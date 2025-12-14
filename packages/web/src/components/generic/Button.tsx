@@ -1,4 +1,3 @@
-import { type ToOptions } from "@tanstack/react-router";
 import { cva, type VariantProps } from "cva";
 import React from "react";
 import {

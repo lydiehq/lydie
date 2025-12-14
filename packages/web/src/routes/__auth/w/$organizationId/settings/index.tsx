@@ -216,13 +216,13 @@ function RouteComponent() {
           <div className="flex justify-end gap-x-1">
             <Button
               intent="secondary"
-              size="xs"
+              size="sm"
               onPress={() => workspaceForm.reset()}
             >
               Cancel
             </Button>
             <Button
-              size="xs"
+              size="sm"
               type="submit"
               isPending={workspaceForm.state.isSubmitting}
             >
@@ -247,7 +247,7 @@ function RouteComponent() {
               setIsApiKeyDialogOpen(true);
               setApiKeyDialogStep("create");
             }}
-            size="xs"
+            size="sm"
             intent="secondary"
           >
             <Plus className="size-3.5 mr-1" />
@@ -340,7 +340,7 @@ function RouteComponent() {
             <div className="flex justify-end">
               <Button
                 intent="danger"
-                size="xs"
+                size="sm"
                 onPress={() => setIsDeleteDialogOpen(true)}
               >
                 Delete Organization
