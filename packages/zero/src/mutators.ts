@@ -2,6 +2,7 @@ import { defineMutators, defineMutator } from "@rocicorp/zero";
 import { createId } from "@lydie/core/id";
 import { z } from "zod";
 import { isAuthenticated, hasOrganizationAccess } from "./auth";
+import { zql } from "./schema";
 
 export const mutators = defineMutators({
   folder: {
@@ -63,7 +64,7 @@ export const mutators = defineMutators({
         const softDeleteFolderRecursive = async (folderId: string) => {
           // Recursively soft-delete all child folders
           const childFolders = await tx.run(
-            tx.query.folders
+            zql.folders
               .where("parent_id", folderId)
               .where("deleted_at", "IS", null)
           );
@@ -75,7 +76,7 @@ export const mutators = defineMutators({
 
           // Soft-delete all documents in this folder
           const documents = await tx.run(
-            tx.query.documents
+            zql.documents
               .where("folder_id", folderId)
               .where("deleted_at", "IS", null)
           );
@@ -232,7 +233,7 @@ export const mutators = defineMutators({
         isAuthenticated(ctx);
 
         const conversation = await tx.run(
-          tx.query.assistant_conversations.where("id", conversationId).one()
+          zql.assistant_conversations.where("id", conversationId).one()
         );
 
         if (!conversation) return;
@@ -246,7 +247,7 @@ export const mutators = defineMutators({
         });
 
         const messages = await tx.run(
-          tx.query.assistant_messages.where("conversation_id", conversationId)
+          zql.assistant_messages.where("conversation_id", conversationId)
         );
 
         for (const message of messages) {
@@ -287,7 +288,7 @@ export const mutators = defineMutators({
 
         // Get or create the user's settings
         let settings = await tx.run(
-          tx.query.user_settings.where("user_id", ctx.userId).one()
+          zql.user_settings.where("user_id", ctx.userId).one()
         );
 
         if (!settings) {
@@ -302,7 +303,7 @@ export const mutators = defineMutators({
             created_at: Date.now(),
             updated_at: Date.now(),
           });
-          settings = await tx.run(tx.query.user_settings.where("id", id).one());
+          settings = await tx.run(zql.user_settings.where("id", id).one());
         }
 
         if (!settings) {
@@ -341,7 +342,7 @@ export const mutators = defineMutators({
 
         // Get or create the organization's settings
         let settings = await tx.run(
-          tx.query.organization_settings
+          zql.organization_settings
             .where("organization_id", organizationId)
             .one()
         );
@@ -356,7 +357,7 @@ export const mutators = defineMutators({
             updated_at: Date.now(),
           });
           settings = await tx.run(
-            tx.query.organization_settings.where("id", id).one()
+            zql.organization_settings.where("id", id).one()
           );
         }
 
@@ -445,11 +446,13 @@ export const mutators = defineMutators({
 
         // Verify user is an owner before allowing deletion
         const member = await tx.run(
-          tx.query.members
+          zql.members
             .where("organization_id", organizationId)
             .where("user_id", ctx.userId)
             .one()
         );
+
+        console.log(member);
 
         if (!member || member.role !== "owner") {
           throw new Error(

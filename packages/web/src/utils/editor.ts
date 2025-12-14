@@ -5,6 +5,7 @@ import { MarkdownPasteExtension } from "@/editor/extensions/markdown-paste";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { DocumentComponent } from "../editor/extensions/document-components";
 import { KeyboardShortcutExtension } from "@/editor/extensions/keyboard-shortcuts";
+import { IndentHandlerExtension } from "@/editor/extensions/indent-handler";
 import { useCallback } from "react";
 import { TableKit } from "@tiptap/extension-table";
 
@@ -49,6 +50,7 @@ export function useContentEditor({
         onAddLink,
       }),
       DocumentComponent,
+      IndentHandlerExtension,
     ],
     content: initialContent,
     editorProps: {

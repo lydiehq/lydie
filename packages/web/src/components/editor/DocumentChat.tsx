@@ -42,7 +42,6 @@ type Props = {
 export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
   const { focusedContent, clearFocusedContent } = useSelectedContent();
   const { organization } = useOrganization();
-  const { session } = useAuth();
   const router = useRouter();
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
 

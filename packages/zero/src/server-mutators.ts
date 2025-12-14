@@ -3,6 +3,7 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { Resource } from "sst";
 import { mutators as sharedMutators } from "./mutators";
 import { z } from "zod";
+import { zql } from "./schema";
 
 const sqs = new SQSClient();
 
@@ -39,9 +40,7 @@ async function triggerEmbeddingGeneration(
 
 // Instead of defining server mutators as a constant,
 // define them as a function of a list of async tasks.
-export function createServerMutators(
-  asyncTasks: Array<() => Promise<void>>
-) {
+export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
   return defineMutators(sharedMutators, {
     document: {
       // Override the shared mutator definition with same name.
@@ -57,13 +56,27 @@ export function createServerMutators(
         async ({
           tx,
           ctx,
-          args: { documentId, title, jsonContent, published, slug, indexStatus },
+          args: {
+            documentId,
+            title,
+            jsonContent,
+            published,
+            slug,
+            indexStatus,
+          },
         }) => {
           // Run the shared mutator first
           await sharedMutators.document.update.fn({
             tx,
             ctx,
-            args: { documentId, title, jsonContent, published, slug, indexStatus },
+            args: {
+              documentId,
+              title,
+              jsonContent,
+              published,
+              slug,
+              indexStatus,
+            },
           });
 
           // Queue async task to trigger embedding generation if content/title changed
@@ -71,9 +84,8 @@ export function createServerMutators(
             title !== undefined || jsonContent !== undefined;
 
           if (shouldTriggerEmbedding) {
-            // Get the document to find its organization
             const doc = await tx.run(
-              tx.query.documents.where("id", documentId).one()
+              zql.documents.where("id", documentId).one()
             );
 
             if (doc) {

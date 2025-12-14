@@ -8,14 +8,10 @@ import { HTTPException } from "hono/http-exception";
 import { createServerMutators } from "@lydie/zero/server-mutators";
 import { handleMutateRequest } from "@rocicorp/zero/server";
 import { mustGetMutator } from "@rocicorp/zero";
-import { zeroPostgresJS } from "@rocicorp/zero/server/adapters/postgresjs";
-import { Resource } from "sst";
-import { default as postgres } from "postgres";
+import { zeroDrizzle } from "@rocicorp/zero/server/adapters/drizzle";
+import { db as drizzleClient } from "@lydie/database";
 
-const zeroDbProvider = zeroPostgresJS(
-  schema,
-  postgres(Resource.PostgresConnectionStringDirect.value)
-);
+const zeroDbProvider = zeroDrizzle(schema, drizzleClient);
 
 export const ZeroRoute = new Hono()
   .post("/queries", async (c) => {
@@ -63,6 +59,8 @@ export const ZeroRoute = new Hono()
         transact((tx, name, args) => {
           const mutator = mustGetMutator(mutators, name);
           return mutator.fn({
+            // @ts-ignore TODO: would be fixed once we are able to use
+            // drizzle-zero (once drizzle v1 is supported)
             tx,
             ctx: session,
             args,

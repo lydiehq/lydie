@@ -2,7 +2,6 @@ import { Editor } from "@/components/Editor";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
 
 export const Route = createFileRoute("/__auth/w/$organizationId/$id/")({
   component: RouteComponent,
@@ -20,7 +19,6 @@ export const Route = createFileRoute("/__auth/w/$organizationId/$id/")({
 
 function RouteComponent() {
   const { id, organizationId } = Route.useParams();
-  const { session } = useAuth();
   const [doc, status] = useQuery(
     queries.documents.byId({ organizationId, documentId: id })
   );

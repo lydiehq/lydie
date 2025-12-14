@@ -1,15 +1,9 @@
-import { defineQueries, defineQuery, createBuilder } from "@rocicorp/zero";
+import { defineQueries, defineQuery } from "@rocicorp/zero";
 import { z } from "zod";
-import { schema } from "./schema";
-import {
-  isAuthenticated,
-  hasOrganizationAccess,
-  type Context,
-} from "./auth";
+import { isAuthenticated, hasOrganizationAccess, type Context } from "./auth";
+import { zql } from "./schema";
 
 export type QueryContext = Context;
-
-export const builder = createBuilder(schema);
 
 export const queries = defineQueries({
   documents: {
@@ -17,7 +11,7 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return builder.documents
+        return zql.documents
           .where("organization_id", organizationId)
           .where("deleted_at", "IS", null)
           .orderBy("updated_at", "desc");
@@ -28,7 +22,7 @@ export const queries = defineQueries({
       ({ args: { organizationId, documentId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
 
-        return builder.documents
+        return zql.documents
           .where("id", documentId)
           .where("organization_id", organizationId)
           .where("deleted_at", "IS", null)
@@ -52,14 +46,14 @@ export const queries = defineQueries({
         hasOrganizationAccess(ctx, organizationId);
 
         if (!searchTerm.trim()) {
-          return builder.documents
+          return zql.documents
             .where("organization_id", organizationId)
             .where("deleted_at", "IS", null)
             .orderBy("created_at", "desc")
             .limit(5);
         }
 
-        return builder.documents
+        return zql.documents
           .where("organization_id", organizationId)
           .where("deleted_at", "IS", null)
           .where("title", "ILIKE", `%${searchTerm}%`)
@@ -73,7 +67,7 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return builder.document_components
+        return zql.document_components
           .where("organization_id", organizationId)
           .orderBy("created_at", "desc");
       }
@@ -84,7 +78,7 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return builder.api_keys
+        return zql.api_keys
           .where("organization_id", organizationId)
           .where("revoked", false)
           .orderBy("created_at", "desc");
@@ -96,7 +90,7 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return builder.members
+        return zql.members
           .where("organization_id", organizationId)
           .related("user")
           .orderBy("created_at", "desc");
@@ -104,21 +98,18 @@ export const queries = defineQueries({
     ),
   },
   organizations: {
-    byUser: defineQuery(
-      z.object({}),
-      ({ ctx }) => {
-        isAuthenticated(ctx);
-        return builder.members
-          .where("user_id", ctx.userId)
-          .related("organization")
-          .orderBy("created_at", "desc");
-      }
-    ),
+    byUser: defineQuery(z.object({}), ({ ctx }) => {
+      isAuthenticated(ctx);
+      return zql.members
+        .where("user_id", ctx.userId)
+        .related("organization")
+        .orderBy("created_at", "desc");
+    }),
     byId: defineQuery(
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return builder.organizations.where("id", organizationId).one();
+        return zql.organizations.where("id", organizationId).one();
       }
     ),
     billing: defineQuery(
@@ -126,7 +117,7 @@ export const queries = defineQueries({
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
 
-        return builder.organizations
+        return zql.organizations
           .where("id", organizationId)
           .one()
           .related("llmUsage", (q) => q.orderBy("created_at", "desc"));
@@ -138,7 +129,7 @@ export const queries = defineQueries({
         hasOrganizationAccess(ctx, organizationId);
         // Get all documents and folders, we'll filter by folder on the client
         // Exclude deleted items
-        return builder.organizations
+        return zql.organizations
           .where("id", organizationId)
           .one()
           .related("documents", (q) =>
@@ -157,12 +148,14 @@ export const queries = defineQueries({
       ({ args: { organizationId, searchTerm }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
 
-        const searchPattern = searchTerm.trim() ? `%${searchTerm.trim()}%` : "%";
+        const searchPattern = searchTerm.trim()
+          ? `%${searchTerm.trim()}%`
+          : "%";
 
         // If search term is empty, return all items (limited)
         // Exclude deleted items
         if (!searchTerm.trim()) {
-          return builder.organizations
+          return zql.organizations
             .where("id", organizationId)
             .one()
             .related("documents", (q) =>
@@ -181,7 +174,7 @@ export const queries = defineQueries({
 
         // Search documents by title and folders by name
         // Exclude deleted items
-        return builder.organizations
+        return zql.organizations
           .where("id", organizationId)
           .one()
           .related("documents", (q) =>
@@ -206,7 +199,7 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return builder.assistant_conversations
+        return zql.assistant_conversations
           .where("organization_id", organizationId)
           .where("user_id", ctx.userId)
           .related("messages", (q) => q.orderBy("created_at", "asc"))
@@ -225,7 +218,7 @@ export const queries = defineQueries({
         today.setHours(0, 0, 0, 0);
         const startOfDay = today.getTime();
 
-        return builder.llm_usage
+        return zql.llm_usage
           .where("organization_id", organizationId)
           .where("created_at", ">=", startOfDay)
           .orderBy("created_at", "desc");
@@ -233,19 +226,16 @@ export const queries = defineQueries({
     ),
   },
   settings: {
-    user: defineQuery(
-      z.object({}),
-      ({ ctx }) => {
-        isAuthenticated(ctx);
-        const settings = builder.user_settings.where("user_id", ctx.userId).one();
-        return settings;
-      }
-    ),
+    user: defineQuery(z.object({}), ({ ctx }) => {
+      isAuthenticated(ctx);
+      const settings = zql.user_settings.where("user_id", ctx.userId).one();
+      return settings;
+    }),
     organization: defineQuery(
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return builder.organization_settings
+        return zql.organization_settings
           .where("organization_id", organizationId)
           .one();
       }

@@ -6,6 +6,7 @@ import {
   relationships,
   json,
   boolean,
+  createBuilder,
 } from "@rocicorp/zero";
 
 const timestamps = {
@@ -467,3 +468,5 @@ export const schema = createSchema({
 });
 
 export type Schema = typeof schema;
+
+export const zql = createBuilder(schema);
