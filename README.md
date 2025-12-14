@@ -58,4 +58,4 @@ Key planned features include:
 - Cross-platform publishing
 - Advanced AI features (LLM selection, web search, cross-document referencing)
 
-For the full roadmap, see [`packages/landing/src/pages/roadmap.astro`](packages/landing/src/pages/roadmap.astro).
+For the full roadmap, see [https://lydie.co/roadmap](https://lydie.co/roadmap).
