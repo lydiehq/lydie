@@ -1,6 +1,20 @@
 import type { SQSEvent } from "aws-lambda";
-import { db } from "@lydie/database/pooled";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { Resource } from "sst";
+import * as schema from "@lydie/database/schema";
+import { relations } from "@lydie/database/relations";
+import postgres from "postgres";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
+
+// Pooled connection via pgBouncer for Lambda functions. Uses postgres-js
+// as Bun is not supported in Lambda.
+const pg = postgres(Resource.PostgresConnectionStringPooled.value);
+
+const db = drizzle({
+  client: pg,
+  schema,
+  relations,
+});
 
 /**
  * Lambda handler for processing embedding queue messages
@@ -61,7 +75,7 @@ export const handler = async (event: SQSEvent) => {
       }
 
       // Process the document
-      await processDocumentEmbedding(doc);
+      await processDocumentEmbedding(doc, db);
 
       results.push({ documentId, success: true });
       console.log(

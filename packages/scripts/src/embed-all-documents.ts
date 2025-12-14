@@ -21,7 +21,7 @@ async function embedAllDocuments() {
 
   for (const doc of documents) {
     try {
-      const result = await processDocumentEmbedding(doc);
+      const result = await processDocumentEmbedding(doc, db);
       if (result.skipped) {
         skipped++;
       } else {

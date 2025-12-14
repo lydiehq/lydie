@@ -597,7 +597,7 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
       }
 
       // Generate embeddings for the imported document asynchronously (don't block)
-      processDocumentEmbedding(insertedDocument)
+      processDocumentEmbedding(insertedDocument, db)
         .then(() => {
           console.log(
             `Successfully generated embeddings for imported document ${documentId}`
