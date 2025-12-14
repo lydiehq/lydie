@@ -1,0 +1,21 @@
+{
+  "name": "@lydie/zero",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "dev": "zero-cache"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.948.0",
+    "@lydie/core": "workspace:*",
+    "@rocicorp/zero": "catalog:",
+    "better-auth": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "sst": "catalog:"
+  }
+}

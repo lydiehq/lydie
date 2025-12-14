@@ -1,0 +1,28 @@
+{
+  "name": "@lydie/backend",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "dev": "bun run --watch ./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.159",
+    "@types/node": "^25.0.2",
+    "sst": "catalog:"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "catalog:",
+    "@ai-sdk/openai": "catalog:",
+    "@lydie/core": "workspace:*",
+    "@lydie/database": "workspace:*",
+    "@lydie/zero": "workspace:*",
+    "@polar-sh/better-auth": "catalog:",
+    "@rocicorp/zero": "catalog:",
+    "ai": "catalog:",
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
+    "hono": "^4.11.0",
+    "postgres": "^3.4.7",
+    "zod": "catalog:"
+  }
+}

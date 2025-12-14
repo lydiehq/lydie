@@ -1,0 +1,17 @@
+{
+  "name": "@trawle/scripts",
+  "scripts": {
+    "db:delete-user": "sst shell bun run src/delete-user.ts",
+    "db:embed-all-documents": "sst shell bun run src/embed-all-documents.ts"
+  },
+  "dependencies": {
+    "@lydie/core": "workspace:*",
+    "@lydie/database": "workspace:*",
+    "ai": "catalog:",
+    "drizzle-orm": "catalog:",
+    "sst": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.2"
+  }
+}

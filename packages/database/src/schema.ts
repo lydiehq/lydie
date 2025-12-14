@@ -1,0 +1,444 @@
+import { createId } from "@lydie/core/id";
+import {
+  index,
+  PgColumn,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  vector,
+  jsonb,
+  boolean,
+  integer,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+
+const timestamps = {
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+};
+
+export const usersTable = pgTable("users", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified")
+    .$defaultFn(() => false)
+    .notNull(),
+  image: text("image"),
+  role: text("role").default("user"),
+  banned: boolean("banned").default(false),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
+  ...timestamps,
+});
+
+export const sessionsTable = pgTable(
+  "sessions",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    activeOrganizationId: text("active_organization_id"),
+    activeTeamId: text("active_team_id"),
+    impersonatedBy: text("impersonated_by"),
+    ...timestamps,
+  },
+  (table) => [index("sessions_user_id_idx").on(table.userId)]
+);
+
+export const accountsTable = pgTable(
+  "accounts",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    ...timestamps,
+  },
+  (table) => [index("accounts_user_id_idx").on(table.userId)]
+);
+
+export const verificationsTable = pgTable(
+  "verifications",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("verifications_identifier_idx").on(table.identifier)]
+);
+
+export const organizationsTable = pgTable("organizations", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  name: text("name").notNull(),
+  slug: text("slug").unique(),
+  logo: text("logo"),
+  metadata: text("metadata"),
+  // Subscription info synced from Polar via webhooks
+  subscriptionStatus: text("subscription_status").default("free"), // 'free', 'active', 'canceled', 'past_due'
+  subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'pro'
+  polarSubscriptionId: text("polar_subscription_id"),
+  ...timestamps,
+});
+
+export const membersTable = pgTable(
+  "members",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("member"),
+    ...timestamps,
+  },
+  (table) => [
+    index("members_user_id_idx").on(table.userId),
+    index("members_organization_id_idx").on(table.organizationId),
+  ]
+);
+
+export const invitationsTable = pgTable(
+  "invitations",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role"),
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at").notNull(),
+    inviterId: text("inviter_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("invitations_email_idx").on(table.email),
+    index("invitations_organization_id_idx").on(table.organizationId),
+  ]
+);
+
+export const foldersTable = pgTable(
+  "folders",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    name: text("name").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    parentId: text("parent_id").references(
+      (): PgColumn<any> => foldersTable.id,
+      {
+        onDelete: "cascade",
+      }
+    ),
+    deletedAt: timestamp("deleted_at"),
+    ...timestamps,
+  },
+  (table) => [index("folders_organization_id_idx").on(table.organizationId)]
+);
+
+export const documentsTable = pgTable(
+  "documents",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    title: text("title").notNull(),
+    slug: text("slug").notNull(),
+    jsonContent: jsonb("json_content").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    folderId: text("folder_id").references(() => foldersTable.id, {
+      onDelete: "set null",
+    }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    indexStatus: text("index_status").notNull().default("outdated"),
+    published: boolean("published").notNull().default(false),
+    lastIndexedTitle: text("last_indexed_title"),
+    lastIndexedContentHash: text("last_indexed_content_hash"),
+    deletedAt: timestamp("deleted_at"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("documents_organization_id_slug_key")
+      .on(table.organizationId, table.slug)
+      .where(sql`deleted_at IS NULL`),
+    index("documents_organization_id_idx").on(table.organizationId),
+    index("documents_folder_id_idx").on(table.folderId),
+  ]
+);
+
+export const documentEmbeddingsTable = pgTable(
+  "document_embeddings",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    chunkIndex: integer("chunk_index"),
+    heading: text("heading"),
+    headingLevel: integer("heading_level"),
+    ...timestamps,
+  },
+  (table) => [
+    index("embedding_index").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops")
+    ),
+    index("document_embeddings_document_id_idx").on(table.documentId),
+  ]
+);
+
+export const documentTitleEmbeddingsTable = pgTable(
+  "document_title_embeddings",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    title: text("title").notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("title_embedding_index").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops")
+    ),
+    index("document_title_embeddings_document_id_idx").on(table.documentId),
+  ]
+);
+
+export const documentConversationsTable = pgTable(
+  "document_conversations",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    title: text("title"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("document_conversations_document_id_idx").on(table.documentId),
+  ]
+);
+
+export const assistantConversationsTable = pgTable(
+  "assistant_conversations",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    title: text("title"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("assistant_conversations_organization_id_idx").on(
+      table.organizationId
+    ),
+  ]
+);
+
+export const documentMessagesTable = pgTable(
+  "document_messages",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => documentConversationsTable.id, { onDelete: "cascade" }),
+    parts: jsonb("parts").notNull(),
+    role: text("role").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("document_messages_conversation_id_idx").on(table.conversationId),
+  ]
+);
+
+export const assistantMessagesTable = pgTable(
+  "assistant_messages",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => assistantConversationsTable.id, {
+        onDelete: "cascade",
+      }),
+    parts: jsonb("parts").notNull(),
+    role: text("role").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("assistant_messages_conversation_id_idx").on(table.conversationId),
+  ]
+);
+
+export const apiKeysTable = pgTable(
+  "api_keys",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    name: text("name").notNull(),
+    partialKey: text("partial_key").notNull(),
+    hashedKey: text("hashed_key").notNull(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    revoked: boolean("revoked").notNull().default(false),
+    lastUsedAt: timestamp("last_used_at"),
+    ...timestamps,
+  },
+  (table) => [index("api_keys_hashed_key_idx").on(table.hashedKey)]
+);
+
+export const documentComponentsTable = pgTable("document_components", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  name: text("name").notNull(),
+  properties: jsonb("properties").notNull(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizationsTable.id, { onDelete: "cascade" }),
+  ...timestamps,
+});
+
+// LLM usage tracking (unified for both document and assistant chat)
+export const llmUsageTable = pgTable(
+  "llm_usage",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    conversationId: text("conversation_id").notNull(),
+    // messageId can point to either a document or assistant message, so we keep it
+    // as a plain text field instead of a strict FK.
+    messageId: text("message_id"),
+    organizationId: text("organization_id").references(
+      () => organizationsTable.id,
+      { onDelete: "cascade" }
+    ),
+    source: text("source").notNull(), // 'document' or 'assistant'
+    model: text("model").notNull(),
+    promptTokens: integer("prompt_tokens").notNull(),
+    completionTokens: integer("completion_tokens").notNull(),
+    totalTokens: integer("total_tokens").notNull(),
+    finishReason: text("finish_reason"),
+    toolCalls: jsonb("tool_calls"),
+    ...timestamps,
+  },
+  (table) => [index("llm_usage_organization_id_idx").on(table.organizationId)]
+);
+
+export const userSettingsTable = pgTable("user_settings", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  persistDocumentTreeExpansion: boolean("persist_document_tree_expansion")
+    .notNull()
+    .default(true),
+  aiPromptStyle: text("ai_prompt_style").default("default"), // 'default', 'journalistic', 'essay'
+  customPrompt: text("custom_prompt"), // For PRO feature
+  ...timestamps,
+});
+
+export const organizationSettingsTable = pgTable("organization_settings", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  organizationId: text("organization_id")
+    .notNull()
+    .unique()
+    .references(() => organizationsTable.id, { onDelete: "cascade" }),
+  ...timestamps,
+});

@@ -1,0 +1,7 @@
+# sst
+.sst
+
+.env
+.DS_Store
+
+node_modules

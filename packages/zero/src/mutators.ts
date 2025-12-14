@@ -1,0 +1,467 @@
+import { defineMutators, defineMutator } from "@rocicorp/zero";
+import { createId } from "@lydie/core/id";
+import { z } from "zod";
+import { isAuthenticated, hasOrganizationAccess } from "./auth";
+
+export const mutators = defineMutators({
+  folder: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        organizationId: z.string(),
+        parentId: z.string().optional(),
+      }),
+      async ({ tx, ctx, args: { id, name, organizationId, parentId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        await tx.mutate.folders.insert({
+          id,
+          name,
+          parent_id: parentId || null,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    rename: defineMutator(
+      z.object({
+        folderId: z.string(),
+        name: z.string(),
+      }),
+      async ({ tx, args: { folderId, name } }) => {
+        await tx.mutate.folders.update({
+          id: folderId,
+          name,
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    move: defineMutator(
+      z.object({
+        folderId: z.string(),
+        newParentId: z.string().optional(),
+      }),
+      async ({ tx, args: { folderId, newParentId } }) => {
+        await tx.mutate.folders.update({
+          id: folderId,
+          parent_id: newParentId || null,
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    delete: defineMutator(
+      z.object({
+        folderId: z.string(),
+      }),
+      async ({ tx, ctx, args: { folderId } }) => {
+        isAuthenticated(ctx);
+
+        // Helper function for recursive folder soft deletion
+        const softDeleteFolderRecursive = async (folderId: string) => {
+          // Recursively soft-delete all child folders
+          const childFolders = await tx.run(
+            tx.query.folders
+              .where("parent_id", folderId)
+              .where("deleted_at", "IS", null)
+          );
+
+          for (const childFolder of childFolders) {
+            // Recursively soft-delete each child folder (which will handle their children)
+            await softDeleteFolderRecursive(childFolder.id);
+          }
+
+          // Soft-delete all documents in this folder
+          const documents = await tx.run(
+            tx.query.documents
+              .where("folder_id", folderId)
+              .where("deleted_at", "IS", null)
+          );
+
+          for (const document of documents) {
+            await tx.mutate.documents.update({
+              id: document.id,
+              deleted_at: Date.now(),
+              updated_at: Date.now(),
+            });
+          }
+
+          // Finally, soft-delete the folder itself
+          await tx.mutate.folders.update({
+            id: folderId,
+            deleted_at: Date.now(),
+            updated_at: Date.now(),
+          });
+        };
+
+        // Soft-delete the folder and all its children recursively
+        await softDeleteFolderRecursive(folderId);
+      }
+    ),
+  },
+  document: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        organizationId: z.string(),
+        title: z.string().optional(),
+        folderId: z.string().optional(),
+        jsonContent: z.any().optional(),
+      }),
+      async ({
+        tx,
+        ctx,
+        args: { id, organizationId, title = "", folderId, jsonContent },
+      }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        await tx.mutate.documents.insert({
+          id,
+          slug: id,
+          title,
+          json_content: jsonContent || { type: "doc", content: [] },
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          index_status: "pending",
+          published: false,
+          folder_id: folderId || null,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    update: defineMutator(
+      z.object({
+        documentId: z.string(),
+        title: z.string().optional(),
+        jsonContent: z.any().optional(),
+        published: z.boolean().optional(),
+        slug: z.string().optional(),
+        indexStatus: z.string().optional(),
+      }),
+      async ({
+        tx,
+        args: { documentId, title, jsonContent, published, slug, indexStatus },
+      }) => {
+        const updates: any = {
+          id: documentId,
+          updated_at: Date.now(),
+        };
+
+        if (title !== undefined) updates.title = title;
+        if (jsonContent !== undefined) updates.json_content = jsonContent;
+        if (published !== undefined) updates.published = published;
+        if (slug !== undefined) updates.slug = slug;
+        if (indexStatus !== undefined) updates.index_status = indexStatus;
+
+        await tx.mutate.documents.update(updates);
+      }
+    ),
+    rename: defineMutator(
+      z.object({
+        documentId: z.string(),
+        title: z.string(),
+      }),
+      async ({ tx, args: { documentId, title } }) => {
+        await tx.mutate.documents.update({
+          id: documentId,
+          title,
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    moveToFolder: defineMutator(
+      z.object({
+        documentId: z.string(),
+        folderId: z.string().optional(),
+      }),
+      async ({ tx, args: { documentId, folderId } }) => {
+        await tx.mutate.documents.update({
+          id: documentId,
+          folder_id: folderId || null,
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    delete: defineMutator(
+      z.object({
+        documentId: z.string(),
+      }),
+      async ({ tx, ctx, args: { documentId } }) => {
+        isAuthenticated(ctx);
+
+        // Soft-delete by setting deleted_at
+        await tx.mutate.documents.update({
+          id: documentId,
+          deleted_at: Date.now(),
+          updated_at: Date.now(),
+        });
+      }
+    ),
+  },
+  documentComponent: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        properties: z.any(),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { id, name, properties, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        await tx.mutate.document_components.insert({
+          id,
+          name,
+          properties,
+          organization_id: organizationId,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+      }
+    ),
+  },
+  assistantConversation: {
+    delete: defineMutator(
+      z.object({
+        conversationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { conversationId } }) => {
+        isAuthenticated(ctx);
+
+        const conversation = await tx.run(
+          tx.query.assistant_conversations.where("id", conversationId).one()
+        );
+
+        if (!conversation) return;
+
+        if (conversation.user_id !== ctx.userId) {
+          throw new Error("Unauthorized");
+        }
+
+        await tx.mutate.assistant_conversations.delete({
+          id: conversationId,
+        });
+
+        const messages = await tx.run(
+          tx.query.assistant_messages.where("conversation_id", conversationId)
+        );
+
+        for (const message of messages) {
+          await tx.mutate.assistant_messages.delete({ id: message.id });
+        }
+      }
+    ),
+  },
+  apiKey: {
+    revoke: defineMutator(
+      z.object({
+        keyId: z.string(),
+      }),
+      async ({ tx, ctx, args: { keyId } }) => {
+        isAuthenticated(ctx);
+
+        await tx.mutate.api_keys.update({
+          id: keyId,
+          revoked: true,
+          updated_at: Date.now(),
+        });
+      }
+    ),
+  },
+  userSettings: {
+    update: defineMutator(
+      z.object({
+        persistDocumentTreeExpansion: z.boolean().optional(),
+        aiPromptStyle: z.string().optional(),
+        customPrompt: z.string().nullable().optional(),
+      }),
+      async ({
+        tx,
+        ctx,
+        args: { persistDocumentTreeExpansion, aiPromptStyle, customPrompt },
+      }) => {
+        isAuthenticated(ctx);
+
+        // Get or create the user's settings
+        let settings = await tx.run(
+          tx.query.user_settings.where("user_id", ctx.userId).one()
+        );
+
+        if (!settings) {
+          // Create settings if they don't exist
+          const id = createId();
+          await tx.mutate.user_settings.insert({
+            id,
+            user_id: ctx.userId,
+            persist_document_tree_expansion: true,
+            ai_prompt_style: "default",
+            custom_prompt: null,
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          });
+          settings = await tx.run(tx.query.user_settings.where("id", id).one());
+        }
+
+        if (!settings) {
+          throw new Error("User settings not found");
+        }
+
+        const updates: any = {
+          id: settings.id,
+          updated_at: Date.now(),
+        };
+
+        if (persistDocumentTreeExpansion !== undefined) {
+          updates.persist_document_tree_expansion =
+            persistDocumentTreeExpansion;
+        }
+
+        if (aiPromptStyle !== undefined) {
+          updates.ai_prompt_style = aiPromptStyle;
+        }
+
+        if (customPrompt !== undefined) {
+          updates.custom_prompt = customPrompt || null;
+        }
+
+        await tx.mutate.user_settings.update(updates);
+      }
+    ),
+  },
+  organizationSettings: {
+    update: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        // Get or create the organization's settings
+        let settings = await tx.run(
+          tx.query.organization_settings
+            .where("organization_id", organizationId)
+            .one()
+        );
+
+        if (!settings) {
+          // Create settings if they don't exist
+          const id = createId();
+          await tx.mutate.organization_settings.insert({
+            id,
+            organization_id: organizationId,
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          });
+          settings = await tx.run(
+            tx.query.organization_settings.where("id", id).one()
+          );
+        }
+
+        if (!settings) {
+          throw new Error("Organization settings not found");
+        }
+
+        const updates: any = {
+          id: settings.id,
+          updated_at: Date.now(),
+        };
+
+        await tx.mutate.organization_settings.update(updates);
+      }
+    ),
+  },
+  organization: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        slug: z.string(),
+        logo: z.string().optional(),
+        metadata: z.string().optional(),
+      }),
+      async ({ tx, ctx, args: { id, name, slug, logo, metadata } }) => {
+        isAuthenticated(ctx);
+
+        await tx.mutate.organizations.insert({
+          id,
+          name,
+          slug,
+          logo: logo || null,
+          metadata: metadata || null,
+          subscription_status: "free",
+          subscription_plan: "free",
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          polar_subscription_id: null,
+        });
+
+        await tx.mutate.members.insert({
+          id: createId(),
+          organization_id: id,
+          user_id: ctx.userId,
+          role: "owner",
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+
+        // Create default organization settings
+        await tx.mutate.organization_settings.insert({
+          id: createId(),
+          organization_id: id,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    update: defineMutator(
+      z.object({
+        organizationId: z.string(),
+        name: z.string().optional(),
+      }),
+      async ({ tx, ctx, args: { organizationId, name } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        const updates: any = {
+          id: organizationId,
+          updated_at: Date.now(),
+        };
+
+        if (name !== undefined) {
+          updates.name = name;
+        }
+
+        await tx.mutate.organizations.update(updates);
+      }
+    ),
+    delete: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        // Verify user is an owner before allowing deletion
+        const member = await tx.run(
+          tx.query.members
+            .where("organization_id", organizationId)
+            .where("user_id", ctx.userId)
+            .one()
+        );
+
+        if (!member || member.role !== "owner") {
+          throw new Error(
+            "Only organization owners can delete the organization"
+          );
+        }
+
+        // Delete the organization - database cascades will handle related records
+        await tx.mutate.organizations.delete({ id: organizationId });
+      }
+    ),
+  },
+});
+
+export type Mutators = typeof mutators;

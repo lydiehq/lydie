@@ -1,0 +1,31 @@
+---
+import Layout from "./Layout.astro";
+import { Container } from "../components/Container";
+import DocumentationSidebar from "../components/documentation/DocumentationSidebar.astro";
+import { CircleAlert } from "lucide-react";
+
+export interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+  <Container className="flex flex-col md:flex-row gap-4">
+    <DocumentationSidebar />
+    <main class="flex-1 min-w-0">
+      <div
+        class="rounded-xl ring-1 ring-black/8 bg-gray-50 text-[0.8125rem] flex items-center gap-x-2 p-2 mb-4 text-gray-700"
+      >
+        <CircleAlert className="size-4 text-gray-500" />
+        <span>
+          We are actively working on the REST API, TypeScript SDK and more as
+          well as getting it properly documented.
+        </span>
+      </div>
+      <slot />
+    </main>
+  </Container>
+</Layout>

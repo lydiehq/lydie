@@ -1,0 +1,74 @@
+---
+import DocumentationLayout from "../../layouts/DocumentationLayout.astro";
+import { Eyebrow } from "../../components/landing/Eyebrow";
+import { Book, Code, ChevronRight } from "lucide-react";
+
+const quickLinks = [
+  {
+    title: "GitHub Repository",
+    description: "View the source code and contribute",
+    href: "https://github.com/lsalling/lydie",
+    icon: Code,
+    external: true,
+  },
+  {
+    title: "Blog",
+    description: "Read the latest updates and tutorials",
+    href: "/blog",
+    icon: Book,
+    external: false,
+  },
+];
+---
+
+<DocumentationLayout
+  title="Documentation - Lydie"
+  description="Complete documentation for Lydie. Learn how to use, configure, and extend Lydie."
+>
+  <div class="flex flex-col gap-y-12">
+    <div class="flex flex-col gap-y-4">
+      <Eyebrow>Documentation</Eyebrow>
+      <h1
+        class="text-2xl font-heading font-medium tracking-tight text-gray-800"
+      >
+        Lydie Documentation
+      </h1>
+      <p class="text-[15px]/relaxed text-gray-600 max-w-[65ch] text-balance">
+        Everything you need to know to get the most out of Lydie. From getting
+        started to advanced customization.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-y-2">
+      <h2 class="text-xl font-heading font-medium tracking-tight text-gray-800">
+        Quick Links
+      </h2>
+      <p class="text-[15px]/relaxed text-gray-800">
+        Additional resources to help you get started
+      </p>
+      <div class="grid md:grid-cols-2 gap-1.5">
+        {
+          quickLinks.map((link) => (
+            <a
+              href={link.href}
+              target={link.external ? "_blank" : undefined}
+              rel={link.external ? "noopener noreferrer" : undefined}
+              class="flex flex-col gap-y-1.5 p-3 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all group"
+            >
+              <div class="flex items-center gap-x-1.5">
+                <link.icon className="size-3.5 text-gray-700 mt-0.5 shrink-0" />
+                <h3 class="text-sm/0 font-medium text-gray-900 group-hover:text-gray-800">
+                  {link.title}
+                </h3>
+              </div>
+              {/* {link.external && (
+                <ChevronRight className="size-3.5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-transform duration-200" />
+              )} */}
+              <p class="text-[0.8125rem] text-gray-600">{link.description}</p>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</DocumentationLayout>

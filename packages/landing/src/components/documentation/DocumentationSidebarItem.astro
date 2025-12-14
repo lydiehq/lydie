@@ -1,0 +1,32 @@
+---
+export interface Props {
+  title: string;
+  href: string;
+  comingSoon?: boolean;
+  currentPath: string;
+}
+
+const { title, href, comingSoon = false, currentPath } = Astro.props;
+---
+
+{
+  comingSoon ? (
+    <div class="text-[0.8125rem] flex items-center gap-x-2 py-1.5 px-3 rounded-lg text-gray-400">
+      <span>{title}</span>
+      <span class="text-[10px] font-medium text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">
+        Soon
+      </span>
+    </div>
+  ) : (
+    <a
+      href={href}
+      class={`text-[0.8125rem] flex py-1.5 px-3 rounded-lg transition-colors ${
+        currentPath === href
+          ? "bg-gray-100 text-gray-900 font-medium"
+          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+      }`}
+    >
+      <span>{title}</span>
+    </a>
+  )
+}

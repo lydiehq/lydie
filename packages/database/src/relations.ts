@@ -1,0 +1,216 @@
+import * as schema from "./schema";
+import { defineRelations } from "drizzle-orm";
+
+export const relations = defineRelations(schema, (r) => ({
+  foldersTable: {
+    user: r.one.usersTable({
+      from: r.foldersTable.userId,
+      to: r.usersTable.id,
+    }),
+    parent: r.one.foldersTable({
+      from: r.foldersTable.parentId,
+      to: r.foldersTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.foldersTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    children: r.many.foldersTable(),
+    documents: r.many.documentsTable(),
+  },
+  documentsTable: {
+    user: r.one.usersTable({
+      from: r.documentsTable.userId,
+      to: r.usersTable.id,
+    }),
+    folder: r.one.foldersTable({
+      from: r.documentsTable.folderId,
+      to: r.foldersTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.documentsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    embeddings: r.many.documentEmbeddingsTable(),
+    titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
+    conversations: r.many.documentConversationsTable(),
+  },
+  documentEmbeddingsTable: {
+    document: r.one.documentsTable({
+      from: r.documentEmbeddingsTable.documentId,
+      to: r.documentsTable.id,
+    }),
+  },
+  documentTitleEmbeddingsTable: {
+    document: r.one.documentsTable({
+      from: r.documentTitleEmbeddingsTable.documentId,
+      to: r.documentsTable.id,
+    }),
+  },
+  documentConversationsTable: {
+    user: r.one.usersTable({
+      from: r.documentConversationsTable.userId,
+      to: r.usersTable.id,
+    }),
+    document: r.one.documentsTable({
+      from: r.documentConversationsTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    messages: r.many.documentMessagesTable(),
+    llmUsage: r.many.llmUsageTable({
+      from: r.documentConversationsTable.id,
+      to: r.llmUsageTable.conversationId,
+    }),
+  },
+
+  assistantConversationsTable: {
+    user: r.one.usersTable({
+      from: r.assistantConversationsTable.userId,
+      to: r.usersTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.assistantConversationsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    messages: r.many.assistantMessagesTable(),
+    llmUsage: r.many.llmUsageTable({
+      from: r.assistantConversationsTable.id,
+      to: r.llmUsageTable.conversationId,
+    }),
+  },
+
+  documentMessagesTable: {
+    conversation: r.one.documentConversationsTable({
+      from: r.documentMessagesTable.conversationId,
+      to: r.documentConversationsTable.id,
+    }),
+    llmUsage: r.many.llmUsageTable({
+      from: r.documentMessagesTable.id,
+      to: r.llmUsageTable.messageId,
+    }),
+  },
+
+  assistantMessagesTable: {
+    conversation: r.one.assistantConversationsTable({
+      from: r.assistantMessagesTable.conversationId,
+      to: r.assistantConversationsTable.id,
+    }),
+    llmUsage: r.many.llmUsageTable({
+      from: r.assistantMessagesTable.id,
+      to: r.llmUsageTable.messageId,
+    }),
+  },
+
+  organizationsTable: {
+    members: r.many.membersTable(),
+    invitations: r.many.invitationsTable(),
+    documents: r.many.documentsTable(),
+    folders: r.many.foldersTable(),
+    assistantConversations: r.many.assistantConversationsTable(),
+    apiKeys: r.many.apiKeysTable(),
+    documentComponents: r.many.documentComponentsTable(),
+    llmUsage: r.many.llmUsageTable(),
+    settings: r.one.organizationSettingsTable({
+      from: r.organizationsTable.id,
+      to: r.organizationSettingsTable.organizationId,
+    }),
+  },
+
+  membersTable: {
+    user: r.one.usersTable({
+      from: r.membersTable.userId,
+      to: r.usersTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.membersTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+  },
+
+  invitationsTable: {
+    organization: r.one.organizationsTable({
+      from: r.invitationsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    inviter: r.one.usersTable({
+      from: r.invitationsTable.inviterId,
+      to: r.usersTable.id,
+    }),
+  },
+
+  sessionsTable: {
+    user: r.one.usersTable({
+      from: r.sessionsTable.userId,
+      to: r.usersTable.id,
+    }),
+  },
+
+  accountsTable: {
+    user: r.one.usersTable({
+      from: r.accountsTable.userId,
+      to: r.usersTable.id,
+    }),
+  },
+
+  apiKeysTable: {
+    organization: r.one.organizationsTable({
+      from: r.apiKeysTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+  },
+
+  documentComponentsTable: {
+    organization: r.one.organizationsTable({
+      from: r.documentComponentsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+  },
+
+  llmUsageTable: {
+    organization: r.one.organizationsTable({
+      from: r.llmUsageTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    documentConversation: r.one.documentConversationsTable({
+      from: r.llmUsageTable.conversationId,
+      to: r.documentConversationsTable.id,
+    }),
+    assistantConversation: r.one.assistantConversationsTable({
+      from: r.llmUsageTable.conversationId,
+      to: r.assistantConversationsTable.id,
+    }),
+    message: r.one.documentMessagesTable({
+      from: r.llmUsageTable.messageId,
+      to: r.documentMessagesTable.id,
+    }),
+  },
+
+  usersTable: {
+    folders: r.many.foldersTable(),
+    documents: r.many.documentsTable(),
+    documentConversations: r.many.documentConversationsTable(),
+    assistantConversations: r.many.assistantConversationsTable(),
+    members: r.many.membersTable(),
+    invitationsSent: r.many.invitationsTable(),
+    sessions: r.many.sessionsTable(),
+    accounts: r.many.accountsTable(),
+    settings: r.one.userSettingsTable({
+      from: r.usersTable.id,
+      to: r.userSettingsTable.userId,
+    }),
+  },
+
+  userSettingsTable: {
+    user: r.one.usersTable({
+      from: r.userSettingsTable.userId,
+      to: r.usersTable.id,
+    }),
+  },
+
+  organizationSettingsTable: {
+    organization: r.one.organizationsTable({
+      from: r.organizationSettingsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+  },
+}));

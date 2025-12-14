@@ -1,0 +1,64 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import FormattedDate from "../../components/FormattedDate.astro";
+import { lydieClient } from "../../utils/lydie-client";
+
+let posts: any[] = [];
+
+try {
+  console.log("Fetching blog posts...", import.meta.env.LYDIE_API_KEY);
+  const { documents } = await lydieClient.getDocuments();
+  posts = documents;
+} catch (error) {
+  console.error("Failed to fetch blog posts:", error);
+  posts = [];
+}
+
+const sortedPosts = posts.sort((a, b) => {
+  const dateA = new Date(a.createdAt || a.updatedAt || 0);
+  const dateB = new Date(b.createdAt || b.updatedAt || 0);
+  return dateB.getTime() - dateA.getTime();
+});
+---
+
+<Layout
+  title="Lydie Blog"
+  description="A minimal, powerful writing environment supercharged with AI."
+>
+  <div class="py-16">
+    <Container>
+      <header class="flex flex-col gap-y-2">
+        <h1 class="text-4xl font-bold text-gray-900">Blog</h1>
+      </header>
+
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {
+          sortedPosts.map((post, index) => (
+            <article class="ring ring-black/8 p-4 rounded-lg">
+              <a href={`/blog/${post.slug}/`} class="block">
+                <div class="space-y-3">
+                  <h2
+                    class={`font-bold text-gray-900 group-hover:text-gray-600 transition-colors ${
+                      index === 0 ? "text-3xl" : "text-xl"
+                    }`}
+                  >
+                    {post.title}
+                  </h2>
+                  {post.createdAt && (
+                    <p class="text-sm text-gray-500">
+                      <FormattedDate date={new Date(post.createdAt)} />
+                    </p>
+                  )}
+                  {post.description && (
+                    <p class="text-gray-600 line-clamp-3">{post.description}</p>
+                  )}
+                </div>
+              </a>
+            </article>
+          ))
+        }
+      </section>
+    </Container>
+  </div>
+</Layout>

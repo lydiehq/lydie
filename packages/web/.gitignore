@@ -1,0 +1,21 @@
+# Playwright
+test-results/
+playwright-report/
+playwright/.auth/
+playwright/.cache/
+
+# Vite
+dist/
+.vite/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
