@@ -1,11 +1,12 @@
-import { drizzle } from "drizzle-orm/bun-sql";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { Resource } from "sst";
 import * as schema from "./schema";
 import { relations } from "./relations";
-import { SQL } from "bun";
+import postgres from "postgres";
 
-// Pooled connection via pgBouncer for Lambda functions
-const pg = new SQL(Resource.PostgresConnectionStringPooled.value);
+// Pooled connection via pgBouncer for Lambda functions. Also uses postgres-js
+// as Bun is not supported in Lambda.
+const pg = postgres(Resource.PostgresConnectionStringPooled.value);
 
 export const db = drizzle({
   client: pg,
