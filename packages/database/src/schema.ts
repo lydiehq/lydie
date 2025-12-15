@@ -177,10 +177,19 @@ export const foldersTable = pgTable(
         onDelete: "cascade",
       }
     ),
+    extensionLinkId: text("extension_link_id").references(
+      () => extensionLinksTable.id,
+      {
+        onDelete: "cascade",
+      }
+    ),
     deletedAt: timestamp("deleted_at"),
     ...timestamps,
   },
-  (table) => [index("folders_organization_id_idx").on(table.organizationId)]
+  (table) => [
+    index("folders_organization_id_idx").on(table.organizationId),
+    index("folders_extension_link_id_idx").on(table.extensionLinkId),
+  ]
 );
 
 export const documentsTable = pgTable(
@@ -202,6 +211,13 @@ export const documentsTable = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    extensionLinkId: text("extension_link_id").references(
+      () => extensionLinksTable.id,
+      {
+        onDelete: "set null",
+      }
+    ),
+    externalId: text("external_id"), // Path/ID in external system (e.g., "docs/guide.md" in GitHub)
     indexStatus: text("index_status").notNull().default("outdated"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
@@ -215,6 +231,7 @@ export const documentsTable = pgTable(
       .where(sql`deleted_at IS NULL`),
     index("documents_organization_id_idx").on(table.organizationId),
     index("documents_folder_id_idx").on(table.folderId),
+    index("documents_extension_link_id_idx").on(table.extensionLinkId),
   ]
 );
 
@@ -442,3 +459,84 @@ export const organizationSettingsTable = pgTable("organization_settings", {
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   ...timestamps,
 });
+
+export const extensionConnectionsTable = pgTable(
+  "extension_connections",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    extensionType: text("extension_type").notNull(), // 'github', 'shopify', 'wordpress', etc.
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    config: jsonb("config").notNull(), // Platform-specific config (access tokens, etc.)
+    enabled: boolean("enabled").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [
+    index("extension_connections_organization_id_idx").on(table.organizationId),
+  ]
+);
+
+// Extension links - configurable "symlinks" to external sources
+// Each link represents a specific path/source in an external system (e.g., a folder in a GitHub repo)
+export const extensionLinksTable = pgTable(
+  "extension_links",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    name: text("name").notNull(), // Display name (e.g., "Web Docs", "API Reference")
+    connectionId: text("connection_id")
+      .notNull()
+      .references(() => extensionConnectionsTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    // Extension-specific config for this link
+    // GitHub: { owner, repo, branch, path }
+    // WordPress: { postType }
+    // Shopify: { blogId }
+    config: jsonb("config").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    lastSyncedAt: timestamp("last_synced_at"),
+    ...timestamps,
+  },
+  (table) => [
+    index("extension_links_connection_id_idx").on(table.connectionId),
+    index("extension_links_organization_id_idx").on(table.organizationId),
+  ]
+);
+
+export const syncMetadataTable = pgTable(
+  "sync_metadata",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    connectionId: text("connection_id")
+      .notNull()
+      .references(() => extensionConnectionsTable.id, { onDelete: "cascade" }),
+    externalId: text("external_id").notNull(), // ID/path in external system
+    lastSyncedAt: timestamp("last_synced_at"),
+    lastSyncedHash: text("last_synced_hash"), // Content hash for change detection
+    syncStatus: text("sync_status").notNull().default("pending"), // 'synced', 'pending', 'conflict', 'error'
+    syncError: text("sync_error"), // Error message if sync failed
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("sync_metadata_document_connection_idx").on(
+      table.documentId,
+      table.connectionId
+    ),
+    index("sync_metadata_document_id_idx").on(table.documentId),
+    index("sync_metadata_connection_id_idx").on(table.connectionId),
+  ]
+);

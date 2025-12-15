@@ -11,6 +11,8 @@
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.948.0",
     "@lydie/core": "workspace:*",
+    "@lydie/database": "workspace:*",
+    "@lydie/extensions": "workspace:*",
     "@rocicorp/zero": "catalog:",
     "better-auth": "catalog:",
     "zod": "catalog:"

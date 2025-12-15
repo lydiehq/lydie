@@ -1,7 +1,10 @@
 import { AlertCircle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/generic/Button";
 import { Logo } from "@/components/layout/Logo";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
+import { authClient } from "@/utils/auth";
+import { clearActiveOrganizationId } from "@/lib/active-organization";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ErrorPageProps {
   error: Error;
@@ -33,6 +36,19 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
     } else {
       window.location.reload();
     }
+  };
+
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const signOut = async () => {
+    clearActiveOrganizationId();
+    await authClient.signOut();
+    queryClient.removeQueries({
+      queryKey: ["auth", "getSession"],
+    });
+    await router.invalidate();
+    navigate({ to: "/auth" });
   };
 
   return (
@@ -70,9 +86,8 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
             <RefreshCw className="size-4 mr-2" />
             Reload Page
           </Button>
-          <Button intent="secondary" onPress={handleGoHome}>
-            <Home className="size-4 mr-2" />
-            Go Home
+          <Button intent="secondary" onPress={signOut}>
+            Sign Out
           </Button>
         </div>
       </div>

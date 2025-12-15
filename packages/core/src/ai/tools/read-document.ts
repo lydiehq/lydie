@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { db, documentsTable } from "@lydie/database";
 import { eq, and, ilike } from "drizzle-orm";
-import { renderContentToHTML } from "../../content";
+import { renderContentToHTML } from "../../serialization";
 
 export const readDocument = (userId: string, organizationId: string) =>
   tool({

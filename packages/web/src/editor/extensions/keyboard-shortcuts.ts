@@ -34,12 +34,12 @@ export const KeyboardShortcutExtension =
       };
     },
 
-    addKeyboardShortcuts() {
-      return {
-        "Mod-k": () => {
-          this.options.onAddLink?.();
-          return true;
-        },
-      };
-    },
+    // addKeyboardShortcuts() {
+    //   return {
+    //     "Mod-k": () => {
+    //       this.options.onAddLink?.();
+    //       return true;
+    //     },
+    //   };
+    // },
   });

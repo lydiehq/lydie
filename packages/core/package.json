@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
+    "./serialization": "./src/serialization/index.ts",
     "./*": [
       "./src/*.ts",
       "./src/*/index.ts"

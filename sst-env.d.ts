@@ -22,6 +22,14 @@ declare module "sst" {
       "type": "sst.aws.Router"
       "url": string
     }
+    "GitHubClientId": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "GoogleAiStudioApiKey": {
       "type": "sst.sst.Secret"
       "value": string

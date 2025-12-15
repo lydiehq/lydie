@@ -17,6 +17,12 @@ export {
   extractTableOfContents,
   extractText,
   renderContentWithBuilder,
+} from "@lydie/core/content";
+export {
   renderContentToHTML,
   HTMLBuilder,
-} from "@lydie/core/content";
+  renderContentToMarkdown,
+  renderContentToPlainText,
+  MarkdownBuilder,
+  PlainTextBuilder,
+} from "@lydie/core/serialization";

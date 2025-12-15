@@ -4,6 +4,7 @@ import { DocumentChatRoute } from "./document-chat";
 import { AssistantRoute } from "./assistant";
 import { MDXImportRoute } from "./mdx-import";
 import { LLMReplaceRoute } from "./llm-replace";
+import { ExtensionsRoute } from "./extensions";
 import { VisibleError } from "@lydie/core/error";
 import { authClient } from "@lydie/core/auth";
 import { authenticatedWithOrganization } from "./middleware";
@@ -31,6 +32,7 @@ const organizationScopedRouter = new Hono<{
 export const InternalApi = new Hono()
   .route("/public", publicRouter)
   .route("/zero", ZeroRoute)
+  .route("/extensions", ExtensionsRoute)
   .route("/", organizationScopedRouter)
   .onError((err, c) => {
     console.error(err);

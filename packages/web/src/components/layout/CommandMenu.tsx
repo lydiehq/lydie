@@ -6,7 +6,6 @@ import { useZero } from "@/services/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { useOrganization } from "@/context/organization.context";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { useAtom } from "jotai";
 import { mutators } from "@lydie/zero/mutators";
@@ -24,6 +23,7 @@ import {
   Settings,
   CreditCard,
   Upload,
+  Plug,
 } from "lucide-react";
 import { DialogTrigger, ModalOverlay, Modal } from "react-aria-components";
 import { overlayStyles } from "../generic/Modal";
@@ -48,6 +48,23 @@ function CommandGroupHeading({ children }: { children: React.ReactNode }) {
       {children}
     </div>
   );
+}
+
+// Helper to get icon for extension type
+function getExtensionIcon(extensionType: string | null | undefined) {
+  if (!extensionType) return null;
+
+  // For now, use a generic Plug icon, but this can be extended
+  // to return specific icons for different extension types
+  switch (extensionType.toLowerCase()) {
+    case "github":
+      // Could import a GitHub icon from lucide-react or use a custom one
+      return Plug;
+    case "shopify":
+      return Plug;
+    default:
+      return Plug;
+  }
 }
 
 interface MenuItem {
@@ -102,6 +119,13 @@ export function CommandMenu() {
 
   const searchDocuments = searchData?.documents || [];
   const searchFolders = searchData?.folders || [];
+
+  // Load extension links to show appropriate icons
+  const [extensionLinks] = useQuery(
+    queries.extensionLinks.byOrganization({
+      organizationId: organization?.id || "",
+    })
+  );
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
   const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom);
@@ -169,9 +193,9 @@ export function CommandMenu() {
 
     if (currentDocument) {
       favoritesItems.push({
-        id: "toggle-publish",
+        id: "publish",
         label: currentDocument.published
-          ? `Unpublish "${currentDocument.title || "Untitled Document"}"`
+          ? `Republish "${currentDocument.title || "Untitled Document"}"`
           : `Publish "${currentDocument.title || "Untitled Document"}"`,
         icon: Plus, // No icon for this action
         action: () => {
@@ -179,12 +203,30 @@ export function CommandMenu() {
             z.mutate(
               mutators.document.update({
                 documentId: currentDocument.id,
-                published: !currentDocument.published,
+                published: true,
               })
             );
           }
         },
       });
+      if (currentDocument.published) {
+        favoritesItems.push({
+          id: "unpublish",
+          label: `Unpublish "${currentDocument.title || "Untitled Document"}"`,
+          icon: Plus, // No icon for this action
+          action: () => {
+            if (currentDocument) {
+              z.mutate(
+                mutators.document.update({
+                  documentId: currentDocument.id,
+                  published: false,
+                })
+              );
+            }
+          },
+          className: `${itemClassName} data-[selected=true]:text-red-600 text-red-500`,
+        });
+      }
       favoritesItems.push({
         id: "delete-document",
         label: `Delete "${currentDocument.title || "Untitled Document"}"`,
@@ -282,6 +324,24 @@ export function CommandMenu() {
             to: "/w/$organizationId/settings/import",
             params: {
               organizationId: organization?.id as string,
+            },
+          });
+        },
+      },
+      {
+        id: "extensions",
+        label: "Go to extensions",
+        icon: Plug,
+        action: () => {
+          navigate({
+            to: "/w/$organizationId/settings/extensions",
+            params: {
+              organizationId: organization?.id as string,
+            },
+            search: {
+              success: false,
+              error: undefined,
+              connectionId: undefined,
             },
           });
         },
@@ -393,56 +453,84 @@ export function CommandMenu() {
                       <CommandGroupHeading>Search Results</CommandGroupHeading>
                     }
                   >
-                    {searchFolders.map((folder) => (
-                      <Command.Item
-                        key={`search-folder-${folder.id}`}
-                        value={`search-folder-${folder.id}-${folder.name}`}
-                        onSelect={() =>
-                          handleCommand(() => {
-                            navigate({
-                              to: "/w/$organizationId",
-                              params: {
-                                organizationId: organization?.id as string,
-                              },
-                              search: {
-                                tree: folder.id,
-                                q: undefined,
-                                focusSearch: undefined,
-                              },
-                            });
-                          })
-                        }
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
-                      >
-                        <Folder className="size-4 text-gray-400 mr-2" />
-                        <span className="truncate">{folder.name}</span>
-                      </Command.Item>
-                    ))}
-                    {searchDocuments.map((doc) => (
-                      <Command.Item
-                        key={`search-document-${doc.id}`}
-                        value={`search-document-${doc.id}-${
-                          doc.title || "Untitled Document"
-                        }`}
-                        onSelect={() =>
-                          handleCommand(() => {
-                            navigate({
-                              to: "/w/$organizationId/$id",
-                              params: {
-                                organizationId: organization?.id as string,
-                                id: doc.id,
-                              },
-                            });
-                          })
-                        }
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
-                      >
-                        <FileText className="size-4 text-gray-400 mr-2" />
-                        <span className="truncate">
-                          {doc.title || "Untitled Document"}
-                        </span>
-                      </Command.Item>
-                    ))}
+                    {searchFolders.map((folder) => {
+                      const link = extensionLinks?.find(
+                        (l) => l.id === folder.extension_link_id
+                      );
+                      const ExtensionIcon = link?.connection
+                        ? getExtensionIcon(link.connection.extension_type)
+                        : null;
+
+                      return (
+                        <Command.Item
+                          key={`search-folder-${folder.id}`}
+                          value={`search-folder-${folder.id}-${folder.name}`}
+                          onSelect={() =>
+                            handleCommand(() => {
+                              navigate({
+                                to: "/w/$organizationId",
+                                params: {
+                                  organizationId: organization?.id as string,
+                                },
+                                search: {
+                                  tree: folder.id,
+                                  q: undefined,
+                                  focusSearch: undefined,
+                                },
+                              });
+                            })
+                          }
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
+                        >
+                          <div className="flex items-center gap-1 mr-2">
+                            <Folder className="size-4 text-gray-400" />
+                            {ExtensionIcon && (
+                              <ExtensionIcon className="size-3 text-blue-500" />
+                            )}
+                          </div>
+                          <span className="truncate">{folder.name}</span>
+                        </Command.Item>
+                      );
+                    })}
+                    {searchDocuments.map((doc) => {
+                      const link = extensionLinks?.find(
+                        (l) => l.id === doc.extension_link_id
+                      );
+                      const ExtensionIcon = link?.connection
+                        ? getExtensionIcon(link.connection.extension_type)
+                        : null;
+
+                      return (
+                        <Command.Item
+                          key={`search-document-${doc.id}`}
+                          value={`search-document-${doc.id}-${
+                            doc.title || "Untitled Document"
+                          }`}
+                          onSelect={() =>
+                            handleCommand(() => {
+                              navigate({
+                                to: "/w/$organizationId/$id",
+                                params: {
+                                  organizationId: organization?.id as string,
+                                  id: doc.id,
+                                },
+                              });
+                            })
+                          }
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
+                        >
+                          <div className="flex items-center gap-1 mr-2">
+                            <FileText className="size-4 text-gray-400" />
+                            {ExtensionIcon && (
+                              <ExtensionIcon className="size-3 text-blue-500" />
+                            )}
+                          </div>
+                          <span className="truncate">
+                            {doc.title || "Untitled Document"}
+                          </span>
+                        </Command.Item>
+                      );
+                    })}
                   </Command.Group>
                 )}
               </Command.List>

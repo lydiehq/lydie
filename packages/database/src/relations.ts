@@ -15,6 +15,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.foldersTable.organizationId,
       to: r.organizationsTable.id,
     }),
+    extensionLink: r.one.extensionLinksTable({
+      from: r.foldersTable.extensionLinkId,
+      to: r.extensionLinksTable.id,
+    }),
     children: r.many.foldersTable(),
     documents: r.many.documentsTable(),
   },
@@ -31,9 +35,14 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.documentsTable.organizationId,
       to: r.organizationsTable.id,
     }),
+    extensionLink: r.one.extensionLinksTable({
+      from: r.documentsTable.extensionLinkId,
+      to: r.extensionLinksTable.id,
+    }),
     embeddings: r.many.documentEmbeddingsTable(),
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
     conversations: r.many.documentConversationsTable(),
+    syncMetadata: r.many.syncMetadataTable(),
   },
   documentEmbeddingsTable: {
     document: r.one.documentsTable({
@@ -110,6 +119,7 @@ export const relations = defineRelations(schema, (r) => ({
     apiKeys: r.many.apiKeysTable(),
     documentComponents: r.many.documentComponentsTable(),
     llmUsage: r.many.llmUsageTable(),
+    extensionConnections: r.many.extensionConnectionsTable(),
     settings: r.one.organizationSettingsTable({
       from: r.organizationsTable.id,
       to: r.organizationSettingsTable.organizationId,
@@ -211,6 +221,39 @@ export const relations = defineRelations(schema, (r) => ({
     organization: r.one.organizationsTable({
       from: r.organizationSettingsTable.organizationId,
       to: r.organizationsTable.id,
+    }),
+  },
+
+  extensionConnectionsTable: {
+    organization: r.one.organizationsTable({
+      from: r.extensionConnectionsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    syncMetadata: r.many.syncMetadataTable(),
+    links: r.many.extensionLinksTable(),
+  },
+
+  extensionLinksTable: {
+    connection: r.one.extensionConnectionsTable({
+      from: r.extensionLinksTable.connectionId,
+      to: r.extensionConnectionsTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.extensionLinksTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    documents: r.many.documentsTable(),
+    folders: r.many.foldersTable(),
+  },
+
+  syncMetadataTable: {
+    document: r.one.documentsTable({
+      from: r.syncMetadataTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    connection: r.one.extensionConnectionsTable({
+      from: r.syncMetadataTable.connectionId,
+      to: r.extensionConnectionsTable.id,
     }),
   },
 }));

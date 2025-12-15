@@ -10,21 +10,16 @@ import { createId } from "@lydie/core/id";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 import { slugify } from "@lydie/core/utils";
+import {
+  deserializeFromMDX,
+  extractMDXComponents,
+  type MDXComponent,
+} from "@lydie/core/serialization";
 
 type Variables = {
   organizationId: string;
   user: any;
 };
-
-// MDX Component regex patterns
-const COMPONENT_REGEX = /<(\w+)([^>]*)>(.*?)<\/\1>|<(\w+)([^>]*?)\/>/gs;
-const PROP_REGEX = /(\w+)=(?:{([^}]+)}|"([^"]*)")/g;
-
-interface MDXComponent {
-  name: string;
-  props: Record<string, any>;
-  children?: string;
-}
 
 interface ParsedMDXContent {
   title: string;
@@ -39,58 +34,7 @@ interface MDXFrontmatter {
   [key: string]: any;
 }
 
-function parseProps(propString: string): Record<string, any> {
-  const props: Record<string, any> = {};
-  let match;
-
-  while ((match = PROP_REGEX.exec(propString)) !== null) {
-    const [, key, jsValue, stringValue] = match;
-    if (jsValue) {
-      try {
-        // Try to parse as JSON for objects/arrays/booleans/numbers
-        props[key] = JSON.parse(jsValue);
-      } catch {
-        // If parsing fails, treat as string
-        props[key] = jsValue;
-      }
-    } else {
-      props[key] = stringValue;
-    }
-  }
-
-  return props;
-}
-
-function extractMDXComponents(content: string): {
-  components: MDXComponent[];
-  cleanContent: string;
-} {
-  const components: MDXComponent[] = [];
-  let cleanContent = content;
-  let match;
-
-  while ((match = COMPONENT_REGEX.exec(content)) !== null) {
-    const [fullMatch, tagName1, props1, children, tagName2, props2] = match;
-    const tagName = tagName1 || tagName2;
-    const propsString = props1 || props2 || "";
-
-    const component: MDXComponent = {
-      name: tagName,
-      props: parseProps(propsString),
-      children: children || undefined,
-    };
-
-    components.push(component);
-
-    // Replace the component with a placeholder that we'll convert to TipTap node
-    cleanContent = cleanContent.replace(
-      fullMatch,
-      `[COMPONENT:${components.length - 1}]`
-    );
-  }
-
-  return { components, cleanContent };
-}
+// extractMDXComponents is now imported from @lydie/core/serialization
 
 function parseFrontmatter(mdxContent: string): {
   frontmatter: MDXFrontmatter;
@@ -129,223 +73,7 @@ function parseFrontmatter(mdxContent: string): {
   return { frontmatter, contentWithoutFrontmatter };
 }
 
-function mdxToTipTapJSON(
-  mdxContent: string,
-  components: MDXComponent[],
-  componentSchemas: Record<string, any>
-): any {
-  const lines = mdxContent.split("\n");
-  const content: any[] = [];
-  let currentParagraph: any = null;
-  let currentList: any = null; // Track current list
-  let currentListType: "bullet" | "ordered" | null = null; // Track list type
-
-  // Helper function to close current list
-  const closeList = () => {
-    if (currentList) {
-      content.push(currentList);
-      currentList = null;
-      currentListType = null;
-    }
-  };
-
-  // Helper function to close current paragraph
-  const closeParagraph = () => {
-    if (currentParagraph) {
-      content.push(currentParagraph);
-      currentParagraph = null;
-    }
-  };
-
-  // Helper function to parse inline markdown (bold, italic, links)
-  const parseInlineMarkdown = (text: string): any[] => {
-    const textNodes: any[] = [];
-    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\))/);
-
-    for (const part of parts) {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        textNodes.push({
-          type: "text",
-          text: part.slice(2, -2),
-          marks: [{ type: "bold" }],
-        });
-      } else if (part.startsWith("*") && part.endsWith("*")) {
-        textNodes.push({
-          type: "text",
-          text: part.slice(1, -1),
-          marks: [{ type: "italic" }],
-        });
-      } else if (part.match(/\[.*?\]\(.*?\)/)) {
-        const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
-        if (linkMatch) {
-          textNodes.push({
-            type: "text",
-            text: linkMatch[1],
-            marks: [{ type: "link", attrs: { href: linkMatch[2] } }],
-          });
-        }
-      } else if (part) {
-        textNodes.push({
-          type: "text",
-          text: part,
-        });
-      }
-    }
-
-    return textNodes;
-  };
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Handle headings
-    if (line.startsWith("#")) {
-      closeParagraph();
-      closeList();
-
-      const level = line.match(/^#+/)?.[0].length || 1;
-      const text = line.replace(/^#+\s*/, "");
-
-      content.push({
-        type: "heading",
-        attrs: { level: Math.min(level, 6) },
-        content: text ? [{ type: "text", text }] : [],
-      });
-      continue;
-    }
-
-    // Handle horizontal rules (---)
-    if (line.trim() === "---") {
-      closeParagraph();
-      closeList();
-
-      content.push({
-        type: "horizontalRule",
-      });
-      continue;
-    }
-
-    // Handle unordered lists (-, *, +)
-    const unorderedMatch = line.match(/^(\s*)([-*+])\s+(.+)$/);
-    if (unorderedMatch) {
-      closeParagraph();
-
-      const listItemText = unorderedMatch[3];
-      const listItem = {
-        type: "listItem",
-        content: [
-          {
-            type: "paragraph",
-            content: parseInlineMarkdown(listItemText),
-          },
-        ],
-      };
-
-      if (currentListType !== "bullet") {
-        closeList();
-        currentList = {
-          type: "bulletList",
-          content: [],
-        };
-        currentListType = "bullet";
-      }
-
-      currentList.content.push(listItem);
-      continue;
-    }
-
-    // Handle ordered lists (1., 2., etc.)
-    const orderedMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
-    if (orderedMatch) {
-      closeParagraph();
-
-      const listItemText = orderedMatch[3];
-      const listItem = {
-        type: "listItem",
-        content: [
-          {
-            type: "paragraph",
-            content: parseInlineMarkdown(listItemText),
-          },
-        ],
-      };
-
-      if (currentListType !== "ordered") {
-        closeList();
-        currentList = {
-          type: "orderedList",
-          content: [],
-        };
-        currentListType = "ordered";
-      }
-
-      currentList.content.push(listItem);
-      continue;
-    }
-
-    // Handle component placeholders
-    const componentMatch = line.match(/\[COMPONENT:(\d+)\]/);
-    if (componentMatch) {
-      closeParagraph();
-      closeList();
-
-      const componentIndex = parseInt(componentMatch[1]);
-      const component = components[componentIndex];
-
-      // Get schema for this component
-      const schema = componentSchemas[component.name] || {};
-
-      content.push({
-        type: "documentComponent",
-        attrs: {
-          name: component.name,
-          properties: component.props,
-          schemas: { [component.name]: schema },
-        },
-      });
-      continue;
-    }
-
-    // Handle empty lines
-    if (line.trim() === "") {
-      closeParagraph();
-      closeList();
-      continue;
-    }
-
-    // Handle regular text
-    closeList(); // Close any open list when we hit regular text
-
-    if (!currentParagraph) {
-      currentParagraph = {
-        type: "paragraph",
-        content: [],
-      };
-    }
-
-    const textNodes = parseInlineMarkdown(line);
-    currentParagraph.content.push(...textNodes);
-  }
-
-  // Close any remaining open elements
-  closeParagraph();
-  closeList();
-
-  // Ensure we always have at least one content node
-  if (content.length === 0) {
-    content.push({
-      type: "paragraph",
-      content: [],
-    });
-  }
-
-  const result = {
-    type: "doc",
-    content,
-  };
-
-  return result;
-}
+// mdxToTipTapJSON is now replaced by deserializeFromMDX from @lydie/core/serialization
 
 function parseMDXContent(
   mdxContent: string,
@@ -400,13 +128,13 @@ function parseMDXContent(
   const contentLines = lines.slice(contentStartIndex);
   const contentString = contentLines.join("\n");
 
-  const { components, cleanContent } = extractMDXComponents(contentString);
+  // Extract components first to get the list for component creation
+  const { components } = extractMDXComponents(contentString);
 
-  const tipTapContent = mdxToTipTapJSON(
-    cleanContent,
-    components,
-    componentSchemas
-  );
+  // Use the core MDX deserializer with component schemas
+  const tipTapContent = deserializeFromMDX(contentString, {
+    componentSchemas,
+  });
 
   const result = {
     title,

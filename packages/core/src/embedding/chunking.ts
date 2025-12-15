@@ -5,7 +5,7 @@
  * semantic chunks by respecting document structure (headings, sections).
  */
 
-import { renderContentToHTML } from "../content";
+import { renderContentToHTML, renderContentToPlainText } from "../serialization";
 
 export interface Chunk {
   content: string;
@@ -41,7 +41,7 @@ function extractContentWithHeadings(jsonContent: any): Array<{
     // Handle heading nodes
     if (node.type === "heading" && node.content) {
       const headingHtml = renderContentToHTML(node);
-      const plainText = stripHtmlTags(headingHtml);
+      const plainText = renderContentToPlainText(node);
 
       if (plainText.trim()) {
         items.push({
@@ -59,7 +59,7 @@ function extractContentWithHeadings(jsonContent: any): Array<{
       node.type === "orderedList"
     ) {
       const contentHtml = renderContentToHTML(node);
-      const plainText = stripHtmlTags(contentHtml);
+      const plainText = renderContentToPlainText(node);
 
       if (plainText.trim()) {
         items.push({
@@ -123,6 +123,8 @@ export function generateHeadingAwareChunks(
     const htmlContent = currentChunkHtml.join("\n");
 
     // Check length using plain text (without HTML tags)
+    // Note: We still use stripHtmlTags here because we're working with HTML strings,
+    // not TipTap nodes. For TipTap nodes, use renderContentToPlainText instead.
     const plainTextLength = stripHtmlTags(htmlContent).length;
 
     if (plainTextLength >= minChunkSize) {
