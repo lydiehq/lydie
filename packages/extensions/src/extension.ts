@@ -5,6 +5,7 @@ import type {
   PullOptions,
   SyncResult,
   SyncMetadata,
+  ExternalResource,
 } from "./types";
 
 /**
@@ -81,6 +82,17 @@ export interface SyncExtension {
 }
 
 /**
+ * Interface for extensions that support listing external resources
+ * Examples: repositories (GitHub), collections (Shopify), databases (Notion)
+ */
+export interface ResourceExtension {
+  /**
+   * Fetch available resources for the authenticated user/connection
+   */
+  fetchResources(connection: ExtensionConnection): Promise<ExternalResource[]>;
+}
+
+/**
  * Base class that provides common functionality for extensions
  * Extensions can extend this to avoid reimplementing common patterns
  */
@@ -95,6 +107,8 @@ export abstract class BaseSyncExtension implements SyncExtension {
   }>;
 
   abstract push(options: PushOptions): Promise<SyncResult>;
+
+  abstract pull(options: PullOptions): Promise<SyncResult[]>;
 
   abstract convertToExternalFormat(content: any): Promise<string>;
 

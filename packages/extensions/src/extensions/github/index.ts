@@ -4,7 +4,9 @@ import type {
   PushOptions,
   PullOptions,
   SyncResult,
+  ExternalResource,
 } from "../../types";
+import type { ResourceExtension } from "../../extension";
 import type {
   OAuthConfig,
   OAuthCredentials,
@@ -15,17 +17,28 @@ import {
   serializeToMarkdown,
   deserializeFromFile,
 } from "@lydie/core/serialization";
+import jwt from "jsonwebtoken";
 
 /**
  * GitHub extension configuration stored in the database
  */
 export interface GitHubConfig {
-  accessToken: string;
-  installationId?: string; // GitHub App installation ID
+  // GitHub App fields
+  installationId: number; // GitHub App installation ID
+  installationAccessToken: string; // Short-lived installation token
+  installationTokenExpiresAt: number; // Token expiration timestamp
+
+  // Common fields
   owner?: string;
   repo?: string;
   branch: string;
   basePath?: string;
+
+  // Extension metadata (available to frontend via Zero)
+  metadata?: {
+    managementUrl?: string; // URL to manage installation in GitHub
+    [key: string]: any; // Allow extensions to add custom metadata
+  };
 }
 
 /**
@@ -48,7 +61,10 @@ export interface GitHubInstallation {
  * GitHub sync extension
  * Syncs documents as Markdown files to a GitHub repository
  */
-export class GitHubExtension extends BaseSyncExtension {
+export class GitHubExtension
+  extends BaseSyncExtension
+  implements ResourceExtension
+{
   readonly type = "github";
   readonly name = "GitHub";
   readonly description =
@@ -60,17 +76,18 @@ export class GitHubExtension extends BaseSyncExtension {
   }> {
     const config = connection.config as GitHubConfig;
 
-    // Basic validation
-    if (
-      !config.accessToken ||
-      !config.owner ||
-      !config.repo ||
-      !config.branch
-    ) {
+    // Basic validation - check for GitHub App installation
+    if (!config.installationId || !config.installationAccessToken) {
       return {
         valid: false,
-        error:
-          "Missing required configuration: accessToken, owner, repo, or branch",
+        error: "Missing required configuration: GitHub App installation",
+      };
+    }
+
+    if (!config.owner || !config.repo || !config.branch) {
+      return {
+        valid: false,
+        error: "Missing required configuration: owner, repo, or branch",
       };
     }
 
@@ -84,9 +101,12 @@ export class GitHubExtension extends BaseSyncExtension {
     const config = connection.config as GitHubConfig;
 
     try {
-      if (!config.repo || !config.accessToken || !config.owner) {
+      if (!config.repo || !config.owner) {
         throw new Error("Repository not fully configured");
       }
+
+      // Get fresh access token (handles automatic refresh)
+      const accessToken = await this.getAccessToken(connection);
 
       // Convert TipTap content to Markdown
       const markdown = await this.convertToExternalFormat(document.content);
@@ -102,7 +122,7 @@ export class GitHubExtension extends BaseSyncExtension {
         }/contents/${filePath}?ref=${config.branch || "main"}`;
         const getResponse = await fetch(getUrl, {
           headers: {
-            Authorization: `Bearer ${config.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             Accept: "application/vnd.github+json",
           },
         });
@@ -146,7 +166,7 @@ export class GitHubExtension extends BaseSyncExtension {
       const putResponse = await fetch(putUrl, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${config.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           Accept: "application/vnd.github+json",
           "Content-Type": "application/json",
         },
@@ -186,13 +206,16 @@ export class GitHubExtension extends BaseSyncExtension {
     console.log(config);
 
     try {
-      if (!config.repo || !config.accessToken) {
+      if (!config.repo) {
         throw new Error("Repository not configured");
       }
 
+      // Get fresh access token (handles automatic refresh)
+      const accessToken = await this.getAccessToken(connection);
+
       // Fetch all supported files (md, mdx, txt) from repository
       const files = await this.fetchSupportedFiles(
-        config.accessToken,
+        accessToken,
         config.owner || "",
         config.repo,
         config.branch || "main",
@@ -207,16 +230,26 @@ export class GitHubExtension extends BaseSyncExtension {
             file.name
           );
 
+          // Extract folder path from file path
+          // e.g., "docs/guides/intro.md" -> folderPath: "docs/guides"
+          // e.g., "intro.md" -> folderPath: null (root)
+          const pathParts = file.path.split("/");
+          const fileName = pathParts.pop() || file.name;
+          const folderPath =
+            pathParts.length > 0
+              ? pathParts.join("/").replace(/^\/+|\/+$/g, "") // Remove leading/trailing slashes
+              : null;
+
           // Generate document ID and slug
           // Slug should not include extension for URL purposes
-          const slug = file.path
+          const slug = fileName
             .replace(/\.(md|mdx|txt)$/i, "")
             .replace(/\//g, "-")
             .toLowerCase();
 
           // Preserve the full filename with extension in the title
           // This is crucial for GitHub extension to know what extension to use when pushing
-          const title = file.name;
+          const title = fileName;
 
           results.push({
             success: true,
@@ -227,6 +260,7 @@ export class GitHubExtension extends BaseSyncExtension {
               title,
               slug,
               content: tipTapContent,
+              folderPath, // Include folder path for folder creation
             },
           });
         } catch (error) {
@@ -406,16 +440,24 @@ export class GitHubExtension extends BaseSyncExtension {
   }
 
   async getOAuthCredentials(): Promise<OAuthCredentials> {
-    // Get from SST/Resource in backend, or environment variables in development
-    const clientId = Resource.GitHubClientId.value;
-    const clientSecret = Resource.GitHubClientSecret.value;
-
-    console.log("Using GitHub client ID:", clientId);
-    console.log("Using GitHub client secret:", clientSecret);
-
     return {
       clientId: Resource.GitHubClientId.value,
       clientSecret: Resource.GitHubClientSecret.value,
+    };
+  }
+
+  /**
+   * Get GitHub App-specific credentials
+   */
+  private async getGitHubAppCredentials(): Promise<{
+    appId?: string;
+    privateKey?: string;
+    appSlug?: string;
+  }> {
+    return {
+      appId: Resource.GitHubAppId.value,
+      privateKey: Resource.GitHubPrivateKey.value,
+      appSlug: Resource.GitHubAppSlug?.value,
     };
   }
 
@@ -424,91 +466,144 @@ export class GitHubExtension extends BaseSyncExtension {
     state: string,
     redirectUri: string
   ): string {
-    const config = this.getOAuthConfig();
-    const params = new URLSearchParams({
-      client_id: credentials.clientId,
-      redirect_uri: redirectUri,
-      scope: config.scopes.join(" "),
-      state,
-      ...config.authParams,
-    });
+    // Use GitHub App installation flow
+    const appSlug = Resource.GitHubAppSlug?.value;
+    if (!appSlug) {
+      throw new Error("GitHub App slug not configured");
+    }
 
-    return `${config.authUrl}?${params.toString()}`;
+    const params = new URLSearchParams({
+      state,
+      redirect_uri: redirectUri,
+    });
+    return `https://github.com/apps/${appSlug}/installations/new?${params.toString()}`;
   }
 
-  async exchangeCodeForToken(
-    code: string,
+  /**
+   * Handle OAuth callback for GitHub App installation flow
+   */
+  async handleOAuthCallback(
+    queryParams: Record<string, string>,
     credentials: OAuthCredentials,
     redirectUri: string
-  ): Promise<OAuthTokenResponse> {
-    const config = this.getOAuthConfig();
-
-    const response = await fetch(config.tokenUrl, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        client_id: credentials.clientId,
-        client_secret: credentials.clientSecret,
-        code,
-        redirect_uri: redirectUri,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to exchange code: ${response.statusText}`);
-    }
-
-    const data = (await response.json()) as {
-      access_token: string;
-      token_type: string;
-      scope: string;
-    };
-
-    return {
-      accessToken: data.access_token,
-      tokenType: data.token_type,
-      scope: data.scope,
-    };
-  }
-
-  async transformOAuthResponse(
-    tokenResponse: OAuthTokenResponse
   ): Promise<GitHubConfig> {
-    // Fetch user info to get default repository information
-    const userResponse = await fetch("https://api.github.com/user", {
-      headers: {
-        Authorization: `Bearer ${tokenResponse.accessToken}`,
-        Accept: "application/vnd.github+json",
-      },
-    });
+    const { installation_id } = queryParams;
 
-    if (!userResponse.ok) {
-      throw new Error("Failed to fetch GitHub user info");
+    if (!installation_id) {
+      throw new Error(
+        "Missing installation_id parameter - GitHub App installation required"
+      );
     }
 
-    const user = (await userResponse.json()) as { login: string };
+    console.log(
+      `[GitHub] Processing GitHub App installation: ${installation_id}`
+    );
+
+    const installationId = Number(installation_id);
+
+    // Get GitHub App credentials
+    const appCredentials = await this.getGitHubAppCredentials();
+
+    // Generate JWT for GitHub App authentication
+    const jwtToken = await this.generateAppJWT(appCredentials);
+
+    // Generate installation access token
+    const installationToken = await this.generateInstallationTokenWithJWT(
+      installationId,
+      jwtToken
+    );
+
+    // Fetch installation details to get account info
+    const installationResponse = await fetch(
+      `https://api.github.com/app/installations/${installationId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          Accept: "application/vnd.github+json",
+        },
+      }
+    );
+
+    if (!installationResponse.ok) {
+      throw new Error("Failed to fetch installation details");
+    }
+
+    const installation = (await installationResponse.json()) as {
+      account: { login: string };
+    };
 
     return {
-      accessToken: tokenResponse.accessToken,
+      installationId,
+      installationAccessToken: installationToken.token,
+      installationTokenExpiresAt: new Date(
+        installationToken.expires_at
+      ).getTime(),
+      owner: installation.account.login,
       branch: "main",
-      owner: user.login, // Default to user's account
       // User will need to select repo in a second step
+      metadata: {
+        managementUrl: `https://github.com/settings/installations/${installationId}`,
+      },
     };
   }
 
   /**
-   * Fetch available repositories for the authenticated user
+   * Fetch available resources (repositories) - implements ResourceExtension
+   * For GitHub Apps, we use the installation token to access repositories
+   * We fetch repositories from the installation's account (owner)
    */
-  async fetchRepositories(
-    accessToken: string
-  ): Promise<
-    Array<{ name: string; full_name: string; default_branch: string }>
-  > {
+  async fetchResources(
+    connection: ExtensionConnection
+  ): Promise<ExternalResource[]> {
+    const config = connection.config as GitHubConfig;
+
+    if (!config.installationId) {
+      throw new Error("GitHub App installation ID not found");
+    }
+
+    // Get fresh installation access token
+    const accessToken = await this.getAccessToken(connection);
+
+    // Get GitHub App credentials to generate JWT for fetching installation details
+    const appCredentials = await this.getGitHubAppCredentials();
+    const jwtToken = await this.generateAppJWT(appCredentials);
+
+    // Get installation details to determine account type and login
+    const installationResponse = await fetch(
+      `https://api.github.com/app/installations/${config.installationId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          Accept: "application/vnd.github+json",
+        },
+      }
+    );
+
+    if (!installationResponse.ok) {
+      const errorData = await installationResponse.json().catch(() => ({}));
+      throw new Error(
+        `Failed to fetch installation: ${
+          installationResponse.statusText
+        } - ${JSON.stringify(errorData)}`
+      );
+    }
+
+    const installation = (await installationResponse.json()) as {
+      account: { login: string; type: string };
+    };
+
+    const accountLogin = installation.account.login;
+    const accountType = installation.account.type; // "User" or "Organization"
+
+    // Use the appropriate endpoint based on account type
+    // Installation tokens can access repositories that the installation has access to
+    const endpoint =
+      accountType === "Organization"
+        ? `https://api.github.com/orgs/${accountLogin}/repos`
+        : `https://api.github.com/users/${accountLogin}/repos`;
+
     const response = await fetch(
-      "https://api.github.com/user/repos?sort=updated&per_page=100",
+      `${endpoint}?sort=updated&per_page=100&type=all`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -518,13 +613,177 @@ export class GitHubExtension extends BaseSyncExtension {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch repositories");
+      const errorData = await response.json().catch(() => ({}));
+      console.error(
+        "Failed to fetch repositories:",
+        response.status,
+        errorData
+      );
+      throw new Error(
+        `Failed to fetch repositories: ${
+          response.statusText
+        } - ${JSON.stringify(errorData)}`
+      );
     }
 
-    return (await response.json()) as Array<{
+    const repositories = (await response.json()) as Array<{
       name: string;
       full_name: string;
       default_branch: string;
     }>;
+
+    return repositories.map((repo) => ({
+      id: repo.full_name,
+      name: repo.name,
+      fullName: repo.full_name,
+      metadata: {
+        defaultBranch: repo.default_branch,
+      },
+    }));
+  }
+
+  /**
+   * Generate a JWT for authenticating as the GitHub App
+   * This JWT is used to generate installation access tokens
+   */
+  private async generateAppJWT(credentials: {
+    appId?: string;
+    privateKey?: string;
+  }): Promise<string> {
+    if (!credentials.appId || !credentials.privateKey) {
+      throw new Error("GitHub App credentials not configured");
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+      iat: now - 60, // Issue time (60 seconds in the past to allow for clock drift)
+      exp: now + 10 * 60, // Expiration time (10 minutes maximum)
+      iss: credentials.appId, // GitHub App's identifier
+    };
+
+    return jwt.sign(payload, credentials.privateKey, { algorithm: "RS256" });
+  }
+
+  /**
+   * Generate an installation access token using a JWT
+   * This is used for refreshing tokens when they expire
+   */
+  private async generateInstallationTokenWithJWT(
+    installationId: number,
+    jwtToken: string
+  ): Promise<{ token: string; expires_at: string }> {
+    const response = await fetch(
+      `https://api.github.com/app/installations/${installationId}/access_tokens`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          Accept: "application/vnd.github+json",
+        },
+        body: JSON.stringify({
+          permissions: {
+            contents: "write",
+            metadata: "read",
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `Failed to generate installation token: ${
+          response.statusText
+        } - ${JSON.stringify(errorData)}`
+      );
+    }
+
+    return (await response.json()) as { token: string; expires_at: string };
+  }
+
+  /**
+   * Get GitHub App information including slug
+   * Uses JWT to authenticate as the app
+   */
+  async getAppInfo(): Promise<{ slug: string; name: string }> {
+    const credentials = await this.getGitHubAppCredentials();
+    if (!credentials.appId || !credentials.privateKey) {
+      throw new Error("GitHub App credentials not configured");
+    }
+
+    const jwtToken = await this.generateAppJWT(credentials);
+    const response = await fetch("https://api.github.com/app", {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch GitHub App info");
+    }
+
+    const appInfo = (await response.json()) as { slug: string; name: string };
+    return appInfo;
+  }
+
+  /**
+   * Get the installation URL for the GitHub App
+   */
+  async getInstallationUrl(state?: string): Promise<string> {
+    const appInfo = await this.getAppInfo();
+    const baseUrl = `https://github.com/apps/${appInfo.slug}/installations/new`;
+    if (state) {
+      return `${baseUrl}?state=${encodeURIComponent(state)}`;
+    }
+    return baseUrl;
+  }
+
+  /**
+   * Get a fresh access token for the extension
+   * Implements automatic token refresh for GitHub Apps
+   */
+  async getAccessToken(connection: ExtensionConnection): Promise<string> {
+    const config = connection.config as GitHubConfig;
+
+    if (!config.installationId || !config.installationAccessToken) {
+      throw new Error(
+        "GitHub App installation not configured. Please reconnect the GitHub extension."
+      );
+    }
+
+    const now = Date.now();
+    const expiresAt = config.installationTokenExpiresAt;
+    const needsRefresh = expiresAt - now < 5 * 60 * 1000; // 5 minutes buffer
+
+    if (needsRefresh) {
+      console.log(
+        `[GitHub] Refreshing installation token for installation ${config.installationId}`
+      );
+
+      // Get credentials to generate a new token
+      const credentials = await this.getGitHubAppCredentials();
+
+      // Generate JWT and use it to get a new installation token
+      const jwtToken = await this.generateAppJWT(credentials);
+      const newToken = await this.generateInstallationTokenWithJWT(
+        config.installationId,
+        jwtToken
+      );
+
+      // Update the config with new token (caller should save to DB)
+      config.installationAccessToken = newToken.token;
+      config.installationTokenExpiresAt = new Date(
+        newToken.expires_at
+      ).getTime();
+
+      console.log(
+        `[GitHub] Token refreshed, expires at ${newToken.expires_at}`
+      );
+
+      return newToken.token;
+    }
+
+    return config.installationAccessToken;
   }
 }

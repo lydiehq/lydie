@@ -14,6 +14,7 @@ import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
 import { Menu, MenuItem } from "@/components/generic/Menu";
 import { Select, SelectItem } from "@/components/generic/Select";
+import { RadioGroup, Radio } from "@/components/generic/RadioGroup";
 import {
   Plus,
   MoreHorizontal,
@@ -22,6 +23,7 @@ import {
   XCircle,
   Link,
   FolderSync,
+  ExternalLink,
 } from "lucide-react";
 import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
@@ -78,6 +80,17 @@ function RouteComponent() {
   const [linkDialogConnectionId, setLinkDialogConnectionId] = useState<
     string | null
   >(null);
+  const [deleteLinkDialog, setDeleteLinkDialog] = useState<{
+    isOpen: boolean;
+    linkId: string | null;
+    linkName: string | null;
+    documentCount: number | null;
+  }>({
+    isOpen: false,
+    linkId: null,
+    linkName: null,
+    documentCount: null,
+  });
 
   const [connections] = useQuery(
     queries.extensions.byOrganization({
@@ -94,24 +107,53 @@ function RouteComponent() {
 
   // Handle OAuth callback - show toast messages
   useEffect(() => {
+    // Check if this is a popup window opened by OAuth flow
+    const isPopup = window.opener && !window.opener.closed;
+
     if (search.success && search.connectionId) {
-      toast.success("Extension connected successfully!");
-      // Clear URL params
-      navigate({
-        to: "/w/$organizationId/settings/extensions",
-        params: { organizationId: organization?.id || "" },
-        search: { success: false, error: undefined, connectionId: undefined },
-        replace: true,
-      });
+      // If in popup, notify the opener and close
+      if (isPopup) {
+        window.opener.postMessage(
+          {
+            type: "oauth-callback",
+            success: true,
+            connectionId: search.connectionId,
+          },
+          window.location.origin
+        );
+        window.close();
+      } else {
+        // Normal flow - show toast and clear URL params
+        toast.success("Extension connected successfully!");
+        navigate({
+          to: "/w/$organizationId/settings/extensions",
+          params: { organizationId: organization?.id || "" },
+          search: { success: false, error: undefined, connectionId: undefined },
+          replace: true,
+        });
+      }
     } else if (search.error) {
-      toast.error(`Failed to connect: ${search.error}`);
-      // Clear error param from URL
-      navigate({
-        to: "/w/$organizationId/settings/extensions",
-        params: { organizationId: organization?.id || "" },
-        search: { success: false, error: undefined, connectionId: undefined },
-        replace: true,
-      });
+      // If in popup, notify the opener and close
+      if (isPopup) {
+        window.opener.postMessage(
+          {
+            type: "oauth-callback",
+            success: false,
+            error: search.error,
+          },
+          window.location.origin
+        );
+        window.close();
+      } else {
+        // Normal flow - show toast and clear URL params
+        toast.error(`Failed to connect: ${search.error}`);
+        navigate({
+          to: "/w/$organizationId/settings/extensions",
+          params: { organizationId: organization?.id || "" },
+          search: { success: false, error: undefined, connectionId: undefined },
+          replace: true,
+        });
+      }
     }
   }, [
     search.success,
@@ -161,25 +203,35 @@ function RouteComponent() {
     }
   };
 
-  const handleDeleteLink = (linkId: string, linkName: string) => {
-    confirmDialog({
-      title: `Delete "${linkName}" Link`,
-      message:
-        "This action cannot be undone. Documents synced from this link will remain but will no longer be associated with this link.",
-      onConfirm: async () => {
-        try {
-          const client = await createClient();
-          // @ts-expect-error - Dynamic route parameter type inference limitation
-          await client.internal.extensions.links[":linkId"].$delete({
-            param: { linkId },
-          });
-          toast.success("Link deleted successfully");
-        } catch (error) {
-          toast.error("Failed to delete link");
-          console.error("Delete link error:", error);
-        }
-      },
-    });
+  const handleDeleteLink = async (linkId: string, linkName: string) => {
+    try {
+      const client = await createClient();
+      // Fetch document count
+      // @ts-expect-error - Dynamic route parameter type inference limitation
+      const countResponse = await client.internal.extensions.links[
+        ":linkId"
+      ].documents.count.$get({
+        param: { linkId },
+      });
+      const countData = await countResponse.json();
+      const documentCount = "count" in countData ? countData.count : 0;
+
+      setDeleteLinkDialog({
+        isOpen: true,
+        linkId,
+        linkName,
+        documentCount,
+      });
+    } catch (error) {
+      console.error("Failed to fetch document count:", error);
+      // Still show dialog even if count fetch fails
+      setDeleteLinkDialog({
+        isOpen: true,
+        linkId,
+        linkName,
+        documentCount: null,
+      });
+    }
   };
 
   const handleToggleConnection = (connectionId: string, enabled: boolean) => {
@@ -214,9 +266,53 @@ function RouteComponent() {
     });
   };
 
-  const getStatusIcon = (enabled: boolean) => {
+  const handleManageInGitHub = (connection: any) => {
+    // Read management URL from connection config metadata (available via Zero)
+    const config = connection.config as any;
+    const managementUrl = config?.metadata?.managementUrl;
+
+    if (managementUrl) {
+      window.open(managementUrl, "_blank", "noopener,noreferrer");
+    } else {
+      toast.error("Management URL not available for this connection");
+    }
+  };
+
+  const getStatusIcon = (enabled: boolean, status?: string) => {
     if (!enabled) return <XCircle className="size-4 text-gray-400" />;
-    return <CheckCircle2 className="size-4 text-green-600" />;
+
+    // Check connection status
+    switch (status) {
+      case "revoked":
+        return <XCircle className="size-4 text-red-600" />;
+      case "error":
+        return <XCircle className="size-4 text-orange-600" />;
+      case "suspended":
+        return <XCircle className="size-4 text-amber-600" />;
+      case "active":
+      default:
+        return <CheckCircle2 className="size-4 text-green-600" />;
+    }
+  };
+
+  const getStatusText = (
+    enabled: boolean,
+    status?: string,
+    statusMessage?: string
+  ) => {
+    if (!enabled) return "Disabled";
+
+    switch (status) {
+      case "revoked":
+        return "Access Revoked";
+      case "error":
+        return statusMessage || "Error";
+      case "suspended":
+        return "Suspended";
+      case "active":
+      default:
+        return "Active";
+    }
   };
 
   const getExtensionIcon = (type: string) => {
@@ -294,12 +390,15 @@ function RouteComponent() {
                   <Cell>
                     <div className="flex items-center gap-1.5">
                       {getStatusIcon(
-                        link.enabled && (link.connection?.enabled ?? false)
+                        link.enabled && (link.connection?.enabled ?? false),
+                        (link.connection as any)?.status
                       )}
                       <span className="text-sm">
-                        {link.enabled && link.connection?.enabled
-                          ? "Enabled"
-                          : "Disabled"}
+                        {getStatusText(
+                          link.enabled && (link.connection?.enabled ?? false),
+                          (link.connection as any)?.status,
+                          (link.connection as any)?.status_message
+                        )}
                       </span>
                     </div>
                   </Cell>
@@ -400,9 +499,19 @@ function RouteComponent() {
                         <span className="font-medium capitalize">
                           {connection.extension_type}
                         </span>
-                        {getStatusIcon(connection.enabled)}
+                        {getStatusIcon(
+                          connection.enabled,
+                          (connection as any).status
+                        )}
+                        <span className="text-xs">
+                          {getStatusText(
+                            connection.enabled,
+                            (connection as any).status,
+                            (connection as any).status_message
+                          )}
+                        </span>
                         <span className="text-xs text-gray-500">
-                          {connectionLinks.length} link
+                          • {connectionLinks.length} link
                           {connectionLinks.length !== 1 ? "s" : ""}
                         </span>
                       </div>
@@ -421,6 +530,18 @@ function RouteComponent() {
                               Add Link
                             </MenuItem>
                           )}
+                          {connection.extension_type === "github" &&
+                            (connection.config as any)?.metadata
+                              ?.managementUrl && (
+                              <MenuItem
+                                onAction={() =>
+                                  handleManageInGitHub(connection)
+                                }
+                              >
+                                <ExternalLink className="size-4 mr-2" />
+                                Manage in GitHub
+                              </MenuItem>
+                            )}
                           <MenuItem
                             onAction={() =>
                               handleToggleConnection(
@@ -466,7 +587,8 @@ function RouteComponent() {
                               <div className="flex items-center gap-2">
                                 {getStatusIcon(
                                   link.enabled &&
-                                    (link.connection?.enabled ?? false)
+                                    (link.connection?.enabled ?? false),
+                                  (link.connection as any)?.status
                                 )}
                                 <MenuTrigger>
                                   <RACButton>
@@ -543,6 +665,22 @@ function RouteComponent() {
           }}
         />
       )}
+
+      {/* Show delete link dialog */}
+      <DeleteLinkDialog
+        isOpen={deleteLinkDialog.isOpen}
+        linkId={deleteLinkDialog.linkId}
+        linkName={deleteLinkDialog.linkName}
+        documentCount={deleteLinkDialog.documentCount}
+        onClose={() => {
+          setDeleteLinkDialog({
+            isOpen: false,
+            linkId: null,
+            linkName: null,
+            documentCount: null,
+          });
+        }}
+      />
     </div>
   );
 }
@@ -677,8 +815,57 @@ function GitHubConfigForm({ onClose }: GitHubConfigFormProps) {
         .then((res: Response) => res.json());
 
       if ("authUrl" in response) {
-        // Redirect to GitHub OAuth
-        window.location.href = response.authUrl;
+        // Open OAuth in a popup window instead of redirecting main tab
+        const width = 600;
+        const height = 700;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+
+        const popup = window.open(
+          response.authUrl,
+          "GitHub OAuth",
+          `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no`
+        );
+
+        if (!popup) {
+          toast.error("Please allow popups to connect to GitHub");
+          setIsLoading(false);
+          return;
+        }
+
+        // Listen for OAuth callback completion
+        const handleMessage = (event: MessageEvent) => {
+          // Verify the message is from our OAuth callback
+          if (event.origin !== window.location.origin) {
+            return;
+          }
+
+          if (event.data.type === "oauth-callback") {
+            window.removeEventListener("message", handleMessage);
+            popup.close();
+
+            if (event.data.success) {
+              toast.success("GitHub connected successfully!");
+              onClose();
+              // Refresh the page to show the new connection
+              window.location.reload();
+            } else {
+              toast.error(event.data.error || "Failed to connect to GitHub");
+              setIsLoading(false);
+            }
+          }
+        };
+
+        window.addEventListener("message", handleMessage);
+
+        // Also check if popup was closed manually
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            window.removeEventListener("message", handleMessage);
+            setIsLoading(false);
+          }
+        }, 1000);
       } else {
         toast.error("Failed to initiate GitHub connection");
         setIsLoading(false);
@@ -779,6 +966,11 @@ function ConfigureConnectionDialog({
       basePath: "",
     },
     onSubmit: async (values) => {
+      if (!values.value.repo) {
+        toast.error("Please select a repository");
+        return;
+      }
+
       setIsSaving(true);
       try {
         const client = await createClient();
@@ -787,7 +979,14 @@ function ConfigureConnectionDialog({
         const selectedRepo = repositories.find(
           (r) => r.name === values.value.repo
         );
-        const owner = selectedRepo?.full_name.split("/")[0] || "";
+
+        if (!selectedRepo) {
+          toast.error("Selected repository not found");
+          setIsSaving(false);
+          return;
+        }
+
+        const owner = selectedRepo.full_name.split("/")[0];
 
         // Create a link instead of updating connection config
         // @ts-expect-error - Dynamic route parameter type inference limitation
@@ -860,14 +1059,21 @@ function ConfigureConnectionDialog({
         // @ts-expect-error - Dynamic route parameter type inference limitation
         const response = await client.internal.extensions[
           ":connectionId"
-        ].repositories
+        ].resources
           .$get({
             param: { connectionId },
           })
           .then((res: Response) => res.json());
 
-        if ("repositories" in response) {
-          setRepositories(response.repositories);
+        if ("resources" in response) {
+          // Map generic resources to repository format for backward compatibility
+          setRepositories(
+            response.resources.map((resource: any) => ({
+              name: resource.name,
+              full_name: resource.fullName,
+              default_branch: resource.metadata?.defaultBranch || "main",
+            }))
+          );
         }
       } catch (error) {
         console.error("Failed to fetch repositories:", error);
@@ -935,8 +1141,8 @@ function ConfigureConnectionDialog({
                         label="Repository"
                         isRequired
                         placeholder="Select a repository"
-                        selectedKey={form.state.values.repo}
-                        onSelectionChange={(key) => {
+                        value={form.state.values.repo || undefined}
+                        onChange={(key) => {
                           if (key && typeof key === "string") {
                             form.setFieldValue("repo", key);
                             // Auto-fill branch from repo's default branch
@@ -1010,9 +1216,7 @@ function ConfigureConnectionDialog({
                     size="sm"
                     type="submit"
                     isPending={isSaving}
-                    isDisabled={
-                      isSaving || isLoading || !form.state.values.repo
-                    }
+                    isDisabled={isSaving || isLoading}
                   >
                     {isSaving ? "Creating & Syncing..." : "Create Link & Sync"}
                   </Button>
@@ -1020,6 +1224,132 @@ function ConfigureConnectionDialog({
               </div>
             </Form>
           )}
+        </Dialog>
+      </Modal>
+    </DialogTrigger>
+  );
+}
+
+type DeleteLinkDialogProps = {
+  isOpen: boolean;
+  linkId: string | null;
+  linkName: string | null;
+  documentCount: number | null;
+  onClose: () => void;
+};
+
+function DeleteLinkDialog({
+  isOpen,
+  linkId,
+  linkName,
+  documentCount,
+  onClose,
+}: DeleteLinkDialogProps) {
+  const { createClient } = useAuthenticatedApi();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDocuments, setDeleteDocuments] = useState<"keep" | "delete">(
+    "keep"
+  );
+
+  const handleDelete = async () => {
+    if (!linkId) return;
+
+    setIsDeleting(true);
+    try {
+      const client = await createClient();
+      // @ts-expect-error - Dynamic route parameter type inference limitation
+      await client.internal.extensions.links[":linkId"].$delete({
+        param: { linkId },
+        query: {
+          deleteDocuments: deleteDocuments === "delete" ? "true" : "false",
+        },
+      });
+      toast.success("Link deleted successfully");
+      onClose();
+    } catch (error) {
+      toast.error("Failed to delete link");
+      console.error("Delete link error:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <DialogTrigger isOpen={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Modal isDismissable>
+        <Dialog>
+          <div className="p-4 flex flex-col gap-y-4">
+            <div>
+              <Heading level={2}>Delete "{linkName}" Link</Heading>
+              <p className="text-sm text-gray-600 mt-1">
+                This action cannot be undone.
+              </p>
+            </div>
+
+            {documentCount !== null && documentCount > 0 && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm font-medium text-amber-900 mb-3">
+                  This link has {documentCount} synchronized document
+                  {documentCount !== 1 ? "s" : ""}. What would you like to do
+                  with them?
+                </p>
+                <RadioGroup
+                  value={deleteDocuments}
+                  onChange={(value: string) =>
+                    setDeleteDocuments(value as "keep" | "delete")
+                  }
+                >
+                  <Radio value="keep">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Keep documents</span>
+                      <span className="text-xs text-gray-600">
+                        Documents will remain in your workspace but will no
+                        longer be associated with this link
+                      </span>
+                    </div>
+                  </Radio>
+                  <Radio value="delete">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Delete documents</span>
+                      <span className="text-xs text-gray-600">
+                        Permanently delete all {documentCount} document
+                        {documentCount !== 1 ? "s" : ""} synced from this link
+                      </span>
+                    </div>
+                  </Radio>
+                </RadioGroup>
+              </div>
+            )}
+
+            {documentCount === 0 && (
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  This link has no synchronized documents.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-1.5">
+              <Button
+                intent="secondary"
+                onPress={onClose}
+                type="button"
+                size="sm"
+                isDisabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onPress={handleDelete}
+                isPending={isDeleting}
+                isDisabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeleting ? "Deleting..." : "Delete Link"}
+              </Button>
+            </div>
+          </div>
         </Dialog>
       </Modal>
     </DialogTrigger>

@@ -346,6 +346,16 @@ export function CommandMenu() {
           });
         },
       },
+      {
+        id: "create-organization",
+        label: "Create new organization",
+        icon: Plus,
+        action: () => {
+          navigate({
+            to: "/onboarding",
+          });
+        },
+      },
     ];
 
     return [

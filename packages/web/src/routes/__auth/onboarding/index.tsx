@@ -78,6 +78,7 @@ function RouteComponent() {
               name="workspaceName"
               children={(field) => (
                 <field.TextField
+                  autoFocus
                   label="Workspace Name"
                   placeholder="My Workspace"
                   description="This will be the name of your organization"

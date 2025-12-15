@@ -90,20 +90,17 @@ export interface OAuthExtension {
   ): string;
 
   /**
-   * Exchange authorization code for access token
+   * Handle OAuth callback parameters and create connection config
+   * This allows extensions to handle different OAuth flows (standard OAuth, GitHub App, etc.)
+   * @param queryParams - All query parameters from the OAuth callback
+   * @param credentials - OAuth credentials for the extension
+   * @param redirectUri - The callback URL
+   * @returns Extension configuration to store in the database
    */
-  exchangeCodeForToken(
-    code: string,
+  handleOAuthCallback(
+    queryParams: Record<string, string>,
     credentials: OAuthCredentials,
     redirectUri: string
-  ): Promise<OAuthTokenResponse>;
-
-  /**
-   * Validate and extract necessary configuration from OAuth response
-   * This transforms the OAuth token response into the extension's config format
-   */
-  transformOAuthResponse(
-    tokenResponse: OAuthTokenResponse
   ): Promise<Record<string, any>>;
 
   /**
@@ -113,6 +110,14 @@ export interface OAuthExtension {
     refreshToken: string,
     credentials: OAuthCredentials
   ): Promise<OAuthTokenResponse>;
+
+  /**
+   * Optional: Get a fresh access token for the extension
+   * For GitHub Apps, this generates a new installation token
+   */
+  getAccessToken?(
+    connection: import("./types").ExtensionConnection
+  ): Promise<string>;
 }
 
 /**
@@ -139,4 +144,3 @@ export function encodeOAuthState(state: OAuthState): string {
 export function decodeOAuthState(token: string): OAuthState {
   return JSON.parse(Buffer.from(token, "base64url").toString());
 }
-

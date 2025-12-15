@@ -13,6 +13,8 @@ export interface SyncDocument {
   published: boolean;
   updatedAt: Date;
   organizationId: string;
+  folderId?: string | null; // Optional folder ID for maintaining folder structure
+  folderPath?: string | null; // Optional folder path (e.g., "docs/guides") for folder creation
 }
 
 /**
@@ -102,4 +104,27 @@ export interface SyncMetadata {
   syncError: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Generic resource (repository, collection, folder, etc.)
+ */
+export interface ExternalResource {
+  id: string;
+  name: string;
+  fullName: string;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Extension that supports listing external resources
+ * Examples: GitHub repositories, Shopify collections, Notion databases
+ */
+export interface ResourceExtension {
+  /**
+   * Fetch available resources for the authenticated user/connection
+   * @param connection - The extension connection
+   * @returns List of available resources
+   */
+  fetchResources(connection: ExtensionConnection): Promise<ExternalResource[]>;
 }

@@ -4,8 +4,9 @@ import {
   extensionConnectionsTable,
   extensionLinksTable,
   documentsTable,
+  foldersTable,
 } from "@lydie/database";
-import { eq } from "drizzle-orm";
+import { eq, sql, and, isNull } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
 import {
   GitHubExtension,
@@ -25,6 +26,13 @@ type Extension = SyncExtension & OAuthExtension;
 const extensionRegistry = new Map<string, Extension>([
   ["github", new GitHubExtension()],
 ]);
+
+// Helper to check if extension supports resources
+function supportsResources(extension: Extension): extension is Extension & {
+  fetchResources: (connection: any) => Promise<any[]>;
+} {
+  return "fetchResources" in extension;
+}
 
 /**
  * OAuth flow:
@@ -131,13 +139,12 @@ export const ExtensionsRoute = new Hono<{
 
   // OAuth callback handler
   // NOTE: This route is intentionally public (no auth middleware) because
-  // GitHub redirects here after OAuth authorization. Security is handled via:
+  // providers redirect here after OAuth authorization. Security is handled via:
   // 1. State token validation (CSRF protection)
   // 2. State token expiration (5 minutes)
   // 3. Organization access verification from state
   .get("/:type/oauth/callback", async (c) => {
     const extensionType = c.req.param("type");
-    const code = c.req.query("code");
     const stateToken = c.req.query("state");
     const error = c.req.query("error");
 
@@ -145,15 +152,17 @@ export const ExtensionsRoute = new Hono<{
     if (error) {
       const errorDescription = c.req.query("error_description") || error;
       // Redirect to frontend with error
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
       return c.redirect(
-        `${
-          process.env.FRONTEND_URL || "http://localhost:3000"
-        }/settings/extensions?error=${encodeURIComponent(errorDescription)}`
+        `${frontendUrl}/settings/extensions?error=${encodeURIComponent(
+          errorDescription
+        )}`
       );
     }
 
-    if (!code || !stateToken) {
-      return c.json({ error: "Missing code or state parameter" }, 400);
+    // State token is required
+    if (!stateToken) {
+      return c.json({ error: "Missing state token" }, 400);
     }
 
     // Decode and validate state
@@ -207,19 +216,37 @@ export const ExtensionsRoute = new Hono<{
 
       // Build callback URL (must match the one used in authorize)
       const callbackUrl = new URL(c.req.url);
-      callbackUrl.search = ""; // Remove query params
-      callbackUrl.searchParams.delete("code");
-      callbackUrl.searchParams.delete("state");
+      callbackUrl.search = ""; // Remove all query params
 
-      // Exchange code for token
-      const tokenResponse = await extension.exchangeCodeForToken(
-        code,
+      // Collect all query parameters for the extension to handle
+      const queryParams: Record<string, string> = {};
+      c.req.url
+        .split("?")[1]
+        ?.split("&")
+        .forEach((param) => {
+          const [key, value] = param.split("=");
+          if (key && value) {
+            queryParams[key] = decodeURIComponent(value);
+          }
+        });
+
+      // Let extension handle the OAuth callback
+      // This allows each extension to handle its own OAuth flow
+      // (e.g., GitHub App installations, standard OAuth, etc.)
+      if (
+        !("handleOAuthCallback" in extension) ||
+        typeof extension.handleOAuthCallback !== "function"
+      ) {
+        throw new Error(
+          `Extension ${extensionType} does not implement handleOAuthCallback`
+        );
+      }
+
+      const config = await extension.handleOAuthCallback(
+        queryParams,
         credentials,
         callbackUrl.toString()
       );
-
-      // Transform OAuth response to extension config
-      const config = await extension.transformOAuthResponse(tokenResponse);
 
       // Create extension connection in database
       const connectionId = createId();
@@ -234,60 +261,78 @@ export const ExtensionsRoute = new Hono<{
       });
 
       // Redirect to frontend with success
-      const redirectUrl = state.redirectUrl || "/settings/extensions";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const redirectPath = state.redirectUrl || "/settings/extensions";
       return c.redirect(
-        `${redirectUrl}?success=true&connectionId=${connectionId}`
+        `${frontendUrl}${redirectPath}?success=true&connectionId=${connectionId}`
       );
     } catch (error) {
       console.error("OAuth callback error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      const redirectUrl = state.redirectUrl || "/settings/extensions";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const redirectPath = state.redirectUrl || "/settings/extensions";
       return c.redirect(
-        `${redirectUrl}?error=${encodeURIComponent(errorMessage)}`
+        `${frontendUrl}${redirectPath}?error=${encodeURIComponent(
+          errorMessage
+        )}`
       );
     }
   })
 
-  // Get available repositories (for GitHub after initial OAuth)
-  .get(
-    "/:connectionId/repositories",
-    authenticatedWithOrganization,
-    async (c) => {
-      const connectionId = c.req.param("connectionId");
-      const organizationId = c.get("organizationId");
+  // Get available resources (repositories, collections, etc.) for a connection
+  .get("/:connectionId/resources", authenticatedWithOrganization, async (c) => {
+    const connectionId = c.req.param("connectionId");
+    const organizationId = c.get("organizationId");
 
-      // Fetch connection from database
-      const connection = await db.query.extensionConnectionsTable.findFirst({
-        where: { id: connectionId },
-      });
+    // Fetch connection from database
+    const connection = await db.query.extensionConnectionsTable.findFirst({
+      where: { id: connectionId },
+    });
 
-      if (!connection || connection.organizationId !== organizationId) {
-        return c.json({ error: "Connection not found" }, 404);
-      }
-
-      // Only GitHub supports fetching repositories
-      if (connection.extensionType !== "github") {
-        return c.json(
-          { error: "Extension does not support repositories" },
-          400
-        );
-      }
-
-      const extension = new GitHubExtension();
-      const config = connection.config as any;
-
-      try {
-        const repositories = await extension.fetchRepositories(
-          config.accessToken
-        );
-        return c.json({ repositories });
-      } catch (error) {
-        console.error("Failed to fetch repositories:", error);
-        return c.json({ error: "Failed to fetch repositories" }, 500);
-      }
+    if (!connection || connection.organizationId !== organizationId) {
+      return c.json({ error: "Connection not found" }, 404);
     }
-  )
+
+    // Get extension from registry
+    const extension = extensionRegistry.get(connection.extensionType);
+    if (!extension) {
+      return c.json({ error: "Unknown extension type" }, 404);
+    }
+
+    // Check if extension supports resources
+    if (!supportsResources(extension)) {
+      return c.json(
+        { error: "Extension does not support resource listing" },
+        400
+      );
+    }
+
+    try {
+      // Map database connection to ExtensionConnection type
+      const extensionConnection = {
+        id: connection.id,
+        extensionType: connection.extensionType,
+        organizationId: connection.organizationId,
+        config: connection.config as Record<string, any>,
+        enabled: connection.enabled,
+        createdAt: connection.createdAt,
+        updatedAt: connection.updatedAt,
+      };
+
+      const resources = await extension.fetchResources(extensionConnection);
+      return c.json({ resources });
+    } catch (error) {
+      console.error("Failed to fetch resources:", error);
+      return c.json(
+        {
+          error: "Failed to fetch resources",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        500
+      );
+    }
+  })
 
   // Update connection config (e.g., select repo after OAuth)
   .patch(
@@ -411,10 +456,43 @@ export const ExtensionsRoute = new Hono<{
     }
   )
 
+  // Get document count for a link
+  .get(
+    "/links/:linkId/documents/count",
+    authenticatedWithOrganization,
+    async (c) => {
+      const linkId = c.req.param("linkId");
+      const organizationId = c.get("organizationId");
+
+      // Verify link exists and belongs to org
+      const link = await db.query.extensionLinksTable.findFirst({
+        where: { id: linkId },
+      });
+
+      if (!link || link.organizationId !== organizationId) {
+        return c.json({ error: "Link not found" }, 404);
+      }
+
+      // Count documents associated with this link (not deleted)
+      const count = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(documentsTable)
+        .where(
+          and(
+            eq(documentsTable.extensionLinkId, linkId),
+            isNull(documentsTable.deletedAt)
+          )
+        );
+
+      return c.json({ count: Number(count[0]?.count || 0) });
+    }
+  )
+
   // Delete a link
   .delete("/links/:linkId", authenticatedWithOrganization, async (c) => {
     const linkId = c.req.param("linkId");
     const organizationId = c.get("organizationId");
+    const deleteDocuments = c.req.query("deleteDocuments") === "true";
 
     // Verify link exists and belongs to org
     const link = await db.query.extensionLinksTable.findFirst({
@@ -425,7 +503,20 @@ export const ExtensionsRoute = new Hono<{
       return c.json({ error: "Link not found" }, 404);
     }
 
-    // Delete the link (documents will have their extension_link_id set to null via FK)
+    // If deleteDocuments is true, delete all documents associated with this link
+    if (deleteDocuments) {
+      await db
+        .update(documentsTable)
+        .set({ deletedAt: new Date() })
+        .where(
+          and(
+            eq(documentsTable.extensionLinkId, linkId),
+            isNull(documentsTable.deletedAt)
+          )
+        );
+    }
+
+    // Delete the link (documents will have their extension_link_id set to null via FK if not deleted)
     await db
       .delete(extensionLinksTable)
       .where(eq(extensionLinksTable.id, linkId));
@@ -435,11 +526,11 @@ export const ExtensionsRoute = new Hono<{
 
   // Sync/pull documents from a specific link
   .post("/links/:linkId/sync", authenticatedWithOrganization, async (c) => {
-    try {
-      const linkId = c.req.param("linkId");
-      const organizationId = c.get("organizationId");
-      const user = c.get("user");
+    const linkId = c.req.param("linkId");
+    const organizationId = c.get("organizationId");
+    const user = c.get("user");
 
+    try {
       console.log(`[Extensions] Starting sync for link ${linkId}`);
 
       // Fetch link with its connection
@@ -483,17 +574,52 @@ export const ExtensionsRoute = new Hono<{
         ...(link.config as Record<string, any>),
       };
 
+      // Create a connection object for token refresh
+      const connectionForRefresh = {
+        id: connection.id,
+        extensionType: connection.extensionType,
+        organizationId: connection.organizationId,
+        config: mergedConfig,
+        enabled: connection.enabled,
+        createdAt: connection.createdAt,
+        updatedAt: connection.updatedAt,
+      };
+
+      // Refresh access token if needed (for GitHub Apps with expiring tokens)
+      if (
+        "getAccessToken" in extension &&
+        typeof extension.getAccessToken === "function"
+      ) {
+        try {
+          const oldToken = (mergedConfig as any).installationAccessToken;
+          await extension.getAccessToken(connectionForRefresh);
+          const newToken = (mergedConfig as any).installationAccessToken;
+
+          // Update database if token was refreshed
+          if (oldToken !== newToken) {
+            console.log(
+              `[Extensions] Token refreshed for connection ${connection.id}`
+            );
+            await db
+              .update(extensionConnectionsTable)
+              .set({
+                config: connection.config,
+                updatedAt: new Date(),
+              })
+              .where(eq(extensionConnectionsTable.id, connection.id));
+          }
+        } catch (error) {
+          console.error(
+            `[Extensions] Failed to refresh token for connection ${connection.id}:`,
+            error
+          );
+          // Continue anyway - the getAccessToken in the extension will handle errors
+        }
+      }
+
       // Call extension's pull method
       const results = await extension.pull({
-        connection: {
-          id: connection.id,
-          extensionType: connection.extensionType,
-          organizationId: connection.organizationId,
-          config: mergedConfig,
-          enabled: connection.enabled,
-          createdAt: connection.createdAt,
-          updatedAt: connection.updatedAt,
-        },
+        connection: connectionForRefresh,
         organizationId,
         userId: user.id,
       });
@@ -550,6 +676,19 @@ export const ExtensionsRoute = new Hono<{
       console.log(
         `[Extensions] Sync complete. Imported: ${imported}, Failed: ${failed}`
       );
+
+      // If sync succeeded, ensure connection status is active
+      if (connection.status !== "active") {
+        await db
+          .update(extensionConnectionsTable)
+          .set({
+            status: "active",
+            statusMessage: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(extensionConnectionsTable.id, connection.id));
+      }
+
       return c.json({ success: true, imported, failed });
     } catch (error) {
       console.error("[Extensions] Error during sync:", error);
@@ -557,6 +696,34 @@ export const ExtensionsRoute = new Hono<{
         "[Extensions] Error stack:",
         error instanceof Error ? error.stack : "No stack"
       );
+
+      // Update connection status to error if sync failed
+      try {
+        // Get the link and connection to update status
+        const linkRow = await db
+          .select()
+          .from(extensionLinksTable)
+          .where(eq(extensionLinksTable.id, linkId))
+          .limit(1);
+
+        if (linkRow[0]) {
+          await db
+            .update(extensionConnectionsTable)
+            .set({
+              status: "error",
+              statusMessage:
+                error instanceof Error ? error.message : "Sync failed",
+              updatedAt: new Date(),
+            })
+            .where(eq(extensionConnectionsTable.id, linkRow[0].connectionId));
+        }
+      } catch (updateError) {
+        console.error(
+          "[Extensions] Failed to update connection status:",
+          updateError
+        );
+      }
+
       return c.json(
         {
           error: "Failed to sync",

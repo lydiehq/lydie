@@ -22,11 +22,27 @@ declare module "sst" {
       "type": "sst.aws.Router"
       "url": string
     }
+    "GitHubAppId": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubAppSlug": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "GitHubClientId": {
       "type": "sst.sst.Secret"
       "value": string
     }
     "GitHubClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubPrivateKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GitHubWebhookSecret": {
       "type": "sst.sst.Secret"
       "value": string
     }

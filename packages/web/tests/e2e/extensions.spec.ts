@@ -135,24 +135,30 @@ test.describe("Extensions", () => {
         })
         .returning();
 
-      // Mock the repositories endpoint
+      // Mock the resources endpoint
       await page.route(
-        `**/internal/extensions/${connection.id}/repositories`,
+        `**/internal/extensions/${connection.id}/resources`,
         async (route: Route) => {
           await route.fulfill({
             status: 200,
             contentType: "application/json",
             body: JSON.stringify({
-              repositories: [
+              resources: [
                 {
+                  id: "test-owner/test-repo",
                   name: "test-repo",
-                  full_name: "test-owner/test-repo",
-                  default_branch: "main",
+                  fullName: "test-owner/test-repo",
+                  metadata: {
+                    defaultBranch: "main",
+                  },
                 },
                 {
+                  id: "test-owner/docs-repo",
                   name: "docs-repo",
-                  full_name: "test-owner/docs-repo",
-                  default_branch: "master",
+                  fullName: "test-owner/docs-repo",
+                  metadata: {
+                    defaultBranch: "master",
+                  },
                 },
               ],
             }),

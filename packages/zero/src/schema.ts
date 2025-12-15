@@ -187,6 +187,8 @@ const extensionConnections = table("extension_connections")
     organization_id: string(),
     config: json(),
     enabled: boolean(),
+    status: string(), // 'active', 'revoked', 'error', 'suspended'
+    status_message: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");

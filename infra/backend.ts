@@ -16,6 +16,10 @@ const commonSecrets = [
   secret.polarWebhookSecret,
   secret.githubClientId,
   secret.githubClientSecret,
+  secret.githubAppId,
+  secret.githubPrivateKey,
+  secret.githubAppSlug,
+  secret.githubWebhookSecret,
 ];
 
 export const backend = new sst.aws.Service("Backend", {
@@ -39,6 +43,9 @@ export const backend = new sst.aws.Service("Backend", {
   },
   image: {
     dockerfile: "./packages/backend/Dockerfile",
+  },
+  environment: {
+    FRONTEND_URL: $dev ? "http://localhost:3000" : "https://cloud.lydie.co",
   },
   link: [...commonSecrets, embeddingQueue],
   dev: {

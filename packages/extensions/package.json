@@ -7,9 +7,11 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@lydie/core": "workspace:*"
+    "@lydie/core": "workspace:*",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^25.0.2",
     "sst": "catalog:",
     "typescript": "^5.9.3"

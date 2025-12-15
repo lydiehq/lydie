@@ -472,7 +472,9 @@ export const extensionConnectionsTable = pgTable(
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
     config: jsonb("config").notNull(), // Platform-specific config (access tokens, etc.)
-    enabled: boolean("enabled").notNull().default(true),
+    enabled: boolean("enabled").notNull().default(true), // User-controlled toggle
+    status: text("status").notNull().default("active"), // 'active', 'revoked', 'error', 'suspended'
+    statusMessage: text("status_message"), // Optional error/status details
     ...timestamps,
   },
   (table) => [
