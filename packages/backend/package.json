@@ -23,7 +23,7 @@
     "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
-    "hono": "^4.11.0",
+    "hono": "^4.11.1",
     "postgres": "^3.4.7",
     "zod": "catalog:"
   }
