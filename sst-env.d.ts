@@ -42,10 +42,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "GitHubWebhookSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "GoogleAiStudioApiKey": {
       "type": "sst.sst.Secret"
       "value": string

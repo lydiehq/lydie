@@ -24,5 +24,4 @@ export const secret = {
   githubAppId: new sst.Secret("GitHubAppId"),
   githubPrivateKey: new sst.Secret("GitHubPrivateKey"),
   githubAppSlug: new sst.Secret("GitHubAppSlug"),
-  githubWebhookSecret: new sst.Secret("GitHubWebhookSecret"),
 };

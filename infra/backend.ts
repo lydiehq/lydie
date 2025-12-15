@@ -19,7 +19,6 @@ const commonSecrets = [
   secret.githubAppId,
   secret.githubPrivateKey,
   secret.githubAppSlug,
-  secret.githubWebhookSecret,
 ];
 
 export const backend = new sst.aws.Service("Backend", {

@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.2",
     "sst": "catalog:",
     "typescript": "^5.9.3"
