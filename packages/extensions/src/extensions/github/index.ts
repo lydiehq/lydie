@@ -111,8 +111,23 @@ export class GitHubExtension
       // Convert TipTap content to Markdown
       const markdown = await this.convertToExternalFormat(document.content);
 
-      // Generate file path using title (which includes extension)
-      const filePath = this.getFilePath(document.title, config.basePath);
+      // Generate file path using title (which includes extension) and folder path
+      // Priority: 1) folderPath from document, 2) extract from externalId, 3) null (root)
+      let folderPath = document.folderPath;
+
+      // If folderPath is not provided, try to extract it from externalId
+      // This handles cases where the document was synced from GitHub and we want to maintain the same path
+      if (!folderPath && document.id) {
+        // Note: externalId would need to be passed in the document, but it's not in SyncDocument
+        // For now, we'll rely on folderPath being passed from the backend
+        // The backend's pushToExtension should provide folderPath based on folderId
+      }
+
+      const filePath = this.getFilePath(
+        document.title,
+        config.basePath,
+        folderPath
+      );
 
       // Check if file exists to get current SHA (required for updates)
       let currentSha: string | undefined;
@@ -400,8 +415,13 @@ export class GitHubExtension
    * Generate the file path for a document in the repository
    * Uses the document title which should include the file extension
    * Supports: .md, .mdx, .txt
+   * Includes folder path if provided to maintain folder structure
    */
-  private getFilePath(title: string, basePath?: string): string {
+  private getFilePath(
+    title: string,
+    basePath?: string,
+    folderPath?: string | null
+  ): string {
     // Title should already include the extension (e.g., "file.md", "file.mdx", or "file.txt")
     // If it doesn't, default to .md
     let fileName = title.includes(".") ? title : `${title}.md`;
@@ -414,15 +434,30 @@ export class GitHubExtension
       fileName = `${nameWithoutExt}.md`;
     }
 
-    if (!basePath) {
-      return fileName;
+    // Build path components
+    const pathParts: string[] = [];
+
+    // Add basePath if provided (repository-level base path)
+    if (basePath) {
+      const normalizedBasePath = basePath.replace(/^\/+|\/+$/g, "");
+      if (normalizedBasePath) {
+        pathParts.push(normalizedBasePath);
+      }
     }
 
-    // Remove leading and trailing slashes from basePath
-    const normalizedBasePath = basePath.replace(/^\/+|\/+$/g, "");
+    // Add folderPath if provided (document's folder structure)
+    if (folderPath) {
+      const normalizedFolderPath = folderPath.replace(/^\/+|\/+$/g, "");
+      if (normalizedFolderPath) {
+        pathParts.push(normalizedFolderPath);
+      }
+    }
 
-    // Combine basePath and fileName, ensuring no leading slash
-    return normalizedBasePath ? `${normalizedBasePath}/${fileName}` : fileName;
+    // Add filename
+    pathParts.push(fileName);
+
+    // Join all parts with slashes
+    return pathParts.join("/");
   }
 
   // OAuth Implementation

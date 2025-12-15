@@ -15,7 +15,8 @@
     "@lydie/extensions": "workspace:*",
     "@rocicorp/zero": "catalog:",
     "better-auth": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "sst": "catalog:"

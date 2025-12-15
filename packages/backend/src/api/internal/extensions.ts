@@ -627,10 +627,75 @@ export const ExtensionsRoute = new Hono<{
       let imported = 0;
       let failed = 0;
 
+      // Helper function to get or create folder by path
+      const getOrCreateFolderByPath = async (
+        folderPath: string | null | undefined
+      ): Promise<string | undefined> => {
+        if (!folderPath || folderPath.trim() === "" || folderPath === "/") {
+          return undefined; // Root level
+        }
+
+        // Normalize path: remove leading/trailing slashes and split
+        const parts = folderPath
+          .replace(/^\/+|\/+$/g, "")
+          .split("/")
+          .filter((part) => part.length > 0);
+
+        if (parts.length === 0) {
+          return undefined;
+        }
+
+        let currentParentId: string | undefined = undefined;
+
+        // Traverse the path, creating folders as needed
+        for (const folderName of parts) {
+          // Check if folder already exists with this name, parent, and organization
+          const [existingFolder] = await db
+            .select()
+            .from(foldersTable)
+            .where(
+              and(
+                eq(foldersTable.name, folderName),
+                eq(foldersTable.organizationId, organizationId),
+                isNull(foldersTable.deletedAt),
+                currentParentId
+                  ? eq(foldersTable.parentId, currentParentId)
+                  : isNull(foldersTable.parentId)
+              )
+            )
+            .limit(1);
+
+          if (existingFolder) {
+            // Reuse existing folder
+            currentParentId = existingFolder.id;
+          } else {
+            // Create new folder
+            const newFolderId = createId();
+            await db.insert(foldersTable).values({
+              id: newFolderId,
+              name: folderName,
+              userId: user.id,
+              organizationId,
+              parentId: currentParentId || null,
+            });
+            currentParentId = newFolderId;
+          }
+        }
+
+        return currentParentId;
+      };
+
       // Create documents from pull results
       for (const result of results) {
         if (result.success && result.metadata) {
           try {
+            // Get or create folder if folderPath is provided
+            const folderPath = result.metadata.folderPath as
+              | string
+              | null
+              | undefined;
+            const folderId = await getOrCreateFolderByPath(folderPath);
+
             const documentId = createId();
 
             await db.insert(documentsTable).values({
@@ -640,7 +705,7 @@ export const ExtensionsRoute = new Hono<{
               jsonContent: result.metadata.content,
               userId: user.id,
               organizationId,
-              folderId: null, // Documents from links are not in folders
+              folderId: folderId || null, // Use created folder or null for root
               extensionLinkId: link.id,
               externalId: result.externalId,
               indexStatus: "pending",
@@ -650,7 +715,7 @@ export const ExtensionsRoute = new Hono<{
             });
 
             imported++;
-            console.log(`[Extensions] Imported: ${result.externalId}`);
+            console.log(`[Extensions] Imported: ${result.externalId}${folderPath ? ` (folder: ${folderPath})` : ""}`);
           } catch (error) {
             failed++;
             console.error(
