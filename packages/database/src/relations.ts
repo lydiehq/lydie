@@ -15,6 +15,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.foldersTable.organizationId,
       to: r.organizationsTable.id,
     }),
+    extensionLink: r.one.extensionLinksTable({
+      from: r.foldersTable.extensionLinkId,
+      to: r.extensionLinksTable.id,
+    }),
     children: r.many.foldersTable(),
     documents: r.many.documentsTable(),
   },
@@ -30,6 +34,10 @@ export const relations = defineRelations(schema, (r) => ({
     organization: r.one.organizationsTable({
       from: r.documentsTable.organizationId,
       to: r.organizationsTable.id,
+    }),
+    extensionLink: r.one.extensionLinksTable({
+      from: r.documentsTable.extensionLinkId,
+      to: r.extensionLinksTable.id,
     }),
     embeddings: r.many.documentEmbeddingsTable(),
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
@@ -222,6 +230,20 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.organizationsTable.id,
     }),
     syncMetadata: r.many.syncMetadataTable(),
+    links: r.many.extensionLinksTable(),
+  },
+
+  extensionLinksTable: {
+    connection: r.one.extensionConnectionsTable({
+      from: r.extensionLinksTable.connectionId,
+      to: r.extensionConnectionsTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.extensionLinksTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    documents: r.many.documentsTable(),
+    folders: r.many.foldersTable(),
   },
 
   syncMetadataTable: {

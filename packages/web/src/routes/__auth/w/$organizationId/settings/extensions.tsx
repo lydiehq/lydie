@@ -20,6 +20,8 @@ import {
   Github,
   CheckCircle2,
   XCircle,
+  Link,
+  FolderSync,
 } from "lucide-react";
 import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
@@ -73,6 +75,9 @@ function RouteComponent() {
     useState<ConnectionDialogStep>("selectType");
   const [selectedExtensionType, setSelectedExtensionType] =
     useState<ExtensionType | null>(null);
+  const [linkDialogConnectionId, setLinkDialogConnectionId] = useState<
+    string | null
+  >(null);
 
   const [connections] = useQuery(
     queries.extensions.byOrganization({
@@ -80,19 +85,31 @@ function RouteComponent() {
     })
   );
 
-  // Handle OAuth callback - show toast messages and clear error params
+  // Query extension links
+  const [extensionLinks] = useQuery(
+    queries.extensionLinks.byOrganization({
+      organizationId: organization?.id || "",
+    })
+  );
+
+  // Handle OAuth callback - show toast messages
   useEffect(() => {
     if (search.success && search.connectionId) {
-      toast.success(
-        "Extension connected successfully! Please configure your repository."
-      );
+      toast.success("Extension connected successfully!");
+      // Clear URL params
+      navigate({
+        to: "/w/$organizationId/settings/extensions",
+        params: { organizationId: organization?.id || "" },
+        search: { success: false, error: undefined, connectionId: undefined },
+        replace: true,
+      });
     } else if (search.error) {
       toast.error(`Failed to connect: ${search.error}`);
       // Clear error param from URL
       navigate({
         to: "/w/$organizationId/settings/extensions",
         params: { organizationId: organization?.id || "" },
-        search: undefined,
+        search: { success: false, error: undefined, connectionId: undefined },
         replace: true,
       });
     }
@@ -115,30 +132,54 @@ function RouteComponent() {
     setSelectedExtensionType(null);
   };
 
-  const handleSyncFromGitHub = async (connectionId: string) => {
+  const handleSyncLink = async (linkId: string, linkName: string) => {
     try {
       const client = await createClient();
 
-      toast.loading("Syncing from GitHub...", { id: "sync-github" });
+      toast.loading(`Syncing "${linkName}"...`, { id: `sync-${linkId}` });
 
       // @ts-expect-error - Dynamic route parameter type inference limitation
-      const response = await client.internal.extensions[":connectionId"].sync
+      const response = await client.internal.extensions.links[":linkId"].sync
         .$post({
-          param: { connectionId },
+          param: { linkId },
         })
         .then((res: Response) => res.json());
 
       if ("error" in response) {
-        toast.error(response.error, { id: "sync-github" });
+        toast.error(response.error, { id: `sync-${linkId}` });
       } else if ("imported" in response) {
-        toast.success(`Synced ${response.imported} document(s) from GitHub`, {
-          id: "sync-github",
-        });
+        toast.success(
+          `Synced ${response.imported} document(s) from "${linkName}"`,
+          {
+            id: `sync-${linkId}`,
+          }
+        );
       }
     } catch (error) {
-      toast.error("Failed to sync from GitHub", { id: "sync-github" });
+      toast.error(`Failed to sync "${linkName}"`, { id: `sync-${linkId}` });
       console.error("Sync error:", error);
     }
+  };
+
+  const handleDeleteLink = (linkId: string, linkName: string) => {
+    confirmDialog({
+      title: `Delete "${linkName}" Link`,
+      message:
+        "This action cannot be undone. Documents synced from this link will remain but will no longer be associated with this link.",
+      onConfirm: async () => {
+        try {
+          const client = await createClient();
+          // @ts-expect-error - Dynamic route parameter type inference limitation
+          await client.internal.extensions.links[":linkId"].$delete({
+            param: { linkId },
+          });
+          toast.success("Link deleted successfully");
+        } catch (error) {
+          toast.error("Failed to delete link");
+          console.error("Delete link error:", error);
+        }
+      },
+    });
   };
 
   const handleToggleConnection = (connectionId: string, enabled: boolean) => {
@@ -218,49 +259,56 @@ function RouteComponent() {
           </Button>
         </div>
 
-        {connections && connections.length > 0 ? (
+        {/* Show Extension Links */}
+        {extensionLinks && extensionLinks.length > 0 ? (
           <Table
-            aria-label="Extension Connections"
+            aria-label="Extension Links"
             className="w-full max-h-none rounded-lg ring ring-black/8 bg-white"
           >
             <TableHeader>
-              <Column>Type</Column>
+              <Column>Name</Column>
+              <Column>Source</Column>
               <Column>Status</Column>
-              <Column>Created</Column>
-              <Column>Config</Column>
+              <Column>Last Synced</Column>
               <Column width={48}>Actions</Column>
             </TableHeader>
-            <TableBody items={connections}>
-              {(connection) => (
-                <Row id={connection.id}>
+            <TableBody items={extensionLinks}>
+              {(link) => (
+                <Row id={link.id}>
                   <Cell>
                     <div className="flex items-center gap-2">
-                      {getExtensionIcon(connection.extension_type)}
-                      <span className="capitalize">
-                        {connection.extension_type}
-                      </span>
+                      <Link className="size-4 text-blue-500" />
+                      <span className="font-medium">{link.name}</span>
+                    </div>
+                  </Cell>
+                  <Cell>
+                    <div className="flex items-center gap-2">
+                      {getExtensionIcon(link.connection?.extension_type || "")}
+                      <code className="text-xs text-gray-600">
+                        {(link.config as any).owner}/{(link.config as any).repo}
+                        {(link.config as any).basePath &&
+                          `/${(link.config as any).basePath}`}
+                      </code>
                     </div>
                   </Cell>
                   <Cell>
                     <div className="flex items-center gap-1.5">
-                      {getStatusIcon(connection.enabled)}
+                      {getStatusIcon(
+                        link.enabled && (link.connection?.enabled ?? false)
+                      )}
                       <span className="text-sm">
-                        {connection.enabled ? "Enabled" : "Disabled"}
+                        {link.enabled && link.connection?.enabled
+                          ? "Enabled"
+                          : "Disabled"}
                       </span>
                     </div>
                   </Cell>
                   <Cell>
-                    {formatDistanceToNow(connection.created_at, {
-                      addSuffix: true,
-                    })}
-                  </Cell>
-                  <Cell>
-                    {connection.extension_type === "github" && (
-                      <code className="text-xs text-gray-600">
-                        {(connection.config as any).owner}/
-                        {(connection.config as any).repo}
-                      </code>
-                    )}
+                    {link.last_synced_at
+                      ? formatDistanceToNow(link.last_synced_at, {
+                          addSuffix: true,
+                        })
+                      : "Never"}
                   </Cell>
                   <Cell>
                     <MenuTrigger>
@@ -268,33 +316,16 @@ function RouteComponent() {
                         <MoreHorizontal className="size-4 text-gray-500" />
                       </RACButton>
                       <Menu>
-                        {connection.extension_type === "github" &&
-                          connection.enabled && (
-                            <MenuItem
-                              onAction={() =>
-                                handleSyncFromGitHub(connection.id)
-                              }
-                            >
-                              Pull from GitHub
-                            </MenuItem>
-                          )}
+                        {link.enabled && link.connection?.enabled && (
+                          <MenuItem
+                            onAction={() => handleSyncLink(link.id, link.name)}
+                          >
+                            <FolderSync className="size-4 mr-2" />
+                            Sync Now
+                          </MenuItem>
+                        )}
                         <MenuItem
-                          onAction={() =>
-                            handleToggleConnection(
-                              connection.id,
-                              connection.enabled
-                            )
-                          }
-                        >
-                          {connection.enabled ? "Disable" : "Enable"}
-                        </MenuItem>
-                        <MenuItem
-                          onAction={() =>
-                            handleDeleteConnection(
-                              connection.id,
-                              connection.extension_type
-                            )
-                          }
+                          onAction={() => handleDeleteLink(link.id, link.name)}
                           className="text-red-600"
                         >
                           Delete
@@ -306,6 +337,32 @@ function RouteComponent() {
               )}
             </TableBody>
           </Table>
+        ) : connections && connections.length > 0 ? (
+          <div className="rounded-xl ring-1 ring-black/10 bg-white p-8 text-center flex flex-col items-center gap-3">
+            <div>
+              <div className="text-sm font-medium text-gray-700">
+                No links configured yet
+              </div>
+              <div className="text-xs mt-1 text-gray-500">
+                You have a connection set up. Add a link to start syncing
+                documents from a specific path.
+              </div>
+            </div>
+            {connections.find((c) => c.enabled) && (
+              <Button
+                onPress={() => {
+                  const enabledConnection = connections.find((c) => c.enabled);
+                  if (enabledConnection) {
+                    setLinkDialogConnectionId(enabledConnection.id);
+                  }
+                }}
+                size="sm"
+              >
+                <Link className="size-3.5 mr-1" />
+                Add Your First Link
+              </Button>
+            )}
+          </div>
         ) : (
           <div className="rounded-xl ring-1 ring-black/10 bg-white p-8 text-center">
             <div className="text-sm font-medium text-gray-700">
@@ -313,6 +370,154 @@ function RouteComponent() {
             </div>
             <div className="text-xs mt-1 text-gray-500">
               Connect your first extension to start syncing documents
+            </div>
+          </div>
+        )}
+
+        {/* Show Connected Extensions with their links */}
+        {connections && connections.length > 0 && (
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-medium text-gray-700">
+                Connected Accounts
+              </h3>
+            </div>
+            <div className="flex flex-col gap-3">
+              {connections.map((connection) => {
+                const connectionLinks =
+                  extensionLinks?.filter(
+                    (link) => link.connection_id === connection.id
+                  ) || [];
+
+                return (
+                  <div
+                    key={connection.id}
+                    className="rounded-lg ring-1 ring-black/10 bg-white p-4"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        {getExtensionIcon(connection.extension_type)}
+                        <span className="font-medium capitalize">
+                          {connection.extension_type}
+                        </span>
+                        {getStatusIcon(connection.enabled)}
+                        <span className="text-xs text-gray-500">
+                          {connectionLinks.length} link
+                          {connectionLinks.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <MenuTrigger>
+                        <RACButton className="ml-1">
+                          <MoreHorizontal className="size-4 text-gray-500" />
+                        </RACButton>
+                        <Menu>
+                          {connection.enabled && (
+                            <MenuItem
+                              onAction={() =>
+                                setLinkDialogConnectionId(connection.id)
+                              }
+                            >
+                              <Link className="size-4 mr-2" />
+                              Add Link
+                            </MenuItem>
+                          )}
+                          <MenuItem
+                            onAction={() =>
+                              handleToggleConnection(
+                                connection.id,
+                                connection.enabled
+                              )
+                            }
+                          >
+                            {connection.enabled ? "Disable" : "Enable"}
+                          </MenuItem>
+                          <MenuItem
+                            onAction={() =>
+                              handleDeleteConnection(
+                                connection.id,
+                                connection.extension_type
+                              )
+                            }
+                            className="text-red-600"
+                          >
+                            Delete
+                          </MenuItem>
+                        </Menu>
+                      </MenuTrigger>
+                    </div>
+                    {connectionLinks.length > 0 && (
+                      <div className="mt-2 pt-3 border-t border-gray-100">
+                        <div className="flex flex-col gap-2">
+                          {connectionLinks.map((link) => (
+                            <div
+                              key={link.id}
+                              className="flex items-center justify-between text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Link className="size-3.5 text-blue-500" />
+                                <span className="font-medium">{link.name}</span>
+                                <code className="text-xs text-gray-500">
+                                  {(link.config as any).owner}/
+                                  {(link.config as any).repo}
+                                  {(link.config as any).basePath &&
+                                    `/${(link.config as any).basePath}`}
+                                </code>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {getStatusIcon(
+                                  link.enabled &&
+                                    (link.connection?.enabled ?? false)
+                                )}
+                                <MenuTrigger>
+                                  <RACButton>
+                                    <MoreHorizontal className="size-3 text-gray-400" />
+                                  </RACButton>
+                                  <Menu>
+                                    {link.enabled &&
+                                      link.connection?.enabled && (
+                                        <MenuItem
+                                          onAction={() =>
+                                            handleSyncLink(link.id, link.name)
+                                          }
+                                        >
+                                          <FolderSync className="size-4 mr-2" />
+                                          Sync Now
+                                        </MenuItem>
+                                      )}
+                                    <MenuItem
+                                      onAction={() =>
+                                        handleDeleteLink(link.id, link.name)
+                                      }
+                                      className="text-red-600"
+                                    >
+                                      Delete
+                                    </MenuItem>
+                                  </Menu>
+                                </MenuTrigger>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {connectionLinks.length === 0 && connection.enabled && (
+                      <div className="mt-2 pt-3 border-t border-gray-100">
+                        <Button
+                          onPress={() =>
+                            setLinkDialogConnectionId(connection.id)
+                          }
+                          size="sm"
+                          intent="secondary"
+                          className="w-full"
+                        >
+                          <Link className="size-3.5 mr-1" />
+                          Add Your First Link
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -328,19 +533,13 @@ function RouteComponent() {
         onClose={handleCloseDialog}
       />
 
-      {/* Show configuration dialog after OAuth success */}
-      {search.success && search.connectionId && (
+      {/* Show link configuration dialog */}
+      {linkDialogConnectionId && (
         <ConfigureConnectionDialog
-          connectionId={search.connectionId}
+          connectionId={linkDialogConnectionId}
           organizationId={organization?.id || ""}
           onClose={() => {
-            // Clear URL params when dialog closes
-            navigate({
-              to: "/w/$organizationId/settings/extensions",
-              params: { organizationId: organization?.id || "" },
-              search: undefined,
-              replace: true,
-            });
+            setLinkDialogConnectionId(null);
           }}
         />
       )}
@@ -558,7 +757,6 @@ function ConfigureConnectionDialog({
   onClose,
 }: ConfigureConnectionDialogProps) {
   const { createClient } = useAuthenticatedApi();
-  const z = useZero();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [repositories, setRepositories] = useState<
@@ -575,72 +773,78 @@ function ConfigureConnectionDialog({
 
   const form = useAppForm({
     defaultValues: {
-      repo: (connection?.config as any)?.repo || "",
-      branch: (connection?.config as any)?.branch || "main",
-      basePath: (connection?.config as any)?.basePath || "",
+      name: "",
+      repo: "",
+      branch: "main",
+      basePath: "",
     },
     onSubmit: async (values) => {
       setIsSaving(true);
       try {
         const client = await createClient();
 
-        // Save configuration
-        // @ts-expect-error - Dynamic route parameter type inference limitation
-        await client.internal.extensions[":connectionId"].config.$patch({
-          param: { connectionId },
-          json: {
-            config: {
-              repo: values.value.repo,
-              branch: values.value.branch || "main",
-              basePath: values.value.basePath || undefined,
-            },
-          },
-        });
+        // Find the selected repository to get the owner
+        const selectedRepo = repositories.find(
+          (r) => r.name === values.value.repo
+        );
+        const owner = selectedRepo?.full_name.split("/")[0] || "";
 
-        // Update via Zero to refresh UI
-        z.mutate(
-          mutators.extensionConnection.update({
-            connectionId,
-            config: {
-              repo: values.value.repo,
-              branch: values.value.branch || "main",
-              basePath: values.value.basePath || undefined,
+        // Create a link instead of updating connection config
+        // @ts-expect-error - Dynamic route parameter type inference limitation
+        const linkResponse = await client.internal.extensions[
+          ":connectionId"
+        ].links
+          .$post({
+            param: { connectionId },
+            json: {
+              name: values.value.name || `${owner}/${values.value.repo}`,
+              config: {
+                owner,
+                repo: values.value.repo,
+                branch: values.value.branch || "main",
+                basePath: values.value.basePath || undefined,
+              },
             },
           })
-        );
+          .then((res: Response) => res.json());
 
-        // Trigger initial sync
+        if ("error" in linkResponse) {
+          toast.error(`Failed to create link: ${linkResponse.error}`);
+          setIsSaving(false);
+          return;
+        }
+
+        const linkId = linkResponse.linkId;
+
+        // Trigger initial sync for the link
         toast.loading("Starting initial sync...", { id: "initial-sync" });
 
         // @ts-expect-error - Dynamic route parameter type inference limitation
-        const syncResponse = await client.internal.extensions[
-          ":connectionId"
+        const syncResponse = await client.internal.extensions.links[
+          ":linkId"
         ].sync
           .$post({
-            param: { connectionId },
+            param: { linkId },
           })
           .then((res: Response) => res.json());
 
         if ("error" in syncResponse) {
-          toast.error(
-            `Configuration saved, but sync failed: ${syncResponse.error}`,
-            {
-              id: "initial-sync",
-              duration: 5000,
-            }
-          );
-          // Close dialog even if sync failed - connection is configured
+          toast.error(`Link created, but sync failed: ${syncResponse.error}`, {
+            id: "initial-sync",
+            duration: 5000,
+          });
+          // Close dialog even if sync failed - link is created
           onClose();
         } else if ("imported" in syncResponse) {
           toast.success(
-            `Configuration saved! Imported ${syncResponse.imported} document(s) from GitHub.`,
+            `Link created! Imported ${syncResponse.imported} document(s).`,
             { id: "initial-sync", duration: 5000 }
           );
           // Close dialog on success
           onClose();
         }
       } catch (error) {
-        toast.error("Failed to configure connection");
+        toast.error("Failed to create link");
         console.error("Configuration error:", error);
       } finally {
         setIsSaving(false);
@@ -676,127 +880,146 @@ function ConfigureConnectionDialog({
     fetchRepositories();
   }, [connectionId]);
 
-  // Update form when connection loads
-  useEffect(() => {
-    if (connection?.config) {
-      const config = connection.config as any;
-      form.setFieldValue("repo", config.repo || "");
-      form.setFieldValue("branch", config.branch || "main");
-      form.setFieldValue("basePath", config.basePath || "");
-    }
-  }, [connection]);
-
-  if (!connection) {
-    return null;
-  }
-
   return (
-    <DialogTrigger isOpen={true} onOpenChange={onClose}>
+    <DialogTrigger
+      isOpen={true}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          onClose();
+        }
+      }}
+    >
       <Modal isDismissable>
         <Dialog>
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-          >
-            <div className="p-4 flex flex-col gap-y-4">
-              <div>
-                <Heading level={2}>Configure GitHub Sync</Heading>
-                <p className="text-sm text-gray-600 mt-1">
-                  Select the repository and configure where to sync your
-                  documents.
-                </p>
-              </div>
-
-              {isLoading ? (
-                <div className="py-8 text-center text-sm text-gray-500">
-                  Loading repositories...
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <Select
-                      label="Repository"
-                      isRequired
-                      placeholder="Select a repository"
-                      selectedKey={form.state.values.repo}
-                      onSelectionChange={(key) => {
-                        if (key && typeof key === "string") {
-                          form.setFieldValue("repo", key);
-                          // Auto-fill branch from repo's default branch
-                          const repo = repositories.find((r) => r.name === key);
-                          if (repo && !form.state.values.branch) {
-                            form.setFieldValue("branch", repo.default_branch);
-                          }
-                        }
-                      }}
-                      items={repositories.map((repo) => ({
-                        id: repo.name,
-                        label: repo.full_name,
-                        defaultBranch: repo.default_branch,
-                      }))}
-                    >
-                      {(item) => (
-                        <SelectItem id={item.id} textValue={item.label}>
-                          {item.label}
-                        </SelectItem>
-                      )}
-                    </Select>
-                  </div>
-
-                  <form.AppField
-                    name="branch"
-                    children={(field) => (
-                      <field.TextField
-                        label="Branch"
-                        placeholder="main"
-                        description="The branch to commit documents to"
-                      />
-                    )}
-                  />
-
-                  <form.AppField
-                    name="basePath"
-                    children={(field) => (
-                      <field.TextField
-                        label="Base Path (Optional)"
-                        placeholder="docs or content/posts"
-                        description="Directory within the repository to store documents"
-                      />
-                    )}
-                  />
-                </>
-              )}
-
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-                <strong>Note:</strong> After saving, an initial sync will pull
-                all Markdown/MDX files from the repository into your workspace.
-                Configuration cannot be changed later - disable and reconnect to
-                reconfigure.
-              </div>
-
-              <div className="flex justify-end gap-1.5">
-                <Button
-                  intent="secondary"
-                  onPress={onClose}
-                  type="button"
-                  size="sm"
-                  isDisabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  type="submit"
-                  isPending={isSaving}
-                  isDisabled={isSaving || isLoading || !form.state.values.repo}
-                >
-                  {isSaving ? "Saving & Syncing..." : "Save & Sync"}
-                </Button>
+          {!connection ? (
+            <div className="p-4">
+              <div className="py-8 text-center text-sm text-gray-500">
+                Loading connection...
               </div>
             </div>
-          </Form>
+          ) : (
+            <Form
+              onSubmit={(e) => {
+                e.preventDefault();
+                form.handleSubmit();
+              }}
+            >
+              <div className="p-4 flex flex-col gap-y-4">
+                <div>
+                  <Heading level={2}>Add GitHub Link</Heading>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Create a link to sync documents from a specific path in your
+                    repository.
+                  </p>
+                </div>
+
+                {isLoading ? (
+                  <div className="py-8 text-center text-sm text-gray-500">
+                    Loading repositories...
+                  </div>
+                ) : (
+                  <>
+                    <form.AppField
+                      name="name"
+                      children={(field) => (
+                        <field.TextField
+                          label="Link Name"
+                          placeholder="e.g. Web Docs, API Reference"
+                          description="A friendly name for this link (shown in the file tree)"
+                        />
+                      )}
+                    />
+
+                    <div>
+                      <Select
+                        label="Repository"
+                        isRequired
+                        placeholder="Select a repository"
+                        selectedKey={form.state.values.repo}
+                        onSelectionChange={(key) => {
+                          if (key && typeof key === "string") {
+                            form.setFieldValue("repo", key);
+                            // Auto-fill branch from repo's default branch
+                            const repo = repositories.find(
+                              (r) => r.name === key
+                            );
+                            if (repo) {
+                              form.setFieldValue("branch", repo.default_branch);
+                              // Auto-fill name if empty
+                              if (!form.state.values.name) {
+                                form.setFieldValue("name", repo.full_name);
+                              }
+                            }
+                          }
+                        }}
+                        items={repositories.map((repo) => ({
+                          id: repo.name,
+                          label: repo.full_name,
+                          defaultBranch: repo.default_branch,
+                        }))}
+                      >
+                        {(item) => (
+                          <SelectItem id={item.id} textValue={item.label}>
+                            {item.label}
+                          </SelectItem>
+                        )}
+                      </Select>
+                    </div>
+
+                    <form.AppField
+                      name="branch"
+                      children={(field) => (
+                        <field.TextField
+                          label="Branch"
+                          placeholder="main"
+                          description="The branch to sync documents from"
+                        />
+                      )}
+                    />
+
+                    <form.AppField
+                      name="basePath"
+                      children={(field) => (
+                        <field.TextField
+                          label="Base Path (Optional)"
+                          placeholder="docs or content/posts"
+                          description="Directory within the repository to sync (leave empty for root)"
+                        />
+                      )}
+                    />
+                  </>
+                )}
+
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                  <strong>Tip:</strong> You can create multiple links from the
+                  same repository to sync different directories. Each link
+                  appears as a separate folder in your file tree.
+                </div>
+
+                <div className="flex justify-end gap-1.5">
+                  <Button
+                    intent="secondary"
+                    onPress={onClose}
+                    type="button"
+                    size="sm"
+                    isDisabled={isSaving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    type="submit"
+                    isPending={isSaving}
+                    isDisabled={
+                      isSaving || isLoading || !form.state.values.repo
+                    }
+                  >
+                    {isSaving ? "Creating & Syncing..." : "Create Link & Sync"}
+                  </Button>
+                </div>
+              </div>
+            </Form>
+          )}
         </Dialog>
       </Modal>
     </DialogTrigger>

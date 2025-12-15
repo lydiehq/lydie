@@ -8,4 +8,5 @@ export default defineConfig({
   dbCredentials: {
     url: Resource.PostgresConnectionStringDirect.value,
   },
+  schemaFilter: ["public"],
 });

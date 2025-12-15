@@ -14,11 +14,14 @@ import {
   FolderOpen,
   MoreVertical,
   Move,
+  Plug,
+  Settings,
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles } from "./Sidebar";
 import { FolderMenu } from "../home-file-explorer/FolderMenu";
 import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
+import { Menu, MenuItem } from "../generic/Menu";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { useAuth } from "@/context/auth.context";
@@ -28,13 +31,17 @@ export type DocumentTreeItemProps = {
   item: {
     id: string;
     name: string;
-    type: "folder" | "document";
+    type: "folder" | "document" | "extension-link";
     children?: Array<{
       id: string;
       name: string;
-      type: "folder" | "document";
+      type: "folder" | "document" | "extension-link";
       children?: any[];
+      extensionLinkId?: string | null;
+      extensionType?: string;
     }>;
+    extensionLinkId?: string | null;
+    extensionType?: string;
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<
@@ -62,6 +69,9 @@ export function DocumentTreeItem({
   const isActiveFolder = item.type === "folder" && tree === item.id;
   const isCurrent = isCurrentDocument || isActiveFolder;
 
+  // Check if this is an extension link item
+  const isExtensionLink = item.type === "extension-link";
+
   const handleNavigate = () => {
     if (item.type === "document") {
       navigate({
@@ -76,13 +86,14 @@ export function DocumentTreeItem({
         search: { tree: item.id, q: undefined, focusSearch: undefined },
       });
     }
+    // Extension links don't navigate anywhere on click (they just expand)
   };
 
   return (
     <TreeItem
       id={item.id}
       textValue={item.name}
-      onAction={handleNavigate}
+      onAction={isExtensionLink ? undefined : handleNavigate}
       className={composeTailwindRenderProps(
         focusRing,
         sidebarItemStyles({
@@ -90,6 +101,7 @@ export function DocumentTreeItem({
           className: `
             dragging:opacity-50 dragging:bg-gray-50 
             ${item.type === "folder" ? "drop-target:bg-gray-200" : ""}
+            ${isExtensionLink ? "cursor-default" : ""}
           `,
         })
       )}
@@ -101,16 +113,39 @@ export function DocumentTreeItem({
       <TreeItemContent>
         {({ isExpanded }) => (
           <>
-            <Button
-              slot="drag"
-              className="hidden"
-              aria-label={`Drag ${
-                item.type === "folder" ? "folder" : "document"
-              } ${item.name}`}
-            >
-              <Move size={12} />
-            </Button>
+            {/* Only show drag button for non-extension-link items */}
+            {!isExtensionLink && (
+              <Button
+                slot="drag"
+                className="hidden"
+                aria-label={`Drag ${
+                  item.type === "folder" ? "folder" : "document"
+                } ${item.name}`}
+              >
+                <Move size={12} />
+              </Button>
+            )}
             <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
+              {/* Extension link item - shows as a folder with plug icon */}
+              {isExtensionLink && (
+                <>
+                  <Button
+                    className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
+                    slot="chevron"
+                  >
+                    <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
+                  </Button>
+                  <div className="flex items-center gap-0.5">
+                    {isExpanded ? (
+                      <FolderOpen className="size-3.5 text-blue-500" />
+                    ) : (
+                      <Folder className="size-3.5 text-blue-500" />
+                    )}
+                    <Plug className="size-3 text-blue-500 shrink-0" />
+                  </div>
+                </>
+              )}
+              {/* Folder item */}
               {item.type === "folder" && (
                 <Button
                   className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
@@ -120,34 +155,71 @@ export function DocumentTreeItem({
                 </Button>
               )}
               {item.type === "folder" && (
-                <Button className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1">
-                  {isExpanded ? (
-                    <FolderOpen className="size-3.5" />
-                  ) : (
-                    <Folder className="size-3.5" />
+                <div className="flex items-center gap-0.5">
+                  <Button className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1">
+                    {isExpanded ? (
+                      <FolderOpen className="size-3.5" />
+                    ) : (
+                      <Folder className="size-3.5" />
+                    )}
+                  </Button>
+                  {item.extensionLinkId && (
+                    <Plug className="size-3 text-blue-500 shrink-0" />
                   )}
-                </Button>
+                </div>
               )}
+              {/* Document item */}
               {item.type === "document" &&
                 (() => {
                   const document = documents.find((doc) => doc.id === item.id);
                   const indexStatus = document?.index_status || "outdated";
                   return (
-                    <div className="relative">
+                    <div className="relative flex items-center gap-0.5">
                       {isAdmin(user) && (
                         <DocumentIndexStatusIndicator
                           indexStatus={indexStatus}
                         />
                       )}
                       <File className="size-3.5 text-gray-500 shrink-0" />
+                      {item.extensionLinkId && (
+                        <Plug className="size-3 text-blue-500 shrink-0" />
+                      )}
                     </div>
                   );
                 })()}
               <span className="truncate">{item.name}</span>
             </div>
 
+            {/* Context menu */}
             <div className="items-center gap-1 relative -mr-1">
-              {item.type === "folder" ? (
+              {isExtensionLink ? (
+                <MenuTrigger>
+                  <Button
+                    className="p-1 rounded hover:bg-gray-200"
+                    aria-label="Extension link options"
+                  >
+                    <MoreVertical size={12} />
+                  </Button>
+                  <Menu>
+                    <MenuItem
+                      onAction={() => {
+                        navigate({
+                          to: "/w/$organizationId/settings/extensions",
+                          params: { organizationId: organizationId || "" },
+                          search: {
+                            success: false,
+                            error: undefined,
+                            connectionId: undefined,
+                          },
+                        });
+                      }}
+                    >
+                      <Settings className="size-4 mr-2" />
+                      Go to extensions
+                    </MenuItem>
+                  </Menu>
+                </MenuTrigger>
+              ) : item.type === "folder" ? (
                 <MenuTrigger>
                   <Button
                     className="p-1 rounded hover:bg-gray-200"

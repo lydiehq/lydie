@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@lydie/core": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^25.0.2",
     "sst": "catalog:",

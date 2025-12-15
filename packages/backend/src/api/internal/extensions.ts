@@ -1,6 +1,10 @@
 import { Hono } from "hono";
 import { db } from "@lydie/database";
-import { extensionConnectionsTable, documentsTable } from "@lydie/database";
+import {
+  extensionConnectionsTable,
+  extensionLinksTable,
+  documentsTable,
+} from "@lydie/database";
 import { eq } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
 import {
@@ -9,13 +13,16 @@ import {
   decodeOAuthState,
   type OAuthState,
   type OAuthExtension,
+  type SyncExtension,
 } from "@lydie/extensions";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { authenticatedWithOrganization } from "./middleware";
 
 // Registry of available extensions
-const extensionRegistry = new Map<string, OAuthExtension>([
+// Extensions must implement both SyncExtension (for push/pull) and OAuthExtension (for OAuth flow)
+type Extension = SyncExtension & OAuthExtension;
+const extensionRegistry = new Map<string, Extension>([
   ["github", new GitHubExtension()],
 ]);
 
@@ -307,7 +314,8 @@ export const ExtensionsRoute = new Hono<{
       }
 
       // Merge new config with existing
-      const updatedConfig = { ...connection.config, ...config };
+      const existingConfig = (connection.config as Record<string, any>) || {};
+      const updatedConfig = { ...existingConfig, ...config };
 
       // Update in database
       await db
@@ -322,28 +330,139 @@ export const ExtensionsRoute = new Hono<{
     }
   )
 
-  // Sync/pull documents from external source
-  .post("/:connectionId/sync", authenticatedWithOrganization, async (c) => {
-    try {
+  // Create a new link for a connection
+  .post(
+    "/:connectionId/links",
+    authenticatedWithOrganization,
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().min(1),
+        config: z.record(z.string(), z.any()),
+      })
+    ),
+    async (c) => {
       const connectionId = c.req.param("connectionId");
       const organizationId = c.get("organizationId");
-      const user = c.get("user");
+      const { name, config } = c.req.valid("json");
 
-      console.log(`[Extensions] Starting sync for connection ${connectionId}`);
-
-      // Fetch connection from database
+      // Verify connection exists and belongs to org
       const connection = await db.query.extensionConnectionsTable.findFirst({
         where: { id: connectionId },
       });
 
       if (!connection || connection.organizationId !== organizationId) {
-        console.error(
-          `[Extensions] Connection not found or access denied: ${connectionId}`
-        );
         return c.json({ error: "Connection not found" }, 404);
       }
 
-      if (!connection.enabled) {
+      // Create the link
+      const linkId = createId();
+      await db.insert(extensionLinksTable).values({
+        id: linkId,
+        name,
+        connectionId,
+        organizationId,
+        config,
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      return c.json({ success: true, linkId });
+    }
+  )
+
+  // Update a link
+  .patch(
+    "/links/:linkId",
+    authenticatedWithOrganization,
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().min(1).optional(),
+        config: z.record(z.string(), z.any()).optional(),
+        enabled: z.boolean().optional(),
+      })
+    ),
+    async (c) => {
+      const linkId = c.req.param("linkId");
+      const organizationId = c.get("organizationId");
+      const updates = c.req.valid("json");
+
+      // Verify link exists and belongs to org
+      const link = await db.query.extensionLinksTable.findFirst({
+        where: { id: linkId },
+      });
+
+      if (!link || link.organizationId !== organizationId) {
+        return c.json({ error: "Link not found" }, 404);
+      }
+
+      // Update the link
+      await db
+        .update(extensionLinksTable)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(eq(extensionLinksTable.id, linkId));
+
+      return c.json({ success: true });
+    }
+  )
+
+  // Delete a link
+  .delete("/links/:linkId", authenticatedWithOrganization, async (c) => {
+    const linkId = c.req.param("linkId");
+    const organizationId = c.get("organizationId");
+
+    // Verify link exists and belongs to org
+    const link = await db.query.extensionLinksTable.findFirst({
+      where: { id: linkId },
+    });
+
+    if (!link || link.organizationId !== organizationId) {
+      return c.json({ error: "Link not found" }, 404);
+    }
+
+    // Delete the link (documents will have their extension_link_id set to null via FK)
+    await db
+      .delete(extensionLinksTable)
+      .where(eq(extensionLinksTable.id, linkId));
+
+    return c.json({ success: true });
+  })
+
+  // Sync/pull documents from a specific link
+  .post("/links/:linkId/sync", authenticatedWithOrganization, async (c) => {
+    try {
+      const linkId = c.req.param("linkId");
+      const organizationId = c.get("organizationId");
+      const user = c.get("user");
+
+      console.log(`[Extensions] Starting sync for link ${linkId}`);
+
+      // Fetch link with its connection
+      const link = await db.query.extensionLinksTable.findFirst({
+        where: { id: linkId },
+        with: {
+          connection: true,
+        },
+      });
+
+      if (!link || link.organizationId !== organizationId) {
+        console.error(
+          `[Extensions] Link not found or access denied: ${linkId}`
+        );
+        return c.json({ error: "Link not found" }, 404);
+      }
+
+      if (!link.enabled) {
+        return c.json({ error: "Link is disabled" }, 400);
+      }
+
+      const connection = link.connection;
+      if (!connection || !connection.enabled) {
         return c.json({ error: "Connection is disabled" }, 400);
       }
 
@@ -353,7 +472,16 @@ export const ExtensionsRoute = new Hono<{
         return c.json({ error: "Unknown extension type" }, 404);
       }
 
-      console.log(`[Extensions] Pulling from ${connection.extensionType}`);
+      console.log(
+        `[Extensions] Pulling from ${connection.extensionType} link: ${link.name}`
+      );
+
+      // Merge connection config with link config for the pull
+      // Link config contains path-specific info (e.g., repo path)
+      const mergedConfig = {
+        ...(connection.config as Record<string, any>),
+        ...(link.config as Record<string, any>),
+      };
 
       // Call extension's pull method
       const results = await extension.pull({
@@ -361,7 +489,7 @@ export const ExtensionsRoute = new Hono<{
           id: connection.id,
           extensionType: connection.extensionType,
           organizationId: connection.organizationId,
-          config: connection.config as Record<string, any>,
+          config: mergedConfig,
           enabled: connection.enabled,
           createdAt: connection.createdAt,
           updatedAt: connection.updatedAt,
@@ -386,9 +514,11 @@ export const ExtensionsRoute = new Hono<{
               jsonContent: result.metadata.content,
               userId: user.id,
               organizationId,
-              folderId: null,
+              folderId: null, // Documents from links are not in folders
+              extensionLinkId: link.id,
+              externalId: result.externalId,
               indexStatus: "pending",
-              published: false,
+              published: true, // Documents from extensions are published by default
               createdAt: new Date(),
               updatedAt: new Date(),
             });
@@ -407,6 +537,15 @@ export const ExtensionsRoute = new Hono<{
           console.error(`[Extensions] Pull failed: ${result.error}`);
         }
       }
+
+      // Update last synced timestamp
+      await db
+        .update(extensionLinksTable)
+        .set({
+          lastSyncedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(extensionLinksTable.id, linkId));
 
       console.log(
         `[Extensions] Sync complete. Imported: ${imported}, Failed: ${failed}`

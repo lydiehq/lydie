@@ -11,6 +11,10 @@ import type {
   OAuthTokenResponse,
 } from "../../oauth";
 import { Resource } from "sst";
+import {
+  serializeToMarkdown,
+  deserializeFromFile,
+} from "@lydie/core/serialization";
 
 /**
  * GitHub extension configuration stored in the database
@@ -76,24 +80,95 @@ export class GitHubExtension extends BaseSyncExtension {
   }
 
   async push(options: PushOptions): Promise<SyncResult> {
-    const { document, connection } = options;
+    const { document, connection, commitMessage } = options;
     const config = connection.config as GitHubConfig;
 
     try {
+      if (!config.repo || !config.accessToken || !config.owner) {
+        throw new Error("Repository not fully configured");
+      }
+
       // Convert TipTap content to Markdown
       const markdown = await this.convertToExternalFormat(document.content);
 
-      // TODO: Implement actual GitHub API calls
-      // 1. Check if file exists (GET /repos/:owner/:repo/contents/:path)
-      // 2. Create/update file (PUT /repos/:owner/:repo/contents/:path)
-      // 3. Handle conflicts if file was modified externally
+      // Generate file path using title (which includes extension)
+      const filePath = this.getFilePath(document.title, config.basePath);
 
-      const filePath = this.getFilePath(document.slug, config.basePath);
+      // Check if file exists to get current SHA (required for updates)
+      let currentSha: string | undefined;
+      try {
+        const getUrl = `https://api.github.com/repos/${config.owner}/${
+          config.repo
+        }/contents/${filePath}?ref=${config.branch || "main"}`;
+        const getResponse = await fetch(getUrl, {
+          headers: {
+            Authorization: `Bearer ${config.accessToken}`,
+            Accept: "application/vnd.github+json",
+          },
+        });
+        if (getResponse.ok) {
+          const fileData = (await getResponse.json()) as { sha: string };
+          currentSha = fileData.sha;
+        } else if (getResponse.status !== 404) {
+          // 404 is expected for new files, but other errors should be thrown
+          throw new Error(
+            `Failed to check file existence: ${getResponse.statusText}`
+          );
+        }
+      } catch (error) {
+        // If it's not a 404, rethrow
+        if (error instanceof Error && !error.message.includes("404")) {
+          throw error;
+        }
+      }
 
+      // Encode content as base64 (GitHub API requirement)
+      const contentBase64 = Buffer.from(markdown, "utf-8").toString("base64");
+
+      // Create or update file
+      const putUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${filePath}`;
+      const putBody: {
+        message: string;
+        content: string;
+        branch: string;
+        sha?: string;
+      } = {
+        message: commitMessage || `Update ${filePath} from Lydie`,
+        content: contentBase64,
+        branch: config.branch || "main",
+      };
+
+      // Include SHA for updates (required by GitHub API)
+      if (currentSha) {
+        putBody.sha = currentSha;
+      }
+
+      const putResponse = await fetch(putUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${config.accessToken}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(putBody),
+      });
+
+      if (!putResponse.ok) {
+        const errorData = await putResponse.json().catch(() => ({}));
+        throw new Error(
+          `Failed to push file: ${putResponse.statusText} - ${JSON.stringify(
+            errorData
+          )}`
+        );
+      }
+
+      const result = (await putResponse.json()) as {
+        content: { path: string };
+      };
       return this.createSuccessResult(
         document.id,
-        filePath,
-        `Would push to ${config.owner}/${config.repo}/${filePath}`
+        result.content.path,
+        `Pushed to ${config.owner}/${config.repo}/${result.content.path}`
       );
     } catch (error) {
       return this.createErrorResult(
@@ -115,8 +190,8 @@ export class GitHubExtension extends BaseSyncExtension {
         throw new Error("Repository not configured");
       }
 
-      // Fetch all markdown/mdx files from repository
-      const files = await this.fetchMarkdownFiles(
+      // Fetch all supported files (md, mdx, txt) from repository
+      const files = await this.fetchSupportedFiles(
         config.accessToken,
         config.owner || "",
         config.repo,
@@ -126,16 +201,22 @@ export class GitHubExtension extends BaseSyncExtension {
 
       for (const file of files) {
         try {
-          // Convert markdown to TipTap JSON
+          // Convert file content to TipTap JSON based on file extension
           const tipTapContent = await this.convertFromExternalFormat(
-            file.content
+            file.content,
+            file.name
           );
 
           // Generate document ID and slug
+          // Slug should not include extension for URL purposes
           const slug = file.path
-            .replace(/\.(md|mdx)$/, "")
+            .replace(/\.(md|mdx|txt)$/i, "")
             .replace(/\//g, "-")
             .toLowerCase();
+
+          // Preserve the full filename with extension in the title
+          // This is crucial for GitHub extension to know what extension to use when pushing
+          const title = file.name;
 
           results.push({
             success: true,
@@ -143,7 +224,7 @@ export class GitHubExtension extends BaseSyncExtension {
             externalId: file.path,
             message: `Pulled ${file.path}`,
             metadata: {
-              title: file.name.replace(/\.(md|mdx)$/, ""),
+              title,
               slug,
               content: tipTapContent,
             },
@@ -170,30 +251,27 @@ export class GitHubExtension extends BaseSyncExtension {
     }
   }
 
-  async convertFromExternalFormat(markdown: string): Promise<any> {
-    // TODO: Implement proper Markdown to TipTap conversion
-    // For now, return a basic structure
-    return {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            {
-              type: "text",
-              text: markdown,
-            },
-          ],
-        },
-      ],
-    };
+  async convertFromExternalFormat(
+    content: string,
+    filename?: string
+  ): Promise<any> {
+    // Use unified deserializer that routes to the correct deserializer based on file extension
+    // If filename is not provided, default to markdown deserialization
+    if (!filename) {
+      // Fallback to markdown deserializer if filename is not available
+      const { deserializeFromMarkdown } = await import(
+        "@lydie/core/serialization"
+      );
+      return deserializeFromMarkdown(content);
+    }
+    return deserializeFromFile(content, filename);
   }
 
   /**
-   * Fetch markdown files from GitHub repository
+   * Fetch supported files (md, mdx, txt) from GitHub repository
    * Uses the Contents API to get files from a specific folder instead of loading the entire repository
    */
-  private async fetchMarkdownFiles(
+  private async fetchSupportedFiles(
     accessToken: string,
     owner: string,
     repo: string,
@@ -231,8 +309,8 @@ export class GitHubExtension extends BaseSyncExtension {
     // Recursively process directory contents
     for (const item of contents) {
       if (item.type === "file") {
-        // Check if it's a markdown file
-        if (/\.(md|mdx)$/i.test(item.name)) {
+        // Check if it's a supported file type (md, mdx, txt)
+        if (/\.(md|mdx|txt)$/i.test(item.name)) {
           try {
             const contentResponse = await fetch(
               `https://api.github.com/repos/${owner}/${repo}/contents/${item.path}?ref=${branch}`,
@@ -265,8 +343,8 @@ export class GitHubExtension extends BaseSyncExtension {
           }
         }
       } else if (item.type === "dir") {
-        // Recursively fetch markdown files from subdirectories
-        const subdirectoryFiles = await this.fetchMarkdownFiles(
+        // Recursively fetch supported files from subdirectories
+        const subdirectoryFiles = await this.fetchSupportedFiles(
           accessToken,
           owner,
           repo,
@@ -281,17 +359,36 @@ export class GitHubExtension extends BaseSyncExtension {
   }
 
   async convertToExternalFormat(content: any): Promise<string> {
-    // TODO: Implement TipTap to Markdown conversion
-    // This is a placeholder - you'll want to use a proper converter
-    return "# Placeholder Markdown\n\nTODO: Implement TipTap to Markdown conversion";
+    return serializeToMarkdown(content);
   }
 
   /**
    * Generate the file path for a document in the repository
+   * Uses the document title which should include the file extension
+   * Supports: .md, .mdx, .txt
    */
-  private getFilePath(slug: string, basePath?: string): string {
-    const fileName = `${slug}.md`;
-    return basePath ? `${basePath}/${fileName}` : fileName;
+  private getFilePath(title: string, basePath?: string): string {
+    // Title should already include the extension (e.g., "file.md", "file.mdx", or "file.txt")
+    // If it doesn't, default to .md
+    let fileName = title.includes(".") ? title : `${title}.md`;
+
+    // Validate that the extension is supported
+    const extension = fileName.toLowerCase().match(/\.([^.]+)$/)?.[1];
+    if (extension && !["md", "mdx", "txt"].includes(extension)) {
+      // If extension is not supported, default to .md
+      const nameWithoutExt = fileName.replace(/\.[^.]+$/, "");
+      fileName = `${nameWithoutExt}.md`;
+    }
+
+    if (!basePath) {
+      return fileName;
+    }
+
+    // Remove leading and trailing slashes from basePath
+    const normalizedBasePath = basePath.replace(/^\/+|\/+$/g, "");
+
+    // Combine basePath and fileName, ensuring no leading slash
+    return normalizedBasePath ? `${normalizedBasePath}/${fileName}` : fileName;
   }
 
   // OAuth Implementation

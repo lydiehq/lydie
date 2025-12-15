@@ -58,6 +58,8 @@ const documents = table("documents")
     organization_id: string(),
     index_status: string(),
     folder_id: string().optional(),
+    extension_link_id: string().optional(),
+    external_id: string().optional(),
     published: boolean(),
     deleted_at: number().optional(),
     ...timestamps,
@@ -71,6 +73,7 @@ const folders = table("folders")
     parent_id: string().optional(),
     user_id: string(),
     organization_id: string(),
+    extension_link_id: string().optional(),
     deleted_at: number().optional(),
     ...timestamps,
   })
@@ -188,6 +191,20 @@ const extensionConnections = table("extension_connections")
   })
   .primaryKey("id");
 
+// Extension links - configurable "symlinks" to external sources
+const extensionLinks = table("extension_links")
+  .columns({
+    id: string(),
+    name: string(),
+    connection_id: string(),
+    organization_id: string(),
+    config: json(), // Extension-specific: { owner, repo, branch, path } for GitHub
+    enabled: boolean(),
+    last_synced_at: number().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
 const syncMetadata = table("sync_metadata")
   .columns({
     id: string(),
@@ -212,6 +229,11 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     sourceField: ["organization_id"],
     destField: ["id"],
     destSchema: organizations,
+  }),
+  extensionLink: one({
+    sourceField: ["extension_link_id"],
+    destField: ["id"],
+    destSchema: extensionLinks,
   }),
   conversations: many({
     sourceField: ["id"],
@@ -245,6 +267,11 @@ const foldersRelations = relationships(folders, ({ one, many }) => ({
     sourceField: ["organization_id"],
     destField: ["id"],
     destSchema: organizations,
+  }),
+  extensionLink: one({
+    sourceField: ["extension_link_id"],
+    destField: ["id"],
+    destSchema: extensionLinks,
   }),
 }));
 
@@ -473,6 +500,37 @@ const extensionConnectionsRelations = relationships(
       destField: ["connection_id"],
       destSchema: syncMetadata,
     }),
+    links: many({
+      sourceField: ["id"],
+      destField: ["connection_id"],
+      destSchema: extensionLinks,
+    }),
+  })
+);
+
+const extensionLinksRelations = relationships(
+  extensionLinks,
+  ({ one, many }) => ({
+    connection: one({
+      sourceField: ["connection_id"],
+      destField: ["id"],
+      destSchema: extensionConnections,
+    }),
+    organization: one({
+      sourceField: ["organization_id"],
+      destField: ["id"],
+      destSchema: organizations,
+    }),
+    documents: many({
+      sourceField: ["id"],
+      destField: ["extension_link_id"],
+      destSchema: documents,
+    }),
+    folders: many({
+      sourceField: ["id"],
+      destField: ["extension_link_id"],
+      destSchema: folders,
+    }),
   })
 );
 
@@ -506,6 +564,7 @@ export const schema = createSchema({
     userSettings,
     organizationSettings,
     extensionConnections,
+    extensionLinks,
     syncMetadata,
   ],
   relationships: [
@@ -524,6 +583,7 @@ export const schema = createSchema({
     userSettingsRelations,
     organizationSettingsRelations,
     extensionConnectionsRelations,
+    extensionLinksRelations,
     syncMetadataRelations,
   ],
   enableLegacyQueries: false,

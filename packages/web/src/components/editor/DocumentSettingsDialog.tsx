@@ -35,11 +35,20 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
     },
   });
 
-  const handlePublishToggle = async () => {
+  const handlePublish = async () => {
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
-        published: !doc.published,
+        published: true,
+      })
+    );
+  };
+
+  const handleUnpublish = async () => {
+    z.mutate(
+      mutators.document.update({
+        documentId: doc.id,
+        published: false,
       })
     );
   };
@@ -91,17 +100,24 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
                 </p>
               </div>
 
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-2">
                 <Button type="submit" size="sm">
                   Save Settings
                 </Button>
-                <Button
-                  size="sm"
-                  intent={doc.published ? "secondary" : "primary"}
-                  onPress={handlePublishToggle}
-                >
-                  {doc.published ? "Unpublish" : "Publish"}
-                </Button>
+                <div className="flex gap-2">
+                  {doc.published && (
+                    <Button
+                      size="sm"
+                      intent="secondary"
+                      onPress={handleUnpublish}
+                    >
+                      Unpublish
+                    </Button>
+                  )}
+                  <Button size="sm" intent="primary" onPress={handlePublish}>
+                    {doc.published ? "Republish" : "Publish"}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

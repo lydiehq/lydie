@@ -74,6 +74,9 @@
     "packages/extensions": {
       "name": "@lydie/extensions",
       "version": "1.0.0",
+      "dependencies": {
+        "@lydie/core": "workspace:*",
+      },
       "devDependencies": {
         "@types/node": "^25.0.2",
         "sst": "catalog:",
@@ -229,6 +232,8 @@
       "dependencies": {
         "@aws-sdk/client-sqs": "^3.948.0",
         "@lydie/core": "workspace:*",
+        "@lydie/database": "workspace:*",
+        "@lydie/extensions": "workspace:*",
         "@rocicorp/zero": "catalog:",
         "better-auth": "catalog:",
         "zod": "catalog:",
