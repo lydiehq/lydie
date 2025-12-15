@@ -7,6 +7,7 @@ import {
   CreditCard,
   Box,
   Upload,
+  Puzzle,
 } from "lucide-react";
 import { sidebarItemStyles } from "@/components/layout/Sidebar";
 
@@ -47,6 +48,11 @@ const settingsRoutes = [
         path: "/w/$organizationId/settings/components",
         label: "Components",
         icon: Box,
+      },
+      {
+        path: "/w/$organizationId/settings/extensions",
+        label: "Extensions",
+        icon: Puzzle,
       },
       {
         path: "/w/$organizationId/settings/import",

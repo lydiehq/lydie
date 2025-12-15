@@ -1,3 +1,4 @@
+import { ErrorPage } from "@/components/layout/ErrorPage";
 import { ZeroInit } from "@/components/zero/ZeroInit";
 import {
   CatchBoundary,
@@ -22,19 +23,7 @@ export const Route = createFileRoute("/__auth")({
 function RouteComponent() {
   const { auth } = Route.useRouteContext();
   return (
-    <CatchBoundary
-      getResetKey={() => "auth"}
-      errorComponent={({ error }) => (
-        <div>
-          Error
-          {error.name}
-          <pre>{error.message}</pre>
-          <pre>{error.stack}</pre>
-          {/* @ts-ignore */}
-          <pre>{error.cause}</pre>
-        </div>
-      )}
-    >
+    <CatchBoundary getResetKey={() => "auth"} errorComponent={ErrorPage}>
       <ZeroInit session={auth.session}>
         <Outlet />
       </ZeroInit>

@@ -14,6 +14,8 @@ const commonSecrets = [
   secret.polarApiKey,
   secret.polarProProductId,
   secret.polarWebhookSecret,
+  secret.githubClientId,
+  secret.githubClientSecret,
 ];
 
 export const backend = new sst.aws.Service("Backend", {

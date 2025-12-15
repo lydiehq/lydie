@@ -241,4 +241,37 @@ export const queries = defineQueries({
       }
     ),
   },
+  extensions: {
+    byOrganization: defineQuery(
+      z.object({ organizationId: z.string() }),
+      ({ args: { organizationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return zql.extension_connections
+          .where("organization_id", organizationId)
+          .orderBy("created_at", "desc");
+      }
+    ),
+    byId: defineQuery(
+      z.object({ connectionId: z.string(), organizationId: z.string() }),
+      ({ args: { connectionId, organizationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return zql.extension_connections
+          .where("id", connectionId)
+          .where("organization_id", organizationId)
+          .one();
+      }
+    ),
+  },
+  syncMetadata: {
+    byDocument: defineQuery(
+      z.object({ documentId: z.string(), organizationId: z.string() }),
+      ({ args: { documentId, organizationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return zql.sync_metadata
+          .where("document_id", documentId)
+          .related("connection")
+          .orderBy("created_at", "desc");
+      }
+    ),
+  },
 });

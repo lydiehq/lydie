@@ -13,8 +13,10 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
+    "@hono/zod-validator": "^0.7.5",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
+    "@lydie/extensions": "workspace:*",
     "@lydie/zero": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
     "@rocicorp/zero": "catalog:",

@@ -17,4 +17,6 @@ export const secret = {
   polarApiKey: new sst.Secret("PolarApiKey"),
   polarProProductId: new sst.Secret("PolarProProductId"),
   polarWebhookSecret: new sst.Secret("PolarWebhookSecret"),
+  githubClientId: new sst.Secret("GitHubClientId"),
+  githubClientSecret: new sst.Secret("GitHubClientSecret"),
 };

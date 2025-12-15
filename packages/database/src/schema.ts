@@ -442,3 +442,53 @@ export const organizationSettingsTable = pgTable("organization_settings", {
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   ...timestamps,
 });
+
+export const extensionConnectionsTable = pgTable(
+  "extension_connections",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    extensionType: text("extension_type").notNull(), // 'github', 'shopify', 'wordpress', etc.
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    config: jsonb("config").notNull(), // Platform-specific config (API keys, repo info, etc.)
+    enabled: boolean("enabled").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [
+    index("extension_connections_organization_id_idx").on(table.organizationId),
+  ]
+);
+
+export const syncMetadataTable = pgTable(
+  "sync_metadata",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    connectionId: text("connection_id")
+      .notNull()
+      .references(() => extensionConnectionsTable.id, { onDelete: "cascade" }),
+    externalId: text("external_id").notNull(), // ID/path in external system
+    lastSyncedAt: timestamp("last_synced_at"),
+    lastSyncedHash: text("last_synced_hash"), // Content hash for change detection
+    syncStatus: text("sync_status").notNull().default("pending"), // 'synced', 'pending', 'conflict', 'error'
+    syncError: text("sync_error"), // Error message if sync failed
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("sync_metadata_document_connection_idx").on(
+      table.documentId,
+      table.connectionId
+    ),
+    index("sync_metadata_document_id_idx").on(table.documentId),
+    index("sync_metadata_connection_id_idx").on(table.connectionId),
+  ]
+);

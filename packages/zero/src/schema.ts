@@ -177,6 +177,31 @@ const organizationSettings = table("organization_settings")
   })
   .primaryKey("id");
 
+const extensionConnections = table("extension_connections")
+  .columns({
+    id: string(),
+    extension_type: string(),
+    organization_id: string(),
+    config: json(),
+    enabled: boolean(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const syncMetadata = table("sync_metadata")
+  .columns({
+    id: string(),
+    document_id: string(),
+    connection_id: string(),
+    external_id: string(),
+    last_synced_at: number().optional(),
+    last_synced_hash: string().optional(),
+    sync_status: string(),
+    sync_error: string().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
 const documentsRelations = relationships(documents, ({ one, many }) => ({
   folder: one({
     sourceField: ["folder_id"],
@@ -260,6 +285,11 @@ const organizationsRelations = relationships(
       sourceField: ["id"],
       destField: ["organization_id"],
       destSchema: llmUsage,
+    }),
+    extensionConnections: many({
+      sourceField: ["id"],
+      destField: ["organization_id"],
+      destSchema: extensionConnections,
     }),
     settings: one({
       sourceField: ["id"],
@@ -430,6 +460,35 @@ const organizationSettingsRelations = relationships(
   })
 );
 
+const extensionConnectionsRelations = relationships(
+  extensionConnections,
+  ({ one, many }) => ({
+    organization: one({
+      sourceField: ["organization_id"],
+      destField: ["id"],
+      destSchema: organizations,
+    }),
+    syncMetadata: many({
+      sourceField: ["id"],
+      destField: ["connection_id"],
+      destSchema: syncMetadata,
+    }),
+  })
+);
+
+const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
+  document: one({
+    sourceField: ["document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  connection: one({
+    sourceField: ["connection_id"],
+    destField: ["id"],
+    destSchema: extensionConnections,
+  }),
+}));
+
 export const schema = createSchema({
   tables: [
     users,
@@ -446,6 +505,8 @@ export const schema = createSchema({
     llmUsage,
     userSettings,
     organizationSettings,
+    extensionConnections,
+    syncMetadata,
   ],
   relationships: [
     documentsRelations,
@@ -462,6 +523,8 @@ export const schema = createSchema({
     llmUsageRelations,
     userSettingsRelations,
     organizationSettingsRelations,
+    extensionConnectionsRelations,
+    syncMetadataRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,

@@ -34,6 +34,7 @@ export const relations = defineRelations(schema, (r) => ({
     embeddings: r.many.documentEmbeddingsTable(),
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
     conversations: r.many.documentConversationsTable(),
+    syncMetadata: r.many.syncMetadataTable(),
   },
   documentEmbeddingsTable: {
     document: r.one.documentsTable({
@@ -110,6 +111,7 @@ export const relations = defineRelations(schema, (r) => ({
     apiKeys: r.many.apiKeysTable(),
     documentComponents: r.many.documentComponentsTable(),
     llmUsage: r.many.llmUsageTable(),
+    extensionConnections: r.many.extensionConnectionsTable(),
     settings: r.one.organizationSettingsTable({
       from: r.organizationsTable.id,
       to: r.organizationSettingsTable.organizationId,
@@ -211,6 +213,25 @@ export const relations = defineRelations(schema, (r) => ({
     organization: r.one.organizationsTable({
       from: r.organizationSettingsTable.organizationId,
       to: r.organizationsTable.id,
+    }),
+  },
+
+  extensionConnectionsTable: {
+    organization: r.one.organizationsTable({
+      from: r.extensionConnectionsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    syncMetadata: r.many.syncMetadataTable(),
+  },
+
+  syncMetadataTable: {
+    document: r.one.documentsTable({
+      from: r.syncMetadataTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    connection: r.one.extensionConnectionsTable({
+      from: r.syncMetadataTable.connectionId,
+      to: r.extensionConnectionsTable.id,
     }),
   },
 }));

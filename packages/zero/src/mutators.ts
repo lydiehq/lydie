@@ -465,6 +465,126 @@ export const mutators = defineMutators({
       }
     ),
   },
+  extensionConnection: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        extensionType: z.string(),
+        organizationId: z.string(),
+        config: z.any(),
+        enabled: z.boolean().optional(),
+      }),
+      async ({
+        tx,
+        ctx,
+        args: { id, extensionType, organizationId, config, enabled = true },
+      }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        await tx.mutate.extension_connections.insert({
+          id,
+          extension_type: extensionType,
+          organization_id: organizationId,
+          config,
+          enabled,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+      }
+    ),
+    update: defineMutator(
+      z.object({
+        connectionId: z.string(),
+        config: z.any().optional(),
+        enabled: z.boolean().optional(),
+      }),
+      async ({ tx, args: { connectionId, config, enabled } }) => {
+        const updates: any = {
+          id: connectionId,
+          updated_at: Date.now(),
+        };
+
+        if (config !== undefined) updates.config = config;
+        if (enabled !== undefined) updates.enabled = enabled;
+
+        await tx.mutate.extension_connections.update(updates);
+      }
+    ),
+    delete: defineMutator(
+      z.object({
+        connectionId: z.string(),
+      }),
+      async ({ tx, args: { connectionId } }) => {
+        await tx.mutate.extension_connections.delete({ id: connectionId });
+      }
+    ),
+  },
+  syncMetadata: {
+    upsert: defineMutator(
+      z.object({
+        id: z.string().optional(),
+        documentId: z.string(),
+        connectionId: z.string(),
+        externalId: z.string(),
+        lastSyncedAt: z.number().optional(),
+        lastSyncedHash: z.string().optional(),
+        syncStatus: z.string(),
+        syncError: z.string().optional(),
+      }),
+      async ({
+        tx,
+        args: {
+          id,
+          documentId,
+          connectionId,
+          externalId,
+          lastSyncedAt,
+          lastSyncedHash,
+          syncStatus,
+          syncError,
+        },
+      }) => {
+        // Check if metadata exists for this document-connection pair
+        const existing = await tx.run(
+          zql.sync_metadata
+            .where("document_id", documentId)
+            .where("connection_id", connectionId)
+            .one()
+        );
+
+        if (existing) {
+          // Update existing
+          const updates: any = {
+            id: existing.id,
+            external_id: externalId,
+            sync_status: syncStatus,
+            updated_at: Date.now(),
+          };
+
+          if (lastSyncedAt !== undefined) updates.last_synced_at = lastSyncedAt;
+          if (lastSyncedHash !== undefined)
+            updates.last_synced_hash = lastSyncedHash;
+          if (syncError !== undefined) updates.sync_error = syncError;
+
+          await tx.mutate.sync_metadata.update(updates);
+        } else {
+          // Insert new
+          await tx.mutate.sync_metadata.insert({
+            id: id || createId(),
+            document_id: documentId,
+            connection_id: connectionId,
+            external_id: externalId,
+            last_synced_at: lastSyncedAt || null,
+            last_synced_hash: lastSyncedHash || null,
+            sync_status: syncStatus,
+            sync_error: syncError || null,
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          });
+        }
+      }
+    ),
+  },
 });
 
 export type Mutators = typeof mutators;

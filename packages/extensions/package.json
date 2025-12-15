@@ -1,0 +1,15 @@
+{
+  "name": "@lydie/extensions",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {},
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^25.0.2",
+    "sst": "catalog:",
+    "typescript": "^5.9.3"
+  }
+}
