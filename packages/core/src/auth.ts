@@ -12,7 +12,6 @@ import {
 } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import { eq } from "drizzle-orm";
-import { createAuthMiddleware } from "better-auth/api";
 import { createId } from "./id";
 import { createOrganization } from "./organization";
 import { slugify } from "./utils";
@@ -34,71 +33,6 @@ export const authClient = betterAuth({
     cookieCache: {
       enabled: true,
     },
-  },
-  hooks: {
-    after: createAuthMiddleware(async (ctx) => {
-      // Auto-create organization for new users on signup
-      if (ctx.context.newSession) {
-        const user = ctx.context.newSession.user;
-
-        // Check if user already has an organization
-        try {
-          const existingMemberships = await db
-            .select()
-            .from(schema.membersTable)
-            .where(eq(schema.membersTable.userId, user.id))
-            .limit(1);
-
-          // Only create a workspace if the user doesn't have one yet
-          if (existingMemberships.length === 0) {
-            await sendEmail({
-              to: "lars@salling.me",
-              subject: "New user signed up to Lydie",
-              html: `<p>New user signed up to Lydie: ${user.email}</p>`,
-            });
-
-            // Extract first name from user's full name
-            const fullName = user.name || user.email.split("@")[0] || "My";
-            const firstName = fullName.split(" ")[0];
-            const organizationName = `${firstName}'s Organization`;
-            const baseSlug = slugify(organizationName);
-            // Make slug unique by appending random characters
-            const slug = `${baseSlug}-${createId().slice(0, 6)}`;
-
-            // Create organization with all required setup (organization, member, settings)
-            await createOrganization({
-              name: organizationName,
-              slug: slug,
-              userId: user.id,
-            });
-          }
-        } catch (error) {
-          // Log error but don't break session creation
-          console.error("Failed to create organization for user:", error);
-        }
-
-        // Create default user settings if they don't exist
-        try {
-          const existingSettings = await db
-            .select()
-            .from(schema.userSettingsTable)
-            .where(eq(schema.userSettingsTable.userId, user.id))
-            .limit(1);
-
-          if (existingSettings.length === 0) {
-            await db.insert(schema.userSettingsTable).values({
-              id: createId(),
-              userId: user.id,
-              persistDocumentTreeExpansion: true,
-            });
-          }
-        } catch (error) {
-          // Log error but don't break session creation
-          // User settings can be created later if needed
-          console.error("Failed to create user settings:", error);
-        }
-      }
-    }),
   },
   baseURL:
     Resource.App.stage === "production"
@@ -151,6 +85,84 @@ export const authClient = betterAuth({
       adminUserIds: [], // Add specific user IDs here if needed
     }),
     organization(),
+    // Auto-create organization plugin - runs during user creation
+    {
+      id: "auto-create-organization",
+      init() {
+        return {
+          options: {
+            databaseHooks: {
+              user: {
+                create: {
+                  async after(user) {
+                    try {
+                      // Check if user already has an organization
+                      const existingMemberships = await db
+                        .select()
+                        .from(schema.membersTable)
+                        .where(eq(schema.membersTable.userId, user.id))
+                        .limit(1);
+
+                      // Only create a workspace if the user doesn't have one yet
+                      if (existingMemberships.length === 0) {
+                        await sendEmail({
+                          to: "lars@salling.me",
+                          subject: "New user signed up to Lydie",
+                          html: `<p>New user signed up to Lydie: ${user.email}</p>`,
+                        });
+
+                        // Extract first name from user's full name
+                        const fullName =
+                          user.name || user.email.split("@")[0] || "My";
+                        const firstName = fullName.split(" ")[0];
+                        const organizationName = `${firstName}'s Organization`;
+                        const baseSlug = slugify(organizationName);
+                        // Make slug unique by appending random characters
+                        const slug = `${baseSlug}-${createId().slice(0, 6)}`;
+
+                        // Create organization with all required setup (organization, member, settings)
+                        await createOrganization({
+                          name: organizationName,
+                          slug: slug,
+                          userId: user.id,
+                        });
+                      }
+                    } catch (error) {
+                      // Log error but don't break user creation
+                      console.error(
+                        "Failed to create organization for user:",
+                        error
+                      );
+                    }
+
+                    // Create default user settings if they don't exist
+                    try {
+                      const existingSettings = await db
+                        .select()
+                        .from(schema.userSettingsTable)
+                        .where(eq(schema.userSettingsTable.userId, user.id))
+                        .limit(1);
+
+                      if (existingSettings.length === 0) {
+                        await db.insert(schema.userSettingsTable).values({
+                          id: createId(),
+                          userId: user.id,
+                          persistDocumentTreeExpansion: true,
+                        });
+                      }
+                    } catch (error) {
+                      // Log error but don't break user creation
+                      // User settings can be created later if needed
+                      console.error("Failed to create user settings:", error);
+                    }
+                  },
+                },
+              },
+            },
+          },
+        };
+      },
+    },
     customSession(async ({ user, session }) => {
       // Fetch user's organizations with their memberships
       const members = await db
