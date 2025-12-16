@@ -469,7 +469,7 @@ function RouteComponent() {
               No integrations connected yet
             </div>
             <div className="text-xs mt-1 text-gray-500">
-              Connect your first extension to start syncing documents
+              Connect your first integration to start syncing documents
             </div>
           </div>
         )}

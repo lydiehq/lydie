@@ -8,6 +8,9 @@ import {
   Box,
   Upload,
   Puzzle,
+  Book,
+  ExternalLink,
+  type LucideIcon,
 } from "lucide-react";
 import { sidebarItemStyles } from "@/components/layout/Sidebar";
 
@@ -15,7 +18,19 @@ export const Route = createFileRoute("/__auth/w/$organizationId/settings")({
   component: RouteComponent,
 });
 
-const settingsRoutes = [
+type SettingsRoute = {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  external?: boolean;
+};
+
+type SettingsSection = {
+  title: string;
+  routes: SettingsRoute[];
+};
+
+const settingsRoutes: SettingsSection[] = [
   {
     title: "Account",
     routes: [
@@ -61,6 +76,17 @@ const settingsRoutes = [
       },
     ],
   },
+  {
+    title: "Miscellaneous",
+    routes: [
+      {
+        path: "https://lydie.co/documentation",
+        external: true,
+        label: "Docs",
+        icon: Book,
+      },
+    ],
+  },
 ];
 
 function RouteComponent() {
@@ -83,6 +109,7 @@ function RouteComponent() {
                           <Link
                             to={route.path}
                             from="/w/$organizationId/settings"
+                            {...(route.external ? { target: "_blank" } : {})}
                             className={sidebarItemStyles()}
                             activeOptions={{
                               exact: true,
@@ -96,6 +123,9 @@ function RouteComponent() {
                               <span className="truncate flex-1">
                                 {route.label}
                               </span>
+                              {route.external && (
+                                <ExternalLink className="size-3 text-gray-500" />
+                              )}
                             </div>
                           </Link>
                         </li>

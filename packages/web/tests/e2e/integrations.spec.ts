@@ -9,7 +9,7 @@ import type { Route } from "@playwright/test";
 
 test.describe("Integrations", () => {
   test.describe("GitHub Connection Flow", () => {
-    test("should open connection dialog and show extension options", async ({
+    test("should open connection dialog and show integration options", async ({
       page,
       organization,
     }) => {
