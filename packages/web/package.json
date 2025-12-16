@@ -17,6 +17,7 @@
     "@lydie/backend": "workspace:*",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
+    "@lydie/integrations": "workspace:*",
     "@lydie/zero": "workspace:*",
     "@openauthjs/openauth": "^0.4.3",
     "@polar-sh/better-auth": "catalog:",

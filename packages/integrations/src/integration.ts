@@ -5,7 +5,6 @@ import type {
   PullOptions,
   SyncResult,
   SyncMetadata,
-  ExternalResource,
 } from "./types";
 
 /**
@@ -79,19 +78,6 @@ export interface Integration {
    * E.g., Markdown -> TipTap for GitHub
    */
   convertFromExternalFormat?(content: string): Promise<any>;
-}
-
-/**
- * Interface for integrations that support listing external resources
- * Examples: repositories (GitHub), collections (Shopify), databases (Notion)
- */
-export interface ResourceIntegration {
-  /**
-   * Fetch available resources for the authenticated user/connection
-   */
-  fetchResources(
-    connection: IntegrationConnection
-  ): Promise<ExternalResource[]>;
 }
 
 /**

@@ -32,17 +32,17 @@ import { confirmDialog } from "@/stores/confirm-dialog";
 import { useAppForm } from "@/hooks/use-app-form";
 import { formatDistanceToNow } from "date-fns";
 import {
+  integrationMetadata,
+  type IntegrationMetadata,
+} from "@lydie/integrations/client";
+import {
   Table,
   TableHeader,
   Column,
   Row,
   Cell,
 } from "@/components/generic/Table";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useOrganization } from "@/context/organization.context";
 import { toast } from "sonner";
 import { useAuthenticatedApi } from "@/services/api";
@@ -438,7 +438,7 @@ function RouteComponent() {
             </TableBody>
           </Table>
         ) : connections && connections.length > 0 ? (
-          <div className="rounded-xl ring-1 ring-black/10 bg-white p-8 text-center flex flex-col items-center gap-3">
+          <div className="rounded-xl ring-1 ring-black/6 bg-white p-8 text-center flex flex-col items-center gap-3">
             <div>
               <div className="text-sm font-medium text-gray-700">
                 No links configured yet
@@ -705,34 +705,26 @@ function ConnectionDialog({
   onSelectIntegration,
   onClose,
 }: ConnectionDialogProps) {
-  const integrations: Array<{
-    type: IntegrationType;
-    name: string;
-    description: string;
-    icon: any;
-    comingSoon?: boolean;
-  }> = [
-    {
-      type: "github",
-      name: "GitHub",
-      description: "Sync documents as Markdown files to a GitHub repository",
-      icon: Github,
-    },
-    {
-      type: "shopify",
-      name: "Shopify Blog",
-      description: "Publish documents to your Shopify blog",
-      icon: null,
-      comingSoon: true,
-    },
-    {
-      type: "wordpress",
-      name: "WordPress",
-      description: "Publish documents to your WordPress site",
-      icon: null,
-      comingSoon: true,
-    },
-  ];
+  // Map integration metadata to include icons (client-side only)
+  const integrations = integrationMetadata.map((meta: IntegrationMetadata) => {
+    let icon: any = null;
+    switch (meta.id) {
+      case "github":
+        icon = Github;
+        break;
+      // Add more icons as integrations are added
+      default:
+        icon = null;
+    }
+
+    return {
+      type: meta.id as IntegrationType,
+      name: meta.name,
+      description: meta.description,
+      icon,
+      comingSoon: meta.comingSoon,
+    };
+  });
 
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -745,31 +737,39 @@ function ConnectionDialog({
                 Choose a platform to connect for document syncing.
               </p>
               <div className="flex flex-col gap-2">
-                {integrations.map((ext) => (
-                  <button
-                    key={ext.type}
-                    onClick={() =>
-                      !ext.comingSoon && onSelectIntegration(ext.type)
-                    }
-                    disabled={ext.comingSoon}
-                    className="flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
-                  >
-                    {ext.icon && <ext.icon className="size-5 mt-0.5" />}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="font-medium">{ext.name}</div>
-                        {ext.comingSoon && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                            Coming Soon
-                          </span>
-                        )}
+                {integrations.map(
+                  (ext: {
+                    type: IntegrationType;
+                    name: string;
+                    description: string;
+                    icon: any;
+                    comingSoon?: boolean;
+                  }) => (
+                    <button
+                      key={ext.type}
+                      onClick={() =>
+                        !ext.comingSoon && onSelectIntegration(ext.type)
+                      }
+                      disabled={ext.comingSoon}
+                      className="flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
+                    >
+                      {ext.icon && <ext.icon className="size-5 mt-0.5" />}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">{ext.name}</div>
+                          {ext.comingSoon && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                              Coming Soon
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {ext.description}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {ext.description}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  )
+                )}
               </div>
               <div className="flex justify-end">
                 <Button intent="secondary" onPress={onClose} size="sm">

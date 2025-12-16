@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {},
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
