@@ -19,7 +19,7 @@
         "@hono/zod-validator": "^0.7.5",
         "@lydie/core": "workspace:*",
         "@lydie/database": "workspace:*",
-        "@lydie/extensions": "workspace:*",
+        "@lydie/integrations": "workspace:*",
         "@lydie/zero": "workspace:*",
         "@polar-sh/better-auth": "catalog:",
         "@rocicorp/zero": "catalog:",
@@ -71,8 +71,8 @@
         "sst": "catalog:",
       },
     },
-    "packages/extensions": {
-      "name": "@lydie/extensions",
+    "packages/integrations": {
+      "name": "@lydie/integrations",
       "version": "1.0.0",
       "dependencies": {
         "@lydie/core": "workspace:*",
@@ -235,7 +235,7 @@
         "@aws-sdk/client-sqs": "^3.948.0",
         "@lydie/core": "workspace:*",
         "@lydie/database": "workspace:*",
-        "@lydie/extensions": "workspace:*",
+        "@lydie/integrations": "workspace:*",
         "@rocicorp/zero": "catalog:",
         "better-auth": "catalog:",
         "drizzle-orm": "catalog:",
@@ -705,7 +705,7 @@
 
     "@lydie/database": ["@lydie/database@workspace:packages/database"],
 
-    "@lydie/extensions": ["@lydie/extensions@workspace:packages/extensions"],
+    "@lydie/integrations": ["@lydie/integrations@workspace:packages/integrations"],
 
     "@lydie/web": ["@lydie/web@workspace:packages/web"],
 

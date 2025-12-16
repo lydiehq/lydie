@@ -29,7 +29,7 @@ function composeTailwindRenderProps<T>(
 
 const styles = cva({
   base: [
-    "relative items-center isolate select-none transition inline-flex shrink-0 justify-center whitespace-nowrap font-medium no-underline rounded-[var(--button-radius)] disabled:opacity-50 disabled:cursor-not-allowed group",
+    "transition-colors duration-150 relative items-center isolate select-none inline-flex shrink-0 justify-center whitespace-nowrap font-medium no-underline rounded-[var(--button-radius)] disabled:opacity-50 disabled:cursor-not-allowed group",
   ].join(" "),
   variants: {
     intent: {

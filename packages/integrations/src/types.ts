@@ -1,9 +1,9 @@
 /**
- * Base types for document sync extensions
+ * Base types for document sync integrations
  */
 
 /**
- * The document structure that extensions will work with
+ * The document structure that integrations will work with
  */
 export interface SyncDocument {
   id: string;
@@ -19,11 +19,11 @@ export interface SyncDocument {
 
 /**
  * Configuration for connecting to an external platform
- * Matches the extensionConnectionsTable schema
+ * Matches the integrationConnectionsTable schema
  */
-export interface ExtensionConnection {
+export interface IntegrationConnection {
   id: string;
-  extensionType: string;
+  integrationType: string;
   organizationId: string;
   config: Record<string, any>; // Platform-specific config (API keys, repo info, etc.)
   enabled: boolean;
@@ -65,7 +65,7 @@ export interface ConflictDetails {
  */
 export interface PushOptions {
   document: SyncDocument;
-  connection: ExtensionConnection;
+  connection: IntegrationConnection;
   resolveConflicts?: boolean;
   commitMessage?: string;
 }
@@ -74,7 +74,7 @@ export interface PushOptions {
  * Options for pull sync operation
  */
 export interface PullOptions {
-  connection: ExtensionConnection;
+  connection: IntegrationConnection;
   organizationId: string;
   userId: string;
 }
@@ -117,14 +117,16 @@ export interface ExternalResource {
 }
 
 /**
- * Extension that supports listing external resources
+ * Integration that supports listing external resources
  * Examples: GitHub repositories, Shopify collections, Notion databases
  */
-export interface ResourceExtension {
+export interface ResourceIntegration {
   /**
    * Fetch available resources for the authenticated user/connection
-   * @param connection - The extension connection
+   * @param connection - The integration connection
    * @returns List of available resources
    */
-  fetchResources(connection: ExtensionConnection): Promise<ExternalResource[]>;
+  fetchResources(
+    connection: IntegrationConnection
+  ): Promise<ExternalResource[]>;
 }

@@ -48,7 +48,7 @@ import { toast } from "sonner";
 import { useAuthenticatedApi } from "@/services/api";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/extensions/"
+  "/__auth/w/$organizationId/settings/integrations/"
 )({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => {
@@ -67,7 +67,6 @@ type ConnectionDialogStep = "selectType" | "configure";
 function RouteComponent() {
   const { organization } = useOrganization();
   const z = useZero();
-  const navigate = useNavigate();
   const { createClient } = useAuthenticatedApi();
   const search = useSearch({
     from: "/__auth/w/$organizationId/settings/integrations/",

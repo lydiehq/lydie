@@ -1,25 +1,25 @@
-# @lydie/extensions
+# @lydie/integrations
 
-A package for managing document sync extensions to external platforms.
+A package for managing document sync integrations to external platforms.
 
-## Creating a New Extension
+## Creating a New Integration
 
-Extend `BaseSyncExtension` and implement the required methods:
+Extend `BaseIntegration` and implement the required methods:
 
 ```typescript
-import { BaseSyncExtension } from "@lydie/extensions";
+import { BaseIntegration } from "@lydie/integrations";
 import type {
-  ExtensionConnection,
+  IntegrationConnection,
   PushOptions,
   SyncResult,
-} from "@lydie/extensions";
+} from "@lydie/integrations";
 
-export class MyExtension extends BaseSyncExtension {
+export class MyIntegration extends BaseIntegration {
   readonly type = "my-platform";
   readonly name = "My Platform";
   readonly description = "Sync documents to My Platform";
 
-  async validateConnection(connection: ExtensionConnection): Promise<{
+  async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
     error?: string;
   }> {
@@ -40,23 +40,23 @@ export class MyExtension extends BaseSyncExtension {
 }
 ```
 
-## Registering an Extension
+## Registering an Integration
 
 ```typescript
-import { extensionRegistry } from "@lydie/extensions";
-import { MyExtension } from "./extensions/my-platform";
+import { integrationRegistry } from "@lydie/integrations";
+import { MyIntegration } from "./integrations/my-platform";
 
-const myExtension = new MyExtension();
-extensionRegistry.register(myExtension);
+const myIntegration = new MyIntegration();
+integrationRegistry.register(myIntegration);
 ```
 
 ## Optional Methods
 
-Extensions can optionally implement:
+Integrations can optionally implement:
 
 - `pull(options: PullOptions)`: Pull documents from the external platform
 - `checkConflicts(document, connection)`: Detect conflicts before pushing
 - `getSyncMetadata(documentId, connection)`: Get sync status information
 - `convertFromExternalFormat(content)`: Convert from external format back to TipTap JSON
 
-For OAuth-based authentication, implement the `OAuthExtension` interface methods.
+For OAuth-based authentication, implement the `OAuthIntegration` interface methods.

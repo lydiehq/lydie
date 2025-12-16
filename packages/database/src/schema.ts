@@ -177,8 +177,8 @@ export const foldersTable = pgTable(
         onDelete: "cascade",
       }
     ),
-    extensionLinkId: text("extension_link_id").references(
-      () => extensionLinksTable.id,
+    integrationLinkId: text("integration_link_id").references(
+      () => integrationLinksTable.id,
       {
         onDelete: "cascade",
       }
@@ -188,7 +188,7 @@ export const foldersTable = pgTable(
   },
   (table) => [
     index("folders_organization_id_idx").on(table.organizationId),
-    index("folders_extension_link_id_idx").on(table.extensionLinkId),
+    index("folders_integration_link_id_idx").on(table.integrationLinkId),
   ]
 );
 
@@ -211,8 +211,8 @@ export const documentsTable = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    extensionLinkId: text("extension_link_id").references(
-      () => extensionLinksTable.id,
+    integrationLinkId: text("integration_link_id").references(
+      () => integrationLinksTable.id,
       {
         onDelete: "set null",
       }
@@ -231,7 +231,7 @@ export const documentsTable = pgTable(
       .where(sql`deleted_at IS NULL`),
     index("documents_organization_id_idx").on(table.organizationId),
     index("documents_folder_id_idx").on(table.folderId),
-    index("documents_extension_link_id_idx").on(table.extensionLinkId),
+    index("documents_integration_link_id_idx").on(table.integrationLinkId),
   ]
 );
 
@@ -460,14 +460,14 @@ export const organizationSettingsTable = pgTable("organization_settings", {
   ...timestamps,
 });
 
-export const extensionConnectionsTable = pgTable(
-  "extension_connections",
+export const integrationConnectionsTable = pgTable(
+  "integration_connections",
   {
     id: text("id")
       .primaryKey()
       .notNull()
       .$default(() => createId()),
-    extensionType: text("extension_type").notNull(), // 'github', 'shopify', 'wordpress', etc.
+    integrationType: text("integration_type").notNull(), // 'github', 'shopify', 'wordpress', etc.
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
@@ -478,14 +478,14 @@ export const extensionConnectionsTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    index("extension_connections_organization_id_idx").on(table.organizationId),
+    index("integration_connections_organization_id_idx").on(table.organizationId),
   ]
 );
 
-// Extension links - configurable "symlinks" to external sources
+// Integration links - configurable "symlinks" to external sources
 // Each link represents a specific path/source in an external system (e.g., a folder in a GitHub repo)
-export const extensionLinksTable = pgTable(
-  "extension_links",
+export const integrationLinksTable = pgTable(
+  "integration_links",
   {
     id: text("id")
       .primaryKey()
@@ -494,11 +494,11 @@ export const extensionLinksTable = pgTable(
     name: text("name").notNull(), // Display name (e.g., "Web Docs", "API Reference")
     connectionId: text("connection_id")
       .notNull()
-      .references(() => extensionConnectionsTable.id, { onDelete: "cascade" }),
+      .references(() => integrationConnectionsTable.id, { onDelete: "cascade" }),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    // Extension-specific config for this link
+    // Integration-specific config for this link
     // GitHub: { owner, repo, branch, path }
     // WordPress: { postType }
     // Shopify: { blogId }
@@ -508,8 +508,8 @@ export const extensionLinksTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    index("extension_links_connection_id_idx").on(table.connectionId),
-    index("extension_links_organization_id_idx").on(table.organizationId),
+    index("integration_links_connection_id_idx").on(table.connectionId),
+    index("integration_links_organization_id_idx").on(table.organizationId),
   ]
 );
 
@@ -525,7 +525,7 @@ export const syncMetadataTable = pgTable(
       .references(() => documentsTable.id, { onDelete: "cascade" }),
     connectionId: text("connection_id")
       .notNull()
-      .references(() => extensionConnectionsTable.id, { onDelete: "cascade" }),
+      .references(() => integrationConnectionsTable.id, { onDelete: "cascade" }),
     externalId: text("external_id").notNull(), // ID/path in external system
     lastSyncedAt: timestamp("last_synced_at"),
     lastSyncedHash: text("last_synced_hash"), // Content hash for change detection

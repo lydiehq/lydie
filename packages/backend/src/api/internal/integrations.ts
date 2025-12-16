@@ -1,54 +1,55 @@
 import { Hono } from "hono";
 import { db } from "@lydie/database";
 import {
-  extensionConnectionsTable,
-  extensionLinksTable,
+  integrationConnectionsTable,
+  integrationLinksTable,
   documentsTable,
   foldersTable,
 } from "@lydie/database";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
 import {
-  GitHubExtension,
+  GitHubIntegration,
   encodeOAuthState,
   decodeOAuthState,
   type OAuthState,
-  type OAuthExtension,
-  type SyncExtension,
-} from "@lydie/extensions";
+  type OAuthIntegration,
+  type Integration,
+} from "@lydie/integrations";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { authenticatedWithOrganization } from "./middleware";
 
-// Registry of available extensions
-// Extensions must implement both SyncExtension (for push/pull) and OAuthExtension (for OAuth flow)
-type Extension = SyncExtension & OAuthExtension;
-const extensionRegistry = new Map<string, Extension>([
-  ["github", new GitHubExtension()],
+// Registry of available integrations
+// Integrations must implement both Integration (for push/pull) and OAuthIntegration (for OAuth flow)
+type IntegrationWithOAuth = Integration & OAuthIntegration;
+const integrationRegistry = new Map<string, IntegrationWithOAuth>([
+  ["github", new GitHubIntegration()],
 ]);
 
-// Helper to check if extension supports resources
-function supportsResources(extension: Extension): extension is Extension & {
+// Helper to check if integration supports resources
+function supportsResources(
+  integration: IntegrationWithOAuth
+): integration is IntegrationWithOAuth & {
   fetchResources: (connection: any) => Promise<any[]>;
 } {
-  return "fetchResources" in extension;
+  return "fetchResources" in integration;
 }
 
 /**
  * OAuth flow:
- * 1. POST /extensions/:type/oauth/authorize - Initiate OAuth, returns auth URL
- * 2. Provider redirects to GET /extensions/:type/oauth/callback
+ * 1. POST /integrations/:type/oauth/authorize - Initiate OAuth, returns auth URL
+ * 2. Provider redirects to GET /integrations/:type/oauth/callback
  * 3. Backend exchanges code for token, creates connection
  * 4. Redirects to frontend with success/error
  */
-export const ExtensionsRoute = new Hono<{
+export const IntegrationsRoute = new Hono<{
   Variables: {
     user: any;
     session: any;
     organizationId: string;
   };
 }>()
-  // Initiate OAuth flow
   .post(
     "/:type/oauth/authorize",
     authenticatedWithOrganization,
@@ -60,42 +61,42 @@ export const ExtensionsRoute = new Hono<{
     ),
     async (c) => {
       try {
-        const extensionType = c.req.param("type");
+        const integrationType = c.req.param("type");
         const { redirectUrl } = c.req.valid("json");
         const user = c.get("user");
         const organizationId = c.get("organizationId");
 
         console.log(
-          `[OAuth] Initiating ${extensionType} OAuth for org ${organizationId}`
+          `[OAuth] Initiating ${integrationType} OAuth for org ${organizationId}`
         );
 
-        // Get extension from registry
-        const extension = extensionRegistry.get(extensionType);
-        if (!extension) {
-          console.error(`[OAuth] Unknown extension type: ${extensionType}`);
-          return c.json({ error: "Unknown extension type" }, 404);
+        // Get integration from registry
+        const integration = integrationRegistry.get(integrationType);
+        if (!integration) {
+          console.error(`[OAuth] Unknown integration type: ${integrationType}`);
+          return c.json({ error: "Unknown integration type" }, 404);
         }
 
         // Get OAuth credentials
-        const credentials = await extension.getOAuthCredentials();
+        const credentials = await integration.getOAuthCredentials();
         console.log(
           `[OAuth] Got credentials - clientId present: ${!!credentials.clientId}`
         );
 
         if (!credentials.clientId || !credentials.clientSecret) {
-          console.error(`[OAuth] Missing credentials for ${extensionType}`, {
+          console.error(`[OAuth] Missing credentials for ${integrationType}`, {
             hasClientId: !!credentials.clientId,
             hasClientSecret: !!credentials.clientSecret,
           });
           return c.json(
-            { error: "OAuth credentials not configured for this extension" },
+            { error: "OAuth credentials not configured for this integration" },
             500
           );
         }
 
         // Generate state token
         const state: OAuthState = {
-          extensionType,
+          integrationType,
           organizationId,
           userId: user.id,
           redirectUrl,
@@ -107,12 +108,12 @@ export const ExtensionsRoute = new Hono<{
 
         // Build OAuth callback URL
         const callbackUrl = new URL(c.req.url);
-        callbackUrl.pathname = `/internal/extensions/${extensionType}/oauth/callback`;
+        callbackUrl.pathname = `/internal/integrations/${integrationType}/oauth/callback`;
 
         console.log(`[OAuth] Callback URL: ${callbackUrl.toString()}`);
 
         // Build authorization URL
-        const authUrl = extension.buildAuthorizationUrl(
+        const authUrl = integration.buildAuthorizationUrl(
           credentials,
           stateToken,
           callbackUrl.toString()
@@ -144,7 +145,7 @@ export const ExtensionsRoute = new Hono<{
   // 2. State token expiration (5 minutes)
   // 3. Organization access verification from state
   .get("/:type/oauth/callback", async (c) => {
-    const extensionType = c.req.param("type");
+    const integrationType = c.req.param("type");
     const stateToken = c.req.query("state");
     const error = c.req.query("error");
 
@@ -154,7 +155,7 @@ export const ExtensionsRoute = new Hono<{
       // Redirect to frontend with error
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
       return c.redirect(
-        `${frontendUrl}/settings/extensions?error=${encodeURIComponent(
+        `${frontendUrl}/settings/integrations?error=${encodeURIComponent(
           errorDescription
         )}`
       );
@@ -178,9 +179,9 @@ export const ExtensionsRoute = new Hono<{
       return c.json({ error: "State token expired" }, 400);
     }
 
-    // Verify extension type matches
-    if (state.extensionType !== extensionType) {
-      return c.json({ error: "Extension type mismatch" }, 400);
+    // Verify integration type matches
+    if (state.integrationType !== integrationType) {
+      return c.json({ error: "Integration type mismatch" }, 400);
     }
 
     // Verify user has access to the organization from state
@@ -204,21 +205,21 @@ export const ExtensionsRoute = new Hono<{
       );
     }
 
-    // Get extension from registry
-    const extension = extensionRegistry.get(extensionType);
-    if (!extension) {
-      return c.json({ error: "Unknown extension type" }, 404);
+    // Get integration from registry
+    const integration = integrationRegistry.get(integrationType);
+    if (!integration) {
+      return c.json({ error: "Unknown integration type" }, 404);
     }
 
     try {
       // Get OAuth credentials
-      const credentials = await extension.getOAuthCredentials();
+      const credentials = await integration.getOAuthCredentials();
 
       // Build callback URL (must match the one used in authorize)
       const callbackUrl = new URL(c.req.url);
       callbackUrl.search = ""; // Remove all query params
 
-      // Collect all query parameters for the extension to handle
+      // Collect all query parameters for the integration to handle
       const queryParams: Record<string, string> = {};
       c.req.url
         .split("?")[1]
@@ -230,29 +231,29 @@ export const ExtensionsRoute = new Hono<{
           }
         });
 
-      // Let extension handle the OAuth callback
-      // This allows each extension to handle its own OAuth flow
+      // Let integration handle the OAuth callback
+      // This allows each integration to handle its own OAuth flow
       // (e.g., GitHub App installations, standard OAuth, etc.)
       if (
-        !("handleOAuthCallback" in extension) ||
-        typeof extension.handleOAuthCallback !== "function"
+        !("handleOAuthCallback" in integration) ||
+        typeof integration.handleOAuthCallback !== "function"
       ) {
         throw new Error(
-          `Extension ${extensionType} does not implement handleOAuthCallback`
+          `Integration ${integrationType} does not implement handleOAuthCallback`
         );
       }
 
-      const config = await extension.handleOAuthCallback(
+      const config = await integration.handleOAuthCallback(
         queryParams,
         credentials,
         callbackUrl.toString()
       );
 
-      // Create extension connection in database
+      // Create integration connection in database
       const connectionId = createId();
-      await db.insert(extensionConnectionsTable).values({
+      await db.insert(integrationConnectionsTable).values({
         id: connectionId,
-        extensionType,
+        integrationType,
         organizationId: state.organizationId,
         config,
         enabled: true,
@@ -262,7 +263,7 @@ export const ExtensionsRoute = new Hono<{
 
       // Redirect to frontend with success
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-      const redirectPath = state.redirectUrl || "/settings/extensions";
+      const redirectPath = state.redirectUrl || "/settings/integrations";
       return c.redirect(
         `${frontendUrl}${redirectPath}?success=true&connectionId=${connectionId}`
       );
@@ -271,7 +272,7 @@ export const ExtensionsRoute = new Hono<{
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-      const redirectPath = state.redirectUrl || "/settings/extensions";
+      const redirectPath = state.redirectUrl || "/settings/integrations";
       return c.redirect(
         `${frontendUrl}${redirectPath}?error=${encodeURIComponent(
           errorMessage
@@ -286,7 +287,7 @@ export const ExtensionsRoute = new Hono<{
     const organizationId = c.get("organizationId");
 
     // Fetch connection from database
-    const connection = await db.query.extensionConnectionsTable.findFirst({
+    const connection = await db.query.integrationConnectionsTable.findFirst({
       where: { id: connectionId },
     });
 
@@ -294,33 +295,31 @@ export const ExtensionsRoute = new Hono<{
       return c.json({ error: "Connection not found" }, 404);
     }
 
-    // Get extension from registry
-    const extension = extensionRegistry.get(connection.extensionType);
-    if (!extension) {
-      return c.json({ error: "Unknown extension type" }, 404);
+    // Get integration from registry
+    const integration = integrationRegistry.get(connection.integrationType);
+    if (!integration) {
+      return c.json({ error: "Unknown integration type" }, 404);
     }
 
-    // Check if extension supports resources
-    if (!supportsResources(extension)) {
+    // Check if integration supports resources
+    if (!supportsResources(integration)) {
       return c.json(
-        { error: "Extension does not support resource listing" },
+        { error: "Integration does not support resource listing" },
         400
       );
     }
 
     try {
-      // Map database connection to ExtensionConnection type
-      const extensionConnection = {
+      const resources = await integration.fetchResources({
         id: connection.id,
-        extensionType: connection.extensionType,
+        integrationType: connection.integrationType,
         organizationId: connection.organizationId,
         config: connection.config as Record<string, any>,
         enabled: connection.enabled,
         createdAt: connection.createdAt,
         updatedAt: connection.updatedAt,
-      };
+      });
 
-      const resources = await extension.fetchResources(extensionConnection);
       return c.json({ resources });
     } catch (error) {
       console.error("Failed to fetch resources:", error);
@@ -350,7 +349,7 @@ export const ExtensionsRoute = new Hono<{
       const { config } = c.req.valid("json");
 
       // Fetch connection from database
-      const connection = await db.query.extensionConnectionsTable.findFirst({
+      const connection = await db.query.integrationConnectionsTable.findFirst({
         where: { id: connectionId },
       });
 
@@ -364,12 +363,12 @@ export const ExtensionsRoute = new Hono<{
 
       // Update in database
       await db
-        .update(extensionConnectionsTable)
+        .update(integrationConnectionsTable)
         .set({
           config: updatedConfig,
           updatedAt: new Date(),
         })
-        .where(eq(extensionConnectionsTable.id, connectionId));
+        .where(eq(integrationConnectionsTable.id, connectionId));
 
       return c.json({ success: true, config: updatedConfig });
     }
@@ -392,7 +391,7 @@ export const ExtensionsRoute = new Hono<{
       const { name, config } = c.req.valid("json");
 
       // Verify connection exists and belongs to org
-      const connection = await db.query.extensionConnectionsTable.findFirst({
+      const connection = await db.query.integrationConnectionsTable.findFirst({
         where: { id: connectionId },
       });
 
@@ -402,7 +401,7 @@ export const ExtensionsRoute = new Hono<{
 
       // Create the link
       const linkId = createId();
-      await db.insert(extensionLinksTable).values({
+      await db.insert(integrationLinksTable).values({
         id: linkId,
         name,
         connectionId,
@@ -435,7 +434,7 @@ export const ExtensionsRoute = new Hono<{
       const updates = c.req.valid("json");
 
       // Verify link exists and belongs to org
-      const link = await db.query.extensionLinksTable.findFirst({
+      const link = await db.query.integrationLinksTable.findFirst({
         where: { id: linkId },
       });
 
@@ -445,12 +444,12 @@ export const ExtensionsRoute = new Hono<{
 
       // Update the link
       await db
-        .update(extensionLinksTable)
+        .update(integrationLinksTable)
         .set({
           ...updates,
           updatedAt: new Date(),
         })
-        .where(eq(extensionLinksTable.id, linkId));
+        .where(eq(integrationLinksTable.id, linkId));
 
       return c.json({ success: true });
     }
@@ -465,7 +464,7 @@ export const ExtensionsRoute = new Hono<{
       const organizationId = c.get("organizationId");
 
       // Verify link exists and belongs to org
-      const link = await db.query.extensionLinksTable.findFirst({
+      const link = await db.query.integrationLinksTable.findFirst({
         where: { id: linkId },
       });
 
@@ -479,7 +478,7 @@ export const ExtensionsRoute = new Hono<{
         .from(documentsTable)
         .where(
           and(
-            eq(documentsTable.extensionLinkId, linkId),
+            eq(documentsTable.integrationLinkId, linkId),
             isNull(documentsTable.deletedAt)
           )
         );
@@ -495,7 +494,7 @@ export const ExtensionsRoute = new Hono<{
     const deleteDocuments = c.req.query("deleteDocuments") === "true";
 
     // Verify link exists and belongs to org
-    const link = await db.query.extensionLinksTable.findFirst({
+    const link = await db.query.integrationLinksTable.findFirst({
       where: { id: linkId },
     });
 
@@ -510,16 +509,16 @@ export const ExtensionsRoute = new Hono<{
         .set({ deletedAt: new Date() })
         .where(
           and(
-            eq(documentsTable.extensionLinkId, linkId),
+            eq(documentsTable.integrationLinkId, linkId),
             isNull(documentsTable.deletedAt)
           )
         );
     }
 
-    // Delete the link (documents will have their extension_link_id set to null via FK if not deleted)
+    // Delete the link (documents will have their integration_link_id set to null via FK if not deleted)
     await db
-      .delete(extensionLinksTable)
-      .where(eq(extensionLinksTable.id, linkId));
+      .delete(integrationLinksTable)
+      .where(eq(integrationLinksTable.id, linkId));
 
     return c.json({ success: true });
   })
@@ -531,10 +530,10 @@ export const ExtensionsRoute = new Hono<{
     const user = c.get("user");
 
     try {
-      console.log(`[Extensions] Starting sync for link ${linkId}`);
+      console.log(`[Integrations] Starting sync for link ${linkId}`);
 
       // Fetch link with its connection
-      const link = await db.query.extensionLinksTable.findFirst({
+      const link = await db.query.integrationLinksTable.findFirst({
         where: { id: linkId },
         with: {
           connection: true,
@@ -543,7 +542,7 @@ export const ExtensionsRoute = new Hono<{
 
       if (!link || link.organizationId !== organizationId) {
         console.error(
-          `[Extensions] Link not found or access denied: ${linkId}`
+          `[Integrations] Link not found or access denied: ${linkId}`
         );
         return c.json({ error: "Link not found" }, 404);
       }
@@ -557,14 +556,14 @@ export const ExtensionsRoute = new Hono<{
         return c.json({ error: "Connection is disabled" }, 400);
       }
 
-      // Get extension from registry
-      const extension = extensionRegistry.get(connection.extensionType);
-      if (!extension) {
-        return c.json({ error: "Unknown extension type" }, 404);
+      // Get integration from registry
+      const integration = integrationRegistry.get(connection.integrationType);
+      if (!integration) {
+        return c.json({ error: "Unknown integration type" }, 404);
       }
 
       console.log(
-        `[Extensions] Pulling from ${connection.extensionType} link: ${link.name}`
+        `[Integrations] Pulling from ${connection.integrationType} link: ${link.name}`
       );
 
       // Merge connection config with link config for the pull
@@ -577,7 +576,7 @@ export const ExtensionsRoute = new Hono<{
       // Create a connection object for token refresh
       const connectionForRefresh = {
         id: connection.id,
-        extensionType: connection.extensionType,
+        integrationType: connection.integrationType,
         organizationId: connection.organizationId,
         config: mergedConfig,
         enabled: connection.enabled,
@@ -587,38 +586,38 @@ export const ExtensionsRoute = new Hono<{
 
       // Refresh access token if needed (for GitHub Apps with expiring tokens)
       if (
-        "getAccessToken" in extension &&
-        typeof extension.getAccessToken === "function"
+        "getAccessToken" in integration &&
+        typeof integration.getAccessToken === "function"
       ) {
         try {
           const oldToken = (mergedConfig as any).installationAccessToken;
-          await extension.getAccessToken(connectionForRefresh);
+          await integration.getAccessToken(connectionForRefresh);
           const newToken = (mergedConfig as any).installationAccessToken;
 
           // Update database if token was refreshed
           if (oldToken !== newToken) {
             console.log(
-              `[Extensions] Token refreshed for connection ${connection.id}`
+              `[Integrations] Token refreshed for connection ${connection.id}`
             );
             await db
-              .update(extensionConnectionsTable)
+              .update(integrationConnectionsTable)
               .set({
                 config: connection.config,
                 updatedAt: new Date(),
               })
-              .where(eq(extensionConnectionsTable.id, connection.id));
+              .where(eq(integrationConnectionsTable.id, connection.id));
           }
         } catch (error) {
           console.error(
-            `[Extensions] Failed to refresh token for connection ${connection.id}:`,
+            `[Integrations] Failed to refresh token for connection ${connection.id}:`,
             error
           );
-          // Continue anyway - the getAccessToken in the extension will handle errors
+          // Continue anyway - the getAccessToken in the integration will handle errors
         }
       }
 
-      // Call extension's pull method
-      const results = await extension.pull({
+      // Call integration's pull method
+      const results = await integration.pull({
         connection: connectionForRefresh,
         organizationId,
         userId: user.id,
@@ -706,59 +705,63 @@ export const ExtensionsRoute = new Hono<{
               userId: user.id,
               organizationId,
               folderId: folderId || null, // Use created folder or null for root
-              extensionLinkId: link.id,
+              integrationLinkId: link.id,
               externalId: result.externalId,
               indexStatus: "pending",
-              published: true, // Documents from extensions are published by default
+              published: true, // Documents from integrations are published by default
               createdAt: new Date(),
               updatedAt: new Date(),
             });
 
             imported++;
-            console.log(`[Extensions] Imported: ${result.externalId}${folderPath ? ` (folder: ${folderPath})` : ""}`);
+            console.log(
+              `[Integrations] Imported: ${result.externalId}${
+                folderPath ? ` (folder: ${folderPath})` : ""
+              }`
+            );
           } catch (error) {
             failed++;
             console.error(
-              `[Extensions] Failed to create document from ${result.externalId}:`,
+              `[Integrations] Failed to create document from ${result.externalId}:`,
               error
             );
           }
         } else {
           failed++;
-          console.error(`[Extensions] Pull failed: ${result.error}`);
+          console.error(`[Integrations] Pull failed: ${result.error}`);
         }
       }
 
       // Update last synced timestamp
       await db
-        .update(extensionLinksTable)
+        .update(integrationLinksTable)
         .set({
           lastSyncedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(extensionLinksTable.id, linkId));
+        .where(eq(integrationLinksTable.id, linkId));
 
       console.log(
-        `[Extensions] Sync complete. Imported: ${imported}, Failed: ${failed}`
+        `[Integrations] Sync complete. Imported: ${imported}, Failed: ${failed}`
       );
 
       // If sync succeeded, ensure connection status is active
       if (connection.status !== "active") {
         await db
-          .update(extensionConnectionsTable)
+          .update(integrationConnectionsTable)
           .set({
             status: "active",
             statusMessage: null,
             updatedAt: new Date(),
           })
-          .where(eq(extensionConnectionsTable.id, connection.id));
+          .where(eq(integrationConnectionsTable.id, connection.id));
       }
 
       return c.json({ success: true, imported, failed });
     } catch (error) {
-      console.error("[Extensions] Error during sync:", error);
+      console.error("[Integrations] Error during sync:", error);
       console.error(
-        "[Extensions] Error stack:",
+        "[Integrations] Error stack:",
         error instanceof Error ? error.stack : "No stack"
       );
 
@@ -767,24 +770,24 @@ export const ExtensionsRoute = new Hono<{
         // Get the link and connection to update status
         const linkRow = await db
           .select()
-          .from(extensionLinksTable)
-          .where(eq(extensionLinksTable.id, linkId))
+          .from(integrationLinksTable)
+          .where(eq(integrationLinksTable.id, linkId))
           .limit(1);
 
         if (linkRow[0]) {
           await db
-            .update(extensionConnectionsTable)
+            .update(integrationConnectionsTable)
             .set({
               status: "error",
               statusMessage:
                 error instanceof Error ? error.message : "Sync failed",
               updatedAt: new Date(),
             })
-            .where(eq(extensionConnectionsTable.id, linkRow[0].connectionId));
+            .where(eq(integrationConnectionsTable.id, linkRow[0].connectionId));
         }
       } catch (updateError) {
         console.error(
-          "[Extensions] Failed to update connection status:",
+          "[Integrations] Failed to update connection status:",
           updateError
         );
       }

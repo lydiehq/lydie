@@ -1,5 +1,5 @@
 import type {
-  ExtensionConnection,
+  IntegrationConnection,
   SyncDocument,
   PushOptions,
   PullOptions,
@@ -9,21 +9,21 @@ import type {
 } from "./types";
 
 /**
- * Base interface that all sync extensions must implement
+ * Base interface that all sync integrations must implement
  */
-export interface SyncExtension {
+export interface Integration {
   /**
-   * Unique identifier for this extension type (e.g., "github", "shopify", "wordpress")
+   * Unique identifier for this integration type (e.g., "github", "shopify", "wordpress")
    */
   readonly type: string;
 
   /**
-   * Human-readable name of the extension
+   * Human-readable name of the integration
    */
   readonly name: string;
 
   /**
-   * Description of what this extension does
+   * Description of what this integration does
    */
   readonly description: string;
 
@@ -31,7 +31,7 @@ export interface SyncExtension {
    * Validate that the connection configuration is valid
    * This is called when a user sets up a new connection
    */
-  validateConnection(connection: ExtensionConnection): Promise<{
+  validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
     error?: string;
   }>;
@@ -54,7 +54,7 @@ export interface SyncExtension {
    */
   checkConflicts?(
     document: SyncDocument,
-    connection: ExtensionConnection
+    connection: IntegrationConnection
   ): Promise<{
     hasConflict: boolean;
     details?: SyncResult["conflictDetails"];
@@ -65,7 +65,7 @@ export interface SyncExtension {
    */
   getSyncMetadata?(
     documentId: string,
-    connection: ExtensionConnection
+    connection: IntegrationConnection
   ): Promise<SyncMetadata | null>;
 
   /**
@@ -82,26 +82,28 @@ export interface SyncExtension {
 }
 
 /**
- * Interface for extensions that support listing external resources
+ * Interface for integrations that support listing external resources
  * Examples: repositories (GitHub), collections (Shopify), databases (Notion)
  */
-export interface ResourceExtension {
+export interface ResourceIntegration {
   /**
    * Fetch available resources for the authenticated user/connection
    */
-  fetchResources(connection: ExtensionConnection): Promise<ExternalResource[]>;
+  fetchResources(
+    connection: IntegrationConnection
+  ): Promise<ExternalResource[]>;
 }
 
 /**
- * Base class that provides common functionality for extensions
- * Extensions can extend this to avoid reimplementing common patterns
+ * Base class that provides common functionality for integrations
+ * Integrations can extend this to avoid reimplementing common patterns
  */
-export abstract class BaseSyncExtension implements SyncExtension {
+export abstract class BaseIntegration implements Integration {
   abstract readonly type: string;
   abstract readonly name: string;
   abstract readonly description: string;
 
-  abstract validateConnection(connection: ExtensionConnection): Promise<{
+  abstract validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
     error?: string;
   }>;

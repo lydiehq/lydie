@@ -7,15 +7,15 @@ import { zql } from "./schema";
 import { db } from "@lydie/database";
 import { sql } from "drizzle-orm";
 import {
-  GitHubExtension,
-  type SyncExtension,
-  type OAuthExtension,
-} from "@lydie/extensions";
+  GitHubIntegration,
+  type Integration,
+  type OAuthIntegration,
+} from "@lydie/integrations";
 
-// Registry of available extensions for push operations
-type Extension = SyncExtension & OAuthExtension;
-const extensionRegistry = new Map<string, Extension>([
-  ["github", new GitHubExtension()],
+// Registry of available integrations for push operations
+type IntegrationWithOAuth = Integration & OAuthIntegration;
+const integrationRegistry = new Map<string, IntegrationWithOAuth>([
+  ["github", new GitHubIntegration()],
 ]);
 
 const sqs = new SQSClient();
@@ -51,31 +51,31 @@ async function triggerEmbeddingGeneration(
   }
 }
 
-async function pushToExtension(
+async function pushToIntegration(
   documentId: string,
-  extensionLinkId: string | null
+  integrationLinkId: string | null
 ) {
-  if (!extensionLinkId) {
+  if (!integrationLinkId) {
     return;
   }
 
   try {
-    // Fetch the extension link with its connection
-    const link = await db.query.extensionLinksTable.findFirst({
-      where: { id: extensionLinkId },
+    // Fetch the integration link with its connection
+    const link = await db.query.integrationLinksTable.findFirst({
+      where: { id: integrationLinkId },
       with: {
         connection: true,
       },
     });
 
     if (!link || !link.connection) {
-      console.error(`[Push] Extension link not found: ${extensionLinkId}`);
+      console.error(`[Push] Integration link not found: ${integrationLinkId}`);
       return;
     }
 
     if (!link.enabled || !link.connection.enabled) {
       console.log(
-        `[Push] Extension link or connection is disabled, skipping push for ${documentId}`
+        `[Push] Integration link or connection is disabled, skipping push for ${documentId}`
       );
       return;
     }
@@ -133,11 +133,11 @@ async function pushToExtension(
       }
     }
 
-    // Get extension from registry
-    const extension = extensionRegistry.get(link.connection.extensionType);
-    if (!extension) {
+    // Get integration from registry
+    const integration = integrationRegistry.get(link.connection.integrationType);
+    if (!integration) {
       console.error(
-        `[Push] Unknown extension type: ${link.connection.extensionType}`
+        `[Push] Unknown integration type: ${link.connection.integrationType}`
       );
       return;
     }
@@ -149,11 +149,11 @@ async function pushToExtension(
     };
 
     console.log(
-      `[Push] Pushing document ${documentId} to ${link.connection.extensionType} link: ${link.name}`
+      `[Push] Pushing document ${documentId} to ${link.connection.integrationType} link: ${link.name}`
     );
 
-    // Call extension's push method
-    const result = await extension.push({
+    // Call integration's push method
+    const result = await integration.push({
       document: {
         id: document.id,
         title: document.title,
@@ -167,7 +167,7 @@ async function pushToExtension(
       },
       connection: {
         id: link.connection.id,
-        extensionType: link.connection.extensionType,
+        integrationType: link.connection.integrationType,
         organizationId: link.connection.organizationId,
         config: mergedConfig,
         enabled: link.connection.enabled,
@@ -248,14 +248,14 @@ export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
               });
             }
 
-            // Queue async task to push to extension if document is published and has extension link
+            // Queue async task to push to integration if document is published and has integration link
             // Always push when publishing, even if already published (enables re-publishing for sync)
             const isPublishing = published === true;
-            const shouldPush = isPublishing && doc.extension_link_id;
+            const shouldPush = isPublishing && doc.integration_link_id;
 
             if (shouldPush) {
               asyncTasks.push(async () => {
-                await pushToExtension(documentId, doc.extension_link_id);
+                await pushToIntegration(documentId, doc.integration_link_id);
               });
             }
           }

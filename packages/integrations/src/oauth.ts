@@ -1,9 +1,9 @@
 /**
- * OAuth configuration and types for extensions
+ * OAuth configuration and types for integrations
  */
 
 /**
- * OAuth 2.0 configuration for an extension
+ * OAuth 2.0 configuration for an integration
  */
 export interface OAuthConfig {
   /**
@@ -58,7 +58,7 @@ export interface OAuthTokenResponse {
  * OAuth authorization request state
  */
 export interface OAuthState {
-  extensionType: string;
+  integrationType: string;
   organizationId: string;
   userId: string;
   redirectUrl: string;
@@ -67,11 +67,11 @@ export interface OAuthState {
 }
 
 /**
- * Extension that supports OAuth authentication
+ * Integration that supports OAuth authentication
  */
-export interface OAuthExtension {
+export interface OAuthIntegration {
   /**
-   * Get OAuth configuration for this extension
+   * Get OAuth configuration for this integration
    */
   getOAuthConfig(): OAuthConfig;
 
@@ -91,11 +91,11 @@ export interface OAuthExtension {
 
   /**
    * Handle OAuth callback parameters and create connection config
-   * This allows extensions to handle different OAuth flows (standard OAuth, GitHub App, etc.)
+   * This allows integrations to handle different OAuth flows (standard OAuth, GitHub App, etc.)
    * @param queryParams - All query parameters from the OAuth callback
-   * @param credentials - OAuth credentials for the extension
+   * @param credentials - OAuth credentials for the integration
    * @param redirectUri - The callback URL
-   * @returns Extension configuration to store in the database
+   * @returns Integration configuration to store in the database
    */
   handleOAuthCallback(
     queryParams: Record<string, string>,
@@ -112,11 +112,11 @@ export interface OAuthExtension {
   ): Promise<OAuthTokenResponse>;
 
   /**
-   * Optional: Get a fresh access token for the extension
+   * Optional: Get a fresh access token for the integration
    * For GitHub Apps, this generates a new installation token
    */
   getAccessToken?(
-    connection: import("./types").ExtensionConnection
+    connection: import("./types").IntegrationConnection
   ): Promise<string>;
 }
 

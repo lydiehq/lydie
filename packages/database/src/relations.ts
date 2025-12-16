@@ -15,9 +15,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.foldersTable.organizationId,
       to: r.organizationsTable.id,
     }),
-    extensionLink: r.one.extensionLinksTable({
-      from: r.foldersTable.extensionLinkId,
-      to: r.extensionLinksTable.id,
+    integrationLink: r.one.integrationLinksTable({
+      from: r.foldersTable.integrationLinkId,
+      to: r.integrationLinksTable.id,
     }),
     children: r.many.foldersTable(),
     documents: r.many.documentsTable(),
@@ -35,9 +35,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.documentsTable.organizationId,
       to: r.organizationsTable.id,
     }),
-    extensionLink: r.one.extensionLinksTable({
-      from: r.documentsTable.extensionLinkId,
-      to: r.extensionLinksTable.id,
+    integrationLink: r.one.integrationLinksTable({
+      from: r.documentsTable.integrationLinkId,
+      to: r.integrationLinksTable.id,
     }),
     embeddings: r.many.documentEmbeddingsTable(),
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
@@ -119,7 +119,7 @@ export const relations = defineRelations(schema, (r) => ({
     apiKeys: r.many.apiKeysTable(),
     documentComponents: r.many.documentComponentsTable(),
     llmUsage: r.many.llmUsageTable(),
-    extensionConnections: r.many.extensionConnectionsTable(),
+    integrationConnections: r.many.integrationConnectionsTable(),
     settings: r.one.organizationSettingsTable({
       from: r.organizationsTable.id,
       to: r.organizationSettingsTable.organizationId,
@@ -224,22 +224,22 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
 
-  extensionConnectionsTable: {
+  integrationConnectionsTable: {
     organization: r.one.organizationsTable({
-      from: r.extensionConnectionsTable.organizationId,
+      from: r.integrationConnectionsTable.organizationId,
       to: r.organizationsTable.id,
     }),
     syncMetadata: r.many.syncMetadataTable(),
-    links: r.many.extensionLinksTable(),
+    links: r.many.integrationLinksTable(),
   },
 
-  extensionLinksTable: {
-    connection: r.one.extensionConnectionsTable({
-      from: r.extensionLinksTable.connectionId,
-      to: r.extensionConnectionsTable.id,
+  integrationLinksTable: {
+    connection: r.one.integrationConnectionsTable({
+      from: r.integrationLinksTable.connectionId,
+      to: r.integrationConnectionsTable.id,
     }),
     organization: r.one.organizationsTable({
-      from: r.extensionLinksTable.organizationId,
+      from: r.integrationLinksTable.organizationId,
       to: r.organizationsTable.id,
     }),
     documents: r.many.documentsTable(),
@@ -251,9 +251,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.syncMetadataTable.documentId,
       to: r.documentsTable.id,
     }),
-    connection: r.one.extensionConnectionsTable({
+    connection: r.one.integrationConnectionsTable({
       from: r.syncMetadataTable.connectionId,
-      to: r.extensionConnectionsTable.id,
+      to: r.integrationConnectionsTable.id,
     }),
   },
 }));

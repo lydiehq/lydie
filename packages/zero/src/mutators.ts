@@ -465,11 +465,11 @@ export const mutators = defineMutators({
       }
     ),
   },
-  extensionConnection: {
+  integrationConnection: {
     create: defineMutator(
       z.object({
         id: z.string(),
-        extensionType: z.string(),
+        integrationType: z.string(),
         organizationId: z.string(),
         config: z.any(),
         enabled: z.boolean().optional(),
@@ -477,13 +477,13 @@ export const mutators = defineMutators({
       async ({
         tx,
         ctx,
-        args: { id, extensionType, organizationId, config, enabled = true },
+        args: { id, integrationType, organizationId, config, enabled = true },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
 
-        await tx.mutate.extension_connections.insert({
+        await tx.mutate.integration_connections.insert({
           id,
-          extension_type: extensionType,
+          integration_type: integrationType,
           organization_id: organizationId,
           config,
           enabled,
@@ -507,7 +507,7 @@ export const mutators = defineMutators({
         if (config !== undefined) updates.config = config;
         if (enabled !== undefined) updates.enabled = enabled;
 
-        await tx.mutate.extension_connections.update(updates);
+        await tx.mutate.integration_connections.update(updates);
       }
     ),
     delete: defineMutator(
@@ -515,7 +515,7 @@ export const mutators = defineMutators({
         connectionId: z.string(),
       }),
       async ({ tx, args: { connectionId } }) => {
-        await tx.mutate.extension_connections.delete({ id: connectionId });
+        await tx.mutate.integration_connections.delete({ id: connectionId });
       }
     ),
   },

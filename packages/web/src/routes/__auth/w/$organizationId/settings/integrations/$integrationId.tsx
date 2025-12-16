@@ -2,21 +2,26 @@ import { Button } from "@/components/generic/Button";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
 import { useQuery } from "@rocicorp/zero/react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useOrganization } from "@/context/organization.context";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { queries } from "@lydie/zero/queries";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, Github, CheckCircle2, XCircle, Link as LinkIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Github,
+  CheckCircle2,
+  XCircle,
+  Link as LinkIcon,
+} from "lucide-react";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/extensions/$extensionId"
+  "/__auth/w/$organizationId/settings/integrations/$integrationId"
 )({
   component: RouteComponent,
   loader: async ({ context, params }) => {
     const { zero } = context;
     zero.run(
-      queries.extensionLinks.byId({
-        linkId: params.extensionId,
+      queries.integrationLinks.byId({
+        linkId: params.integrationId,
         organizationId: params.organizationId,
       })
     );
@@ -25,13 +30,12 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { extensionId, organizationId } = Route.useParams();
-  const { organization } = useOrganization();
+  const { integrationId, organizationId } = Route.useParams();
   const navigate = useNavigate();
 
   const [extensionLink, status] = useQuery(
-    queries.extensionLinks.byId({
-      linkId: extensionId,
+    queries.integrationLinks.byId({
+      linkId: integrationId,
       organizationId: organizationId || "",
     })
   );
@@ -61,8 +65,7 @@ function RouteComponent() {
 
   const connection = extensionLink.connection;
   const config = extensionLink.config as any;
-  const isEnabled =
-    extensionLink.enabled && (connection?.enabled ?? false);
+  const isEnabled = extensionLink.enabled && (connection?.enabled ?? false);
 
   const getStatusIcon = (enabled: boolean, status?: string) => {
     if (!enabled) return <XCircle className="size-4 text-gray-400" />;
@@ -100,7 +103,7 @@ function RouteComponent() {
     }
   };
 
-  const getExtensionIcon = (type: string) => {
+  const getIntegrationIcon = (type: string) => {
     switch (type) {
       case "github":
         return <Github className="size-4" />;
@@ -115,8 +118,7 @@ function RouteComponent() {
         <Button
           onPress={() => {
             navigate({
-              to: "/w/$organizationId/settings/extensions/",
-              params: { organizationId: organizationId || "" },
+              to: "/w/$organizationId/settings/integrations",
             });
           }}
           size="sm"
@@ -141,10 +143,7 @@ function RouteComponent() {
           <h2 className="text-md/none font-medium mb-3">Status</h2>
           <div className="rounded-lg ring-1 ring-black/10 bg-white p-4">
             <div className="flex items-center gap-2">
-              {getStatusIcon(
-                isEnabled,
-                (connection as any)?.status
-              )}
+              {getStatusIcon(isEnabled, (connection as any)?.status)}
               <span className="text-sm font-medium">
                 {getStatusText(
                   isEnabled,
@@ -170,9 +169,9 @@ function RouteComponent() {
             <h2 className="text-md/none font-medium mb-3">Connection</h2>
             <div className="rounded-lg ring-1 ring-black/10 bg-white p-4">
               <div className="flex items-center gap-2 mb-2">
-                {getExtensionIcon(connection.extension_type)}
+                {getIntegrationIcon(connection.integration_type)}
                 <span className="text-sm font-medium capitalize">
-                  {connection.extension_type}
+                  {connection.integration_type}
                 </span>
               </div>
               <div className="text-xs text-gray-500">
@@ -220,11 +219,15 @@ function RouteComponent() {
             <div className="flex flex-col gap-y-3">
               <div>
                 <div className="text-xs text-gray-500 mb-1">Link ID</div>
-                <code className="text-sm text-gray-700">{extensionLink.id}</code>
+                <code className="text-sm text-gray-700">
+                  {extensionLink.id}
+                </code>
               </div>
               <div>
                 <div className="text-xs text-gray-500 mb-1">Name</div>
-                <div className="text-sm text-gray-700">{extensionLink.name}</div>
+                <div className="text-sm text-gray-700">
+                  {extensionLink.name}
+                </div>
               </div>
               <div>
                 <div className="text-xs text-gray-500 mb-1">Enabled</div>
@@ -239,4 +242,3 @@ function RouteComponent() {
     </div>
   );
 }
-

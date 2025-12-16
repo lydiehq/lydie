@@ -329,19 +329,14 @@ export function CommandMenu() {
         },
       },
       {
-        id: "extensions",
-        label: "Go to extensions",
+        id: "integrations",
+        label: "Go to integrations",
         icon: Plug,
         action: () => {
           navigate({
-            to: "/w/$organizationId/settings/extensions/",
+            to: "/w/$organizationId/settings/integrations/",
             params: {
               organizationId: organization?.id as string,
-            },
-            search: {
-              success: false,
-              error: undefined,
-              connectionId: undefined,
             },
           });
         },

@@ -4,7 +4,7 @@ import { Button as RACButton } from "react-aria-components";
 import { Button } from "../generic/Button";
 import { OrganizationMenu } from "./OrganizationMenu";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { cva } from "cva";
 import { UsageStats } from "./UsageStats";
@@ -28,7 +28,7 @@ type Props = {
 };
 
 export const sidebarItemStyles = cva({
-  base: "group flex items-center py-1 rounded-md  text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5",
+  base: "group flex items-center py-1 rounded-md  text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-150",
   variants: {
     isCurrent: {
       true: "bg-black/5",

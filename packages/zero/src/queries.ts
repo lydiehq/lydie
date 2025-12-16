@@ -241,12 +241,12 @@ export const queries = defineQueries({
       }
     ),
   },
-  extensions: {
+  integrations: {
     byOrganization: defineQuery(
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return zql.extension_connections
+        return zql.integration_connections
           .where("organization_id", organizationId)
           .related("links")
           .orderBy("created_at", "desc");
@@ -256,7 +256,7 @@ export const queries = defineQueries({
       z.object({ connectionId: z.string(), organizationId: z.string() }),
       ({ args: { connectionId, organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return zql.extension_connections
+        return zql.integration_connections
           .where("id", connectionId)
           .where("organization_id", organizationId)
           .related("links")
@@ -264,12 +264,12 @@ export const queries = defineQueries({
       }
     ),
   },
-  extensionLinks: {
+  integrationLinks: {
     byOrganization: defineQuery(
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return zql.extension_links
+        return zql.integration_links
           .where("organization_id", organizationId)
           .related("connection")
           .orderBy("created_at", "desc");
@@ -279,7 +279,7 @@ export const queries = defineQueries({
       z.object({ connectionId: z.string(), organizationId: z.string() }),
       ({ args: { connectionId, organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return zql.extension_links
+        return zql.integration_links
           .where("connection_id", connectionId)
           .where("organization_id", organizationId)
           .related("connection")
@@ -290,7 +290,7 @@ export const queries = defineQueries({
       z.object({ linkId: z.string(), organizationId: z.string() }),
       ({ args: { linkId, organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        return zql.extension_links
+        return zql.integration_links
           .where("id", linkId)
           .where("organization_id", organizationId)
           .related("connection")

@@ -50,8 +50,8 @@ const settingsRoutes = [
         icon: Box,
       },
       {
-        path: "/w/$organizationId/settings/extensions/",
-        label: "Extensions",
+        path: "/w/$organizationId/settings/integrations/",
+        label: "Integrations",
         icon: Puzzle,
       },
       {

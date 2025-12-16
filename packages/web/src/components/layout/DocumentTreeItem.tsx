@@ -69,7 +69,7 @@ export function DocumentTreeItem({
   const isCurrent = isCurrentDocument || isActiveFolder;
 
   // Check if this is an extension link item
-  const isExtensionLink = item.type === "extension-link";
+  const isIntegrationLink = item.type === "integration-link";
 
   const handleNavigate = () => {
     if (item.type === "document") {
@@ -92,7 +92,7 @@ export function DocumentTreeItem({
     <TreeItem
       id={item.id}
       textValue={item.name}
-      onAction={isExtensionLink ? undefined : handleNavigate}
+      onAction={isIntegrationLink ? undefined : handleNavigate}
       className={composeTailwindRenderProps(
         focusRing,
         sidebarItemStyles({
@@ -100,7 +100,7 @@ export function DocumentTreeItem({
           className: `
             dragging:opacity-50 dragging:bg-gray-50 
             ${item.type === "folder" ? "drop-target:bg-gray-200" : ""}
-            ${isExtensionLink ? "cursor-default" : ""}
+            ${isIntegrationLink ? "cursor-default" : ""}
           `,
         })
       )}
@@ -113,7 +113,7 @@ export function DocumentTreeItem({
         {({ isExpanded }) => (
           <>
             {/* Only show drag button for non-extension-link items */}
-            {!isExtensionLink && (
+            {!isIntegrationLink && (
               <Button
                 slot="drag"
                 className="hidden"
@@ -126,7 +126,7 @@ export function DocumentTreeItem({
             )}
             <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
               {/* Extension link item - shows as a folder with plug icon */}
-              {isExtensionLink && (
+              {isIntegrationLink && (
                 <>
                   <Button
                     className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
@@ -191,7 +191,7 @@ export function DocumentTreeItem({
 
             {/* Context menu */}
             <div className="items-center gap-1 relative -mr-1">
-              {isExtensionLink ? (
+              {isIntegrationLink ? (
                 <MenuTrigger>
                   <Button
                     className="p-1 rounded hover:bg-gray-200"
@@ -204,10 +204,10 @@ export function DocumentTreeItem({
                       onAction={() => {
                         if (item.extensionLinkId) {
                           navigate({
-                            to: "/w/$organizationId/settings/extensions/$extensionId",
+                            to: "/w/$organizationId/settings/integrations/$integrationId",
                             params: {
                               organizationId: organizationId || "",
-                              extensionId: item.extensionLinkId,
+                              integrationId: item.integrationId,
                             },
                           });
                         }

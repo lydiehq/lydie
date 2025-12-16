@@ -1,12 +1,12 @@
-import { BaseSyncExtension } from "../../extension";
+import { BaseIntegration } from "../../integration";
 import type {
-  ExtensionConnection,
+  IntegrationConnection,
   PushOptions,
   PullOptions,
   SyncResult,
   ExternalResource,
 } from "../../types";
-import type { ResourceExtension } from "../../extension";
+import type { ResourceIntegration } from "../../integration";
 import type { OAuthConfig, OAuthCredentials } from "../../oauth";
 import { Resource } from "sst";
 import {
@@ -16,7 +16,7 @@ import {
 import jwt from "jsonwebtoken";
 
 /**
- * GitHub extension configuration stored in the database
+ * GitHub integration configuration stored in the database
  */
 export interface GitHubConfig {
   // GitHub App fields
@@ -30,10 +30,10 @@ export interface GitHubConfig {
   branch: string;
   basePath?: string;
 
-  // Extension metadata (available to frontend via Zero)
+  // Integration metadata (available to frontend via Zero)
   metadata?: {
     managementUrl?: string; // URL to manage installation in GitHub
-    [key: string]: any; // Allow extensions to add custom metadata
+    [key: string]: any; // Allow integrations to add custom metadata
   };
 }
 
@@ -54,19 +54,19 @@ export interface GitHubInstallation {
 }
 
 /**
- * GitHub sync extension
+ * GitHub sync integration
  * Syncs documents as Markdown files to a GitHub repository
  */
-export class GitHubExtension
-  extends BaseSyncExtension
-  implements ResourceExtension
+export class GitHubIntegration
+  extends BaseIntegration
+  implements ResourceIntegration
 {
   readonly type = "github";
   readonly name = "GitHub";
   readonly description =
     "Sync documents as Markdown files to a GitHub repository";
 
-  async validateConnection(connection: ExtensionConnection): Promise<{
+  async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
     error?: string;
   }> {
@@ -259,7 +259,7 @@ export class GitHubExtension
             .toLowerCase();
 
           // Preserve the full filename with extension in the title
-          // This is crucial for GitHub extension to know what extension to use when pushing
+          // This is crucial for GitHub integration to know what extension to use when pushing
           const title = fileName;
 
           results.push({
@@ -576,12 +576,12 @@ export class GitHubExtension
   }
 
   /**
-   * Fetch available resources (repositories) - implements ResourceExtension
+   * Fetch available resources (repositories) - implements ResourceIntegration
    * For GitHub Apps, we use the installation token to access repositories
    * We fetch repositories from the installation's account (owner)
    */
   async fetchResources(
-    connection: ExtensionConnection
+    connection: IntegrationConnection
   ): Promise<ExternalResource[]> {
     const config = connection.config as GitHubConfig;
 
@@ -769,15 +769,15 @@ export class GitHubExtension
   }
 
   /**
-   * Get a fresh access token for the extension
+   * Get a fresh access token for the integration
    * Implements automatic token refresh for GitHub Apps
    */
-  async getAccessToken(connection: ExtensionConnection): Promise<string> {
+  async getAccessToken(connection: IntegrationConnection): Promise<string> {
     const config = connection.config as GitHubConfig;
 
     if (!config.installationId || !config.installationAccessToken) {
       throw new Error(
-        "GitHub App installation not configured. Please reconnect the GitHub extension."
+        "GitHub App installation not configured. Please reconnect the GitHub integration."
       );
     }
 
