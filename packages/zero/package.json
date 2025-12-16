@@ -9,7 +9,7 @@
     "dev": "zero-cache"
   },
   "dependencies": {
-    "@aws-sdk/client-sqs": "^3.948.0",
+    "@aws-sdk/client-sqs": "^3.952.0",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "@lydie/integrations": "workspace:*",

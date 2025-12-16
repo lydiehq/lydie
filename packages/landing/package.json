@@ -16,7 +16,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@lydie-app/sdk": "^0.0.1",
     "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-form": "^1.27.3",
+    "@tanstack/react-form": "^1.27.4",
     "@tiptap/core": "^3.13.0",
     "@tiptap/react": "^3.13.0",
     "@tiptap/starter-kit": "^3.13.0",
