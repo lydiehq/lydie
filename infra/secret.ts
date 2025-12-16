@@ -18,7 +18,7 @@ export const secret = {
   polarProProductId: new sst.Secret("PolarProProductId"),
   polarWebhookSecret: new sst.Secret("PolarWebhookSecret"),
 
-  // Native GitHub extension
+  // GitHub integration
   githubClientId: new sst.Secret("GitHubClientId"),
   githubClientSecret: new sst.Secret("GitHubClientSecret"),
   githubPrivateKey: new sst.Secret("GitHubPrivateKey"),

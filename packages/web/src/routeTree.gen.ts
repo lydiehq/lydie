@@ -27,7 +27,6 @@ import { Route as _authWOrganizationIdSettingsComponentsRouteImport } from './ro
 import { Route as _authWOrganizationIdSettingsBillingRouteImport } from './routes/__auth/w/$organizationId/settings/billing'
 import { Route as _authWOrganizationIdSettingsAiRouteImport } from './routes/__auth/w/$organizationId/settings/ai'
 import { Route as _authWOrganizationIdSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/index'
-import { Route as _authWOrganizationIdSettingsExtensionsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/extensions/index'
 import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationIdRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationId'
 
 const LandingRouteRoute = LandingRouteRouteImport.update({
@@ -130,12 +129,6 @@ const _authWOrganizationIdSettingsIntegrationsIndexRoute =
     path: '/integrations/',
     getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsExtensionsIndexRoute =
-  _authWOrganizationIdSettingsExtensionsIndexRouteImport.update({
-    id: '/extensions/',
-    path: '/extensions/',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
-  } as any)
 const _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute =
   _authWOrganizationIdSettingsIntegrationsIntegrationIdRouteImport.update({
     id: '/integrations/$integrationId',
@@ -160,7 +153,6 @@ export interface FileRoutesByFullPath {
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
   '/w/$organizationId/settings/integrations/$integrationId': typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
-  '/w/$organizationId/settings/extensions': typeof _authWOrganizationIdSettingsExtensionsIndexRoute
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -178,7 +170,6 @@ export interface FileRoutesByTo {
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings': typeof _authWOrganizationIdSettingsIndexRoute
   '/w/$organizationId/settings/integrations/$integrationId': typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
-  '/w/$organizationId/settings/extensions': typeof _authWOrganizationIdSettingsExtensionsIndexRoute
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRoutesById {
@@ -201,7 +192,6 @@ export interface FileRoutesById {
   '/__auth/w/$organizationId/$id/': typeof _authWOrganizationIdIdIndexRoute
   '/__auth/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
   '/__auth/w/$organizationId/settings/integrations/$integrationId': typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
-  '/__auth/w/$organizationId/settings/extensions/': typeof _authWOrganizationIdSettingsExtensionsIndexRoute
   '/__auth/w/$organizationId/settings/integrations/': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRouteTypes {
@@ -223,7 +213,6 @@ export interface FileRouteTypes {
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings/'
     | '/w/$organizationId/settings/integrations/$integrationId'
-    | '/w/$organizationId/settings/extensions'
     | '/w/$organizationId/settings/integrations'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -241,7 +230,6 @@ export interface FileRouteTypes {
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings'
     | '/w/$organizationId/settings/integrations/$integrationId'
-    | '/w/$organizationId/settings/extensions'
     | '/w/$organizationId/settings/integrations'
   id:
     | '__root__'
@@ -263,7 +251,6 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationId/$id/'
     | '/__auth/w/$organizationId/settings/'
     | '/__auth/w/$organizationId/settings/integrations/$integrationId'
-    | '/__auth/w/$organizationId/settings/extensions/'
     | '/__auth/w/$organizationId/settings/integrations/'
   fileRoutesById: FileRoutesById
 }
@@ -400,13 +387,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRouteImport
       parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/extensions/': {
-      id: '/__auth/w/$organizationId/settings/extensions/'
-      path: '/extensions'
-      fullPath: '/w/$organizationId/settings/extensions'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsExtensionsIndexRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
-    }
     '/__auth/w/$organizationId/settings/integrations/$integrationId': {
       id: '/__auth/w/$organizationId/settings/integrations/$integrationId'
       path: '/integrations/$integrationId'
@@ -425,7 +405,6 @@ interface _authWOrganizationIdSettingsRouteRouteChildren {
   _authWOrganizationIdSettingsUserRoute: typeof _authWOrganizationIdSettingsUserRoute
   _authWOrganizationIdSettingsIndexRoute: typeof _authWOrganizationIdSettingsIndexRoute
   _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
-  _authWOrganizationIdSettingsExtensionsIndexRoute: typeof _authWOrganizationIdSettingsExtensionsIndexRoute
   _authWOrganizationIdSettingsIntegrationsIndexRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 
@@ -444,8 +423,6 @@ const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettin
       _authWOrganizationIdSettingsIndexRoute,
     _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute:
       _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute,
-    _authWOrganizationIdSettingsExtensionsIndexRoute:
-      _authWOrganizationIdSettingsExtensionsIndexRoute,
     _authWOrganizationIdSettingsIntegrationsIndexRoute:
       _authWOrganizationIdSettingsIntegrationsIndexRoute,
   }

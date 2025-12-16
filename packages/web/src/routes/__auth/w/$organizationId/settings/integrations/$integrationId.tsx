@@ -33,39 +33,38 @@ function RouteComponent() {
   const { integrationId, organizationId } = Route.useParams();
   const navigate = useNavigate();
 
-  const [extensionLink, status] = useQuery(
+  const [integrationLink, status] = useQuery(
     queries.integrationLinks.byId({
       linkId: integrationId,
       organizationId: organizationId || "",
     })
   );
 
-  if (!extensionLink && status.type === "complete") {
+  if (!integrationLink && status.type === "complete") {
     return (
       <div className="flex flex-col gap-y-4">
-        <div className="text-sm text-gray-500">Extension link not found</div>
+        <div className="text-sm text-gray-500">Integration link not found</div>
         <Button
           onPress={() => {
             navigate({
-              to: "/w/$organizationId/settings/extensions/",
-              params: { organizationId: organizationId || "" },
+              to: "/w/$organizationId/settings/integrations",
             });
           }}
           size="sm"
           intent="secondary"
         >
           <ArrowLeft className="size-3.5 mr-1" />
-          Back to Extensions
+          Back to integrations
         </Button>
       </div>
     );
   }
 
-  if (!extensionLink) return null;
+  if (!integrationLink) return null;
 
-  const connection = extensionLink.connection;
-  const config = extensionLink.config as any;
-  const isEnabled = extensionLink.enabled && (connection?.enabled ?? false);
+  const connection = integrationLink.connection;
+  const config = integrationLink.config as any;
+  const isEnabled = integrationLink.enabled && (connection?.enabled ?? false);
 
   const getStatusIcon = (enabled: boolean, status?: string) => {
     if (!enabled) return <XCircle className="size-4 text-gray-400" />;
@@ -128,9 +127,9 @@ function RouteComponent() {
           Back
         </Button>
         <div>
-          <Heading level={1}>{extensionLink.name}</Heading>
+          <Heading level={1}>{integrationLink?.name}</Heading>
           <p className="text-sm/relaxed text-gray-600 mt-1">
-            Extension link settings and configuration
+            Integration link settings and configuration
           </p>
         </div>
       </div>
@@ -152,10 +151,10 @@ function RouteComponent() {
                 )}
               </span>
             </div>
-            {extensionLink.last_synced_at && (
+            {integrationLink?.last_synced_at && (
               <div className="text-xs text-gray-500 mt-2">
                 Last synced{" "}
-                {formatDistanceToNow(extensionLink.last_synced_at, {
+                {formatDistanceToNow(integrationLink?.last_synced_at, {
                   addSuffix: true,
                 })}
               </div>
@@ -220,19 +219,19 @@ function RouteComponent() {
               <div>
                 <div className="text-xs text-gray-500 mb-1">Link ID</div>
                 <code className="text-sm text-gray-700">
-                  {extensionLink.id}
+                  {integrationLink.id}
                 </code>
               </div>
               <div>
                 <div className="text-xs text-gray-500 mb-1">Name</div>
                 <div className="text-sm text-gray-700">
-                  {extensionLink.name}
+                  {integrationLink.name}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-gray-500 mb-1">Enabled</div>
                 <div className="text-sm text-gray-700">
-                  {extensionLink.enabled ? "Yes" : "No"}
+                  {integrationLink.enabled ? "Yes" : "No"}
                 </div>
               </div>
             </div>

@@ -30,17 +30,17 @@ export type DocumentTreeItemProps = {
   item: {
     id: string;
     name: string;
-    type: "folder" | "document" | "extension-link";
+    type: "folder" | "document" | "integration-link";
     children?: Array<{
       id: string;
       name: string;
-      type: "folder" | "document" | "extension-link";
+      type: "folder" | "document" | "integration-link";
       children?: any[];
-      extensionLinkId?: string | null;
-      extensionType?: string;
+      integrationLinkId?: string | null;
+      integrationType?: string;
     }>;
-    extensionLinkId?: string | null;
-    extensionType?: string;
+    integrationLinkId?: string | null;
+    integrationType?: string;
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<
@@ -68,7 +68,7 @@ export function DocumentTreeItem({
   const isActiveFolder = item.type === "folder" && tree === item.id;
   const isCurrent = isCurrentDocument || isActiveFolder;
 
-  // Check if this is an extension link item
+  // Check if this is an integration link item
   const isIntegrationLink = item.type === "integration-link";
 
   const handleNavigate = () => {
@@ -85,7 +85,7 @@ export function DocumentTreeItem({
         search: { tree: item.id, q: undefined, focusSearch: undefined },
       });
     }
-    // Extension links don't navigate anywhere on click (they just expand)
+    // Integration links don't navigate anywhere on click (they just expand)
   };
 
   return (
@@ -112,7 +112,7 @@ export function DocumentTreeItem({
       <TreeItemContent>
         {({ isExpanded }) => (
           <>
-            {/* Only show drag button for non-extension-link items */}
+            {/* Only show drag button for non-integration-link items */}
             {!isIntegrationLink && (
               <Button
                 slot="drag"
@@ -125,7 +125,7 @@ export function DocumentTreeItem({
               </Button>
             )}
             <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
-              {/* Extension link item - shows as a folder with plug icon */}
+              {/* Integration link item - shows as a folder with plug icon */}
               {isIntegrationLink && (
                 <>
                   <Button
@@ -162,7 +162,7 @@ export function DocumentTreeItem({
                       <Folder className="size-3.5" />
                     )}
                   </Button>
-                  {item.extensionLinkId && (
+                  {item.integrationLinkId && (
                     <Plug className="size-3 text-blue-500 shrink-0" />
                   )}
                 </div>
@@ -180,7 +180,7 @@ export function DocumentTreeItem({
                         />
                       )}
                       <File className="size-3.5 text-gray-500 shrink-0" />
-                      {item.extensionLinkId && (
+                      {item.integrationLinkId && (
                         <Plug className="size-3 text-blue-500 shrink-0" />
                       )}
                     </div>
@@ -195,25 +195,25 @@ export function DocumentTreeItem({
                 <MenuTrigger>
                   <Button
                     className="p-1 rounded hover:bg-gray-200"
-                    aria-label="Extension link options"
+                    aria-label="Integration link options"
                   >
                     <MoreVertical size={12} />
                   </Button>
                   <Menu>
                     <MenuItem
                       onAction={() => {
-                        if (item.extensionLinkId) {
+                        if (item.integrationLinkId) {
                           navigate({
                             to: "/w/$organizationId/settings/integrations/$integrationId",
                             params: {
                               organizationId: organizationId || "",
-                              integrationId: item.integrationId,
+                              integrationId: item.integrationLinkId,
                             },
                           });
                         }
                       }}
                     >
-                      Extension settings
+                      Integration settings
                     </MenuItem>
                   </Menu>
                 </MenuTrigger>

@@ -16,10 +16,10 @@ import type { QueryResultType } from "@rocicorp/zero";
 type TreeItem = {
   id: string;
   name: string;
-  type: "folder" | "document" | "extension-link";
+  type: "folder" | "document" | "integration-link";
   children?: TreeItem[];
-  extensionLinkId?: string | null;
-  extensionType?: string;
+  integrationLinkId?: string | null;
+  integrationType?: string;
 };
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
@@ -141,7 +141,7 @@ export function DocumentTree() {
 
   // Query extension links with their connections
   const [extensionLinks] = useQuery(
-    queries.extensionLinks.byOrganization({
+    queries.integrationLinks.byOrganization({
       organizationId: organization?.id || "",
     })
   );
@@ -149,8 +149,9 @@ export function DocumentTree() {
   const documents = orgData?.documents || [];
   const folders = orgData?.folders || [];
   const enabledLinks =
-    extensionLinks?.filter((link) => link.enabled && link.connection?.enabled) ||
-    [];
+    extensionLinks?.filter(
+      (link) => link.enabled && link.connection?.enabled
+    ) || [];
 
   // Expand all parent folders when a document is opened
   useEffect(() => {
@@ -186,11 +187,11 @@ export function DocumentTree() {
   const buildTreeItems = (folderId: string | null): TreeItem[] => {
     // Only include documents that don't belong to an extension link
     const folderDocs = documents.filter(
-      (doc) => doc.folder_id === folderId && !doc.extension_link_id
+      (doc) => doc.folder_id === folderId && !doc.integration_link_id
     );
     // Only include folders that don't belong to an extension link
     const subFolders = folders.filter(
-      (folder) => folder.parent_id === folderId && !folder.extension_link_id
+      (folder) => folder.parent_id === folderId && !folder.integration_link_id
     );
 
     return [
@@ -199,7 +200,7 @@ export function DocumentTree() {
         name: folder.name,
         type: "folder" as const,
         children: buildTreeItems(folder.id),
-        extensionLinkId: folder.extension_link_id,
+        integrationLinkId: folder.integration_link_id,
       })),
       ...folderDocs.map((doc) => ({
         id: doc.id,
@@ -211,9 +212,11 @@ export function DocumentTree() {
 
   // Build tree items for an extension link (documents that belong to this link)
   const buildLinkItems = (linkId: string): TreeItem[] => {
-    const linkDocs = documents.filter((doc) => doc.extension_link_id === linkId);
+    const linkDocs = documents.filter(
+      (doc) => doc.integration_link_id === linkId
+    );
     const linkFolders = folders.filter(
-      (folder) => folder.extension_link_id === linkId
+      (folder) => folder.integration_link_id === linkId
     );
 
     // Build nested structure for link folders
@@ -229,13 +232,13 @@ export function DocumentTree() {
           name: folder.name,
           type: "folder" as const,
           children: buildNestedFolders(folder.id),
-          extensionLinkId: folder.extension_link_id,
+          integrationLinkId: folder.integration_link_id,
         })),
         ...folderDocs.map((doc) => ({
           id: doc.id,
           name: doc.title || "Untitled document",
           type: "document" as const,
-          extensionLinkId: doc.extension_link_id,
+          integrationLinkId: doc.integration_link_id,
         })),
       ];
     };
@@ -243,17 +246,17 @@ export function DocumentTree() {
     return buildNestedFolders(null);
   };
 
-  // Build extension link entries as virtual top-level folder items
+  // Build integration link entries as virtual top-level folder items
   const linkItems: TreeItem[] = enabledLinks.map((link) => ({
-    id: `extension-link-${link.id}`,
+    id: `integration-link-${link.id}`,
     name: link.name,
-    type: "extension-link" as const,
-    extensionType: link.connection?.extension_type,
-    extensionLinkId: link.id, // Store the actual link ID for navigation
+    type: "integration-link" as const,
+    integrationType: link.connection?.integration_type,
+    integrationLinkId: link.id, // Store the actual link ID for navigation
     children: buildLinkItems(link.id),
   }));
 
-  // Combine extension links (at top) with regular tree items
+  // Combine integration links (at top) with regular tree items
   const treeItems = [...linkItems, ...buildTreeItems(null)];
 
   const renderItem = (item: TreeItem): ReactElement => (

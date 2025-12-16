@@ -96,7 +96,7 @@ test.describe("Integrations", () => {
 
       // Should show success toast
       await expect(
-        page.getByText("Extension connected successfully!")
+        page.getByText("Integration connected successfully!")
       ).toBeVisible();
 
       // URL should be cleaned up
@@ -126,7 +126,7 @@ test.describe("Integrations", () => {
     });
   });
 
-  test.describe("Extension Links", () => {
+  test.describe("Integration Links", () => {
     test("should show 'no integrations connected' state initially", async ({
       page,
       organization,
@@ -138,7 +138,7 @@ test.describe("Integrations", () => {
       ).toBeVisible();
       await expect(
         page.getByText(
-          "Connect your first extension to start syncing documents"
+          "Connect your first integration to start syncing documents"
         )
       ).toBeVisible();
     });

@@ -97,7 +97,7 @@ function RouteComponent() {
     })
   );
 
-  // Query extension links
+  // Query integration links
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byOrganization({
       organizationId: organization?.id || "",
@@ -354,10 +354,10 @@ function RouteComponent() {
           </Button>
         </div>
 
-        {/* Show Integration Links */}
+        {/* Show integration links */}
         {integrationLinks && integrationLinks.length > 0 ? (
           <Table
-            aria-label="Integration Links"
+            aria-label="integration links"
             className="w-full max-h-none rounded-lg ring ring-black/8 bg-white"
           >
             <TableHeader>

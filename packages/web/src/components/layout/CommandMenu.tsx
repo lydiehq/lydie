@@ -50,13 +50,13 @@ function CommandGroupHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Helper to get icon for extension type
-function getExtensionIcon(extensionType: string | null | undefined) {
-  if (!extensionType) return null;
+// Helper to get icon for integration type
+function getIntegrationIcon(integrationType: string | null | undefined) {
+  if (!integrationType) return null;
 
   // For now, use a generic Plug icon, but this can be extended
-  // to return specific icons for different extension types
-  switch (extensionType.toLowerCase()) {
+  // to return specific icons for different integration types
+  switch (integrationType.toLowerCase()) {
     case "github":
       // Could import a GitHub icon from lucide-react or use a custom one
       return Plug;
@@ -120,9 +120,9 @@ export function CommandMenu() {
   const searchDocuments = searchData?.documents || [];
   const searchFolders = searchData?.folders || [];
 
-  // Load extension links to show appropriate icons
-  const [extensionLinks] = useQuery(
-    queries.extensionLinks.byOrganization({
+  // Load integration links to show appropriate icons
+  const [integrationLinks] = useQuery(
+    queries.integrationLinks.byOrganization({
       organizationId: organization?.id || "",
     })
   );
@@ -334,10 +334,7 @@ export function CommandMenu() {
         icon: Plug,
         action: () => {
           navigate({
-            to: "/w/$organizationId/settings/integrations/",
-            params: {
-              organizationId: organization?.id as string,
-            },
+            to: "/w/$organizationId/settings/integrations",
           });
         },
       },
@@ -459,11 +456,11 @@ export function CommandMenu() {
                     }
                   >
                     {searchFolders.map((folder) => {
-                      const link = extensionLinks?.find(
-                        (l) => l.id === folder.extension_link_id
+                      const link = integrationLinks?.find(
+                        (l) => l.id === folder.integration_link_id
                       );
-                      const ExtensionIcon = link?.connection
-                        ? getExtensionIcon(link.connection.extension_type)
+                      const IntegrationIcon = link?.connection
+                        ? getIntegrationIcon(link.connection.integration_type)
                         : null;
 
                       return (
@@ -489,8 +486,8 @@ export function CommandMenu() {
                         >
                           <div className="flex items-center gap-1 mr-2">
                             <Folder className="size-4 text-gray-400" />
-                            {ExtensionIcon && (
-                              <ExtensionIcon className="size-3 text-blue-500" />
+                            {IntegrationIcon && (
+                              <IntegrationIcon className="size-3 text-blue-500" />
                             )}
                           </div>
                           <span className="truncate">{folder.name}</span>
@@ -498,11 +495,11 @@ export function CommandMenu() {
                       );
                     })}
                     {searchDocuments.map((doc) => {
-                      const link = extensionLinks?.find(
-                        (l) => l.id === doc.extension_link_id
+                      const link = integrationLinks?.find(
+                        (l) => l.id === doc.integration_link_id
                       );
-                      const ExtensionIcon = link?.connection
-                        ? getExtensionIcon(link.connection.extension_type)
+                      const IntegrationIcon = link?.connection
+                        ? getIntegrationIcon(link.connection.integration_type)
                         : null;
 
                       return (
@@ -526,8 +523,8 @@ export function CommandMenu() {
                         >
                           <div className="flex items-center gap-1 mr-2">
                             <FileText className="size-4 text-gray-400" />
-                            {ExtensionIcon && (
-                              <ExtensionIcon className="size-3 text-blue-500" />
+                            {IntegrationIcon && (
+                              <IntegrationIcon className="size-3 text-blue-500" />
                             )}
                           </div>
                           <span className="truncate">

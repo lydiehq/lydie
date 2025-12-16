@@ -2,7 +2,7 @@ import type { Route } from "@playwright/test";
 
 /**
  * Mock responses for GitHub API endpoints
- * Use these to test the extension functionality without hitting real GitHub APIs
+ * Use these to test the integration functionality without hitting real GitHub APIs
  */
 
 export interface MockRepository {

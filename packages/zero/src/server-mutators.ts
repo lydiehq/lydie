@@ -134,7 +134,9 @@ async function pushToIntegration(
     }
 
     // Get integration from registry
-    const integration = integrationRegistry.get(link.connection.integrationType);
+    const integration = integrationRegistry.get(
+      link.connection.integrationType
+    );
     if (!integration) {
       console.error(
         `[Push] Unknown integration type: ${link.connection.integrationType}`
@@ -231,7 +233,7 @@ export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
             },
           });
 
-          // Get the document to check for extension links and trigger async tasks
+          // Get the document to check for integration links and trigger async tasks
           const doc = await tx.run(zql.documents.where("id", documentId).one());
 
           if (doc) {
