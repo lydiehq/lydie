@@ -50,7 +50,7 @@ const settingsRoutes = [
         icon: Box,
       },
       {
-        path: "/w/$organizationId/settings/extensions",
+        path: "/w/$organizationId/settings/extensions/",
         label: "Extensions",
         icon: Puzzle,
       },
@@ -84,7 +84,10 @@ function RouteComponent() {
                             to={route.path}
                             from="/w/$organizationId/settings"
                             className={sidebarItemStyles()}
-                            activeOptions={{ exact: true }}
+                            activeOptions={{
+                              exact: true,
+                              includeSearch: false,
+                            }}
                           >
                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
                               {Icon && (

@@ -24,8 +24,8 @@ const commonEnv = {
   ZERO_CHANGE_DB: conn.value,
   ZERO_IMAGE_URL: image,
   ZERP_APP_ID: $app.stage,
-  ZERO_CVR_MAX_CONNS: "10",
-  ZERO_UPSTREAM_MAX_CONNS: "10",
+  // ZERO_CVR_MAX_CONNS: "10",
+  // ZERO_UPSTREAM_MAX_CONNS: "10",
   ZERO_MUTATE_FORWARD_COOKIES: "true",
   ZERO_QUERY_FORWARD_COOKIES: "true",
   ...($dev ? {} : { ZERO_APP_PUBLICATIONS: "zero_data" }),
@@ -37,8 +37,8 @@ const commonEnv = {
     : "https://api.lydie.co/internal/zero/queries",
 };
 
-const replication = !$dev
-  ? new sst.aws.Service(`replication-manager`, {
+!$dev
+  ? new sst.aws.Service("ReplicationManager", {
       wait: true,
       cluster,
       cpu: "0.25 vCPU",
@@ -56,7 +56,7 @@ const replication = !$dev
       environment: {
         ...commonEnv,
         ZERO_LITESTREAM_BACKUP_URL: $interpolate`s3://${replicationBucket.name}/backup`,
-        ZERO_NUM_SYNC_WORKERS: "0",
+        // ZERO_NUM_SYNC_WORKERS: "0",
       },
       loadBalancer: {
         public: false,
@@ -85,7 +85,7 @@ const replication = !$dev
     })
   : undefined;
 
-export const zero = new sst.aws.Service(`view-syncer`, {
+export const zero = new sst.aws.Service("Zero", {
   cluster,
   ...($app.stage === "production"
     ? {

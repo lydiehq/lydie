@@ -334,7 +334,7 @@ export function CommandMenu() {
         icon: Plug,
         action: () => {
           navigate({
-            to: "/w/$organizationId/settings/extensions",
+            to: "/w/$organizationId/settings/extensions/",
             params: {
               organizationId: organization?.id as string,
             },

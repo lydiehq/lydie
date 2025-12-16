@@ -48,7 +48,7 @@ import { toast } from "sonner";
 import { useAuthenticatedApi } from "@/services/api";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/extensions"
+  "/__auth/w/$organizationId/settings/extensions/"
 )({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => {
@@ -70,7 +70,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { createClient } = useAuthenticatedApi();
   const search = useSearch({
-    from: "/__auth/w/$organizationId/settings/extensions",
+    from: "/__auth/w/$organizationId/settings/extensions/",
   });
   const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
   const [connectionDialogStep, setConnectionDialogStep] =
@@ -106,62 +106,62 @@ function RouteComponent() {
   );
 
   // Handle OAuth callback - show toast messages
-  useEffect(() => {
-    // Check if this is a popup window opened by OAuth flow
-    const isPopup = window.opener && !window.opener.closed;
+  // useEffect(() => {
+  //   // Check if this is a popup window opened by OAuth flow
+  //   const isPopup = window.opener && !window.opener.closed;
 
-    if (search.success && search.connectionId) {
-      // If in popup, notify the opener and close
-      if (isPopup) {
-        window.opener.postMessage(
-          {
-            type: "oauth-callback",
-            success: true,
-            connectionId: search.connectionId,
-          },
-          window.location.origin
-        );
-        window.close();
-      } else {
-        // Normal flow - show toast and clear URL params
-        toast.success("Extension connected successfully!");
-        navigate({
-          to: "/w/$organizationId/settings/extensions",
-          params: { organizationId: organization?.id || "" },
-          search: { success: false, error: undefined, connectionId: undefined },
-          replace: true,
-        });
-      }
-    } else if (search.error) {
-      // If in popup, notify the opener and close
-      if (isPopup) {
-        window.opener.postMessage(
-          {
-            type: "oauth-callback",
-            success: false,
-            error: search.error,
-          },
-          window.location.origin
-        );
-        window.close();
-      } else {
-        // Normal flow - show toast and clear URL params
-        toast.error(`Failed to connect: ${search.error}`);
-        navigate({
-          to: "/w/$organizationId/settings/extensions",
-          params: { organizationId: organization?.id || "" },
-          search: { success: false, error: undefined, connectionId: undefined },
-          replace: true,
-        });
-      }
-    }
-  }, [
-    search.success,
-    search.error,
-    search.connectionId,
-    organization?.id,
-    navigate,
-  ]);
+  //   if (search.success && search.connectionId) {
+  //     // If in popup, notify the opener and close
+  //     if (isPopup) {
+  //       window.opener.postMessage(
+  //         {
+  //           type: "oauth-callback",
+  //           success: true,
+  //           connectionId: search.connectionId,
+  //         },
+  //         window.location.origin
+  //       );
+  //       window.close();
+  //     } else {
+  //       // Normal flow - show toast and clear URL params
+  //       toast.success("Extension connected successfully!");
+  //       navigate({
+  //         to: "/w/$organizationId/settings/extensions",
+  //         params: { organizationId: organization?.id || "" },
+  //         search: { success: false, error: undefined, connectionId: undefined },
+  //         replace: true,
+  //       });
+  //     }
+  //   } else if (search.error) {
+  //     // If in popup, notify the opener and close
+  //     if (isPopup) {
+  //       window.opener.postMessage(
+  //         {
+  //           type: "oauth-callback",
+  //           success: false,
+  //           error: search.error,
+  //         },
+  //         window.location.origin
+  //       );
+  //       window.close();
+  //     } else {
+  //       // Normal flow - show toast and clear URL params
+  //       toast.error(`Failed to connect: ${search.error}`);
+  //       navigate({
+  //         to: "/w/$organizationId/settings/extensions",
+  //         params: { organizationId: organization?.id || "" },
+  //         search: { success: false, error: undefined, connectionId: undefined },
+  //         replace: true,
+  //       });
+  //     }
+  //   }
+  // }, [
+  //   search.success,
+  //   search.error,
+  //   search.connectionId,
+  //   organization?.id,
+  //   navigate,
+  // ]);
 
   const handleSelectExtension = (type: ExtensionType) => {
     setSelectedExtensionType(type);

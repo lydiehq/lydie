@@ -22,10 +22,6 @@ declare module "sst" {
       "type": "sst.aws.Router"
       "url": string
     }
-    "GitHubAppId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "GitHubAppSlug": {
       "type": "sst.sst.Secret"
       "value": string
@@ -90,6 +86,11 @@ declare module "sst" {
       "type": "sst.aws.StaticSite"
       "url": string
     }
+    "Zero": {
+      "service": string
+      "type": "sst.aws.Service"
+      "url": string
+    }
     "ZeroAdminPassword": {
       "type": "sst.sst.Secret"
       "value": string
@@ -97,16 +98,6 @@ declare module "sst" {
     "replication-bucket": {
       "name": string
       "type": "sst.aws.Bucket"
-    }
-    "replication-manager": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
-    "view-syncer": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
     }
     "vpc": {
       "type": "sst.aws.Vpc"

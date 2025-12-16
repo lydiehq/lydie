@@ -7,11 +7,7 @@ import type {
   ExternalResource,
 } from "../../types";
 import type { ResourceExtension } from "../../extension";
-import type {
-  OAuthConfig,
-  OAuthCredentials,
-  OAuthTokenResponse,
-} from "../../oauth";
+import type { OAuthConfig, OAuthCredentials } from "../../oauth";
 import { Resource } from "sst";
 import {
   serializeToMarkdown,
@@ -485,24 +481,23 @@ export class GitHubExtension
    * Get GitHub App-specific credentials
    */
   private async getGitHubAppCredentials(): Promise<{
-    appId?: string;
+    clientId?: string;
     privateKey?: string;
     appSlug?: string;
   }> {
     return {
-      appId: Resource.GitHubAppId.value,
+      clientId: Resource.GitHubClientId.value,
       privateKey: Resource.GitHubPrivateKey.value,
       appSlug: Resource.GitHubAppSlug?.value,
     };
   }
 
-  buildAuthorizationUrl(
+  public buildAuthorizationUrl(
     credentials: OAuthCredentials,
     state: string,
     redirectUri: string
   ): string {
-    // Use GitHub App installation flow
-    const appSlug = Resource.GitHubAppSlug?.value;
+    const appSlug = Resource.GitHubAppSlug.value;
     if (!appSlug) {
       throw new Error("GitHub App slug not configured");
     }
@@ -518,9 +513,7 @@ export class GitHubExtension
    * Handle OAuth callback for GitHub App installation flow
    */
   async handleOAuthCallback(
-    queryParams: Record<string, string>,
-    credentials: OAuthCredentials,
-    redirectUri: string
+    queryParams: Record<string, string>
   ): Promise<GitHubConfig> {
     const { installation_id } = queryParams;
 
@@ -680,12 +673,13 @@ export class GitHubExtension
   /**
    * Generate a JWT for authenticating as the GitHub App
    * This JWT is used to generate installation access tokens
+   * Uses Client ID for the iss claim (recommended by GitHub)
    */
   private async generateAppJWT(credentials: {
-    appId?: string;
+    clientId?: string;
     privateKey?: string;
   }): Promise<string> {
-    if (!credentials.appId || !credentials.privateKey) {
+    if (!credentials.clientId || !credentials.privateKey) {
       throw new Error("GitHub App credentials not configured");
     }
 
@@ -693,7 +687,7 @@ export class GitHubExtension
     const payload = {
       iat: now - 60, // Issue time (60 seconds in the past to allow for clock drift)
       exp: now + 10 * 60, // Expiration time (10 minutes maximum)
-      iss: credentials.appId, // GitHub App's identifier
+      iss: credentials.clientId, // GitHub App's Client ID (recommended over App ID)
     };
 
     return jwt.sign(payload, credentials.privateKey, { algorithm: "RS256" });
@@ -742,7 +736,7 @@ export class GitHubExtension
    */
   async getAppInfo(): Promise<{ slug: string; name: string }> {
     const credentials = await this.getGitHubAppCredentials();
-    if (!credentials.appId || !credentials.privateKey) {
+    if (!credentials.clientId || !credentials.privateKey) {
       throw new Error("GitHub App credentials not configured");
     }
 

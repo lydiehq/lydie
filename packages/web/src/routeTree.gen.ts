@@ -23,10 +23,11 @@ import { Route as _authWOrganizationIdSettingsIndexRouteImport } from './routes/
 import { Route as _authWOrganizationIdIdIndexRouteImport } from './routes/__auth/w/$organizationId/$id/index'
 import { Route as _authWOrganizationIdSettingsUserRouteImport } from './routes/__auth/w/$organizationId/settings/user'
 import { Route as _authWOrganizationIdSettingsImportRouteImport } from './routes/__auth/w/$organizationId/settings/import'
-import { Route as _authWOrganizationIdSettingsExtensionsRouteImport } from './routes/__auth/w/$organizationId/settings/extensions'
 import { Route as _authWOrganizationIdSettingsComponentsRouteImport } from './routes/__auth/w/$organizationId/settings/components'
 import { Route as _authWOrganizationIdSettingsBillingRouteImport } from './routes/__auth/w/$organizationId/settings/billing'
 import { Route as _authWOrganizationIdSettingsAiRouteImport } from './routes/__auth/w/$organizationId/settings/ai'
+import { Route as _authWOrganizationIdSettingsExtensionsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/extensions/index'
+import { Route as _authWOrganizationIdSettingsExtensionsExtensionIdRouteImport } from './routes/__auth/w/$organizationId/settings/extensions/$extensionId'
 
 const LandingRouteRoute = LandingRouteRouteImport.update({
   id: '/_landing',
@@ -104,12 +105,6 @@ const _authWOrganizationIdSettingsImportRoute =
     path: '/import',
     getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsExtensionsRoute =
-  _authWOrganizationIdSettingsExtensionsRouteImport.update({
-    id: '/extensions',
-    path: '/extensions',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
-  } as any)
 const _authWOrganizationIdSettingsComponentsRoute =
   _authWOrganizationIdSettingsComponentsRouteImport.update({
     id: '/components',
@@ -128,6 +123,18 @@ const _authWOrganizationIdSettingsAiRoute =
     path: '/ai',
     getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
   } as any)
+const _authWOrganizationIdSettingsExtensionsIndexRoute =
+  _authWOrganizationIdSettingsExtensionsIndexRouteImport.update({
+    id: '/extensions/',
+    path: '/extensions/',
+    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+  } as any)
+const _authWOrganizationIdSettingsExtensionsExtensionIdRoute =
+  _authWOrganizationIdSettingsExtensionsExtensionIdRouteImport.update({
+    id: '/extensions/$extensionId',
+    path: '/extensions/$extensionId',
+    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof _authIndexRoute
@@ -141,11 +148,12 @@ export interface FileRoutesByFullPath {
   '/w/$organizationId/settings/ai': typeof _authWOrganizationIdSettingsAiRoute
   '/w/$organizationId/settings/billing': typeof _authWOrganizationIdSettingsBillingRoute
   '/w/$organizationId/settings/components': typeof _authWOrganizationIdSettingsComponentsRoute
-  '/w/$organizationId/settings/extensions': typeof _authWOrganizationIdSettingsExtensionsRoute
   '/w/$organizationId/settings/import': typeof _authWOrganizationIdSettingsImportRoute
   '/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
+  '/w/$organizationId/settings/extensions/$extensionId': typeof _authWOrganizationIdSettingsExtensionsExtensionIdRoute
+  '/w/$organizationId/settings/extensions': typeof _authWOrganizationIdSettingsExtensionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof _authIndexRoute
@@ -157,11 +165,12 @@ export interface FileRoutesByTo {
   '/w/$organizationId/settings/ai': typeof _authWOrganizationIdSettingsAiRoute
   '/w/$organizationId/settings/billing': typeof _authWOrganizationIdSettingsBillingRoute
   '/w/$organizationId/settings/components': typeof _authWOrganizationIdSettingsComponentsRoute
-  '/w/$organizationId/settings/extensions': typeof _authWOrganizationIdSettingsExtensionsRoute
   '/w/$organizationId/settings/import': typeof _authWOrganizationIdSettingsImportRoute
   '/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings': typeof _authWOrganizationIdSettingsIndexRoute
+  '/w/$organizationId/settings/extensions/$extensionId': typeof _authWOrganizationIdSettingsExtensionsExtensionIdRoute
+  '/w/$organizationId/settings/extensions': typeof _authWOrganizationIdSettingsExtensionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -178,11 +187,12 @@ export interface FileRoutesById {
   '/__auth/w/$organizationId/settings/ai': typeof _authWOrganizationIdSettingsAiRoute
   '/__auth/w/$organizationId/settings/billing': typeof _authWOrganizationIdSettingsBillingRoute
   '/__auth/w/$organizationId/settings/components': typeof _authWOrganizationIdSettingsComponentsRoute
-  '/__auth/w/$organizationId/settings/extensions': typeof _authWOrganizationIdSettingsExtensionsRoute
   '/__auth/w/$organizationId/settings/import': typeof _authWOrganizationIdSettingsImportRoute
   '/__auth/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
   '/__auth/w/$organizationId/$id/': typeof _authWOrganizationIdIdIndexRoute
   '/__auth/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
+  '/__auth/w/$organizationId/settings/extensions/$extensionId': typeof _authWOrganizationIdSettingsExtensionsExtensionIdRoute
+  '/__auth/w/$organizationId/settings/extensions/': typeof _authWOrganizationIdSettingsExtensionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,11 +208,12 @@ export interface FileRouteTypes {
     | '/w/$organizationId/settings/ai'
     | '/w/$organizationId/settings/billing'
     | '/w/$organizationId/settings/components'
-    | '/w/$organizationId/settings/extensions'
     | '/w/$organizationId/settings/import'
     | '/w/$organizationId/settings/user'
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings/'
+    | '/w/$organizationId/settings/extensions/$extensionId'
+    | '/w/$organizationId/settings/extensions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -214,11 +225,12 @@ export interface FileRouteTypes {
     | '/w/$organizationId/settings/ai'
     | '/w/$organizationId/settings/billing'
     | '/w/$organizationId/settings/components'
-    | '/w/$organizationId/settings/extensions'
     | '/w/$organizationId/settings/import'
     | '/w/$organizationId/settings/user'
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings'
+    | '/w/$organizationId/settings/extensions/$extensionId'
+    | '/w/$organizationId/settings/extensions'
   id:
     | '__root__'
     | '/__auth'
@@ -234,11 +246,12 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationId/settings/ai'
     | '/__auth/w/$organizationId/settings/billing'
     | '/__auth/w/$organizationId/settings/components'
-    | '/__auth/w/$organizationId/settings/extensions'
     | '/__auth/w/$organizationId/settings/import'
     | '/__auth/w/$organizationId/settings/user'
     | '/__auth/w/$organizationId/$id/'
     | '/__auth/w/$organizationId/settings/'
+    | '/__auth/w/$organizationId/settings/extensions/$extensionId'
+    | '/__auth/w/$organizationId/settings/extensions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -346,13 +359,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationIdSettingsImportRouteImport
       parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/extensions': {
-      id: '/__auth/w/$organizationId/settings/extensions'
-      path: '/extensions'
-      fullPath: '/w/$organizationId/settings/extensions'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsExtensionsRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
-    }
     '/__auth/w/$organizationId/settings/components': {
       id: '/__auth/w/$organizationId/settings/components'
       path: '/components'
@@ -374,6 +380,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationIdSettingsAiRouteImport
       parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
     }
+    '/__auth/w/$organizationId/settings/extensions/': {
+      id: '/__auth/w/$organizationId/settings/extensions/'
+      path: '/extensions'
+      fullPath: '/w/$organizationId/settings/extensions'
+      preLoaderRoute: typeof _authWOrganizationIdSettingsExtensionsIndexRouteImport
+      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+    }
+    '/__auth/w/$organizationId/settings/extensions/$extensionId': {
+      id: '/__auth/w/$organizationId/settings/extensions/$extensionId'
+      path: '/extensions/$extensionId'
+      fullPath: '/w/$organizationId/settings/extensions/$extensionId'
+      preLoaderRoute: typeof _authWOrganizationIdSettingsExtensionsExtensionIdRouteImport
+      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+    }
   }
 }
 
@@ -381,10 +401,11 @@ interface _authWOrganizationIdSettingsRouteRouteChildren {
   _authWOrganizationIdSettingsAiRoute: typeof _authWOrganizationIdSettingsAiRoute
   _authWOrganizationIdSettingsBillingRoute: typeof _authWOrganizationIdSettingsBillingRoute
   _authWOrganizationIdSettingsComponentsRoute: typeof _authWOrganizationIdSettingsComponentsRoute
-  _authWOrganizationIdSettingsExtensionsRoute: typeof _authWOrganizationIdSettingsExtensionsRoute
   _authWOrganizationIdSettingsImportRoute: typeof _authWOrganizationIdSettingsImportRoute
   _authWOrganizationIdSettingsUserRoute: typeof _authWOrganizationIdSettingsUserRoute
   _authWOrganizationIdSettingsIndexRoute: typeof _authWOrganizationIdSettingsIndexRoute
+  _authWOrganizationIdSettingsExtensionsExtensionIdRoute: typeof _authWOrganizationIdSettingsExtensionsExtensionIdRoute
+  _authWOrganizationIdSettingsExtensionsIndexRoute: typeof _authWOrganizationIdSettingsExtensionsIndexRoute
 }
 
 const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettingsRouteRouteChildren =
@@ -394,14 +415,16 @@ const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettin
       _authWOrganizationIdSettingsBillingRoute,
     _authWOrganizationIdSettingsComponentsRoute:
       _authWOrganizationIdSettingsComponentsRoute,
-    _authWOrganizationIdSettingsExtensionsRoute:
-      _authWOrganizationIdSettingsExtensionsRoute,
     _authWOrganizationIdSettingsImportRoute:
       _authWOrganizationIdSettingsImportRoute,
     _authWOrganizationIdSettingsUserRoute:
       _authWOrganizationIdSettingsUserRoute,
     _authWOrganizationIdSettingsIndexRoute:
       _authWOrganizationIdSettingsIndexRoute,
+    _authWOrganizationIdSettingsExtensionsExtensionIdRoute:
+      _authWOrganizationIdSettingsExtensionsExtensionIdRoute,
+    _authWOrganizationIdSettingsExtensionsIndexRoute:
+      _authWOrganizationIdSettingsExtensionsIndexRoute,
   }
 
 const _authWOrganizationIdSettingsRouteRouteWithChildren =

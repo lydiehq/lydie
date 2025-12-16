@@ -15,7 +15,6 @@ import {
   MoreVertical,
   Move,
   Plug,
-  Settings,
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles } from "./Sidebar";
@@ -203,19 +202,18 @@ export function DocumentTreeItem({
                   <Menu>
                     <MenuItem
                       onAction={() => {
-                        navigate({
-                          to: "/w/$organizationId/settings/extensions",
-                          params: { organizationId: organizationId || "" },
-                          search: {
-                            success: false,
-                            error: undefined,
-                            connectionId: undefined,
-                          },
-                        });
+                        if (item.extensionLinkId) {
+                          navigate({
+                            to: "/w/$organizationId/settings/extensions/$extensionId",
+                            params: {
+                              organizationId: organizationId || "",
+                              extensionId: item.extensionLinkId,
+                            },
+                          });
+                        }
                       }}
                     >
-                      <Settings className="size-4 mr-2" />
-                      Go to extensions
+                      Extension settings
                     </MenuItem>
                   </Menu>
                 </MenuTrigger>

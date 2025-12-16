@@ -16,7 +16,6 @@ const commonSecrets = [
   secret.polarWebhookSecret,
   secret.githubClientId,
   secret.githubClientSecret,
-  secret.githubAppId,
   secret.githubPrivateKey,
   secret.githubAppSlug,
 ];
