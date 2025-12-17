@@ -32,7 +32,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       const result = await loadSession(queryClient);
       return result;
     } catch (error) {
-      throw redirect({ to: "/auth" });
+      throw new Error("Failed to load session");
     }
   },
   component: () => {

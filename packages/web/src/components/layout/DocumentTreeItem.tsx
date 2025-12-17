@@ -15,6 +15,7 @@ import {
   MoreVertical,
   Move,
   Plug,
+  Blocks,
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles } from "./Sidebar";
@@ -25,16 +26,17 @@ import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 export type DocumentTreeItemProps = {
   item: {
     id: string;
     name: string;
-    type: "folder" | "document" | "integration-link";
+    type: "folder" | "document" | "integration-link" | "integration-group";
     children?: Array<{
       id: string;
       name: string;
-      type: "folder" | "document" | "integration-link";
+      type: "folder" | "document" | "integration-link" | "integration-group";
       children?: any[];
       integrationLinkId?: string | null;
       integrationType?: string;
@@ -57,7 +59,7 @@ export function DocumentTreeItem({
   renderItem,
   documents,
 }: DocumentTreeItemProps) {
-  const { id: currentDocId, organizationId } = useParams({ strict: false });
+  const { id: currentDocId } = useParams({ strict: false });
   const navigate = useNavigate();
   const { tree } = useSearch({ strict: false });
   const { user } = useAuth();
@@ -79,17 +81,19 @@ export function DocumentTreeItem({
     } else if (item.type === "folder") {
       navigate({
         to: "/w/$organizationId",
-        params: { organizationId: organizationId || "" },
         search: { tree: item.id, q: undefined, focusSearch: undefined },
+        from: "/w/$organizationId",
       });
     }
   };
+
+  const isGroup = item.type === "integration-group";
 
   return (
     <TreeItem
       id={item.id}
       textValue={item.name}
-      onAction={isIntegrationLink ? undefined : handleNavigate}
+      onAction={isIntegrationLink || isGroup ? undefined : handleNavigate}
       className={composeTailwindRenderProps(
         focusRing,
         sidebarItemStyles({
@@ -97,7 +101,7 @@ export function DocumentTreeItem({
           className: `
             dragging:opacity-50 dragging:bg-gray-50 
             ${item.type === "folder" ? "drop-target:bg-gray-200" : ""}
-            ${isIntegrationLink ? "cursor-default" : ""}
+            ${isIntegrationLink || isGroup ? "cursor-default" : ""}
           `,
         })
       )}
@@ -109,19 +113,49 @@ export function DocumentTreeItem({
       <TreeItemContent>
         {({ isExpanded }) => (
           <>
-            {/* Only show drag button for non-integration-link items */}
-            {!isIntegrationLink && (
+            {/* Only show drag button for non-integration-link/group items */}
+            {!isIntegrationLink && !isGroup && (
               <Button
                 slot="drag"
                 className="hidden"
-                aria-label={`Drag ${
-                  item.type === "folder" ? "folder" : "document"
-                } ${item.name}`}
+                aria-label={`Drag ${item.type === "folder" ? "folder" : "document"
+                  } ${item.name}`}
               >
                 <Move size={12} />
               </Button>
             )}
             <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
+              {/* Integration Group item - shows as a folder with blocks icon */}
+              {isGroup && (
+                <>
+                  <Button
+                    className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
+                    slot="chevron"
+                  >
+                    <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
+                  </Button>
+                  <div className="flex items-center gap-0.5">
+                    {(() => {
+                      const iconUrl = item.integrationType
+                        ? getIntegrationIconUrl(item.integrationType)
+                        : null;
+
+                      if (iconUrl) {
+                        return (
+                          <img
+                            src={iconUrl}
+                            alt={`${item.name} icon`}
+                            className="size-3.5 rounded-[2px]"
+                          />
+                        );
+                      }
+
+                      return <Blocks className="size-3.5 text-gray-500" />;
+                    })()}
+                  </div>
+                </>
+              )}
+
               {/* Integration link item - shows as a folder with plug icon */}
               {isIntegrationLink && (
                 <>
@@ -188,7 +222,7 @@ export function DocumentTreeItem({
 
             {/* Context menu */}
             <div className="items-center gap-1 relative -mr-1">
-              {isIntegrationLink ? (
+              {isGroup ? null : isIntegrationLink ? (
                 <MenuTrigger>
                   <Button
                     className="p-1 rounded hover:bg-gray-200"
@@ -202,10 +236,8 @@ export function DocumentTreeItem({
                         if (item.integrationLinkId) {
                           navigate({
                             to: "/w/$organizationId/settings/integrations/$integrationId",
-                            params: {
-                              organizationId: organizationId || "",
-                              integrationId: item.integrationType,
-                            },
+                            params: { integrationId: item.integrationType },
+                            from: "/w/$organizationId",
                           });
                         }
                       }}

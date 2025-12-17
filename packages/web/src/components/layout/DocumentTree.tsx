@@ -4,7 +4,6 @@ import { DocumentTreeItem } from "./DocumentTreeItem";
 import type { ReactElement } from "react";
 import { useOrganization } from "@/context/organization.context";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
 import { useAtom } from "jotai";
 import { useMemo, useEffect, useState } from "react";
@@ -13,10 +12,12 @@ import { atom } from "jotai";
 import { useParams } from "@tanstack/react-router";
 import type { QueryResultType } from "@rocicorp/zero";
 
+import { getIntegrationMetadata } from "@lydie/integrations/metadata";
+
 type TreeItem = {
   id: string;
   name: string;
-  type: "folder" | "document" | "integration-link";
+  type: "folder" | "document" | "integration-link" | "integration-group";
   children?: TreeItem[];
   integrationLinkId?: string | null;
   integrationType?: string;
@@ -24,7 +25,6 @@ type TreeItem = {
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
 
-// Helper to load from localStorage
 function loadFromStorage(): string[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -37,7 +37,6 @@ function loadFromStorage(): string[] {
   return [];
 }
 
-// Helper to save to localStorage
 function saveToStorage(keys: string[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
@@ -66,7 +65,6 @@ function findParentFolderIds(
   const parentIds: string[] = [];
   let currentFolderId: string | null = document.folder_id;
 
-  // Traverse up the folder hierarchy
   while (currentFolderId) {
     parentIds.push(currentFolderId);
     const folder = folders.find((f) => f.id === currentFolderId);
@@ -79,9 +77,6 @@ function findParentFolderIds(
 
 export function DocumentTree() {
   const { organization } = useOrganization();
-  const { session } = useAuth();
-
-  // Get the current document ID from route params
   const { id: currentDocumentId } = useParams({ strict: false });
 
   // Get user settings to determine if we should persist to local storage
@@ -126,9 +121,7 @@ export function DocumentTree() {
     [expandedKeysArray]
   );
 
-  // Handle expanded state changes from Tree component
   const handleExpandedChange = (keys: Set<Key>) => {
-    // Convert Key (string | number) to string array
     // In our case, all IDs are strings, so we can safely convert
     setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
   };
@@ -246,18 +239,47 @@ export function DocumentTree() {
     return buildNestedFolders(null);
   };
 
-  // Build integration link entries as virtual top-level folder items
-  const linkItems: TreeItem[] = enabledLinks.map((link) => ({
-    id: `integration-link-${link.id}`,
-    name: link.name,
-    type: "integration-link" as const,
-    integrationType: link.connection?.integration_type,
-    integrationLinkId: link.id, // Store the actual link ID for navigation
-    children: buildLinkItems(link.id),
-  }));
+  // Build integration link entries grouped by type
+  const linkGroups = useMemo(() => {
+    const groups = new Map<string, typeof enabledLinks>();
 
-  // Combine integration links (at top) with regular tree items
-  const treeItems = [...linkItems, ...buildTreeItems(null)];
+    enabledLinks.forEach((link) => {
+      const type = link.connection?.integration_type;
+      if (!type) return;
+
+      if (!groups.has(type)) {
+        groups.set(type, []);
+      }
+      groups.get(type)?.push(link);
+    });
+
+    const items: TreeItem[] = [];
+
+    groups.forEach((links, type) => {
+      const metadata = getIntegrationMetadata(type);
+      if (!metadata) return;
+
+      items.push({
+        id: `integration-group-${type}`,
+        name: metadata.name,
+        type: "integration-group",
+        children: links.map((link) => ({
+          id: `integration-link-${link.id}`,
+          name: link.name,
+          type: "integration-link",
+          integrationType: link.connection?.integration_type,
+          integrationLinkId: link.id,
+          children: buildLinkItems(link.id),
+        })),
+        integrationType: type,
+      });
+    });
+
+    return items;
+  }, [enabledLinks, documents, folders]); // Re-compute when data changes
+
+  // Combine integration groups (at top) with regular tree items
+  const treeItems = [...linkGroups, ...buildTreeItems(null)];
 
   const renderItem = (item: TreeItem): ReactElement => (
     <DocumentTreeItem

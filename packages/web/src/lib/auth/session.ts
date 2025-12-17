@@ -46,6 +46,7 @@ export async function loadSession(
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
     staleTime: STALE_TIME,
+    retry: 2,
   })) as ExtendedSessionData;
 
   return {
