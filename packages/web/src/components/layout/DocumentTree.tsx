@@ -259,11 +259,18 @@ export function DocumentTree() {
       const metadata = getIntegrationMetadata(type);
       if (!metadata) return;
 
+      // Sort links within each integration group alphabetically by name
+      const sortedLinks = [...links].sort((a, b) =>
+        (a.name || "").localeCompare(b.name || "", undefined, {
+          sensitivity: "base",
+        })
+      );
+
       items.push({
         id: `integration-group-${type}`,
         name: metadata.name,
         type: "integration-group",
-        children: links.map((link) => ({
+        children: sortedLinks.map((link) => ({
           id: `integration-link-${link.id}`,
           name: link.name,
           type: "integration-link",
@@ -274,6 +281,11 @@ export function DocumentTree() {
         integrationType: type,
       });
     });
+
+    // Ensure integration groups themselves are sorted alphabetically by name
+    items.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+    );
 
     return items;
   }, [enabledLinks, documents, folders]); // Re-compute when data changes

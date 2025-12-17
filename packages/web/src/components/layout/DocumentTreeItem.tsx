@@ -12,9 +12,9 @@ import {
   File,
   Folder,
   FolderOpen,
+  FolderSync,
   MoreVertical,
   Move,
-  Plug,
   Blocks,
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
@@ -157,7 +157,7 @@ export function DocumentTreeItem({
                 </>
               )}
 
-              {/* Integration link item - shows as a folder with plug icon */}
+              {/* Integration link item - styled similarly to regular folders, but with a sync icon */}
               {isIntegrationLink && (
                 <>
                   <Button
@@ -167,12 +167,7 @@ export function DocumentTreeItem({
                     <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
                   </Button>
                   <div className="flex items-center gap-0.5">
-                    {isExpanded ? (
-                      <FolderOpen className="size-3.5 text-blue-500" />
-                    ) : (
-                      <Folder className="size-3.5 text-blue-500" />
-                    )}
-                    <Plug className="size-3 text-blue-500 shrink-0" />
+                    <FolderSync className="size-3.5 text-gray-500" />
                   </div>
                 </>
               )}
@@ -194,9 +189,6 @@ export function DocumentTreeItem({
                       <Folder className="size-3.5" />
                     )}
                   </Button>
-                  {item.integrationLinkId && (
-                    <Plug className="size-3 text-blue-500 shrink-0" />
-                  )}
                 </div>
               )}
               {/* Document item */}
@@ -215,9 +207,6 @@ export function DocumentTreeItem({
                         />
                       )}
                       <File className="size-3.5 text-gray-500 shrink-0" />
-                      {item.integrationLinkId && (
-                        <Plug className="size-3 text-blue-500 shrink-0" />
-                      )}
                     </div>
                   );
                 })()}

@@ -14,8 +14,6 @@ import {
   commandMenuStateAtom,
 } from "@/stores/command-menu";
 import {
-  FileText,
-  Folder,
   Search,
   Plus,
   Home,
@@ -26,9 +24,13 @@ import {
   Plug,
 } from "lucide-react";
 import { DialogTrigger, ModalOverlay, Modal } from "react-aria-components";
-import { overlayStyles } from "../generic/Modal";
-import { Dialog } from "../generic/Dialog";
+import { overlayStyles } from "../../generic/Modal";
+import { Dialog } from "../../generic/Dialog";
 import { cva } from "cva";
+import type { MenuItem } from "./CommandMenuItem";
+import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
+import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
+import { SearchResults } from "./CommandMenuSearchResults";
 
 const modalStyles = cva({
   base: "w-full max-w-lg max-h-full rounded-lg shadow-2xl bg-clip-padding ring ring-black/10 overflow-hidden",
@@ -41,45 +43,6 @@ const modalStyles = cva({
     },
   },
 });
-
-function CommandGroupHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 text-left">
-      {children}
-    </div>
-  );
-}
-
-// Helper to get icon for integration type
-function getIntegrationIcon(integrationType: string | null | undefined) {
-  if (!integrationType) return null;
-
-  // For now, use a generic Plug icon, but this can be extended
-  // to return specific icons for different integration types
-  switch (integrationType.toLowerCase()) {
-    case "github":
-      // Could import a GitHub icon from lucide-react or use a custom one
-      return Plug;
-    case "shopify":
-      return Plug;
-    default:
-      return Plug;
-  }
-}
-
-interface MenuItem {
-  id: string;
-  label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  action: () => void;
-  className?: string;
-}
-
-interface MenuSection {
-  id: string;
-  heading: string;
-  items: MenuItem[];
-}
 
 export function CommandMenu() {
   const { createDocument, createFolder, deleteDocument } = useDocumentActions();
@@ -171,9 +134,6 @@ export function CommandMenu() {
     setOpen(false);
   };
 
-  const itemClassName =
-    "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800";
-
   // Build menu sections
   const menuSections = useMemo<MenuSection[]>(() => {
     const favoritesItems: MenuItem[] = [
@@ -195,8 +155,8 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "publish",
         label: currentDocument.published
-          ? `Republish "${currentDocument.title || "Untitled Document"}"`
-          : `Publish "${currentDocument.title || "Untitled Document"}"`,
+          ? "Republish document"
+          : "Publish document",
         icon: Plus, // No icon for this action
         action: () => {
           if (currentDocument) {
@@ -212,7 +172,7 @@ export function CommandMenu() {
       if (currentDocument.published) {
         favoritesItems.push({
           id: "unpublish",
-          label: `Unpublish "${currentDocument.title || "Untitled Document"}"`,
+          label: "Unpublish document",
           icon: Plus, // No icon for this action
           action: () => {
             if (currentDocument) {
@@ -224,12 +184,11 @@ export function CommandMenu() {
               );
             }
           },
-          className: `${itemClassName} data-[selected=true]:text-red-600 text-red-500`,
         });
       }
       favoritesItems.push({
         id: "delete-document",
-        label: `Delete "${currentDocument.title || "Untitled Document"}"`,
+        label: "Delete document",
         icon: Plus, // No icon for this action
         action: () => {
           if (currentDocumentId) {
@@ -244,7 +203,6 @@ export function CommandMenu() {
             });
           }
         },
-        className: `${itemClassName} data-[selected=true]:text-red-600 text-red-500`,
       });
     }
 
@@ -335,6 +293,14 @@ export function CommandMenu() {
         action: () => {
           navigate({
             to: "/w/$organizationId/settings/integrations",
+            params: {
+              organizationId: organization?.id as string,
+            },
+            search: {
+              success: false,
+              error: undefined,
+              connectionId: undefined,
+            },
           });
         },
       },
@@ -413,156 +379,37 @@ export function CommandMenu() {
                   <>
                     {/* Menu sections */}
                     {menuSections.map((section) => (
-                      <Command.Group
+                      <CommandMenuSection
                         key={section.id}
-                        heading={
-                          <CommandGroupHeading>
-                            {section.heading}
-                          </CommandGroupHeading>
-                        }
-                      >
-                        {section.items.map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <Command.Item
-                              key={item.id}
-                              onSelect={() => {
-                                // Don't close dialog for "search" - it navigates to a sub-page
-                                if (item.id === "search") {
-                                  item.action();
-                                } else {
-                                  handleCommand(item.action);
-                                }
-                              }}
-                              className={item.className || itemClassName}
-                            >
-                              {Icon && (
-                                <Icon className="size-4 text-gray-400 mr-2" />
-                              )}
-                              <span className="truncate">{item.label}</span>
-                            </Command.Item>
-                          );
-                        })}
-                      </Command.Group>
+                        section={section}
+                        onSelect={(item) => {
+                          // Don't close dialog for "search" - it navigates to a sub-page
+                          if (item.id === "search") {
+                            item.action();
+                          } else {
+                            handleCommand(item.action);
+                          }
+                        }}
+                      />
                     ))}
                   </>
                 )}
 
                 {/* Search page */}
                 {currentPage === "search" && (
-                  <Command.Group
-                    heading={
-                      <CommandGroupHeading>Search Results</CommandGroupHeading>
+                  <SearchResults
+                    searchDocuments={[...searchDocuments]}
+                    searchFolders={[...searchFolders]}
+                    integrationLinks={integrationLinks}
+                    organizationId={organization?.id as string}
+                    onNavigate={(options) =>
+                      handleCommand(() => navigate(options))
                     }
-                  >
-                    {searchFolders.map((folder) => {
-                      const link = integrationLinks?.find(
-                        (l) => l.id === folder.integration_link_id
-                      );
-                      const IntegrationIcon = link?.connection
-                        ? getIntegrationIcon(link.connection.integration_type)
-                        : null;
-
-                      return (
-                        <Command.Item
-                          key={`search-folder-${folder.id}`}
-                          value={`search-folder-${folder.id}-${folder.name}`}
-                          onSelect={() =>
-                            handleCommand(() => {
-                              navigate({
-                                to: "/w/$organizationId",
-                                params: {
-                                  organizationId: organization?.id as string,
-                                },
-                                search: {
-                                  tree: folder.id,
-                                  q: undefined,
-                                  focusSearch: undefined,
-                                },
-                              });
-                            })
-                          }
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
-                        >
-                          <div className="flex items-center gap-1 mr-2">
-                            <Folder className="size-4 text-gray-400" />
-                            {IntegrationIcon && (
-                              <IntegrationIcon className="size-3 text-blue-500" />
-                            )}
-                          </div>
-                          <span className="truncate">{folder.name}</span>
-                        </Command.Item>
-                      );
-                    })}
-                    {searchDocuments.map((doc) => {
-                      const link = integrationLinks?.find(
-                        (l) => l.id === doc.integration_link_id
-                      );
-                      const IntegrationIcon = link?.connection
-                        ? getIntegrationIcon(link.connection.integration_type)
-                        : null;
-
-                      return (
-                        <Command.Item
-                          key={`search-document-${doc.id}`}
-                          value={`search-document-${doc.id}-${
-                            doc.title || "Untitled Document"
-                          }`}
-                          onSelect={() =>
-                            handleCommand(() => {
-                              navigate({
-                                to: "/w/$organizationId/$id",
-                                params: {
-                                  organizationId: organization?.id as string,
-                                  id: doc.id,
-                                },
-                              });
-                            })
-                          }
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
-                        >
-                          <div className="flex items-center gap-1 mr-2">
-                            <FileText className="size-4 text-gray-400" />
-                            {IntegrationIcon && (
-                              <IntegrationIcon className="size-3 text-blue-500" />
-                            )}
-                          </div>
-                          <span className="truncate">
-                            {doc.title || "Untitled Document"}
-                          </span>
-                        </Command.Item>
-                      );
-                    })}
-                  </Command.Group>
+                  />
                 )}
               </Command.List>
             </Command>
-            <div className="border-t border-gray-200 px-4 py-2 text-xs text-gray-500 flex items-center gap-x-2">
-              <div className="flex gap-x-1 items-center">
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-600 opacity-100">
-                  ↑↓
-                </kbd>
-                Navigate
-              </div>
-              <div className="h-3 w-px bg-gray-200" />
-              <div className="flex gap-x-1 items-center">
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-600 opacity-100">
-                  ↵
-                </kbd>
-                Select
-              </div>
-              {pages.length > 0 && (
-                <>
-                  <div className="h-3 w-px bg-gray-200" />
-                  <div className="flex gap-x-1 items-center">
-                    <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-600 opacity-100">
-                      Esc
-                    </kbd>
-                    Back
-                  </div>
-                </>
-              )}
-            </div>
+            <CommandMenuKeyboardHelp showBack={pages.length > 0} />
           </Dialog>
         </Modal>
       </ModalOverlay>

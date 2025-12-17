@@ -1,0 +1,118 @@
+import { Command } from "cmdk";
+import { FileText, Folder, Plug } from "lucide-react";
+
+function getIntegrationIcon(integrationType: string | null | undefined) {
+  if (!integrationType) return null;
+  
+  switch (integrationType.toLowerCase()) {
+    case "github":
+    case "shopify":
+    default:
+      return Plug; // Return Plug icon as default
+  }
+}
+
+interface SearchResultsProps {
+  searchDocuments: any[];
+  searchFolders: any[];
+  integrationLinks: any[];
+  organizationId: string;
+  onNavigate: (options: any) => void;
+}
+
+export function SearchResults({
+  searchDocuments,
+  searchFolders,
+  integrationLinks,
+  organizationId,
+  onNavigate,
+}: SearchResultsProps) {
+  function CommandGroupHeading({ children }: { children: React.ReactNode }) {
+    return (
+      <div className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 text-left">
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <Command.Group
+      heading={<CommandGroupHeading>Search Results</CommandGroupHeading>}
+    >
+      {searchFolders.map((folder) => {
+        const link = integrationLinks?.find(
+          (l) => l.id === folder.integration_link_id
+        );
+        const IntegrationIcon = link?.connection
+          ? getIntegrationIcon(link.connection.integration_type)
+          : null;
+
+        return (
+          <Command.Item
+            key={`search-folder-${folder.id}`}
+            value={`search-folder-${folder.id}-${folder.name}`}
+            onSelect={() =>
+              onNavigate({
+                to: "/w/$organizationId",
+                params: {
+                  organizationId,
+                },
+                search: {
+                  tree: folder.id,
+                  q: undefined,
+                  focusSearch: undefined,
+                },
+              })
+            }
+            className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
+          >
+            <div className="flex items-center gap-1 mr-2">
+              <Folder className="size-4 text-gray-400" />
+              {IntegrationIcon && (
+                <IntegrationIcon className="size-3 text-blue-500" />
+              )}
+            </div>
+            <span className="truncate">{folder.name}</span>
+          </Command.Item>
+        );
+      })}
+      {searchDocuments.map((doc) => {
+        const link = integrationLinks?.find(
+          (l) => l.id === doc.integration_link_id
+        );
+        const IntegrationIcon = link?.connection
+          ? getIntegrationIcon(link.connection.integration_type)
+          : null;
+
+        return (
+          <Command.Item
+            key={`search-document-${doc.id}`}
+            value={`search-document-${doc.id}-${
+              doc.title || "Untitled Document"
+            }`}
+            onSelect={() =>
+              onNavigate({
+                to: "/w/$organizationId/$id",
+                params: {
+                  organizationId,
+                  id: doc.id,
+                },
+              })
+            }
+            className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
+          >
+            <div className="flex items-center gap-1 mr-2">
+              <FileText className="size-4 text-gray-400" />
+              {IntegrationIcon && (
+                <IntegrationIcon className="size-3 text-blue-500" />
+              )}
+            </div>
+            <span className="truncate">
+              {doc.title || "Untitled Document"}
+            </span>
+          </Command.Item>
+        );
+      })}
+    </Command.Group>
+  );
+}

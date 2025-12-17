@@ -11,19 +11,11 @@ import {
   type IntegrationMetadata,
 } from "@lydie/integrations/client";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
-import {
-  Table,
-  TableHeader,
-  Column,
-  Row,
-  Cell,
-} from "@/components/generic/Table";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   DialogTrigger,
   MenuTrigger,
   Button as RACButton,
-  TableBody,
 } from "react-aria-components";
 import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
@@ -35,7 +27,6 @@ import {
   CheckCircle2,
   XCircle,
   Link as LinkIcon,
-  FolderSync,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -44,9 +35,11 @@ import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";
+import { Input, Label } from "@/components/generic/Field";
+import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/github"
+  "/__auth/w/$organizationId/settings/integrations/(integration)/shopify"
 )({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => ({
@@ -68,10 +61,7 @@ function RouteComponent() {
   const navigate = Route.useNavigate();
 
   const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
-  const [connectionDialogStep, setConnectionDialogStep] =
-    useState<ConnectionDialogStep>("selectType");
-  const [selectedIntegrationType, setSelectedIntegrationType] =
-    useState<IntegrationType | null>(null);
+  const [shopUrl, setShopUrl] = useState("");
   const [linkDialogConnectionId, setLinkDialogConnectionId] = useState<
     string | null
   >(null);
@@ -101,12 +91,12 @@ function RouteComponent() {
 
   const connections =
     allConnections?.filter(
-      (connection) => connection.integration_type === "github"
+      (connection) => connection.integration_type === "shopify"
     ) ?? undefined;
 
   const integrationLinks =
     allIntegrationLinks?.filter(
-      (link) => link.connection?.integration_type === "github"
+      (link) => link.connection?.integration_type === "shopify"
     ) ?? undefined;
 
   useEffect(() => {
@@ -126,9 +116,9 @@ function RouteComponent() {
         );
         window.close();
       } else {
-        toast.success("GitHub integration connected successfully!");
+        toast.success("Shopify integration connected successfully!");
         navigate({
-          to: "/w/$organizationId/settings/integrations/github",
+          to: "/w/$organizationId/settings/integrations/shopify",
           params: { organizationId: organization?.id || "" },
           search: {
             success: false,
@@ -150,9 +140,9 @@ function RouteComponent() {
         );
         window.close();
       } else {
-        toast.error(`Failed to connect GitHub: ${search.error}`);
+        toast.error(`Failed to connect Shopify: ${search.error}`);
         navigate({
-          to: "/w/$organizationId/settings/integrations/github",
+          to: "/w/$organizationId/settings/integrations/shopify",
           params: { organizationId: organization?.id || "" },
           search: {
             success: false,
@@ -171,9 +161,11 @@ function RouteComponent() {
     navigate,
   ]);
 
-  const handleSelectIntegration = async (type: IntegrationType) => {
-    if (type !== "github") {
-      toast.error("This integration is not available yet.");
+  const handleConnectShopify = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!shopUrl) {
+      toast.error("Please enter your Shopify store URL");
       return;
     }
 
@@ -184,42 +176,43 @@ function RouteComponent() {
 
     try {
       const client = await createClient();
-      const redirectUrl = `/w/${organization.id}/settings/integrations/github`;
+      const redirectUrl = `/w/${organization.id}/settings/integrations/shopify`;
 
       // @ts-expect-error - Dynamic route parameter type inference limitation
       const response = await client.internal.integrations[
         ":type"
       ].oauth.authorize
         .$post({
-          param: { type: "github" },
-          json: { redirectUrl },
+          param: { type: "shopify" },
+          json: {
+            redirectUrl,
+            shop: shopUrl,
+          },
         })
         .then((res: Response) => res.json());
 
       if (!response || "error" in response) {
         toast.error(
           "error" in response
-            ? `Failed to start GitHub connection: ${response.error}`
-            : "Failed to start GitHub connection"
+            ? `Failed to start Shopify connection: ${response.error}`
+            : "Failed to start Shopify connection"
         );
         return;
       }
 
       setIsConnectionDialogOpen(false);
-      setConnectionDialogStep("selectType");
-      setSelectedIntegrationType(null);
+      setShopUrl("");
 
       window.location.href = response.authUrl as string;
     } catch (error) {
-      console.error("GitHub OAuth error:", error);
-      toast.error("Failed to start GitHub connection");
+      console.error("Shopify OAuth error:", error);
+      toast.error("Failed to start Shopify connection");
     }
   };
 
   const handleCloseDialog = () => {
     setIsConnectionDialogOpen(false);
-    setConnectionDialogStep("selectType");
-    setSelectedIntegrationType(null);
+    setShopUrl("");
   };
 
   const handleSyncLink = async (linkId: string, linkName: string) => {
@@ -316,9 +309,9 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-y-6">
       <div>
-        <Heading level={1}>GitHub Integration</Heading>
+        <Heading level={1}>Shopify Integration</Heading>
         <p className="text-sm/relaxed text-gray-600 mt-1">
-          Sync your documents to a GitHub repository.
+          Sync your documents to your Shopify store as Pages or Blog Posts.
         </p>
       </div>
       <Separator />
@@ -331,12 +324,11 @@ function RouteComponent() {
             <Button
               onPress={() => {
                 setIsConnectionDialogOpen(true);
-                setConnectionDialogStep("selectType");
               }}
               size="sm"
             >
               <Plus className="size-3.5 mr-1" />
-              Connect GitHub
+              Connect Shopify
             </Button>
           )}
         </div>
@@ -350,9 +342,9 @@ function RouteComponent() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {getIntegrationIcon(connection.integration_type)}
+                    {getIntegrationIcon("shopify")}
                     <span className="font-medium capitalize">
-                      {connection.integration_type}
+                      {(connection.config as any)?.shop || "Shopify Store"}
                     </span>
                     {getStatusIcon(
                       connection.enabled,
@@ -383,10 +375,7 @@ function RouteComponent() {
                       </MenuItem>
                       <MenuItem
                         onAction={() =>
-                          handleDeleteConnection(
-                            connection.id,
-                            connection.integration_type
-                          )
+                          handleDeleteConnection(connection.id, "Shopify")
                         }
                         className="text-red-600"
                       >
@@ -404,26 +393,26 @@ function RouteComponent() {
               Not connected
             </div>
             <div className="text-xs mt-1 text-gray-500">
-              Connect your GitHub account to start syncing.
+              Connect your Shopify store to start syncing.
             </div>
           </Card>
         )}
       </div>
 
       {/* 2. Link Management (Only if connected) */}
-      {connections && connections.find(c => c.enabled) && (
+      {connections && connections.find((c) => c.enabled) && (
         <div className="flex flex-col gap-y-2">
           <div className="flex justify-between items-start">
             <div className="flex flex-col gap-y-0.5">
-              <Heading level={2}>Synced Links</Heading>
+              <Heading level={2}>Synced Resources</Heading>
               <p className="text-sm/relaxed text-gray-700">
-                Manage specific repositories and folders being synced.
+                Manage which Pages or Blogs are being synced.
               </p>
             </div>
 
             <Button
               onPress={() => {
-                const enabledConnection = connections.find(c => c.enabled);
+                const enabledConnection = connections.find((c) => c.enabled);
                 if (enabledConnection) {
                   setLinkDialogConnectionId(enabledConnection.id);
                 }
@@ -432,114 +421,98 @@ function RouteComponent() {
               intent="secondary"
             >
               <LinkIcon className="size-3.5 mr-1" />
-              Add Link
+              Add Resource
             </Button>
           </div>
 
           {integrationLinks && integrationLinks.length > 0 ? (
-            <Table
-              aria-label="integration links"
-              className="w-full max-h-none rounded-lg ring ring-black/8 bg-white"
-            >
-              <TableHeader>
-                <Column>Name</Column>
-                <Column>Source</Column>
-                <Column>Status</Column>
-                <Column>Last Synced</Column>
-                <Column width={48}>Actions</Column>
-              </TableHeader>
-              <TableBody items={integrationLinks}>
-                {(link) => (
-                  <Row id={link.id}>
-                    <Cell>
-                      <div className="flex items-center gap-2">
-                        <LinkIcon className="size-4 text-blue-500" />
-                        <span className="font-medium">{link.name}</span>
-                      </div>
-                    </Cell>
-                    <Cell>
-                      <div className="flex items-center gap-2">
-                        {getIntegrationIcon(
-                          link.connection?.integration_type || ""
-                        )}
-                        <code className="text-xs text-gray-600">
-                          {(link.config as any).owner}/{(link.config as any).repo}
-                          {(link.config as any).basePath &&
-                            `/${(link.config as any).basePath}`}
-                        </code>
-                      </div>
-                    </Cell>
-                    <Cell>
-                      <div className="flex items-center gap-1.5">
-                        {getStatusIcon(
-                          link.enabled && (link.connection?.enabled ?? false),
-                          (link.connection as any)?.status
-                        )}
-                        <span className="text-sm">
-                          {getStatusText(
-                            link.enabled && (link.connection?.enabled ?? false),
-                            (link.connection as any)?.status,
-                            (link.connection as any)?.status_message
-                          )}
-                        </span>
-                      </div>
-                    </Cell>
-                    <Cell>
-                      {link.last_synced_at
-                        ? formatDistanceToNow(link.last_synced_at, {
-                          addSuffix: true,
-                        })
-                        : "Never"}
-                    </Cell>
-                    <Cell>
-                      <MenuTrigger>
-                        <RACButton>
-                          <MoreHorizontal className="size-4 text-gray-500" />
-                        </RACButton>
-                        <Menu>
-                          {link.enabled && link.connection?.enabled && (
-                            <MenuItem
-                              onAction={() => handleSyncLink(link.id, link.name)}
-                            >
-                              <FolderSync className="size-4 mr-2" />
-                              Sync Now
-                            </MenuItem>
-                          )}
-                          <MenuItem
-                            onAction={() => handleDeleteLink(link.id, link.name)}
-                            className="text-red-600"
-                          >
-                            Delete
-                          </MenuItem>
-                        </Menu>
-                      </MenuTrigger>
-                    </Cell>
-                  </Row>
-                )}
-              </TableBody>
-            </Table>
+            <IntegrationLinkList
+              items={integrationLinks.map((link) => ({
+                id: link.id,
+                name: link.name,
+                nameIcon: <LinkIcon className="size-4 text-green-500" />,
+                secondaryText: (
+                  <span className="capitalize text-xs text-gray-600">
+                    {(link.config as any)?.resourceFullName || "Unknown"}
+                  </span>
+                ),
+                statusIcon: getStatusIcon(
+                  link.enabled && (link.connection?.enabled ?? false),
+                  (link.connection as any)?.status
+                ),
+                statusText: getStatusText(
+                  link.enabled && (link.connection?.enabled ?? false),
+                  (link.connection as any)?.status,
+                  (link.connection as any)?.status_message
+                ),
+                lastSyncedLabel: link.last_synced_at
+                  ? formatDistanceToNow(link.last_synced_at, {
+                      addSuffix: true,
+                    })
+                  : "Never",
+                canSync: !!(link.enabled && link.connection?.enabled),
+                onSync: () => handleSyncLink(link.id, link.name),
+                onDelete: () => handleDeleteLink(link.id, link.name),
+              }))}
+            />
           ) : (
             <Card className="p-8 text-center">
               <div className="text-sm font-medium text-gray-700">
-                No links configured yet
+                No resources configured yet
               </div>
               <div className="text-xs mt-1 text-gray-500">
-                Add a link to start syncing documents from a specific path.
+                Add a resource to start syncing documents.
               </div>
             </Card>
           )}
         </div>
       )}
 
-      <ConnectionDialog
+      {/* Connection Dialog */}
+      <DialogTrigger
         isOpen={isConnectionDialogOpen}
         onOpenChange={setIsConnectionDialogOpen}
-        step={connectionDialogStep}
-        selectedType={selectedIntegrationType}
-        organizationId={organization?.id || ""}
-        onSelectIntegration={handleSelectIntegration}
-        onClose={handleCloseDialog}
-      />
+      >
+        <Modal isDismissable>
+          <Dialog>
+            <div className="p-4 flex flex-col gap-y-4 w-[400px]">
+              <Heading level={2}>Connect Shopify</Heading>
+              <form
+                onSubmit={handleConnectShopify}
+                className="flex flex-col gap-y-4"
+              >
+                <div className="flex flex-col gap-y-2">
+                  <Label htmlFor="shop-url">myShopify URL</Label>
+                  <Input
+                    id="shop-url"
+                    placeholder="your-store.myshopify.com"
+                    value={shopUrl}
+                    onChange={(e) => setShopUrl(e.target.value)}
+                    autoFocus
+                  />
+                  <p className="text-xs text-gray-500">
+                    Enter your store's myshopify.com URL (e.g.
+                    my-store.myshopify.com) or custom domain.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-x-2">
+                  <Button
+                    intent="secondary"
+                    onPress={handleCloseDialog}
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm">
+                    Connect
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </Dialog>
+        </Modal>
+      </DialogTrigger>
 
       {/* Show link configuration dialog */}
       {linkDialogConnectionId && (
@@ -627,114 +600,6 @@ function getStatusText(
   }
 }
 
-type ConnectionDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  step: ConnectionDialogStep;
-  selectedType: IntegrationType | null;
-  organizationId: string;
-  onSelectIntegration: (type: IntegrationType) => void;
-  onClose: () => void;
-};
-
-function ConnectionDialog({
-  isOpen,
-  onOpenChange,
-  step,
-  selectedType,
-  organizationId,
-  onSelectIntegration,
-  onClose,
-}: ConnectionDialogProps) {
-  // Map integration metadata to include icons (client-side only)
-  const integrations = integrationMetadata.map((meta: IntegrationMetadata) => {
-    // Try to get icon image dynamically
-    const iconImage = getIntegrationIconUrl(meta.id);
-
-    // Fallback to Lucide icons if no image is available
-    let icon: any = null;
-    if (!iconImage) {
-      // Add more icons as integrations are added
-      icon = null;
-    }
-
-    return {
-      type: meta.id as IntegrationType,
-      name: meta.name,
-      description: meta.description,
-      icon,
-      iconImage,
-      comingSoon: meta.comingSoon,
-    };
-  });
-
-  return (
-    <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal isDismissable>
-        <Dialog>
-          {step === "selectType" ? (
-            <div className="p-4 flex flex-col gap-y-4">
-              <Heading level={2}>Select Integration</Heading>
-              <p className="text-sm text-gray-600">
-                Choose a platform to connect for document syncing.
-              </p>
-              <div className="flex flex-col gap-2">
-                {integrations.map(
-                  (ext: {
-                    type: IntegrationType;
-                    name: string;
-                    description: string;
-                    icon: any;
-                    iconImage?: string | null;
-                    comingSoon?: boolean;
-                  }) => (
-                    <button
-                      key={ext.type}
-                      onClick={() =>
-                        !ext.comingSoon && onSelectIntegration(ext.type)
-                      }
-                      disabled={ext.comingSoon}
-                      className="flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
-                    >
-                      {ext.iconImage ? (
-                        <img
-                          src={ext.iconImage}
-                          alt={`${ext.name} icon`}
-                          className="size-5 mt-0.5 shrink-0"
-                        />
-                      ) : (
-                        ext.icon && <ext.icon className="size-5 mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium">{ext.name}</div>
-                          {ext.comingSoon && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                              Coming Soon
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {ext.description}
-                        </div>
-                      </div>
-                    </button>
-                  )
-                )}
-              </div>
-              <div className="flex justify-end">
-                <Button intent="secondary" onPress={onClose} size="sm">
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </Dialog>
-      </Modal>
-    </DialogTrigger>
-  );
-}
-
 type ConfigureConnectionDialogProps = {
   connectionId: string;
   organizationId: string;
@@ -755,12 +620,13 @@ function ConfigureConnectionDialog({
       id: string;
       name: string;
       fullName: string;
-      metadata?: { defaultBranch?: string };
+      metadata?: { type?: string };
     }>
   >([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string>("");
-  const [branch, setBranch] = useState<string>("");
-  const [basePath, setBasePath] = useState<string>("");
+
+  // Shopify specific: For now we don't have extra config like branch/basePath for each resource,
+  // but we might want to let them rename the link.
   const [linkName, setLinkName] = useState<string>("");
 
   useEffect(() => {
@@ -784,8 +650,8 @@ function ConfigureConnectionDialog({
         if (!res || ("error" in res && res.error)) {
           toast.error(
             "error" in res
-              ? `Failed to load repositories: ${res.error}`
-              : "Failed to load repositories"
+              ? `Failed to load resources: ${res.error}`
+              : "Failed to load resources"
           );
           return;
         }
@@ -794,92 +660,71 @@ function ConfigureConnectionDialog({
           id: string;
           name: string;
           fullName: string;
-          metadata?: { defaultBranch?: string };
+          metadata?: { type?: string };
         }>;
 
         setResources(resourcesList);
 
-        if (resourcesList.length > 0) {
-          const first = resourcesList[0];
-          setSelectedResourceId(first.id);
-          setBranch(first.metadata?.defaultBranch || "main");
-        }
+        // Use the first one by default if available? No, force selection.
       } catch (error) {
-        if (!cancelled) {
-          console.error("Failed to load resources:", error);
-          toast.error("Failed to load repositories");
-        }
+        console.error("Failed to load resources:", error);
+        toast.error("Failed to load available resources from Shopify");
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        if (!cancelled) setIsLoading(false);
       }
     };
 
-    void loadResources();
+    if (connectionId) {
+      loadResources();
+    }
 
     return () => {
       cancelled = true;
     };
   }, [connectionId, createClient]);
 
-  const handleClose = () => {
-    setIsOpen(false);
-    onClose();
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
+  const handleSave = async () => {
     if (!selectedResourceId) {
-      toast.error("Please select a repository");
+      toast.error("Please select a resource to sync");
       return;
     }
 
     const selectedResource = resources.find((r) => r.id === selectedResourceId);
-    if (!selectedResource) {
-      toast.error("Selected repository not found");
-      return;
-    }
-
-    const [owner, repo] = selectedResource.fullName.split("/");
-    const normalizedBasePath = basePath.trim().replace(/^\/+|\/+$/g, "");
-    const branchName =
-      branch.trim() || selectedResource.metadata?.defaultBranch || "main";
-
-    const name =
-      linkName.trim() ||
-      `${repo}${normalizedBasePath ? `/${normalizedBasePath}` : ""}`;
+    if (!selectedResource) return; // Should not happen
 
     setIsSaving(true);
     try {
       const client = await createClient();
+      const finalLinkName = linkName || selectedResource.name;
+
+      const config = {
+        resourceType: selectedResource.metadata?.type || "unknown",
+        resourceId: selectedResource.id,
+        resourceFullName: selectedResource.fullName,
+      };
+
       // @ts-expect-error - Dynamic route parameter type inference limitation
-      const res = await client.internal.integrations[":connectionId"].links
+      const response = await client.internal.integrations[":connectionId"].links
         .$post({
           param: { connectionId },
           json: {
-            name,
-            config: {
-              owner,
-              repo,
-              branch: branchName,
-              basePath: normalizedBasePath || "",
-            },
+            name: finalLinkName,
+            config,
           },
         })
-        .then((r: Response) => r.json());
+        .then((res: Response) => res.json());
 
-      if (res && "error" in res) {
-        toast.error(`Failed to create link: ${res.error}`);
+      if ("error" in response) {
+        toast.error(`Failed to create link: ${response.error}`);
         return;
       }
 
-      toast.success("Link created successfully");
-      handleClose();
+      toast.success("Resource connected successfully");
+      setIsOpen(false);
+      onClose();
     } catch (error) {
-      console.error("Failed to create link:", error);
-      toast.error("Failed to create link");
+      console.error("Failed to save link:", error);
+      toast.error("Failed to save resource configuration");
     } finally {
       setIsSaving(false);
     }
@@ -888,115 +733,100 @@ function ConfigureConnectionDialog({
   return (
     <DialogTrigger
       isOpen={isOpen}
-      onOpenChange={(open) => !open && handleClose()}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) onClose();
+      }}
     >
       <Modal isDismissable>
         <Dialog>
-          <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-y-4">
-            <div>
-              <Heading level={2}>Add GitHub Link</Heading>
-              <p className="text-sm text-gray-600 mt-1">
-                Select a repository and folder to sync documents from GitHub.
-              </p>
-            </div>
+          <div className="p-4 flex flex-col gap-y-4 w-[500px]">
+            <Heading level={2}>Add Resource</Heading>
+            <p className="text-sm text-gray-600">
+              Select a Shopify resource to sync documents to.
+            </p>
 
-            <div className="flex flex-col gap-y-3">
-              <div className="flex flex-col gap-y-1">
-                <label className="text-sm font-medium text-gray-900">
-                  Repository
-                </label>
-                <select
-                  className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  value={selectedResourceId}
-                  onChange={(e) => setSelectedResourceId(e.target.value)}
-                  disabled={isLoading}
-                >
-                  {isLoading && (
-                    <option value="">Loading repositories...</option>
-                  )}
-                  {!isLoading && resources.length === 0 && (
-                    <option value="">No repositories available</option>
-                  )}
-                  {!isLoading &&
-                    resources.map((repo) => (
-                      <option key={repo.id} value={repo.id}>
-                        {repo.fullName}
-                      </option>
-                    ))}
-                </select>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label>Resource Type</Label>
+                  <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto border rounded-md p-2">
+                    {resources.length === 0 ? (
+                      <div className="text-sm text-gray-500 text-center py-4">
+                        No syncable resources found.
+                      </div>
+                    ) : (
+                      <RadioGroup
+                        value={selectedResourceId}
+                        onChange={(val) => {
+                          setSelectedResourceId(val);
+                          const res = resources.find((r) => r.id === val);
+                          if (res && !linkName) {
+                            setLinkName(res.name);
+                          }
+                        }}
+                      >
+                        {resources.map((resource) => (
+                          <Radio
+                            key={resource.id}
+                            value={resource.id}
+                            className="flex items-center gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer"
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">
+                                {resource.name}
+                              </span>
+                              <span className="text-xs text-gray-500 capitalize">
+                                {resource.metadata?.type?.replace("_", " ") ||
+                                  resource.fullName}
+                              </span>
+                            </div>
+                          </Radio>
+                        ))}
+                      </RadioGroup>
+                    )}
+                  </div>
+                </div>
 
-              <div className="flex flex-col gap-y-1">
-                <label className="text-sm font-medium text-gray-900">
-                  Branch
-                </label>
-                <input
-                  type="text"
-                  className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                  placeholder="main"
-                />
-                <p className="text-xs text-gray-500">
-                  Use the branch you want to sync documents from.
-                </p>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="link-name">Name (Optional)</Label>
+                  <Input
+                    id="link-name"
+                    value={linkName}
+                    onChange={(e) => setLinkName(e.target.value)}
+                    placeholder="e.g. Store Pages"
+                  />
+                  <p className="text-xs text-gray-500">
+                    A friendly name for this sync connection.
+                  </p>
+                </div>
               </div>
+            )}
 
-              <div className="flex flex-col gap-y-1">
-                <label className="text-sm font-medium text-gray-900">
-                  Folder path (optional)
-                </label>
-                <input
-                  type="text"
-                  className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  value={basePath}
-                  onChange={(e) => setBasePath(e.target.value)}
-                  placeholder="docs/guides"
-                />
-                <p className="text-xs text-gray-500">
-                  Relative path inside the repository. Leave empty to sync from
-                  the repository root.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-y-1">
-                <label className="text-sm font-medium text-gray-900">
-                  Link name (optional)
-                </label>
-                <input
-                  type="text"
-                  className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  value={linkName}
-                  onChange={(e) => setLinkName(e.target.value)}
-                  placeholder="Web Docs"
-                />
-                <p className="text-xs text-gray-500">
-                  Display name for this link. Defaults to the repository and
-                  folder path.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-1.5 mt-2">
+            <div className="flex justify-end gap-2 mt-2">
               <Button
                 intent="secondary"
-                type="button"
+                onPress={() => {
+                  setIsOpen(false);
+                  onClose();
+                }}
                 size="sm"
-                onPress={handleClose}
-                isDisabled={isSaving}
               >
                 Cancel
               </Button>
               <Button
+                onPress={handleSave}
+                isDisabled={isLoading || isSaving || !selectedResourceId}
                 size="sm"
-                type="submit"
-                isPending={isSaving}
-                isDisabled={isSaving || isLoading || !selectedResourceId}
               >
-                {isSaving ? "Creating..." : "Create Link"}
+                {isSaving ? "Saving..." : "Add Resource"}
               </Button>
             </div>
-          </form>
+          </div>
         </Dialog>
       </Modal>
     </DialogTrigger>

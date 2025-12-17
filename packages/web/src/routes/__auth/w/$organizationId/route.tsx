@@ -7,7 +7,7 @@ import {
 } from "react-resizable-panels";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { useRef, useState } from "react";
-import { CommandMenu } from "@/components/layout/CommandMenu";
+import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
 import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
 import { setActiveOrganizationId } from "@/lib/active-organization";

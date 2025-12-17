@@ -6,19 +6,11 @@ import { mutators } from "@lydie/zero/mutators";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
-import {
-  Table,
-  TableHeader,
-  Column,
-  Row,
-  Cell,
-} from "@/components/generic/Table";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   DialogTrigger,
   MenuTrigger,
   Button as RACButton,
-  TableBody,
   Input,
   Label,
   TextField,
@@ -26,13 +18,13 @@ import {
 import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
 import { Menu, MenuItem } from "@/components/generic/Menu";
+import { RadioGroup, Radio } from "@/components/generic/RadioGroup";
 import {
   Plus,
   MoreHorizontal,
   CheckCircle2,
   XCircle,
   Link as LinkIcon,
-  FolderSync,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -41,14 +33,14 @@ import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";
+import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/wordpress"
+  "/__auth/w/$organizationId/settings/integrations/(integration)/wordpress"
 )({
   component: RouteComponent,
 });
 
-type IntegrationType = "github" | "shopify" | "wordpress";
 type ConnectionDialogStep = "selectType" | "configure";
 
 function RouteComponent() {
@@ -59,8 +51,6 @@ function RouteComponent() {
   const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
   const [connectionDialogStep, setConnectionDialogStep] =
     useState<ConnectionDialogStep>("selectType");
-  const [selectedIntegrationType, setSelectedIntegrationType] =
-    useState<IntegrationType | null>(null);
 
   // WordPress Config State
   const [wpConfig, setWpConfig] = useState({
@@ -102,15 +92,6 @@ function RouteComponent() {
     allIntegrationLinks?.filter(
       (link) => link.connection?.integration_type === "wordpress"
     ) ?? undefined;
-
-  const handleSelectIntegration = async (type: IntegrationType) => {
-    if (type !== "wordpress") {
-      // Redirect to other integration pages if needed, but for now just handle WP here or error
-      return;
-    }
-    setSelectedIntegrationType(type);
-    setConnectionDialogStep("configure");
-  };
 
   const handleConnectWordpress = async () => {
     if (!organization?.id) return;
@@ -192,7 +173,6 @@ function RouteComponent() {
   const handleCloseDialog = () => {
     setIsConnectionDialogOpen(false);
     setConnectionDialogStep("selectType");
-    setSelectedIntegrationType(null);
     setWpConfig({ siteUrl: "", username: "", applicationPassword: "" });
   };
 
@@ -299,7 +279,6 @@ function RouteComponent() {
         </p>
       </div>
       <Separator />
-
       {/* 1. Connection Management */}
       <div className="flex flex-col gap-y-2">
         <div className="flex justify-between items-start">
@@ -389,7 +368,6 @@ function RouteComponent() {
           </Card>
         )}
       </div>
-
       {/* 2. Link Management */}
       {connections && connections.find((c) => c.enabled) && (
         <div className="flex flex-col gap-y-2">
@@ -401,92 +379,42 @@ function RouteComponent() {
           </div>
 
           {integrationLinks && integrationLinks.length > 0 ? (
-            <Table
-              aria-label="integration links"
-              className="w-full max-h-none rounded-lg ring ring-black/8 bg-white"
-            >
-              <TableHeader>
-                <Column>Name</Column>
-                <Column>Source</Column>
-                <Column>Status</Column>
-                <Column>Last Synced</Column>
-                <Column width={48}>Actions</Column>
-              </TableHeader>
-              <TableBody items={integrationLinks}>
-                {(link) => (
-                  <Row id={link.id}>
-                    <Cell>
-                      <div className="flex items-center gap-2">
-                        <LinkIcon className="size-4 text-blue-500" />
-                        <span className="font-medium">{link.name}</span>
-                      </div>
-                    </Cell>
-                    <Cell>
-                      <div className="flex items-center gap-2">
-                        {getIntegrationIcon(
-                          link.connection?.integration_type || ""
-                        )}
-                        <code className="text-xs text-gray-600">
-                          {/* Display WP specific config info */}
-                          {(link.config as any)?.resourceType ||
-                            (link.config as any)?.type ||
-                            "Pages"}
-                        </code>
-                      </div>
-                    </Cell>
-                    <Cell>
-                      <div className="flex items-center gap-1.5">
-                        {getStatusIcon(
-                          link.enabled && (link.connection?.enabled ?? false),
-                          (link.connection as any)?.status
-                        )}
-                        <span className="text-sm">
-                          {getStatusText(
-                            link.enabled && (link.connection?.enabled ?? false),
-                            (link.connection as any)?.status,
-                            (link.connection as any)?.status_message
-                          )}
-                        </span>
-                      </div>
-                    </Cell>
-                    <Cell>
-                      {link.last_synced_at
-                        ? formatDistanceToNow(link.last_synced_at, {
-                            addSuffix: true,
-                          })
-                        : "Never"}
-                    </Cell>
-                    <Cell>
-                      <MenuTrigger>
-                        <RACButton>
-                          <MoreHorizontal className="size-4 text-gray-500" />
-                        </RACButton>
-                        <Menu>
-                          {link.enabled && link.connection?.enabled && (
-                            <MenuItem
-                              onAction={() =>
-                                handleSyncLink(link.id, link.name)
-                              }
-                            >
-                              <FolderSync className="size-4 mr-2" />
-                              Sync Now
-                            </MenuItem>
-                          )}
-                          <MenuItem
-                            onAction={() =>
-                              handleDeleteLink(link.id, link.name)
-                            }
-                            className="text-red-600"
-                          >
-                            Delete
-                          </MenuItem>
-                        </Menu>
-                      </MenuTrigger>
-                    </Cell>
-                  </Row>
-                )}
-              </TableBody>
-            </Table>
+            <IntegrationLinkList
+              items={integrationLinks.map((link) => ({
+                id: link.id,
+                name: link.name,
+                nameIcon: <LinkIcon className="size-4 text-blue-500" />,
+                secondaryText: (
+                  <>
+                    {getIntegrationIcon(
+                      link.connection?.integration_type || ""
+                    )}
+                    <code className="text-xs text-gray-600">
+                      {(link.config as any)?.resourceType ||
+                        (link.config as any)?.type ||
+                        "Pages"}
+                    </code>
+                  </>
+                ),
+                statusIcon: getStatusIcon(
+                  link.enabled && (link.connection?.enabled ?? false),
+                  (link.connection as any)?.status
+                ),
+                statusText: getStatusText(
+                  link.enabled && (link.connection?.enabled ?? false),
+                  (link.connection as any)?.status,
+                  (link.connection as any)?.status_message
+                ),
+                lastSyncedLabel: link.last_synced_at
+                  ? formatDistanceToNow(link.last_synced_at, {
+                      addSuffix: true,
+                    })
+                  : "Never",
+                canSync: !!(link.enabled && link.connection?.enabled),
+                onSync: () => handleSyncLink(link.id, link.name),
+                onDelete: () => handleDeleteLink(link.id, link.name),
+              }))}
+            />
           ) : (
             <Card className="p-8 text-center">
               <div className="text-sm font-medium text-gray-700">
@@ -499,7 +427,6 @@ function RouteComponent() {
           )}
         </div>
       )}
-
       <DialogTrigger
         isOpen={isConnectionDialogOpen}
         onOpenChange={setIsConnectionDialogOpen}
@@ -581,7 +508,6 @@ function RouteComponent() {
           </Dialog>
         </Modal>
       </DialogTrigger>
-
       {/* Show delete link dialog */}
       <DeleteLinkDialog
         isOpen={deleteLinkDialog.isOpen}
@@ -618,15 +544,23 @@ function getIntegrationIcon(integrationType: string) {
   return null;
 }
 
-function getStatusIcon(enabled: boolean, status: any) {
+function getStatusIcon(enabled: boolean, _status: any) {
   if (!enabled) return <XCircle className="size-4 text-gray-400" />;
   return <CheckCircle2 className="size-4 text-green-500" />;
 }
 
-function getStatusText(enabled: boolean, status: any, msg: any) {
+function getStatusText(enabled: boolean, _status: any, _msg: any) {
   if (!enabled) return "Disabled";
   return "Active";
 }
+
+type DeleteLinkDialogProps = {
+  isOpen: boolean;
+  linkId: string | null;
+  linkName: string | null;
+  documentCount: number | null;
+  onClose: () => void;
+};
 
 function DeleteLinkDialog({
   isOpen,
@@ -634,31 +568,109 @@ function DeleteLinkDialog({
   linkName,
   documentCount,
   onClose,
-}: any) {
-  const z = useZero();
+}: DeleteLinkDialogProps) {
+  const { createClient } = useAuthenticatedApi();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDocuments, setDeleteDocuments] = useState<"keep" | "delete">(
+    "keep"
+  );
+
   const handleDelete = async () => {
-    // mutation to delete
+    if (!linkId) return;
+
+    setIsDeleting(true);
     try {
-      z.mutate(mutators.integrationLink.delete({ linkId }));
-      toast.success("Link deleted");
+      const client = await createClient();
+      // @ts-expect-error - Dynamic route parameter type inference limitation
+      await client.internal.integrations.links[":linkId"].$delete({
+        param: { linkId },
+        query: {
+          deleteDocuments: deleteDocuments === "delete" ? "true" : "false",
+        },
+      });
+      toast.success("Link deleted successfully");
       onClose();
-    } catch (e) {
-      toast.error("Failed to delete");
+    } catch (error) {
+      toast.error("Failed to delete link");
+      console.error("Delete link error:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
+
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <Modal>
+      <Modal isDismissable>
         <Dialog>
-          <div className="p-4 flex flex-col gap-4">
-            <Heading level={2}>Delete Link?</Heading>
-            <p>Are you sure you want to delete {linkName}?</p>
-            <div className="flex justify-end gap-2">
-              <Button intent="secondary" onPress={onClose}>
+          <div className="p-4 flex flex-col gap-y-4">
+            <div>
+              <Heading level={2}>Delete "{linkName}" Link</Heading>
+              <p className="text-sm text-gray-600 mt-1">
+                This action cannot be undone.
+              </p>
+            </div>
+
+            {documentCount !== null && documentCount > 0 && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm font-medium text-amber-900 mb-3">
+                  This link has {documentCount} synchronized document
+                  {documentCount !== 1 ? "s" : ""}. What would you like to do
+                  with them?
+                </p>
+                <RadioGroup
+                  value={deleteDocuments}
+                  onChange={(value: string) =>
+                    setDeleteDocuments(value as "keep" | "delete")
+                  }
+                >
+                  <Radio value="keep">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Keep documents</span>
+                      <span className="text-xs text-gray-600">
+                        Documents will remain in your workspace but will no
+                        longer be associated with this link
+                      </span>
+                    </div>
+                  </Radio>
+                  <Radio value="delete">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Delete documents</span>
+                      <span className="text-xs text-gray-600">
+                        Permanently delete all {documentCount} document
+                        {documentCount !== 1 ? "s" : ""} synced from this link
+                      </span>
+                    </div>
+                  </Radio>
+                </RadioGroup>
+              </div>
+            )}
+
+            {documentCount === 0 && (
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  This link has no synchronized documents.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-1.5">
+              <Button
+                intent="secondary"
+                onPress={onClose}
+                type="button"
+                size="sm"
+                isDisabled={isDeleting}
+              >
                 Cancel
               </Button>
-              <Button intent="danger" onPress={handleDelete}>
-                Delete
+              <Button
+                size="sm"
+                onPress={handleDelete}
+                isPending={isDeleting}
+                isDisabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeleting ? "Deleting..." : "Delete Link"}
               </Button>
             </div>
           </div>
