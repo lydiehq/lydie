@@ -130,3 +130,11 @@ export interface ResourceIntegration {
     connection: IntegrationConnection
   ): Promise<ExternalResource[]>;
 }
+
+/**
+ * Default link configuration for auto-creation on connection
+ */
+export interface DefaultLink {
+  name: string;
+  config: Record<string, any>;
+}

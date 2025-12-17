@@ -149,41 +149,6 @@ export { serializeToPlainText as renderContentToPlainText };
  * const textContent = deserializeFromFile(textContent, "document.txt");
  * ```
  */
-export function deserializeFromFile(
-  content: string,
-  filename: string,
-  options?: MDXDeserializeOptions | TextDeserializeOptions
-): any {
-  // Extract file extension
-  const extension = filename.toLowerCase().match(/\.([^.]+)$/)?.[1] || "";
+export { deserializeFromHTML } from "./html-deserializer";
+export type { HTMLDeserializeOptions } from "./html-deserializer";
 
-  switch (extension) {
-    case "mdx":
-      // MDX files can use MDXDeserializeOptions
-      return deserializeFromMDX(content, options as MDXDeserializeOptions);
-
-    case "md":
-      // Markdown files - use basic markdown deserializer
-      // If options are provided and include componentSchemas, use MDX deserializer instead
-      // (some .md files might have MDX components)
-      if (options && "componentSchemas" in options && Object.keys((options as MDXDeserializeOptions).componentSchemas || {}).length > 0) {
-        return deserializeFromMDX(content, options as MDXDeserializeOptions);
-      }
-      return deserializeFromMarkdown(content, options as any);
-
-    case "txt":
-      // Plain text files
-      return deserializeFromText(content, options as TextDeserializeOptions);
-
-    default:
-      // Default to markdown deserializer for unknown extensions
-      // This provides a safe fallback
-      console.warn(
-        `[Lydie] Unknown file extension "${extension}", defaulting to markdown deserializer`
-      );
-      return deserializeFromMarkdown(content, options as any);
-  }
-}
-
-// Backwards-compatible function name
-export { deserializeFromFile as parseFileToTipTap };

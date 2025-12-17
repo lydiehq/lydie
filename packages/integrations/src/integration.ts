@@ -5,27 +5,13 @@ import type {
   PullOptions,
   SyncResult,
   SyncMetadata,
+  DefaultLink,
 } from "./types";
 
 /**
  * Base interface that all sync integrations must implement
  */
 export interface Integration {
-  /**
-   * Unique identifier for this integration type (e.g., "github", "shopify", "wordpress")
-   */
-  readonly type: string;
-
-  /**
-   * Human-readable name of the integration
-   */
-  readonly name: string;
-
-  /**
-   * Description of what this integration does
-   */
-  readonly description: string;
-
   /**
    * Validate that the connection configuration is valid
    * This is called when a user sets up a new connection
@@ -68,16 +54,10 @@ export interface Integration {
   ): Promise<SyncMetadata | null>;
 
   /**
-   * Convert TipTap JSON to the format expected by the external platform
-   * E.g., TipTap -> Markdown for GitHub
+   * Called after a connection is successfully established
+   * Can return default links to auto-create for this integration
    */
-  convertToExternalFormat(content: any): Promise<string>;
-
-  /**
-   * Convert from external format back to TipTap JSON
-   * E.g., Markdown -> TipTap for GitHub
-   */
-  convertFromExternalFormat?(content: string): Promise<any>;
+  onConnect?(): { links?: DefaultLink[] };
 }
 
 /**
@@ -85,10 +65,6 @@ export interface Integration {
  * Integrations can extend this to avoid reimplementing common patterns
  */
 export abstract class BaseIntegration implements Integration {
-  abstract readonly type: string;
-  abstract readonly name: string;
-  abstract readonly description: string;
-
   abstract validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
     error?: string;
@@ -97,8 +73,6 @@ export abstract class BaseIntegration implements Integration {
   abstract push(options: PushOptions): Promise<SyncResult>;
 
   abstract pull(options: PullOptions): Promise<SyncResult[]>;
-
-  abstract convertToExternalFormat(content: any): Promise<string>;
 
   /**
    * Helper method to create a success result

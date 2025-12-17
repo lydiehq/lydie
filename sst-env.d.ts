@@ -82,6 +82,14 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "ShopifyClientId": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ShopifyClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "Web": {
       "type": "sst.aws.StaticSite"
       "url": string

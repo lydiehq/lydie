@@ -11,7 +11,9 @@ import type { OAuthConfig, OAuthCredentials } from "../../oauth";
 import { Resource } from "sst";
 import {
   serializeToMarkdown,
-  deserializeFromFile,
+  deserializeFromMarkdown,
+  deserializeFromMDX,
+  deserializeFromText,
 } from "@lydie/core/serialization";
 import jwt from "jsonwebtoken";
 
@@ -59,12 +61,7 @@ export interface GitHubInstallation {
  */
 export class GitHubIntegration
   extends BaseIntegration
-  implements ResourceIntegration
-{
-  readonly type = "github";
-  readonly name = "GitHub";
-  readonly description =
-    "Sync documents as Markdown files to a GitHub repository";
+  implements ResourceIntegration {
 
   async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
@@ -105,7 +102,7 @@ export class GitHubIntegration
       const accessToken = await this.getAccessToken(connection);
 
       // Convert TipTap content to Markdown
-      const markdown = await this.convertToExternalFormat(document.content);
+      const markdown = this.serializeToMarkdown(document.content);
 
       // Generate file path using title (which includes extension) and folder path
       // Priority: 1) folderPath from document, 2) extract from externalId, 3) null (root)
@@ -128,9 +125,8 @@ export class GitHubIntegration
       // Check if file exists to get current SHA (required for updates)
       let currentSha: string | undefined;
       try {
-        const getUrl = `https://api.github.com/repos/${config.owner}/${
-          config.repo
-        }/contents/${filePath}?ref=${config.branch || "main"}`;
+        const getUrl = `https://api.github.com/repos/${config.owner}/${config.repo
+          }/contents/${filePath}?ref=${config.branch || "main"}`;
         const getResponse = await fetch(getUrl, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -233,13 +229,24 @@ export class GitHubIntegration
         config.basePath || ""
       );
 
+
       for (const file of files) {
         try {
-          // Convert file content to TipTap JSON based on file extension
-          const tipTapContent = await this.convertFromExternalFormat(
-            file.content,
-            file.name
-          );
+          // Determine deserializer based on file extension
+          const extension = file.name.toLowerCase().match(/\.([^.]+)$/)?.[1] || "";
+          let tipTapContent: any;
+
+          switch (extension) {
+            case "mdx":
+              tipTapContent = deserializeFromMDX(file.content);
+              break;
+            case "txt":
+              tipTapContent = deserializeFromText(file.content);
+              break;
+            case "md":
+            default:
+              tipTapContent = deserializeFromMarkdown(file.content);
+          }
 
           // Extract folder path from file path
           // e.g., "docs/guides/intro.md" -> folderPath: "docs/guides"
@@ -254,6 +261,7 @@ export class GitHubIntegration
           // Generate document ID and slug
           // Slug should not include extension for URL purposes
           const slug = fileName
+
             .replace(/\.(md|mdx|txt)$/i, "")
             .replace(/\//g, "-")
             .toLowerCase();
@@ -296,21 +304,6 @@ export class GitHubIntegration
     }
   }
 
-  async convertFromExternalFormat(
-    content: string,
-    filename?: string
-  ): Promise<any> {
-    // Use unified deserializer that routes to the correct deserializer based on file extension
-    // If filename is not provided, default to markdown deserialization
-    if (!filename) {
-      // Fallback to markdown deserializer if filename is not available
-      const { deserializeFromMarkdown } = await import(
-        "@lydie/core/serialization"
-      );
-      return deserializeFromMarkdown(content);
-    }
-    return deserializeFromFile(content, filename);
-  }
 
   /**
    * Fetch supported files (md, mdx, txt) from GitHub repository
@@ -403,7 +396,7 @@ export class GitHubIntegration
     return files;
   }
 
-  async convertToExternalFormat(content: any): Promise<string> {
+  private serializeToMarkdown(content: any): string {
     return serializeToMarkdown(content);
   }
 
@@ -495,18 +488,19 @@ export class GitHubIntegration
   public buildAuthorizationUrl(
     credentials: OAuthCredentials,
     state: string,
-    redirectUri: string
+    redirectUri: string,
+    params?: Record<string, string>
   ): string {
     const appSlug = Resource.GitHubAppSlug.value;
     if (!appSlug) {
       throw new Error("GitHub App slug not configured");
     }
 
-    const params = new URLSearchParams({
+    const urlParams = new URLSearchParams({
       state,
       redirect_uri: redirectUri,
     });
-    return `https://github.com/apps/${appSlug}/installations/new?${params.toString()}`;
+    return `https://github.com/apps/${appSlug}/installations/new?${urlParams.toString()}`;
   }
 
   /**
@@ -610,8 +604,7 @@ export class GitHubIntegration
     if (!installationResponse.ok) {
       const errorData = await installationResponse.json().catch(() => ({}));
       throw new Error(
-        `Failed to fetch installation: ${
-          installationResponse.statusText
+        `Failed to fetch installation: ${installationResponse.statusText
         } - ${JSON.stringify(errorData)}`
       );
     }
@@ -648,8 +641,7 @@ export class GitHubIntegration
         errorData
       );
       throw new Error(
-        `Failed to fetch repositories: ${
-          response.statusText
+        `Failed to fetch repositories: ${response.statusText
         } - ${JSON.stringify(errorData)}`
       );
     }
@@ -721,8 +713,7 @@ export class GitHubIntegration
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        `Failed to generate installation token: ${
-          response.statusText
+        `Failed to generate installation token: ${response.statusText
         } - ${JSON.stringify(errorData)}`
       );
     }

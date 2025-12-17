@@ -10,30 +10,39 @@ import { eq, sql, and, isNull } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
 import {
   GitHubIntegration,
+  ShopifyIntegration,
   encodeOAuthState,
   decodeOAuthState,
   type OAuthState,
   type OAuthIntegration,
   type Integration,
+  WordpressIntegration,
 } from "@lydie/integrations";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { authenticatedWithOrganization } from "./middleware";
 
 // Registry of available integrations
-// Integrations must implement both Integration (for push/pull) and OAuthIntegration (for OAuth flow)
-type IntegrationWithOAuth = Integration & OAuthIntegration;
-const integrationRegistry = new Map<string, IntegrationWithOAuth>([
+const integrationRegistry = new Map<string, Integration>([
   ["github", new GitHubIntegration()],
+  ["shopify", new ShopifyIntegration()],
+  ["wordpress", new WordpressIntegration()],
 ]);
 
 // Helper to check if integration supports resources
 function supportsResources(
-  integration: IntegrationWithOAuth
-): integration is IntegrationWithOAuth & {
+  integration: Integration
+): integration is Integration & {
   fetchResources: (connection: any) => Promise<any[]>;
 } {
   return "fetchResources" in integration;
+}
+
+// Helper to check if integration supports OAuth
+function supportsOAuth(
+  integration: Integration
+): integration is Integration & OAuthIntegration {
+  return "getOAuthCredentials" in integration;
 }
 
 /**
@@ -50,19 +59,109 @@ export const IntegrationsRoute = new Hono<{
     organizationId: string;
   };
 }>()
+  // Direct connection creation (for non-OAuth integrations like WordPress)
+  .post(
+    "/:type/connect",
+    authenticatedWithOrganization,
+    zValidator(
+      "json",
+      z.object({
+        organizationId: z.string(),
+        config: z.record(z.string(), z.any()),
+      })
+    ),
+    async (c) => {
+      const integrationType = c.req.param("type");
+      const { organizationId, config } = c.req.valid("json");
+      const orgId = c.get("organizationId");
+
+      if (organizationId !== orgId) {
+        return c.json({ error: "Organization mismatch" }, 403);
+      }
+
+      const integration = integrationRegistry.get(integrationType);
+      if (!integration) {
+        return c.json({ error: "Unknown integration type" }, 404);
+      }
+
+      try {
+        // Validate connection first
+        const validation = await integration.validateConnection({
+          id: "", // Temporary
+          integrationType,
+          organizationId,
+          config,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        if (!validation.valid) {
+          return c.json(
+            { error: validation.error || "Connection validation failed" },
+            400
+          );
+        }
+
+        // Create connection
+        const connectionId = createId();
+        await db.insert(integrationConnectionsTable).values({
+          id: connectionId,
+          integrationType,
+          organizationId,
+          config,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        // Call onConnect hook if defined (e.g., to auto-create links)
+        if (integration.onConnect) {
+          const result = integration.onConnect();
+          if (result.links && result.links.length > 0) {
+            const linkValues = result.links.map((link) => ({
+              id: createId(),
+              name: link.name,
+              connectionId,
+              organizationId,
+              config: link.config,
+              enabled: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }));
+            await db.insert(integrationLinksTable).values(linkValues);
+          }
+        }
+
+        return c.json({ success: true, connectionId });
+      } catch (error) {
+        console.error(`Failed to connect ${integrationType}:`, error);
+        return c.json(
+          {
+            error: "Failed to create connection",
+            details: error instanceof Error ? error.message : String(error),
+          },
+          500
+        );
+      }
+    }
+  )
+
   .post(
     "/:type/oauth/authorize",
     authenticatedWithOrganization,
     zValidator(
       "json",
-      z.object({
-        redirectUrl: z.string(),
-      })
+      z
+        .object({
+          redirectUrl: z.string(),
+        })
+        .passthrough() // Allow other properties
     ),
     async (c) => {
       try {
         const integrationType = c.req.param("type");
-        const { redirectUrl } = c.req.valid("json");
+        const { redirectUrl, ...params } = c.req.valid("json");
         const user = c.get("user");
         const organizationId = c.get("organizationId");
 
@@ -75,6 +174,10 @@ export const IntegrationsRoute = new Hono<{
         if (!integration) {
           console.error(`[OAuth] Unknown integration type: ${integrationType}`);
           return c.json({ error: "Unknown integration type" }, 404);
+        }
+
+        if (!supportsOAuth(integration)) {
+          return c.json({ error: "This integration does not support OAuth" }, 400);
         }
 
         // Get OAuth credentials
@@ -116,7 +219,8 @@ export const IntegrationsRoute = new Hono<{
         const authUrl = integration.buildAuthorizationUrl(
           credentials,
           stateToken,
-          callbackUrl.toString()
+          callbackUrl.toString(),
+          params as Record<string, string>
         );
 
         console.log(`[OAuth] Authorization URL generated successfully`);
@@ -211,6 +315,10 @@ export const IntegrationsRoute = new Hono<{
       return c.json({ error: "Unknown integration type" }, 404);
     }
 
+    if (!supportsOAuth(integration)) {
+      return c.json({ error: "This integration does not support OAuth" }, 400);
+    }
+
     try {
       // Get OAuth credentials
       const credentials = await integration.getOAuthCredentials();
@@ -232,17 +340,6 @@ export const IntegrationsRoute = new Hono<{
         });
 
       // Let integration handle the OAuth callback
-      // This allows each integration to handle its own OAuth flow
-      // (e.g., GitHub App installations, standard OAuth, etc.)
-      if (
-        !("handleOAuthCallback" in integration) ||
-        typeof integration.handleOAuthCallback !== "function"
-      ) {
-        throw new Error(
-          `Integration ${integrationType} does not implement handleOAuthCallback`
-        );
-      }
-
       const config = await integration.handleOAuthCallback(
         queryParams,
         credentials,
@@ -656,6 +753,7 @@ export const IntegrationsRoute = new Hono<{
               and(
                 eq(foldersTable.name, folderName),
                 eq(foldersTable.organizationId, organizationId),
+                eq(foldersTable.integrationLinkId, linkId),
                 isNull(foldersTable.deletedAt),
                 currentParentId
                   ? eq(foldersTable.parentId, currentParentId)
@@ -676,6 +774,7 @@ export const IntegrationsRoute = new Hono<{
               userId: user.id,
               organizationId,
               parentId: currentParentId || null,
+              integrationLinkId: linkId,
             });
             currentParentId = newFolderId;
           }
@@ -715,8 +814,7 @@ export const IntegrationsRoute = new Hono<{
 
             imported++;
             console.log(
-              `[Integrations] Imported: ${result.externalId}${
-                folderPath ? ` (folder: ${folderPath})` : ""
+              `[Integrations] Imported: ${result.externalId}${folderPath ? ` (folder: ${folderPath})` : ""
               }`
             );
           } catch (error) {

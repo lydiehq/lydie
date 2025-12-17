@@ -1,7 +1,7 @@
 {
   "id": "wordpress",
   "name": "WordPress",
-  "description": "Publish documents to your WordPress site",
+  "description": "Sync content to your self-hosted WordPress site using Application Passwords.",
   "icon": "logo.png",
-  "comingSoon": true
+  "comingSoon": false
 }

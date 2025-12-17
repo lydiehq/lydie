@@ -86,7 +86,8 @@ export interface OAuthIntegration {
   buildAuthorizationUrl(
     credentials: OAuthCredentials,
     state: string,
-    redirectUri: string
+    redirectUri: string,
+    params?: Record<string, string>
   ): string;
 
   /**

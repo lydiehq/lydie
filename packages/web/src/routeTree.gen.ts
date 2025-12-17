@@ -27,6 +27,8 @@ import { Route as _authWOrganizationIdSettingsComponentsRouteImport } from './ro
 import { Route as _authWOrganizationIdSettingsBillingRouteImport } from './routes/__auth/w/$organizationId/settings/billing'
 import { Route as _authWOrganizationIdSettingsAiRouteImport } from './routes/__auth/w/$organizationId/settings/ai'
 import { Route as _authWOrganizationIdSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/index'
+import { Route as _authWOrganizationIdSettingsIntegrationsWordpressRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/wordpress'
+import { Route as _authWOrganizationIdSettingsIntegrationsShopifyRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/shopify'
 import { Route as _authWOrganizationIdSettingsIntegrationsGithubRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/github'
 
 const LandingRouteRoute = LandingRouteRouteImport.update({
@@ -129,6 +131,18 @@ const _authWOrganizationIdSettingsIntegrationsIndexRoute =
     path: '/integrations/',
     getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
   } as any)
+const _authWOrganizationIdSettingsIntegrationsWordpressRoute =
+  _authWOrganizationIdSettingsIntegrationsWordpressRouteImport.update({
+    id: '/integrations/wordpress',
+    path: '/integrations/wordpress',
+    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+  } as any)
+const _authWOrganizationIdSettingsIntegrationsShopifyRoute =
+  _authWOrganizationIdSettingsIntegrationsShopifyRouteImport.update({
+    id: '/integrations/shopify',
+    path: '/integrations/shopify',
+    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+  } as any)
 const _authWOrganizationIdSettingsIntegrationsGithubRoute =
   _authWOrganizationIdSettingsIntegrationsGithubRouteImport.update({
     id: '/integrations/github',
@@ -153,6 +167,8 @@ export interface FileRoutesByFullPath {
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
   '/w/$organizationId/settings/integrations/github': typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
+  '/w/$organizationId/settings/integrations/shopify': typeof _authWOrganizationIdSettingsIntegrationsShopifyRoute
+  '/w/$organizationId/settings/integrations/wordpress': typeof _authWOrganizationIdSettingsIntegrationsWordpressRoute
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -170,6 +186,8 @@ export interface FileRoutesByTo {
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings': typeof _authWOrganizationIdSettingsIndexRoute
   '/w/$organizationId/settings/integrations/github': typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
+  '/w/$organizationId/settings/integrations/shopify': typeof _authWOrganizationIdSettingsIntegrationsShopifyRoute
+  '/w/$organizationId/settings/integrations/wordpress': typeof _authWOrganizationIdSettingsIntegrationsWordpressRoute
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRoutesById {
@@ -192,6 +210,8 @@ export interface FileRoutesById {
   '/__auth/w/$organizationId/$id/': typeof _authWOrganizationIdIdIndexRoute
   '/__auth/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
   '/__auth/w/$organizationId/settings/integrations/github': typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
+  '/__auth/w/$organizationId/settings/integrations/shopify': typeof _authWOrganizationIdSettingsIntegrationsShopifyRoute
+  '/__auth/w/$organizationId/settings/integrations/wordpress': typeof _authWOrganizationIdSettingsIntegrationsWordpressRoute
   '/__auth/w/$organizationId/settings/integrations/': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRouteTypes {
@@ -213,6 +233,8 @@ export interface FileRouteTypes {
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings/'
     | '/w/$organizationId/settings/integrations/github'
+    | '/w/$organizationId/settings/integrations/shopify'
+    | '/w/$organizationId/settings/integrations/wordpress'
     | '/w/$organizationId/settings/integrations'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -230,6 +252,8 @@ export interface FileRouteTypes {
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings'
     | '/w/$organizationId/settings/integrations/github'
+    | '/w/$organizationId/settings/integrations/shopify'
+    | '/w/$organizationId/settings/integrations/wordpress'
     | '/w/$organizationId/settings/integrations'
   id:
     | '__root__'
@@ -251,6 +275,8 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationId/$id/'
     | '/__auth/w/$organizationId/settings/'
     | '/__auth/w/$organizationId/settings/integrations/github'
+    | '/__auth/w/$organizationId/settings/integrations/shopify'
+    | '/__auth/w/$organizationId/settings/integrations/wordpress'
     | '/__auth/w/$organizationId/settings/integrations/'
   fileRoutesById: FileRoutesById
 }
@@ -387,6 +413,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRouteImport
       parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
     }
+    '/__auth/w/$organizationId/settings/integrations/wordpress': {
+      id: '/__auth/w/$organizationId/settings/integrations/wordpress'
+      path: '/integrations/wordpress'
+      fullPath: '/w/$organizationId/settings/integrations/wordpress'
+      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsWordpressRouteImport
+      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+    }
+    '/__auth/w/$organizationId/settings/integrations/shopify': {
+      id: '/__auth/w/$organizationId/settings/integrations/shopify'
+      path: '/integrations/shopify'
+      fullPath: '/w/$organizationId/settings/integrations/shopify'
+      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsShopifyRouteImport
+      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+    }
     '/__auth/w/$organizationId/settings/integrations/github': {
       id: '/__auth/w/$organizationId/settings/integrations/github'
       path: '/integrations/github'
@@ -405,6 +445,8 @@ interface _authWOrganizationIdSettingsRouteRouteChildren {
   _authWOrganizationIdSettingsUserRoute: typeof _authWOrganizationIdSettingsUserRoute
   _authWOrganizationIdSettingsIndexRoute: typeof _authWOrganizationIdSettingsIndexRoute
   _authWOrganizationIdSettingsIntegrationsGithubRoute: typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
+  _authWOrganizationIdSettingsIntegrationsShopifyRoute: typeof _authWOrganizationIdSettingsIntegrationsShopifyRoute
+  _authWOrganizationIdSettingsIntegrationsWordpressRoute: typeof _authWOrganizationIdSettingsIntegrationsWordpressRoute
   _authWOrganizationIdSettingsIntegrationsIndexRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 
@@ -423,6 +465,10 @@ const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettin
       _authWOrganizationIdSettingsIndexRoute,
     _authWOrganizationIdSettingsIntegrationsGithubRoute:
       _authWOrganizationIdSettingsIntegrationsGithubRoute,
+    _authWOrganizationIdSettingsIntegrationsShopifyRoute:
+      _authWOrganizationIdSettingsIntegrationsShopifyRoute,
+    _authWOrganizationIdSettingsIntegrationsWordpressRoute:
+      _authWOrganizationIdSettingsIntegrationsWordpressRoute,
     _authWOrganizationIdSettingsIntegrationsIndexRoute:
       _authWOrganizationIdSettingsIntegrationsIndexRoute,
   }

@@ -7,13 +7,13 @@ export class IntegrationRegistry {
   private integrations = new Map<string, Integration>();
 
   /**
-   * Register a new integration
+   * Register a new integration with explicit type key
    */
-  register(integration: Integration): void {
-    if (this.integrations.has(integration.type)) {
-      throw new Error(`Integration ${integration.type} is already registered`);
+  register(type: string, integration: Integration): void {
+    if (this.integrations.has(type)) {
+      throw new Error(`Integration ${type} is already registered`);
     }
-    this.integrations.set(integration.type, integration);
+    this.integrations.set(type, integration);
   }
 
   /**

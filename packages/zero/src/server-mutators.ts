@@ -8,14 +8,15 @@ import { db } from "@lydie/database";
 import { sql } from "drizzle-orm";
 import {
   GitHubIntegration,
-  type Integration,
-  type OAuthIntegration,
+  ShopifyIntegration,
+  WordpressIntegration,
+  type BaseIntegration,
 } from "@lydie/integrations";
 
-// Registry of available integrations for push operations
-type IntegrationWithOAuth = Integration & OAuthIntegration;
-const integrationRegistry = new Map<string, IntegrationWithOAuth>([
+const integrationRegistry = new Map<string, BaseIntegration>([
   ["github", new GitHubIntegration()],
+  ["shopify", new ShopifyIntegration()],
+  ["wordpress", new WordpressIntegration()],
 ]);
 
 const sqs = new SQSClient();
@@ -32,6 +33,7 @@ async function triggerEmbeddingGeneration(
 
     await sqs.send(
       new SendMessageCommand({
+        // @ts-ignore
         QueueUrl: Resource.EmbeddingQueue.url,
         MessageBody: JSON.stringify({
           documentId,

@@ -13,3 +13,6 @@ export * from "./oauth";
 // Export server-side integrations (for backend use)
 // Note: These exports should NOT include React components
 export * from "./integrations/github";
+export * from "./integrations/shopify";
+export * from "./integrations/wordpress";
+

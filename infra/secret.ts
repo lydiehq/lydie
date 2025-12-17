@@ -23,4 +23,8 @@ export const secret = {
   githubClientSecret: new sst.Secret("GitHubClientSecret"),
   githubPrivateKey: new sst.Secret("GitHubPrivateKey"),
   githubAppSlug: new sst.Secret("GitHubAppSlug"),
+
+  // Shopify integration
+  shopifyClientId: new sst.Secret("ShopifyClientId"),
+  shopifyClientSecret: new sst.Secret("ShopifyClientSecret"),
 };

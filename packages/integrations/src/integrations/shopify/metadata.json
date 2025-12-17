@@ -3,5 +3,5 @@
   "name": "Shopify Blog",
   "description": "Publish documents to your Shopify blog",
   "icon": "logo.png",
-  "comingSoon": true
+  "comingSoon": false
 }
