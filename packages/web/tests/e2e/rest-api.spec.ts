@@ -10,7 +10,7 @@ test.describe("API key REST API", () => {
   }) => {
     // Navigate to a page first to establish base URL
     await page.goto(`/w/${organization.id}/settings`);
-    await page.waitForURL(`/w/${organization.id}/settings`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}/settings`);
 
     // Create an API key through the UI
     await page
@@ -30,13 +30,11 @@ test.describe("API key REST API", () => {
       .filter({ hasText: /Create API Key/i })
       .click();
 
-    await expect(
-      page.getByText(/API Key Created Successfully/i)
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/API Key Created Successfully/i)).toBeVisible;
 
     // Get the full API key value
     const apiKeyValue = await page
-      .locator('input[readonly], textarea[readonly]')
+      .locator("input[readonly], textarea[readonly]")
       .first()
       .inputValue();
 
@@ -91,7 +89,7 @@ test.describe("API key REST API", () => {
   }) => {
     // Navigate to a page first to establish base URL
     await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
 
     // Create an API key directly in the database
     const { createHash } = await import("crypto");
@@ -142,9 +140,7 @@ test.describe("API key REST API", () => {
       expect(error.message || error.error).toContain("Invalid or revoked");
     } finally {
       // Cleanup
-      await db
-        .delete(apiKeysTable)
-        .where(eq(apiKeysTable.id, createdKey.id));
+      await db.delete(apiKeysTable).where(eq(apiKeysTable.id, createdKey.id));
     }
   });
 
@@ -154,7 +150,7 @@ test.describe("API key REST API", () => {
   }) => {
     // Navigate to a page first to establish base URL
     await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
 
     // Create a different organization and API key
     const { organization: otherOrg, cleanup } = await createTestUser({
@@ -201,9 +197,9 @@ test.describe("API key REST API", () => {
 
         expect(response.status()).toBe(403);
         const error = await response.json();
-        expect(
-          error.message || error.error || JSON.stringify(error)
-        ).toContain("does not have access");
+        expect(error.message || error.error || JSON.stringify(error)).toContain(
+          "does not have access"
+        );
       } finally {
         // Cleanup other org key
         await db
@@ -215,10 +211,13 @@ test.describe("API key REST API", () => {
     }
   });
 
-  test("should reject requests without API key", async ({ page, organization }) => {
+  test("should reject requests without API key", async ({
+    page,
+    organization,
+  }) => {
     // Navigate to a page first to establish base URL
     await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
 
     const pageURL = new URL(page.url());
     const baseURL = `${pageURL.protocol}//${pageURL.host}`;
@@ -267,7 +266,7 @@ test.describe("API key REST API", () => {
   }) => {
     // Navigate to a page first to establish base URL
     await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
 
     // Create an API key directly in the database
     const { createHash } = await import("crypto");
@@ -321,9 +320,7 @@ test.describe("API key REST API", () => {
       expect(updatedKey?.lastUsedAt).toBeInstanceOf(Date);
     } finally {
       // Cleanup
-      await db
-        .delete(apiKeysTable)
-        .where(eq(apiKeysTable.id, createdKey.id));
+      await db.delete(apiKeysTable).where(eq(apiKeysTable.id, createdKey.id));
     }
   });
 });

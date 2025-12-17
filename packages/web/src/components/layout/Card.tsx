@@ -1,4 +1,10 @@
+import { cva } from "cva";
 import { twMerge } from "tailwind-merge";
+
+export const cardStyles = cva({
+  base: "bg-surface ring ring-black/6 rounded-lg",
+  variants: {},
+});
 
 export function Card({
   children,
@@ -7,14 +13,5 @@ export function Card({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <div
-      className={twMerge(
-        "bg-surface ring ring-black/2 rounded-lg ml-px size-full grow shadow-surface",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
+  return <div className={twMerge(cardStyles({ className }))}>{children}</div>;
 }

@@ -32,6 +32,7 @@ import {
   Cell,
 } from "@/components/generic/Table";
 import { mutators } from "@lydie/zero/mutators";
+import { Card } from "@/components/layout/Card";
 
 type ApiKeyDialogStep = "create" | "success";
 
@@ -304,14 +305,14 @@ function RouteComponent() {
             </TableBody>
           </Table>
         ) : (
-          <div className="rounded-xl ring-1 ring-black/10 bg-white p-8 text-center">
+          <Card className="p-8 text-center">
             <div className="text-sm font-medium text-gray-700">
               No API keys created yet
             </div>
             <div className="text-xs mt-1 text-gray-500">
               Create your first API key to get started
             </div>
-          </div>
+          </Card>
         )}
       </div>
 

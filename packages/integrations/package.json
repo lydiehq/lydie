@@ -5,7 +5,7 @@
   "scripts": {},
   "exports": {
     ".": "./src/index.ts",
-    "./client": "./src/client.ts"
+    "./*": "./src/*.ts"
   },
   "dependencies": {
     "@lydie/core": "workspace:*",

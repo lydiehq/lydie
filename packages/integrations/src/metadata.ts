@@ -2,7 +2,7 @@
  * Client-safe integration metadata
  * This file exports static metadata about available integrations
  * without requiring server-side code or integration instances.
- * 
+ *
  * Each integration defines its own metadata in a metadata.json file
  * within its folder (e.g., /integrations/github/metadata.json).
  */
@@ -12,21 +12,27 @@ export interface IntegrationMetadata {
    * Unique identifier for this integration type (e.g., "github", "shopify", "wordpress")
    */
   id: string;
-  
+
   /**
    * Human-readable name of the integration
    */
   name: string;
-  
+
   /**
    * Description of what this integration does
    */
   description: string;
-  
+
   /**
    * Whether this integration is coming soon (not yet available)
    */
   comingSoon?: boolean;
+
+  /**
+   * Optional path to the icon image in the integration's assets folder
+   * (e.g., "icon.png" or "icon.svg")
+   */
+  icon?: string;
 }
 
 // Import metadata from each integration's metadata.json file
@@ -49,7 +55,9 @@ export const integrationMetadata: IntegrationMetadata[] = [
 /**
  * Get metadata for a specific integration by ID
  */
-export function getIntegrationMetadata(id: string): IntegrationMetadata | undefined {
+export function getIntegrationMetadata(
+  id: string
+): IntegrationMetadata | undefined {
   return integrationMetadata.find((meta) => meta.id === id);
 }
 
@@ -59,4 +67,3 @@ export function getIntegrationMetadata(id: string): IntegrationMetadata | undefi
 export function getAvailableIntegrations(): IntegrationMetadata[] {
   return integrationMetadata.filter((meta) => !meta.comingSoon);
 }
-

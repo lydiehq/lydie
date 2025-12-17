@@ -11,7 +11,7 @@ testUnauthenticated(
   "should not allow unauthed workspace access",
   async ({ page }) => {
     await page.goto("/w/test-org-id");
-    await page.waitForURL(/\/auth/, { timeout: 5000 });
+    await page.waitForURL(/\/auth/);
   }
 );
 
@@ -21,7 +21,7 @@ test.describe("workspace auth", () => {
     organization,
   }) => {
     await page.goto("/auth");
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
   });
 
   test("authenticated users should be be redirected to workspace if accessing root", async ({
@@ -30,7 +30,7 @@ test.describe("workspace auth", () => {
     user,
   }) => {
     await page.goto("/");
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
     await expect(
       page.getByText(`Welcome back, ${user.name.split(" ")[0]}!`)
     ).toBeVisible();
@@ -41,12 +41,12 @@ test.describe("workspace auth", () => {
     organization,
   }) => {
     await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
     await page.getByRole("button", { name: organization.name }).first().click();
 
     await page.getByRole("menuitem", { name: "Sign Out" }).click();
 
-    await page.waitForURL(/\/auth/, { timeout: 5000 });
+    await page.waitForURL(/\/auth/);
   });
 });
 

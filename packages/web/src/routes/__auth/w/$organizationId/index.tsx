@@ -1,4 +1,4 @@
-import { Card } from "@/components/layout/Card";
+import { Surface } from "@/components/layout/Surface";
 import { HomeFileExplorer } from "@/components/home-file-explorer";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
@@ -15,9 +15,9 @@ export const Route = createFileRoute("/__auth/w/$organizationId/")({
 function RouteComponent() {
   return (
     <div className="p-1 size-full">
-      <Card>
+      <Surface>
         <HomeFileExplorer />
-      </Card>
+      </Surface>
     </div>
   );
 }

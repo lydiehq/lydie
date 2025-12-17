@@ -14,6 +14,7 @@ import { Button } from "@/components/generic/Button";
 import { Label } from "@/components/generic/Field";
 import { Link } from "@/components/generic/Link";
 import { mutators } from "@lydie/zero/mutators";
+import { Card } from "@/components/layout/Card";
 
 export const Route = createFileRoute("/__auth/w/$organizationId/settings/ai")({
   component: RouteComponent,
@@ -120,7 +121,7 @@ function RouteComponent() {
           </p>
         </div>
 
-        <div className="rounded-xl ring-1 ring-black/10 bg-white p-6 space-y-4">
+        <Card className="p-6 space-y-4">
           <RadioGroup
             label="AI Writing Style"
             value={currentStyle}
@@ -145,7 +146,7 @@ function RouteComponent() {
               </Radio>
             ))}
           </RadioGroup>
-        </div>
+        </Card>
 
         {/* Custom Prompt Section (PRO only) */}
         {isPro && (
@@ -158,7 +159,7 @@ function RouteComponent() {
               </p>
             </div>
 
-            <div className="rounded-xl ring-1 ring-black/10 bg-white p-6 space-y-4">
+            <Card className="p-6 space-y-4">
               {hasCustomPrompt && (
                 <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
                   <p className="text-xs text-blue-800 font-medium mb-1">
@@ -207,13 +208,13 @@ function RouteComponent() {
                   </Button>
                 )}
               </div>
-            </div>
+            </Card>
           </div>
         )}
 
         {/* PRO Upgrade Prompt */}
         {!isPro && (
-          <div className="rounded-xl ring-1 ring-black/10 bg-white p-6">
+          <Card className="p-6">
             <div className="flex flex-col gap-y-3">
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-1">
@@ -231,7 +232,7 @@ function RouteComponent() {
                 <Button size="sm">Upgrade to Pro</Button>
               </Link>
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </div>

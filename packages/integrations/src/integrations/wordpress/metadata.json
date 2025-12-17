@@ -2,6 +2,6 @@
   "id": "wordpress",
   "name": "WordPress",
   "description": "Publish documents to your WordPress site",
+  "icon": "logo.png",
   "comingSoon": true
 }
-

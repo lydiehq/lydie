@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MessageCircle, CircleArrowUp, Square } from "lucide-react";
-import { Card } from "@/components/layout/Card";
+import { Surface } from "@/components/layout/Surface";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useMemo, useState, useRef } from "react";
@@ -66,7 +66,7 @@ function AssistantPage() {
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Card className="overflow-hidden size-full">
+      <Surface className="overflow-hidden size-full">
         <PanelGroup direction="horizontal" autoSaveId="assistant-panel-group">
           <Panel>
             <AssistantChat
@@ -98,7 +98,7 @@ function AssistantPage() {
             />
           </Panel>
         </PanelGroup>
-      </Card>
+      </Surface>
     </div>
   );
 }

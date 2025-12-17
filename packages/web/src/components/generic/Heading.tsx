@@ -7,7 +7,7 @@ const styles = cva({
   base: "text-gray-950 dark:text-white leading-none font-heading",
   variants: {
     level: {
-      1: "text-2xl/none font-medium",
+      1: "text-xl/none font-medium",
       2: "text-base/none font-medium",
       3: "text-lg/none font-semibold",
       4: "text-base/none font-semibold",

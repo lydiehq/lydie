@@ -20,6 +20,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Separator } from "../generic/Separator";
+import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
 
 type Props = {
@@ -178,7 +179,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         <Separator />
         <div className="flex flex-col gap-y-2 grow min-h-0">
           <div className="flex items-center justify-between px-2 shrink-0">
-            <span className="text-xs font-medium text-gray-500">Documents</span>
+            <Eyebrow>Documents</Eyebrow>
             <div className="flex gap-x-1">
               <TooltipTrigger delay={500}>
                 <RACButton

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { Card } from "@/components/layout/Card";
+import { Surface } from "@/components/layout/Surface";
 import {
   User,
   Settings,
@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { sidebarItemStyles } from "@/components/layout/Sidebar";
+import { Eyebrow } from "@/components/generic/Eyebrow";
 
 export const Route = createFileRoute("/__auth/w/$organizationId/settings")({
   component: RouteComponent,
@@ -92,15 +93,13 @@ const settingsRoutes: SettingsSection[] = [
 function RouteComponent() {
   return (
     <div className="p-1 size-full">
-      <Card className="overflow-y-auto">
+      <Surface className="overflow-y-auto">
         <div className="mx-auto max-w-5xl gap-x-8 flex size-full grow p-12 overflow-visible">
           <nav aria-label="Settings navigation" className="w-[200px] shrink-0">
             <ul className="flex flex-col gap-y-2">
               {settingsRoutes.map((section) => (
                 <li key={section.title} className="flex flex-col gap-y-2">
-                  <span className="text-xs font-medium text-gray-500">
-                    {section.title}
-                  </span>
+                  <Eyebrow>{section.title}</Eyebrow>
                   <ul className="flex flex-col">
                     {section.routes.map((route) => {
                       const Icon = route.icon;
@@ -140,7 +139,7 @@ function RouteComponent() {
             <Outlet />
           </div>
         </div>
-      </Card>
+      </Surface>
     </div>
   );
 }

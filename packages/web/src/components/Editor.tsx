@@ -21,7 +21,7 @@ import { LinkPopover } from "./editor/LinkPopover";
 import { BubbleMenu } from "./editor/BubbleMenu";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
-import { Card } from "./layout/Card";
+import { Surface } from "./layout/Surface";
 import { Input } from "react-aria-components";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
@@ -213,7 +213,7 @@ function EditorContainer({ doc }: Props) {
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Card className="overflow-hidden">
+      <Surface className="overflow-hidden">
         <PanelGroup autoSaveId="editor-panel-group" direction="horizontal">
           <Panel
             minSize={20}
@@ -303,7 +303,7 @@ function EditorContainer({ doc }: Props) {
             />
           </Panel>
         </PanelGroup>
-      </Card>
+      </Surface>
     </div>
   );
 }

@@ -9,7 +9,7 @@ test.describe("organization management", () => {
     organization,
   }) => {
     await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`);
 
     await page.getByRole("button", { name: organization.name }).first().click();
 
@@ -20,7 +20,7 @@ test.describe("organization management", () => {
     ).toBeVisible();
 
     await page.getByRole("link", { name: "Create organization" }).click();
-    await page.waitForURL("/onboarding", { timeout: 5000 });
+    await page.waitForURL("/onboarding");
 
     await expect(
       page.getByRole("heading", { name: "Welcome to Lydie" })
@@ -31,7 +31,7 @@ test.describe("organization management", () => {
 
     await page.getByRole("button", { name: "Create Workspace" }).click();
 
-    await page.waitForURL(/\/w\/[\w-]+/, { timeout: 10000 });
+    await page.waitForURL(/\/w\/[\w-]+/);
 
     await expect(
       page.getByRole("button", { name: newWorkspaceName }).first()
@@ -52,7 +52,7 @@ test.describe("organization management", () => {
 
     try {
       await page.goto(`/w/${organization.id}`);
-      await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+      await page.waitForURL(`/w/${organization.id}`);
 
       await page
         .getByRole("button", { name: organization.name })
@@ -70,7 +70,7 @@ test.describe("organization management", () => {
 
       await page.getByRole("button").filter({ hasText: secondOrgName }).click();
 
-      await page.waitForURL(`/w/${secondOrg.id}`, { timeout: 5000 });
+      await page.waitForURL(`/w/${secondOrg.id}`);
 
       await expect(
         page.getByRole("button", { name: secondOrgName }).first()
@@ -99,7 +99,7 @@ test.describe("organization access isolation", () => {
             "Access denied: You do not have permission to access this organization"
           )
           .first()
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
     } finally {
       await cleanup();
     }

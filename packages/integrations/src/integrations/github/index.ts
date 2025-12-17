@@ -5,8 +5,8 @@ import type {
   PullOptions,
   SyncResult,
   ExternalResource,
+  ResourceIntegration,
 } from "../../types";
-import type { ResourceIntegration } from "../../integration";
 import type { OAuthConfig, OAuthCredentials } from "../../oauth";
 import { Resource } from "sst";
 import {

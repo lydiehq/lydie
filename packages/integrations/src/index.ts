@@ -10,5 +10,6 @@ export * from "./integration";
 export * from "./registry";
 export * from "./oauth";
 
-// Export integrations
+// Export server-side integrations (for backend use)
+// Note: These exports should NOT include React components
 export * from "./integrations/github";

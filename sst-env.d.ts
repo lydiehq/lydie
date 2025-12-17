@@ -82,11 +82,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "ReplicationManager": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
     "Web": {
       "type": "sst.aws.StaticSite"
       "url": string

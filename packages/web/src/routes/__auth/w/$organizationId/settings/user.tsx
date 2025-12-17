@@ -3,7 +3,6 @@ import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
 import { useZero } from "@/services/zero";
 import { Switch } from "@/components/generic/Switch";
 import { toast } from "sonner";
@@ -16,6 +15,7 @@ import {
 } from "@/stores/font-size";
 import { Select, SelectItem } from "@/components/generic/Select";
 import { mutators } from "@lydie/zero/mutators";
+import { Card } from "@/components/layout/Card";
 
 export const Route = createFileRoute("/__auth/w/$organizationId/settings/user")(
   {
@@ -77,7 +77,7 @@ function RouteComponent() {
           </p>
         </div>
 
-        <div className="rounded-xl ring-1 ring-black/10 bg-white p-6 space-y-6">
+        <Card className="p-4 flex flex-col gap-y-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-y-1">
               <Label
@@ -135,7 +135,7 @@ function RouteComponent() {
               </Select>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

@@ -27,7 +27,7 @@ import { Route as _authWOrganizationIdSettingsComponentsRouteImport } from './ro
 import { Route as _authWOrganizationIdSettingsBillingRouteImport } from './routes/__auth/w/$organizationId/settings/billing'
 import { Route as _authWOrganizationIdSettingsAiRouteImport } from './routes/__auth/w/$organizationId/settings/ai'
 import { Route as _authWOrganizationIdSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/index'
-import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationIdRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationId'
+import { Route as _authWOrganizationIdSettingsIntegrationsGithubRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/github'
 
 const LandingRouteRoute = LandingRouteRouteImport.update({
   id: '/_landing',
@@ -129,10 +129,10 @@ const _authWOrganizationIdSettingsIntegrationsIndexRoute =
     path: '/integrations/',
     getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute =
-  _authWOrganizationIdSettingsIntegrationsIntegrationIdRouteImport.update({
-    id: '/integrations/$integrationId',
-    path: '/integrations/$integrationId',
+const _authWOrganizationIdSettingsIntegrationsGithubRoute =
+  _authWOrganizationIdSettingsIntegrationsGithubRouteImport.update({
+    id: '/integrations/github',
+    path: '/integrations/github',
     getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
   } as any)
 
@@ -152,7 +152,7 @@ export interface FileRoutesByFullPath {
   '/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
-  '/w/$organizationId/settings/integrations/$integrationId': typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
+  '/w/$organizationId/settings/integrations/github': typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -169,7 +169,7 @@ export interface FileRoutesByTo {
   '/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
   '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
   '/w/$organizationId/settings': typeof _authWOrganizationIdSettingsIndexRoute
-  '/w/$organizationId/settings/integrations/$integrationId': typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
+  '/w/$organizationId/settings/integrations/github': typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRoutesById {
@@ -191,7 +191,7 @@ export interface FileRoutesById {
   '/__auth/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
   '/__auth/w/$organizationId/$id/': typeof _authWOrganizationIdIdIndexRoute
   '/__auth/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
-  '/__auth/w/$organizationId/settings/integrations/$integrationId': typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
+  '/__auth/w/$organizationId/settings/integrations/github': typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
   '/__auth/w/$organizationId/settings/integrations/': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 export interface FileRouteTypes {
@@ -212,7 +212,7 @@ export interface FileRouteTypes {
     | '/w/$organizationId/settings/user'
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings/'
-    | '/w/$organizationId/settings/integrations/$integrationId'
+    | '/w/$organizationId/settings/integrations/github'
     | '/w/$organizationId/settings/integrations'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -229,7 +229,7 @@ export interface FileRouteTypes {
     | '/w/$organizationId/settings/user'
     | '/w/$organizationId/$id'
     | '/w/$organizationId/settings'
-    | '/w/$organizationId/settings/integrations/$integrationId'
+    | '/w/$organizationId/settings/integrations/github'
     | '/w/$organizationId/settings/integrations'
   id:
     | '__root__'
@@ -250,7 +250,7 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationId/settings/user'
     | '/__auth/w/$organizationId/$id/'
     | '/__auth/w/$organizationId/settings/'
-    | '/__auth/w/$organizationId/settings/integrations/$integrationId'
+    | '/__auth/w/$organizationId/settings/integrations/github'
     | '/__auth/w/$organizationId/settings/integrations/'
   fileRoutesById: FileRoutesById
 }
@@ -387,11 +387,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRouteImport
       parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/integrations/$integrationId': {
-      id: '/__auth/w/$organizationId/settings/integrations/$integrationId'
-      path: '/integrations/$integrationId'
-      fullPath: '/w/$organizationId/settings/integrations/$integrationId'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRouteImport
+    '/__auth/w/$organizationId/settings/integrations/github': {
+      id: '/__auth/w/$organizationId/settings/integrations/github'
+      path: '/integrations/github'
+      fullPath: '/w/$organizationId/settings/integrations/github'
+      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsGithubRouteImport
       parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
     }
   }
@@ -404,7 +404,7 @@ interface _authWOrganizationIdSettingsRouteRouteChildren {
   _authWOrganizationIdSettingsImportRoute: typeof _authWOrganizationIdSettingsImportRoute
   _authWOrganizationIdSettingsUserRoute: typeof _authWOrganizationIdSettingsUserRoute
   _authWOrganizationIdSettingsIndexRoute: typeof _authWOrganizationIdSettingsIndexRoute
-  _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute
+  _authWOrganizationIdSettingsIntegrationsGithubRoute: typeof _authWOrganizationIdSettingsIntegrationsGithubRoute
   _authWOrganizationIdSettingsIntegrationsIndexRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
 }
 
@@ -421,8 +421,8 @@ const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettin
       _authWOrganizationIdSettingsUserRoute,
     _authWOrganizationIdSettingsIndexRoute:
       _authWOrganizationIdSettingsIndexRoute,
-    _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute:
-      _authWOrganizationIdSettingsIntegrationsIntegrationIdRoute,
+    _authWOrganizationIdSettingsIntegrationsGithubRoute:
+      _authWOrganizationIdSettingsIntegrationsGithubRoute,
     _authWOrganizationIdSettingsIntegrationsIndexRoute:
       _authWOrganizationIdSettingsIntegrationsIndexRoute,
   }

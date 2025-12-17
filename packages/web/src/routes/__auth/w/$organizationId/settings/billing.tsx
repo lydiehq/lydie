@@ -22,6 +22,7 @@ import { authClient } from "@/utils/auth";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { useAuth } from "@/context/auth.context";
+import { Card } from "@/components/layout/Card";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationId/settings/billing"
@@ -131,7 +132,7 @@ function RouteComponent() {
 
       {/* Free Plan Upgrade Section */}
       {currentPlan === PLAN_TYPES.FREE && (
-        <div className="rounded-xl ring-1 ring-black/10 bg-white p-8 text-center">
+        <Card className="p-8 text-center">
           <AlertCircle className="size-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Free Plan
@@ -244,12 +245,12 @@ function RouteComponent() {
               </Dialog>
             </Modal>
           </DialogTrigger>
-        </div>
+        </Card>
       )}
 
       {/* Current Plan - Only show for Pro users */}
       {currentPlan === PLAN_TYPES.PRO && (
-        <div className="rounded-xl ring-1 ring-black/10 bg-white p-6">
+        <Card className="p-6">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -354,10 +355,10 @@ function RouteComponent() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       )}
       {/* Usage Breakdown */}
-      <div className="rounded-xl ring-1 ring-black/10 bg-white p-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-md font-semibold text-gray-900">
             Usage Breakdown
@@ -451,10 +452,10 @@ function RouteComponent() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Early Alpha Disclaimer */}
-      <div className="rounded-xl ring-1 ring-black/10 bg-white p-6">
+      <Card className="p-6">
         <div className="flex items-start gap-3">
           <AlertCircle className="size-5 text-amber-600 mt-0.5 shrink-0" />
           <div>
@@ -469,7 +470,7 @@ function RouteComponent() {
             </p>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

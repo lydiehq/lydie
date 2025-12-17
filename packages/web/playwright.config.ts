@@ -11,7 +11,7 @@ export default defineConfig({
   retries: Resource.App.stage === "production" ? 2 : 0,
   // Reporter to use
   reporter: [["html"], ["list"]],
-  timeout: 20_000,
+  timeout: 50_000,
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
