@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
-    "drizzle-kit": "^1.0.0-beta.2-f9236e3",
+    "drizzle-kit": "^1.0.0-beta.3-36e9b9e",
     "drizzle-orm": "catalog:",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
-    "@types/node": "^25.0.2",
+    "@types/node": "^25.0.3",
     "sst": "catalog:"
   }
 }
