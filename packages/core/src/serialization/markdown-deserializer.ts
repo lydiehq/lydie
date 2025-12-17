@@ -1,23 +1,5 @@
-/**
- * Markdown to TipTap JSON deserializer
- * Deserializes Markdown strings to TipTap JSON format
- *
- * Handles basic Markdown syntax:
- * - Headings (# ## ###)
- * - Paragraphs
- * - Bold (**text**)
- * - Italic (*text*)
- * - Links ([text](url))
- * - Unordered lists (-, *, +)
- * - Ordered lists (1., 2., etc.)
- * - Horizontal rules (---)
- */
-
 export interface MarkdownDeserializeOptions {
-  /**
-   * Whether to preserve empty paragraphs
-   * @default false
-   */
+  // Whether to preserve empty paragraphs
   preserveEmptyParagraphs?: boolean;
 }
 
@@ -297,4 +279,3 @@ export function deserializeFromMarkdown(
     content,
   };
 }
-

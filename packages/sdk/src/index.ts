@@ -9,11 +9,11 @@ export type {
   ContentNode,
   TextNode,
   Mark,
-  ContentBuilder,
+  NodeBuilder,
 } from "./core";
 
 export {
   LydieClient,
   extractTableOfContents,
-  renderContentWithBuilder,
+  renderWithBuilder,
 } from "./core";

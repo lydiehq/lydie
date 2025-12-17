@@ -549,6 +549,27 @@ const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
   }),
 }));
 
+const integrationActivityLogs = table("integration_activity_logs")
+  .columns({
+    id: string(),
+    connection_id: string(),
+    activity_type: string(),
+    activity_status: string(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const integrationActivityLogsRelations = relationships(
+  integrationActivityLogs,
+  ({ one }) => ({
+    connection: one({
+      sourceField: ["connection_id"],
+      destField: ["id"],
+      destSchema: integrationConnections,
+    }),
+  })
+);
+
 export const schema = createSchema({
   tables: [
     users,
@@ -568,6 +589,7 @@ export const schema = createSchema({
     integrationConnections,
     integrationLinks,
     syncMetadata,
+    integrationActivityLogs,
   ],
   relationships: [
     documentsRelations,
@@ -587,6 +609,7 @@ export const schema = createSchema({
     integrationConnectionsRelations,
     integrationLinksRelations,
     syncMetadataRelations,
+    integrationActivityLogsRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,

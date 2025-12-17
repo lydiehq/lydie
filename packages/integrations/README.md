@@ -131,10 +131,16 @@ export class MyIntegration extends BaseIntegration implements ResourceIntegratio
 
 ## Serialization
 
-Use `@lydie/core/serialization` directly in push/pull methods:
+Use the format-specific serializers from `@lydie/core/serialization/*` in push/pull methods:
 
 ```typescript
-import { serializeToHTML, deserializeFromHTML } from "@lydie/core/serialization";
-import { serializeToMarkdown, deserializeFromMarkdown } from "@lydie/core/serialization";
+import {
+  serializeToHTML,
+  deserializeFromHTML,
+} from "@lydie/core/serialization/html";
+import {
+  serializeToMarkdown,
+  deserializeFromMarkdown,
+} from "@lydie/core/serialization/markdown";
 ```
 

@@ -9,19 +9,21 @@ export type {
   ContentNode,
   TextNode,
   Mark,
-  ContentBuilder,
+  NodeBuilder,
 } from "@lydie/core/content";
 
 export {
   LydieClient,
   extractTableOfContents,
   extractText,
-  renderContentWithBuilder,
+  renderWithBuilder,
 } from "@lydie/core/content";
+export { serializeToHTML } from "@lydie/core/serialization/html";
 export {
-  serializeToHTML,
   serializeToMarkdown,
-  serializeToPlainText,
   MarkdownBuilder,
+} from "@lydie/core/serialization/markdown";
+export {
+  serializeToPlainText,
   PlainTextBuilder,
-} from "@lydie/core/serialization";
+} from "@lydie/core/serialization/text";

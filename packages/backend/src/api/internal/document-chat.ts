@@ -237,7 +237,7 @@ export const DocumentChatRoute = new Hono<{
 
     return createAgentUIStreamResponse({
       agent,
-      messages: await validateUIMessages({
+      uiMessages: await validateUIMessages({
         messages: enhancedMessages,
       }),
       messageMetadata: ({ part }): MessageMetadata | undefined => {

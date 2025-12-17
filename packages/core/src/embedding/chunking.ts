@@ -5,7 +5,8 @@
  * semantic chunks by respecting document structure (headings, sections).
  */
 
-import { serializeToHTML, serializeToPlainText } from '../serialization';
+import { serializeToHTML } from "../serialization/html";
+import { serializeToPlainText } from "../serialization/text";
 
 export interface Chunk {
   content: string;

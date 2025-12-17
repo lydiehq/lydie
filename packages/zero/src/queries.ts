@@ -310,4 +310,15 @@ export const queries = defineQueries({
       }
     ),
   },
+  integrationActivityLogs: {
+    byConnection: defineQuery(
+      z.object({ connectionId: z.string(), organizationId: z.string() }),
+      ({ args: { connectionId, organizationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return zql.integration_activity_logs
+          .where("connection_id", connectionId)
+          .orderBy("created_at", "desc");
+      }
+    ),
+  },
 });

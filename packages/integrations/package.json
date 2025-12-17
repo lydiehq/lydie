@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
+    "@lydie/database": "workspace:*",
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {

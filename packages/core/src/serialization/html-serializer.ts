@@ -1,15 +1,6 @@
-/**
- * HTML serializer for TipTap content
- * Serializes TipTap JSON to HTML format
- * Implements the ContentBuilder interface to convert TipTap JSON to HTML
- */
+import type { NodeBuilder } from "../content";
 
-import type { ContentBuilder } from "../content";
-
-/**
- * HTML Serializer - generates HTML strings from TipTap content
- */
-export class HTMLSerializer implements ContentBuilder<string> {
+export class HTMLSerializer implements NodeBuilder<string> {
   private linkPrefix?: string;
 
   constructor(options?: { linkPrefix?: string }) {
@@ -51,7 +42,7 @@ export class HTMLSerializer implements ContentBuilder<string> {
   }
 
   doc(children: string[]): string {
-    return `<div class="tiptap-content">${children.join("")}</div>`;
+    return `<div>${children.join("")}</div>`;
   }
 
   paragraph(children: string[]): string {
@@ -108,4 +99,3 @@ export class HTMLSerializer implements ContentBuilder<string> {
 
 // For backwards compatibility
 export { HTMLSerializer as HTMLBuilder };
-

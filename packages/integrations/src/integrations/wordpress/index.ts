@@ -11,7 +11,7 @@ import type {
 import {
   serializeToHTML,
   deserializeFromHTML,
-} from "@lydie/core/serialization";
+} from "@lydie/core/serialization/html";
 import type { ContentNode } from "@lydie/core/content";
 
 export interface WordpressConfig {

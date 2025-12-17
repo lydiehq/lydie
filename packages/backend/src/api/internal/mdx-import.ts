@@ -14,7 +14,7 @@ import {
   deserializeFromMDX,
   extractMDXComponents,
   type MDXComponent,
-} from "@lydie/core/serialization";
+} from "@lydie/core/serialization/mdx";
 
 type Variables = {
   organizationId: string;

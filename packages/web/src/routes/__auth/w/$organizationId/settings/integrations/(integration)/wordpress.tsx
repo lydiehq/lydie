@@ -310,10 +310,6 @@ function RouteComponent() {
                     <span className="font-medium capitalize">
                       {connection.integration_type}
                     </span>
-                    {getStatusIcon(
-                      connection.enabled,
-                      (connection as any).status
-                    )}
                     <span className="text-xs">
                       {getStatusText(
                         connection.enabled,

@@ -95,13 +95,13 @@ export interface Mark {
 }
 
 // ============================================================================
-// Content Builder Interface
+// Node Builder Interface
 // ============================================================================
 
 /**
  * Generic builder interface for different output formats (HTML, React, Vue, etc.)
  */
-export interface ContentBuilder<T> {
+export interface NodeBuilder<T> {
   // Text and marks
   text(content: string): T;
   bold(content: T): T;
@@ -130,20 +130,15 @@ export interface ContentBuilder<T> {
 // Re-export HTML Builder for backwards compatibility
 // ============================================================================
 
-// The HTMLBuilder has been moved to serialization/html-serializer.ts
-// This export is kept for backwards compatibility
-export { HTMLBuilder } from "./serialization";
+export { HTMLBuilder } from "./serialization/html";
 
 // ============================================================================
-// Core Rendering Engine
+// Core rendering engine
 // ============================================================================
 
-/**
- * Core rendering engine that works with any builder
- */
-export function renderContentWithBuilder<T>(
+export function renderWithBuilder<T>(
   content: ContentNode,
-  builder: ContentBuilder<T>
+  builder: NodeBuilder<T>
 ): T {
   const renderMarks = (text: string, marks?: Mark[]): T => {
     if (!marks || marks.length === 0) {
@@ -234,16 +229,16 @@ export function renderContentWithBuilder<T>(
           }
           return builder.empty();
 
-        case "documentComponent":
-          // Handle documentComponent nodes (used in backend for embedding)
-          const docComponentName = node.attrs?.name;
-          if (docComponentName && typeof docComponentName === "string") {
+        case "documentComponent": {
+          const componentName = node.attrs?.name;
+          if (componentName && typeof componentName === "string") {
             return builder.customBlock(
-              docComponentName,
+              componentName,
               node.attrs?.properties || {}
             );
           }
           return builder.empty();
+        }
 
         default:
           console.warn(`[Lydie] Unknown content node type: ${node.type}`);
@@ -255,16 +250,14 @@ export function renderContentWithBuilder<T>(
     }
   };
 
-  return serializeToHTML(content);
+  return renderNode(content);
 }
 
 // ============================================================================
 // HTML Rendering (Re-export for backwards compatibility)
 // ============================================================================
 
-// The renderContentToHTML has been moved to serialization/index.ts
-// This export is kept for backwards compatibility
-export { serializeToHTML } from './serialization';
+export { serializeToHTML } from "./serialization/html";
 
 // ============================================================================
 // API Client

@@ -12,9 +12,9 @@ import { Resource } from "sst";
 import {
   serializeToMarkdown,
   deserializeFromMarkdown,
-  deserializeFromMDX,
-  deserializeFromText,
-} from "@lydie/core/serialization";
+} from "@lydie/core/serialization/markdown";
+import { deserializeFromMDX } from "@lydie/core/serialization/mdx";
+import { deserializeFromText } from "@lydie/core/serialization/text";
 import jwt from "jsonwebtoken";
 
 /**

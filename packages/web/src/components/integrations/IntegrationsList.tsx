@@ -32,9 +32,13 @@ export function IntegrationsListItem({
     "/w/$organizationId/settings/integrations";
 
   return (
-    <li className={cardStyles({ className: "p-2.5" })}>
+    <li
+      className={cardStyles({
+        className: "hover:bg-black/1 transition-colors duration-75",
+      })}
+    >
       <Link to={integrationRoute} from="/w/$organizationId/settings/">
-        <div className="flex flex-col gap-y-2">
+        <div className="flex flex-col gap-y-2 p-2.5">
           <div className="flex items-center gap-x-2">
             <div className="rounded-md ring ring-black/6 p-[2px]">
               {iconUrl ? (

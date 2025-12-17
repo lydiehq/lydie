@@ -478,7 +478,9 @@ export const integrationConnectionsTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    index("integration_connections_organization_id_idx").on(table.organizationId),
+    index("integration_connections_organization_id_idx").on(
+      table.organizationId
+    ),
   ]
 );
 
@@ -494,7 +496,9 @@ export const integrationLinksTable = pgTable(
     name: text("name").notNull(), // Display name (e.g., "Web Docs", "API Reference")
     connectionId: text("connection_id")
       .notNull()
-      .references(() => integrationConnectionsTable.id, { onDelete: "cascade" }),
+      .references(() => integrationConnectionsTable.id, {
+        onDelete: "cascade",
+      }),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
@@ -525,7 +529,9 @@ export const syncMetadataTable = pgTable(
       .references(() => documentsTable.id, { onDelete: "cascade" }),
     connectionId: text("connection_id")
       .notNull()
-      .references(() => integrationConnectionsTable.id, { onDelete: "cascade" }),
+      .references(() => integrationConnectionsTable.id, {
+        onDelete: "cascade",
+      }),
     externalId: text("external_id").notNull(), // ID/path in external system
     lastSyncedAt: timestamp("last_synced_at"),
     lastSyncedHash: text("last_synced_hash"), // Content hash for change detection
@@ -540,5 +546,26 @@ export const syncMetadataTable = pgTable(
     ),
     index("sync_metadata_document_id_idx").on(table.documentId),
     index("sync_metadata_connection_id_idx").on(table.connectionId),
+  ]
+);
+
+export const integrationActivityLogsTable = pgTable(
+  "integration_activity_logs",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    connectionId: text("connection_id")
+      .notNull()
+      .references(() => integrationConnectionsTable.id, {
+        onDelete: "cascade",
+      }),
+    activityType: text("activity_type").notNull(), // 'push', 'pull', 'sync'
+    activityStatus: text("activity_status").notNull(), // 'success', 'failure', 'conflict', 'error'
+    ...timestamps,
+  },
+  (table) => [
+    index("integration_activity_logs_connection_id_idx").on(table.connectionId),
   ]
 );

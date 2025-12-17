@@ -1,15 +1,10 @@
 import { Button } from "@/components/generic/Button";
 import { Card } from "@/components/layout/Card";
-import { Link } from "@/components/generic/Link";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
 import { mutators } from "@lydie/zero/mutators";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { formatDistanceToNow } from "date-fns";
-import {
-  integrationMetadata,
-  type IntegrationMetadata,
-} from "@lydie/integrations/client";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -37,6 +32,8 @@ import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";
 import { Input, Label } from "@/components/generic/Field";
 import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
+import { IntegrationActivityLog } from "@/components/integrations/IntegrationActivityLog";
+import { SettingsSectionLayout } from "@/components/settings/SettingsSectionLayout";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationId/settings/integrations/(integration)/shopify"
@@ -49,16 +46,10 @@ export const Route = createFileRoute(
   }),
 });
 
-type IntegrationType = "github" | "shopify" | "wordpress";
-type ConnectionDialogStep = "selectType" | "configure";
-
 function RouteComponent() {
   const { organization } = useOrganization();
   const z = useZero();
   const { createClient } = useAuthenticatedApi();
-
-  const search = Route.useSearch();
-  const navigate = Route.useNavigate();
 
   const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
   const [shopUrl, setShopUrl] = useState("");
@@ -98,68 +89,6 @@ function RouteComponent() {
     allIntegrationLinks?.filter(
       (link) => link.connection?.integration_type === "shopify"
     ) ?? undefined;
-
-  useEffect(() => {
-    // Check if this is a popup window opened by OAuth flow
-    const isPopup =
-      typeof window !== "undefined" && window.opener && !window.opener.closed;
-
-    if (search.success && search.connectionId) {
-      if (isPopup) {
-        window.opener.postMessage(
-          {
-            type: "oauth-callback",
-            success: true,
-            connectionId: search.connectionId,
-          },
-          window.location.origin
-        );
-        window.close();
-      } else {
-        toast.success("Shopify integration connected successfully!");
-        navigate({
-          to: "/w/$organizationId/settings/integrations/shopify",
-          params: { organizationId: organization?.id || "" },
-          search: {
-            success: false,
-            error: undefined,
-            connectionId: undefined,
-          },
-          replace: true,
-        });
-      }
-    } else if (search.error) {
-      if (isPopup) {
-        window.opener.postMessage(
-          {
-            type: "oauth-callback",
-            success: false,
-            error: search.error,
-          },
-          window.location.origin
-        );
-        window.close();
-      } else {
-        toast.error(`Failed to connect Shopify: ${search.error}`);
-        navigate({
-          to: "/w/$organizationId/settings/integrations/shopify",
-          params: { organizationId: organization?.id || "" },
-          search: {
-            success: false,
-            error: undefined,
-            connectionId: undefined,
-          },
-          replace: true,
-        });
-      }
-    }
-  }, [
-    search.success,
-    search.error,
-    search.connectionId,
-    organization?.id,
-    navigate,
-  ]);
 
   const handleConnectShopify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,9 +235,18 @@ function RouteComponent() {
       },
     });
   };
+
+  const [activityLogs] = useQuery(
+    queries.integrationActivityLogs.byConnection({
+      // TODO: is it even possible to have more than one connection?
+      connectionId: connections?.[0]?.id || "",
+      organizationId: organization?.id || "",
+    })
+  );
+
   return (
     <div className="flex flex-col gap-y-6">
-      <div>
+      <div className="flex flex-col gap-y-2">
         <Heading level={1}>Shopify Integration</Heading>
         <p className="text-sm/relaxed text-gray-600 mt-1">
           Sync your documents to your Shopify store as Pages or Blog Posts.
@@ -319,7 +257,7 @@ function RouteComponent() {
       {/* 1. Connection Management */}
       <div className="flex flex-col gap-y-2">
         <div className="flex justify-between items-start">
-          <Heading level={2}>Connection</Heading>
+          <SettingsSectionLayout heading="Connection" />
           {(!connections || connections.length === 0) && (
             <Button
               onPress={() => {
@@ -336,26 +274,12 @@ function RouteComponent() {
         {connections && connections.length > 0 ? (
           <div className="flex flex-col gap-3">
             {connections.map((connection) => (
-              <div
-                key={connection.id}
-                className="rounded-lg ring-1 ring-black/10 bg-white p-4"
-              >
+              <Card key={connection.id} className="p-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {getIntegrationIcon("shopify")}
                     <span className="font-medium capitalize">
                       {(connection.config as any)?.shop || "Shopify Store"}
-                    </span>
-                    {getStatusIcon(
-                      connection.enabled,
-                      (connection as any).status
-                    )}
-                    <span className="text-xs">
-                      {getStatusText(
-                        connection.enabled,
-                        (connection as any).status,
-                        (connection as any).status_message
-                      )}
                     </span>
                   </div>
                   <MenuTrigger>
@@ -384,7 +308,7 @@ function RouteComponent() {
                     </Menu>
                   </MenuTrigger>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         ) : (
@@ -398,8 +322,14 @@ function RouteComponent() {
           </Card>
         )}
       </div>
+      <div className="flex flex-col gap-y-4">
+        <SettingsSectionLayout
+          heading="Activity Logs"
+          description="View the activity logs for your Shopify connection."
+        />
+        <IntegrationActivityLog logs={activityLogs} />
+      </div>
 
-      {/* 2. Link Management (Only if connected) */}
       {connections && connections.find((c) => c.enabled) && (
         <div className="flex flex-col gap-y-2">
           <div className="flex justify-between items-start">
@@ -608,7 +538,6 @@ type ConfigureConnectionDialogProps = {
 
 function ConfigureConnectionDialog({
   connectionId,
-  organizationId,
   onClose,
 }: ConfigureConnectionDialogProps) {
   const { createClient } = useAuthenticatedApi();

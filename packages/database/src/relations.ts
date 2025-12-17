@@ -231,6 +231,7 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     syncMetadata: r.many.syncMetadataTable(),
     links: r.many.integrationLinksTable(),
+    logs: r.many.integrationActivityLogsTable(),
   },
 
   integrationLinksTable: {
@@ -253,6 +254,12 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     connection: r.one.integrationConnectionsTable({
       from: r.syncMetadataTable.connectionId,
+      to: r.integrationConnectionsTable.id,
+    }),
+  },
+  integrationActivityLogsTable: {
+    connection: r.one.integrationConnectionsTable({
+      from: r.integrationActivityLogsTable.connectionId,
       to: r.integrationConnectionsTable.id,
     }),
   },

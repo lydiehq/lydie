@@ -1,16 +1,6 @@
-/**
- * Plain text serializer for TipTap content
- * Serializes TipTap JSON to plain text format
- * Implements the ContentBuilder interface to convert TipTap JSON to plain text
- */
+import type { NodeBuilder } from "../content";
 
-import type { ContentBuilder } from "../content";
-
-/**
- * Plain Text Serializer - generates plain text strings from TipTap content
- * Strips all formatting and structure, keeping only text content
- */
-export class PlainTextSerializer implements ContentBuilder<string> {
+export class PlainTextSerializer implements NodeBuilder<string> {
   text(content: string): string {
     return content;
   }

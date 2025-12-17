@@ -1,15 +1,6 @@
-/**
- * Markdown serializer for TipTap content
- * Serializes TipTap JSON to Markdown format
- * Implements the ContentBuilder interface to convert TipTap JSON to Markdown
- */
+import type { NodeBuilder } from "../content";
 
-import type { ContentBuilder } from "../content";
-
-/**
- * Markdown Serializer - generates Markdown strings from TipTap content
- */
-export class MarkdownSerializer implements ContentBuilder<string> {
+export class MarkdownSerializer implements NodeBuilder<string> {
   text(content: string): string {
     return this.escape(content);
   }

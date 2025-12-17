@@ -100,68 +100,6 @@ function RouteComponent() {
       (link) => link.connection?.integration_type === "github"
     ) ?? undefined;
 
-  useEffect(() => {
-    // Check if this is a popup window opened by OAuth flow
-    const isPopup =
-      typeof window !== "undefined" && window.opener && !window.opener.closed;
-
-    if (search.success && search.connectionId) {
-      if (isPopup) {
-        window.opener.postMessage(
-          {
-            type: "oauth-callback",
-            success: true,
-            connectionId: search.connectionId,
-          },
-          window.location.origin
-        );
-        window.close();
-      } else {
-        toast.success("GitHub integration connected successfully!");
-        navigate({
-          to: "/w/$organizationId/settings/integrations/github",
-          params: { organizationId: organization?.id || "" },
-          search: {
-            success: false,
-            error: undefined,
-            connectionId: undefined,
-          },
-          replace: true,
-        });
-      }
-    } else if (search.error) {
-      if (isPopup) {
-        window.opener.postMessage(
-          {
-            type: "oauth-callback",
-            success: false,
-            error: search.error,
-          },
-          window.location.origin
-        );
-        window.close();
-      } else {
-        toast.error(`Failed to connect GitHub: ${search.error}`);
-        navigate({
-          to: "/w/$organizationId/settings/integrations/github",
-          params: { organizationId: organization?.id || "" },
-          search: {
-            success: false,
-            error: undefined,
-            connectionId: undefined,
-          },
-          replace: true,
-        });
-      }
-    }
-  }, [
-    search.success,
-    search.error,
-    search.connectionId,
-    organization?.id,
-    navigate,
-  ]);
-
   const handleSelectIntegration = async (type: IntegrationType) => {
     if (type !== "github") {
       toast.error("This integration is not available yet.");

@@ -4,8 +4,8 @@ import {
   CustomBlockProps,
   TocItem,
   Document,
-  ContentBuilder,
-  renderContentWithBuilder,
+  NodeBuilder,
+  renderWithBuilder,
   extractTableOfContents,
 } from "@lydie/core/content";
 
@@ -94,8 +94,8 @@ export function useLydieDocument(
   };
 }
 
-// React Builder for rendering content
-export class ReactBuilder implements ContentBuilder<React.ReactNode> {
+// React Builder for rendering document nodes
+export class ReactBuilder implements NodeBuilder<React.ReactNode> {
   private customComponents?: Record<
     string,
     React.ComponentType<CustomBlockProps>
@@ -153,7 +153,7 @@ export class ReactBuilder implements ContentBuilder<React.ReactNode> {
   }
 
   doc(children: React.ReactNode[]): React.ReactNode {
-    return <div className="tiptap-content">{this.fragment(children)}</div>;
+    return <div>{this.fragment(children)}</div>;
   }
 
   paragraph(children: React.ReactNode[]): React.ReactNode {
@@ -235,7 +235,7 @@ export function renderContentToReact(
   }
 ): React.ReactNode {
   const builder = new ReactBuilder(customComponents, options);
-  return renderContentWithBuilder(content, builder);
+  return renderWithBuilder(content, builder);
 }
 
 // React component for rendering content

@@ -12,8 +12,8 @@ import { Resource } from "sst";
 import {
   serializeToHTML,
   deserializeFromHTML,
-  deserializeFromText,
-} from "@lydie/core/serialization";
+} from "@lydie/core/serialization/html";
+import { deserializeFromText } from "@lydie/core/serialization/text";
 import type { ContentNode } from "@lydie/core/content";
 
 export interface ShopifyConfig {

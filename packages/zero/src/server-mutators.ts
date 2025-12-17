@@ -12,6 +12,7 @@ import {
   WordpressIntegration,
   type BaseIntegration,
 } from "@lydie/integrations";
+import { logIntegrationActivity } from "@lydie/integrations/activity-log";
 
 const integrationRegistry = new Map<string, BaseIntegration>([
   ["github", new GitHubIntegration()],
@@ -53,6 +54,7 @@ async function triggerEmbeddingGeneration(
   }
 }
 
+// TODO: should be moved to core or backend
 async function pushToIntegration(
   documentId: string,
   integrationLinkId: string | null
@@ -131,6 +133,7 @@ async function pushToIntegration(
           `[Push] Failed to get folder path for document ${documentId}:`,
           error
         );
+
         // Continue without folder path
       }
     }
@@ -182,10 +185,12 @@ async function pushToIntegration(
     });
 
     if (result.success) {
+      await logIntegrationActivity(link.connection.id, "push", "success");
       console.log(
         `[Push] Successfully pushed document ${documentId}: ${result.message}`
       );
     } else {
+      await logIntegrationActivity(link.connection.id, "push", "error");
       console.error(
         `[Push] Failed to push document ${documentId}: ${result.error}`
       );

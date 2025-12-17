@@ -21,6 +21,7 @@ import {
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { authenticatedWithOrganization } from "./middleware";
+import { logIntegrationActivity } from "@lydie/integrations/activity-log";
 
 // Registry of available integrations
 const integrationRegistry = new Map<string, Integration>([
@@ -133,6 +134,8 @@ export const IntegrationsRoute = new Hono<{
           }
         }
 
+        await logIntegrationActivity(connectionId, "connect", "success");
+
         return c.json({ success: true, connectionId });
       } catch (error) {
         console.error(`Failed to connect ${integrationType}:`, error);
@@ -146,7 +149,6 @@ export const IntegrationsRoute = new Hono<{
       }
     }
   )
-
   .post(
     "/:type/oauth/authorize",
     authenticatedWithOrganization,
@@ -177,7 +179,10 @@ export const IntegrationsRoute = new Hono<{
         }
 
         if (!supportsOAuth(integration)) {
-          return c.json({ error: "This integration does not support OAuth" }, 400);
+          return c.json(
+            { error: "This integration does not support OAuth" },
+            400
+          );
         }
 
         // Get OAuth credentials
@@ -472,6 +477,7 @@ export const IntegrationsRoute = new Hono<{
   )
 
   // Create a new link for a connection
+  // TODO: should be handled by Zero in server-mutators.ts
   .post(
     "/:connectionId/links",
     authenticatedWithOrganization,
@@ -814,7 +820,8 @@ export const IntegrationsRoute = new Hono<{
 
             imported++;
             console.log(
-              `[Integrations] Imported: ${result.externalId}${folderPath ? ` (folder: ${folderPath})` : ""
+              `[Integrations] Imported: ${result.externalId}${
+                folderPath ? ` (folder: ${folderPath})` : ""
               }`
             );
           } catch (error) {

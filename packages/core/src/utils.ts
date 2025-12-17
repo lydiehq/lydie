@@ -3,7 +3,7 @@
  * Frontend-compatible utilities (no Node.js dependencies).
  */
 
-import { serializeToPlainText } from './serialization';
+import { serializeToPlainText } from "./serialization/text";
 
 /**
  * Generates a URL-friendly slug from a text string.
