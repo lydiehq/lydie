@@ -106,7 +106,7 @@ export function DocumentTreeItem({
         })
       )}
       style={{
-        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 1rem + 0.5rem)`,
+        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.75rem + 0.5rem)`,
         paddingRight: "0.5rem",
       }}
     >
@@ -118,8 +118,9 @@ export function DocumentTreeItem({
               <Button
                 slot="drag"
                 className="hidden"
-                aria-label={`Drag ${item.type === "folder" ? "folder" : "document"
-                  } ${item.name}`}
+                aria-label={`Drag ${
+                  item.type === "folder" ? "folder" : "document"
+                } ${item.name}`}
               >
                 <Move size={12} />
               </Button>
@@ -199,6 +200,9 @@ export function DocumentTreeItem({
                 </div>
               )}
               {/* Document item */}
+              {item.type === "document" && (
+                <div className="w-5 -ml-1 shrink-0" />
+              )}
               {item.type === "document" &&
                 (() => {
                   const document = documents.find((doc) => doc.id === item.id);

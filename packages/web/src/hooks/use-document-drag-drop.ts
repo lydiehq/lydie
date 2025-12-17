@@ -3,7 +3,7 @@ import { useZero } from "@/services/zero";
 import { toast } from "sonner";
 import { mutators } from "@lydie/zero/mutators";
 
-const enableLogging = true;
+const enableLogging = false;
 
 interface ItemType {
   id: string;
@@ -15,15 +15,9 @@ interface ItemType {
 interface UseDocumentDragDropOptions {
   allFolders: ReadonlyArray<{ id: string; parent_id: string | null }>;
   allDocuments: ReadonlyArray<{ id: string; folder_id: string | null }>;
-  /**
-   * Optional current folder ID context.
-   * When provided, root drops will move items to this folder instead of the actual root.
-   * Used by HomeFileExplorer when viewing a folder.
-   */
   currentFolderId?: string | null;
 }
 
-// Helper function to check if a folder is a descendant of another folder
 function isDescendant(
   ancestorId: string,
   descendantId: string,
