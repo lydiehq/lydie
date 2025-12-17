@@ -1,38 +1,39 @@
 import { useQuery } from "@rocicorp/zero/react";
-import { CheckCircle2, Github } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { queries } from "@lydie/zero/queries";
 import {
   integrationMetadata,
   type IntegrationMetadata,
 } from "@lydie/integrations/client";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
-import { Heading } from "@/components/generic/Heading";
 import { Link } from "@/components/generic/Link";
 import { cardStyles } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
+import { Eyebrow } from "../generic/Eyebrow";
+
+const integrationRoutes = {
+  github: "/w/$organizationId/settings/integrations/github",
+  shopify: "/w/$organizationId/settings/integrations/shopify",
+  wordpress: "/w/$organizationId/settings/integrations/wordpress",
+} as const;
 
 type IntegrationsListItemProps = {
   integration: IntegrationMetadata;
-  connections: any[] | null | undefined;
+  isEnabled: boolean;
 };
 
 export function IntegrationsListItem({
   integration,
-  connections,
+  isEnabled,
 }: IntegrationsListItemProps) {
-  const enabledConnection = connections?.find(
-    (conn) => conn.integration_type === integration.id && conn.enabled === true
-  );
-  const isTurnedOn = !!enabledConnection;
   const iconUrl = getIntegrationIconUrl(integration.id);
+  const integrationRoute =
+    integrationRoutes[integration.id as keyof typeof integrationRoutes] ??
+    "/w/$organizationId/settings/integrations";
 
   return (
     <li className={cardStyles({ className: "p-2.5" })}>
-      <Link
-        to="/w/$organizationId/settings/integrations/$integrationId"
-        params={{ integrationId: integration.id }}
-        from="/w/$organizationId/settings/"
-      >
+      <Link to={integrationRoute} from="/w/$organizationId/settings/">
         <div className="flex flex-col gap-y-2">
           <div className="flex items-center gap-x-2">
             <div className="rounded-md ring ring-black/6 p-[2px]">
@@ -49,7 +50,7 @@ export function IntegrationsListItem({
             <h3 className="text-sm font-medium text-gray-950">
               {integration.name}
             </h3>
-            {isTurnedOn && (
+            {isEnabled && (
               <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-50 border border-green-200">
                 <CheckCircle2 className="size-3 text-green-600" />
                 <span className="text-xs font-medium text-green-700">On</span>
@@ -71,34 +72,32 @@ export function IntegrationsList() {
     })
   );
 
-  // Split integrations into enabled and not enabled
-  const enabledIntegrations = integrationMetadata.filter((integration) => {
-    const enabledConnection = connections?.find(
-      (conn) =>
-        conn.integration_type === integration.id && conn.enabled === true
-    );
-    return !!enabledConnection;
-  });
+  const enabledIntegrationIds = new Set(
+    connections
+      ?.filter((conn) => conn.enabled === true)
+      .map((conn) => conn.integration_type)
+  );
 
-  const notEnabledIntegrations = integrationMetadata.filter((integration) => {
-    const enabledConnection = connections?.find(
-      (conn) =>
-        conn.integration_type === integration.id && conn.enabled === true
-    );
-    return !enabledConnection;
-  });
+  // Split integrations into enabled and not enabled
+  const enabledIntegrations = integrationMetadata.filter((integration) =>
+    enabledIntegrationIds.has(integration.id)
+  );
+
+  const notEnabledIntegrations = integrationMetadata.filter(
+    (integration) => !enabledIntegrationIds.has(integration.id)
+  );
 
   return (
     <div className="flex flex-col gap-y-6">
       {enabledIntegrations.length > 0 && (
         <div className="flex flex-col gap-y-2">
-          <Heading level={3}>Enabled</Heading>
+          <Eyebrow>Enabled</Eyebrow>
           <ul className="flex flex-col gap-y-2">
             {enabledIntegrations.map((integration) => (
               <IntegrationsListItem
                 key={integration.id}
                 integration={integration}
-                connections={connections}
+                isEnabled={true}
               />
             ))}
           </ul>
@@ -106,13 +105,13 @@ export function IntegrationsList() {
       )}
       {notEnabledIntegrations.length > 0 && (
         <div className="flex flex-col gap-y-2">
-          <Heading level={3}>Not Enabled</Heading>
+          <Eyebrow>Not Enabled</Eyebrow>
           <ul className="flex flex-col gap-y-2">
             {notEnabledIntegrations.map((integration) => (
               <IntegrationsListItem
                 key={integration.id}
                 integration={integration}
-                connections={connections}
+                isEnabled={false}
               />
             ))}
           </ul>

@@ -19,10 +19,9 @@ export {
   renderContentWithBuilder,
 } from "@lydie/core/content";
 export {
-  renderContentToHTML,
-  HTMLBuilder,
-  renderContentToMarkdown,
-  renderContentToPlainText,
+  serializeToHTML,
+  serializeToMarkdown,
+  serializeToPlainText,
   MarkdownBuilder,
   PlainTextBuilder,
 } from "@lydie/core/serialization";

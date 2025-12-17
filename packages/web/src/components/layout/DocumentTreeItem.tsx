@@ -62,13 +62,11 @@ export function DocumentTreeItem({
   const { tree } = useSearch({ strict: false });
   const { user } = useAuth();
 
-  // Check if this item is current (for documents) or active (for folders)
   const isCurrentDocument =
     item.type === "document" && currentDocId === item.id;
   const isActiveFolder = item.type === "folder" && tree === item.id;
   const isCurrent = isCurrentDocument || isActiveFolder;
 
-  // Check if this is an integration link item
   const isIntegrationLink = item.type === "integration-link";
 
   const handleNavigate = () => {
@@ -85,7 +83,6 @@ export function DocumentTreeItem({
         search: { tree: item.id, q: undefined, focusSearch: undefined },
       });
     }
-    // Integration links don't navigate anywhere on click (they just expand)
   };
 
   return (
@@ -207,7 +204,7 @@ export function DocumentTreeItem({
                             to: "/w/$organizationId/settings/integrations/$integrationId",
                             params: {
                               organizationId: organizationId || "",
-                              integrationId: item.integrationLinkId,
+                              integrationId: item.integrationType,
                             },
                           });
                         }

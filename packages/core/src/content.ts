@@ -255,7 +255,7 @@ export function renderContentWithBuilder<T>(
     }
   };
 
-  return renderNode(content);
+  return serializeToHTML(content);
 }
 
 // ============================================================================
@@ -264,7 +264,7 @@ export function renderContentWithBuilder<T>(
 
 // The renderContentToHTML has been moved to serialization/index.ts
 // This export is kept for backwards compatibility
-export { renderContentToHTML } from "./serialization";
+export { serializeToHTML } from './serialization';
 
 // ============================================================================
 // API Client
@@ -366,9 +366,8 @@ export class LydieClient {
         params.set("use_ids", "true");
       }
 
-      const url = `${this.getBaseUrl()}/documents/${slug}${
-        params.toString() ? `?${params.toString()}` : ""
-      }`;
+      const url = `${this.getBaseUrl()}/documents/${slug}${params.toString() ? `?${params.toString()}` : ""
+        }`;
 
       if (this.debug) {
         console.log(`[Lydie] Fetching document from url: ${url}`);
@@ -449,9 +448,8 @@ export class LydieClient {
         params.set("use_ids", "true");
       }
 
-      const url = `${this.getBaseUrl()}/documents/by-path/${path}${
-        params.toString() ? `?${params.toString()}` : ""
-      }`;
+      const url = `${this.getBaseUrl()}/documents/by-path/${path}${params.toString() ? `?${params.toString()}` : ""
+        }`;
 
       if (this.debug) {
         console.log(`[Lydie] Fetching document by path from url: ${url}`);

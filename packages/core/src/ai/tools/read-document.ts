@@ -2,13 +2,13 @@ import { tool } from "ai";
 import { z } from "zod";
 import { db, documentsTable } from "@lydie/database";
 import { eq, and, ilike } from "drizzle-orm";
-import { renderContentToHTML } from "../../serialization";
+import { serializeToHTML } from "../../serialization";
 
 export const readDocument = (userId: string, organizationId: string) =>
   tool({
     description: `Read the full content of a specific document by ID or title.
 Use this tool when you need to access the complete content of a document to reference specific information,
-quote passages, or understand the full context of a document.`,
+  quote passages, or understand the full context of a document.`,
     inputSchema: z.object({
       documentId: z
         .string()
@@ -68,7 +68,7 @@ quote passages, or understand the full context of a document.`,
       if (documentId) {
         conditions.push(eq(documentsTable.id, documentId));
       } else if (documentTitle) {
-        conditions.push(ilike(documentsTable.title, `%${documentTitle}%`));
+        conditions.push(ilike(documentsTable.title, `% ${documentTitle}% `));
       }
 
       // Apply all conditions at once
@@ -82,7 +82,7 @@ quote passages, or understand the full context of a document.`,
           : `title containing "${documentTitle}"`;
         yield {
           state: "error",
-          error: `No document found with ${searchTerm}`,
+          error: `No document found with ${searchTerm} `,
         };
         return;
       }
@@ -102,7 +102,7 @@ quote passages, or understand the full context of a document.`,
       // Convert jsonContent to HTML using our custom renderer
       let htmlContent: string;
       try {
-        htmlContent = renderContentToHTML(document.jsonContent as any);
+        htmlContent = serializeToHTML(document.jsonContent as any);
       } catch (error) {
         console.error(
           "[ReadDocument] Error converting jsonContent to HTML:",

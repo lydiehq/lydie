@@ -31,19 +31,3 @@ export function getIntegrationIconUrl(integrationId: string): string | null {
   // Assets are in public/integrations/{id}/assets/{icon}
   return `/integrations/${integrationId}/assets/${iconFilename}`;
 }
-
-/**
- * Get all available integration icon URLs
- * Returns a map of integration ID to icon URL
- */
-export function getAllIntegrationIcons(): Record<string, string> {
-  const icons: Record<string, string> = {};
-
-  for (const meta of integrationMetadata) {
-    if (meta.icon) {
-      icons[meta.id] = `/integrations/${meta.id}/assets/${meta.icon}`;
-    }
-  }
-
-  return icons;
-}

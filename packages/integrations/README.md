@@ -2,32 +2,6 @@
 
 This package provides integrations for syncing content between Lydie and external platforms (GitHub, Shopify, WordPress, etc.).
 
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                        Organization                               │
-│  ┌────────────────────┐     ┌────────────────────┐               │
-│  │   Connection       │     │   Connection       │               │
-│  │   (GitHub)         │     │   (WordPress)      │               │
-│  │   - credentials    │     │   - credentials    │               │
-│  │   - owner/repo     │     │   - site URL       │               │
-│  └────────┬───────────┘     └────────┬───────────┘               │
-│           │                          │                            │
-│   ┌───────┴───────┐          ┌───────┴───────┐                   │
-│   │               │          │               │                    │
-│   ▼               ▼          ▼               ▼                    │
-│ ┌─────┐       ┌─────┐    ┌─────┐       ┌─────┐                   │
-│ │Link │       │Link │    │Link │       │Link │                   │
-│ │/docs│       │/blog│    │Pages│       │Posts│                   │
-│ └──┬──┘       └──┬──┘    └──┬──┘       └──┬──┘                   │
-│    │             │          │             │                       │
-│    ▼             ▼          ▼             ▼                       │
-│  Folder        Folder     Folder        Folder                    │
-│  └─ Doc        └─ Doc     └─ Doc        └─ Doc                   │
-└──────────────────────────────────────────────────────────────────┘
-```
-
 ## Core Concepts
 
 ### Connection

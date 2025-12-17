@@ -16,7 +16,6 @@ export const Route = createFileRoute(
   },
 });
 
-
 function RouteComponent() {
   return (
     <div className="flex flex-col gap-y-6">
@@ -27,12 +26,7 @@ function RouteComponent() {
         </p>
       </div>
       <Separator />
-      <div className="flex flex-col gap-y-2">
-        <div className="flex justify-between items-start">
-          <Heading level={2}>Integrations</Heading>
-        </div>
-        <IntegrationsList />
-      </div>
+      <IntegrationsList />
     </div>
   );
 }

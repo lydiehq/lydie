@@ -3,7 +3,7 @@
  * Frontend-compatible utilities (no Node.js dependencies).
  */
 
-import { renderContentToPlainText } from "./serialization";
+import { serializeToPlainText } from './serialization';
 
 /**
  * Generates a URL-friendly slug from a text string.
@@ -24,7 +24,8 @@ export function slugify(text: string): string {
  */
 export function convertTipTapToPlaintext(jsonContent: any): string {
   try {
-    return renderContentToPlainText(jsonContent);
+    const plainText = serializeToPlainText(jsonContent);
+    return plainText;
   } catch (error) {
     console.error("Error converting TipTap JSON to plaintext:", error);
     // Fallback to JSON string if conversion fails

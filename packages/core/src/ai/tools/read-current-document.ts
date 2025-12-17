@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { db, documentsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
-import { renderContentToHTML } from "../../serialization";
+import { serializeToHTML } from '../../serialization';
 
 export const readCurrentDocument = (documentId: string) =>
   tool({
@@ -58,7 +58,7 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
       // Convert jsonContent to HTML using our custom renderer
       let htmlContent: string;
       try {
-        htmlContent = renderContentToHTML(document.jsonContent as any);
+        htmlContent = serializeToHTML(document.jsonContent as any);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);

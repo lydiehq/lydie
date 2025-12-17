@@ -26,10 +26,12 @@ const client = new LydieClient({
 });
 
 // Fetch a document
-const doc = await client.getDocument("getting-started");
+const document = await client.getDocument("getting-started");
 
-// Render to HTML (no React needed)
-const html = renderContentToHTML(doc.jsonContent);
+// Convert to various formats
+const html = document.toHTML();         // Uses serializeToHTML under the hood
+const markdown = document.toMarkdown(); // Uses serializeToMarkdown under the hood
+const text = document.toPlainText();    // Uses serializeToPlainText under the hood
 ```
 
 ### React (Client-Side)

@@ -124,10 +124,7 @@ export function serializeToPlainText(content: ContentNode): string {
   return renderContentWithBuilder(content, serializer);
 }
 
-// Backwards-compatible function names
-export { serializeToHTML as renderContentToHTML };
-export { serializeToMarkdown as renderContentToMarkdown };
-export { serializeToPlainText as renderContentToPlainText };
+
 
 // ============================================================================
 // Deserialization Functions (Text → TipTap JSON)
