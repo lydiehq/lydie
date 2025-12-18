@@ -12,7 +12,6 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { toast } from "sonner";
 import { mutators } from "@lydie/zero/mutators";
 import type { PopoverProps } from "@/components/generic/Popover";
-import { FilePlus } from "lucide-react";
 
 type FolderMenuProps = {
   folderId: string;
@@ -68,7 +67,9 @@ export function FolderMenu({
   return (
     <>
       <Menu placement={placement}>
-        <MenuItem onAction={handleCreateDocument}>Create document</MenuItem>
+        <MenuItem onAction={handleCreateDocument}>
+          Create document in folder
+        </MenuItem>
         <MenuSeparator />
         <MenuItem onAction={() => setIsRenameDialogOpen(true)}>Rename</MenuItem>
         <MenuItem onAction={handleDelete}>Delete</MenuItem>

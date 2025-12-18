@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures/auth.fixture";
-import { triggerCommandMenuShortcut } from "./utils/command-menu";
+// import { triggerCommandMenuShortcut } from "./utils/command-menu";
 
 test.describe("documents", () => {
   test("can create a new document", async ({ page, organization }) => {
@@ -9,6 +9,30 @@ test.describe("documents", () => {
       title: "Test Document",
       content: "",
     });
+  });
+
+  test("can create new document in folder", async ({ page, organization }) => {
+    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Create new folder" }).click();
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+    await sidebarTree
+      .getByRole("row", { name: "New Folder" })
+      .getByRole("button", { name: "Folder options" })
+      .click();
+    await page
+      .getByRole("menuitem", { name: "Create document in folder" })
+      .click();
+    // TODO: better way of figuring out if a document has actually been created?
+    await expect(
+      page.getByRole("textbox", { name: "Document title" })
+    ).toHaveValue("Untitled document");
+
+    const documentSidebarItem = page.getByRole("row", {
+      name: "Untitled document",
+    });
+    await expect(documentSidebarItem).toBeVisible();
+    // expect to be a descendant of the folder row
+    await expect(documentSidebarItem).toHaveAttribute("aria-level", "2");
   });
 
   test("can update document content", async ({ page, organization }) => {
@@ -38,7 +62,8 @@ test.describe("documents", () => {
       title: "Document to Delete",
       content: "Some content",
     });
-    const documentSidebarItem = page.getByRole("row", {
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+    const documentSidebarItem = sidebarTree.getByRole("row", {
       name: "Document to Delete",
     });
     await documentSidebarItem
@@ -68,8 +93,9 @@ test.describe("documents", () => {
     await titleInput.blur();
 
     // Expect document to have new title in sidebar
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
     await expect(
-      page.getByRole("row", { name: "My new document title" })
+      sidebarTree.getByRole("row", { name: "My new document title" })
     ).toBeVisible();
   });
 
@@ -90,7 +116,8 @@ test.describe("documents", () => {
       .getByRole("option", { name: "Publish document" })
       .click();
 
-    const documentSidebarItem = page.getByRole("row", {
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+    const documentSidebarItem = sidebarTree.getByRole("row", {
       name: "Test Document",
     });
     await documentSidebarItem

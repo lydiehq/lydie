@@ -195,7 +195,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
                 <RACButton
                   className="p-1 rounded hover:bg-black/5 text-gray-600"
                   onPress={createFolder}
-                  aria-label="Add folder"
+                  aria-label="Create new folder"
                 >
                   <FolderPlus size={16} />
                 </RACButton>
