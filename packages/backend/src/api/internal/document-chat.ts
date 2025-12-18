@@ -206,7 +206,7 @@ export const DocumentChatRoute = new Hono<{
     const systemPrompt = buildSystemPrompt(promptStyle, customPrompt);
 
     const agent = new ToolLoopAgent({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-3-flash-preview"),
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
