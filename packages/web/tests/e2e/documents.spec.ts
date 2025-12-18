@@ -27,8 +27,12 @@ test.describe("documents", () => {
       page.getByRole("textbox", { name: "Document title" })
     ).toHaveValue("Untitled document");
 
+    const titleInput = page.getByRole("textbox", { name: "Document title" });
+    await titleInput.fill("Document in Folder");
+    await titleInput.blur();
+
     const documentSidebarItem = page.getByRole("row", {
-      name: "Untitled document",
+      name: "Document in Folder",
     });
     await expect(documentSidebarItem).toBeVisible();
     // expect to be a descendant of the folder row
