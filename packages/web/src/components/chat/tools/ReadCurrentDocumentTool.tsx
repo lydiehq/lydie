@@ -1,6 +1,5 @@
 import React from "react";
 import { Check, Loader } from "lucide-react";
-import { ToolContainer } from "./ToolContainer";
 
 export interface ReadCurrentDocumentToolProps {
   tool: {
@@ -25,7 +24,6 @@ export interface ReadCurrentDocumentToolProps {
 
 export function ReadCurrentDocumentTool({
   tool,
-  className = "",
 }: ReadCurrentDocumentToolProps) {
   const outputState = tool.output?.state;
   const isToolLoading =

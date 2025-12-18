@@ -8,7 +8,6 @@ import { useOrganization } from "@/context/organization.context";
 import { queries } from "@lydie/zero/queries";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { useAtom } from "jotai";
-import { mutators } from "@lydie/zero/mutators";
 import {
   commandMenuOpenAtom,
   commandMenuStateAtom,
@@ -146,7 +145,6 @@ export function CommandMenu() {
     wordpress: "/w/$organizationId/settings/integrations/wordpress",
   } as const;
 
-  // Build menu sections
   const menuSections = useMemo<MenuSection[]>(() => {
     const favoritesItems: MenuItem[] = [
       {
@@ -166,10 +164,8 @@ export function CommandMenu() {
     if (currentDocument) {
       favoritesItems.push({
         id: "publish",
-        label: currentDocument.published
-          ? "Republish document"
-          : "Publish document",
-        icon: Plus, // No icon for this action
+        label: "Publish document",
+        icon: Plus,
         action: () => {
           if (currentDocument) {
             publishDocument(currentDocument.id);
@@ -179,7 +175,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
-        icon: Plus, // No icon for this action
+        icon: Plus,
         action: () => {
           if (currentDocumentId) {
             const documentTitle = currentDocument.title || "Untitled Document";

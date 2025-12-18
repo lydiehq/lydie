@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { sidebarItemStyles } from "@/components/layout/Sidebar";
 import { Eyebrow } from "@/components/generic/Eyebrow";
+import { useAuth } from "@/context/auth.context";
+import { isAdmin } from "@/utils/admin";
 
 export const Route = createFileRoute("/__auth/w/$organizationId/settings")({
   component: RouteComponent,
@@ -24,6 +26,7 @@ type SettingsRoute = {
   label: string;
   icon: LucideIcon;
   external?: boolean;
+  adminOnly?: boolean;
 };
 
 type SettingsSection = {
@@ -64,6 +67,7 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationId/settings/components",
         label: "Components",
         icon: Box,
+        adminOnly: true,
       },
       {
         path: "/w/$organizationId/settings/integrations/",
@@ -74,6 +78,7 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationId/settings/import",
         label: "Import",
         icon: Upload,
+        adminOnly: true,
       },
     ],
   },
@@ -91,6 +96,9 @@ const settingsRoutes: SettingsSection[] = [
 ];
 
 function RouteComponent() {
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
+
   return (
     <div className="p-1 size-full">
       <Surface className="overflow-y-auto">
@@ -101,35 +109,37 @@ function RouteComponent() {
                 <li key={section.title} className="flex flex-col gap-y-2">
                   <Eyebrow>{section.title}</Eyebrow>
                   <ul className="flex flex-col">
-                    {section.routes.map((route) => {
-                      const Icon = route.icon;
-                      return (
-                        <li key={route.path}>
-                          <Link
-                            to={route.path}
-                            from="/w/$organizationId/settings"
-                            {...(route.external ? { target: "_blank" } : {})}
-                            className={sidebarItemStyles()}
-                            activeOptions={{
-                              exact: true,
-                              includeSearch: false,
-                            }}
-                          >
-                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                              {Icon && (
-                                <Icon className="size-4 text-gray-500" />
-                              )}
-                              <span className="truncate flex-1">
-                                {route.label}
-                              </span>
-                              {route.external && (
-                                <ExternalLink className="size-3 text-gray-500" />
-                              )}
-                            </div>
-                          </Link>
-                        </li>
-                      );
-                    })}
+                    {section.routes
+                      .filter((route) => !route.adminOnly || userIsAdmin)
+                      .map((route) => {
+                        const Icon = route.icon;
+                        return (
+                          <li key={route.path}>
+                            <Link
+                              to={route.path}
+                              from="/w/$organizationId/settings"
+                              {...(route.external ? { target: "_blank" } : {})}
+                              className={sidebarItemStyles()}
+                              activeOptions={{
+                                exact: true,
+                                includeSearch: false,
+                              }}
+                            >
+                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                {Icon && (
+                                  <Icon className="size-4 text-gray-500" />
+                                )}
+                                <span className="truncate flex-1">
+                                  {route.label}
+                                </span>
+                                {route.external && (
+                                  <ExternalLink className="size-3 text-gray-500" />
+                                )}
+                              </div>
+                            </Link>
+                          </li>
+                        );
+                      })}
                   </ul>
                 </li>
               ))}

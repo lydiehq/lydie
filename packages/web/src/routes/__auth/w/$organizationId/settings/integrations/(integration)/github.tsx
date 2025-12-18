@@ -5,20 +5,11 @@ import { Heading } from "@/components/generic/Heading";
 import { mutators } from "@lydie/zero/mutators";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { formatDistanceToNow } from "date-fns";
-import {
-  integrationMetadata,
-  type IntegrationMetadata,
-} from "@lydie/integrations/client";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  DialogTrigger,
-  MenuTrigger,
-  Button as RACButton,
-} from "react-aria-components";
+import { DialogTrigger } from "react-aria-components";
 import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
-import { Menu, MenuItem } from "@/components/generic/Menu";
 import { RadioGroup, Radio } from "@/components/generic/RadioGroup";
 import {
   Plus,
@@ -34,23 +25,19 @@ import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
 import { useAuthenticatedApi } from "@/services/api";
 import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
+import { createId } from "@lydie/core/id";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationId/settings/integrations/(integration)/github"
 )({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>) => ({
-    success: search.success === "true" || search.success === true,
-    error: (search.error as string) || undefined,
-    connectionId: (search.connectionId as string) || undefined,
-  }),
 });
 
 type IntegrationType = "github" | "shopify" | "wordpress";
 type ConnectionDialogStep = "selectType" | "configure";
 
 function RouteComponent() {
-  const z = useZero();
+  const zero = useZero();
   const { createClient } = useAuthenticatedApi();
   const { organizationId } = Route.useParams();
 
@@ -74,6 +61,7 @@ function RouteComponent() {
     documentCount: null,
   });
 
+  // TODO: maybe a query that gets all resources for the specific integration.
   const [allConnections] = useQuery(
     queries.integrations.byOrganization({
       organizationId: organizationId || "",
@@ -99,7 +87,7 @@ function RouteComponent() {
   const connect = async () => {
     try {
       const client = await createClient();
-      const redirectUrl = `/w/${organization.id}/settings/integrations/github`;
+      const redirectUrl = `/w/${organizationId}/settings/integrations/github`;
       const response = await client.internal.integrations[
         ":type"
       ].oauth.authorize
@@ -108,21 +96,7 @@ function RouteComponent() {
           json: { redirectUrl },
         })
         .then((res: Response) => res.json());
-
-      if (!response || "error" in response) {
-        toast.error(
-          "error" in response
-            ? `Failed to start GitHub connection: ${response.error}`
-            : "Failed to start GitHub connection"
-        );
-        return;
-      }
-
-      setIsConnectionDialogOpen(false);
-      setConnectionDialogStep("selectType");
-      setSelectedIntegrationType(null);
-
-      window.location.href = response.authUrl as string;
+      window.location.href = response.authUrl;
     } catch (error) {
       console.error("GitHub OAuth error:", error);
       toast.error("Failed to start GitHub connection");
@@ -189,7 +163,7 @@ function RouteComponent() {
 
   const handleToggleConnection = (connectionId: string, enabled: boolean) => {
     try {
-      z.mutate(
+      zero.mutate(
         mutators.integrationConnection.update({
           connectionId,
           enabled: !enabled,
@@ -219,7 +193,15 @@ function RouteComponent() {
     });
   };
 
+  const disconnect = async () => {
+    handleDeleteConnection(connections?.[0]?.id || "", "GitHub");
+  };
+
   const iconUrl = getIntegrationIconUrl("github");
+
+  // TODO: we may support multiple connections in the future, so we need to
+  // check if any are enabled
+  const isEnabled = connections?.some((c) => c.enabled);
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -233,99 +215,16 @@ function RouteComponent() {
             </p>
           </div>
         </div>
-        <Button onPress={connect}>Enable</Button>
-      </div>
-
-      <Separator />
-
-      {/* 1. Connection Management */}
-      <div className="flex flex-col gap-y-2">
-        <div className="flex justify-between items-start">
-          <Heading level={2}>Connection</Heading>
-          {(!connections || connections.length === 0) && (
-            <Button
-              onPress={() => {
-                setIsConnectionDialogOpen(true);
-                setConnectionDialogStep("selectType");
-              }}
-              size="sm"
-            >
-              <Plus className="size-3.5 mr-1" />
-              Connect GitHub
-            </Button>
-          )}
-        </div>
-
-        {connections && connections.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {connections.map((connection) => (
-              <div
-                key={connection.id}
-                className="rounded-lg ring-1 ring-black/10 bg-white p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getIntegrationIcon(connection.integration_type)}
-                    <span className="font-medium capitalize">
-                      {connection.integration_type}
-                    </span>
-                    {getStatusIcon(
-                      connection.enabled,
-                      (connection as any).status
-                    )}
-                    <span className="text-xs">
-                      {getStatusText(
-                        connection.enabled,
-                        (connection as any).status,
-                        (connection as any).status_message
-                      )}
-                    </span>
-                  </div>
-                  <MenuTrigger>
-                    <RACButton className="ml-1">
-                      <MoreHorizontal className="size-4 text-gray-500" />
-                    </RACButton>
-                    <Menu>
-                      <MenuItem
-                        onAction={() =>
-                          handleToggleConnection(
-                            connection.id,
-                            connection.enabled
-                          )
-                        }
-                      >
-                        {connection.enabled ? "Disable" : "Enable"}
-                      </MenuItem>
-                      <MenuItem
-                        onAction={() =>
-                          handleDeleteConnection(
-                            connection.id,
-                            connection.integration_type
-                          )
-                        }
-                        className="text-red-600"
-                      >
-                        Delete
-                      </MenuItem>
-                    </Menu>
-                  </MenuTrigger>
-                </div>
-              </div>
-            ))}
-          </div>
+        {isEnabled ? (
+          <Button onPress={disconnect} intent="secondary">
+            Disable Integration
+          </Button>
         ) : (
-          <Card className="p-8 text-center">
-            <div className="text-sm font-medium text-gray-700">
-              Not connected
-            </div>
-            <div className="text-xs mt-1 text-gray-500">
-              Connect your GitHub account to start syncing.
-            </div>
-          </Card>
+          <Button onPress={connect}>Enable Integration</Button>
         )}
       </div>
 
-      {/* 2. Link Management (Only if connected) */}
+      <Separator />
       {connections && connections.find((c) => c.enabled) && (
         <div className="flex flex-col gap-y-2">
           <div className="flex justify-between items-start">
@@ -415,7 +314,7 @@ function RouteComponent() {
       {linkDialogConnectionId && (
         <ConfigureConnectionDialog
           connectionId={linkDialogConnectionId}
-          organizationId={organization?.id || ""}
+          organizationId={organizationId}
           onClose={() => {
             setLinkDialogConnectionId(null);
           }}
@@ -495,114 +394,6 @@ function getStatusText(
     default:
       return "Active";
   }
-}
-
-type ConnectionDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  step: ConnectionDialogStep;
-  selectedType: IntegrationType | null;
-  organizationId: string;
-  onSelectIntegration: (type: IntegrationType) => void;
-  onClose: () => void;
-};
-
-function ConnectionDialog({
-  isOpen,
-  onOpenChange,
-  step,
-  selectedType: _selectedType,
-  organizationId: _organizationId,
-  onSelectIntegration,
-  onClose,
-}: ConnectionDialogProps) {
-  // Map integration metadata to include icons (client-side only)
-  const integrations = integrationMetadata.map((meta: IntegrationMetadata) => {
-    // Try to get icon image dynamically
-    const iconImage = getIntegrationIconUrl(meta.id);
-
-    // Fallback to Lucide icons if no image is available
-    let icon: any = null;
-    if (!iconImage) {
-      // Add more icons as integrations are added
-      icon = null;
-    }
-
-    return {
-      type: meta.id as IntegrationType,
-      name: meta.name,
-      description: meta.description,
-      icon,
-      iconImage,
-      comingSoon: meta.comingSoon,
-    };
-  });
-
-  return (
-    <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal isDismissable>
-        <Dialog>
-          {step === "selectType" ? (
-            <div className="p-4 flex flex-col gap-y-4">
-              <Heading level={2}>Select Integration</Heading>
-              <p className="text-sm text-gray-600">
-                Choose a platform to connect for document syncing.
-              </p>
-              <div className="flex flex-col gap-2">
-                {integrations.map(
-                  (ext: {
-                    type: IntegrationType;
-                    name: string;
-                    description: string;
-                    icon: any;
-                    iconImage?: string | null;
-                    comingSoon?: boolean;
-                  }) => (
-                    <button
-                      key={ext.type}
-                      onClick={() =>
-                        !ext.comingSoon && onSelectIntegration(ext.type)
-                      }
-                      disabled={ext.comingSoon}
-                      className="flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
-                    >
-                      {ext.iconImage ? (
-                        <img
-                          src={ext.iconImage}
-                          alt={`${ext.name} icon`}
-                          className="size-5 mt-0.5 shrink-0"
-                        />
-                      ) : (
-                        ext.icon && <ext.icon className="size-5 mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium">{ext.name}</div>
-                          {ext.comingSoon && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                              Coming Soon
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {ext.description}
-                        </div>
-                      </div>
-                    </button>
-                  )
-                )}
-              </div>
-              <div className="flex justify-end">
-                <Button intent="secondary" onPress={onClose} size="sm">
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </Dialog>
-      </Modal>
-    </DialogTrigger>
-  );
 }
 
 type ConfigureConnectionDialogProps = {
@@ -698,6 +489,8 @@ function ConfigureConnectionDialog({
     onClose();
   };
 
+  const zero = useZero();
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -721,38 +514,23 @@ function ConfigureConnectionDialog({
       linkName.trim() ||
       `${repo}${normalizedBasePath ? `/${normalizedBasePath}` : ""}`;
 
-    setIsSaving(true);
-    try {
-      const client = await createClient();
-      // @ts-expect-error - Dynamic route parameter type inference limitation
-      const res = await client.internal.integrations[":connectionId"].links
-        .$post({
-          param: { connectionId },
-          json: {
-            name,
-            config: {
-              owner,
-              repo,
-              branch: branchName,
-              basePath: normalizedBasePath || "",
-            },
-          },
-        })
-        .then((r: Response) => r.json());
+    zero.mutate(
+      mutators.integrations.createLink({
+        id: createId(),
+        connectionId,
+        organizationId: _organizationId,
+        name,
+        config: {
+          owner,
+          repo,
+          branch: branchName,
+          basePath: normalizedBasePath || "",
+        },
+      })
+    );
 
-      if (res && "error" in res) {
-        toast.error(`Failed to create link: ${res.error}`);
-        return;
-      }
-
-      toast.success("Link created successfully");
-      handleClose();
-    } catch (error) {
-      console.error("Failed to create link:", error);
-      toast.error("Failed to create link");
-    } finally {
-      setIsSaving(false);
-    }
+    toast.success("Link created successfully");
+    handleClose();
   };
 
   return (
@@ -853,17 +631,11 @@ function ConfigureConnectionDialog({
                 type="button"
                 size="sm"
                 onPress={handleClose}
-                isDisabled={isSaving}
               >
                 Cancel
               </Button>
-              <Button
-                size="sm"
-                type="submit"
-                isPending={isSaving}
-                isDisabled={isSaving || isLoading || !selectedResourceId}
-              >
-                {isSaving ? "Creating..." : "Create Link"}
+              <Button size="sm" type="submit">
+                Create Link
               </Button>
             </div>
           </form>

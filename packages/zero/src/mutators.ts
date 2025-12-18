@@ -508,6 +508,48 @@ export const mutators = defineMutators({
       }
     ),
   },
+  integrations: {
+    createLink: defineMutator(
+      z.object({
+        id: z.string(),
+        connectionId: z.string(),
+        name: z.string(),
+        config: z.record(z.string(), z.any()),
+        organizationId: z.string(),
+      }),
+      async ({
+        tx,
+        ctx,
+        args: { id, connectionId, name, config, organizationId },
+      }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        const connection = await tx.run(
+          zql.integration_connections
+            .where("id", connectionId)
+            .where("organization_id", organizationId)
+            .one()
+        );
+
+        if (!connection) {
+          throw new Error(
+            `Connection not found: ${connectionId} for organization ${organizationId}`
+          );
+        }
+
+        await tx.mutate.integration_links.insert({
+          id,
+          connection_id: connection.id,
+          organization_id: organizationId,
+          enabled: true,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          name,
+          config,
+        });
+      }
+    ),
+  },
   integrationConnection: {
     create: defineMutator(
       z.object({

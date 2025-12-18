@@ -8,10 +8,7 @@
  * before the build process, ensuring they're available at runtime.
  */
 
-import {
-  getIntegrationMetadata,
-  integrationMetadata,
-} from "@lydie/integrations/client";
+import { getIntegrationMetadata } from "@lydie/integrations/client";
 
 /**
  * Get the icon URL for an integration by its ID
@@ -24,7 +21,8 @@ export function getIntegrationIconUrl(integrationId: string): string | null {
   const iconFilename = metadata?.icon;
 
   if (!iconFilename) {
-    return null;
+    // TODO: placeholder icon
+    return "";
   }
 
   // Return the public URL path to the icon

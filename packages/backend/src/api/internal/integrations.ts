@@ -475,50 +475,6 @@ export const IntegrationsRoute = new Hono<{
       return c.json({ success: true, config: updatedConfig });
     }
   )
-
-  // Create a new link for a connection
-  // TODO: should be handled by Zero in server-mutators.ts
-  .post(
-    "/:connectionId/links",
-    authenticatedWithOrganization,
-    zValidator(
-      "json",
-      z.object({
-        name: z.string().min(1),
-        config: z.record(z.string(), z.any()),
-      })
-    ),
-    async (c) => {
-      const connectionId = c.req.param("connectionId");
-      const organizationId = c.get("organizationId");
-      const { name, config } = c.req.valid("json");
-
-      // Verify connection exists and belongs to org
-      const connection = await db.query.integrationConnectionsTable.findFirst({
-        where: { id: connectionId },
-      });
-
-      if (!connection || connection.organizationId !== organizationId) {
-        return c.json({ error: "Connection not found" }, 404);
-      }
-
-      // Create the link
-      const linkId = createId();
-      await db.insert(integrationLinksTable).values({
-        id: linkId,
-        name,
-        connectionId,
-        organizationId,
-        config,
-        enabled: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      return c.json({ success: true, linkId });
-    }
-  )
-
   // Update a link
   .patch(
     "/links/:linkId",
