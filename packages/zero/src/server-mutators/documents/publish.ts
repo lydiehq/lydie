@@ -7,18 +7,7 @@ import { sql } from "drizzle-orm";
 import { logIntegrationActivity } from "@lydie/integrations/activity-log";
 import { mutators as sharedMutators } from "../../mutators";
 
-import {
-  GitHubIntegration,
-  ShopifyIntegration,
-  WordpressIntegration,
-  type BaseIntegration,
-} from "@lydie/integrations";
-
-const integrationRegistry = new Map<string, BaseIntegration>([
-  ["github", new GitHubIntegration()],
-  ["shopify", new ShopifyIntegration()],
-  ["wordpress", new WordpressIntegration()],
-]);
+import { integrationRegistry } from "@lydie/integrations";
 
 export const publishDocumentMutation = (
   asyncTasks: Array<() => Promise<void>>
@@ -78,13 +67,6 @@ async function pushToIntegration(
 
     if (!link || !link.connection) {
       console.error(`[Push] Integration link not found: ${integrationLinkId}`);
-      return;
-    }
-
-    if (!link.enabled || !link.connection.enabled) {
-      console.log(
-        `[Push] Integration link or connection is disabled, skipping push for ${documentId}`
-      );
       return;
     }
 
@@ -181,7 +163,6 @@ async function pushToIntegration(
         integrationType: link.connection.integrationType,
         organizationId: link.connection.organizationId,
         config: mergedConfig,
-        enabled: link.connection.enabled,
         createdAt: link.connection.createdAt,
         updatedAt: link.connection.updatedAt,
       },
@@ -189,12 +170,22 @@ async function pushToIntegration(
     });
 
     if (result.success) {
-      await logIntegrationActivity(link.connection.id, "push", "success");
+      await logIntegrationActivity(
+        link.connection.id,
+        "push",
+        "success",
+        link.connection.integrationType
+      );
       console.log(
         `[Push] Successfully pushed document ${documentId}: ${result.message}`
       );
     } else {
-      await logIntegrationActivity(link.connection.id, "push", "error");
+      await logIntegrationActivity(
+        link.connection.id,
+        "push",
+        "error",
+        link.connection.integrationType
+      );
       console.error(
         `[Push] Failed to push document ${documentId}: ${result.error}`
       );

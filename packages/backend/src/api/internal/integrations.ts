@@ -9,40 +9,22 @@ import {
 import { eq, sql, and, isNull } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
 import {
-  GitHubIntegration,
-  ShopifyIntegration,
+  integrationRegistry,
   encodeOAuthState,
   decodeOAuthState,
   type OAuthState,
   type OAuthIntegration,
-  BaseIntegration,
-  WordpressIntegration,
+  type Integration,
 } from "@lydie/integrations";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { authenticatedWithOrganization } from "./middleware";
 import { logIntegrationActivity } from "@lydie/integrations/activity-log";
 
-// Registry of available integrations
-const integrationRegistry = new Map<string, BaseIntegration>([
-  ["github", new GitHubIntegration()],
-  ["shopify", new ShopifyIntegration()],
-  ["wordpress", new WordpressIntegration()],
-]);
-
-// Helper to check if integration supports resources
-function supportsResources(
-  integration: BaseIntegration
-): integration is BaseIntegration & {
-  fetchResources: (connection: any) => Promise<any[]>;
-} {
-  return "fetchResources" in integration;
-}
-
 // Helper to check if integration supports OAuth
 function supportsOAuth(
-  integration: BaseIntegration
-): integration is BaseIntegration & OAuthIntegration {
+  integration: Integration
+): integration is Integration & OAuthIntegration {
   return "getOAuthCredentials" in integration;
 }
 
@@ -92,7 +74,6 @@ export const IntegrationsRoute = new Hono<{
           integrationType,
           organizationId,
           config,
-          enabled: true,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -111,7 +92,6 @@ export const IntegrationsRoute = new Hono<{
           integrationType,
           organizationId,
           config,
-          enabled: true,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -126,7 +106,7 @@ export const IntegrationsRoute = new Hono<{
               connectionId,
               organizationId,
               config: link.config,
-              enabled: true,
+              integrationType,
               createdAt: new Date(),
               updatedAt: new Date(),
             }));
@@ -134,7 +114,12 @@ export const IntegrationsRoute = new Hono<{
           }
         }
 
-        await logIntegrationActivity(connectionId, "connect", "success");
+        await logIntegrationActivity(
+          connectionId,
+          "connect",
+          "success",
+          integrationType
+        );
 
         return c.json({ success: true, connectionId });
       } catch (error) {
@@ -358,7 +343,6 @@ export const IntegrationsRoute = new Hono<{
         integrationType,
         organizationId: state.organizationId,
         config,
-        enabled: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -403,21 +387,13 @@ export const IntegrationsRoute = new Hono<{
       return c.json({ error: "Unknown integration type" }, 404);
     }
 
-    // Check if integration supports resources
-    if (!supportsResources(integration)) {
-      return c.json(
-        { error: "Integration does not support resource listing" },
-        400
-      );
-    }
-
+    // All integrations now support fetchResources
     try {
       const resources = await integration.fetchResources({
         id: connection.id,
         integrationType: connection.integrationType,
         organizationId: connection.organizationId,
         config: connection.config as Record<string, any>,
-        enabled: connection.enabled,
         createdAt: connection.createdAt,
         updatedAt: connection.updatedAt,
       });
@@ -484,7 +460,6 @@ export const IntegrationsRoute = new Hono<{
       z.object({
         name: z.string().min(1).optional(),
         config: z.record(z.string(), z.any()).optional(),
-        enabled: z.boolean().optional(),
       })
     ),
     async (c) => {
@@ -606,13 +581,9 @@ export const IntegrationsRoute = new Hono<{
         return c.json({ error: "Link not found" }, 404);
       }
 
-      if (!link.enabled) {
-        return c.json({ error: "Link is disabled" }, 400);
-      }
-
       const connection = link.connection;
-      if (!connection || !connection.enabled) {
-        return c.json({ error: "Connection is disabled" }, 400);
+      if (!connection) {
+        return c.json({ error: "Connection not found" }, 404);
       }
 
       // Get integration from registry
@@ -638,7 +609,6 @@ export const IntegrationsRoute = new Hono<{
         integrationType: connection.integrationType,
         organizationId: connection.organizationId,
         config: mergedConfig,
-        enabled: connection.enabled,
         createdAt: connection.createdAt,
         updatedAt: connection.updatedAt,
       };

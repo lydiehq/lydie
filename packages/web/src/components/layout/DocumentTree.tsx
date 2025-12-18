@@ -141,10 +141,6 @@ export function DocumentTree() {
 
   const documents = orgData?.documents || [];
   const folders = orgData?.folders || [];
-  const enabledLinks =
-    extensionLinks?.filter(
-      (link) => link.enabled && link.connection?.enabled
-    ) || [];
 
   // Expand all parent folders when a document is opened
   useEffect(() => {
@@ -241,9 +237,9 @@ export function DocumentTree() {
 
   // Build integration link entries grouped by type
   const linkGroups = useMemo(() => {
-    const groups = new Map<string, typeof enabledLinks>();
+    const groups = new Map<string, typeof extensionLinks>();
 
-    enabledLinks.forEach((link) => {
+    extensionLinks.forEach((link) => {
       const type = link.connection?.integration_type;
       if (!type) return;
 
@@ -288,7 +284,7 @@ export function DocumentTree() {
     );
 
     return items;
-  }, [enabledLinks, documents, folders]); // Re-compute when data changes
+  }, [extensionLinks, documents, folders]); // Re-compute when data changes
 
   // Combine integration groups (at top) with regular tree items
   const treeItems = [...linkGroups, ...buildTreeItems(null)];

@@ -1,0 +1,147 @@
+import { Heading } from "@/components/generic/Heading";
+import { useAuthenticatedApi } from "@/services/api";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
+import { getIntegrationMetadata } from "@lydie/integrations/client";
+import { queries } from "@lydie/zero/queries";
+import { useQuery, useZero } from "@rocicorp/zero/react";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Button } from "@/components/generic/Button";
+import { Link } from "@/components/generic/Link";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Outlet } from "@tanstack/react-router";
+import { mutators } from "@lydie/zero/mutators";
+import { useState } from "react";
+
+export const Route = createFileRoute(
+  "/__auth/w/$organizationId/settings/integrations/$integrationType"
+)({
+  component: RouteComponent,
+  validateSearch: z.object({
+    integrationType: z.string().optional(),
+  }),
+  loader: async ({ params }) => {
+    const { integrationType } = params;
+    const integration = getIntegrationMetadata(integrationType);
+    if (!integration) throw notFound();
+    // TODO: default image
+    const iconUrl = getIntegrationIconUrl(integration.id) ?? "";
+    const integrationDetails = { ...integration, iconUrl };
+    return { integrationDetails };
+  },
+});
+
+function RouteComponent() {
+  const { organizationId } = Route.useParams();
+  const { integrationDetails } = Route.useLoaderData();
+  const { createClient } = useAuthenticatedApi();
+  const zero = useZero();
+
+  const [integrationConnections] = useQuery(
+    queries.integrations.byIntegrationType({
+      integrationType: integrationDetails.id,
+      organizationId: organizationId,
+    })
+  );
+
+  const isEnabled = integrationConnections.length > 0;
+
+  const [isConnecting, setIsConnecting] = useState(false);
+  const connect = async () => {
+    try {
+      setIsConnecting(true);
+      const client = await createClient();
+      const redirectUrl = `/w/${organizationId}/settings/integrations/${integrationDetails.id}`;
+      const response = await client.internal.integrations[
+        ":type"
+      ].oauth.authorize
+        .$post({
+          param: { type: integrationDetails.id },
+          json: { redirectUrl },
+        })
+        .then((res: Response) => res.json());
+      window.location.href = response.authUrl;
+    } catch (error) {
+      setIsConnecting(false);
+      console.error(`${integrationDetails.name} OAuth error:`, error);
+      toast.error(`Failed to start ${integrationDetails.name} connection`);
+    }
+  };
+
+  const disconnect = async () => {
+    zero.mutate(
+      mutators.integrationConnection.disconnect({
+        // TODO: some integrations may have multiple connections (eg GitHub to
+        // different organizations/users). We should maybe support this.
+        connectionId: integrationConnections[0].id,
+        organizationId: organizationId,
+      })
+    );
+  };
+
+  const pages = [
+    {
+      label: "Connections",
+      href: `/w/$organizationId/settings/integrations/${integrationDetails.id}`,
+    },
+    {
+      label: "Activity",
+      href: `/w/$organizationId/settings/integrations/${integrationDetails.id}/activity`,
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-y-6">
+      <Link to=".." className="text-sm text-gray-500 mb-4 block">
+        Back to Integrations
+      </Link>
+      <div className="border-b border-black/5 flex flex-col gap-y-6 pb-1.5">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-x-4">
+            <div className="rounded-lg ring-1 ring-black/6 flex items-center justify-center size-11">
+              <img
+                src={integrationDetails.iconUrl}
+                alt={`${integrationDetails.name} icon`}
+                className="size-8 rounded-sm"
+              />
+            </div>
+            <div>
+              <Heading level={1}>{integrationDetails.name} Integration</Heading>
+              <p className="text-sm/relaxed text-gray-600 mt-1">
+                {integrationDetails.description}
+              </p>
+            </div>
+          </div>
+          {isEnabled ? (
+            <Button onPress={disconnect} intent="secondary">
+              Disable Integration
+            </Button>
+          ) : (
+            <Button onPress={connect} isPending={isConnecting}>
+              Enable Integration
+            </Button>
+          )}
+        </div>
+        <nav aria-label="Integration pages" className="flex gap-x-1">
+          {pages.map((page) => (
+            <Link
+              key={page.label}
+              to={page.href}
+              className="text-sm font-medium text-gray-700 px-3 py-1 hover:bg-black/1 rounded-md"
+              replace
+              activeOptions={{
+                exact: true,
+              }}
+              activeProps={{
+                className: "text-gray-950 bg-black/3",
+              }}
+            >
+              {page.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+      <Outlet />
+    </div>
+  );
+}

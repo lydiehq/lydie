@@ -7,13 +7,6 @@ export const Route = createFileRoute(
   "/__auth/w/$organizationId/settings/integrations/"
 )({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      success: search.success === "true" || search.success === true,
-      error: (search.error as string) || undefined,
-      connectionId: (search.connectionId as string) || undefined,
-    };
-  },
 });
 
 function RouteComponent() {

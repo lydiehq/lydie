@@ -71,29 +71,38 @@ export function DocumentTreeItem({
 
   const isIntegrationLink = item.type === "integration-link";
 
-  const handleNavigate = () => {
-    if (item.type === "document") {
+  const isGroup = item.type === "integration-group";
+
+  const handleAction = () => {
+    if (isIntegrationLink) return;
+    if (isGroup)
       navigate({
-        to: "/w/$organizationId/$id",
-        params: { id: item.id },
+        to: "/w/$organizationId/settings/integrations/$integrationId",
+        params: { integrationId: item.integrationType },
         from: "/w/$organizationId",
       });
-    } else if (item.type === "folder") {
+
+    if (item.type === "folder") {
       navigate({
         to: "/w/$organizationId",
         search: { tree: item.id, q: undefined, focusSearch: undefined },
         from: "/w/$organizationId",
       });
     }
+    if (item.type === "document") {
+      navigate({
+        to: "/w/$organizationId/$id",
+        params: { id: item.id },
+        from: "/w/$organizationId",
+      });
+    }
   };
-
-  const isGroup = item.type === "integration-group";
 
   return (
     <TreeItem
       id={item.id}
       textValue={item.name}
-      onAction={isIntegrationLink || isGroup ? undefined : handleNavigate}
+      onAction={handleAction}
       className={composeTailwindRenderProps(
         focusRing,
         sidebarItemStyles({

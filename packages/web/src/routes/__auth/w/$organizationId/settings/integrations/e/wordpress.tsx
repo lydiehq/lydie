@@ -36,7 +36,7 @@ import { useAuthenticatedApi } from "@/services/api";
 import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/(integration)/wordpress"
+  "/__auth/w/$organizationId/settings/integrations/e/wordpress"
 )({
   component: RouteComponent,
 });
@@ -137,7 +137,6 @@ function RouteComponent() {
       z.mutate(
         mutators.integrationConnection.update({
           connectionId,
-          enabled: !enabled,
         })
       );
       toast.success(enabled ? "Connection disabled" : "Connection enabled");

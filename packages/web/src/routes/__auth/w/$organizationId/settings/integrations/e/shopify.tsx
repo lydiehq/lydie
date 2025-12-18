@@ -36,14 +36,9 @@ import { IntegrationActivityLog } from "@/components/integrations/IntegrationAct
 import { SettingsSectionLayout } from "@/components/settings/SettingsSectionLayout";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/(integration)/shopify"
+  "/__auth/w/$organizationId/settings/integrations/e/shopify"
 )({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>) => ({
-    success: search.success === "true" || search.success === true,
-    error: (search.error as string) || undefined,
-    connectionId: (search.connectionId as string) || undefined,
-  }),
 });
 
 function RouteComponent() {

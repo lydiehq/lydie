@@ -225,9 +225,14 @@ export const documentsTable = pgTable(
     deletedAt: timestamp("deleted_at"),
     ...timestamps,
   },
-  (table) => [
-    uniqueIndex("documents_organization_id_slug_key")
+   (table) => [
+    // Unique slugs for user-created documents within organization
+    uniqueIndex("documents_user_organization_id_slug_key")
       .on(table.organizationId, table.slug)
+      .where(sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`),
+    // Unique slugs for integration documents within organization and integration link
+    uniqueIndex("documents_integration_organization_link_slug_key")
+      .on(table.organizationId, table.integrationLinkId, table.slug)
       .where(sql`deleted_at IS NULL`),
     index("documents_organization_id_idx").on(table.organizationId),
     index("documents_folder_id_idx").on(table.folderId),
@@ -486,7 +491,6 @@ export const integrationConnectionsTable = pgTable(
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
     config: jsonb("config").notNull(), // Platform-specific config (access tokens, etc.)
-    enabled: boolean("enabled").notNull().default(true), // User-controlled toggle
     status: text("status").notNull().default("active"), // 'active', 'revoked', 'error', 'suspended'
     statusMessage: text("status_message"), // Optional error/status details
     ...timestamps,
@@ -516,18 +520,19 @@ export const integrationLinksTable = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    integrationType: text("integration_type").notNull(), // Denormalized from connection for easier querying
     // Integration-specific config for this link
     // GitHub: { owner, repo, branch, path }
     // WordPress: { postType }
     // Shopify: { blogId }
     config: jsonb("config").notNull(),
-    enabled: boolean("enabled").notNull().default(true),
     lastSyncedAt: timestamp("last_synced_at"),
     ...timestamps,
   },
   (table) => [
     index("integration_links_connection_id_idx").on(table.connectionId),
     index("integration_links_organization_id_idx").on(table.organizationId),
+    index("integration_links_integration_type_idx").on(table.integrationType),
   ]
 );
 
@@ -575,6 +580,7 @@ export const integrationActivityLogsTable = pgTable(
       .references(() => integrationConnectionsTable.id, {
         onDelete: "cascade",
       }),
+    integrationType: text("integration_type").notNull(), // Denormalized from connection for easier querying with Zero
     activityType: text("activity_type").notNull(), // 'push', 'pull', 'sync'
     activityStatus: text("activity_status").notNull(), // 'success', 'failure', 'conflict', 'error'
     ...timestamps,

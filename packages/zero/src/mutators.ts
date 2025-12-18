@@ -508,7 +508,41 @@ export const mutators = defineMutators({
       }
     ),
   },
-  integrations: {
+  integration: {
+    deleteLink: defineMutator(
+      z.object({
+        linkId: z.string(),
+        deleteDocuments: z.boolean().optional(),
+        organizationId: z.string(),
+      }),
+      async ({
+        tx,
+        ctx,
+        args: { linkId, deleteDocuments, organizationId },
+      }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        const link = await tx.run(
+          zql.integration_links
+            .where("id", linkId)
+            .where("organization_id", organizationId)
+            .one()
+            .related("documents")
+        );
+
+        if (!link) {
+          throw new Error(`Link not found: ${linkId}`);
+        }
+
+        if (deleteDocuments) {
+          const deleteDocumentsPromise = link.documents.map(({ id }) =>
+            tx.mutate.documents.delete({ id })
+          );
+          await Promise.all(deleteDocumentsPromise);
+        }
+
+        await tx.mutate.integration_links.delete({ id: linkId });
+      }
+    ),
     createLink: defineMutator(
       z.object({
         id: z.string(),
@@ -541,7 +575,7 @@ export const mutators = defineMutators({
           id,
           connection_id: connection.id,
           organization_id: organizationId,
-          enabled: true,
+          integration_type: connection.integration_type,
           created_at: Date.now(),
           updated_at: Date.now(),
           name,
@@ -557,12 +591,11 @@ export const mutators = defineMutators({
         integrationType: z.string(),
         organizationId: z.string(),
         config: z.any(),
-        enabled: z.boolean().optional(),
       }),
       async ({
         tx,
         ctx,
-        args: { id, integrationType, organizationId, config, enabled = true },
+        args: { id, integrationType, organizationId, config },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
 
@@ -572,7 +605,6 @@ export const mutators = defineMutators({
           status: "active",
           organization_id: organizationId,
           config,
-          enabled,
           created_at: Date.now(),
           updated_at: Date.now(),
         });
@@ -582,26 +614,40 @@ export const mutators = defineMutators({
       z.object({
         connectionId: z.string(),
         config: z.any().optional(),
-        enabled: z.boolean().optional(),
       }),
-      async ({ tx, args: { connectionId, config, enabled } }) => {
+      async ({ tx, args: { connectionId, config } }) => {
         const updates: any = {
           id: connectionId,
           updated_at: Date.now(),
         };
 
         if (config !== undefined) updates.config = config;
-        if (enabled !== undefined) updates.enabled = enabled;
 
         await tx.mutate.integration_connections.update(updates);
       }
     ),
-    delete: defineMutator(
+    disconnect: defineMutator(
       z.object({
         connectionId: z.string(),
+        organizationId: z.string(),
       }),
-      async ({ tx, args: { connectionId } }) => {
-        await tx.mutate.integration_connections.delete({ id: connectionId });
+      async ({ tx, ctx, args: { connectionId, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        const connection = await tx.run(
+          zql.integration_connections
+            .where("id", connectionId)
+            .where("organization_id", organizationId)
+            .one()
+        );
+
+        if (!connection) {
+          throw new Error(`Connection not found: ${connectionId}`);
+        }
+
+        await tx.mutate.integration_connections.update({
+          id: connectionId,
+          updated_at: Date.now(),
+        });
       }
     ),
   },

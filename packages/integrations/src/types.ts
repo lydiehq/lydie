@@ -26,7 +26,6 @@ export interface IntegrationConnection {
   integrationType: string;
   organizationId: string;
   config: Record<string, any>; // Platform-specific config (API keys, repo info, etc.)
-  enabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -117,24 +116,71 @@ export interface ExternalResource {
 }
 
 /**
- * Integration that supports listing external resources
- * Examples: GitHub repositories, Shopify collections, Notion databases
- */
-export interface ResourceIntegration {
-  /**
-   * Fetch available resources for the authenticated user/connection
-   * @param connection - The integration connection
-   * @returns List of available resources
-   */
-  fetchResources(
-    connection: IntegrationConnection
-  ): Promise<ExternalResource[]>;
-}
-
-/**
  * Default link configuration for auto-creation on connection
  */
 export interface DefaultLink {
   name: string;
   config: Record<string, any>;
+}
+
+/**
+ * Integration interface that all integrations must implement
+ * Provides sync functionality between Lydie and external platforms
+ */
+export interface Integration {
+  /**
+   * Validate that a connection is properly configured and working
+   */
+  validateConnection(connection: IntegrationConnection): Promise<{
+    valid: boolean;
+    error?: string;
+  }>;
+
+  /**
+   * Push a document to the external platform
+   */
+  push(options: PushOptions): Promise<SyncResult>;
+
+  /**
+   * Pull documents from the external platform
+   */
+  pull(options: PullOptions): Promise<SyncResult[]>;
+
+  /**
+   * Fetch available resources for the authenticated user/connection
+   * Examples: GitHub repositories, Shopify collections, WordPress sites
+   */
+  fetchResources(
+    connection: IntegrationConnection
+  ): Promise<ExternalResource[]>;
+
+  /**
+   * Called when a connection is disconnected
+   * Optional - integrations can override this to perform cleanup
+   */
+  onDisconnect?(): Promise<void>;
+
+  /**
+   * Called after a connection is successfully established
+   * Can return default links to auto-create for this integration
+   * Optional - integrations can override this method
+   */
+  onConnect?(): { links?: DefaultLink[] };
+}
+
+/**
+ * Helper function to create an error result
+ */
+export function createErrorResult(
+  documentId: string,
+  error: string,
+  conflictDetails?: SyncResult["conflictDetails"]
+): SyncResult {
+  return {
+    success: false,
+    documentId,
+    error,
+    conflictDetected: !!conflictDetails,
+    conflictDetails,
+  };
 }

@@ -2,6 +2,7 @@ import { defineQueries, defineQuery } from "@rocicorp/zero";
 import { z } from "zod";
 import { isAuthenticated, hasOrganizationAccess, type Context } from "./auth";
 import { zql } from "./schema";
+import { ZodLazy } from "better-auth";
 
 export type QueryContext = Context;
 
@@ -242,6 +243,16 @@ export const queries = defineQueries({
     ),
   },
   integrations: {
+    byIntegrationType: defineQuery(
+      z.object({ integrationType: z.string(), organizationId: z.string() }),
+      ({ args: { integrationType, organizationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return zql.integration_connections
+          .where("integration_type", integrationType)
+          .where("organization_id", organizationId)
+          .orderBy("created_at", "desc");
+      }
+    ),
     byOrganization: defineQuery(
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
@@ -286,6 +297,17 @@ export const queries = defineQueries({
           .orderBy("created_at", "desc");
       }
     ),
+    byIntegrationType: defineQuery(
+      z.object({ organizationId: z.string(), integrationType: z.string() }),
+      ({ args: { organizationId, integrationType }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return zql.integration_links
+          .where("organization_id", organizationId)
+          .where("integration_type", integrationType)
+          .related("connection")
+          .orderBy("created_at", "desc");
+      }
+    ),
     byId: defineQuery(
       z.object({ linkId: z.string(), organizationId: z.string() }),
       ({ args: { linkId, organizationId }, ctx }) => {
@@ -311,12 +333,12 @@ export const queries = defineQueries({
     ),
   },
   integrationActivityLogs: {
-    byConnection: defineQuery(
-      z.object({ connectionId: z.string(), organizationId: z.string() }),
-      ({ args: { connectionId, organizationId }, ctx }) => {
+    byIntegrationType: defineQuery(
+      z.object({ organizationId: z.string(), integrationType: z.string() }),
+      ({ args: { organizationId, integrationType }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
         return zql.integration_activity_logs
-          .where("connection_id", connectionId)
+          .where("integration_type", integrationType)
           .orderBy("created_at", "desc");
       }
     ),

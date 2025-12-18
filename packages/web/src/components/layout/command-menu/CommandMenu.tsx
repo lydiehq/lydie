@@ -139,11 +139,9 @@ export function CommandMenu() {
     setOpen(false);
   };
 
-  const integrationRoutes = {
-    github: "/w/$organizationId/settings/integrations/github",
-    shopify: "/w/$organizationId/settings/integrations/shopify",
-    wordpress: "/w/$organizationId/settings/integrations/wordpress",
-  } as const;
+  // Use dynamic integration route for all integrations
+  const getIntegrationRoute = (integrationType: string) =>
+    `/w/$organizationId/settings/integrations/${integrationType}`;
 
   const menuSections = useMemo<MenuSection[]>(() => {
     const favoritesItems: MenuItem[] = [
@@ -295,12 +293,8 @@ export function CommandMenu() {
         label: `Go to ${integration.name} integration`,
         iconUrl: getIntegrationIconUrl(integration.id) || undefined,
         action: () => {
-          const route =
-            integrationRoutes[
-              integration.id as keyof typeof integrationRoutes
-            ] || "/w/$organizationId/settings/integrations";
           navigate({
-            to: route,
+            to: getIntegrationRoute(integration.id),
             params: {
               organizationId: organization?.id as string,
             },

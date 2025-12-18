@@ -1,13 +1,17 @@
-import { BaseIntegration } from "../../integration";
 import type {
+  Integration,
   IntegrationConnection,
   PushOptions,
   PullOptions,
   SyncResult,
   ExternalResource,
-  ResourceIntegration,
 } from "../../types";
-import type { OAuthConfig, OAuthCredentials } from "../../oauth";
+import { createErrorResult } from "../../types";
+import type {
+  OAuthConfig,
+  OAuthCredentials,
+  OAuthIntegration,
+} from "../../oauth";
 import { Resource } from "sst";
 import {
   serializeToHTML,
@@ -29,10 +33,11 @@ interface ShopifyTokenResponse {
   scope: string;
 }
 
-export class ShopifyIntegration
-  extends BaseIntegration
-  implements ResourceIntegration
-{
+/**
+ * Shopify sync integration
+ * Syncs documents to Shopify via REST Admin API
+ */
+export const shopifyIntegration: Integration & OAuthIntegration = {
   async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
     error?: string;
@@ -78,7 +83,7 @@ export class ShopifyIntegration
         error: `Connection validation error: ${error.message}`,
       };
     }
-  }
+  },
 
   async fetchResources(
     connection: IntegrationConnection
@@ -135,17 +140,14 @@ export class ShopifyIntegration
       console.error("Error fetching Shopify resources:", error);
       return [];
     }
-  }
+  },
 
   async push(options: PushOptions): Promise<SyncResult> {
     const { document, connection } = options;
     const config = connection.config as ShopifyConfig;
 
     if (!config.shop || !config.accessToken) {
-      return this.createErrorResult(
-        document.id,
-        "Missing Shopify configuration"
-      );
+      return createErrorResult(document.id, "Missing Shopify configuration");
     }
 
     // Convert to HTML
@@ -204,7 +206,7 @@ export class ShopifyIntegration
         // Blog Article
         const blogId = resourceId;
         if (!blogId) {
-          return this.createErrorResult(
+          return createErrorResult(
             document.id,
             "Blog ID is required for pushing blog articles."
           );
@@ -216,7 +218,7 @@ export class ShopifyIntegration
           { headers }
         );
         if (!blogCheck.ok) {
-          return this.createErrorResult(
+          return createErrorResult(
             document.id,
             "Target Blog not found on Shopify."
           );
@@ -256,7 +258,7 @@ export class ShopifyIntegration
           };
         }
       } else {
-        return this.createErrorResult(
+        return createErrorResult(
           document.id,
           `Unknown resource type: ${resourceType}`
         );
@@ -299,12 +301,12 @@ export class ShopifyIntegration
       };
     } catch (error: any) {
       console.error("Shopify Push Error:", error);
-      return this.createErrorResult(
+      return createErrorResult(
         document.id,
         error.message || "Failed to push to Shopify"
       );
     }
-  }
+  },
 
   async pull(options: PullOptions): Promise<SyncResult[]> {
     const { connection } = options;
@@ -438,7 +440,7 @@ export class ShopifyIntegration
       });
       return results;
     }
-  }
+  },
 
   // OAuth Implementation
 
@@ -448,14 +450,14 @@ export class ShopifyIntegration
       tokenUrl: "", // Dynamic based on shop
       scopes: ["write_content", "read_content", "write_themes", "read_themes"], // Updated scopes
     };
-  }
+  },
 
   async getOAuthCredentials(): Promise<OAuthCredentials> {
     return {
       clientId: Resource.ShopifyClientId.value,
       clientSecret: Resource.ShopifyClientSecret.value,
     };
-  }
+  },
 
   buildAuthorizationUrl(
     credentials: OAuthCredentials,
@@ -475,10 +477,10 @@ export class ShopifyIntegration
       .replace(/.myshopify.com$/, "");
     const shopDomain = `${cleanShop}.myshopify.com`;
 
-    const scopes = this.getOAuthConfig().scopes.join(",");
+    const scopes = shopifyIntegration.getOAuthConfig().scopes.join(",");
 
     return `https://${shopDomain}/admin/oauth/authorize?client_id=${credentials.clientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${state}`;
-  }
+  },
 
   async handleOAuthCallback(
     queryParams: Record<string, string>,
@@ -521,5 +523,5 @@ export class ShopifyIntegration
       accessToken: data.access_token,
       scopes: data.scope.split(","),
     };
-  }
-}
+  },
+};

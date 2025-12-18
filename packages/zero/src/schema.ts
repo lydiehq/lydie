@@ -211,7 +211,6 @@ const integrationConnections = table("integration_connections")
     integration_type: string(),
     organization_id: string(),
     config: json(),
-    enabled: boolean(),
     status: string(), // 'active', 'revoked', 'error', 'suspended'
     status_message: string().optional(),
     ...timestamps,
@@ -225,8 +224,8 @@ const integrationLinks = table("integration_links")
     name: string(),
     connection_id: string(),
     organization_id: string(),
+    integration_type: string(), // Denormalized from connection for easier querying
     config: json(), // Integration-specific: { owner, repo, branch, path } for GitHub
-    enabled: boolean(),
     last_synced_at: number().optional(),
     ...timestamps,
   })
@@ -585,6 +584,7 @@ const integrationActivityLogs = table("integration_activity_logs")
     connection_id: string(),
     activity_type: string(),
     activity_status: string(),
+    integration_type: string(),
     ...timestamps,
   })
   .primaryKey("id");

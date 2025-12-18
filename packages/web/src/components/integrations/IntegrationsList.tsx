@@ -10,12 +10,62 @@ import { Link } from "@/components/generic/Link";
 import { cardStyles } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
 import { Eyebrow } from "../generic/Eyebrow";
+export function IntegrationsList() {
+  const { organization } = useOrganization();
+  const [connections] = useQuery(
+    queries.integrations.byOrganization({
+      organizationId: organization?.id || "",
+    })
+  );
 
-const integrationRoutes = {
-  github: "/w/$organizationId/settings/integrations/github",
-  shopify: "/w/$organizationId/settings/integrations/shopify",
-  wordpress: "/w/$organizationId/settings/integrations/wordpress",
-} as const;
+  const connectedIntegrationIds = new Set(
+    connections
+      ?.filter((conn) => conn.status === "active")
+      .map((conn) => conn.integration_type)
+  );
+
+  // Split integrations into enabled and not enabled
+  const connectedIntegrations = integrationMetadata.filter((integration) =>
+    connectedIntegrationIds.has(integration.id)
+  );
+
+  const notConnectedIntegrations = integrationMetadata.filter(
+    (integration) => !connectedIntegrationIds.has(integration.id)
+  );
+
+  return (
+    <div className="flex flex-col gap-y-6">
+      {connectedIntegrations.length > 0 && (
+        <div className="flex flex-col gap-y-2">
+          <Eyebrow>Enabled</Eyebrow>
+          <ul className="flex flex-col gap-y-2">
+            {connectedIntegrations.map((integration) => (
+              <IntegrationsListItem
+                key={integration.id}
+                integration={integration}
+                isEnabled={true}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+      {notConnectedIntegrations.length > 0 && (
+        <div className="flex flex-col gap-y-2">
+          <Eyebrow>Not Enabled</Eyebrow>
+          <ul className="flex flex-col gap-y-2">
+            {notConnectedIntegrations.map((integration) => (
+              <IntegrationsListItem
+                key={integration.id}
+                integration={integration}
+                isEnabled={false}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 type IntegrationsListItemProps = {
   integration: IntegrationMetadata;
@@ -27,9 +77,7 @@ export function IntegrationsListItem({
   isEnabled,
 }: IntegrationsListItemProps) {
   const iconUrl = getIntegrationIconUrl(integration.id);
-  const integrationRoute =
-    integrationRoutes[integration.id as keyof typeof integrationRoutes] ??
-    "/w/$organizationId/settings/integrations";
+  const integrationRoute = `/w/$organizationId/settings/integrations/${integration.id}`;
 
   return (
     <li
@@ -65,62 +113,5 @@ export function IntegrationsListItem({
         </div>
       </Link>
     </li>
-  );
-}
-
-export function IntegrationsList() {
-  const { organization } = useOrganization();
-  const [connections] = useQuery(
-    queries.integrations.byOrganization({
-      organizationId: organization?.id || "",
-    })
-  );
-
-  const enabledIntegrationIds = new Set(
-    connections
-      ?.filter((conn) => conn.enabled === true)
-      .map((conn) => conn.integration_type)
-  );
-
-  // Split integrations into enabled and not enabled
-  const enabledIntegrations = integrationMetadata.filter((integration) =>
-    enabledIntegrationIds.has(integration.id)
-  );
-
-  const notEnabledIntegrations = integrationMetadata.filter(
-    (integration) => !enabledIntegrationIds.has(integration.id)
-  );
-
-  return (
-    <div className="flex flex-col gap-y-6">
-      {enabledIntegrations.length > 0 && (
-        <div className="flex flex-col gap-y-2">
-          <Eyebrow>Enabled</Eyebrow>
-          <ul className="flex flex-col gap-y-2">
-            {enabledIntegrations.map((integration) => (
-              <IntegrationsListItem
-                key={integration.id}
-                integration={integration}
-                isEnabled={true}
-              />
-            ))}
-          </ul>
-        </div>
-      )}
-      {notEnabledIntegrations.length > 0 && (
-        <div className="flex flex-col gap-y-2">
-          <Eyebrow>Not Enabled</Eyebrow>
-          <ul className="flex flex-col gap-y-2">
-            {notEnabledIntegrations.map((integration) => (
-              <IntegrationsListItem
-                key={integration.id}
-                integration={integration}
-                isEnabled={false}
-              />
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
   );
 }

@@ -1,13 +1,13 @@
-import { BaseIntegration } from "../../integration";
 import type {
+  Integration,
   IntegrationConnection,
   PushOptions,
   PullOptions,
   SyncResult,
   ExternalResource,
-  ResourceIntegration,
   DefaultLink,
 } from "../../types";
+import { createErrorResult } from "../../types";
 import {
   serializeToHTML,
   deserializeFromHTML,
@@ -15,7 +15,7 @@ import {
 import type { ContentNode } from "@lydie/core/content";
 
 export interface WordpressConfig {
-  siteUrl: string; 
+  siteUrl: string;
   username: string; // WP username
   applicationPassword: string; // Application password
   resourceType?: string;
@@ -27,10 +27,25 @@ interface WpUser {
   slug: string;
 }
 
-export class WordpressIntegration
-  extends BaseIntegration
-  implements ResourceIntegration
-{
+// Helper functions (module-level, not exported)
+
+function getAuthHeaders(config: WordpressConfig) {
+  const credentials = btoa(`${config.username}:${config.applicationPassword}`);
+  return {
+    Authorization: `Basic ${credentials}`,
+    "Content-Type": "application/json",
+  };
+}
+
+function cleanUrl(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
+/**
+ * WordPress sync integration
+ * Syncs documents to WordPress sites via REST API
+ */
+export const wordpressIntegration: Integration = {
   onConnect(): { links?: DefaultLink[] } {
     return {
       links: [
@@ -38,21 +53,7 @@ export class WordpressIntegration
         { name: "Posts", config: { type: "posts" } },
       ],
     };
-  }
-
-  private getAuthHeaders(config: WordpressConfig) {
-    const credentials = btoa(
-      `${config.username}:${config.applicationPassword}`
-    );
-    return {
-      Authorization: `Basic ${credentials}`,
-      "Content-Type": "application/json",
-    };
-  }
-
-  private cleanUrl(url: string): string {
-    return url.replace(/\/$/, "");
-  }
+  },
 
   async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
@@ -68,11 +69,11 @@ export class WordpressIntegration
     }
 
     try {
-      const baseUrl = this.cleanUrl(config.siteUrl);
+      const baseUrl = cleanUrl(config.siteUrl);
       console.log("baseUrl", baseUrl);
-      console.log("headers", this.getAuthHeaders(config));
+      console.log("headers", getAuthHeaders(config));
       const response = await fetch(`${baseUrl}/wp-json/wp/v2/users/me`, {
-        headers: this.getAuthHeaders(config),
+        headers: getAuthHeaders(config),
       });
 
       if (!response.ok) {
@@ -99,7 +100,7 @@ export class WordpressIntegration
         error: `Connection error: ${error.message}`,
       };
     }
-  }
+  },
 
   async fetchResources(
     connection: IntegrationConnection
@@ -125,17 +126,14 @@ export class WordpressIntegration
     ];
 
     return resources;
-  }
+  },
 
   async push(options: PushOptions): Promise<SyncResult> {
     const { document, connection } = options;
     const config = connection.config as WordpressConfig;
 
     if (!config.siteUrl || !config.username || !config.applicationPassword) {
-      return this.createErrorResult(
-        document.id,
-        "Missing WordPress configuration"
-      );
+      return createErrorResult(document.id, "Missing WordPress configuration");
     }
 
     const htmlContent = serializeToHTML(document.content as ContentNode);
@@ -148,8 +146,8 @@ export class WordpressIntegration
     // Note: WP API endpoints are /pages and /posts
     const endpointType = resourceType === "posts" ? "posts" : "pages";
 
-    const headers = this.getAuthHeaders(config);
-    const baseUrl = this.cleanUrl(config.siteUrl);
+    const headers = getAuthHeaders(config);
+    const baseUrl = cleanUrl(config.siteUrl);
 
     try {
       let endpoint = "";
@@ -218,12 +216,12 @@ export class WordpressIntegration
       };
     } catch (error: any) {
       console.error("WordPress Push Error:", error);
-      return this.createErrorResult(
+      return createErrorResult(
         document.id,
         error.message || "Failed to push to WordPress"
       );
     }
-  }
+  },
 
   async pull(options: PullOptions): Promise<SyncResult[]> {
     const { connection } = options;
@@ -234,8 +232,8 @@ export class WordpressIntegration
       return [];
     }
 
-    const headers = this.getAuthHeaders(config);
-    const baseUrl = this.cleanUrl(config.siteUrl);
+    const headers = getAuthHeaders(config);
+    const baseUrl = cleanUrl(config.siteUrl);
 
     try {
       // Function to fetch and process a specific type (pages or posts)
@@ -299,5 +297,5 @@ export class WordpressIntegration
       });
       return results;
     }
-  }
-}
+  },
+};

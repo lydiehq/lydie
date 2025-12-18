@@ -24,10 +24,10 @@ Links have their own config that gets merged with connection config during sync.
 
 ### Default Links
 
-Integrations can define **default links** that are auto-created when a connection is established via the `onConnect()` hook:
+Integrations can define **default links** that are auto-created when a connection is established via the `onConnect()` method:
 
 ```typescript
-class WordpressIntegration extends BaseIntegration {
+export const wordpressIntegration: Integration = {
   onConnect(): { links?: DefaultLink[] } {
     return {
       links: [
@@ -35,45 +35,43 @@ class WordpressIntegration extends BaseIntegration {
         { name: "Posts", config: { type: "posts" } },
       ],
     };
-  }
-}
+  },
+  // ... other methods
+};
 ```
 
-## BaseIntegration Class
+## Integration Interface
 
-Every integration must extend the `BaseIntegration` class:
+Every integration is a plain object implementing the `Integration` interface:
 
 ```typescript
-abstract class BaseIntegration {
+interface Integration {
   // Validate credentials work
-  abstract validateConnection(
+  validateConnection(
     connection: IntegrationConnection
   ): Promise<{ valid: boolean; error?: string }>;
 
   // Push document to external platform
-  abstract push(options: PushOptions): Promise<SyncResult>;
+  push(options: PushOptions): Promise<SyncResult>;
 
   // Pull documents from external platform
-  abstract pull(options: PullOptions): Promise<SyncResult[]>;
+  pull(options: PullOptions): Promise<SyncResult[]>;
+
+  // Fetch available resources for the authenticated user/connection
+  // Examples: GitHub repositories, Shopify collections, WordPress sites
+  fetchResources(
+    connection: IntegrationConnection
+  ): Promise<ExternalResource[]>;
+
+  // Optional: cleanup when connection is disconnected
+  onDisconnect?(): Promise<void>;
 
   // Optional: auto-create links on connection
   onConnect?(): { links?: DefaultLink[] };
 }
 ```
 
-**Note**: Integration metadata (name, description, icon) lives in `metadata.json` files, not in the class.
-
-### ResourceIntegration
-
-Integrations that support listing external resources (repos, blogs, etc.) also implement:
-
-```typescript
-interface ResourceIntegration {
-  fetchResources(
-    connection: IntegrationConnection
-  ): Promise<ExternalResource[]>;
-}
-```
+**Note**: Integration metadata (name, description, icon) lives in `metadata.json` files, not in the integration object.
 
 ### OAuthIntegration
 
@@ -91,42 +89,70 @@ interface OAuthIntegration {
 
 1. Create a new directory: `src/integrations/<name>/`
 2. Add `metadata.json` with name, description, icon
-3. Extend `BaseIntegration` and implement the required abstract methods
-4. Add to registry in `packages/backend/src/api/internal/integrations.ts`
+3. Create an integration object implementing the `Integration` interface
+4. Add to registry in `src/registry.ts`
 5. Export from `src/index.ts`
 
 ### Example: Non-OAuth Integration
 
 ```typescript
-export class MyIntegration
-  extends BaseIntegration
-  implements ResourceIntegration
-{
+import type { Integration } from "@lydie/integrations";
+import { createErrorResult } from "@lydie/integrations";
+
+// Helper functions (module-level, not exported)
+function someHelper() {
+  // ... helper logic
+}
+
+export const myIntegration: Integration = {
   // Auto-create default links
   onConnect(): { links?: DefaultLink[] } {
     return {
       links: [{ name: "Content", config: { type: "content" } }],
     };
-  }
+  },
 
   async validateConnection(connection: IntegrationConnection) {
     // Verify credentials by making an API call
-  }
+    try {
+      // ... validation logic
+      return { valid: true };
+    } catch (error) {
+      return { valid: false, error: "Validation failed" };
+    }
+  },
 
   async push(options: PushOptions): Promise<SyncResult> {
     // Convert content using serializeToHTML/serializeToMarkdown and upload
-  }
+    try {
+      // ... push logic (can use helper functions)
+      return {
+        success: true,
+        documentId: options.document.id,
+        externalId: "external-id",
+      };
+    } catch (error) {
+      return createErrorResult(
+        options.document.id,
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
+  },
 
   async pull(options: PullOptions): Promise<SyncResult[]> {
     // Fetch content and convert using deserializeFromHTML/deserializeFromMarkdown
-  }
+    const results: SyncResult[] = [];
+    // ... pull logic
+    return results;
+  },
 
   async fetchResources(
     connection: IntegrationConnection
   ): Promise<ExternalResource[]> {
     // List available resources
-  }
-}
+    return [];
+  },
+};
 ```
 
 ## Sync Flow
