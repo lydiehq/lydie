@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
-    "drizzle-kit": "^1.0.0-beta.3-36e9b9e",
+    "drizzle-kit": "^1.0.0-beta.3-a8902bc",
     "drizzle-orm": "catalog:",
     "postgres": "^3.4.7"
   },
