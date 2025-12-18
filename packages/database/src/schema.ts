@@ -235,6 +235,20 @@ export const documentsTable = pgTable(
   ]
 );
 
+export const documentPublicationsTable = pgTable("document_publications", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  documentId: text("document_id")
+    .notNull()
+    .references(() => documentsTable.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizationsTable.id, { onDelete: "cascade" }),
+  ...timestamps,
+});
+
 export const documentEmbeddingsTable = pgTable(
   "document_embeddings",
   {

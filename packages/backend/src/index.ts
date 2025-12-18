@@ -1,4 +1,4 @@
-import { app } from "./api/app";
+import { app } from "./api";
 
 export default {
   port: 3001,

@@ -78,7 +78,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
           <Menu className="outline-none max-h-[inherit] overflow-auto p-1 w-full">
             <MenuSeparator />
             <MenuItemLink
-              to="/w/$organizationId/settings"
+              to="/w/$organizationId/settings/user"
               from="/w/$organizationId"
             >
               Settings

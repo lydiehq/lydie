@@ -103,6 +103,38 @@ export const mutators = defineMutators({
     ),
   },
   document: {
+    publish: defineMutator(
+      z.object({
+        documentId: z.string(),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { documentId, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        const document = await tx.run(
+          zql.documents
+            .where("id", documentId)
+            .where("organization_id", organizationId)
+            .one()
+        );
+
+        if (!document) {
+          throw new Error(`Document not found: ${documentId}`);
+        }
+
+        await tx.mutate.documents.update({
+          id: documentId,
+          published: true,
+        });
+
+        await tx.mutate.document_publications.insert({
+          id: createId(),
+          document_id: documentId,
+          organization_id: organizationId,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+      }
+    ),
     create: defineMutator(
       z.object({
         id: z.string(),
@@ -141,11 +173,22 @@ export const mutators = defineMutators({
         published: z.boolean().optional(),
         slug: z.string().optional(),
         indexStatus: z.string().optional(),
+        organizationId: z.string(),
       }),
       async ({
         tx,
-        args: { documentId, title, jsonContent, published, slug, indexStatus },
+        ctx,
+        args: {
+          documentId,
+          title,
+          jsonContent,
+          published,
+          slug,
+          indexStatus,
+          organizationId,
+        },
       }) => {
+        hasOrganizationAccess(ctx, organizationId);
         const updates: any = {
           id: documentId,
           updated_at: Date.now(),
@@ -484,6 +527,7 @@ export const mutators = defineMutators({
         await tx.mutate.integration_connections.insert({
           id,
           integration_type: integrationType,
+          status: "active",
           organization_id: organizationId,
           config,
           enabled,

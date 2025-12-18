@@ -15,7 +15,7 @@ import {
   decodeOAuthState,
   type OAuthState,
   type OAuthIntegration,
-  type Integration,
+  BaseIntegration,
   WordpressIntegration,
 } from "@lydie/integrations";
 import { z } from "zod";
@@ -24,7 +24,7 @@ import { authenticatedWithOrganization } from "./middleware";
 import { logIntegrationActivity } from "@lydie/integrations/activity-log";
 
 // Registry of available integrations
-const integrationRegistry = new Map<string, Integration>([
+const integrationRegistry = new Map<string, BaseIntegration>([
   ["github", new GitHubIntegration()],
   ["shopify", new ShopifyIntegration()],
   ["wordpress", new WordpressIntegration()],
@@ -32,8 +32,8 @@ const integrationRegistry = new Map<string, Integration>([
 
 // Helper to check if integration supports resources
 function supportsResources(
-  integration: Integration
-): integration is Integration & {
+  integration: BaseIntegration
+): integration is BaseIntegration & {
   fetchResources: (connection: any) => Promise<any[]>;
 } {
   return "fetchResources" in integration;
@@ -41,8 +41,8 @@ function supportsResources(
 
 // Helper to check if integration supports OAuth
 function supportsOAuth(
-  integration: Integration
-): integration is Integration & OAuthIntegration {
+  integration: BaseIntegration
+): integration is BaseIntegration & OAuthIntegration {
   return "getOAuthCredentials" in integration;
 }
 

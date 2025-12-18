@@ -66,6 +66,31 @@ const documents = table("documents")
   })
   .primaryKey("id");
 
+const documentPublications = table("document_publications")
+  .columns({
+    id: string(),
+    document_id: string(),
+    organization_id: string(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const documentPublicationsRelations = relationships(
+  documentPublications,
+  ({ one }) => ({
+    document: one({
+      sourceField: ["document_id"],
+      destField: ["id"],
+      destSchema: documents,
+    }),
+    organization: one({
+      sourceField: ["organization_id"],
+      destField: ["id"],
+      destSchema: organizations,
+    }),
+  })
+);
+
 const folders = table("folders")
   .columns({
     id: string(),
@@ -241,6 +266,11 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     sourceField: ["id"],
     destField: ["document_id"],
     destSchema: documentConversations,
+  }),
+  publications: many({
+    sourceField: ["id"],
+    destField: ["document_id"],
+    destSchema: documentPublications,
   }),
 }));
 
@@ -590,6 +620,7 @@ export const schema = createSchema({
     integrationLinks,
     syncMetadata,
     integrationActivityLogs,
+    documentPublications,
   ],
   relationships: [
     documentsRelations,
@@ -610,6 +641,7 @@ export const schema = createSchema({
     integrationLinksRelations,
     syncMetadataRelations,
     integrationActivityLogsRelations,
+    documentPublicationsRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,
@@ -618,3 +650,9 @@ export const schema = createSchema({
 export type Schema = typeof schema;
 
 export const zql = createBuilder(schema);
+
+declare module "@rocicorp/zero" {
+  interface DefaultTypes {
+    schema: Schema;
+  }
+}

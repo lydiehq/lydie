@@ -8,8 +8,7 @@ test.describe("organization management", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
 
     await page.getByRole("button", { name: organization.name }).first().click();
 

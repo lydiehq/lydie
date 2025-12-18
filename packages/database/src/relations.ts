@@ -43,6 +43,7 @@ export const relations = defineRelations(schema, (r) => ({
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
     conversations: r.many.documentConversationsTable(),
     syncMetadata: r.many.syncMetadataTable(),
+    publications: r.many.documentPublicationsTable(),
   },
   documentEmbeddingsTable: {
     document: r.one.documentsTable({
@@ -261,6 +262,16 @@ export const relations = defineRelations(schema, (r) => ({
     connection: r.one.integrationConnectionsTable({
       from: r.integrationActivityLogsTable.connectionId,
       to: r.integrationConnectionsTable.id,
+    }),
+  },
+  documentPublicationsTable: {
+    document: r.one.documentsTable({
+      from: r.documentPublicationsTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.documentPublicationsTable.organizationId,
+      to: r.organizationsTable.id,
     }),
   },
 }));

@@ -15,10 +15,10 @@ import {
 import type { ContentNode } from "@lydie/core/content";
 
 export interface WordpressConfig {
-  siteUrl: string; // e.g. "https://example.com"
+  siteUrl: string; 
   username: string; // WP username
   applicationPassword: string; // Application password
-  resourceType?: string; // "pages" or "posts"
+  resourceType?: string;
 }
 
 interface WpUser {

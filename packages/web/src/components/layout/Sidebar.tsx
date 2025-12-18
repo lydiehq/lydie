@@ -185,7 +185,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
                 <RACButton
                   className="p-1 rounded hover:bg-black/5 text-gray-600 "
                   onPress={() => createDocument(tree)}
-                  aria-label="Add document"
+                  aria-label="Create new document"
                 >
                   <FilePlus size={16} />
                 </RACButton>

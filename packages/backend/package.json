@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "bun run --watch ./src/index.ts"
   },
+  "exports": {
+    "./api": "./src/api/index.ts"
+  },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.159",
     "@types/node": "^25.0.3",

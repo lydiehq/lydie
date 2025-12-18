@@ -2,19 +2,7 @@ import { expect, test } from "./fixtures/auth.fixture";
 import { db, documentsTable, foldersTable } from "@lydie/database";
 import { createId } from "@lydie/core/id";
 import { eq } from "drizzle-orm";
-
-// Helper to trigger Cmd+K (or Ctrl+K) keyboard shortcut using Playwright's native keyboard API
-async function triggerCommandMenuShortcut(page: any) {
-  // Ensure the page has focus
-  await page.bringToFront();
-
-  // Click on the page to ensure it has focus and can receive keyboard events
-  await page.click("body");
-
-  // Use Playwright's native press method
-  // Try Meta+k (lowercase) first, which sometimes works better
-  await page.keyboard.press("Meta+k");
-}
+import { triggerCommandMenuShortcut } from "./utils/command-menu";
 
 test.describe("command menu", () => {
   test("can open command menu with keyboard shortcut", async ({
@@ -63,7 +51,9 @@ test.describe("command menu", () => {
     await page.getByRole("option", { name: "Go home" }).click();
 
     // Verify navigation to home
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.waitForURL(`/w/${organization.id}`, {
+      waitUntil: "networkidle",
+    });
   });
 
   test("can navigate to assistant via command menu", async ({
@@ -73,20 +63,13 @@ test.describe("command menu", () => {
     await page.goto(`/w/${organization.id}`);
     await page.waitForLoadState("networkidle");
 
-    // Wait for the page to be fully loaded
     await page.getByRole("button", { name: "Quick Action" }).waitFor();
-
-    // Trigger Cmd+K keyboard shortcut
     await triggerCommandMenuShortcut(page);
-
     await expect(page.getByRole("dialog")).toBeVisible();
-
-    // Click "Go to assistant" option
     await page.getByRole("option", { name: "Go to assistant" }).click();
 
-    // Verify navigation to assistant
     await page.waitForURL(`/w/${organization.id}/assistant`, {
-      timeout: 5000,
+      waitUntil: "networkidle",
     });
   });
 
@@ -121,12 +104,9 @@ test.describe("command menu", () => {
 
     try {
       await page.goto(`/w/${organization.id}`);
-      await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
-
-      // Wait for the page to be fully loaded
-      await page.getByRole("button", { name: "Quick Action" }).waitFor();
-
-      // Trigger Cmd+K keyboard shortcut
+      await page.waitForURL(`/w/${organization.id}`, {
+        waitUntil: "networkidle",
+      });
       await triggerCommandMenuShortcut(page);
 
       await expect(page.getByRole("dialog")).toBeVisible();

@@ -1,6 +1,7 @@
 import { useDebounceCallback } from "usehooks-ts";
 import { useZero } from "@/services/zero";
 import { mutators } from "@lydie/zero/mutators";
+import { useOrganization } from "@/context/organization.context";
 
 export function useAutoSave({
   documentId,
@@ -10,6 +11,7 @@ export function useAutoSave({
   debounceMs?: number;
 }) {
   const z = useZero();
+  const { organization } = useOrganization();
 
   // Simple debounced save using Zero's optimistic mutations
   // The server-side mutator will automatically trigger embedding generation
@@ -24,6 +26,7 @@ export function useAutoSave({
             jsonContent: data.json_content,
           }),
           indexStatus: "outdated", // Mark as needing re-indexing
+          organizationId: organization?.id || "",
         })
       );
     },

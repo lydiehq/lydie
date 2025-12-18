@@ -14,6 +14,7 @@ export interface MenuItem {
   id: string;
   label: string;
   icon?: React.ComponentType<{ className?: string }>;
+  iconUrl?: string;
   action: () => void;
   destructive?: boolean;
   customClassName?: string;
@@ -35,7 +36,15 @@ export function CommandMenuItem({ item, onSelect }: CommandMenuItemProps) {
         item.customClassName || itemClassName({ destructive: item.destructive })
       }
     >
-      {Icon && <Icon className="size-4 text-gray-400 mr-2" />}
+      {item.iconUrl ? (
+        <img
+          src={item.iconUrl}
+          alt=""
+          className="size-4 mr-2 rounded-sm"
+        />
+      ) : (
+        Icon && <Icon className="size-4 text-gray-400 mr-2" />
+      )}
       <span className="truncate">{item.label}</span>
     </Command.Item>
   );

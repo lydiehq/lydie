@@ -12,7 +12,6 @@ export const useAuthenticatedApi = () => {
         credentials: "include",
       },
       headers: {
-        // Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         "X-Organization-Id": organization?.id || "",
       },

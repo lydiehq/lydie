@@ -17,10 +17,8 @@ import { deserializeFromMDX } from "@lydie/core/serialization/mdx";
 import { deserializeFromText } from "@lydie/core/serialization/text";
 import jwt from "jsonwebtoken";
 
-/**
- * GitHub integration configuration stored in the database
- */
-export interface GitHubConfig {
+// config saved in the database on the connection
+type GitHubConfig = {
   // GitHub App fields
   installationId: number; // GitHub App installation ID
   installationAccessToken: string; // Short-lived installation token
@@ -37,7 +35,7 @@ export interface GitHubConfig {
     managementUrl?: string; // URL to manage installation in GitHub
     [key: string]: any; // Allow integrations to add custom metadata
   };
-}
+};
 
 /**
  * GitHub App installation info
@@ -61,8 +59,8 @@ export interface GitHubInstallation {
  */
 export class GitHubIntegration
   extends BaseIntegration
-  implements ResourceIntegration {
-
+  implements ResourceIntegration
+{
   async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
     error?: string;
@@ -125,8 +123,9 @@ export class GitHubIntegration
       // Check if file exists to get current SHA (required for updates)
       let currentSha: string | undefined;
       try {
-        const getUrl = `https://api.github.com/repos/${config.owner}/${config.repo
-          }/contents/${filePath}?ref=${config.branch || "main"}`;
+        const getUrl = `https://api.github.com/repos/${config.owner}/${
+          config.repo
+        }/contents/${filePath}?ref=${config.branch || "main"}`;
         const getResponse = await fetch(getUrl, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -192,11 +191,13 @@ export class GitHubIntegration
       const result = (await putResponse.json()) as {
         content: { path: string };
       };
-      return this.createSuccessResult(
-        document.id,
-        result.content.path,
-        `Pushed to ${config.owner}/${config.repo}/${result.content.path}`
-      );
+
+      return {
+        success: true,
+        documentId: document.id,
+        externalId: result.content.path,
+        message: `Pushed to ${config.owner}/${config.repo}/${result.content.path}`,
+      };
     } catch (error) {
       return this.createErrorResult(
         document.id,
@@ -229,11 +230,11 @@ export class GitHubIntegration
         config.basePath || ""
       );
 
-
       for (const file of files) {
         try {
           // Determine deserializer based on file extension
-          const extension = file.name.toLowerCase().match(/\.([^.]+)$/)?.[1] || "";
+          const extension =
+            file.name.toLowerCase().match(/\.([^.]+)$/)?.[1] || "";
           let tipTapContent: any;
 
           switch (extension) {
@@ -303,7 +304,6 @@ export class GitHubIntegration
       ];
     }
   }
-
 
   /**
    * Fetch supported files (md, mdx, txt) from GitHub repository
@@ -604,7 +604,8 @@ export class GitHubIntegration
     if (!installationResponse.ok) {
       const errorData = await installationResponse.json().catch(() => ({}));
       throw new Error(
-        `Failed to fetch installation: ${installationResponse.statusText
+        `Failed to fetch installation: ${
+          installationResponse.statusText
         } - ${JSON.stringify(errorData)}`
       );
     }
@@ -641,7 +642,8 @@ export class GitHubIntegration
         errorData
       );
       throw new Error(
-        `Failed to fetch repositories: ${response.statusText
+        `Failed to fetch repositories: ${
+          response.statusText
         } - ${JSON.stringify(errorData)}`
       );
     }
@@ -713,7 +715,8 @@ export class GitHubIntegration
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        `Failed to generate installation token: ${response.statusText
+        `Failed to generate installation token: ${
+          response.statusText
         } - ${JSON.stringify(errorData)}`
       );
     }

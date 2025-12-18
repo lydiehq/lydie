@@ -14,7 +14,6 @@ import { useParams } from "@tanstack/react-router";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import type { PopoverProps } from "@/components/generic/Popover";
 import { useOrganization } from "@/context/organization.context";
-import { useAuth } from "@/context/auth.context";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { format } from "date-fns";
@@ -38,7 +37,6 @@ export function DocumentMenu({
   const { deleteDocument } = useDocumentActions();
   const { id: currentDocId } = useParams({ strict: false });
   const { organization } = useOrganization();
-  const { session } = useAuth();
 
   // Query document data (only used when info dialog is open)
   const [document] = useQuery(
@@ -60,10 +58,16 @@ export function DocumentMenu({
       return;
     }
 
+    if (!organization?.id) {
+      toast.error("Organization not found");
+      return;
+    }
+
     try {
       z.mutate(
         mutators.document.update({
           documentId,
+          organizationId: organization.id,
           title: renameValue.trim(),
         })
       );
@@ -173,11 +177,16 @@ export function DocumentMenu({
                     {document.slug}
                   </p>
                 </div>
-                <div>
-                  <Label className="text-xs text-gray-500">Status</Label>
-                  <div className="flex gap-2 mt-1">
+                <div role="group" aria-labelledby="publication-status-label">
+                  <Label
+                    id="publication-status-label"
+                    className="text-xs text-gray-500"
+                  >
+                    Publication Status
+                  </Label>
+                  <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded ${
+                      className={`text-xs px-2 py-1 rounded inline-block ${
                         document.published
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-700"
@@ -185,8 +194,18 @@ export function DocumentMenu({
                     >
                       {document.published ? "Published" : "Draft"}
                     </span>
+                  </div>
+                </div>
+                <div role="group" aria-labelledby="index-status-label">
+                  <Label
+                    id="index-status-label"
+                    className="text-xs text-gray-500"
+                  >
+                    Index Status
+                  </Label>
+                  <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded ${
+                      className={`text-xs px-2 py-1 rounded inline-block ${
                         document.index_status === "indexed"
                           ? "bg-blue-100 text-blue-700"
                           : "bg-yellow-100 text-yellow-700"

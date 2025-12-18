@@ -29,7 +29,9 @@ export function useDocumentActions() {
       })
     );
 
-    navigate({
+    console.log("createDocument", folderId);
+
+    await navigate({
       from: "/w/$organizationId",
       to: "/w/$organizationId/$id",
       params: { id },
@@ -82,10 +84,31 @@ export function useDocumentActions() {
     });
   };
 
+  const publishDocument = (documentId: string) => {
+    z.mutate(
+      mutators.document.publish({
+        documentId,
+        organizationId: organization?.id || "",
+      })
+    );
+  };
+
+  const updateDocument = (documentId: string, data: any) => {
+    z.mutate(
+      mutators.document.update({
+        documentId,
+        organizationId: organization?.id || "",
+        ...data,
+      })
+    );
+  };
+
   return {
     createDocument,
     createFolder,
     deleteDocument,
     deleteFolder,
+    publishDocument,
+    updateDocument,
   };
 }

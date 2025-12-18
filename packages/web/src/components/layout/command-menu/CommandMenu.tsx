@@ -31,6 +31,11 @@ import type { MenuItem } from "./CommandMenuItem";
 import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
 import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
 import { SearchResults } from "./CommandMenuSearchResults";
+import {
+  integrationMetadata,
+  type IntegrationMetadata,
+} from "@lydie/integrations/client";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 const modalStyles = cva({
   base: "w-full max-w-lg max-h-full rounded-lg shadow-2xl bg-clip-padding ring ring-black/10 overflow-hidden",
@@ -45,7 +50,8 @@ const modalStyles = cva({
 });
 
 export function CommandMenu() {
-  const { createDocument, createFolder, deleteDocument } = useDocumentActions();
+  const { createDocument, createFolder, deleteDocument, publishDocument } =
+    useDocumentActions();
   const params = useParams({ strict: false });
   const navigate = useNavigate();
   const { organization } = useOrganization();
@@ -134,6 +140,12 @@ export function CommandMenu() {
     setOpen(false);
   };
 
+  const integrationRoutes = {
+    github: "/w/$organizationId/settings/integrations/github",
+    shopify: "/w/$organizationId/settings/integrations/shopify",
+    wordpress: "/w/$organizationId/settings/integrations/wordpress",
+  } as const;
+
   // Build menu sections
   const menuSections = useMemo<MenuSection[]>(() => {
     const favoritesItems: MenuItem[] = [
@@ -160,32 +172,10 @@ export function CommandMenu() {
         icon: Plus, // No icon for this action
         action: () => {
           if (currentDocument) {
-            z.mutate(
-              mutators.document.update({
-                documentId: currentDocument.id,
-                published: true,
-              })
-            );
+            publishDocument(currentDocument.id);
           }
         },
       });
-      if (currentDocument.published) {
-        favoritesItems.push({
-          id: "unpublish",
-          label: "Unpublish document",
-          icon: Plus, // No icon for this action
-          action: () => {
-            if (currentDocument) {
-              z.mutate(
-                mutators.document.update({
-                  documentId: currentDocument.id,
-                  published: false,
-                })
-              );
-            }
-          },
-        });
-      }
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
@@ -304,6 +294,23 @@ export function CommandMenu() {
           });
         },
       },
+      ...integrationMetadata.map((integration: IntegrationMetadata) => ({
+        id: `integration-${integration.id}`,
+        label: `Go to ${integration.name} integration`,
+        iconUrl: getIntegrationIconUrl(integration.id) || undefined,
+        action: () => {
+          const route =
+            integrationRoutes[
+              integration.id as keyof typeof integrationRoutes
+            ] || "/w/$organizationId/settings/integrations";
+          navigate({
+            to: route,
+            params: {
+              organizationId: organization?.id as string,
+            },
+          });
+        },
+      })),
       {
         id: "create-organization",
         label: "Create new organization",

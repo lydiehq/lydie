@@ -32,7 +32,6 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@rocicorp/zero/react";
 import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
-import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";
 import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
 
@@ -51,12 +50,9 @@ type IntegrationType = "github" | "shopify" | "wordpress";
 type ConnectionDialogStep = "selectType" | "configure";
 
 function RouteComponent() {
-  const { organization } = useOrganization();
   const z = useZero();
   const { createClient } = useAuthenticatedApi();
-
-  const search = Route.useSearch();
-  const navigate = Route.useNavigate();
+  const { organizationId } = Route.useParams();
 
   const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
   const [connectionDialogStep, setConnectionDialogStep] =
@@ -80,13 +76,13 @@ function RouteComponent() {
 
   const [allConnections] = useQuery(
     queries.integrations.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organizationId || "",
     })
   );
 
   const [allIntegrationLinks] = useQuery(
     queries.integrationLinks.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organizationId || "",
     })
   );
 
@@ -100,22 +96,10 @@ function RouteComponent() {
       (link) => link.connection?.integration_type === "github"
     ) ?? undefined;
 
-  const handleSelectIntegration = async (type: IntegrationType) => {
-    if (type !== "github") {
-      toast.error("This integration is not available yet.");
-      return;
-    }
-
-    if (!organization?.id) {
-      toast.error("Organization not found");
-      return;
-    }
-
+  const connect = async () => {
     try {
       const client = await createClient();
       const redirectUrl = `/w/${organization.id}/settings/integrations/github`;
-
-      // @ts-expect-error - Dynamic route parameter type inference limitation
       const response = await client.internal.integrations[
         ":type"
       ].oauth.authorize
@@ -145,19 +129,12 @@ function RouteComponent() {
     }
   };
 
-  const handleCloseDialog = () => {
-    setIsConnectionDialogOpen(false);
-    setConnectionDialogStep("selectType");
-    setSelectedIntegrationType(null);
-  };
-
   const handleSyncLink = async (linkId: string, linkName: string) => {
     try {
       const client = await createClient();
 
       toast.loading(`Syncing "${linkName}"...`, { id: `sync-${linkId}` });
 
-      // @ts-expect-error - Dynamic route parameter type inference limitation
       const response = await client.internal.integrations.links[":linkId"].sync
         .$post({
           param: { linkId },
@@ -184,7 +161,6 @@ function RouteComponent() {
     try {
       const client = await createClient();
       // Fetch document count
-      // @ts-expect-error - Dynamic route parameter type inference limitation
       const countResponse = await client.internal.integrations.links[
         ":linkId"
       ].documents.count.$get({
@@ -242,14 +218,24 @@ function RouteComponent() {
       },
     });
   };
+
+  const iconUrl = getIntegrationIconUrl("github");
+
   return (
     <div className="flex flex-col gap-y-6">
-      <div>
-        <Heading level={1}>GitHub Integration</Heading>
-        <p className="text-sm/relaxed text-gray-600 mt-1">
-          Sync your documents to a GitHub repository.
-        </p>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-x-2">
+          <img src={iconUrl} alt="GitHub icon" className="size-8 rounded-sm" />
+          <div>
+            <Heading level={1}>GitHub Integration</Heading>
+            <p className="text-sm/relaxed text-gray-600 mt-1">
+              Sync your documents to a GitHub repository.
+            </p>
+          </div>
+        </div>
+        <Button onPress={connect}>Enable</Button>
       </div>
+
       <Separator />
 
       {/* 1. Connection Management */}
@@ -415,7 +401,7 @@ function RouteComponent() {
         </div>
       )}
 
-      <ConnectionDialog
+      {/* <ConnectionDialog
         isOpen={isConnectionDialogOpen}
         onOpenChange={setIsConnectionDialogOpen}
         step={connectionDialogStep}
@@ -423,7 +409,7 @@ function RouteComponent() {
         organizationId={organization?.id || ""}
         onSelectIntegration={handleSelectIntegration}
         onClose={handleCloseDialog}
-      />
+      /> */}
 
       {/* Show link configuration dialog */}
       {linkDialogConnectionId && (

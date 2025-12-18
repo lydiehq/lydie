@@ -99,50 +99,6 @@ function RouteComponent() {
     try {
       const client = await createClient();
 
-      // 1. Validate credentials by trying to create connection (which typically validates)
-      // OR we can have a specific validate endpoint.
-      // For now, let's try to create the connection directly,
-      // passing the config. The backend 'create' should validate it.
-
-      // Note: The API schema might expect a specific format for 'create'.
-      // Assuming a standard POST to /integrations/wordpress (or similar dynamic route)
-
-      // Using the dynamic route pattern seen in github.tsx:
-      // client.internal.integrations[':type'].oauth... is for OAuth.
-      // For simple credentials, we might need a different endpoint or use a generic 'create' endpoint if it exists.
-
-      // Let's assume there is a generic create endpoint for integrations that takes config.
-      // If not, we might need to add one.
-      // Checking github.tsx, it uses OAuth flow which creates connection on callback.
-      // Since WP is credentials based, we need to POST credentials.
-
-      // Start a connection
-      // We might need to look at how manual connections are created.
-      // Assuming an endpoint: POST /api/integrations/wordpress/connect
-
-      // Actually, let's look at how we might POST config.
-      // If the pattern is strictly OAuth, we might need to adjust the backend to accept direct config.
-      // But 'BaseIntegration' has 'validateConnection'.
-
-      // Let's assume we can POST to `client.internal.integrations.connect` or similar if it exists?
-      // If not, we will try to use the generic structure.
-
-      // Let's try:
-      /*
-            const response = await client.internal.integrations.connect.$post({
-                json: {
-                    type: "wordpress",
-                    organizationId: organization.id,
-                    config: wpConfig
-                }
-            });
-            */
-
-      // Looking at previous patterns, there might not be a generic 'connect' endpoint exposed yet for non-OAuth.
-      // However, I will implement the UI assuming we can call an endpoint.
-      // I will try to call a new endpoint: `client.internal.integrations[':type'].connect.$post`
-
-      // @ts-expect-error - Dynamic route
       const response = await client.internal.integrations[":type"].connect
         .$post({
           param: { type: "wordpress" },

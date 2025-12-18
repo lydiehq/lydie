@@ -71,6 +71,7 @@ function EditorContainer({ doc }: Props) {
         documentId: doc.id,
         title: title || "Untitled document",
         indexStatus: "outdated",
+        organizationId: doc.organization_id,
       })
     );
   };
@@ -102,6 +103,7 @@ function EditorContainer({ doc }: Props) {
         title: title || "Untitled document",
         jsonContent: contentEditor.editor.getJSON(),
         indexStatus: "outdated",
+        organizationId: doc.organization_id,
       })
     );
   };
@@ -274,6 +276,7 @@ function EditorContainer({ doc }: Props) {
                   onAddLink={handleOpenLinkDialog}
                 />
                 <EditorContent
+                  aria-label="Document content"
                   editor={contentEditor.editor}
                   className="min-h-full size-full"
                 />
