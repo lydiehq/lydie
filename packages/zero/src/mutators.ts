@@ -660,14 +660,37 @@ export const mutators = defineMutators({
             .where("id", connectionId)
             .where("organization_id", organizationId)
             .one()
+            .related("links")
         );
 
         if (!connection) {
           throw new Error(`Connection not found: ${connectionId}`);
         }
 
-        console.log("Deleting connection", connectionId);
+        // Clean up all resources related to this integration connection
+        // to avoid duplicate slug violations when documents are moved to root organization
 
+        // For each integration link, delete all associated documents
+        // (folders will be automatically deleted via cascade when links are deleted)
+        for (const link of connection.links) {
+          const linkWithDocuments = await tx.run(
+            zql.integration_links
+              .where("id", link.id)
+              .one()
+              .related("documents")
+          );
+
+          if (linkWithDocuments) {
+            // Delete all documents associated with this link
+            // This will cascade to embeddings, conversations, publications, etc.
+            const deleteDocumentsPromise = linkWithDocuments.documents.map(
+              ({ id }) => tx.mutate.documents.delete({ id })
+            );
+            await Promise.all(deleteDocumentsPromise);
+          }
+        }
+
+        // Delete the connection (this will cascade to links, sync_metadata, and activity_logs)
         await tx.mutate.integration_connections.delete({
           id: connectionId,
         });

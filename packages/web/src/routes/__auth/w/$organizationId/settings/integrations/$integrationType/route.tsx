@@ -12,6 +12,7 @@ import { z } from "zod";
 import { Outlet } from "@tanstack/react-router";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
+import { confirmDialog } from "@/stores/confirm-dialog";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationId/settings/integrations/$integrationType"
@@ -69,14 +70,19 @@ function RouteComponent() {
   };
 
   const disconnect = () => {
-    zero.mutate(
-      mutators.integrationConnection.disconnect({
-        // TODO: some integrations may have multiple connections (eg GitHub to
-        // different organizations/users). We should maybe support this.
-        connectionId: integrationConnections[0].id,
-        organizationId: organizationId,
-      })
-    );
+    confirmDialog({
+      title: `Disable ${integrationDetails.name} Integration`,
+      message:
+        "This action will disconnect all connections and delete all documents associated with this integration.",
+      onConfirm: () => {
+        zero.mutate(
+          mutators.integrationConnection.disconnect({
+            connectionId: integrationConnections[0].id,
+            organizationId: organizationId,
+          })
+        );
+      },
+    });
   };
 
   const pages = [
