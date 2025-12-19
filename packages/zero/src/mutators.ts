@@ -232,16 +232,38 @@ export const mutators = defineMutators({
     delete: defineMutator(
       z.object({
         documentId: z.string(),
+        organizationId: z.string(),
       }),
-      async ({ tx, ctx, args: { documentId } }) => {
+      async ({ tx, ctx, args: { documentId, organizationId } }) => {
         isAuthenticated(ctx);
 
+        const document = await tx.run(
+          zql.documents
+            .where("id", documentId)
+            .where("organization_id", organizationId)
+            .one()
+        );
+        if (!document) {
+          throw new Error(`Document not found: ${documentId}`);
+        }
+
         // Soft-delete by setting deleted_at
-        await tx.mutate.documents.update({
-          id: documentId,
-          deleted_at: Date.now(),
-          updated_at: Date.now(),
-        });
+        const isIntegrationDocument = Boolean(
+          document.integration_link_id && document.external_id
+        );
+
+        // If document is part of an integration, delete it completely from Lydie on delete
+        if (isIntegrationDocument) {
+          await tx.mutate.documents.delete({
+            id: documentId,
+          });
+        } else {
+          await tx.mutate.documents.update({
+            id: documentId,
+            deleted_at: Date.now(),
+            updated_at: Date.now(),
+          });
+        }
       }
     ),
   },
@@ -644,9 +666,10 @@ export const mutators = defineMutators({
           throw new Error(`Connection not found: ${connectionId}`);
         }
 
-        await tx.mutate.integration_connections.update({
+        console.log("Deleting connection", connectionId);
+
+        await tx.mutate.integration_connections.delete({
           id: connectionId,
-          updated_at: Date.now(),
         });
       }
     ),

@@ -2,6 +2,8 @@
  * OAuth configuration and types for integrations
  */
 
+import type { IntegrationConnection } from "./types";
+
 /**
  * OAuth 2.0 configuration for an integration
  */
@@ -116,9 +118,7 @@ export interface OAuthIntegration {
    * Optional: Get a fresh access token for the integration
    * For GitHub Apps, this generates a new installation token
    */
-  getAccessToken?(
-    connection: import("./types").IntegrationConnection
-  ): Promise<string>;
+  getAccessToken?(connection: IntegrationConnection): Promise<string>;
 }
 
 /**
@@ -145,3 +145,4 @@ export function encodeOAuthState(state: OAuthState): string {
 export function decodeOAuthState(token: string): OAuthState {
   return JSON.parse(Buffer.from(token, "base64url").toString());
 }
+

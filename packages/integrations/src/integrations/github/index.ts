@@ -3,15 +3,16 @@ import type {
   IntegrationConnection,
   PushOptions,
   PullOptions,
+  DeleteOptions,
   SyncResult,
   ExternalResource,
-} from "../../types";
-import { createErrorResult } from "../../types";
+} from "@lydie/core/integrations";
+import { createErrorResult } from "@lydie/core/integrations";
 import type {
   OAuthConfig,
   OAuthCredentials,
   OAuthIntegration,
-} from "../../oauth";
+} from "@lydie/core/integrations";
 import { Resource } from "sst";
 import {
   serializeToMarkdown,
@@ -493,6 +494,88 @@ export const githubIntegration: GitHubIntegrationExtended = {
     }
   },
 
+  async delete(options: DeleteOptions): Promise<SyncResult> {
+    const { documentId, externalId, connection, commitMessage } = options;
+    const config = connection.config as GitHubConfig;
+
+    try {
+      if (!config.repo || !config.owner) {
+        throw new Error("Repository not fully configured");
+      }
+
+      // Get fresh access token (handles automatic refresh)
+      const accessToken = await getAccessToken(connection);
+
+      // Get the file's current SHA (required for deletion by GitHub API)
+      const getUrl = `https://api.github.com/repos/${config.owner}/${
+        config.repo
+      }/contents/${externalId}?ref=${config.branch || "main"}`;
+      const getResponse = await fetch(getUrl, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github+json",
+        },
+      });
+
+      if (!getResponse.ok) {
+        if (getResponse.status === 404) {
+          // File doesn't exist, consider deletion successful
+          return {
+            success: true,
+            documentId,
+            externalId,
+            message: `File ${externalId} does not exist, deletion skipped`,
+          };
+        }
+        throw new Error(
+          `Failed to get file for deletion: ${getResponse.statusText}`
+        );
+      }
+
+      const fileData = (await getResponse.json()) as { sha: string };
+      const currentSha = fileData.sha;
+
+      // Delete the file
+      const deleteUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${externalId}`;
+      const deleteBody = {
+        message: commitMessage || `Delete ${externalId} from Lydie`,
+        sha: currentSha,
+        branch: config.branch || "main",
+      };
+
+      const deleteResponse = await fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(deleteBody),
+      });
+
+      if (!deleteResponse.ok) {
+        const errorData = await deleteResponse.json().catch(() => ({}));
+        throw new Error(
+          `Failed to delete file: ${
+            deleteResponse.statusText
+          } - ${JSON.stringify(errorData)}`
+        );
+      }
+
+      return {
+        success: true,
+        documentId,
+        externalId,
+        message: `Deleted ${externalId} from ${config.owner}/${config.repo}`,
+      };
+    } catch (error) {
+      return createErrorResult(
+        documentId,
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
+  },
+
   async pull(options: PullOptions): Promise<SyncResult[]> {
     const { connection } = options;
     const config = connection.config as GitHubConfig;
@@ -554,7 +637,7 @@ export const githubIntegration: GitHubIntegrationExtended = {
             .replace(/\//g, "-")
             .toLowerCase();
 
-          // Preserve the full filename with extension in the title
+          // Preserve the full
           // This is crucial for GitHub integration to know what extension to use when pushing
           const title = fileName;
 
@@ -818,5 +901,73 @@ export const githubIntegration: GitHubIntegrationExtended = {
    */
   async getAccessToken(connection: IntegrationConnection): Promise<string> {
     return getAccessToken(connection);
+  },
+
+  /**
+   * Remove the GitHub App installation when connection is disconnected
+   */
+  async onDisconnect(connection: IntegrationConnection): Promise<void> {
+    const config = connection.config as GitHubConfig;
+
+    if (!config.installationId) {
+      console.log(
+        "[GitHub] No installation ID found, skipping installation removal"
+      );
+      return;
+    }
+
+    try {
+      // Get GitHub App credentials to generate JWT
+      const appCredentials = await getGitHubAppCredentials();
+      if (!appCredentials.clientId || !appCredentials.privateKey) {
+        console.error(
+          "[GitHub] App credentials not configured, cannot remove installation"
+        );
+        return;
+      }
+
+      // Generate JWT for GitHub App authentication
+      const jwtToken = await generateAppJWT(appCredentials);
+
+      // Delete the installation using GitHub API
+      const deleteResponse = await fetch(
+        `https://api.github.com/app/installations/${config.installationId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+            Accept: "application/vnd.github+json",
+          },
+        }
+      );
+
+      if (!deleteResponse.ok) {
+        // 404 means installation already deleted, which is fine
+        if (deleteResponse.status === 404) {
+          console.log(
+            `[GitHub] Installation ${config.installationId} already removed`
+          );
+          return;
+        }
+
+        const errorData = await deleteResponse.json().catch(() => ({}));
+        throw new Error(
+          `Failed to delete installation: ${
+            deleteResponse.statusText
+          } - ${JSON.stringify(errorData)}`
+        );
+      }
+
+      console.log(
+        `[GitHub] Successfully removed installation ${config.installationId}`
+      );
+    } catch (error) {
+      // Log error but don't throw - we don't want to block disconnection
+      // if the installation removal fails (e.g., already deleted, network issue)
+      console.error(
+        `[GitHub] Error removing installation ${config.installationId}:`,
+        error instanceof Error ? error.message : String(error)
+      );
+    }
   },
 };

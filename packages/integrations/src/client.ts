@@ -5,4 +5,4 @@ export type {
   SyncResult,
   SyncMetadata,
   ExternalResource,
-} from "./types";
+} from "@lydie/core/integrations";

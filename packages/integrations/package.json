@@ -10,7 +10,8 @@
   "dependencies": {
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",

@@ -4,7 +4,7 @@ import { zql } from "../../schema";
 import { hasOrganizationAccess } from "../../auth";
 import { db } from "@lydie/database";
 import { sql } from "drizzle-orm";
-import { logIntegrationActivity } from "@lydie/integrations/activity-log";
+import { logIntegrationActivity } from "@lydie/core/integrations";
 import { mutators as sharedMutators } from "../../mutators";
 
 import { integrationRegistry } from "@lydie/integrations";

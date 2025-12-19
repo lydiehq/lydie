@@ -68,7 +68,7 @@ function RouteComponent() {
     }
   };
 
-  const disconnect = async () => {
+  const disconnect = () => {
     zero.mutate(
       mutators.integrationConnection.disconnect({
         // TODO: some integrations may have multiple connections (eg GitHub to

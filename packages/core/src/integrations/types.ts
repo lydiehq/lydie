@@ -79,6 +79,16 @@ export interface PullOptions {
 }
 
 /**
+ * Options for delete sync operation
+ */
+export interface DeleteOptions {
+  documentId: string; // Document ID in Lydie
+  externalId: string; // ID/path in external system (e.g., GitHub file path)
+  connection: IntegrationConnection;
+  commitMessage?: string;
+}
+
+/**
  * Pulled document from external platform
  */
 export interface PulledDocument {
@@ -147,6 +157,11 @@ export interface Integration {
   pull(options: PullOptions): Promise<SyncResult[]>;
 
   /**
+   * Delete a document from the external platform
+   */
+  delete(options: DeleteOptions): Promise<SyncResult>;
+
+  /**
    * Fetch available resources for the authenticated user/connection
    * Examples: GitHub repositories, Shopify collections, WordPress sites
    */
@@ -158,7 +173,7 @@ export interface Integration {
    * Called when a connection is disconnected
    * Optional - integrations can override this to perform cleanup
    */
-  onDisconnect?(): Promise<void>;
+  onDisconnect?(connection: IntegrationConnection): Promise<void>;
 
   /**
    * Called after a connection is successfully established

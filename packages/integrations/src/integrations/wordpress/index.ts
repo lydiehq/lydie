@@ -3,11 +3,12 @@ import type {
   IntegrationConnection,
   PushOptions,
   PullOptions,
+  DeleteOptions,
   SyncResult,
   ExternalResource,
   DefaultLink,
-} from "../../types";
-import { createErrorResult } from "../../types";
+} from "@lydie/core/integrations";
+import { createErrorResult } from "@lydie/core/integrations";
 import {
   serializeToHTML,
   deserializeFromHTML,
@@ -219,6 +220,56 @@ export const wordpressIntegration: Integration = {
       return createErrorResult(
         document.id,
         error.message || "Failed to push to WordPress"
+      );
+    }
+  },
+
+  async delete(options: DeleteOptions): Promise<SyncResult> {
+    const { documentId, externalId, connection } = options;
+    const config = connection.config as WordpressConfig;
+
+    try {
+      if (!config.siteUrl || !config.username || !config.applicationPassword) {
+        throw new Error("WordPress configuration incomplete");
+      }
+
+      const baseUrl = cleanUrl(config.siteUrl);
+      const headers = getAuthHeaders(config);
+      const endpointType = config.resourceType || "posts";
+
+      const endpoint = `${baseUrl}/wp-json/wp/v2/${endpointType}/${externalId}?force=true`;
+
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Resource doesn't exist, consider deletion successful
+          return {
+            success: true,
+            documentId,
+            externalId,
+            message: `Resource ${externalId} does not exist, deletion skipped`,
+          };
+        }
+        const errorText = await response.text();
+        throw new Error(
+          `WordPress API error: ${response.status} ${response.statusText} - ${errorText}`
+        );
+      }
+
+      return {
+        success: true,
+        documentId,
+        externalId,
+        message: `Deleted ${endpointType} ${externalId} from ${config.siteUrl}`,
+      };
+    } catch (error: any) {
+      return createErrorResult(
+        documentId,
+        error.message || "Failed to delete from WordPress"
       );
     }
   },

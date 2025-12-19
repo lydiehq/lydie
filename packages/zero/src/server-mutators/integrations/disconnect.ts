@@ -43,7 +43,16 @@ export const disconnectIntegrationMutation = (
       console.log("disconnecting integration", integration.onDisconnect);
 
       if (typeof integration.onDisconnect === "function") {
-        asyncTasks.push(integration.onDisconnect);
+        // Transform database connection to IntegrationConnection interface
+        const integrationConnection = {
+          id: connection.id,
+          integrationType: connection.integration_type,
+          organizationId: connection.organization_id,
+          config: connection.config as Record<string, any>,
+          createdAt: new Date(connection.created_at),
+          updatedAt: new Date(connection.updated_at),
+        };
+        asyncTasks.push(() => integration.onDisconnect!(integrationConnection));
       }
     }
   );

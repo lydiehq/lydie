@@ -3,15 +3,16 @@ import type {
   IntegrationConnection,
   PushOptions,
   PullOptions,
+  DeleteOptions,
   SyncResult,
   ExternalResource,
-} from "../../types";
-import { createErrorResult } from "../../types";
+} from "@lydie/core/integrations";
+import { createErrorResult } from "@lydie/core/integrations";
 import type {
   OAuthConfig,
   OAuthCredentials,
   OAuthIntegration,
-} from "../../oauth";
+} from "@lydie/core/integrations";
 import { Resource } from "sst";
 import {
   serializeToHTML,
@@ -304,6 +305,70 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       return createErrorResult(
         document.id,
         error.message || "Failed to push to Shopify"
+      );
+    }
+  },
+
+  async delete(options: DeleteOptions): Promise<SyncResult> {
+    const { documentId, externalId, connection } = options;
+    const config = connection.config as ShopifyConfig;
+
+    try {
+      if (!config.shop || !config.accessToken) {
+        throw new Error("Shop not configured");
+      }
+
+      const headers = {
+        "X-Shopify-Access-Token": config.accessToken,
+        "Content-Type": "application/json",
+      };
+
+      const resourceType = config.resourceType || "pages";
+      let endpoint = "";
+
+      if (resourceType === "pages") {
+        endpoint = `https://${config.shop}/admin/api/2024-01/pages/${externalId}.json`;
+      } else if (resourceType === "blog") {
+        const blogId = config.resourceId;
+        if (!blogId) {
+          throw new Error("Blog ID is required for deleting blog articles");
+        }
+        endpoint = `https://${config.shop}/admin/api/2024-01/blogs/${blogId}/articles/${externalId}.json`;
+      } else {
+        throw new Error(`Unknown resource type: ${resourceType}`);
+      }
+
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Resource doesn't exist, consider deletion successful
+          return {
+            success: true,
+            documentId,
+            externalId,
+            message: `Resource ${externalId} does not exist, deletion skipped`,
+          };
+        }
+        const errorText = await response.text();
+        throw new Error(
+          `Shopify API error: ${response.status} ${response.statusText} - ${errorText}`
+        );
+      }
+
+      return {
+        success: true,
+        documentId,
+        externalId,
+        message: `Deleted ${resourceType} ${externalId} from ${config.shop}`,
+      };
+    } catch (error: any) {
+      return createErrorResult(
+        documentId,
+        error.message || "Failed to delete from Shopify"
       );
     }
   },

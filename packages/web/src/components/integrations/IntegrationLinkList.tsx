@@ -1,6 +1,7 @@
 import { Menu, MenuItem } from "@/components/generic/Menu";
 import {
   Button as RACButton,
+  Heading as RACHeading,
   MenuTrigger,
   DialogTrigger,
 } from "react-aria-components";
@@ -165,26 +166,20 @@ export function IntegrationLinkListItem({
   const { organization } = useOrganization();
   const zero = useZero();
 
-  const deleteLink = () => {
-    zero.mutate(
-      mutators.integration.deleteLink({
-        linkId: link.id,
-        organizationId: organization?.id || "",
-      })
-    );
-  };
   const client = useAuthenticatedApi();
 
   const onSync = async () => {
     const apiClient = await client.createClient();
     // TODO: maybe handle via Zero mutator
-    // better UI feedback for sync
-    await apiClient.internal.integrations.links[":linkId"].sync
+    // better UI feedback for pull
+    await apiClient.internal.integrations.links[":linkId"].pull
       .$post({
         param: { linkId: link.id },
       })
       .then((res: Response) => res.json());
   };
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   return (
     <ul className="p-2.5 hover:bg-black/1 first:rounded-t-lg last:rounded-b-lg transition-colors duration-75">
@@ -207,10 +202,76 @@ export function IntegrationLinkListItem({
           </RACButton>
           <Menu>
             <MenuItem onAction={onSync}>Resync</MenuItem>
-            <MenuItem onAction={deleteLink}>Delete</MenuItem>
+            <MenuItem onAction={() => setIsDeleteDialogOpen(true)}>
+              Delete
+            </MenuItem>
           </Menu>
         </MenuTrigger>
+        <DeleteLinkDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          link={link}
+        />
       </div>
     </ul>
+  );
+}
+
+type DeleteLinkDialogProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  link: QueryResultType<
+    typeof queries.integrationLinks.byIntegrationType
+  >[number];
+};
+
+function DeleteLinkDialog({
+  isOpen,
+  onOpenChange,
+  link,
+}: DeleteLinkDialogProps) {
+  const zero = useZero();
+  const { organization } = useOrganization();
+
+  const handleConfirm = () => {
+    zero.mutate(
+      mutators.integration.deleteLink({
+        linkId: link.id,
+        organizationId: organization?.id || "",
+        deleteDocuments: true,
+      })
+    );
+  };
+
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange} isDismissable size="sm">
+      <Dialog role="alertdialog">
+        <div className="p-4 flex flex-col gap-y-3">
+          <RACHeading
+            slot="title"
+            className="text-lg font-medium text-gray-900"
+          >
+            Confirm
+          </RACHeading>
+          <p className="text-sm text-slate-600">
+            The link you&apo;re trying to delete has existing documents, do you
+            want to delete them or transfer to the organization root? ( this is
+            not implemented)
+          </p>
+          <div className="flex gap-x-1.5 justify-end">
+            <Button
+              intent="secondary"
+              onPress={() => onOpenChange(false)}
+              size="sm"
+            >
+              Cancel
+            </Button>
+            <Button onPress={handleConfirm} size="sm" autoFocus>
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+    </Modal>
   );
 }

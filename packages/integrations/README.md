@@ -64,7 +64,7 @@ interface Integration {
   ): Promise<ExternalResource[]>;
 
   // Optional: cleanup when connection is disconnected
-  onDisconnect?(): Promise<void>;
+  onDisconnect?(connection: IntegrationConnection): Promise<void>;
 
   // Optional: auto-create links on connection
   onConnect?(): { links?: DefaultLink[] };

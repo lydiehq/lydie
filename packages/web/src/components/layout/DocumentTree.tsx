@@ -132,6 +132,13 @@ export function DocumentTree() {
     })
   );
 
+  // Query integration connections (to show all connected integrations)
+  const [connections] = useQuery(
+    queries.integrations.byOrganization({
+      organizationId: organization?.id || "",
+    })
+  );
+
   // Query extension links with their connections
   const [extensionLinks] = useQuery(
     queries.integrationLinks.byOrganization({
@@ -236,27 +243,48 @@ export function DocumentTree() {
   };
 
   // Build integration link entries grouped by type
+  // Show groups for all active connections, even if they have no links
   const linkGroups = useMemo(() => {
-    const groups = new Map<string, typeof extensionLinks>();
+    // Get all active connections grouped by integration type
+    const connectionGroups = new Map<string, typeof connections>();
+    
+    connections?.forEach((connection) => {
+      if (connection.status !== "active") return;
+      
+      const type = connection.integration_type;
+      if (!type) return;
+
+      if (!connectionGroups.has(type)) {
+        connectionGroups.set(type, []);
+      }
+      connectionGroups.get(type)?.push(connection);
+    });
+
+    // Group links by integration type
+    const linkGroupsByType = new Map<string, typeof extensionLinks>();
 
     extensionLinks.forEach((link) => {
       const type = link.connection?.integration_type;
       if (!type) return;
 
-      if (!groups.has(type)) {
-        groups.set(type, []);
+      if (!linkGroupsByType.has(type)) {
+        linkGroupsByType.set(type, []);
       }
-      groups.get(type)?.push(link);
+      linkGroupsByType.get(type)?.push(link);
     });
 
     const items: TreeItem[] = [];
 
-    groups.forEach((links, type) => {
+    // Create groups for all active connections
+    connectionGroups.forEach((conns, type) => {
       const metadata = getIntegrationMetadata(type);
       if (!metadata) return;
 
+      // Get links for this integration type
+      const linksForType = linkGroupsByType.get(type) || [];
+
       // Sort links within each integration group alphabetically by name
-      const sortedLinks = [...links].sort((a, b) =>
+      const sortedLinks = [...linksForType].sort((a, b) =>
         (a.name || "").localeCompare(b.name || "", undefined, {
           sensitivity: "base",
         })
@@ -284,7 +312,7 @@ export function DocumentTree() {
     );
 
     return items;
-  }, [extensionLinks, documents, folders]); // Re-compute when data changes
+  }, [connections, extensionLinks, documents, folders]); // Re-compute when data changes
 
   // Combine integration groups (at top) with regular tree items
   const treeItems = [...linkGroups, ...buildTreeItems(null)];

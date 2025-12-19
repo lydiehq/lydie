@@ -169,10 +169,10 @@ function RouteComponent() {
     try {
       const client = await createClient();
 
-      toast.loading(`Syncing "${linkName}"...`, { id: `sync-${linkId}` });
+      toast.loading(`Pulling "${linkName}"...`, { id: `sync-${linkId}` });
 
       // @ts-expect-error - Dynamic route parameter type inference limitation
-      const response = await client.internal.integrations.links[":linkId"].sync
+      const response = await client.internal.integrations.links[":linkId"].pull
         .$post({
           param: { linkId },
         })
@@ -182,7 +182,7 @@ function RouteComponent() {
         toast.error(response.error, { id: `sync-${linkId}` });
       } else if ("imported" in response) {
         toast.success(
-          `Synced ${response.imported} document(s) from "${linkName}"`,
+          `Pulled ${response.imported} document(s) from "${linkName}"`,
           {
             id: `sync-${linkId}`,
           }

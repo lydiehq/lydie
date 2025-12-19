@@ -8,18 +8,19 @@ import {
 } from "@lydie/database";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
-import {
-  integrationRegistry,
-  encodeOAuthState,
-  decodeOAuthState,
-  type OAuthState,
-  type OAuthIntegration,
-  type Integration,
-} from "@lydie/integrations";
+import { integrationRegistry } from "@lydie/integrations";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { authenticatedWithOrganization } from "./middleware";
-import { logIntegrationActivity } from "@lydie/integrations/activity-log";
+import {
+  decodeOAuthState,
+  encodeOAuthState,
+  Integration,
+  logIntegrationActivity,
+  OAuthIntegration,
+  OAuthState,
+  pullFromIntegrationLink,
+} from "@lydie/core/integrations";
 
 // Helper to check if integration supports OAuth
 function supportsOAuth(
@@ -556,279 +557,55 @@ export const IntegrationsRoute = new Hono<{
 
     return c.json({ success: true });
   })
-
-  // Sync/pull documents from a specific link
-  .post("/links/:linkId/sync", authenticatedWithOrganization, async (c) => {
+  .post("/links/:linkId/pull", authenticatedWithOrganization, async (c) => {
     const linkId = c.req.param("linkId");
     const organizationId = c.get("organizationId");
     const user = c.get("user");
 
-    try {
-      console.log(`[Integrations] Starting sync for link ${linkId}`);
+    // Fetch link with its connection to get integration type
+    const link = await db.query.integrationLinksTable.findFirst({
+      where: { id: linkId },
+      with: {
+        connection: true,
+      },
+    });
 
-      // Fetch link with its connection
-      const link = await db.query.integrationLinksTable.findFirst({
-        where: { id: linkId },
-        with: {
-          connection: true,
-        },
-      });
+    if (!link || link.organizationId !== organizationId) {
+      return c.json({ error: "Link not found" }, 404);
+    }
 
-      if (!link || link.organizationId !== organizationId) {
-        console.error(
-          `[Integrations] Link not found or access denied: ${linkId}`
-        );
-        return c.json({ error: "Link not found" }, 404);
-      }
+    if (!link.connection) {
+      return c.json({ error: "Connection not found" }, 404);
+    }
 
-      const connection = link.connection;
-      if (!connection) {
-        return c.json({ error: "Connection not found" }, 404);
-      }
+    // Get integration from registry
+    const integration = integrationRegistry.get(
+      link.connection.integrationType
+    );
+    if (!integration) {
+      return c.json({ error: "Unknown integration type" }, 404);
+    }
 
-      // Get integration from registry
-      const integration = integrationRegistry.get(connection.integrationType);
-      if (!integration) {
-        return c.json({ error: "Unknown integration type" }, 404);
-      }
+    const result = await pullFromIntegrationLink({
+      linkId,
+      organizationId,
+      userId: user.id,
+      integration,
+    });
 
-      console.log(
-        `[Integrations] Pulling from ${connection.integrationType} link: ${link.name}`
-      );
-
-      // Merge connection config with link config for the pull
-      // Link config contains path-specific info (e.g., repo path)
-      const mergedConfig = {
-        ...(connection.config as Record<string, any>),
-        ...(link.config as Record<string, any>),
-      };
-
-      // Create a connection object for token refresh
-      const connectionForRefresh = {
-        id: connection.id,
-        integrationType: connection.integrationType,
-        organizationId: connection.organizationId,
-        config: mergedConfig,
-        createdAt: connection.createdAt,
-        updatedAt: connection.updatedAt,
-      };
-
-      // Refresh access token if needed (for GitHub Apps with expiring tokens)
-      if (
-        "getAccessToken" in integration &&
-        typeof integration.getAccessToken === "function"
-      ) {
-        try {
-          const oldToken = (mergedConfig as any).installationAccessToken;
-          await integration.getAccessToken(connectionForRefresh);
-          const newToken = (mergedConfig as any).installationAccessToken;
-
-          // Update database if token was refreshed
-          if (oldToken !== newToken) {
-            console.log(
-              `[Integrations] Token refreshed for connection ${connection.id}`
-            );
-            await db
-              .update(integrationConnectionsTable)
-              .set({
-                config: connection.config,
-                updatedAt: new Date(),
-              })
-              .where(eq(integrationConnectionsTable.id, connection.id));
-          }
-        } catch (error) {
-          console.error(
-            `[Integrations] Failed to refresh token for connection ${connection.id}:`,
-            error
-          );
-          // Continue anyway - the getAccessToken in the integration will handle errors
-        }
-      }
-
-      // Call integration's pull method
-      const results = await integration.pull({
-        connection: connectionForRefresh,
-        organizationId,
-        userId: user.id,
-      });
-
-      let imported = 0;
-      let failed = 0;
-
-      // Helper function to get or create folder by path
-      const getOrCreateFolderByPath = async (
-        folderPath: string | null | undefined
-      ): Promise<string | undefined> => {
-        if (!folderPath || folderPath.trim() === "" || folderPath === "/") {
-          return undefined; // Root level
-        }
-
-        // Normalize path: remove leading/trailing slashes and split
-        const parts = folderPath
-          .replace(/^\/+|\/+$/g, "")
-          .split("/")
-          .filter((part) => part.length > 0);
-
-        if (parts.length === 0) {
-          return undefined;
-        }
-
-        let currentParentId: string | undefined = undefined;
-
-        // Traverse the path, creating folders as needed
-        for (const folderName of parts) {
-          // Check if folder already exists with this name, parent, and organization
-          const [existingFolder] = await db
-            .select()
-            .from(foldersTable)
-            .where(
-              and(
-                eq(foldersTable.name, folderName),
-                eq(foldersTable.organizationId, organizationId),
-                eq(foldersTable.integrationLinkId, linkId),
-                isNull(foldersTable.deletedAt),
-                currentParentId
-                  ? eq(foldersTable.parentId, currentParentId)
-                  : isNull(foldersTable.parentId)
-              )
-            )
-            .limit(1);
-
-          if (existingFolder) {
-            // Reuse existing folder
-            currentParentId = existingFolder.id;
-          } else {
-            // Create new folder
-            const newFolderId = createId();
-            await db.insert(foldersTable).values({
-              id: newFolderId,
-              name: folderName,
-              userId: user.id,
-              organizationId,
-              parentId: currentParentId || null,
-              integrationLinkId: linkId,
-            });
-            currentParentId = newFolderId;
-          }
-        }
-
-        return currentParentId;
-      };
-
-      // Create documents from pull results
-      for (const result of results) {
-        if (result.success && result.metadata) {
-          try {
-            // Get or create folder if folderPath is provided
-            const folderPath = result.metadata.folderPath as
-              | string
-              | null
-              | undefined;
-            const folderId = await getOrCreateFolderByPath(folderPath);
-
-            const documentId = createId();
-
-            await db.insert(documentsTable).values({
-              id: documentId,
-              title: result.metadata.title,
-              slug: result.metadata.slug,
-              jsonContent: result.metadata.content,
-              userId: user.id,
-              organizationId,
-              folderId: folderId || null, // Use created folder or null for root
-              integrationLinkId: link.id,
-              externalId: result.externalId,
-              indexStatus: "pending",
-              published: true, // Documents from integrations are published by default
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
-
-            imported++;
-            console.log(
-              `[Integrations] Imported: ${result.externalId}${
-                folderPath ? ` (folder: ${folderPath})` : ""
-              }`
-            );
-          } catch (error) {
-            failed++;
-            console.error(
-              `[Integrations] Failed to create document from ${result.externalId}:`,
-              error
-            );
-          }
-        } else {
-          failed++;
-          console.error(`[Integrations] Pull failed: ${result.error}`);
-        }
-      }
-
-      // Update last synced timestamp
-      await db
-        .update(integrationLinksTable)
-        .set({
-          lastSyncedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(integrationLinksTable.id, linkId));
-
-      console.log(
-        `[Integrations] Sync complete. Imported: ${imported}, Failed: ${failed}`
-      );
-
-      // If sync succeeded, ensure connection status is active
-      if (connection.status !== "active") {
-        await db
-          .update(integrationConnectionsTable)
-          .set({
-            status: "active",
-            statusMessage: null,
-            updatedAt: new Date(),
-          })
-          .where(eq(integrationConnectionsTable.id, connection.id));
-      }
-
-      return c.json({ success: true, imported, failed });
-    } catch (error) {
-      console.error("[Integrations] Error during sync:", error);
-      console.error(
-        "[Integrations] Error stack:",
-        error instanceof Error ? error.stack : "No stack"
-      );
-
-      // Update connection status to error if sync failed
-      try {
-        // Get the link and connection to update status
-        const linkRow = await db
-          .select()
-          .from(integrationLinksTable)
-          .where(eq(integrationLinksTable.id, linkId))
-          .limit(1);
-
-        if (linkRow[0]) {
-          await db
-            .update(integrationConnectionsTable)
-            .set({
-              status: "error",
-              statusMessage:
-                error instanceof Error ? error.message : "Sync failed",
-              updatedAt: new Date(),
-            })
-            .where(eq(integrationConnectionsTable.id, linkRow[0].connectionId));
-        }
-      } catch (updateError) {
-        console.error(
-          "[Integrations] Failed to update connection status:",
-          updateError
-        );
-      }
-
+    if (!result.success) {
       return c.json(
         {
-          error: "Failed to sync",
-          details: error instanceof Error ? error.message : String(error),
+          error: "Failed to pull",
+          details: result.error,
         },
         500
       );
     }
+
+    return c.json({
+      success: true,
+      imported: result.imported,
+      failed: result.failed,
+    });
   });

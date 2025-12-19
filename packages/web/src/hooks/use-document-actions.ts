@@ -55,7 +55,12 @@ export function useDocumentActions() {
 
   const deleteDocument = (documentId: string, redirectAfterDelete = false) => {
     try {
-      z.mutate(mutators.document.delete({ documentId }));
+      z.mutate(
+        mutators.document.delete({
+          documentId,
+          organizationId: organization?.id || "",
+        })
+      );
       toast.success("Document deleted");
 
       if (redirectAfterDelete) {
