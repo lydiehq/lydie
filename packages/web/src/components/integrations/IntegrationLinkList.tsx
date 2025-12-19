@@ -163,9 +163,6 @@ type IntegrationLinkListItemProps = {
 export function IntegrationLinkListItem({
   link,
 }: IntegrationLinkListItemProps) {
-  const { organization } = useOrganization();
-  const zero = useZero();
-
   const client = useAuthenticatedApi();
 
   const onSync = async () => {
@@ -243,6 +240,8 @@ function DeleteLinkDialog({
     );
   };
 
+  const hasDocuments = link.documents.length > 0;
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} isDismissable size="sm">
       <Dialog role="alertdialog">
@@ -254,9 +253,9 @@ function DeleteLinkDialog({
             Confirm
           </RACHeading>
           <p className="text-sm text-slate-600">
-            The link you&apo;re trying to delete has existing documents, do you
-            want to delete them or transfer to the organization root? ( this is
-            not implemented)
+            {hasDocuments
+              ? "The link you're trying to delete has existing documents which will be deleted, do you want to continue?"
+              : "Are you sure you want to delete this link?"}
           </p>
           <div className="flex gap-x-1.5 justify-end">
             <Button
