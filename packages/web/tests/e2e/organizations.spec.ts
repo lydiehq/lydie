@@ -60,14 +60,16 @@ test.describe("organization management", () => {
 
       await page.getByRole("menuitem", { name: "Switch organization" }).click();
 
+      const dialog = await page.getByRole("dialog");
+
       await expect(
-        page.getByRole("heading", { name: "My organizations" })
+        dialog.getByRole("heading", { name: "My organizations" })
       ).toBeVisible();
 
-      await expect(page.getByText(organization.name)).toBeVisible();
-      await expect(page.getByText(secondOrgName)).toBeVisible();
+      await expect(dialog.getByText(organization.name)).toBeVisible();
+      await expect(dialog.getByText(secondOrgName)).toBeVisible();
 
-      await page.getByRole("button").filter({ hasText: secondOrgName }).click();
+      await dialog.getByRole("button", { name: secondOrgName }).click();
 
       await page.waitForURL(`/w/${secondOrg.id}`);
 

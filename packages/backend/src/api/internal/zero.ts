@@ -17,6 +17,8 @@ export const ZeroRoute = new Hono()
   .post("/queries", async (c) => {
     const sessionData = await authClient.api.getSession(c.req.raw);
 
+    console.log(c.req.raw.headers);
+
     if (!sessionData?.session) {
       throw new HTTPException(401, {
         message: "Unauthorized",

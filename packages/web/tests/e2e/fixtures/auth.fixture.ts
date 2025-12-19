@@ -14,7 +14,7 @@ import { createHMAC } from "@better-auth/utils/hmac";
 import { base64 } from "@better-auth/utils/base64";
 import { createRandomStringGenerator } from "@better-auth/utils/random";
 import type { InferSelectModel } from "drizzle-orm";
-import { createTestUser } from "../utils/db";
+import { createTestUser } from "@lydie/test-utils";
 
 interface WorkerData {
   user: InferSelectModel<typeof usersTable>;

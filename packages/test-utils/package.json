@@ -1,0 +1,17 @@
+{
+  "name": "@lydie/test-utils",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@better-auth/utils": "^0.3.0",
+    "@lydie/database": "workspace:*",
+    "@lydie/core": "workspace:*",
+    "@lydie/zero": "workspace:*",
+    "@rocicorp/zero": "catalog:",
+    "drizzle-orm": "catalog:"
+  }
+}

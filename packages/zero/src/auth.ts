@@ -18,6 +18,7 @@ declare module "@rocicorp/zero" {
 export function isAuthenticated(
   session: Context | undefined
 ): asserts session is Context {
+  console.log("isAuthenticated", session);
   if (!session || !session.userId) {
     throw new Error("Session expired");
   }

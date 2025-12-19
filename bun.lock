@@ -144,6 +144,18 @@
         "@types/react": "^19.2.7",
       },
     },
+    "packages/test-utils": {
+      "name": "@lydie/test-utils",
+      "version": "0.0.0",
+      "dependencies": {
+        "@better-auth/utils": "^0.3.0",
+        "@lydie/core": "workspace:*",
+        "@lydie/database": "workspace:*",
+        "@lydie/zero": "workspace:*",
+        "@rocicorp/zero": "catalog:",
+        "drizzle-orm": "catalog:",
+      },
+    },
     "packages/web": {
       "name": "@lydie/web",
       "dependencies": {
@@ -214,6 +226,7 @@
       },
       "devDependencies": {
         "@better-auth/utils": "^0.3.0",
+        "@lydie/test-utils": "workspace:*",
         "@playwright/test": "^1.57.0",
         "@testing-library/dom": "^10.4.1",
         "@testing-library/react": "^16.3.1",
@@ -245,6 +258,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@lydie/test-utils": "workspace:*",
         "sst": "catalog:",
       },
     },
@@ -709,6 +723,8 @@
     "@lydie/database": ["@lydie/database@workspace:packages/database"],
 
     "@lydie/integrations": ["@lydie/integrations@workspace:packages/integrations"],
+
+    "@lydie/test-utils": ["@lydie/test-utils@workspace:packages/test-utils"],
 
     "@lydie/web": ["@lydie/web@workspace:packages/web"],
 
