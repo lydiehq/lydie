@@ -227,6 +227,7 @@ const integrationLinks = table("integration_links")
     integration_type: string(), // Denormalized from connection for easier querying
     config: json(), // Integration-specific: { owner, repo, branch, path } for GitHub
     last_synced_at: number().optional(),
+    sync_status: string().optional(), // 'idle', 'pulling', 'pushing', 'error'
     ...timestamps,
   })
   .primaryKey("id");

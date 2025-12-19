@@ -1,5 +1,4 @@
 export * from "./types";
 export * from "./oauth";
-export * from "./integration-pull";
+export * from "./pull";
 export * from "./activity-log";
-

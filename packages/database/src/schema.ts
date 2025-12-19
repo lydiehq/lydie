@@ -225,11 +225,13 @@ export const documentsTable = pgTable(
     deletedAt: timestamp("deleted_at"),
     ...timestamps,
   },
-   (table) => [
+  (table) => [
     // Unique slugs for user-created documents within organization
     uniqueIndex("documents_user_organization_id_slug_key")
       .on(table.organizationId, table.slug)
-      .where(sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`),
+      .where(
+        sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`
+      ),
     // Unique slugs for integration documents within organization and integration link
     uniqueIndex("documents_integration_organization_link_slug_key")
       .on(table.organizationId, table.integrationLinkId, table.slug)
@@ -527,6 +529,7 @@ export const integrationLinksTable = pgTable(
     // Shopify: { blogId }
     config: jsonb("config").notNull(),
     lastSyncedAt: timestamp("last_synced_at"),
+    syncStatus: text("sync_status").default("idle"), // 'idle', 'pulling', 'pushing', 'error'
     ...timestamps,
   },
   (table) => [

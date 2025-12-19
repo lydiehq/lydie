@@ -16,6 +16,7 @@ import {
   MoreVertical,
   Move,
   Blocks,
+  Loader,
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles } from "./Sidebar";
@@ -40,9 +41,11 @@ export type DocumentTreeItemProps = {
       children?: any[];
       integrationLinkId?: string | null;
       integrationType?: string;
+      syncStatus?: string | null;
     }>;
     integrationLinkId?: string | null;
     integrationType?: string;
+    syncStatus?: string | null;
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<
@@ -166,7 +169,7 @@ export function DocumentTreeItem({
                 </>
               )}
 
-              {/* Integration link item - styled similarly to regular folders, but with a sync icon */}
+              {/* Integration link item - styled similarly to regular folders, but with a sync icon or spinner */}
               {isIntegrationLink && (
                 <>
                   <Button
@@ -176,7 +179,11 @@ export function DocumentTreeItem({
                     <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
                   </Button>
                   <div className="flex items-center gap-0.5">
-                    <FolderSync className="size-3.5 text-gray-500" />
+                    {item.syncStatus === "pulling" ? (
+                      <Loader className="size-3.5 text-gray-500 animate-spin" />
+                    ) : (
+                      <FolderSync className="size-3.5 text-gray-500" />
+                    )}
                   </div>
                 </>
               )}

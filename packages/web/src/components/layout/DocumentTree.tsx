@@ -21,6 +21,7 @@ type TreeItem = {
   children?: TreeItem[];
   integrationLinkId?: string | null;
   integrationType?: string;
+  syncStatus?: string | null;
 };
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
@@ -300,6 +301,7 @@ export function DocumentTree() {
           type: "integration-link",
           integrationType: link.connection?.integration_type,
           integrationLinkId: link.id,
+          syncStatus: link.sync_status,
           children: buildLinkItems(link.id),
         })),
         integrationType: type,

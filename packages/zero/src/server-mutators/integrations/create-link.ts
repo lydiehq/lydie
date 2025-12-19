@@ -7,6 +7,9 @@ import {
   logIntegrationActivity,
   pullFromIntegrationLink,
 } from "@lydie/core/integrations";
+import { db } from "@lydie/database";
+import { integrationLinksTable } from "@lydie/database/schema";
+import { eq } from "drizzle-orm";
 
 import { integrationRegistry } from "@lydie/integrations";
 
@@ -56,31 +59,64 @@ export const createIntegrationLinkMutation = (
         console.log(
           `[Integration Link] Auto-pulling from newly created link ${id}`
         );
-        const result = await pullFromIntegrationLink({
-          linkId: id,
-          organizationId,
-          userId: ctx.userId,
-          integration,
-        });
+        
+        try {
+          const result = await pullFromIntegrationLink({
+            linkId: id,
+            organizationId,
+            userId: ctx.userId,
+            integration,
+          });
 
-        if (result.success) {
-          console.log(
-            `[Integration Link] Auto-pull succeeded: imported ${result.imported}, failed ${result.failed}`
-          );
-          await logIntegrationActivity(
-            connectionId,
-            "pull",
-            "success",
-            connection.integration_type
-          );
-        } else {
-          console.error(`[Integration Link] Auto-pull failed: ${result.error}`);
-          await logIntegrationActivity(
-            connectionId,
-            "pull",
-            "error",
-            connection.integration_type
-          );
+          if (result.success) {
+            console.log(
+              `[Integration Link] Auto-pull succeeded: imported ${result.imported}, failed ${result.failed}`
+            );
+            await logIntegrationActivity(
+              connectionId,
+              "pull",
+              "success",
+              connection.integration_type
+            );
+            
+            // Update sync status to idle
+            await db
+              .update(integrationLinksTable)
+              .set({ 
+                syncStatus: "idle",
+                lastSyncedAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(integrationLinksTable.id, id));
+          } else {
+            console.error(`[Integration Link] Auto-pull failed: ${result.error}`);
+            await logIntegrationActivity(
+              connectionId,
+              "pull",
+              "error",
+              connection.integration_type
+            );
+            
+            // Update sync status to error
+            await db
+              .update(integrationLinksTable)
+              .set({ 
+                syncStatus: "error",
+                updatedAt: new Date(),
+              })
+              .where(eq(integrationLinksTable.id, id));
+          }
+        } catch (error) {
+          console.error(`[Integration Link] Auto-pull exception:`, error);
+          
+          // Update sync status to error
+          await db
+            .update(integrationLinksTable)
+            .set({ 
+              syncStatus: "error",
+              updatedAt: new Date(),
+            })
+            .where(eq(integrationLinksTable.id, id));
         }
       });
     }

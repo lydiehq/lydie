@@ -5,7 +5,7 @@ import {
   MenuTrigger,
   DialogTrigger,
 } from "react-aria-components";
-import { MoreHorizontal, LinkIcon } from "lucide-react";
+import { MoreHorizontal, LinkIcon, Loader } from "lucide-react";
 import { useZero } from "@rocicorp/zero/react";
 import { mutators } from "@lydie/zero/mutators";
 import { useOrganization } from "@/context/organization.context";
@@ -61,7 +61,7 @@ export function IntegrationLinkList({
     }
 
     try {
-      const write = zero.mutate(
+      zero.mutate(
         mutators.integration.createLink({
           id: createId(),
           connectionId: connection.id,
@@ -71,9 +71,7 @@ export function IntegrationLinkList({
         })
       );
 
-      await write.server;
-
-      toast.success("Link created successfully");
+      toast.success("Link created, pulling resources...");
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Failed to create link:", error);
@@ -178,11 +176,25 @@ export function IntegrationLinkListItem({
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const isPullingResources = link.sync_status === "pulling";
+  const hasError = link.sync_status === "error";
+
   return (
     <ul className="p-2.5 hover:bg-black/1 first:rounded-t-lg last:rounded-b-lg transition-colors duration-75">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="font-medium">{link.name}</span>
+          {isPullingResources && (
+            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <Loader className="size-3 animate-spin" />
+              <span>pulling resources...</span>
+            </div>
+          )}
+          {hasError && (
+            <div className="flex items-center gap-1.5 text-sm text-red-500">
+              <span>sync failed</span>
+            </div>
+          )}
         </div>
       </div>
 

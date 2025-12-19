@@ -7,6 +7,7 @@ import {
 } from "@lydie/database";
 import { eq, and, isNull } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
+import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 import type { Integration } from "./types";
 
 export interface PullFromLinkOptions {
@@ -242,6 +243,37 @@ export async function pullFromIntegrationLink(
                 deletedAt: null, // Ensure document is not marked as deleted
               },
             });
+
+          // Fetch the document after upsert to get the actual document ID
+          // (in case of conflict, the existing document ID is used)
+          const insertedDocument = await db.query.documentsTable.findFirst({
+            where: {
+              organizationId: organizationId,
+              integrationLinkId: link.id,
+              slug: result.metadata.slug,
+              deletedAt: undefined,
+            },
+          });
+
+          if (insertedDocument) {
+            // Generate embeddings for the imported/updated document asynchronously (don't block)
+            processDocumentEmbedding(insertedDocument, db)
+              .then(() => {
+                console.log(
+                  `[Integration Pull] Successfully generated embeddings for document ${insertedDocument.id} (${result.externalId})`
+                );
+              })
+              .catch((error) => {
+                console.error(
+                  `[Integration Pull] Failed to generate embeddings for document ${insertedDocument.id} (${result.externalId}):`,
+                  error
+                );
+              });
+          } else {
+            console.warn(
+              `[Integration Pull] Could not find document after upsert for ${result.externalId}`
+            );
+          }
 
           imported++;
           console.log(

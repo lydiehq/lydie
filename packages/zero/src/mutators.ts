@@ -602,6 +602,7 @@ export const mutators = defineMutators({
           updated_at: Date.now(),
           name,
           config,
+          sync_status: "pulling",
         });
       }
     ),
