@@ -206,13 +206,43 @@ export async function pullFromIntegrationLink(
             | undefined;
           const folderId = await getOrCreateFolderByPath(folderPath);
 
-          const documentId = createId();
+          // Check if document already exists (using the partial unique index criteria)
+          const existingDocument = await db.query.documentsTable.findFirst({
+            where: {
+              organizationId: organizationId,
+              integrationLinkId: link.id,
+              slug: result.metadata.slug,
+              deletedAt: undefined,
+            },
+          });
 
-          // Upsert document: insert or update on conflict
-          // Conflicts on unique constraint: (organizationId, integrationLinkId, slug) where deleted_at IS NULL
-          await db
-            .insert(documentsTable)
-            .values({
+          let insertedDocument;
+
+          if (existingDocument) {
+            // Update existing document
+            await db
+              .update(documentsTable)
+              .set({
+                title: result.metadata.title,
+                jsonContent: result.metadata.content,
+                folderId: folderId || null,
+                externalId: result.externalId ?? null,
+                indexStatus: "pending", // Re-index when content changes
+                updatedAt: new Date(),
+                deletedAt: null, // Ensure document is not marked as deleted
+              })
+              .where(eq(documentsTable.id, existingDocument.id));
+
+            // Fetch the updated document
+            insertedDocument = await db.query.documentsTable.findFirst({
+              where: {
+                id: existingDocument.id,
+              },
+            });
+          } else {
+            // Insert new document
+            const documentId = createId();
+            await db.insert(documentsTable).values({
               id: documentId,
               title: result.metadata.title,
               slug: result.metadata.slug,
@@ -221,39 +251,20 @@ export async function pullFromIntegrationLink(
               organizationId,
               folderId: folderId || null, // Use created folder or null for root
               integrationLinkId: link.id,
-              externalId: result.externalId,
+              externalId: result.externalId ?? null,
               indexStatus: "pending",
               published: true, // Documents from integrations are published by default
               createdAt: new Date(),
               updatedAt: new Date(),
-            })
-            .onConflictDoUpdate({
-              target: [
-                documentsTable.organizationId,
-                documentsTable.integrationLinkId,
-                documentsTable.slug,
-              ],
-              set: {
-                title: result.metadata.title,
-                jsonContent: result.metadata.content,
-                folderId: folderId || null,
-                externalId: result.externalId,
-                indexStatus: "pending", // Re-index when content changes
-                updatedAt: new Date(),
-                deletedAt: null, // Ensure document is not marked as deleted
-              },
             });
 
-          // Fetch the document after upsert to get the actual document ID
-          // (in case of conflict, the existing document ID is used)
-          const insertedDocument = await db.query.documentsTable.findFirst({
-            where: {
-              organizationId: organizationId,
-              integrationLinkId: link.id,
-              slug: result.metadata.slug,
-              deletedAt: undefined,
-            },
-          });
+            // Fetch the newly inserted document
+            insertedDocument = await db.query.documentsTable.findFirst({
+              where: {
+                id: documentId,
+              },
+            });
+          }
 
           if (insertedDocument) {
             // Generate embeddings for the imported/updated document asynchronously (don't block)
