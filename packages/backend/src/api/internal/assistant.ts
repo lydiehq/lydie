@@ -1,12 +1,11 @@
 import { Hono } from "hono";
-import { advancedModel } from "@lydie/core/ai/llm";
+import { google } from "@lydie/core/ai/llm";
 import {
-  streamText,
-  stepCountIs,
-  convertToModelMessages,
+  validateUIMessages,
+  createAgentUIStreamResponse,
+  ToolLoopAgent,
   smoothStream,
-  createUIMessageStream,
-  createUIMessageStreamResponse,
+  stepCountIs,
   tool,
 } from "ai";
 import {
@@ -125,60 +124,53 @@ export const AssistantRoute = new Hono<{
 
     const startTime = Date.now();
 
-    const dataStream = createUIMessageStream({
-      execute: async ({ writer }) => {
-        const result = streamText({
-          model: advancedModel,
-          messages: convertToModelMessages(messages),
-          stopWhen: stepCountIs(8),
-          experimental_transform: smoothStream({ chunking: "word" }),
-          system: systemPrompt,
-          tools: {
-            searchDocuments: searchDocuments(userId, organizationId),
-            readDocument: readDocument(userId, organizationId),
-            listDocuments: listDocuments(userId, organizationId),
-            createFolder: createFolder(userId, organizationId),
-            moveDocuments: moveDocuments(userId, organizationId),
-            createDocument: tool({
-              description:
-                "Create a new document. This tool creates the document in the system but DOES NOT redirect the user. The user will see a preview and a button to open it. Use this when the user asks to create a new document, note, or page. You can optionally provide content for the new document.",
-              inputSchema: z.object({
-                title: z
-                  .string()
-                  .optional()
-                  .describe("The title of the document"),
-                content: z
-                  .string()
-                  .optional()
-                  .describe(
-                    "The initial content of the document in HTML format. Use HTML tags like <p>, <h2>, <ul>, etc."
-                  ),
-              }),
-            }),
-          },
-        });
+    const agent = new ToolLoopAgent({
+      model: google("gemini-3-flash-preview"),
+      instructions: systemPrompt,
+      // TODO: fix - this is just an arbitrary number to stop the agent from running forever
+      stopWhen: stepCountIs(50),
+      // @ts-expect-error - experimental_transform is not typed
+      experimental_transform: smoothStream({ chunking: "word" }),
+      tools: {
+        searchDocuments: searchDocuments(userId, organizationId),
+        readDocument: readDocument(userId, organizationId),
+        listDocuments: listDocuments(userId, organizationId),
+        createFolder: createFolder(userId, organizationId),
+        moveDocuments: moveDocuments(userId, organizationId),
+        createDocument: tool({
+          description:
+            "Create a new document. This tool creates the document in the system but DOES NOT redirect the user. The user will see a preview and a button to open it. Use this when the user asks to create a new document, note, or page. You can optionally provide content for the new document.",
+          inputSchema: z.object({
+            title: z.string().optional().describe("The title of the document"),
+            content: z
+              .string()
+              .optional()
+              .describe(
+                "The initial content of the document in HTML format. Use HTML tags like <p>, <h2>, <ul>, etc."
+              ),
+          }),
+        }),
+      },
+    });
 
-        result.consumeStream();
-        writer.merge(
-          result.toUIMessageStream({
-            messageMetadata: ({ part }): MessageMetadata | undefined => {
-              if (part.type === "start") {
-                return {
-                  timestamp: new Date().toISOString(),
-                };
-              }
-
-              if (part.type === "finish") {
-                return {
-                  duration: Date.now() - startTime,
-                  usage: part.totalUsage.totalTokens,
-                };
-              }
-
-              return undefined;
-            },
-          })
-        );
+    return createAgentUIStreamResponse({
+      agent,
+      uiMessages: await validateUIMessages({
+        messages,
+      }),
+      messageMetadata: ({ part }): MessageMetadata | undefined => {
+        if (part.type === "start") {
+          return {
+            timestamp: new Date().toISOString(),
+          };
+        }
+        if (part.type === "finish") {
+          return {
+            duration: Date.now() - startTime,
+            usage: part.totalUsage.totalTokens,
+          };
+        }
+        return undefined;
       },
       onFinish: async ({ messages: finalMessages }) => {
         const assistantMessage = finalMessages[finalMessages.length - 1];
@@ -204,7 +196,7 @@ export const AssistantRoute = new Hono<{
             messageId: savedMessage.id,
             organizationId,
             source: "assistant",
-            model: advancedModel.modelId || "gemini-1.5-pro",
+            model: "gemini-3-flash-preview",
             promptTokens,
             completionTokens,
             totalTokens,
@@ -213,10 +205,6 @@ export const AssistantRoute = new Hono<{
           });
         }
       },
-    });
-
-    return createUIMessageStreamResponse({
-      stream: dataStream,
     });
   } catch (e) {
     console.error(e);
