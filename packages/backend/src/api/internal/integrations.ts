@@ -88,6 +88,7 @@ export const IntegrationsRoute = new Hono<{
 
         // Create connection
         const connectionId = createId();
+        const user = c.get("user");
         await db.insert(integrationConnectionsTable).values({
           id: connectionId,
           integrationType,
@@ -98,19 +99,25 @@ export const IntegrationsRoute = new Hono<{
         });
 
         // Call onConnect hook if defined (e.g., to auto-create links)
+        const createdLinkIds: string[] = [];
         if (integration.onConnect) {
           const result = integration.onConnect();
           if (result.links && result.links.length > 0) {
-            const linkValues = result.links.map((link) => ({
-              id: createId(),
-              name: link.name,
-              connectionId,
-              organizationId,
-              config: link.config,
-              integrationType,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            }));
+            const linkValues = result.links.map((link) => {
+              const linkId = createId();
+              createdLinkIds.push(linkId);
+              return {
+                id: linkId,
+                name: link.name,
+                connectionId,
+                organizationId,
+                config: link.config,
+                integrationType,
+                syncStatus: "pulling" as const,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
+            });
             await db.insert(integrationLinksTable).values(linkValues);
           }
         }
@@ -121,6 +128,86 @@ export const IntegrationsRoute = new Hono<{
           "success",
           integrationType
         );
+
+        // Automatically pull from default links (same behavior as manually created links)
+        if (createdLinkIds.length > 0) {
+          // Trigger pulls asynchronously (don't block the response)
+          Promise.all(
+            createdLinkIds.map(async (linkId) => {
+              try {
+                console.log(
+                  `[Integration Connection] Auto-pulling from default link ${linkId}`
+                );
+                const result = await pullFromIntegrationLink({
+                  linkId,
+                  organizationId,
+                  userId: user.id,
+                  integration,
+                });
+
+                if (result.success) {
+                  console.log(
+                    `[Integration Connection] Auto-pull succeeded for link ${linkId}: imported ${result.imported}, failed ${result.failed}`
+                  );
+                  await logIntegrationActivity(
+                    connectionId,
+                    "pull",
+                    "success",
+                    integrationType
+                  );
+
+                  // Update sync status to idle
+                  await db
+                    .update(integrationLinksTable)
+                    .set({
+                      syncStatus: "idle",
+                      lastSyncedAt: new Date(),
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(integrationLinksTable.id, linkId));
+                } else {
+                  console.error(
+                    `[Integration Connection] Auto-pull failed for link ${linkId}: ${result.error}`
+                  );
+                  await logIntegrationActivity(
+                    connectionId,
+                    "pull",
+                    "error",
+                    integrationType
+                  );
+
+                  // Update sync status to error
+                  await db
+                    .update(integrationLinksTable)
+                    .set({
+                      syncStatus: "error",
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(integrationLinksTable.id, linkId));
+                }
+              } catch (error) {
+                console.error(
+                  `[Integration Connection] Auto-pull exception for link ${linkId}:`,
+                  error
+                );
+
+                // Update sync status to error
+                await db
+                  .update(integrationLinksTable)
+                  .set({
+                    syncStatus: "error",
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(integrationLinksTable.id, linkId));
+              }
+            })
+          ).catch((error) => {
+            console.error(
+              `[Integration Connection] Error triggering auto-pulls:`,
+              error
+            );
+          });
+        }
 
         return c.json({ success: true, connectionId });
       } catch (error) {
@@ -347,6 +434,110 @@ export const IntegrationsRoute = new Hono<{
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+
+      // Call onConnect hook if defined (e.g., to auto-create links)
+      const createdLinkIds: string[] = [];
+      if (integration.onConnect) {
+        const result = integration.onConnect();
+        if (result.links && result.links.length > 0) {
+          const linkValues = result.links.map((link) => {
+            const linkId = createId();
+            createdLinkIds.push(linkId);
+            return {
+              id: linkId,
+              name: link.name,
+              connectionId,
+              organizationId: state.organizationId,
+              config: link.config,
+              integrationType,
+              syncStatus: "pulling" as const,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+          });
+          await db.insert(integrationLinksTable).values(linkValues);
+        }
+      }
+
+      // Automatically pull from default links (same behavior as manually created links)
+      if (createdLinkIds.length > 0) {
+        // Trigger pulls asynchronously (don't block the redirect)
+        Promise.all(
+          createdLinkIds.map(async (linkId) => {
+            try {
+              console.log(
+                `[Integration OAuth] Auto-pulling from default link ${linkId}`
+              );
+              const result = await pullFromIntegrationLink({
+                linkId,
+                organizationId: state.organizationId,
+                userId: state.userId,
+                integration,
+              });
+
+              if (result.success) {
+                console.log(
+                  `[Integration OAuth] Auto-pull succeeded for link ${linkId}: imported ${result.imported}, failed ${result.failed}`
+                );
+                await logIntegrationActivity(
+                  connectionId,
+                  "pull",
+                  "success",
+                  integrationType
+                );
+
+                // Update sync status to idle
+                await db
+                  .update(integrationLinksTable)
+                  .set({
+                    syncStatus: "idle",
+                    lastSyncedAt: new Date(),
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(integrationLinksTable.id, linkId));
+              } else {
+                console.error(
+                  `[Integration OAuth] Auto-pull failed for link ${linkId}: ${result.error}`
+                );
+                await logIntegrationActivity(
+                  connectionId,
+                  "pull",
+                  "error",
+                  integrationType
+                );
+
+                // Update sync status to error
+                await db
+                  .update(integrationLinksTable)
+                  .set({
+                    syncStatus: "error",
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(integrationLinksTable.id, linkId));
+              }
+            } catch (error) {
+              console.error(
+                `[Integration OAuth] Auto-pull exception for link ${linkId}:`,
+                error
+              );
+
+              // Update sync status to error
+              await db
+                .update(integrationLinksTable)
+                .set({
+                  syncStatus: "error",
+                  updatedAt: new Date(),
+                })
+                .where(eq(integrationLinksTable.id, linkId));
+            }
+          })
+        ).catch((error) => {
+          console.error(
+            `[Integration OAuth] Error triggering auto-pulls:`,
+            error
+          );
+        });
+      }
 
       // Redirect to frontend with success
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";

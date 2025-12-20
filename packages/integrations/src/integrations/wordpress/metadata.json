@@ -3,5 +3,6 @@
   "name": "WordPress",
   "description": "Sync content to your self-hosted WordPress site using Application Passwords.",
   "icon": "logo.png",
-  "comingSoon": false
+  "comingSoon": false,
+  "authType": "manual"
 }

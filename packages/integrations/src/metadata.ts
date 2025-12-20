@@ -33,6 +33,13 @@ export interface IntegrationMetadata {
    * (e.g., "icon.png" or "icon.svg")
    */
   icon?: string;
+
+  /**
+   * Authentication type for this integration
+   * - "oauth": Uses OAuth flow (redirects to provider)
+   * - "manual": Requires manual credential entry (e.g., API keys, passwords)
+   */
+  authType?: "oauth" | "manual";
 }
 
 // Import metadata from each integration's metadata.json file

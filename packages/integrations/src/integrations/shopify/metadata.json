@@ -3,5 +3,6 @@
   "name": "Shopify Blog",
   "description": "Publish documents to your Shopify blog",
   "icon": "logo.png",
-  "comingSoon": false
+  "comingSoon": false,
+  "authType": "oauth"
 }

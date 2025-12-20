@@ -13,6 +13,10 @@ import { Outlet } from "@tanstack/react-router";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 import { confirmDialog } from "@/stores/confirm-dialog";
+import { DialogTrigger } from "react-aria-components";
+import { Modal } from "@/components/generic/Modal";
+import { Dialog } from "@/components/generic/Dialog";
+import { WordPressConnectionForm } from "@/components/integrations/forms/wordpress-connection-form";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationId/settings/integrations/$integrationType"
@@ -46,9 +50,13 @@ function RouteComponent() {
   );
 
   const isEnabled = integrationConnections.length > 0;
+  const authType = integrationDetails.authType || "oauth"; // Default to OAuth for backwards compatibility
+  const isOAuth = authType === "oauth";
 
   const [isConnecting, setIsConnecting] = useState(false);
-  const connect = async () => {
+  const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
+
+  const connectOAuth = async () => {
     try {
       setIsConnecting(true);
       const client = await createClient();
@@ -67,6 +75,11 @@ function RouteComponent() {
       console.error(`${integrationDetails.name} OAuth error:`, error);
       toast.error(`Failed to start ${integrationDetails.name} connection`);
     }
+  };
+
+  const handleConnectionSuccess = () => {
+    setIsConnectionDialogOpen(false);
+    // The connection will be automatically reflected via the query
   };
 
   const disconnect = () => {
@@ -122,10 +135,34 @@ function RouteComponent() {
             <Button onPress={disconnect} intent="secondary">
               Disable Integration
             </Button>
-          ) : (
-            <Button onPress={connect} isPending={isConnecting}>
+          ) : isOAuth ? (
+            <Button onPress={connectOAuth} isPending={isConnecting}>
               Enable Integration
             </Button>
+          ) : (
+            <>
+              <DialogTrigger
+                isOpen={isConnectionDialogOpen}
+                onOpenChange={setIsConnectionDialogOpen}
+              >
+                <Button>Enable Integration</Button>
+                <Modal isDismissable>
+                  <Dialog>
+                    <div className="p-4">
+                      {integrationDetails.id === "wordpress" && (
+                        <WordPressConnectionForm
+                          organizationId={organizationId}
+                          integrationType={integrationDetails.id}
+                          onSuccess={handleConnectionSuccess}
+                          onCancel={() => setIsConnectionDialogOpen(false)}
+                        />
+                      )}
+                      {/* Add other manual connection forms here as needed */}
+                    </div>
+                  </Dialog>
+                </Modal>
+              </DialogTrigger>
+            </>
           )}
         </div>
         <nav aria-label="Integration pages" className="flex gap-x-1">

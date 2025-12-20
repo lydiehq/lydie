@@ -2,5 +2,6 @@
   "id": "github",
   "name": "GitHub",
   "description": "Sync documents as Markdown files to a GitHub repository",
-  "icon": "logo.png"
+  "icon": "logo.png",
+  "authType": "oauth"
 }
