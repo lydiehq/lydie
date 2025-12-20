@@ -86,7 +86,6 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         .select({
           id: documentsTable.id,
           title: documentsTable.title,
-          userId: documentsTable.userId,
           organizationId: documentsTable.organizationId,
         })
         .from(documentsTable)
@@ -100,11 +99,7 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         };
       }
 
-      // Check authorization
-      if (
-        document.userId !== userId ||
-        document.organizationId !== organizationId
-      ) {
+      if (document.organizationId !== organizationId) {
         return {
           error: "You do not have permission to access this document",
           results: [],

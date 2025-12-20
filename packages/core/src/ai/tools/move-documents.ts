@@ -64,7 +64,6 @@ You can move documents by their IDs or by searching for documents matching certa
             and(
               eq(foldersTable.id, folderId),
               eq(foldersTable.organizationId, organizationId),
-              eq(foldersTable.userId, userId),
               isNull(foldersTable.deletedAt)
             )
           )
@@ -88,7 +87,6 @@ You can move documents by their IDs or by searching for documents matching certa
             and(
               eq(foldersTable.name, folderName),
               eq(foldersTable.organizationId, organizationId),
-              eq(foldersTable.userId, userId),
               isNull(foldersTable.deletedAt),
               isNull(foldersTable.parentId) // Root level folder
             )
@@ -120,7 +118,6 @@ You can move documents by their IDs or by searching for documents matching certa
           .from(documentsTable)
           .where(
             and(
-              eq(documentsTable.userId, userId),
               eq(documentsTable.organizationId, organizationId),
               isNull(documentsTable.deletedAt)
             )
@@ -143,7 +140,6 @@ You can move documents by their IDs or by searching for documents matching certa
           .from(documentsTable)
           .where(
             and(
-              eq(documentsTable.userId, userId),
               eq(documentsTable.organizationId, organizationId),
               inArray(documentsTable.id, documentIds),
               isNull(documentsTable.deletedAt)
@@ -168,7 +164,6 @@ You can move documents by their IDs or by searching for documents matching certa
         .where(
           and(
             eq(documentsTable.organizationId, organizationId),
-            eq(documentsTable.userId, userId),
             inArray(
               documentsTable.id,
               documentsToMove.map((d) => d.id)

@@ -64,7 +64,6 @@ export async function searchDocumentsByTitle(
       )
       .where(
         and(
-          eq(documentsTable.userId, userId),
           eq(documentsTable.organizationId, organizationId),
           // More lenient similarity threshold for titles
           sql`(${documentTitleEmbeddingsTable.embedding} <=> ${JSON.stringify(
@@ -377,7 +376,6 @@ export async function searchDocuments(
       )
       .where(
         and(
-          eq(documentsTable.userId, userId),
           eq(documentsTable.organizationId, organizationId),
           // Only return results with reasonable similarity
           sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(

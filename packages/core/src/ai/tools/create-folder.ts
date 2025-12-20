@@ -45,7 +45,6 @@ You can create folders at the root level or inside other folders (nested folders
             and(
               eq(foldersTable.id, parentFolderId),
               eq(foldersTable.organizationId, organizationId),
-              eq(foldersTable.userId, userId),
               isNull(foldersTable.deletedAt)
             )
           )
@@ -69,7 +68,6 @@ You can create folders at the root level or inside other folders (nested folders
             and(
               eq(foldersTable.name, parentFolderName),
               eq(foldersTable.organizationId, organizationId),
-              eq(foldersTable.userId, userId),
               isNull(foldersTable.deletedAt),
               isNull(foldersTable.parentId) // Root level folder
             )
@@ -91,7 +89,6 @@ You can create folders at the root level or inside other folders (nested folders
       const existingFolderConditions = [
         eq(foldersTable.name, name),
         eq(foldersTable.organizationId, organizationId),
-        eq(foldersTable.userId, userId),
         isNull(foldersTable.deletedAt),
       ];
 

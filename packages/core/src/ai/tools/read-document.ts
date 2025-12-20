@@ -60,10 +60,7 @@ Use this tool when you need to access the complete content of a document to refe
         .from(documentsTable)
         .$dynamic();
 
-      const conditions = [
-        eq(documentsTable.userId, userId),
-        eq(documentsTable.organizationId, organizationId),
-      ];
+      const conditions = [eq(documentsTable.organizationId, organizationId)];
 
       if (documentId) {
         conditions.push(eq(documentsTable.id, documentId));
@@ -88,6 +85,18 @@ Use this tool when you need to access the complete content of a document to refe
       }
 
       const document = documents[0];
+
+      if (!document) {
+        yield {
+          state: "error",
+          error: `No document found with ${
+            documentId
+              ? `ID "${documentId}"`
+              : `title containing "${documentTitle}"`
+          }`,
+        };
+        return;
+      }
 
       // Yield reading state
       yield {

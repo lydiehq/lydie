@@ -70,7 +70,6 @@ find documents by title patterns, get their latest/recent/newest documents (by s
       }
 
       const conditions = [
-        eq(documentsTable.userId, userId),
         eq(documentsTable.organizationId, organizationId),
         isNull(documentsTable.deletedAt),
       ];

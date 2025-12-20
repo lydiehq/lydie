@@ -165,9 +165,9 @@ export const foldersTable = pgTable(
       .notNull()
       .$default(() => createId()),
     name: text("name").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
@@ -202,9 +202,9 @@ export const documentsTable = pgTable(
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     jsonContent: jsonb("json_content").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
     folderId: text("folder_id").references(() => foldersTable.id, {
       onDelete: "set null",
     }),
