@@ -278,7 +278,7 @@ function EditorContainer({ doc }: Props) {
                 <EditorContent
                   aria-label="Document content"
                   editor={contentEditor.editor}
-                  className="min-h-full size-full"
+                  className="min-h-full size-full pb-12 block"
                 />
               </div>
             </div>

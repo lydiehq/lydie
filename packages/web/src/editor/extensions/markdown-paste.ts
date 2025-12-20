@@ -21,8 +21,23 @@ export const MarkdownPasteExtension = Extension.create<MarkdownPasteOptions>({
         key: new PluginKey("markdownPaste"),
         props: {
           handlePaste: (_, event) => {
+            // First, try to get HTML from clipboard to preserve formatting
+            const clipboardHtml = event.clipboardData?.getData("text/html");
             const clipboardText = event.clipboardData?.getData("text/plain");
 
+            if (clipboardHtml) {
+              // If HTML is available, use it directly to preserve formatting
+              try {
+                this.options.onPaste?.(clipboardHtml);
+                this.editor.commands.insertContent(clipboardHtml);
+                return true;
+              } catch (error) {
+                console.error("Error inserting HTML content:", error);
+                // Fall through to markdown parsing
+              }
+            }
+
+            // Fall back to markdown parsing if HTML is not available
             if (clipboardText) {
               try {
                 const html = marked(clipboardText);
