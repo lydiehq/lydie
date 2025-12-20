@@ -74,9 +74,9 @@ export function Header() {
                 </a>
               </li>
             ))}
-            <li className="ml-2">
+            {/* <li className="ml-2">
               <Button href="https://cloud.lydie.co/auth">Sign in</Button>
-            </li>
+            </li> */}
           </ul>
         </nav>
 
@@ -112,7 +112,7 @@ export function Header() {
                     </li>
                   ))}
                 </ul>
-                <div className="flex flex-col gap-y-3 pt-4 border-t border-gray-100">
+                {/* <div className="flex flex-col gap-y-3 pt-4 border-t border-gray-100">
                   <Button
                     href="https://cloud.lydie.co/auth"
                     size="lg"
@@ -120,7 +120,7 @@ export function Header() {
                   >
                     Sign in
                   </Button>
-                </div>
+                </div> */}
               </nav>
             </motion.div>
           )}

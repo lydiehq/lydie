@@ -4,6 +4,7 @@ import { AnimatedWord } from "../AnimatedWord";
 import { ChevronRight, Github } from "lucide-react";
 import { AsciiBackground } from "./AsciiBackground";
 import { Button } from "../generic/Button";
+import { WaitlistForm } from "./WaitlistForm";
 
 export function Hero() {
   return (
@@ -73,7 +74,7 @@ export function Hero() {
               you stay in control.
             </motion.span>
             <motion.div className="flex items-center gap-x-1.5 w-full md:w-auto">
-              <motion.div
+              {/* <motion.div
                 className="flex-1 md:flex-none"
                 initial={{
                   opacity: 0,
@@ -100,8 +101,8 @@ export function Hero() {
                     <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
                   </div>
                 </Button>
-              </motion.div>
-              <motion.div
+              </motion.div> */}
+              {/* <motion.div
                 className="flex-1 md:flex-none"
                 initial={{
                   opacity: 0,
@@ -130,6 +131,25 @@ export function Hero() {
                     <span>Star on GitHub</span>
                   </div>
                 </Button>
+              </motion.div> */}
+              <motion.div
+                className="flex-1 w-full"
+                initial={{
+                  opacity: 0,
+                  x: -14,
+                  filter: "blur(10px)",
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  filter: "blur(0px)",
+                }}
+                transition={{
+                  delay: 1.1,
+                  duration: 0.6,
+                }}
+              >
+                <WaitlistForm />
               </motion.div>
             </motion.div>
           </div>

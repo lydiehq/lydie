@@ -24,8 +24,6 @@ const commonEnv = {
   ZERO_CHANGE_DB: conn.value,
   ZERO_IMAGE_URL: image,
   ZERP_APP_ID: $app.stage,
-  // ZERO_CVR_MAX_CONNS: "10",
-  // ZERO_UPSTREAM_MAX_CONNS: "10",
   ZERO_MUTATE_FORWARD_COOKIES: "true",
   ZERO_QUERY_FORWARD_COOKIES: "true",
   ...($dev ? {} : { ZERO_APP_PUBLICATIONS: "zero_data" }),
