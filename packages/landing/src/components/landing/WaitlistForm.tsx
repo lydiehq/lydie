@@ -67,17 +67,10 @@ export function WaitlistForm() {
         <Button
           type="submit"
           size="lg"
-          isDisabled={isSubmitting || !email.trim()}
           className="shrink-0"
+          isPending={isSubmitting}
         >
-          {isSubmitting ? (
-            <div className="flex items-center gap-x-2">
-              <Loader2 className="size-4 animate-spin" />
-              <span>Joining...</span>
-            </div>
-          ) : (
-            <span>Join waitlist</span>
-          )}
+          Join waitlist
         </Button>
       </form>
       {status !== "idle" && (
