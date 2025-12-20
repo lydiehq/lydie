@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "../generic/Button";
-import { Loader2 } from "lucide-react";
 
 export function WaitlistForm() {
   const [email, setEmail] = useState("");
