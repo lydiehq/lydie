@@ -147,7 +147,18 @@ export const DocumentChatRoute = new Hono<{
       });
     }
 
-    // Check daily message limit before processing
+    const latestMessage = messages[messages.length - 1];
+
+    // Save the user message first to prevent race conditions
+    await saveMessage({
+      conversationId,
+      parts: latestMessage.parts,
+      role: "user",
+      metadata: latestMessage.metadata,
+    });
+
+    // Check daily message limit AFTER saving to prevent race conditions
+    // This ensures the message we just saved is counted
     const limitCheck = await checkDailyMessageLimit({
       id: organization.id,
       subscriptionPlan: organization.subscriptionPlan,
@@ -161,8 +172,6 @@ export const DocumentChatRoute = new Hono<{
         429
       );
     }
-
-    const latestMessage = messages[messages.length - 1];
 
     const focusedContent = latestMessage.metadata?.focusedContent;
 
@@ -183,13 +192,6 @@ export const DocumentChatRoute = new Hono<{
     };
 
     const enhancedMessages = [...messages.slice(0, -1), enhancedLatestMessage];
-
-    await saveMessage({
-      conversationId,
-      parts: latestMessage.parts,
-      role: "user",
-      metadata: latestMessage.metadata,
-    });
 
     const [userSettings] = await db
       .select()

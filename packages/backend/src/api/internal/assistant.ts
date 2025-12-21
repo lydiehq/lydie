@@ -77,7 +77,18 @@ export const AssistantRoute = new Hono<{
       });
     }
 
-    // Check daily message limit before processing
+    const latestMessage = messages[messages.length - 1];
+
+    // Save the user message first to prevent race conditions
+    await saveMessage({
+      conversationId,
+      parts: latestMessage.parts,
+      role: "user",
+      metadata: latestMessage.metadata,
+    });
+
+    // Check daily message limit AFTER saving to prevent race conditions
+    // This ensures the message we just saved is counted
     const organization = await db.query.organizationsTable.findFirst({
       where: { id: organizationId },
     });
@@ -99,15 +110,6 @@ export const AssistantRoute = new Hono<{
         message: `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
       });
     }
-
-    const latestMessage = messages[messages.length - 1];
-
-    await saveMessage({
-      conversationId,
-      parts: latestMessage.parts,
-      role: "user",
-      metadata: latestMessage.metadata,
-    });
 
     // Fetch user settings for prompt style
     const [userSettings] = await db
