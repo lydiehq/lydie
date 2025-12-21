@@ -1,5 +1,6 @@
 import { useDragAndDrop, isTextDropItem } from "react-aria-components";
 import { useZero } from "@/services/zero";
+import { useOrganization } from "@/context/organization.context";
 import { toast } from "sonner";
 import { mutators } from "@lydie/zero/mutators";
 
@@ -44,11 +45,17 @@ export function useDocumentDragDrop({
   currentFolderId,
 }: UseDocumentDragDropOptions) {
   const z = useZero();
+  const { organization } = useOrganization();
 
   const moveDocumentToFolder = (
     documentId: string,
     targetFolderId: string | null | undefined
   ) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return false;
+    }
+    
     const doc = allDocuments.find((d) => d.id === documentId);
     const normalizedTarget = targetFolderId ?? null;
 
@@ -61,6 +68,7 @@ export function useDocumentDragDrop({
       mutators.document.moveToFolder({
         documentId,
         folderId: targetFolderId === null ? undefined : targetFolderId,
+        organizationId: organization.id,
       })
     );
     return true;
@@ -70,6 +78,11 @@ export function useDocumentDragDrop({
     folderId: string,
     targetParentId: string | null | undefined
   ) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return false;
+    }
+    
     const folder = allFolders.find((f) => f.id === folderId);
     const normalizedTarget = targetParentId ?? null;
 
@@ -88,6 +101,7 @@ export function useDocumentDragDrop({
       mutators.folder.move({
         folderId,
         newParentId: targetParentId || undefined,
+        organizationId: organization.id,
       })
     );
     return true;

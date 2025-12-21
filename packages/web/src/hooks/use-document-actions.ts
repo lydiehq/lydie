@@ -74,13 +74,18 @@ export function useDocumentActions() {
   };
 
   const deleteFolder = (folderId: string) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+    
     confirmDialog({
       title: "Delete Folder",
       message:
         "Are you sure you want to delete this folder? This action cannot be undone.",
       onConfirm: () => {
         try {
-          z.mutate(mutators.folder.delete({ folderId }));
+          z.mutate(mutators.folder.delete({ folderId, organizationId: organization.id }));
           toast.success("Folder deleted");
         } catch (error) {
           toast.error("Failed to delete folder");

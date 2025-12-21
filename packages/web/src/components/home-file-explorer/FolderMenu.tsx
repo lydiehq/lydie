@@ -9,6 +9,7 @@ import { Input, Label } from "@/components/generic/Field";
 import { TextField } from "react-aria-components";
 import { useZero } from "@/services/zero";
 import { useDocumentActions } from "@/hooks/use-document-actions";
+import { useOrganization } from "@/context/organization.context";
 import { toast } from "sonner";
 import { mutators } from "@lydie/zero/mutators";
 import type { PopoverProps } from "@/components/generic/Popover";
@@ -27,6 +28,7 @@ export function FolderMenu({
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(folderName);
   const z = useZero();
+  const { organization } = useOrganization();
   const { deleteFolder, createDocument } = useDocumentActions();
 
   // Sync renameValue when dialog opens or folderName changes
@@ -42,11 +44,17 @@ export function FolderMenu({
       return;
     }
 
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+    
     try {
       z.mutate(
         mutators.folder.rename({
           folderId,
           name: renameValue.trim(),
+          organizationId: organization.id,
         })
       );
       toast.success("Folder renamed");

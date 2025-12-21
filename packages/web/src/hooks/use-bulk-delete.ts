@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useZero } from "@/services/zero";
+import { useOrganization } from "@/context/organization.context";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { toast } from "sonner";
 import { mutators } from "@lydie/zero/mutators";
@@ -11,9 +12,15 @@ interface ItemType {
 
 export function useBulkDelete() {
   const z = useZero();
+  const { organization } = useOrganization();
 
   const handleDelete = useCallback(
     (selectedItems: ItemType[], onSelectionClear: () => void) => {
+      if (!organization) {
+        toast.error("Organization not found");
+        return;
+      }
+      
       const documentsToDelete = selectedItems.filter(
         (item) => item.type === "document"
       );
@@ -31,10 +38,10 @@ export function useBulkDelete() {
         onConfirm: () => {
           try {
             documentsToDelete.forEach((item) => {
-              z.mutate(mutators.document.delete({ documentId: item.id }));
+              z.mutate(mutators.document.delete({ documentId: item.id, organizationId: organization.id }));
             });
             foldersToDelete.forEach((item) => {
-              z.mutate(mutators.folder.delete({ folderId: item.id }));
+              z.mutate(mutators.folder.delete({ folderId: item.id, organizationId: organization.id }));
             });
             toast.success(
               `${totalItems} item${totalItems !== 1 ? "s" : ""} deleted`
@@ -46,7 +53,7 @@ export function useBulkDelete() {
         },
       });
     },
-    [z]
+    [z, organization]
   );
 
   return { handleDelete };

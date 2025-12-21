@@ -29,8 +29,6 @@ import { Route as _authWOrganizationIdSettingsAiRouteImport } from './routes/__a
 import { Route as _authWOrganizationIdSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/index'
 import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationType/route'
 import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationType/index'
-import { Route as _authWOrganizationIdSettingsIntegrationsEWordpressRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/e/wordpress'
-import { Route as _authWOrganizationIdSettingsIntegrationsEShopifyRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/e/shopify'
 import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationType/activity'
 
 const LandingRouteRoute = LandingRouteRouteImport.update({
@@ -150,18 +148,6 @@ const _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute =
         _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute,
     } as any,
   )
-const _authWOrganizationIdSettingsIntegrationsEWordpressRoute =
-  _authWOrganizationIdSettingsIntegrationsEWordpressRouteImport.update({
-    id: '/integrations/e/wordpress',
-    path: '/integrations/e/wordpress',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
-  } as any)
-const _authWOrganizationIdSettingsIntegrationsEShopifyRoute =
-  _authWOrganizationIdSettingsIntegrationsEShopifyRouteImport.update({
-    id: '/integrations/e/shopify',
-    path: '/integrations/e/shopify',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
-  } as any)
 const _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute =
   _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRouteImport.update(
     {
@@ -191,8 +177,6 @@ export interface FileRoutesByFullPath {
   '/w/$organizationId/settings/integrations/$integrationType': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
   '/w/$organizationId/settings/integrations/$integrationType/activity': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute
-  '/w/$organizationId/settings/integrations/e/shopify': typeof _authWOrganizationIdSettingsIntegrationsEShopifyRoute
-  '/w/$organizationId/settings/integrations/e/wordpress': typeof _authWOrganizationIdSettingsIntegrationsEWordpressRoute
   '/w/$organizationId/settings/integrations/$integrationType/': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute
 }
 export interface FileRoutesByTo {
@@ -211,8 +195,6 @@ export interface FileRoutesByTo {
   '/w/$organizationId/settings': typeof _authWOrganizationIdSettingsIndexRoute
   '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
   '/w/$organizationId/settings/integrations/$integrationType/activity': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute
-  '/w/$organizationId/settings/integrations/e/shopify': typeof _authWOrganizationIdSettingsIntegrationsEShopifyRoute
-  '/w/$organizationId/settings/integrations/e/wordpress': typeof _authWOrganizationIdSettingsIntegrationsEWordpressRoute
   '/w/$organizationId/settings/integrations/$integrationType': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute
 }
 export interface FileRoutesById {
@@ -237,8 +219,6 @@ export interface FileRoutesById {
   '/__auth/w/$organizationId/settings/integrations/$integrationType': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
   '/__auth/w/$organizationId/settings/integrations/': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
   '/__auth/w/$organizationId/settings/integrations/$integrationType/activity': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute
-  '/__auth/w/$organizationId/settings/integrations/e/shopify': typeof _authWOrganizationIdSettingsIntegrationsEShopifyRoute
-  '/__auth/w/$organizationId/settings/integrations/e/wordpress': typeof _authWOrganizationIdSettingsIntegrationsEWordpressRoute
   '/__auth/w/$organizationId/settings/integrations/$integrationType/': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute
 }
 export interface FileRouteTypes {
@@ -262,8 +242,6 @@ export interface FileRouteTypes {
     | '/w/$organizationId/settings/integrations/$integrationType'
     | '/w/$organizationId/settings/integrations'
     | '/w/$organizationId/settings/integrations/$integrationType/activity'
-    | '/w/$organizationId/settings/integrations/e/shopify'
-    | '/w/$organizationId/settings/integrations/e/wordpress'
     | '/w/$organizationId/settings/integrations/$integrationType/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -282,8 +260,6 @@ export interface FileRouteTypes {
     | '/w/$organizationId/settings'
     | '/w/$organizationId/settings/integrations'
     | '/w/$organizationId/settings/integrations/$integrationType/activity'
-    | '/w/$organizationId/settings/integrations/e/shopify'
-    | '/w/$organizationId/settings/integrations/e/wordpress'
     | '/w/$organizationId/settings/integrations/$integrationType'
   id:
     | '__root__'
@@ -307,8 +283,6 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationId/settings/integrations/$integrationType'
     | '/__auth/w/$organizationId/settings/integrations/'
     | '/__auth/w/$organizationId/settings/integrations/$integrationType/activity'
-    | '/__auth/w/$organizationId/settings/integrations/e/shopify'
-    | '/__auth/w/$organizationId/settings/integrations/e/wordpress'
     | '/__auth/w/$organizationId/settings/integrations/$integrationType/'
   fileRoutesById: FileRoutesById
 }
@@ -459,20 +433,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRouteImport
       parentRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute
     }
-    '/__auth/w/$organizationId/settings/integrations/e/wordpress': {
-      id: '/__auth/w/$organizationId/settings/integrations/e/wordpress'
-      path: '/integrations/e/wordpress'
-      fullPath: '/w/$organizationId/settings/integrations/e/wordpress'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsEWordpressRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
-    }
-    '/__auth/w/$organizationId/settings/integrations/e/shopify': {
-      id: '/__auth/w/$organizationId/settings/integrations/e/shopify'
-      path: '/integrations/e/shopify'
-      fullPath: '/w/$organizationId/settings/integrations/e/shopify'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsEShopifyRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
-    }
     '/__auth/w/$organizationId/settings/integrations/$integrationType/activity': {
       id: '/__auth/w/$organizationId/settings/integrations/$integrationType/activity'
       path: '/activity'
@@ -510,8 +470,6 @@ interface _authWOrganizationIdSettingsRouteRouteChildren {
   _authWOrganizationIdSettingsIndexRoute: typeof _authWOrganizationIdSettingsIndexRoute
   _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
   _authWOrganizationIdSettingsIntegrationsIndexRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
-  _authWOrganizationIdSettingsIntegrationsEShopifyRoute: typeof _authWOrganizationIdSettingsIntegrationsEShopifyRoute
-  _authWOrganizationIdSettingsIntegrationsEWordpressRoute: typeof _authWOrganizationIdSettingsIntegrationsEWordpressRoute
 }
 
 const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettingsRouteRouteChildren =
@@ -531,10 +489,6 @@ const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettin
       _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren,
     _authWOrganizationIdSettingsIntegrationsIndexRoute:
       _authWOrganizationIdSettingsIntegrationsIndexRoute,
-    _authWOrganizationIdSettingsIntegrationsEShopifyRoute:
-      _authWOrganizationIdSettingsIntegrationsEShopifyRoute,
-    _authWOrganizationIdSettingsIntegrationsEWordpressRoute:
-      _authWOrganizationIdSettingsIntegrationsEWordpressRoute,
   }
 
 const _authWOrganizationIdSettingsRouteRouteWithChildren =

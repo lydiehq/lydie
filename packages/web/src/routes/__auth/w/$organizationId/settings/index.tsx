@@ -130,13 +130,18 @@ function RouteComponent() {
   }, [organization?.name]);
 
   const handleRevokeApiKey = async (keyId: string, keyName: string) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+    
     confirmDialog({
       title: `Revoke API Key "${keyName}"`,
       message:
         "This action cannot be undone. The API key will be permanently revoked.",
       onConfirm: () => {
         try {
-          z.mutate(mutators.apiKey.revoke({ keyId }));
+          z.mutate(mutators.apiKey.revoke({ keyId, organizationId: organization.id }));
           toast.success("API key revoked successfully");
         } catch (error) {
           toast.error("Failed to revoke API key");
