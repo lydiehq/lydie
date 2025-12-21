@@ -15,6 +15,7 @@ import { Route as _authIndexRouteImport } from './routes/__auth/index'
 import { Route as LandingBlogIndexRouteImport } from './routes/_landing/blog/index'
 import { Route as LandingAuthIndexRouteImport } from './routes/_landing/auth/index'
 import { Route as _authOnboardingIndexRouteImport } from './routes/__auth/onboarding/index'
+import { Route as IntegrationsIntegrationIdEnableRouteImport } from './routes/integrations/$integrationId/enable'
 import { Route as _authWOrganizationIdRouteRouteImport } from './routes/__auth/w/$organizationId/route'
 import { Route as _authWOrganizationIdIndexRouteImport } from './routes/__auth/w/$organizationId/index'
 import { Route as _authWOrganizationIdAssistantRouteImport } from './routes/__auth/w/$organizationId/assistant'
@@ -59,6 +60,12 @@ const _authOnboardingIndexRoute = _authOnboardingIndexRouteImport.update({
   path: '/onboarding/',
   getParentRoute: () => _authRouteRoute,
 } as any)
+const IntegrationsIntegrationIdEnableRoute =
+  IntegrationsIntegrationIdEnableRouteImport.update({
+    id: '/integrations/$integrationId/enable',
+    path: '/integrations/$integrationId/enable',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const _authWOrganizationIdRouteRoute =
   _authWOrganizationIdRouteRouteImport.update({
     id: '/w/$organizationId',
@@ -161,6 +168,7 @@ const _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute =
 export interface FileRoutesByFullPath {
   '/': typeof _authIndexRoute
   '/w/$organizationId': typeof _authWOrganizationIdRouteRouteWithChildren
+  '/integrations/$integrationId/enable': typeof IntegrationsIntegrationIdEnableRoute
   '/onboarding': typeof _authOnboardingIndexRoute
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
@@ -181,6 +189,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof _authIndexRoute
+  '/integrations/$integrationId/enable': typeof IntegrationsIntegrationIdEnableRoute
   '/onboarding': typeof _authOnboardingIndexRoute
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
@@ -203,6 +212,7 @@ export interface FileRoutesById {
   '/_landing': typeof LandingRouteRouteWithChildren
   '/__auth/': typeof _authIndexRoute
   '/__auth/w/$organizationId': typeof _authWOrganizationIdRouteRouteWithChildren
+  '/integrations/$integrationId/enable': typeof IntegrationsIntegrationIdEnableRoute
   '/__auth/onboarding/': typeof _authOnboardingIndexRoute
   '/_landing/auth/': typeof LandingAuthIndexRoute
   '/_landing/blog/': typeof LandingBlogIndexRoute
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/w/$organizationId'
+    | '/integrations/$integrationId/enable'
     | '/onboarding'
     | '/auth'
     | '/blog'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/integrations/$integrationId/enable'
     | '/onboarding'
     | '/auth'
     | '/blog'
@@ -267,6 +279,7 @@ export interface FileRouteTypes {
     | '/_landing'
     | '/__auth/'
     | '/__auth/w/$organizationId'
+    | '/integrations/$integrationId/enable'
     | '/__auth/onboarding/'
     | '/_landing/auth/'
     | '/_landing/blog/'
@@ -289,6 +302,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   _authRouteRoute: typeof _authRouteRouteWithChildren
   LandingRouteRoute: typeof LandingRouteRouteWithChildren
+  IntegrationsIntegrationIdEnableRoute: typeof IntegrationsIntegrationIdEnableRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -334,6 +348,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding'
       preLoaderRoute: typeof _authOnboardingIndexRouteImport
       parentRoute: typeof _authRouteRoute
+    }
+    '/integrations/$integrationId/enable': {
+      id: '/integrations/$integrationId/enable'
+      path: '/integrations/$integrationId/enable'
+      fullPath: '/integrations/$integrationId/enable'
+      preLoaderRoute: typeof IntegrationsIntegrationIdEnableRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/__auth/w/$organizationId': {
       id: '/__auth/w/$organizationId'
@@ -550,6 +571,7 @@ const LandingRouteRouteWithChildren = LandingRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   _authRouteRoute: _authRouteRouteWithChildren,
   LandingRouteRoute: LandingRouteRouteWithChildren,
+  IntegrationsIntegrationIdEnableRoute: IntegrationsIntegrationIdEnableRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

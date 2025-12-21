@@ -1,25 +1,7 @@
 ---
 import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
-
-const integrations = [
-  {
-    id: "github",
-    title: "GitHub",
-    description: "Sync documents as Markdown files to a GitHub repository",
-  },
-  {
-    id: "shopify",
-    title: "Shopify Blog",
-    description: "Publish documents to your Shopify blog",
-  },
-  {
-    id: "wordpress",
-    title: "WordPress",
-    description:
-      "Sync content to your self-hosted WordPress site using Application Passwords.",
-  },
-];
+import { integrations } from "../../utils/integrations";
 ---
 
 <Layout
@@ -34,22 +16,43 @@ const integrations = [
         Integrations
       </h1>
       <p class="text-[15px]/relaxed text-gray-600 max-w-[65ch] text-balance">
-        Connect your documents to external platforms and services. Sync content
-        to GitHub, publish to Shopify, or integrate with WordPress.
+        Lydie integrations allow you to connect to external platforms and
+        services, making it easy to sync your documents to your favorite tools.
+
+        <br />
+        <br />
+        Missing an integration? <a
+          href="https://github.com/lsalling/lydie/issues/new?labels=integration&title=Integration+Request%3A+"
+          target="_blank"
+          class="text-gray-900 hover:text-gray-800 transition-colors"
+          >Let us know</a
+        >.
       </p>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
       {
         integrations.map((integration) => (
-          <div class="flex flex-col gap-y-2 p-4 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all">
-            <h3 class="text-base font-medium text-gray-900">
-              {integration.title}
-            </h3>
-            <p class="text-[0.8125rem] text-gray-600">
-              {integration.description}
-            </p>
-          </div>
+          <a
+            href={`/integrations/${integration.id}`}
+            class="flex flex-col gap-y-3 p-4 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all group"
+          >
+            {integration.icon && (
+              <img
+                src={`/integrations/${integration.id}/assets/${integration.icon}`}
+                alt={`${integration.title} logo`}
+                class="w-12 h-12 object-contain"
+              />
+            )}
+            <div class="flex flex-col gap-y-1">
+              <h3 class="text-base font-medium text-gray-900 group-hover:text-gray-800">
+                {integration.title}
+              </h3>
+              <p class="text-[0.8125rem] text-gray-600">
+                {integration.description}
+              </p>
+            </div>
+          </a>
         ))
       }
     </div>

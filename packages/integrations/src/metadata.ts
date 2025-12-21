@@ -40,6 +40,12 @@ export interface IntegrationMetadata {
    * - "manual": Requires manual credential entry (e.g., API keys, passwords)
    */
   authType?: "oauth" | "manual";
+
+  /**
+   * Extended description for landing pages
+   * A longer, more detailed description with overview, features, and instructions
+   */
+  extendedDescription?: string;
 }
 
 // Import metadata from each integration's metadata.json file

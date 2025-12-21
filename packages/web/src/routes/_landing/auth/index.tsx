@@ -3,10 +3,14 @@ import { Heading } from "@/components/generic/Heading";
 import { Logo } from "@/components/layout/Logo";
 import { authClient } from "@/utils/auth";
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_landing/auth/")({
   component: RouteComponent,
+  validateSearch: z.object({
+    redirect: z.string().optional(),
+  }),
 });
 
 function RouteComponent() {
@@ -37,13 +41,17 @@ function RouteComponent() {
 
 function AuthBox() {
   const [isPending, setIsPending] = useState(false);
+  const { redirect } = Route.useSearch();
 
   const handleGoogleSignIn = async () => {
     setIsPending(true);
     try {
+      const callbackURL = redirect
+        ? `${window.location.origin}${redirect}`
+        : window.location.origin;
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: window.location.origin,
+        callbackURL,
       });
     } catch (error) {
       setIsPending(false);

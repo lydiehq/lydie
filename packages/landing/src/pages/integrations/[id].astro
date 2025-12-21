@@ -1,0 +1,100 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { getIntegration } from "../../utils/integrations";
+import { ChevronLeft } from "lucide-react";
+
+export async function getStaticPaths() {
+  const { integrations } = await import("../../utils/integrations");
+  return integrations.map((integration) => ({
+    params: { id: integration.id },
+  }));
+}
+
+const { id } = Astro.params;
+const integration = getIntegration(id!);
+
+if (!integration) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Integration not found",
+  });
+}
+---
+
+<Layout
+  title={`${integration.title} - Integrations - Lydie`}
+  description={integration.description}
+>
+  <Container className="flex flex-col gap-y-8">
+    <a
+      href="/integrations"
+      class="flex items-center gap-x-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors w-fit"
+    >
+      <ChevronLeft className="size-4" />
+      Back to Integrations
+    </a>
+
+    <div class="flex flex-col gap-y-6">
+      <div class="flex flex-col gap-y-4">
+        <div class="flex items-center gap-x-4">
+          {
+            integration.icon && (
+              <div class="rounded-lg p-2 ring ring-black/5">
+                <img
+                  src={`/integrations/${integration.id}/assets/${integration.icon}`}
+                  alt={`${integration.title} logo`}
+                  class="w-16 h-16 object-contain rounded"
+                />
+              </div>
+            )
+          }
+          <div class="flex flex-col gap-y-2">
+            <h1
+              class="text-3xl font-heading font-medium tracking-tight text-gray-800"
+            >
+              {integration.title}
+            </h1>
+            <p class="text-[15px]/relaxed text-gray-600 max-w-[65ch]">
+              {integration.description}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-y-6">
+        {
+          integration.extendedDescription && (
+            <div class="prose max-w-xl">
+              {(() => {
+                const paragraphs =
+                  integration.extendedDescription.split("\n\n");
+                const instructionsIndex = paragraphs.findIndex((p) =>
+                  p.startsWith("## Instructions")
+                );
+                const filteredParagraphs =
+                  instructionsIndex >= 0
+                    ? paragraphs.slice(0, instructionsIndex)
+                    : paragraphs;
+
+                return filteredParagraphs.map((paragraph) => {
+                  if (paragraph.startsWith("## ")) {
+                    const headingText = paragraph.replace(/^## /, "");
+                    return <h2>{headingText}</h2>;
+                  }
+                  if (paragraph.startsWith("### ")) {
+                    const headingText = paragraph.replace(/^### /, "");
+                    return <h3>{headingText}</h3>;
+                  }
+                  return (
+                    <p class="mb-4 text-[15px] leading-relaxed">{paragraph}</p>
+                  );
+                });
+              })()}
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </Container>
+</Layout>

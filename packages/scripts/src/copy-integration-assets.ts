@@ -9,6 +9,7 @@ const __dirname = dirname(__filename);
 const ROOT_DIR = join(__dirname, "../../..");
 const INTEGRATIONS_SRC = join(ROOT_DIR, "packages/integrations/src/integrations");
 const WEB_PUBLIC = join(ROOT_DIR, "packages/web/public/integrations");
+const LANDING_PUBLIC = join(ROOT_DIR, "packages/landing/public/integrations");
 
 async function copyDirectory(src: string, dest: string) {
   await mkdir(dest, { recursive: true });
@@ -30,13 +31,15 @@ async function copyIntegrationAssets() {
   console.log("Copying integration assets...");
 
   try {
-    // Ensure the destination directory exists
+    // Ensure the destination directories exist
     await mkdir(WEB_PUBLIC, { recursive: true });
+    await mkdir(LANDING_PUBLIC, { recursive: true });
 
     // Read all integration directories
     const integrations = await readdir(INTEGRATIONS_SRC, { withFileTypes: true });
 
-    let copiedCount = 0;
+    let webCopiedCount = 0;
+    let landingCopiedCount = 0;
 
     // Copy each integration's assets folder
     for (const integration of integrations) {
@@ -44,7 +47,8 @@ async function copyIntegrationAssets() {
 
       const integrationId = integration.name;
       const assetsSrc = join(INTEGRATIONS_SRC, integrationId, "assets");
-      const assetsDest = join(WEB_PUBLIC, integrationId, "assets");
+      const webAssetsDest = join(WEB_PUBLIC, integrationId, "assets");
+      const landingAssetsDest = join(LANDING_PUBLIC, integrationId, "assets");
 
       // Check if assets directory exists
       try {
@@ -58,8 +62,9 @@ async function copyIntegrationAssets() {
         continue;
       }
 
-      // Copy the assets directory
-      await copyDirectory(assetsSrc, assetsDest);
+      // Copy the assets directory to both destinations
+      await copyDirectory(assetsSrc, webAssetsDest);
+      await copyDirectory(assetsSrc, landingAssetsDest);
 
       // Count files copied
       const countFiles = async (dir: string): Promise<number> => {
@@ -76,12 +81,14 @@ async function copyIntegrationAssets() {
         return count;
       };
 
-      const fileCount = await countFiles(assetsDest);
-      copiedCount += fileCount;
-      console.log(`  ✓ Copied ${integrationId} (${fileCount} file(s))`);
+      const fileCount = await countFiles(webAssetsDest);
+      webCopiedCount += fileCount;
+      landingCopiedCount += fileCount;
+      console.log(`  ✓ Copied ${integrationId} to web and landing (${fileCount} file(s) each)`);
     }
 
-    console.log(`\n✅ Successfully copied ${copiedCount} asset file(s) to ${WEB_PUBLIC}`);
+    console.log(`\n✅ Successfully copied ${webCopiedCount} asset file(s) to ${WEB_PUBLIC}`);
+    console.log(`✅ Successfully copied ${landingCopiedCount} asset file(s) to ${LANDING_PUBLIC}`);
   } catch (error) {
     console.error("❌ Error copying integration assets:", error);
     process.exit(1);
