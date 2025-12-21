@@ -40,7 +40,7 @@ const remainingPosts = sortedPosts.slice(3);
         featuredPosts.length > 0 && (
           <section class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <a
-              href={`/blog/${featuredPosts[0].slug}/`}
+              href={`/blog/${featuredPosts[0].slug}`}
               class="rounded-lg bg-black/2 flex flex-col justify-end col-span-2 hover:bg-black/5 transition-colors duration-75 bg-center bg-cover bg-no-repeat aspect-1024/640 ring ring-black/5 overflow-hidden"
               style="background-image: url(/blog.png)"
             >
@@ -59,7 +59,7 @@ const remainingPosts = sortedPosts.slice(3);
             <div class="grid grid-cols-1 gap-2">
               {featuredPosts.slice(1, 3).map((post) => (
                 <a
-                  href={`/blog/${post.slug}/`}
+                  href={`/blog/${post.slug}`}
                   class="rounded-lg bg-black/2 p-4 flex flex-col justify-end hover:bg-black/5 transition-colors duration-75 h-40"
                 >
                   <h2 class="text-xl font-medium text-gray-900">
