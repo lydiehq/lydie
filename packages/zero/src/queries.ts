@@ -328,7 +328,9 @@ export const queries = defineQueries({
         hasOrganizationAccess(ctx, organizationId);
         return zql.sync_metadata
           .where("document_id", documentId)
-          .related("connection")
+          .related("connection", (q) =>
+            q.where("organization_id", organizationId)
+          )
           .orderBy("created_at", "desc");
       }
     ),
@@ -340,6 +342,9 @@ export const queries = defineQueries({
         hasOrganizationAccess(ctx, organizationId);
         return zql.integration_activity_logs
           .where("integration_type", integrationType)
+          .related("connection", (q) =>
+            q.where("organization_id", organizationId)
+          )
           .orderBy("created_at", "desc");
       }
     ),

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Label } from "@/components/generic/Field";
 import { Input } from "react-aria-components";
 import { TextField } from "react-aria-components";
+import { Button } from "@/components/generic/Button";
 
 export type WordPressConnectionConfig = {
   siteUrl: string;
@@ -74,9 +75,7 @@ export function WordPressConnectionForm({
       className="flex flex-col gap-y-4"
     >
       <div>
-        <h3 className="text-lg font-medium text-gray-900">
-          Connect WordPress
-        </h3>
+        <h3 className="text-lg font-medium text-gray-900">Connect WordPress</h3>
         <p className="text-sm text-gray-600 mt-1">
           Enter your WordPress site credentials to connect.
         </p>
@@ -153,22 +152,13 @@ export function WordPressConnectionForm({
       </div>
 
       <div className="flex justify-end gap-1.5 mt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-        >
+        <Button type="button" onPress={onCancel} intent="secondary">
           Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={form.state.isSubmitting}
-          className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50"
-        >
+        </Button>
+        <Button type="submit" isDisabled={form.state.isSubmitting}>
           {form.state.isSubmitting ? "Connecting..." : "Connect"}
-        </button>
+        </Button>
       </div>
     </form>
   );
 }
-
