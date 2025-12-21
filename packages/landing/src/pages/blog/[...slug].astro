@@ -1,5 +1,5 @@
 ---
-import { type Document } from "@lydie/sdk";
+import { type Document } from "@lydie-app/sdk";
 import BlogPost from "../../layouts/BlogPost.astro";
 import { LydieContent } from "../../components/LydieContent";
 import { lydieClient } from "../../utils/lydie-client";
@@ -24,7 +24,7 @@ const { slug } = Astro.params;
 // Fetch the specific document using getDocument(slug)
 let document: Document;
 try {
-  document = await lydieClient.getDocument(slug!);
+  document = await lydieClient.getDocument(slug!, { related: true });
 } catch (error) {
   console.error(`Failed to fetch document with slug "${slug}":`, error);
   // Return 404 response for missing or errored documents
@@ -36,29 +36,44 @@ try {
 
 const blogPostProps = {
   title: document.title,
-  description: document.description,
 };
 ---
 
 <BlogPost {...blogPostProps}>
-  <header class="flex flex-col gap-y-2">
-    <div class="text-sm text-gray-500 mb-4">
-      <!-- <FormattedDate date={new Date(document.createdAt)} />
-      {
-        document.updatedAt && (
-          <span class="ml-4">
-            Last updated: <FormattedDate date={document.updatedAt} />
-          </span>
-        )
-      } -->
+  <div class="max-w-2xl mx-auto">
+    <header class="flex flex-col gap-y-4 mb-4">
+      <h1 class="text-4xl font-bold text-gray-900">{document.title}</h1>
+      <span class="text-gray-500">
+        <FormattedDate date={new Date(document.createdAt)} />
+      </span>
+    </header>
+    <article class="prose">
+      <LydieContent
+        content={document.jsonContent}
+        customComponents={{}}
+        client:load
+      />
+    </article>
+    <hr class="my-8 border-gray-200" />
+    <div class="flex flex-col gap-y-4">
+      <span class="text-gray-500 text-sm"> Related posts </span>
+      <div class="grid grid-cols-3">
+        {
+          document.related?.map((post: any) => (
+            <a
+              href={`/blog/${post.slug}/`}
+              class="rounded-lg bg-black/2 p-4 flex flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline"
+            >
+              <span class="text-base font-medium text-gray-900">
+                {post.title}
+              </span>
+              <p class="text-gray-500 text-sm">
+                <FormattedDate date={new Date(post.createdAt)} />
+              </p>
+            </a>
+          ))
+        }
+      </div>
     </div>
-    <h1 class="text-4xl font-bold text-gray-900">{document.title}</h1>
-  </header>
-  <div class="prose">
-    <LydieContent
-      content={document.jsonContent}
-      customComponents={{}}
-      client:load
-    />
   </div>
 </BlogPost>

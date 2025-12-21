@@ -20,6 +20,9 @@ const sortedPosts = posts.sort((a, b) => {
   const dateB = new Date(b.createdAt || b.updatedAt || 0);
   return dateB.getTime() - dateA.getTime();
 });
+
+const featuredPosts = sortedPosts.slice(0, 3);
+const remainingPosts = sortedPosts.slice(3);
 ---
 
 <Layout
@@ -28,37 +31,78 @@ const sortedPosts = posts.sort((a, b) => {
 >
   <div class="py-16">
     <Container>
-      <header class="flex flex-col gap-y-2">
+      <header class="flex flex-col gap-y-2 mb-12">
         <h1 class="text-4xl font-bold text-gray-900">Blog</h1>
       </header>
 
-      <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {
-          sortedPosts.map((post, index) => (
-            <article class="ring ring-black/8 p-4 rounded-lg">
-              <a href={`/blog/${post.slug}/`} class="block">
-                <div class="space-y-3">
-                  <h2
-                    class={`font-bold text-gray-900 group-hover:text-gray-600 transition-colors ${
-                      index === 0 ? "text-3xl" : "text-xl"
-                    }`}
-                  >
+      <!-- Featured Articles Grid -->
+      {
+        featuredPosts.length > 0 && (
+          <section class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <a
+              href={`/blog/${featuredPosts[0].slug}/`}
+              class="rounded-lg bg-black/2 flex flex-col justify-end col-span-2 hover:bg-black/5 transition-colors duration-75 bg-center bg-cover bg-no-repeat aspect-1024/640 ring ring-black/5 overflow-hidden"
+              style="background-image: url(/blog.png)"
+            >
+              <div class="flex flex-col gap-y-2 p-6">
+                <h2 class="text-xl font-medium text-gray-900">
+                  {featuredPosts[0].title}
+                </h2>
+                {/* <p class="text-gray-600 text-sm">
+                  {featuredPosts[0].description}
+                </p> */}
+                <p class="text-gray-500 text-sm">
+                  <FormattedDate date={new Date(featuredPosts[0].createdAt)} />
+                </p>
+              </div>
+            </a>
+            <div class="grid grid-cols-1 gap-2">
+              {featuredPosts.slice(1, 3).map((post) => (
+                <a
+                  href={`/blog/${post.slug}/`}
+                  class="rounded-lg bg-black/2 p-4 flex flex-col justify-end hover:bg-black/5 transition-colors duration-75 h-40"
+                >
+                  <h2 class="text-xl font-medium text-gray-900">
                     {post.title}
                   </h2>
-                  {post.createdAt && (
-                    <p class="text-sm text-gray-500">
-                      <FormattedDate date={new Date(post.createdAt)} />
-                    </p>
-                  )}
-                  {post.description && (
-                    <p class="text-gray-600 line-clamp-3">{post.description}</p>
-                  )}
-                </div>
-              </a>
-            </article>
-          ))
-        }
-      </section>
+                  <p class="text-gray-600 text-sm">{post.description}</p>
+                  <p class="text-gray-500 text-sm">
+                    <FormattedDate date={new Date(post.createdAt)} />
+                  </p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      <!-- More Posts List -->
+      {
+        remainingPosts.length > 0 && (
+          <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">More writing</h2>
+            <ul class="space-y-4">
+              {remainingPosts.map((post) => (
+                <li>
+                  <a
+                    href={`/blog/${post.slug}/`}
+                    class="flex items-start justify-between gap-4 py-3 border-b border-gray-200 hover:border-gray-300 transition-colors group"
+                  >
+                    <h3 class="font-semibold text-gray-900 group-hover:text-gray-600 transition-colors flex-1">
+                      {post.title}
+                    </h3>
+                    {post.createdAt && (
+                      <span class="text-sm text-gray-500 whitespace-nowrap">
+                        <FormattedDate date={new Date(post.createdAt)} />
+                      </span>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
     </Container>
   </div>
 </Layout>

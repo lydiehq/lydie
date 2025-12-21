@@ -4,20 +4,17 @@ import { Container } from "../components/Container";
 
 interface Props {
   title: string;
-  description: string;
 }
 
-const { title, description } = Astro.props;
+const { title } = Astro.props;
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={""}>
   <div class="py-16">
     <Container>
-      <article class="max-w-4xl mx-auto">
-        <div class="prose max-w-2xl">
-          <slot />
-        </div>
-      </article>
+      <div class="mx-auto">
+        <slot />
+      </div>
     </Container>
   </div>
 </Layout>
