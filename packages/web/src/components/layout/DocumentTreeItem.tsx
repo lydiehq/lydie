@@ -6,7 +6,7 @@ import {
 } from "react-aria-components";
 import { useParams, useNavigate, useSearch } from "@tanstack/react-router";
 import { Collection } from "react-aria-components";
-import { type ReactElement } from "react";
+import { type ReactElement, useRef } from "react";
 import {
   ChevronRight,
   File,
@@ -66,6 +66,8 @@ export function DocumentTreeItem({
   const navigate = useNavigate();
   const { tree } = useSearch({ strict: false });
   const { user } = useAuth();
+  const folderChevronRef = useRef<HTMLButtonElement>(null);
+  const integrationLinkChevronRef = useRef<HTMLButtonElement>(null);
 
   const isCurrentDocument =
     item.type === "document" && currentDocId === item.id;
@@ -77,7 +79,6 @@ export function DocumentTreeItem({
   const isGroup = item.type === "integration-group";
 
   const handleAction = () => {
-    if (isIntegrationLink) return;
     if (isGroup)
       navigate({
         to: "/w/$organizationId/settings/integrations/$integrationId",
@@ -85,12 +86,14 @@ export function DocumentTreeItem({
         from: "/w/$organizationId",
       });
 
+    // For folders and integration links, trigger expansion by clicking the chevron button
     if (item.type === "folder") {
-      navigate({
-        to: "/w/$organizationId",
-        search: { tree: item.id, q: undefined, focusSearch: undefined },
-        from: "/w/$organizationId",
-      });
+      folderChevronRef.current?.click();
+      return;
+    }
+    if (isIntegrationLink) {
+      integrationLinkChevronRef.current?.click();
+      return;
     }
     if (item.type === "document") {
       navigate({
@@ -112,8 +115,12 @@ export function DocumentTreeItem({
           isCurrent,
           className: `
             dragging:opacity-50 dragging:bg-gray-50 
-            ${item.type === "folder" ? "drop-target:bg-gray-200" : ""}
-            ${isIntegrationLink || isGroup ? "cursor-default" : ""}
+            ${
+              item.type === "folder" || isIntegrationLink
+                ? "drop-target:bg-gray-200"
+                : ""
+            }
+            ${isGroup ? "cursor-default" : ""}
           `,
         })
       )}
@@ -169,47 +176,33 @@ export function DocumentTreeItem({
                 </>
               )}
 
-              {/* Integration link item - styled similarly to regular folders, but with a sync icon or spinner */}
+              {/* Integration link item - use sync icon as chevron to toggle expansion */}
               {isIntegrationLink && (
-                <>
-                  <Button
-                    className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
-                    slot="chevron"
-                  >
-                    <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
-                  </Button>
-                  <div className="flex items-center gap-0.5">
-                    {item.syncStatus === "pulling" ? (
-                      <Loader className="size-3.5 text-gray-500 animate-spin" />
-                    ) : (
-                      <FolderSync className="size-3.5 text-gray-500" />
-                    )}
-                  </div>
-                </>
-              )}
-              {/* Folder item */}
-              {item.type === "folder" && (
                 <Button
-                  className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
+                  ref={integrationLinkChevronRef}
+                  className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
                   slot="chevron"
                 >
-                  <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
+                  {item.syncStatus === "pulling" ? (
+                    <Loader className="size-3.5 text-gray-500 animate-spin" />
+                  ) : (
+                    <FolderSync className="size-3.5 text-gray-500" />
+                  )}
                 </Button>
               )}
+              {/* Folder item - use folder icon as chevron to toggle expansion */}
               {item.type === "folder" && (
-                <div className="flex items-center gap-0.5">
-                  <Button className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1">
-                    {isExpanded ? (
-                      <FolderOpen className="size-3.5" />
-                    ) : (
-                      <Folder className="size-3.5" />
-                    )}
-                  </Button>
-                </div>
-              )}
-              {/* Document item */}
-              {item.type === "document" && (
-                <div className="w-5 -ml-1 shrink-0" />
+                <Button
+                  ref={folderChevronRef}
+                  className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
+                  slot="chevron"
+                >
+                  {isExpanded ? (
+                    <FolderOpen className="size-3.5" />
+                  ) : (
+                    <Folder className="size-3.5" />
+                  )}
+                </Button>
               )}
               {item.type === "document" &&
                 (() => {
