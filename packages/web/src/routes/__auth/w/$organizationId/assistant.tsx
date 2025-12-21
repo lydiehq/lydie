@@ -37,7 +37,6 @@ export const Route = createFileRoute("/__auth/w/$organizationId/assistant")({
 
 function AssistantPage() {
   const { organization } = useOrganization();
-  const { session } = useAuth();
   // Note: If we have a fresh page load, we default to a new conversation.
   const [conversationId, setConversationId] = useState(() => createId());
 

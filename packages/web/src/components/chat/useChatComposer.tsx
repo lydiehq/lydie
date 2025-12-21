@@ -53,6 +53,7 @@ export function useChatComposer({
   });
 
   const editor = useEditor({
+    autofocus: true,
     extensions: [
       StarterKit,
       Placeholder.configure({
