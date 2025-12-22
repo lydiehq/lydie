@@ -111,12 +111,15 @@ export const DocumentChatRoute = new Hono<{
       });
     }
 
+    const organizationId = c.get("organizationId");
+    
     const [currentDocument] = await db
       .select()
       .from(documentsTable)
       .where(
         and(
           eq(documentsTable.id, documentId),
+          eq(documentsTable.organizationId, organizationId),
           sql`${documentsTable.deletedAt} IS NULL`
         )
       );
@@ -127,10 +130,10 @@ export const DocumentChatRoute = new Hono<{
       });
     }
 
-    // Verify user has access to this organization
+    // Verify user has access to this organization (double-check for security)
     const organization = await db.query.organizationsTable.findFirst({
       where: {
-        id: currentDocument.organizationId,
+        id: organizationId,
       },
       with: {
         members: {

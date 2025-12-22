@@ -60,10 +60,20 @@ export const AssistantRoute = new Hono<{
         .from(assistantConversationsTable)
         .where(eq(assistantConversationsTable.id, conversationId));
 
-      if (conversation && conversation.userId !== userId) {
-        throw new HTTPException(403, {
-          message: "You are not authorized to access this conversation",
-        });
+      if (conversation) {
+        // Verify conversation belongs to the organization from context
+        if (conversation.organizationId !== organizationId) {
+          throw new HTTPException(403, {
+            message: "You are not authorized to access this conversation",
+          });
+        }
+        
+        // Verify conversation belongs to the user
+        if (conversation.userId !== userId) {
+          throw new HTTPException(403, {
+            message: "You are not authorized to access this conversation",
+          });
+        }
       }
     }
 

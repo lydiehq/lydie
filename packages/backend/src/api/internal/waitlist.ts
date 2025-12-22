@@ -40,6 +40,11 @@ export const WaitlistRoute = new Hono().post(
 
       try {
         await sendEmail({
+          to: "lars@salling.me",
+          subject: "New waitlist signup",
+          text: `New waitlist signup: ${email}`,
+        });
+        await sendEmail({
           to: email,
           subject: "You're on the Lydie waitlist!",
           text: `Welcome to the waitlist!
