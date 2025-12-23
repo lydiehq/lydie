@@ -24,12 +24,6 @@ export function ZeroInit({ children, session }: Props) {
           zero,
         },
       });
-      router.update({
-        context: {
-          ...router.options.context,
-          zero,
-        },
-      });
 
       router.invalidate();
       if (params.organizationId) {
