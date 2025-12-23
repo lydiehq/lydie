@@ -25,6 +25,7 @@ import { Surface } from "./layout/Surface";
 import { Input } from "react-aria-components";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
+import { isLocalOrganization } from "@/lib/local-organization";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -48,6 +49,7 @@ function EditorContainer({ doc }: Props) {
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { setFocusedContent } = useSelectedContent();
   const openLinkDialogRef = useRef<(() => void) | null>(null);
+  const isLocal = isLocalOrganization(doc.organization_id);
 
   const { saveDocument } = useAutoSave({
     documentId: doc.id,
@@ -303,6 +305,7 @@ function EditorContainer({ doc }: Props) {
               doc={doc}
               isCollapsed={sidebarSize === COLLAPSED_SIZE}
               onToggle={toggleSidebar}
+              disableChat={isLocal}
             />
           </Panel>
         </PanelGroup>

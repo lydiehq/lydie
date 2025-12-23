@@ -16,9 +16,8 @@ import { GridList } from "react-aria-components";
 import { useState, useMemo, useEffect } from "react";
 import { Heading } from "@/components/generic/Heading";
 import { useListData } from "react-stately";
-import { useOrganization } from "@/context/organization.context";
-import { useSearch } from "@tanstack/react-router";
-import { useAuth } from "@/context/auth.context";
+import { useOrganizationContext } from "@/context/organization-provider";
+import { useSearch, useRouteContext } from "@tanstack/react-router";
 import { Separator } from "../generic/Separator";
 
 interface ItemType {
@@ -31,11 +30,13 @@ interface ItemType {
 const VIEW_MODE_STORAGE_KEY = "lydie:view:mode";
 
 export function HomeFileExplorer() {
-  const { session, user } = useAuth();
-  const { organization } = useOrganization();
-  // todo: could probably be made non-strict
   const { tree } = useSearch({ strict: false });
-  const organizationId = organization?.id || "";
+  const routeContext = useRouteContext({ from: "__root__" });
+  const { organizationId } = useOrganizationContext();
+
+  // Safely get auth - it might not exist in unauthed routes
+  const session = routeContext.auth?.session;
+  const user = routeContext.auth?.user;
   const { createDocument } = useDocumentActions();
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     // Initialize from localStorage, defaulting to "grid"
@@ -63,7 +64,7 @@ export function HomeFileExplorer() {
     onSearchChange,
     allDocuments,
     allFolders,
-  } = useDocumentSearch(organizationId, session, "/__auth/w/$organizationId/");
+  } = useDocumentSearch(organizationId, session, "__root__");
 
   // When searching, show all results. Otherwise filter by folder
   const documents = search.trim()

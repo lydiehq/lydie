@@ -20,7 +20,7 @@ export const mutators = defineMutators({
           id,
           name,
           parent_id: parentId || null,
-          user_id: ctx.userId,
+          user_id: ctx?.userId || "anon",
           organization_id: organizationId,
           created_at: Date.now(),
           updated_at: Date.now(),
@@ -35,7 +35,7 @@ export const mutators = defineMutators({
       }),
       async ({ tx, ctx, args: { folderId, name, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify folder belongs to the organization
         const folder = await tx.run(
           zql.folders
@@ -44,11 +44,11 @@ export const mutators = defineMutators({
             .where("deleted_at", "IS", null)
             .one()
         );
-        
+
         if (!folder) {
           throw new Error(`Folder not found: ${folderId}`);
         }
-        
+
         await tx.mutate.folders.update({
           id: folderId,
           name,
@@ -64,7 +64,7 @@ export const mutators = defineMutators({
       }),
       async ({ tx, ctx, args: { folderId, newParentId, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify folder belongs to the organization
         const folder = await tx.run(
           zql.folders
@@ -73,11 +73,11 @@ export const mutators = defineMutators({
             .where("deleted_at", "IS", null)
             .one()
         );
-        
+
         if (!folder) {
           throw new Error(`Folder not found: ${folderId}`);
         }
-        
+
         // If moving to a parent folder, verify parent belongs to same organization
         if (newParentId) {
           const parentFolder = await tx.run(
@@ -87,12 +87,12 @@ export const mutators = defineMutators({
               .where("deleted_at", "IS", null)
               .one()
           );
-          
+
           if (!parentFolder) {
             throw new Error(`Parent folder not found: ${newParentId}`);
           }
         }
-        
+
         await tx.mutate.folders.update({
           id: folderId,
           parent_id: newParentId || null,
@@ -107,7 +107,7 @@ export const mutators = defineMutators({
       }),
       async ({ tx, ctx, args: { folderId, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify folder belongs to the organization
         const folder = await tx.run(
           zql.folders
@@ -116,7 +116,7 @@ export const mutators = defineMutators({
             .where("deleted_at", "IS", null)
             .one()
         );
-        
+
         if (!folder) {
           throw new Error(`Folder not found: ${folderId}`);
         }
@@ -222,7 +222,7 @@ export const mutators = defineMutators({
               .where("deleted_at", "IS", null)
               .one()
           );
-          
+
           if (!folder) {
             throw new Error(`Folder not found: ${folderId}`);
           }
@@ -233,7 +233,7 @@ export const mutators = defineMutators({
           slug: id,
           title,
           json_content: jsonContent || { type: "doc", content: [] },
-          user_id: ctx.userId,
+          user_id: ctx?.userId || "anon",
           organization_id: organizationId,
           index_status: "pending",
           published: false,
@@ -267,7 +267,7 @@ export const mutators = defineMutators({
         },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify document belongs to the organization
         const document = await tx.run(
           zql.documents
@@ -276,11 +276,11 @@ export const mutators = defineMutators({
             .where("deleted_at", "IS", null)
             .one()
         );
-        
+
         if (!document) {
           throw new Error(`Document not found: ${documentId}`);
         }
-        
+
         const updates: any = {
           id: documentId,
           updated_at: Date.now(),
@@ -303,7 +303,7 @@ export const mutators = defineMutators({
       }),
       async ({ tx, ctx, args: { documentId, title, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify document belongs to the organization
         const document = await tx.run(
           zql.documents
@@ -312,11 +312,11 @@ export const mutators = defineMutators({
             .where("deleted_at", "IS", null)
             .one()
         );
-        
+
         if (!document) {
           throw new Error(`Document not found: ${documentId}`);
         }
-        
+
         await tx.mutate.documents.update({
           id: documentId,
           title,
@@ -332,7 +332,7 @@ export const mutators = defineMutators({
       }),
       async ({ tx, ctx, args: { documentId, folderId, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify document belongs to the organization
         const document = await tx.run(
           zql.documents
@@ -341,11 +341,11 @@ export const mutators = defineMutators({
             .where("deleted_at", "IS", null)
             .one()
         );
-        
+
         if (!document) {
           throw new Error(`Document not found: ${documentId}`);
         }
-        
+
         // If moving to a folder, verify folder belongs to same organization
         if (folderId) {
           const folder = await tx.run(
@@ -355,12 +355,12 @@ export const mutators = defineMutators({
               .where("deleted_at", "IS", null)
               .one()
           );
-          
+
           if (!folder) {
             throw new Error(`Folder not found: ${folderId}`);
           }
         }
-        
+
         await tx.mutate.documents.update({
           id: documentId,
           folder_id: folderId || null,
@@ -468,7 +468,7 @@ export const mutators = defineMutators({
       }),
       async ({ tx, ctx, args: { keyId, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify API key belongs to the organization
         const apiKey = await tx.run(
           zql.api_keys
@@ -476,7 +476,7 @@ export const mutators = defineMutators({
             .where("organization_id", organizationId)
             .one()
         );
-        
+
         if (!apiKey) {
           throw new Error(`API key not found: ${keyId}`);
         }
@@ -793,7 +793,7 @@ export const mutators = defineMutators({
       }),
       async ({ tx, ctx, args: { connectionId, config, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify connection belongs to the organization
         const connection = await tx.run(
           zql.integration_connections
@@ -801,11 +801,11 @@ export const mutators = defineMutators({
             .where("organization_id", organizationId)
             .one()
         );
-        
+
         if (!connection) {
           throw new Error(`Connection not found: ${connectionId}`);
         }
-        
+
         const updates: any = {
           id: connectionId,
           updated_at: Date.now(),
@@ -894,7 +894,7 @@ export const mutators = defineMutators({
         },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
-        
+
         // Verify document belongs to the organization
         const document = await tx.run(
           zql.documents
@@ -902,11 +902,11 @@ export const mutators = defineMutators({
             .where("organization_id", organizationId)
             .one()
         );
-        
+
         if (!document) {
           throw new Error(`Document not found: ${documentId}`);
         }
-        
+
         // Verify connection belongs to the organization
         const connection = await tx.run(
           zql.integration_connections
@@ -914,11 +914,11 @@ export const mutators = defineMutators({
             .where("organization_id", organizationId)
             .one()
         );
-        
+
         if (!connection) {
           throw new Error(`Connection not found: ${connectionId}`);
         }
-        
+
         // Check if metadata exists for this document-connection pair
         const existing = await tx.run(
           zql.sync_metadata

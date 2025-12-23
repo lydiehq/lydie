@@ -24,10 +24,11 @@ type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
   isCollapsed: boolean;
   onToggle: () => void;
+  disableChat?: boolean;
 };
 
 export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
-  ({ contentEditor, doc, isCollapsed, onToggle }, ref) => {
+  ({ contentEditor, doc, isCollapsed, onToggle, disableChat = false }, ref) => {
     const { user } = useAuth();
 
     const [currentConversationId, setCurrentConversationId] = useState<string>(
@@ -120,7 +121,7 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
             </TooltipTrigger>
           </div>
         </div>
-        {!isCollapsed && (
+        {!isCollapsed && !disableChat && (
           <DocumentChat
             key={currentConversation.id}
             contentEditor={contentEditor}
@@ -128,6 +129,13 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
             doc={doc}
             conversation={currentConversation}
           />
+        )}
+        {!isCollapsed && disableChat && (
+          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+            <p className="text-sm text-gray-600">
+              Document chat is not available in local mode. Sign in to use AI features.
+            </p>
+          </div>
         )}
       </div>
     );

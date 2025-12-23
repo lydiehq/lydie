@@ -27,11 +27,18 @@ export function isAuthenticated(
  * Validates that a user has access to a specific organization
  * Uses the organizations array from the session (populated by customSession plugin)
  * to avoid additional database lookups for performance
+ *
+ * Special case: 'local' organization is allowed for anonymous users
  */
 export function hasOrganizationAccess(
   session: Context | undefined,
   organizationId: string
 ): asserts session is Context & { userId: string } {
+  // Allow local organization for anonymous users
+  if (organizationId === "local") {
+    return;
+  }
+
   isAuthenticated(session);
 
   if (!session.organizations || session.organizations.length === 0) {

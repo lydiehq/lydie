@@ -83,7 +83,6 @@ export function DocumentTreeItem({
       navigate({
         to: "/w/$organizationId/settings/integrations/$integrationId",
         params: { integrationId: item.integrationType },
-        from: "/w/$organizationId",
       });
 
     // For folders and integration links, trigger expansion by clicking the chevron button
@@ -99,7 +98,6 @@ export function DocumentTreeItem({
       navigate({
         to: "/w/$organizationId/$id",
         params: { id: item.id },
-        from: "/w/$organizationId",
       });
     }
   };
@@ -239,7 +237,6 @@ export function DocumentTreeItem({
                           navigate({
                             to: "/w/$organizationId/settings/integrations/$integrationId",
                             params: { integrationId: item.integrationType },
-                            from: "/w/$organizationId",
                           });
                         }
                       }}

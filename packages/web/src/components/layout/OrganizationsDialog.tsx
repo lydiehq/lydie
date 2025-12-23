@@ -4,7 +4,6 @@ import { Dialog } from "../generic/Dialog";
 import { Heading, Button as RACButton } from "react-aria-components";
 import { Separator } from "../generic/Separator";
 import { Button } from "../generic/Button";
-import { authClient } from "@/utils/auth";
 import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { CreateOrganizationDialog } from "./CreateOrganizationDialog";
@@ -19,7 +18,7 @@ export function OrganizationsDialog({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const { organization } = useOrganization();
-  const { organizations } = useRouteContext({ from: "/__auth" });
+  const { organizations } = useRouteContext({ strict: false });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const navigate = useNavigate();

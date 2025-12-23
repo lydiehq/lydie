@@ -18,14 +18,18 @@ type DocumentItemProps = {
   isSelected?: boolean;
 };
 
-export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemProps) {
+export function DocumentItem({
+  id,
+  name,
+  updated_at,
+  viewMode,
+}: DocumentItemProps) {
   const navigate = useNavigate();
 
   const handleNavigate = () => {
     navigate({
       to: "/w/$organizationId/$id",
       params: { id },
-      from: "/w/$organizationId",
     });
   };
 
@@ -106,4 +110,3 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
     </GridListItem>
   );
 }
-

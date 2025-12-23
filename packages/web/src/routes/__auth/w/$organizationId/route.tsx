@@ -9,11 +9,12 @@ import { PanelResizer } from "@/components/panels/PanelResizer";
 import { useRef, useState } from "react";
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
 import { queries } from "@lydie/zero/queries";
-import { useOrganization } from "@/context/organization.context";
+import { useOrganizationContext } from "@/context/organization-provider";
 import { setActiveOrganizationId } from "@/lib/active-organization";
+import { OrganizationProvider } from "@/context/organization-provider";
 
 export const Route = createFileRoute("/__auth/w/$organizationId")({
-  component: RouteComponent,
+  component: WrapperComponent,
   beforeLoad: async ({ context, params }) => {
     // Set as active organization when navigating to it (handles direct navigation via URLs)
     setActiveOrganizationId(params.organizationId);
@@ -25,10 +26,19 @@ export const Route = createFileRoute("/__auth/w/$organizationId")({
   ssr: false,
 });
 
+function WrapperComponent() {
+  const { organizationId } = Route.useParams();
+  return (
+    <OrganizationProvider organizationId={organizationId}>
+      <RouteComponent />
+    </OrganizationProvider>
+  );
+}
+
 const COLLAPSED_SIZE = 3;
 
 function RouteComponent() {
-  const { organization } = useOrganization();
+  const { organization } = useOrganizationContext();
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const [size, setSize] = useState(25);
 

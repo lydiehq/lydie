@@ -1,20 +1,20 @@
 import { createId } from "@lydie/core/id";
-import { useNavigate } from "@tanstack/react-router";
-import { useZero } from "@/services/zero";
-import { useOrganization } from "@/context/organization.context";
-import { toast } from "sonner";
 import { useRouter } from "@tanstack/react-router";
+import { useZero } from "@/services/zero";
+import { useOrganizationContext } from "@/context/organization-provider";
+import { toast } from "sonner";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { mutators } from "@lydie/zero/mutators";
+import { isLocalOrganization } from "@/lib/local-organization";
 
 export function useDocumentActions() {
   const z = useZero();
-  const navigate = useNavigate();
-  const { navigate: routerNavigate } = useRouter();
-  const { organization } = useOrganization();
+  const router = useRouter();
+  const { organizationId } = useOrganizationContext();
+  const isLocal = isLocalOrganization(organizationId);
 
   const createDocument = async (folderId?: string) => {
-    if (!organization) {
+    if (!organizationId) {
       toast.error("Something went wrong, please try again or contact support.");
       return;
     }
@@ -23,7 +23,7 @@ export function useDocumentActions() {
     z.mutate(
       mutators.document.create({
         id,
-        organizationId: organization.id,
+        organizationId,
         title: "",
         folderId,
       })
@@ -31,11 +31,12 @@ export function useDocumentActions() {
 
     console.log("createDocument", folderId);
 
-    await navigate({
-      from: "/w/$organizationId",
-      to: "/w/$organizationId/$id",
-      params: { id },
-    });
+    // Use history.pushState for simpler navigation
+    if (isLocal) {
+      router.history.push(`/__unauthed/${id}`);
+    } else {
+      router.history.push(`/w/${organizationId}/${id}`);
+    }
   };
 
   const createFolder = async () => {
@@ -45,7 +46,7 @@ export function useDocumentActions() {
         mutators.folder.create({
           id: folderId,
           name: "New Folder",
-          organizationId: organization?.id || "",
+          organizationId,
         })
       );
     } catch (error) {
@@ -58,15 +59,13 @@ export function useDocumentActions() {
       z.mutate(
         mutators.document.delete({
           documentId,
-          organizationId: organization?.id || "",
+          organizationId,
         })
       );
       toast.success("Document deleted");
 
       if (redirectAfterDelete) {
-        routerNavigate({
-          to: "..",
-        });
+        router.history.back();
       }
     } catch (error) {
       toast.error("Failed to delete document");
@@ -74,18 +73,18 @@ export function useDocumentActions() {
   };
 
   const deleteFolder = (folderId: string) => {
-    if (!organization) {
+    if (!organizationId) {
       toast.error("Organization not found");
       return;
     }
-    
+
     confirmDialog({
       title: "Delete Folder",
       message:
         "Are you sure you want to delete this folder? This action cannot be undone.",
       onConfirm: () => {
         try {
-          z.mutate(mutators.folder.delete({ folderId, organizationId: organization.id }));
+          z.mutate(mutators.folder.delete({ folderId, organizationId }));
           toast.success("Folder deleted");
         } catch (error) {
           toast.error("Failed to delete folder");
@@ -95,10 +94,14 @@ export function useDocumentActions() {
   };
 
   const publishDocument = (documentId: string) => {
+    if (isLocalOrganization(organizationId)) {
+      toast.error("Publishing is not available in local mode");
+      return;
+    }
     z.mutate(
       mutators.document.publish({
         documentId,
-        organizationId: organization?.id || "",
+        organizationId,
       })
     );
   };
@@ -107,7 +110,7 @@ export function useDocumentActions() {
     z.mutate(
       mutators.document.update({
         documentId,
-        organizationId: organization?.id || "",
+        organizationId,
         ...data,
       })
     );

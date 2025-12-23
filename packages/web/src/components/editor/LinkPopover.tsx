@@ -359,7 +359,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
     }, 100);
   };
 
-  const navigate = useNavigate({ from: "/w/$organizationId" });
+  const navigate = useNavigate({ strict: false });
 
   const handleOpenLink = () => {
     if (!linkData) return;

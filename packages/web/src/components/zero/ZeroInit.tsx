@@ -9,7 +9,7 @@ import { queries } from "@lydie/zero/queries";
 
 type Props = {
   children: React.ReactNode;
-  session: Session;
+  session: Session | undefined;
 };
 
 export function ZeroInit({ children, session }: Props) {
@@ -51,5 +51,9 @@ export function ZeroInit({ children, session }: Props) {
 }
 
 function preload(zero: Zero, organizationId: string) {
+  // Don't preload for local organization
+  if (organizationId === "local") {
+    return;
+  }
   zero.preload(queries.organizations.documentsAndFolders({ organizationId }));
 }

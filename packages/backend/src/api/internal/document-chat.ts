@@ -112,7 +112,7 @@ export const DocumentChatRoute = new Hono<{
     }
 
     const organizationId = c.get("organizationId");
-    
+
     const [currentDocument] = await db
       .select()
       .from(documentsTable)

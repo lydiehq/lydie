@@ -67,7 +67,7 @@ export const AssistantRoute = new Hono<{
             message: "You are not authorized to access this conversation",
           });
         }
-        
+
         // Verify conversation belongs to the user
         if (conversation.userId !== userId) {
           throw new HTTPException(403, {
@@ -141,7 +141,6 @@ export const AssistantRoute = new Hono<{
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
-      // @ts-expect-error - experimental_transform is not typed
       experimental_transform: smoothStream({ chunking: "word" }),
       tools: {
         searchDocuments: searchDocuments(userId, organizationId),

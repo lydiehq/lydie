@@ -2,7 +2,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { Tree } from "react-aria-components";
 import { DocumentTreeItem } from "./DocumentTreeItem";
 import type { ReactElement } from "react";
-import { useOrganization } from "@/context/organization.context";
+import { useOrganizationContext } from "@/context/organization-provider";
 import { queries } from "@lydie/zero/queries";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
 import { useAtom } from "jotai";
@@ -77,7 +77,7 @@ function findParentFolderIds(
 }
 
 export function DocumentTree() {
-  const { organization } = useOrganization();
+  const { organizationId } = useOrganizationContext();
   const { id: currentDocumentId } = useParams({ strict: false });
 
   // Get user settings to determine if we should persist to local storage
@@ -129,21 +129,21 @@ export function DocumentTree() {
 
   const [orgData] = useQuery(
     queries.organizations.documentsAndFolders({
-      organizationId: organization?.id || "",
+      organizationId,
     })
   );
 
   // Query integration connections (to show all connected integrations)
   const [connections] = useQuery(
     queries.integrations.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId,
     })
   );
 
   // Query extension links with their connections
   const [extensionLinks] = useQuery(
     queries.integrationLinks.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId,
     })
   );
 
@@ -248,10 +248,10 @@ export function DocumentTree() {
   const linkGroups = useMemo(() => {
     // Get all active connections grouped by integration type
     const connectionGroups = new Map<string, typeof connections>();
-    
+
     connections?.forEach((connection) => {
       if (connection.status !== "active") return;
-      
+
       const type = connection.integration_type;
       if (!type) return;
 

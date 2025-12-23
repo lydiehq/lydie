@@ -34,7 +34,6 @@ export function useDocumentSearch(
       // Clear the focusSearch param from URL after focusing
       navigate({
         to: "/w/$organizationId",
-        from: "/w/$organizationId",
         search: (prev) => ({
           tree: (prev as { tree?: string })?.tree,
           q: (prev as { q?: string })?.q,
@@ -49,7 +48,6 @@ export function useDocumentSearch(
     (text: string) => {
       navigate({
         to: "/w/$organizationId",
-        from: "/w/$organizationId",
         search: (prev) => ({
           tree: (prev as { tree?: string })?.tree,
           q: text || undefined,

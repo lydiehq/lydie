@@ -2,13 +2,9 @@ import { DocumentTree } from "./DocumentTree";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { Button as RACButton } from "react-aria-components";
 import { Button } from "../generic/Button";
-import { OrganizationMenu } from "./OrganizationMenu";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 import { Link, useSearch } from "@tanstack/react-router";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { cva } from "cva";
-import { UsageStats } from "./UsageStats";
-import { useOrganizationContext } from "@/context/organization-provider";
 import { SidebarIcon } from "./SidebarIcon";
 import { useSetAtom } from "jotai";
 import { commandMenuStateAtom } from "@/stores/command-menu";
@@ -17,49 +13,24 @@ import {
   FilePlus,
   FolderPlus,
   Home,
-  MessageCircle,
+  LogIn,
+  AlertCircle,
 } from "lucide-react";
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
-import { useMemo } from "react";
+import { sidebarItemStyles } from "./Sidebar";
 
 type Props = {
   isCollapsed: boolean;
   onToggle: () => void;
 };
 
-export const sidebarItemStyles = cva({
-  base: "group flex items-center py-1 rounded-md text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-150",
-  variants: {
-    isCurrent: {
-      true: "bg-black/5",
-      false: "text-gray-600 hover:bg-black/3",
-    },
-  },
-  defaultVariants: {
-    isCurrent: false,
-  },
-});
-
-export function Sidebar({ isCollapsed, onToggle }: Props) {
+export function SidebarUnauthed({ isCollapsed, onToggle }: Props) {
   const { createDocument, createFolder } = useDocumentActions();
-  const { organization } = useOrganizationContext();
   const setCommandMenuState = useSetAtom(commandMenuStateAtom);
   const { tree } = useSearch({
     strict: false,
   });
-
-  const isFreePlan = useMemo(() => {
-    if (!organization) {
-      return true;
-    }
-
-    const hasProAccess =
-      organization.subscriptionPlan === "pro" &&
-      organization.subscriptionStatus === "active";
-
-    return !hasProAccess;
-  }, [organization]);
 
   const handleSearchClick = () => {
     setCommandMenuState({
@@ -82,7 +53,9 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           !isCollapsed ? "-ml-1" : ""
         }`}
       >
-        <OrganizationMenu isCollapsed={isCollapsed} />
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-gray-900">Lydie</span>
+        </div>
         <TooltipTrigger delay={500}>
           <RACButton
             className={composeTailwindRenderProps(
@@ -126,6 +99,24 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           isCollapsed ? "hidden" : ""
         } grow min-h-0`}
       >
+        {/* Login banner */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <div className="flex items-start gap-2 mb-2">
+            <AlertCircle className="text-amber-600 size-4 mt-0.5 shrink-0" />
+            <p className="text-sm text-amber-900">
+              You're working locally. Sign in to sync your documents across
+              devices.
+            </p>
+          </div>
+          <Link
+            to="/auth"
+            className="flex items-center justify-center gap-2 w-full bg-amber-600 hover:bg-amber-700 text-white rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+          >
+            <LogIn size={14} />
+            Sign in or create account
+          </Link>
+        </div>
+
         <div className="flex gap-x-1 max-w-[300px]">
           <Button
             intent="secondary"
@@ -154,25 +145,13 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </div>
         <div className="flex flex-col">
           <Link
-            to="/w/$organizationId"
-            from="/w/$organizationId"
+            to="/__unauthed"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <Home className="text-gray-700 shrink-0 size-4" />
               <span className="truncate flex-1">Home</span>
-            </div>
-          </Link>
-          <Link
-            to="/w/$organizationId/assistant"
-            from="/w/$organizationId"
-            activeOptions={{ exact: true }}
-            className={sidebarItemStyles()}
-          >
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <MessageCircle className="text-gray-700 shrink-0 size-4" />
-              <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
         </div>
@@ -204,26 +183,9 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </div>
           <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white pr-2 -mr-2">
-            <DocumentTree />
+            {/* <DocumentTree /> */}
           </div>
         </div>
-        {isFreePlan && <UsageStats />}
-        {/* <div className="flex flex-col">
-          <Separator />
-          <nav className="py-2">
-            <ul className="flex flex-col gap-y-2">
-              <li>
-                <Link
-                  to="/w/$organizationId/settings"
-                  from="/w/$organizationId"
-                  className="text-xs font-medium text-gray-700"
-                >
-                  Send feedback
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div> */}
       </div>
     </div>
   );
