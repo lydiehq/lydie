@@ -22,6 +22,7 @@ import {
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
+import { useIsTrial } from "@/hooks/useIsTrial";
 
 type Props = {
   isCollapsed: boolean;
@@ -48,6 +49,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
   const { tree } = useSearch({
     strict: false,
   });
+  const isTrial = useIsTrial();
 
   const isFreePlan = useMemo(() => {
     if (!organization) {
@@ -164,17 +166,19 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               <span className="truncate flex-1">Home</span>
             </div>
           </Link>
-          <Link
-            to="/w/$organizationId/assistant"
-            from="/w/$organizationId"
-            activeOptions={{ exact: true }}
-            className={sidebarItemStyles()}
-          >
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <MessageCircle className="text-gray-700 shrink-0 size-4" />
-              <span className="truncate flex-1">Assistant</span>
-            </div>
-          </Link>
+          {!isTrial && (
+            <Link
+              to="/w/$organizationId/assistant"
+              from="/w/$organizationId"
+              activeOptions={{ exact: true }}
+              className={sidebarItemStyles()}
+            >
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <MessageCircle className="text-gray-700 shrink-0 size-4" />
+                <span className="truncate flex-1">Assistant</span>
+              </div>
+            </Link>
+          )}
         </div>
         <Separator />
         <div className="flex flex-col gap-y-2 grow min-h-0">

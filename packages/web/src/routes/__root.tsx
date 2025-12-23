@@ -40,7 +40,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       }
 
       // If authenticated and trying to access unauthed routes, redirect to workspace
-      if (result.auth && location.pathname.startsWith("/__unauthed")) {
+      if (result.auth && location.pathname.startsWith("/_unauthed")) {
         const activeOrgId = localStorage.getItem("lydie:active-organization");
         if (activeOrgId) {
           throw redirect({

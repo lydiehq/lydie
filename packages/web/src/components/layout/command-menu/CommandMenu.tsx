@@ -35,6 +35,7 @@ import {
   type IntegrationMetadata,
 } from "@lydie/integrations/client";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
+import { useIsTrial } from "@/hooks/useIsTrial";
 
 const modalStyles = cva({
   base: "w-full max-w-lg max-h-full rounded-lg shadow-2xl bg-clip-padding ring ring-black/10 overflow-hidden",
@@ -58,6 +59,7 @@ export function CommandMenu() {
   const [search, setSearch] = useState("");
   const [pages, setPages] = useState<string[]>([]);
   const currentPage = pages[pages.length - 1];
+  const isTrial = useIsTrial();
 
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
@@ -160,16 +162,19 @@ export function CommandMenu() {
     ];
 
     if (currentDocument) {
-      favoritesItems.push({
-        id: "publish",
-        label: "Publish document",
-        icon: Plus,
-        action: () => {
-          if (currentDocument) {
-            publishDocument(currentDocument.id);
-          }
-        },
-      });
+      // Only show publish in authenticated mode
+      if (!isTrial) {
+        favoritesItems.push({
+          id: "publish",
+          label: "Publish document",
+          icon: Plus,
+          action: () => {
+            if (currentDocument) {
+              publishDocument(currentDocument.id);
+            }
+          },
+        });
+      }
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
@@ -218,7 +223,8 @@ export function CommandMenu() {
           });
         },
       },
-      {
+      // Hide assistant, integrations, import in trial mode
+      ...(!isTrial ? [{
         id: "go-assistant",
         label: "Go to assistant",
         icon: Bot,
@@ -230,7 +236,7 @@ export function CommandMenu() {
             },
           });
         },
-      },
+      }] : []),
       {
         id: "organization-settings",
         label: "Go to organization settings",
@@ -244,7 +250,7 @@ export function CommandMenu() {
           });
         },
       },
-      {
+      ...(!isTrial ? [{
         id: "billing",
         label: "Go to billing settings",
         icon: CreditCard,
@@ -256,8 +262,8 @@ export function CommandMenu() {
             },
           });
         },
-      },
-      {
+      }] : []),
+      ...(!isTrial ? [{
         id: "mdx-import",
         label: "Go to import settings",
         icon: Upload,
@@ -269,8 +275,8 @@ export function CommandMenu() {
             },
           });
         },
-      },
-      {
+      }] : []),
+      ...(!isTrial ? [{
         id: "integrations",
         label: "Go to integrations",
         icon: Plug,
@@ -287,8 +293,8 @@ export function CommandMenu() {
             },
           });
         },
-      },
-      ...integrationMetadata.map((integration: IntegrationMetadata) => ({
+      }] : []),
+      ...(!isTrial ? integrationMetadata.map((integration: IntegrationMetadata) => ({
         id: `integration-${integration.id}`,
         label: `Go to ${integration.name} integration`,
         iconUrl: getIntegrationIconUrl(integration.id) || undefined,
@@ -300,7 +306,7 @@ export function CommandMenu() {
             },
           });
         },
-      })),
+      })) : []),
       {
         id: "create-organization",
         label: "Create new organization",
@@ -335,6 +341,8 @@ export function CommandMenu() {
     organization?.id,
     pages,
     z,
+    isTrial,
+    publishDocument,
   ]);
 
   return (

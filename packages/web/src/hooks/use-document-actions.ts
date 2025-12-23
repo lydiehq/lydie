@@ -33,7 +33,7 @@ export function useDocumentActions() {
 
     // Use history.pushState for simpler navigation
     if (isLocal) {
-      router.history.push(`/__unauthed/${id}`);
+      router.history.push(`/${id}`);
     } else {
       router.history.push(`/w/${organizationId}/${id}`);
     }

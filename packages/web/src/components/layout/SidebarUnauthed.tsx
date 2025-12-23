@@ -145,7 +145,7 @@ export function SidebarUnauthed({ isCollapsed, onToggle }: Props) {
         </div>
         <div className="flex flex-col">
           <Link
-            to="/__unauthed"
+            to="/_unauthed"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >

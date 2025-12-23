@@ -1,7 +1,7 @@
 import { defineMutators, defineMutator } from "@rocicorp/zero";
 import { createId } from "@lydie/core/id";
 import { z } from "zod";
-import { isAuthenticated, hasOrganizationAccess } from "./auth";
+import { isAuthenticated, hasOrganizationAccess, isTrialMode } from "./auth";
 import { zql } from "./schema";
 
 export const mutators = defineMutators({
@@ -172,6 +172,13 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { documentId, organizationId } }) => {
+        // Publishing is disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "Publishing is not available in trial mode. Please sign up to publish documents."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
         const document = await tx.run(
           zql.documents
@@ -434,6 +441,13 @@ export const mutators = defineMutators({
         conversationId: z.string(),
       }),
       async ({ tx, ctx, args: { conversationId } }) => {
+        // AI Assistant is disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "AI Assistant is not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         isAuthenticated(ctx);
 
         const conversation = await tx.run(
@@ -467,6 +481,13 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { keyId, organizationId } }) => {
+        // API keys are disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "API keys are not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
 
         // Verify API key belongs to the organization
@@ -601,7 +622,20 @@ export const mutators = defineMutators({
         metadata: z.string().optional(),
       }),
       async ({ tx, ctx, args: { id, name, slug, logo, metadata } }) => {
-        isAuthenticated(ctx);
+        // Allow creating "local" organization in trial mode without authentication
+        const isLocalOrg = id === "local" && isTrialMode(ctx);
+
+        if (!isLocalOrg) {
+          isAuthenticated(ctx);
+        }
+
+        // Check if organization already exists
+        const existing = await tx.run(zql.organizations.where("id", id).one());
+
+        if (existing) {
+          // Organization already exists, skip creation
+          return;
+        }
 
         await tx.mutate.organizations.insert({
           id,
@@ -616,14 +650,17 @@ export const mutators = defineMutators({
           polar_subscription_id: null,
         });
 
-        await tx.mutate.members.insert({
-          id: createId(),
-          organization_id: id,
-          user_id: ctx.userId,
-          role: "owner",
-          created_at: Date.now(),
-          updated_at: Date.now(),
-        });
+        // Only create member record if authenticated (not in trial mode)
+        if (!isLocalOrg) {
+          await tx.mutate.members.insert({
+            id: createId(),
+            organization_id: id,
+            user_id: ctx.userId,
+            role: "owner",
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          });
+        }
 
         // Create default organization settings
         await tx.mutate.organization_settings.insert({
@@ -694,6 +731,13 @@ export const mutators = defineMutators({
         ctx,
         args: { linkId, deleteDocuments, organizationId },
       }) => {
+        // Integrations are disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "Integrations are not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
         const link = await tx.run(
           zql.integration_links
@@ -730,6 +774,13 @@ export const mutators = defineMutators({
         ctx,
         args: { id, connectionId, name, config, organizationId },
       }) => {
+        // Integrations are disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "Integrations are not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
 
         const connection = await tx.run(
@@ -772,6 +823,13 @@ export const mutators = defineMutators({
         ctx,
         args: { id, integrationType, organizationId, config },
       }) => {
+        // Integrations are disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "Integrations are not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
 
         await tx.mutate.integration_connections.insert({
@@ -792,6 +850,13 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { connectionId, config, organizationId } }) => {
+        // Integrations are disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "Integrations are not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
 
         // Verify connection belongs to the organization
@@ -822,6 +887,13 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { connectionId, organizationId } }) => {
+        // Integrations are disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "Integrations are not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
         const connection = await tx.run(
           zql.integration_connections
@@ -893,6 +965,13 @@ export const mutators = defineMutators({
           organizationId,
         },
       }) => {
+        // Sync metadata is only for integrations, disabled in trial mode
+        if (isTrialMode(ctx)) {
+          throw new Error(
+            "Integration sync is not available in trial mode. Please sign up to use this feature."
+          );
+        }
+
         hasOrganizationAccess(ctx, organizationId);
 
         // Verify document belongs to the organization

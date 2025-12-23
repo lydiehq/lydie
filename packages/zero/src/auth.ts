@@ -1,6 +1,7 @@
 import type { Session } from "better-auth";
 
 export type Context = Session & {
+  isTrial?: boolean;
   organizations?: Array<{
     id: string;
     name: string;
@@ -15,6 +16,10 @@ declare module "@rocicorp/zero" {
   }
 }
 
+export function isTrialMode(session: Context | undefined): boolean {
+  return session?.isTrial === true;
+}
+
 export function isAuthenticated(
   session: Context | undefined
 ): asserts session is Context {
@@ -23,17 +28,33 @@ export function isAuthenticated(
   }
 }
 
+export function isAuthenticatedOrTrial(
+  session: Context | undefined
+): void {
+  if (isTrialMode(session)) {
+    return;
+  }
+  isAuthenticated(session);
+}
+
 /**
  * Validates that a user has access to a specific organization
  * Uses the organizations array from the session (populated by customSession plugin)
  * to avoid additional database lookups for performance
  *
- * Special case: 'local' organization is allowed for anonymous users
+ * Special cases:
+ * - Trial mode: allows operations without organization validation
+ * - 'local' organization: allowed for anonymous users
  */
 export function hasOrganizationAccess(
   session: Context | undefined,
   organizationId: string
 ): asserts session is Context & { userId: string } {
+  // Allow operations in trial mode without organization validation
+  if (isTrialMode(session)) {
+    return;
+  }
+
   // Allow local organization for anonymous users
   if (organizationId === "local") {
     return;

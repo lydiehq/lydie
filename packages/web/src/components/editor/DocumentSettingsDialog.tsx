@@ -9,6 +9,7 @@ import { Separator } from "../generic/Separator";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { mutators } from "@lydie/zero/mutators";
+import { useIsTrial } from "@/hooks/useIsTrial";
 
 type Props = {
   isOpen: boolean;
@@ -18,6 +19,7 @@ type Props = {
 
 export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
   const z = useZero();
+  const isTrial = useIsTrial();
 
   const form = useAppForm({
     defaultValues: {
@@ -86,40 +88,51 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
               )}
             />
 
-            <Separator />
+            {!isTrial && (
+              <>
+                <Separator />
 
-            <div className="space-y-3">
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-1">
-                  Publishing Status
-                </h4>
-                <p className="text-sm text-gray-500">
-                  {doc.published
-                    ? "This document is published and available through the API"
-                    : "This document is a draft and not available through the API"}
-                </p>
-              </div>
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-1">
+                      Publishing Status
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      {doc.published
+                        ? "This document is published and available through the API"
+                        : "This document is a draft and not available through the API"}
+                    </p>
+                  </div>
 
-              <div className="flex justify-between items-center gap-2">
+                  <div className="flex justify-between items-center gap-2">
+                    <Button type="submit" size="sm">
+                      Save Settings
+                    </Button>
+                    <div className="flex gap-2">
+                      {doc.published && (
+                        <Button
+                          size="sm"
+                          intent="secondary"
+                          onPress={handleUnpublish}
+                        >
+                          Unpublish
+                        </Button>
+                      )}
+                      <Button size="sm" intent="primary" onPress={handlePublish}>
+                        {doc.published ? "Republish" : "Publish"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {isTrial && (
+              <div className="flex justify-end">
                 <Button type="submit" size="sm">
                   Save Settings
                 </Button>
-                <div className="flex gap-2">
-                  {doc.published && (
-                    <Button
-                      size="sm"
-                      intent="secondary"
-                      onPress={handleUnpublish}
-                    >
-                      Unpublish
-                    </Button>
-                  )}
-                  <Button size="sm" intent="primary" onPress={handlePublish}>
-                    {doc.published ? "Republish" : "Publish"}
-                  </Button>
-                </div>
               </div>
-            </div>
+            )}
           </div>
         </Form>
       </Dialog>
