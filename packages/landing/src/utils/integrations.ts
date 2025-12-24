@@ -1,4 +1,3 @@
-import type { IntegrationMetadata } from "@lydie/integrations/metadata";
 import { integrationMetadata } from "@lydie/integrations/metadata";
 
 export interface Integration {
@@ -21,4 +20,3 @@ export const integrations: Integration[] = integrationMetadata.map((meta) => ({
 export function getIntegration(id: string): Integration | undefined {
   return integrations.find((integration) => integration.id === id);
 }
-

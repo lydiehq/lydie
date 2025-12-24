@@ -18,6 +18,7 @@ import {
   FolderPlus,
   Home,
   MessageCircle,
+  Puzzle,
 } from "lucide-react";
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
@@ -173,6 +174,17 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <MessageCircle className="text-gray-700 shrink-0 size-4" />
               <span className="truncate flex-1">Assistant</span>
+            </div>
+          </Link>
+          <Link
+            to="/w/$organizationId/settings/integrations"
+            from="/w/$organizationId"
+            activeOptions={{ exact: true }}
+            className={sidebarItemStyles()}
+          >
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <Puzzle className="text-gray-700 shrink-0 size-4" />
+              <span className="truncate flex-1">Integrations</span>
             </div>
           </Link>
         </div>
