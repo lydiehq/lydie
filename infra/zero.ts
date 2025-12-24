@@ -23,7 +23,7 @@ const commonEnv = {
   ZERO_CVR_DB: conn.value,
   ZERO_CHANGE_DB: conn.value,
   ZERO_IMAGE_URL: image,
-  ZERP_APP_ID: $app.stage,
+  ZERP_APP_ID: $app.stage + "elelel",
   ZERO_MUTATE_FORWARD_COOKIES: "true",
   ZERO_QUERY_FORWARD_COOKIES: "true",
   ...($dev ? {} : { ZERO_APP_PUBLICATIONS: "zero_data" }),
