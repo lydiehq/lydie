@@ -55,6 +55,7 @@
     "drizzle-orm": "catalog:",
     "hono": "^4.11.1",
     "jotai": "^2.16.0",
+    "jszip": "^3.10.1",
     "ky": "^1.14.1",
     "lucide-react": "^0.561.0",
     "marked": "^17.0.1",

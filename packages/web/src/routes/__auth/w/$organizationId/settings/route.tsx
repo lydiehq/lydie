@@ -10,6 +10,7 @@ import {
   Puzzle,
   Book,
   ExternalLink,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { sidebarItemStyles } from "@/components/layout/Sidebar";
@@ -57,6 +58,12 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationId/settings",
         label: "General",
         icon: Settings,
+      },
+      {
+        path: "/w/$organizationId/settings/admin",
+        label: "Admin",
+        icon: ShieldCheck,
+        adminOnly: true,
       },
       {
         path: "/w/$organizationId/settings/billing",
