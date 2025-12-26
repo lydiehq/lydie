@@ -87,11 +87,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "ReplicationManager": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
     "ShopifyClientId": {
       "type": "sst.sst.Secret"
       "value": string
