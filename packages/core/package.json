@@ -13,10 +13,10 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
-    "@aws-sdk/client-sesv2": "^3.956.0",
+    "@aws-sdk/client-sesv2": "^3.958.0",
     "@lydie/database": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
-    "@polar-sh/sdk": "^0.41.5",
+    "@polar-sh/sdk": "^0.42.1",
     "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
