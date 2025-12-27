@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { useOrganization } from "@/context/organization.context";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
 import {
   parseReferences,
   type ParsedTextSegment,
@@ -181,7 +180,6 @@ function ReferenceSegment({
 
 function DocumentReferencePill({ documentId }: { documentId: string }) {
   const { organization } = useOrganization();
-  const { session } = useAuth();
   const [document] = useQuery(
     queries.documents.byId({
       organizationId: organization?.id || "",

@@ -38,12 +38,20 @@ export function ChatMessages({
   organizationId,
   onApplyContent,
 }: ChatMessagesProps) {
+  const lastMessage = messages[messages.length - 1];
   const isSubmitting =
     status === "submitted" &&
     messages.length > 0 &&
-    messages[messages.length - 1].role === "user";
+    lastMessage?.role === "user";
 
-  if (messages.length === 0) return null;
+  // Show loading indicator until text actually appears in the assistant message
+  const shouldShowLoading =
+    isSubmitting ||
+    (status === "streaming" &&
+      lastMessage?.role === "assistant" &&
+      !lastMessage.parts?.some(
+        (part: any) => part.type === "text" && part.text?.trim()
+      ));
 
   return (
     <StickToBottom
@@ -70,7 +78,7 @@ export function ChatMessages({
             </div>
           ))}
         </AnimatePresence>
-        {isSubmitting && <ThinkingIndicator />}
+        {shouldShowLoading && <ThinkingIndicator />}
       </StickToBottom.Content>
     </StickToBottom>
   );
@@ -79,25 +87,72 @@ export function ChatMessages({
 function ThinkingIndicator() {
   return (
     <motion.div
-      className="flex justify-start"
+      className="flex justify-start w-full"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="flex items-center gap-2 text-gray-500">
-        <div className="flex gap-x-0.5">
-          <div
-            className="size-[3px] bg-gray-400 rounded-full animate-float-up-down"
-            style={{ animationDelay: "0ms" }}
-          />
-          <div
-            className="size-[3px] bg-gray-400 rounded-full animate-float-up-down"
-            style={{ animationDelay: "150ms" }}
-          />
-          <div
-            className="size-[3px] bg-gray-400 rounded-full animate-float-up-down"
-            style={{ animationDelay: "300ms" }}
-          />
+      <div className="flex items-center gap-3">
+        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gray-100 ring-1 ring-gray-200">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 2,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+          >
+            <svg
+              className="size-3.5 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 3v3m6.366-.366-2.12 2.12M21 12h-3m.366 6.366-2.12-2.12M12 21v-3m-6.366.366 2.12-2.12M3 12h3m-.366-6.366 2.12 2.12"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+              />
+            </svg>
+          </motion.div>
+        </div>
+        <div className="flex items-center gap-1 text-gray-600 text-sm">
+          <span>Thinking</span>
+          <span className="inline-flex gap-0.5">
+            <motion.span
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Number.POSITIVE_INFINITY,
+                delay: 0,
+              }}
+            >
+              .
+            </motion.span>
+            <motion.span
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Number.POSITIVE_INFINITY,
+                delay: 0.2,
+              }}
+            >
+              .
+            </motion.span>
+            <motion.span
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Number.POSITIVE_INFINITY,
+                delay: 0.4,
+              }}
+            >
+              .
+            </motion.span>
+          </span>
         </div>
       </div>
     </motion.div>

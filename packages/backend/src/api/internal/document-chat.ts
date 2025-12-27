@@ -112,7 +112,7 @@ export const DocumentChatRoute = new Hono<{
     }
 
     const organizationId = c.get("organizationId");
-    
+
     const [currentDocument] = await db
       .select()
       .from(documentsTable)
@@ -151,30 +151,34 @@ export const DocumentChatRoute = new Hono<{
     }
 
     const latestMessage = messages[messages.length - 1];
+    const user = c.get("user");
 
-    // Save the user message first to prevent race conditions
+    // Check daily message limit BEFORE saving to prevent exceeding the limit
+    // Skip limit check for admin users
+    const isAdmin = (user as any)?.role === "admin";
+    if (!isAdmin) {
+      const limitCheck = await checkDailyMessageLimit({
+        id: organization.id,
+        subscriptionPlan: organization.subscriptionPlan,
+        subscriptionStatus: organization.subscriptionStatus,
+      });
+
+      if (!limitCheck.allowed) {
+        throw new VisibleError(
+          "usage_limit_exceeded",
+          `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
+          429
+        );
+      }
+    }
+
+    // Save the user message after limit check passes
     await saveMessage({
       conversationId,
       parts: latestMessage.parts,
       role: "user",
       metadata: latestMessage.metadata,
     });
-
-    // Check daily message limit AFTER saving to prevent race conditions
-    // This ensures the message we just saved is counted
-    const limitCheck = await checkDailyMessageLimit({
-      id: organization.id,
-      subscriptionPlan: organization.subscriptionPlan,
-      subscriptionStatus: organization.subscriptionStatus,
-    });
-
-    if (!limitCheck.allowed) {
-      throw new VisibleError(
-        "usage_limit_exceeded",
-        `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
-        429
-      );
-    }
 
     const focusedContent = latestMessage.metadata?.focusedContent;
 

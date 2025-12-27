@@ -19,7 +19,6 @@ import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-
 import { useSelectedContent } from "@/context/selected-content.context";
 import { useQuery } from "@rocicorp/zero/react";
 import { useOrganization } from "@/context/organization.context";
-import { useAuth } from "@/context/auth.context";
 import type { QueryResultType } from "@rocicorp/zero";
 import { useRouter } from "@tanstack/react-router";
 import { ChatAlert, type ChatAlertState } from "./ChatAlert";
@@ -92,6 +91,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
 
   const { messages, sendMessage, stop, status } =
     useChat<DocumentChatAgentUIMessage>({
+      experimental_throttle: 100,
       transport: new DefaultChatTransport({
         api:
           import.meta.env.VITE_API_URL.replace(/\/+$/, "") +

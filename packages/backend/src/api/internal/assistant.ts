@@ -88,17 +88,10 @@ export const AssistantRoute = new Hono<{
     }
 
     const latestMessage = messages[messages.length - 1];
+    const user = c.get("user");
 
-    // Save the user message first to prevent race conditions
-    await saveMessage({
-      conversationId,
-      parts: latestMessage.parts,
-      role: "user",
-      metadata: latestMessage.metadata,
-    });
-
-    // Check daily message limit AFTER saving to prevent race conditions
-    // This ensures the message we just saved is counted
+    // Check daily message limit BEFORE saving to prevent exceeding the limit
+    // Skip limit check for admin users
     const organization = await db.query.organizationsTable.findFirst({
       where: { id: organizationId },
     });
@@ -109,17 +102,28 @@ export const AssistantRoute = new Hono<{
       });
     }
 
-    const limitCheck = await checkDailyMessageLimit({
-      id: organization.id,
-      subscriptionPlan: organization.subscriptionPlan,
-      subscriptionStatus: organization.subscriptionStatus,
-    });
-
-    if (!limitCheck.allowed) {
-      throw new HTTPException(429, {
-        message: `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
+    const isAdmin = (user as any)?.role === "admin";
+    if (!isAdmin) {
+      const limitCheck = await checkDailyMessageLimit({
+        id: organization.id,
+        subscriptionPlan: organization.subscriptionPlan,
+        subscriptionStatus: organization.subscriptionStatus,
       });
+
+      if (!limitCheck.allowed) {
+        throw new HTTPException(429, {
+          message: `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
+        });
+      }
     }
+
+    // Save the user message after limit check passes
+    await saveMessage({
+      conversationId,
+      parts: latestMessage.parts,
+      role: "user",
+      metadata: latestMessage.metadata,
+    });
 
     // Fetch user settings for prompt style
     const [userSettings] = await db

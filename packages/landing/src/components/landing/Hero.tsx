@@ -155,7 +155,7 @@ export function Hero() {
           </div>
           <div className="relative w-full">
             <motion.div
-              className="relative w-full md:w-[980px] h-auto md:h-[800px] z-10 p-2 bg-white ring ring-black/4 rounded-2xl mt-8 md:-ml-4"
+              className="relative w-full md:w-[980px] h-auto md:h-[800px] z-10 p-2 bg-white ring ring-black/4 rounded-2xl mt-8"
               initial={{
                 opacity: 0,
                 x: -8,
