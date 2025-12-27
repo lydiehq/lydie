@@ -26,6 +26,9 @@ const commonEnv = {
   ZERP_APP_ID: $app.stage,
   ZERO_MUTATE_FORWARD_COOKIES: "true",
   ZERO_QUERY_FORWARD_COOKIES: "true",
+  ZERO_UPSTREAM_MAX_CONNS: "5", // Reduced from default 20
+  ZERO_CHANGE_MAX_CONNS: "2", // Reduced from default 5
+  ZERO_CVR_MAX_CONNS: "5", // Reduced from default 30
   ...($dev ? {} : { ZERO_APP_PUBLICATIONS: "zero_data" }),
   ZERO_MUTATE_URL: $dev
     ? "http://localhost:3001/internal/zero/mutate"
