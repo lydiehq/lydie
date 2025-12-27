@@ -51,7 +51,6 @@
     "cmdk": "^1.1.1",
     "cva": "^1.0.0-beta.4",
     "date-fns": "^4.1.0",
-    "diff": "^8.0.2",
     "drizzle-orm": "catalog:",
     "hono": "^4.11.3",
     "jotai": "^2.16.1",
