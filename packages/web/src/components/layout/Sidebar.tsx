@@ -8,6 +8,7 @@ import { Link, useSearch } from "@tanstack/react-router";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { cva } from "cva";
 import { UsageStats } from "./UsageStats";
+import { ZeroConnectionStatus } from "./ZeroConnectionStatus";
 import { useOrganization } from "@/context/organization.context";
 import { SidebarIcon } from "./SidebarIcon";
 import { useSetAtom } from "jotai";
@@ -23,6 +24,8 @@ import {
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
+import { useAuth } from "@/context/auth.context";
+import { isAdmin } from "@/utils/admin";
 
 type Props = {
   isCollapsed: boolean;
@@ -45,6 +48,8 @@ export const sidebarItemStyles = cva({
 export function Sidebar({ isCollapsed, onToggle }: Props) {
   const { createDocument, createFolder } = useDocumentActions();
   const { organization } = useOrganization();
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
   const setCommandMenuState = useSetAtom(commandMenuStateAtom);
   const { tree } = useSearch({
     strict: false,
@@ -220,6 +225,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           </div>
         </div>
         {isFreePlan && <UsageStats />}
+        {userIsAdmin && <ZeroConnectionStatus />}
         {/* <div className="flex flex-col">
           <Separator />
           <nav className="py-2">
