@@ -6,16 +6,13 @@ import { DefaultChatTransport } from "ai";
 import { useMemo, useState, useRef } from "react";
 import { createId } from "@lydie/core/id";
 import { useOrganization } from "@/context/organization.context";
-import { useAuth } from "@/context/auth.context";
 import { useZero } from "@/services/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { useChatComposer } from "@/components/chat/useChatComposer";
-import {
-  LLMMessages,
-  type LLMMessageWithMetadata,
-} from "@/components/chat/LLMMessages";
+import { ChatMessages } from "@/components/chat/ChatMessages";
 import { EditorContent, Editor } from "@tiptap/react";
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 import StarterKit from "@tiptap/starter-kit";
 import { Form, Button as RACButton } from "react-aria-components";
 import { ChatAlert, type ChatAlertState } from "@/components/editor/ChatAlert";
@@ -112,7 +109,6 @@ function AssistantChat({
   organizationId: string;
 }) {
   const router = useRouter();
-  const { session } = useAuth();
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
   const z = useZero();
 
@@ -138,7 +134,7 @@ function AssistantChat({
   });
 
   const { messages, sendMessage, stop, status, addToolOutput } =
-    useChat<LLMMessageWithMetadata>({
+    useChat<DocumentChatAgentUIMessage>({
       id: conversationId,
       messages: selectedConversation?.messages.map((msg: any) => ({
         id: msg.id,
@@ -243,7 +239,7 @@ function AssistantChat({
     sendMessage({
       text: textContent,
       metadata: {
-        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       },
     });
     chatComposer.clearContent();
@@ -259,7 +255,7 @@ function AssistantChat({
             onSuggestionClick={(text) => chatComposer.setContent(text)}
           />
         ) : (
-          <LLMMessages
+          <ChatMessages
             messages={messages}
             status={status}
             editor={null}

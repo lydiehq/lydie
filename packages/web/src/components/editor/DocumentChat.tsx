@@ -7,7 +7,7 @@ import { DefaultChatTransport } from "ai";
 import { queries } from "@lydie/zero/queries";
 import { type EditorHookResult } from "@/utils/editor";
 import { applyContentChanges } from "@/utils/document-changes";
-import { LLMMessages } from "@/components/chat/LLMMessages";
+import { ChatMessages } from "@/components/chat/ChatMessages";
 import {
   useMemo,
   useState,
@@ -216,7 +216,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
 
   return (
     <div className="flex flex-col overflow-hidden grow">
-      <LLMMessages
+      <ChatMessages
         messages={messages}
         onApplyContent={applyContent}
         status={status}

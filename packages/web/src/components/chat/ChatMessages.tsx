@@ -1,4 +1,5 @@
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { StickToBottom } from "use-stick-to-bottom";
 import { format } from "date-fns";
 import { Button, DialogTrigger } from "react-aria-components";
 import { MoreVertical } from "lucide-react";
@@ -10,13 +11,12 @@ import { ReadDocumentTool } from "./tools/ReadDocumentTool";
 import { ReadCurrentDocumentTool } from "./tools/ReadCurrentDocumentTool";
 import { ListDocumentsTool } from "./tools/ListDocumentsTool";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
-import { Messages } from "./Messages";
 import { UserMessage } from "./Message";
 import { Streamdown } from "streamdown";
 import type { Editor } from "@tiptap/react";
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 
-interface LLMMessagesProps {
+interface ChatMessagesProps {
   messages: DocumentChatAgentUIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   editor?: Editor | null;
@@ -27,39 +27,80 @@ interface LLMMessagesProps {
   ) => void;
 }
 
-export function LLMMessages({
+/**
+ * Main chat messages component used by both assistant chat and document chat.
+ * Handles message rendering, tool displays, and auto-scrolling.
+ */
+export function ChatMessages({
   messages,
   status,
   editor = null,
   organizationId,
   onApplyContent,
-}: LLMMessagesProps) {
-  const renderMessage = (
-    message: DocumentChatAgentUIMessage,
-    index: number
-  ) => {
-    if (message.role === "user") {
-      return <UserMessage message={message} />;
-    }
+}: ChatMessagesProps) {
+  const isSubmitting =
+    status === "submitted" &&
+    messages.length > 0 &&
+    messages[messages.length - 1].role === "user";
 
-    return (
-      <AssistantMessageWithTools
-        message={message}
-        onApplyContent={onApplyContent}
-        status={status}
-        isLastMessage={index === messages.length - 1}
-        editor={editor}
-        organizationId={organizationId}
-      />
-    );
-  };
+  if (messages.length === 0) return null;
 
   return (
-    <Messages
-      messages={messages}
-      status={status}
-      renderMessage={renderMessage}
-    />
+    <StickToBottom
+      className="flex-1 overflow-hidden scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-300 scrollbar-track-gray-50"
+      resize="smooth"
+      initial="instant"
+    >
+      <StickToBottom.Content className="flex flex-col gap-y-2 p-3">
+        <AnimatePresence initial={false}>
+          {messages.map((message, index) => (
+            <div key={message.id}>
+              {message.role === "user" ? (
+                <UserMessage message={message} />
+              ) : (
+                <AssistantMessageWithTools
+                  message={message}
+                  onApplyContent={onApplyContent}
+                  status={status}
+                  isLastMessage={index === messages.length - 1}
+                  editor={editor}
+                  organizationId={organizationId}
+                />
+              )}
+            </div>
+          ))}
+        </AnimatePresence>
+        {isSubmitting && <ThinkingIndicator />}
+      </StickToBottom.Content>
+    </StickToBottom>
+  );
+}
+
+function ThinkingIndicator() {
+  return (
+    <motion.div
+      className="flex justify-start"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+    >
+      <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex gap-x-0.5">
+          <div
+            className="size-[3px] bg-gray-400 rounded-full animate-float-up-down"
+            style={{ animationDelay: "0ms" }}
+          />
+          <div
+            className="size-[3px] bg-gray-400 rounded-full animate-float-up-down"
+            style={{ animationDelay: "150ms" }}
+          />
+          <div
+            className="size-[3px] bg-gray-400 rounded-full animate-float-up-down"
+            style={{ animationDelay: "300ms" }}
+          />
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
