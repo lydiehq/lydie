@@ -5,7 +5,7 @@ import {
 } from "react-aria-components";
 
 const styles = cva({
-  base: "bg-black/5 border-black/5",
+  base: "bg-black/3 border-black/3",
   variants: {
     orientation: {
       horizontal: "h-px",

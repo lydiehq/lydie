@@ -31,6 +31,7 @@ export const ExternalApi = new Hono()
     const includeToc = c.req.query("include_toc") === "true";
     const transformLinks = c.req.query("transform_links") !== "false"; // Default: true
     const useIds = c.req.query("use_ids") === "true"; // Default: false (use slugs)
+    const basePath = c.req.query("base_path") || undefined;
 
     const document = await getDocumentWithPath(slug, organizationId, true);
 
@@ -47,13 +48,14 @@ export const ExternalApi = new Hono()
         if (useIds) {
           // Fast path: just convert internal://ID to /ID without DB lookups
           transformedContent = transformDocumentLinksSync(
-            document.jsonContent as ContentNode
+            document.jsonContent as ContentNode,
+            { basePath }
           );
         } else {
           // Resolve slugs for SEO-friendly URLs
           transformedContent = await transformDocumentLinks(
             document.jsonContent as ContentNode,
-            { organizationId, useIds }
+            { organizationId, useIds, basePath }
           );
         }
       } catch (error) {
@@ -106,6 +108,7 @@ export const ExternalApi = new Hono()
     const includeToc = c.req.query("include_toc") === "true";
     const transformLinks = c.req.query("transform_links") !== "false"; // Default: true
     const useIds = c.req.query("use_ids") === "true"; // Default: false (use slugs)
+    const basePath = c.req.query("base_path") || undefined;
 
     if (!fullPath) {
       throw new HTTPException(400, {
@@ -128,13 +131,14 @@ export const ExternalApi = new Hono()
         if (useIds) {
           // Fast path: just convert internal://ID to /ID without DB lookups
           transformedContent = transformDocumentLinksSync(
-            document.jsonContent as ContentNode
+            document.jsonContent as ContentNode,
+            { basePath }
           );
         } else {
           // Resolve slugs for SEO-friendly URLs
           transformedContent = await transformDocumentLinks(
             document.jsonContent as ContentNode,
-            { organizationId, useIds }
+            { organizationId, useIds, basePath }
           );
         }
       } catch (error) {

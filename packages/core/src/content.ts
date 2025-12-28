@@ -342,6 +342,7 @@ export class LydieClient {
       toc?: boolean;
       transformLinks?: boolean;
       useIds?: boolean;
+      basePath?: string;
     }
   ): Promise<Document> {
     try {
@@ -358,9 +359,13 @@ export class LydieClient {
       if (options?.useIds) {
         params.set("use_ids", "true");
       }
+      if (options?.basePath) {
+        params.set("base_path", options.basePath);
+      }
 
-      const url = `${this.getBaseUrl()}/documents/${slug}${params.toString() ? `?${params.toString()}` : ""
-        }`;
+      const url = `${this.getBaseUrl()}/documents/${slug}${
+        params.toString() ? `?${params.toString()}` : ""
+      }`;
 
       if (this.debug) {
         console.log(`[Lydie] Fetching document from url: ${url}`);
@@ -424,6 +429,7 @@ export class LydieClient {
       toc?: boolean;
       transformLinks?: boolean;
       useIds?: boolean;
+      basePath?: string;
     }
   ): Promise<Document> {
     try {
@@ -440,9 +446,13 @@ export class LydieClient {
       if (options?.useIds) {
         params.set("use_ids", "true");
       }
+      if (options?.basePath) {
+        params.set("base_path", options.basePath);
+      }
 
-      const url = `${this.getBaseUrl()}/documents/by-path/${path}${params.toString() ? `?${params.toString()}` : ""
-        }`;
+      const url = `${this.getBaseUrl()}/documents/by-path/${path}${
+        params.toString() ? `?${params.toString()}` : ""
+      }`;
 
       if (this.debug) {
         console.log(`[Lydie] Fetching document by path from url: ${url}`);
@@ -452,6 +462,9 @@ export class LydieClient {
         }
         if (options?.useIds) {
           console.log(`[Lydie] Using document IDs in links`);
+        }
+        if (options?.basePath) {
+          console.log(`[Lydie] Using base path for links: ${options.basePath}`);
         }
       }
 
