@@ -29,6 +29,10 @@ import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
+function getDisplayName(name: string): string {
+  return name.trim() || "Untitled document";
+}
+
 export type DocumentTreeItemProps = {
   item: {
     id: string;
@@ -219,7 +223,7 @@ export function DocumentTreeItem({
                     </div>
                   );
                 })()}
-              <span className="truncate">{item.name}</span>
+              <span className="truncate">{getDisplayName(item.name)}</span>
             </div>
 
             {/* Context menu */}

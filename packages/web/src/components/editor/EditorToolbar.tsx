@@ -9,11 +9,8 @@ import {
 import {
   List,
   ListOrdered,
-  Settings,
   Undo,
   Redo,
-  Eye,
-  EyeOff,
   Table,
   Plus,
   Minus,
