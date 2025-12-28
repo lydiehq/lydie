@@ -28,6 +28,8 @@
     "drizzle-orm": "catalog:",
     "hono": "^4.11.3",
     "postgres": "^3.4.7",
+    "y-websocket": "^2.0.4",
+    "yjs": "^13.6.27",
     "zod": "catalog:"
   }
 }

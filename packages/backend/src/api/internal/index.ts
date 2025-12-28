@@ -16,7 +16,42 @@ const publicRouter = new Hono()
   .on(["GET", "POST"], "/auth/*", async (c) => {
     return authClient.handler(c.req.raw);
   })
-  .route("/waitlist", WaitlistRoute);
+  .route("/waitlist", WaitlistRoute)
+  .get("/yjs-token", async (c) => {
+    // Get session to verify user is authenticated
+    const session = await authClient.api.getSession({
+      headers: c.req.raw.headers,
+    });
+
+    if (!session?.session) {
+      throw new HTTPException(401, {
+        message: "Unauthorized",
+      });
+    }
+
+    // Extract token from cookie header
+    const cookieHeader = c.req.header("Cookie") || "";
+    const cookies = cookieHeader.split(";").map((cookie) => cookie.trim());
+    
+    for (const cookie of cookies) {
+      if (cookie.startsWith("better-auth.session_token=")) {
+        const token = cookie.substring("better-auth.session_token=".length);
+        return c.json({ token });
+      }
+    }
+
+    // Also check for secure cookie variant
+    for (const cookie of cookies) {
+      if (cookie.startsWith("__Secure-better-auth.session_token=")) {
+        const token = cookie.substring("__Secure-better-auth.session_token=".length);
+        return c.json({ token });
+      }
+    }
+
+    throw new HTTPException(401, {
+      message: "Session token not found",
+    });
+  });
 
 const organizationScopedRouter = new Hono<{
   Variables: {

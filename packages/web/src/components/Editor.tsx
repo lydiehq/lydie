@@ -7,12 +7,11 @@ import {
   type ImperativePanelHandle,
 } from "react-resizable-panels";
 import { EditorSidebar } from "./editor/EditorSidebar";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { EditorToolbar } from "./editor/EditorToolbar";
 import { PanelResizer } from "./panels/PanelResizer";
 import { BottomBar } from "./editor/BottomBar";
-import { useContentEditor } from "@/utils/editor";
-import { useAutoSave } from "@/hooks/use-auto-save";
+import { useCollaborativeEditor } from "@/utils/collaborative-editor";
 import {
   SelectedContentProvider,
   useSelectedContent,
@@ -25,6 +24,8 @@ import { Surface } from "./layout/Surface";
 import { Input } from "react-aria-components";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
+import { useAuth } from "@/context/auth.context";
+import { PresenceIndicators } from "./editor/PresenceIndicators";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -43,16 +44,12 @@ const COLLAPSED_SIZE = 3.5;
 function EditorContainer({ doc }: Props) {
   const api = useAuthenticatedApi();
   const z = useZero();
+  const { session } = useAuth();
   const [sidebarSize, setSidebarSize] = useState(25);
   const [title, setTitle] = useState(doc.title || "Untitled document");
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { setFocusedContent } = useSelectedContent();
   const openLinkDialogRef = useRef<(() => void) | null>(null);
-
-  const { saveDocument } = useAutoSave({
-    documentId: doc.id,
-    debounceMs: 500,
-  });
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current;
@@ -89,19 +86,18 @@ function EditorContainer({ doc }: Props) {
   };
 
   const handleContentUpdate = () => {
-    if (!contentEditor.editor) return;
-    saveDocument({
-      json_content: contentEditor.editor.getJSON(),
-    });
+    // Content sync is now handled by Yjs, no need for auto-save
+    // We keep this callback for potential future use
   };
 
   const handleManualSave = () => {
     if (!contentEditor.editor) return;
+    // Manual save now only updates the title and marks index as outdated
+    // Content is auto-synced by Yjs
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
         title: title || "Untitled document",
-        jsonContent: contentEditor.editor.getJSON(),
         indexStatus: "outdated",
         organizationId: doc.organization_id,
       })
@@ -128,7 +124,7 @@ function EditorContainer({ doc }: Props) {
     }
   };
 
-  const contentEditor = useContentEditor({
+  const contentEditor = useCollaborativeEditor({
     initialContent: doc?.json_content ? doc.json_content : null,
     documentId: doc.id,
     onUpdate: handleContentUpdate,
@@ -136,7 +132,27 @@ function EditorContainer({ doc }: Props) {
     onSave: handleManualSave,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
+    currentUser: session?.user
+      ? {
+          id: session.user.id,
+          name: session.user.name,
+        }
+      : undefined,
+    yjsServerUrl:
+      import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:1234",
   });
+
+  // Cleanup Yjs provider on unmount
+  useEffect(() => {
+    return () => {
+      if (contentEditor.provider) {
+        contentEditor.provider.destroy();
+      }
+      if (contentEditor.ydoc) {
+        contentEditor.ydoc.destroy();
+      }
+    };
+  }, [contentEditor.provider, contentEditor.ydoc]);
 
   // Extract a good title suggestion from the document content
   const extractTitleSuggestion = () => {
@@ -244,16 +260,8 @@ function EditorContainer({ doc }: Props) {
                   }}
                 />
               </div>
-              <div className="flex-1">
-                {/* <ul className="flex items-center gap-1">
-                  {[...Array(3)].map(() => (
-                    <li>
-                      <button className="text-sm font-medium text-gray-700 rounded-lg px-2 py-1">
-                        Yooooooooo
-                      </button>
-                    </li>
-                  ))}
-                </ul> */}
+              <div className="flex-1 flex items-center justify-end px-4">
+                <PresenceIndicators provider={contentEditor.provider} />
               </div>
             </div>
             <EditorToolbar

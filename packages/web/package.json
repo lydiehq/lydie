@@ -34,6 +34,8 @@
     "@tiptap/core": "^3.14.0",
     "@tiptap/extension-bubble-menu": "^3.14.0",
     "@tiptap/extension-character-count": "^3.14.0",
+    "@tiptap/extension-collaboration": "^3.14.0",
+    "@tiptap/extension-collaboration-caret": "^3.14.0",
     "@tiptap/extension-document": "^3.14.0",
     "@tiptap/extension-heading": "^3.14.0",
     "@tiptap/extension-link": "^3.14.0",
@@ -74,6 +76,8 @@
     "tiptap-markdown": "^0.9.0",
     "use-stick-to-bottom": "^1.1.1",
     "usehooks-ts": "^3.1.1",
+    "y-websocket": "^2.0.4",
+    "yjs": "^13.6.27",
     "zod": "^4.2.1"
   },
   "devDependencies": {
