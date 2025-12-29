@@ -8,7 +8,7 @@ test.describe("organization management", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
 
     await page.getByRole("button", { name: organization.name }).first().click();
 
@@ -50,8 +50,8 @@ test.describe("organization management", () => {
     });
 
     try {
-      await page.goto(`/w/${organization.id}`);
-      await page.waitForURL(`/w/${organization.id}`);
+      await page.goto(`/w/${organization.slug}`);
+      await page.waitForURL(`/w/${organization.slug}`);
 
       await page
         .getByRole("button", { name: organization.name })
@@ -69,7 +69,7 @@ test.describe("organization management", () => {
 
       await page.getByRole("button").filter({ hasText: secondOrgName }).click();
 
-      await page.waitForURL(`/w/${secondOrg.id}`);
+      await page.waitForURL(`/w/${secondOrg.slug}`);
 
       await expect(
         page.getByRole("button", { name: secondOrgName }).first()
@@ -91,7 +91,7 @@ test.describe("organization access isolation", () => {
     });
 
     try {
-      await page.goto(`/w/${organization.id}`);
+      await page.goto(`/w/${organization.slug}`);
       await expect(
         page
           .getByText(

@@ -10,9 +10,15 @@ export const Route = createFileRoute(
   component: RouteComponent,
   loader: async ({ context, params }) => {
     const { zero } = context;
-    const { organizationId } = params;
-    // Preload all integration connections for the organization
-    zero.run(queries.integrations.byOrganization({ organizationId }));
+    const { organizationSlug } = params;
+    // Get organization by slug first to get the ID
+    const org = await zero.run(
+      queries.organizations.bySlug({ organizationSlug })
+    );
+    if (org) {
+      // Preload all integration connections for the organization
+      zero.run(queries.integrations.byOrganization({ organizationId: org.id }));
+    }
   },
   ssr: false,
 });

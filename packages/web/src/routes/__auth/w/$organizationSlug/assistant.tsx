@@ -229,7 +229,7 @@ function AssistantChat({
               onClick: () => {
                 router.navigate({
                   to: "/w/$organizationSlug/settings/billing",
-                  params: { organizationId },
+                  from: "/w/$organizationSlug/assistant",
                 });
               },
             },
