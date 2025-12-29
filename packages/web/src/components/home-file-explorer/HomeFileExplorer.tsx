@@ -63,7 +63,7 @@ export function HomeFileExplorer() {
     onSearchChange,
     allDocuments,
     allFolders,
-  } = useDocumentSearch(organizationId, session, "/__auth/w/$organizationId/");
+  } = useDocumentSearch(organizationId, "/__auth/w/$organizationId/");
 
   // When searching, show all results. Otherwise filter by folder
   const documents = search.trim()

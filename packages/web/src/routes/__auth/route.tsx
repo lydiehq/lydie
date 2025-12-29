@@ -23,10 +23,8 @@ export const Route = createFileRoute("/__auth")({
 function RouteComponent() {
   const { auth } = Route.useRouteContext();
   return (
-    <CatchBoundary getResetKey={() => "auth"} errorComponent={ErrorPage}>
-      <ZeroInit session={auth.session}>
-        <Outlet />
-      </ZeroInit>
-    </CatchBoundary>
+    <ZeroInit session={auth.session}>
+      <Outlet />
+    </ZeroInit>
   );
 }
