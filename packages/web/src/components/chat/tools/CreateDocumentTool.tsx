@@ -57,7 +57,7 @@ export function CreateDocumentTool({
       {output?.id && (
         <div className="p-2 bg-gray-50 flex justify-end">
           <Link
-            to="/w/$organizationId/$id"
+            to="/w/$organizationSlug/$id"
             params={{ organizationId, id: output.id }}
             className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
           >
@@ -69,4 +69,3 @@ export function CreateDocumentTool({
     </Card>
   );
 }
-

@@ -14,7 +14,7 @@ import { useAuth } from "@/context/auth.context";
 import { mutators } from "@lydie/zero/mutators";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/components"
+  "/__auth/w/$organizationSlug/settings/components"
 )({
   component: RouteComponent,
 });

@@ -36,6 +36,7 @@ export function HomeFileExplorer() {
   // todo: could probably be made non-strict
   const { tree } = useSearch({ strict: false });
   const organizationId = organization?.id || "";
+  const organizationSlug = organization?.slug || "";
   const { createDocument } = useDocumentActions();
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     // Initialize from localStorage, defaulting to "grid"
@@ -63,7 +64,11 @@ export function HomeFileExplorer() {
     onSearchChange,
     allDocuments,
     allFolders,
-  } = useDocumentSearch(organizationId, "/__auth/w/$organizationId/");
+  } = useDocumentSearch(
+    organizationId,
+    organizationSlug,
+    "/__auth/w/$organizationSlug/"
+  );
 
   // When searching, show all results. Otherwise filter by folder
   const documents = search.trim()

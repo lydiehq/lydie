@@ -25,7 +25,7 @@ import { useAuth } from "@/context/auth.context";
 import { Card } from "@/components/layout/Card";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/billing"
+  "/__auth/w/$organizationSlug/settings/billing"
 )({
   component: RouteComponent,
   loader: async ({ context, params }) => {

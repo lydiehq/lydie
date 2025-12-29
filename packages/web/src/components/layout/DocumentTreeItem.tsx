@@ -85,9 +85,9 @@ export function DocumentTreeItem({
   const handleAction = () => {
     if (isGroup)
       navigate({
-        to: "/w/$organizationId/settings/integrations/$integrationId",
+        to: "/w/$organizationSlug/settings/integrations/$integrationId",
         params: { integrationId: item.integrationType },
-        from: "/w/$organizationId",
+        from: "/w/$organizationSlug",
       });
 
     // For folders and integration links, trigger expansion by clicking the chevron button
@@ -101,9 +101,9 @@ export function DocumentTreeItem({
     }
     if (item.type === "document") {
       navigate({
-        to: "/w/$organizationId/$id",
+        to: "/w/$organizationSlug/$id",
         params: { id: item.id },
-        from: "/w/$organizationId",
+        from: "/w/$organizationSlug",
       });
     }
   };
@@ -241,9 +241,9 @@ export function DocumentTreeItem({
                       onAction={() => {
                         if (item.integrationLinkId) {
                           navigate({
-                            to: "/w/$organizationId/settings/integrations/$integrationId",
+                            to: "/w/$organizationSlug/settings/integrations/$integrationId",
                             params: { integrationId: item.integrationType },
-                            from: "/w/$organizationId",
+                            from: "/w/$organizationSlug",
                           });
                         }
                       }}

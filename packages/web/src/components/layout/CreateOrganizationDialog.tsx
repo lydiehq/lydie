@@ -7,7 +7,7 @@ import { slugify } from "@lydie/core/utils";
 import { Separator } from "../generic/Separator";
 import { authClient } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
-import { setActiveOrganizationId } from "@/lib/active-organization";
+import { setActiveOrganizationSlug } from "@/lib/active-organization";
 
 type Props = {
   isOpen: boolean;
@@ -29,13 +29,13 @@ export function CreateOrganizationDialog({ isOpen, onOpenChange }: Props) {
           slug: values.value.slug,
         });
 
-        const organizationId = result.data?.id || values.value.slug;
+        const organizationSlug = values.value.slug;
 
         onOpenChange(false);
 
         navigate({
-          to: "/w/$organizationId",
-          params: { organizationId },
+          to: "/w/$organizationSlug",
+          params: { organizationSlug },
         });
       } catch (error) {
         console.error("Failed to create organization:", error);

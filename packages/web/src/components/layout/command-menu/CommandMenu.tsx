@@ -141,7 +141,7 @@ export function CommandMenu() {
 
   // Use dynamic integration route for all integrations
   const getIntegrationRoute = (integrationType: string) =>
-    `/w/$organizationId/settings/integrations/${integrationType}`;
+    `/w/$organizationSlug/settings/integrations/${integrationType}`;
 
   const menuSections = useMemo<MenuSection[]>(() => {
     const favoritesItems: MenuItem[] = [
@@ -206,9 +206,9 @@ export function CommandMenu() {
         icon: Home,
         action: () => {
           navigate({
-            to: "/w/$organizationId",
+            to: "/w/$organizationSlug",
             params: {
-              organizationId: organization?.id as string,
+              organizationSlug: organization?.slug as string,
             },
             search: {
               tree: undefined,
@@ -224,9 +224,9 @@ export function CommandMenu() {
         icon: Bot,
         action: () => {
           navigate({
-            to: "/w/$organizationId/assistant",
+            to: "/w/$organizationSlug/assistant",
             params: {
-              organizationId: organization?.id as string,
+              organizationSlug: organization?.slug as string,
             },
           });
         },
@@ -237,9 +237,9 @@ export function CommandMenu() {
         icon: Settings,
         action: () => {
           navigate({
-            to: "/w/$organizationId/settings",
+            to: "/w/$organizationSlug/settings",
             params: {
-              organizationId: organization?.id as string,
+              organizationSlug: organization?.slug as string,
             },
           });
         },
@@ -250,9 +250,9 @@ export function CommandMenu() {
         icon: CreditCard,
         action: () => {
           navigate({
-            to: "/w/$organizationId/settings/billing",
+            to: "/w/$organizationSlug/settings/billing",
             params: {
-              organizationId: organization?.id as string,
+              organizationSlug: organization?.slug as string,
             },
           });
         },
@@ -263,9 +263,9 @@ export function CommandMenu() {
         icon: Upload,
         action: () => {
           navigate({
-            to: "/w/$organizationId/settings/import",
+            to: "/w/$organizationSlug/settings/import",
             params: {
-              organizationId: organization?.id as string,
+              organizationSlug: organization?.slug as string,
             },
           });
         },
@@ -276,9 +276,9 @@ export function CommandMenu() {
         icon: Plug,
         action: () => {
           navigate({
-            to: "/w/$organizationId/settings/integrations",
+            to: "/w/$organizationSlug/settings/integrations",
             params: {
-              organizationId: organization?.id as string,
+              organizationSlug: organization?.slug as string,
             },
             search: {
               success: false,

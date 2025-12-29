@@ -33,10 +33,11 @@ import {
 } from "@/components/generic/Table";
 import { mutators } from "@lydie/zero/mutators";
 import { Card } from "@/components/layout/Card";
+import { slugify } from "@lydie/core/utils";
 
 type ApiKeyDialogStep = "create" | "success";
 
-export const Route = createFileRoute("/__auth/w/$organizationId/settings/")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/")({
   component: RouteComponent,
 });
 
@@ -57,6 +58,7 @@ function RouteComponent() {
   const workspaceForm = useAppForm({
     defaultValues: {
       name: organization?.name || "",
+      slug: organization?.slug || "",
     },
     onSubmit: async (values) => {
       if (!organization) {
@@ -69,7 +71,22 @@ function RouteComponent() {
         return;
       }
 
-      if (values.value.name.trim() === organization.name) {
+      if (!values.value.slug.trim()) {
+        toast.error("Workspace slug cannot be empty");
+        return;
+      }
+
+      const slugified = slugify(values.value.slug.trim());
+      if (slugified !== values.value.slug.trim()) {
+        toast.error("Slug contains invalid characters. Only letters, numbers, and hyphens are allowed.");
+        return;
+      }
+
+      const hasChanges =
+        values.value.name.trim() !== organization.name ||
+        slugified !== organization.slug;
+
+      if (!hasChanges) {
         return;
       }
 
@@ -78,12 +95,17 @@ function RouteComponent() {
           mutators.organization.update({
             organizationId: organization.id,
             name: values.value.name.trim(),
+            slug: slugified,
           })
         );
-        toast.success("Workspace name updated successfully");
-      } catch (error) {
-        toast.error("Failed to update workspace name");
-        console.error("Workspace name update error:", error);
+        toast.success("Workspace updated successfully");
+      } catch (error: any) {
+        const errorMessage =
+          error?.message === "Slug is already taken"
+            ? "This slug is already taken. Please choose a different one."
+            : "Failed to update workspace";
+        toast.error(errorMessage);
+        console.error("Workspace update error:", error);
       }
     },
   });
@@ -122,12 +144,15 @@ function RouteComponent() {
     },
   });
 
-  // Sync workspace name when organization changes
+  // Sync workspace name and slug when organization changes
   useEffect(() => {
     if (organization?.name) {
       workspaceForm.setFieldValue("name", organization.name);
     }
-  }, [organization?.name]);
+    if (organization?.slug) {
+      workspaceForm.setFieldValue("slug", organization.slug);
+    }
+  }, [organization?.name, organization?.slug]);
 
   const handleRevokeApiKey = async (keyId: string, keyName: string) => {
     if (!organization) {
@@ -218,6 +243,21 @@ function RouteComponent() {
           <workspaceForm.AppField
             name="name"
             children={(field) => <field.TextField label="Workspace Name" />}
+          />
+          <workspaceForm.AppField
+            name="slug"
+            listeners={{
+              onBlur: (e) => {
+                const slugified = slugify(e.value);
+                workspaceForm.setFieldValue("slug", slugified);
+              },
+            }}
+            children={(field) => (
+              <field.TextField
+                label="Workspace Slug"
+                description="Used in URLs and API endpoints. Only letters, numbers, and hyphens are allowed."
+              />
+            )}
           />
           <div className="flex justify-end gap-x-1">
             <Button

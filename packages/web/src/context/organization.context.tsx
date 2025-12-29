@@ -5,9 +5,13 @@ import { useAuth } from "./auth.context";
 import { useMemo } from "react";
 
 export function useOrganization() {
-  const { organizationId } = useParams({ from: "/__auth/w/$organizationId" });
+  const { organizationSlug } = useParams({
+    from: "/__auth/w/$organizationSlug",
+  });
   const { session } = useAuth();
-  const [org] = useQuery(queries.organizations.byId({ organizationId }));
+  const [org] = useQuery(
+    queries.organizations.bySlug({ organizationSlug })
+  );
   const organization = useMemo(() => {
     if (!org) return undefined;
 

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/import"
+  "/__auth/w/$organizationSlug/settings/import"
 )({
   component: RouteComponent,
 });
@@ -416,7 +416,7 @@ function RouteComponent() {
 
   const handleViewDocument = (documentId: string) => {
     navigate({
-      to: "/w/$organizationId/$id",
+      to: "/w/$organizationSlug/$id",
       params: {
         organizationId: organization.id,
         id: documentId,

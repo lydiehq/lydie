@@ -359,7 +359,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
     }, 100);
   };
 
-  const navigate = useNavigate({ from: "/w/$organizationId" });
+  const navigate = useNavigate({ from: "/w/$organizationSlug" });
 
   const handleOpenLink = () => {
     if (!linkData) return;
@@ -368,7 +368,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
       const documentId = extractDocumentIdFromInternalLink(linkData.href);
       if (documentId) {
         navigate({
-          to: "/w/$organizationId/$id",
+          to: "/w/$organizationSlug/$id",
           params: { id: documentId },
         });
       }

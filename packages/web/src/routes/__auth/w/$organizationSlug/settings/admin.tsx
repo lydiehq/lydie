@@ -17,7 +17,7 @@ import { isAdmin } from "@/utils/admin";
 import { Card } from "@/components/layout/Card";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/admin"
+  "/__auth/w/$organizationSlug/settings/admin"
 )({
   component: RouteComponent,
 });

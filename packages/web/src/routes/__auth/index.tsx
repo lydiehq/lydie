@@ -1,16 +1,16 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { listOrganizationsQuery } from "@/utils/auth";
-import { getActiveOrganizationId } from "@/lib/active-organization";
+import { getActiveOrganizationSlug } from "@/lib/active-organization";
 
 export const Route = createFileRoute("/__auth/")({
   component: RouteComponent,
   beforeLoad: async ({ context: { queryClient } }) => {
-    const activeOrganizationId = getActiveOrganizationId();
+    const activeOrganizationSlug = getActiveOrganizationSlug();
 
-    if (activeOrganizationId) {
+    if (activeOrganizationSlug) {
       throw redirect({
-        to: "/w/$organizationId",
-        params: { organizationId: activeOrganizationId },
+        to: "/w/$organizationSlug",
+        params: { organizationSlug: activeOrganizationSlug },
       });
     }
 
@@ -19,10 +19,13 @@ export const Route = createFileRoute("/__auth/")({
     });
 
     if (organizations && organizations.length > 0) {
-      throw redirect({
-        to: "/w/$organizationId",
-        params: { organizationId: organizations[0].id },
-      });
+      const firstOrg = organizations[0];
+      if (firstOrg.slug) {
+        throw redirect({
+          to: "/w/$organizationSlug",
+          params: { organizationSlug: firstOrg.slug },
+        });
+      }
     }
 
     // No organizations found - redirect to onboarding to create one

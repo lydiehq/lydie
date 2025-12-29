@@ -16,7 +16,7 @@ import { Link } from "@/components/generic/Link";
 import { mutators } from "@lydie/zero/mutators";
 import { Card } from "@/components/layout/Card";
 
-export const Route = createFileRoute("/__auth/w/$organizationId/settings/ai")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")({
   component: RouteComponent,
 });
 
@@ -226,7 +226,7 @@ function RouteComponent() {
                 </p>
               </div>
               <Link
-                to="/w/$organizationId/settings/billing"
+                to="/w/$organizationSlug/settings/billing"
                 params={{ organizationId: organization?.id || "" }}
               >
                 <Button size="sm">Upgrade to Pro</Button>

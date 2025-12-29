@@ -19,7 +19,7 @@ import { Dialog } from "@/components/generic/Dialog";
 import { WordPressConnectionForm } from "@/components/integrations/forms/wordpress-connection-form";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/$integrationType"
+  "/__auth/w/$organizationSlug/settings/integrations/$integrationType"
 )({
   component: RouteComponent,
   validateSearch: z.object({
@@ -112,11 +112,11 @@ function RouteComponent() {
   const pages = [
     {
       label: "Connections",
-      href: `/w/$organizationId/settings/integrations/${integrationDetails.id}`,
+      href: `/w/$organizationSlug/settings/integrations/${integrationDetails.id}`,
     },
     {
       label: "Activity",
-      href: `/w/$organizationId/settings/integrations/${integrationDetails.id}/activity`,
+      href: `/w/$organizationSlug/settings/integrations/${integrationDetails.id}/activity`,
     },
   ];
 

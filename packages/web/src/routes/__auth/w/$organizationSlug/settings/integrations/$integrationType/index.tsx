@@ -1,12 +1,12 @@
 import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
 import { createFileRoute } from "@tanstack/react-router";
-import { Route as IntegrationRoute } from "@/routes/__auth/w/$organizationId/settings/integrations/$integrationType/route";
+import { Route as IntegrationRoute } from "@/routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/route";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Heading } from "@/components/generic/Heading";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/$integrationType/"
+  "/__auth/w/$organizationSlug/settings/integrations/$integrationType/"
 )({
   component: RouteComponent,
 });

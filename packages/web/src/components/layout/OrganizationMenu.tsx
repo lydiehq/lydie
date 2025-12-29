@@ -10,7 +10,7 @@ import { useState } from "react";
 import { OrganizationsDialog } from "./OrganizationsDialog";
 import clsx from "clsx";
 import { authClient } from "@/utils/auth";
-import { clearActiveOrganizationId } from "@/lib/active-organization";
+import { clearActiveOrganizationSlug } from "@/lib/active-organization";
 import { useQueryClient } from "@tanstack/react-query";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { Popover } from "../generic/Popover";
@@ -30,7 +30,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
     useState(false);
 
   const signOut = async () => {
-    clearActiveOrganizationId();
+    clearActiveOrganizationSlug();
     await authClient.signOut();
     queryClient.removeQueries({
       queryKey: ["auth", "getSession"],
@@ -78,8 +78,8 @@ export function OrganizationMenu({ isCollapsed }: Props) {
           <Menu className="outline-none max-h-[inherit] overflow-auto p-1 w-full">
             <MenuSeparator />
             <MenuItemLink
-              to="/w/$organizationId/settings/user"
-              from="/w/$organizationId"
+              to="/w/$organizationSlug/settings/user"
+              from="/w/$organizationSlug"
             >
               Settings
             </MenuItemLink>

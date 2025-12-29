@@ -160,8 +160,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </div>
         <div className="flex flex-col px-2">
           <Link
-            to="/w/$organizationId"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
@@ -171,8 +171,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Link>
           <Link
-            to="/w/$organizationId/assistant"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug/assistant"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
@@ -182,8 +182,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Link>
           <Link
-            to="/w/$organizationId/settings/integrations"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug/settings/integrations"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
@@ -234,8 +234,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <ul className="flex flex-col gap-y-2">
               <li>
                 <Link
-                  to="/w/$organizationId/settings"
-                  from="/w/$organizationId"
+                  to="/w/$organizationSlug/settings"
+                  from="/w/$organizationSlug"
                   className="text-xs font-medium text-gray-700"
                 >
                   Send feedback

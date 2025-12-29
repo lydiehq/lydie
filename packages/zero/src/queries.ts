@@ -1,6 +1,11 @@
 import { defineQueries, defineQuery } from "@rocicorp/zero";
 import { z } from "zod";
-import { isAuthenticated, hasOrganizationAccess, type Context } from "./auth";
+import {
+  isAuthenticated,
+  hasOrganizationAccess,
+  hasOrganizationAccessBySlug,
+  type Context,
+} from "./auth";
 import { zql } from "./schema";
 import { ZodLazy } from "better-auth";
 
@@ -111,6 +116,13 @@ export const queries = defineQueries({
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
         return zql.organizations.where("id", organizationId).one();
+      }
+    ),
+    bySlug: defineQuery(
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
+        return zql.organizations.where("slug", organizationSlug).one();
       }
     ),
     billing: defineQuery(

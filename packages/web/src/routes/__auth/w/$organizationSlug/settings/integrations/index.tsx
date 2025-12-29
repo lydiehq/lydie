@@ -5,7 +5,7 @@ import { IntegrationsList } from "@/components/integrations/IntegrationsList";
 import { queries } from "@lydie/zero/queries";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/"
+  "/__auth/w/$organizationSlug/settings/integrations/"
 )({
   component: RouteComponent,
   loader: async ({ context, params }) => {

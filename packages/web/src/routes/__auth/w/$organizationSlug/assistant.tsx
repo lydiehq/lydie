@@ -28,14 +28,20 @@ import {
 import clsx from "clsx";
 import { mutators } from "@lydie/zero/mutators";
 
-export const Route = createFileRoute("/__auth/w/$organizationId/assistant")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/assistant")({
   component: AssistantPage,
   loader: async ({ context, params }) => {
     const { zero } = context;
-    const { organizationId } = params;
-    // Preload assistant conversations and documents for mentions
-    zero.run(queries.assistant.conversations({ organizationId }));
-    zero.run(queries.documents.byUpdated({ organizationId }));
+    const { organizationSlug } = params;
+    // Get organization by slug first to get the ID
+    const org = await zero.run(
+      queries.organizations.bySlug({ organizationSlug })
+    );
+    if (org) {
+      // Preload assistant conversations and documents for mentions
+      zero.run(queries.assistant.conversations({ organizationId: org.id }));
+      zero.run(queries.documents.byUpdated({ organizationId: org.id }));
+    }
   },
   ssr: false,
 });
@@ -222,7 +228,7 @@ function AssistantChat({
               label: "Upgrade to Pro →",
               onClick: () => {
                 router.navigate({
-                  to: "/w/$organizationId/settings/billing",
+                  to: "/w/$organizationSlug/settings/billing",
                   params: { organizationId },
                 });
               },

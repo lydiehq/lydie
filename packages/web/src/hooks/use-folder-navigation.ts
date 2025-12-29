@@ -12,7 +12,7 @@ export function useFolderNavigation(
       // Clear search when entering a folder (search is global)
       setSearch("");
       navigate({
-        to: "/w/$organizationId",
+        to: "/w/$organizationSlug",
         params: { organizationId },
         search: { tree: folderId, q: undefined, focusSearch: undefined },
       });
@@ -24,7 +24,7 @@ export function useFolderNavigation(
     // Clear search when leaving a folder
     setSearch("");
     navigate({
-      to: "/w/$organizationId",
+      to: "/w/$organizationSlug",
       params: { organizationId },
       search: { tree: undefined, q: undefined, focusSearch: undefined },
     });
@@ -35,4 +35,3 @@ export function useFolderNavigation(
     handleBackClick,
   };
 }
-

@@ -18,7 +18,7 @@ import { Eyebrow } from "@/components/generic/Eyebrow";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
 
-export const Route = createFileRoute("/__auth/w/$organizationId/settings")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/settings")({
   component: RouteComponent,
 });
 
@@ -40,12 +40,12 @@ const settingsRoutes: SettingsSection[] = [
     title: "Account",
     routes: [
       {
-        path: "/w/$organizationId/settings/user",
+        path: "/w/$organizationSlug/settings/user",
         label: "Preferences",
         icon: User,
       },
       {
-        path: "/w/$organizationId/settings/ai",
+        path: "/w/$organizationSlug/settings/ai",
         label: "AI Settings",
         icon: Sparkles,
       },
@@ -55,34 +55,34 @@ const settingsRoutes: SettingsSection[] = [
     title: "Workspace",
     routes: [
       {
-        path: "/w/$organizationId/settings",
+        path: "/w/$organizationSlug/settings",
         label: "General",
         icon: Settings,
       },
       {
-        path: "/w/$organizationId/settings/admin",
+        path: "/w/$organizationSlug/settings/admin",
         label: "Admin",
         icon: ShieldCheck,
         adminOnly: true,
       },
       {
-        path: "/w/$organizationId/settings/billing",
+        path: "/w/$organizationSlug/settings/billing",
         label: "Billing & Usage",
         icon: CreditCard,
       },
       {
-        path: "/w/$organizationId/settings/components",
+        path: "/w/$organizationSlug/settings/components",
         label: "Components",
         icon: Box,
         adminOnly: true,
       },
       {
-        path: "/w/$organizationId/settings/integrations/",
+        path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
         icon: Puzzle,
       },
       {
-        path: "/w/$organizationId/settings/import",
+        path: "/w/$organizationSlug/settings/import",
         label: "Import",
         icon: Upload,
         adminOnly: true,
@@ -124,7 +124,7 @@ function RouteComponent() {
                           <li key={route.path}>
                             <Link
                               to={route.path}
-                              from="/w/$organizationId/settings"
+                              from="/w/$organizationSlug/settings"
                               {...(route.external ? { target: "_blank" } : {})}
                               className={sidebarItemStyles()}
                               activeOptions={{

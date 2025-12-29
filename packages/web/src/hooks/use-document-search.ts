@@ -4,7 +4,11 @@ import { useQuery } from "@rocicorp/zero/react";
 import { useDebounceCallback } from "usehooks-ts";
 import { queries } from "@lydie/zero/queries";
 
-export function useDocumentSearch(organizationId: string, routePath: string) {
+export function useDocumentSearch(
+  organizationId: string,
+  organizationSlug: string,
+  routePath: string
+) {
   const { q, focusSearch } = useSearch({
     from: routePath as any,
   });
@@ -28,8 +32,9 @@ export function useDocumentSearch(organizationId: string, routePath: string) {
       }, 100);
       // Clear the focusSearch param from URL after focusing
       navigate({
-        to: "/w/$organizationId",
-        from: "/w/$organizationId",
+        to: "/w/$organizationSlug",
+        from: "/w/$organizationSlug",
+        params: { organizationSlug },
         search: (prev) => ({
           tree: (prev as { tree?: string })?.tree,
           q: (prev as { q?: string })?.q,
@@ -43,8 +48,9 @@ export function useDocumentSearch(organizationId: string, routePath: string) {
   const updateSearchParam = useCallback(
     (text: string) => {
       navigate({
-        to: "/w/$organizationId",
-        from: "/w/$organizationId",
+        to: "/w/$organizationSlug",
+        from: "/w/$organizationSlug",
+        params: { organizationSlug },
         search: (prev) => ({
           tree: (prev as { tree?: string })?.tree,
           q: text || undefined,
@@ -53,7 +59,7 @@ export function useDocumentSearch(organizationId: string, routePath: string) {
         replace: true,
       });
     },
-    [navigate, organizationId]
+    [navigate, organizationSlug]
   );
 
   // Debounce the URL navigation - this waits for user to stop typing

@@ -641,8 +641,9 @@ export const mutators = defineMutators({
       z.object({
         organizationId: z.string(),
         name: z.string().optional(),
+        slug: z.string().optional(),
       }),
-      async ({ tx, ctx, args: { organizationId, name } }) => {
+      async ({ tx, ctx, args: { organizationId, name, slug } }) => {
         hasOrganizationAccess(ctx, organizationId);
 
         const updates: any = {
@@ -652,6 +653,22 @@ export const mutators = defineMutators({
 
         if (name !== undefined) {
           updates.name = name;
+        }
+
+        if (slug !== undefined) {
+          // Check if slug is already taken by another organization
+          const existingOrg = await tx.run(
+            zql.organizations
+              .where("slug", slug)
+              .where("id", "!=", organizationId)
+              .one()
+          );
+
+          if (existingOrg) {
+            throw new Error("Slug is already taken");
+          }
+
+          updates.slug = slug;
         }
 
         await tx.mutate.organizations.update(updates);
