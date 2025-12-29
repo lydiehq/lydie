@@ -19,6 +19,8 @@ const frontendRouter = new sst.aws.Router("Frontend", {
         queryStringsConfig: {
           queryStringBehavior: "none",
         },
+        enableAcceptEncodingBrotli: true,
+        enableAcceptEncodingGzip: true,
       },
     }
   },
