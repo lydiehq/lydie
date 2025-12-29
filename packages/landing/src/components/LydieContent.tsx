@@ -13,6 +13,7 @@ interface LydieContentProps {
     href: string;
     id?: string;
     slug?: string;
+    title?: string;
     type?: "internal" | "external";
   }) => string;
 }

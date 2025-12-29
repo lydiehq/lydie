@@ -8,12 +8,7 @@ import {
   getDocumentByPath,
   getFoldersWithPaths,
 } from "../../utils/document-path";
-import {
-  transformDocumentLinks,
-  transformDocumentLinksSync,
-  extractInternalLinks,
-  fetchDocumentMetadata,
-} from "../utils/link-transformer";
+import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
 import type { ContentNode } from "../utils/types";
 import { findRelatedDocuments } from "@lydie/core/embedding/index";
 
@@ -31,9 +26,6 @@ export const ExternalApi = new Hono()
     const slug = c.req.param("slug");
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
-    const transformLinks = c.req.query("transform_links") !== "false"; // Default: true
-    const useIds = c.req.query("use_ids") === "true"; // Default: false (use slugs)
-    const includeLinkMetadata = c.req.query("include_link_metadata") === "true";
 
     const document = await getDocumentWithPath(slug, organizationId, true);
 
@@ -43,27 +35,17 @@ export const ExternalApi = new Hono()
       });
     }
 
-    // Transform internal:// links to relative URLs
+    // Always transform internal:// links to internal-link marks with metadata
     let transformedContent = document.jsonContent;
-    if (transformLinks) {
-      try {
-        if (useIds) {
-          // Fast path: just convert internal://ID to /ID without DB lookups
-          transformedContent = transformDocumentLinksSync(
-            document.jsonContent as ContentNode
-          );
-        } else {
-          // Resolve slugs for SEO-friendly URLs
-          transformedContent = await transformDocumentLinks(
-            document.jsonContent as ContentNode,
-            { organizationId, useIds }
-          );
-        }
-      } catch (error) {
-        console.error("Error transforming document links:", error);
-        // Don't fail the request if link transformation fails
-        transformedContent = document.jsonContent;
-      }
+    try {
+      transformedContent = await transformDocumentLinksToInternalLinkMarks(
+        document.jsonContent as ContentNode,
+        organizationId
+      );
+    } catch (error) {
+      console.error("Error transforming document links:", error);
+      // Don't fail the request if link transformation fails
+      transformedContent = document.jsonContent;
     }
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
@@ -92,40 +74,12 @@ export const ExternalApi = new Hono()
       }
     }
 
-    // Optionally include link metadata for frontend resolution
-    let linkMetadata: Record<string, { id: string; slug: string; title: string }> = {};
-    if (includeLinkMetadata) {
-      try {
-        const internalLinkIds = extractInternalLinks(document.jsonContent as ContentNode);
-        if (internalLinkIds.size > 0) {
-          const metadataMap = await fetchDocumentMetadata(
-            Array.from(internalLinkIds),
-            organizationId
-          );
-          // Convert Map to plain object for JSON response
-          for (const [id, metadata] of metadataMap.entries()) {
-            if (metadata.exists) {
-              linkMetadata[id] = {
-                id: metadata.id,
-                slug: metadata.slug || metadata.id,
-                title: metadata.title || "",
-              };
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching link metadata:", error);
-        linkMetadata = {};
-      }
-    }
-
     // Add optional fields to the already-transformed document
     const response = {
       ...document,
       jsonContent: transformedContent,
       ...(includeRelated && { related }),
       ...(includeToc && { toc }),
-      ...(includeLinkMetadata && { linkMetadata }),
     };
 
     return c.json(response);
@@ -135,9 +89,6 @@ export const ExternalApi = new Hono()
     const fullPath = c.req.param("*"); // Get the full path after /by-path/
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
-    const transformLinks = c.req.query("transform_links") !== "false"; // Default: true
-    const useIds = c.req.query("use_ids") === "true"; // Default: false (use slugs)
-    const includeLinkMetadata = c.req.query("include_link_metadata") === "true";
 
     if (!fullPath) {
       throw new HTTPException(400, {
@@ -153,27 +104,17 @@ export const ExternalApi = new Hono()
       });
     }
 
-    // Transform internal:// links to relative URLs
+    // Always transform internal:// links to internal-link marks with metadata
     let transformedContent = document.jsonContent;
-    if (transformLinks) {
-      try {
-        if (useIds) {
-          // Fast path: just convert internal://ID to /ID without DB lookups
-          transformedContent = transformDocumentLinksSync(
-            document.jsonContent as ContentNode
-          );
-        } else {
-          // Resolve slugs for SEO-friendly URLs
-          transformedContent = await transformDocumentLinks(
-            document.jsonContent as ContentNode,
-            { organizationId, useIds }
-          );
-        }
-      } catch (error) {
-        console.error("Error transforming document links:", error);
-        // Don't fail the request if link transformation fails
-        transformedContent = document.jsonContent;
-      }
+    try {
+      transformedContent = await transformDocumentLinksToInternalLinkMarks(
+        document.jsonContent as ContentNode,
+        organizationId
+      );
+    } catch (error) {
+      console.error("Error transforming document links:", error);
+      // Don't fail the request if link transformation fails
+      transformedContent = document.jsonContent;
     }
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
@@ -200,40 +141,12 @@ export const ExternalApi = new Hono()
       }
     }
 
-    // Optionally include link metadata for frontend resolution
-    let linkMetadata: Record<string, { id: string; slug: string; title: string }> = {};
-    if (includeLinkMetadata) {
-      try {
-        const internalLinkIds = extractInternalLinks(document.jsonContent as ContentNode);
-        if (internalLinkIds.size > 0) {
-          const metadataMap = await fetchDocumentMetadata(
-            Array.from(internalLinkIds),
-            organizationId
-          );
-          // Convert Map to plain object for JSON response
-          for (const [id, metadata] of metadataMap.entries()) {
-            if (metadata.exists) {
-              linkMetadata[id] = {
-                id: metadata.id,
-                slug: metadata.slug || metadata.id,
-                title: metadata.title || "",
-              };
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching link metadata:", error);
-        linkMetadata = {};
-      }
-    }
-
     // Add optional fields to the already-transformed document
     const response = {
       ...document,
       jsonContent: transformedContent,
       ...(includeRelated && { related }),
       ...(includeToc && { toc }),
-      ...(includeLinkMetadata && { linkMetadata }),
     };
 
     return c.json(response);

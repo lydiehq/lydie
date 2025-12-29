@@ -23,12 +23,11 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 
 // Fetch the specific document using getDocument(slug)
+// Internal links are automatically transformed to internal-link marks with metadata
 let document: Document;
 try {
   document = await lydieClient.getDocument(slug!, {
     related: true,
-    transformLinks: false, // Keep internal:// references, resolve in frontend
-    linkMetadata: true, // Get document metadata for link resolution
   });
 } catch (error) {
   console.error(`Failed to fetch document with slug "${slug}":`, error);
@@ -65,14 +64,16 @@ const blogPostProps = {
         content={document.jsonContent}
         customComponents={{}}
         linkResolver={(ref) => {
-          // Resolve internal:// links to /blog/[slug]
-          if (ref.type === "internal" && ref.id) {
-            // Use the linkMetadata to get the slug for SEO-friendly URLs
-            const metadata = document.linkMetadata?.[ref.id];
-            const slug = metadata?.slug || ref.id;
-            return `/blog/${slug}`;
+          // Resolve internal links to /blog/[slug]
+          // The slug is now embedded in the internal-link mark attrs
+          if (ref.type === "internal" && ref.slug) {
+            return `/blog/${ref.slug}`;
           }
-          return ref.href;
+          // Fallback to document ID if slug not available
+          if (ref.type === "internal" && ref.id) {
+            return `/blog/${ref.id}`;
+          }
+          return ref.href || "#";
         }}
         client:load
       />

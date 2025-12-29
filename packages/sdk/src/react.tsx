@@ -18,10 +18,6 @@ export interface UseLydieDocumentConfig {
     related?: boolean;
     toc?: boolean;
   };
-  links?: {
-    transform?: boolean;
-    useIds?: boolean;
-  };
 }
 
 export interface UseLydieDocumentReturn {
@@ -50,12 +46,6 @@ export function useLydieDocument(
       }
       if (config.include?.toc) {
         params.set("include_toc", "true");
-      }
-      if (config.links?.transform === false) {
-        params.set("transform_links", "false");
-      }
-      if (config.links?.useIds) {
-        params.set("use_ids", "true");
       }
 
       const url = `${config.apiUrl || "https://api.lydie.co/v1"}/${
@@ -105,6 +95,7 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
     href: string;
     id?: string;
     slug?: string;
+    title?: string;
     type?: "internal" | "external";
   }) => string;
 
@@ -116,6 +107,7 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
         href: string;
         id?: string;
         slug?: string;
+        title?: string;
         type?: "internal" | "external";
       }) => string;
     }
@@ -145,23 +137,13 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
   ): React.ReactNode {
     let finalHref = href;
 
-    // If linkResolver is provided, use it to resolve internal:// links
-    if (this.linkResolver && href?.startsWith("internal://")) {
-      const documentId = href.replace("internal://", "");
-      finalHref = this.linkResolver({
-        href,
-        id: documentId,
-        type: "internal",
-      });
-    }
-    // Otherwise, apply link prefix if provided and href is a relative path
-    else if (
+    // Apply link prefix if provided and href is a relative path
+    if (
       this.linkPrefix &&
       href &&
       !href.startsWith("http") &&
       !href.startsWith("mailto:") &&
-      !href.startsWith("tel:") &&
-      !href.startsWith("internal://")
+      !href.startsWith("tel:")
     ) {
       // Only prefix relative paths (not absolute URLs or protocols)
       finalHref = `${this.linkPrefix}${
@@ -171,6 +153,46 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
 
     return (
       <a key={Math.random()} href={finalHref} rel={rel} target={target}>
+        {content}
+      </a>
+    );
+  }
+
+  internalLink(
+    content: React.ReactNode,
+    documentId?: string,
+    documentSlug?: string,
+    documentTitle?: string
+  ): React.ReactNode {
+    let finalHref: string | undefined;
+
+    // If linkResolver is provided, use it to resolve internal links
+    if (this.linkResolver) {
+      finalHref = this.linkResolver({
+        href: `internal://${documentId || ""}`,
+        id: documentId,
+        slug: documentSlug,
+        title: documentTitle,
+        type: "internal",
+      });
+    } else if (documentSlug) {
+      // Use slug if available
+      finalHref = documentSlug.startsWith("/")
+        ? documentSlug
+        : `/${documentSlug}`;
+      if (this.linkPrefix) {
+        finalHref = `${this.linkPrefix}${finalHref}`;
+      }
+    } else if (documentId) {
+      // Fallback to document ID
+      finalHref = `/${documentId}`;
+      if (this.linkPrefix) {
+        finalHref = `${this.linkPrefix}${finalHref}`;
+      }
+    }
+
+    return (
+      <a key={Math.random()} href={finalHref}>
         {content}
       </a>
     );
@@ -260,6 +282,7 @@ export function renderContentToReact(
       href: string;
       id?: string;
       slug?: string;
+      title?: string;
       type?: "internal" | "external";
     }) => string;
   }
@@ -277,6 +300,7 @@ export interface LydieContentProps {
     href: string;
     id?: string;
     slug?: string;
+    title?: string;
     type?: "internal" | "external";
   }) => string;
 }
@@ -288,7 +312,9 @@ export function LydieContent({
   linkResolver,
 }: LydieContentProps) {
   return (
-    <>{renderContentToReact(content, components, { linkPrefix, linkResolver })}</>
+    <>
+      {renderContentToReact(content, components, { linkPrefix, linkResolver })}
+    </>
   );
 }
 

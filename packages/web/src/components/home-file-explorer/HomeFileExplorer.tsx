@@ -69,14 +69,14 @@ export function HomeFileExplorer() {
   const documents = search.trim()
     ? allDocuments
     : tree
-    ? allDocuments.filter((doc) => doc.folder_id === tree)
-    : allDocuments.filter((doc) => !doc.folder_id);
+      ? allDocuments.filter((doc) => doc.folder_id === tree)
+      : allDocuments.filter((doc) => !doc.folder_id);
 
   const folders = search.trim()
     ? allFolders
     : tree
-    ? allFolders.filter((folder) => folder.parent_id === tree)
-    : allFolders.filter((folder) => !folder.parent_id);
+      ? allFolders.filter((folder) => folder.parent_id === tree)
+      : allFolders.filter((folder) => !folder.parent_id);
 
   // Create separate items for folders and documents
   const folderItems: ItemType[] = useMemo(
