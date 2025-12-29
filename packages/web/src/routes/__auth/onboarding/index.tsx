@@ -46,8 +46,8 @@ function RouteComponent() {
         await router.invalidate();
 
         navigate({
-          to: "/w/$organizationId",
-          params: { organizationId: id },
+          to: "/w/$organizationSlug",
+          params: { organizationSlug: slug },
         });
 
         toast.success("Workspace created successfully");

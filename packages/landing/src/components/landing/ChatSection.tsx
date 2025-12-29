@@ -19,8 +19,8 @@ const points = [
 
 export function ChatSection() {
   return (
-    <section className="pt-px z-0 relative -mb-40">
-      <div className="absolute inset-y-0 left-0 z-20 w-40 bg-linear-to-r from-white" />
+    <section className="pt-px z-0 relative md:-mb-40">
+      <div className="absolute inset-y-0 left-0 z-20 w-40 bg-linear-to-r from-white hidden md:block" />
 
       <div className="absolute -inset-x-4 -bottom-px z-20 hidden h-80 bg-linear-to-t from-white via-white md:block" />
       <Container className="relative flex flex-col items-center md:items-end py-4 md:flex-row md:py-0">

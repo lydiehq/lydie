@@ -17,16 +17,34 @@ import { DialogTrigger } from "react-aria-components";
 import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
 import { WordPressConnectionForm } from "@/components/integrations/forms/wordpress-connection-form";
+import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/$integrationType"
+  "/__auth/w/$organizationSlug/settings/integrations/$integrationType"
 )({
   component: RouteComponent,
   validateSearch: z.object({
     integrationType: z.string().optional(),
   }),
-  loader: async ({ params }) => {
-    const { integrationType } = params;
+  loader: async ({ context, params }) => {
+    const { zero } = context;
+    const { integrationType, organizationSlug } = params;
+
+    // Get organization by slug first to get the ID
+    const org = await zero.run(
+      queries.organizations.bySlug({ organizationSlug })
+    );
+
+    if (org) {
+      // Preload integration connections
+      zero.run(
+        queries.integrations.byIntegrationType({
+          integrationType,
+          organizationId: org.id,
+        })
+      );
+    }
+
     const integration = getIntegrationMetadata(integrationType);
     if (!integration) throw notFound();
     // TODO: default image
@@ -34,10 +52,11 @@ export const Route = createFileRoute(
     const integrationDetails = { ...integration, iconUrl };
     return { integrationDetails };
   },
+  ssr: false,
 });
 
 function RouteComponent() {
-  const { organizationId } = Route.useParams();
+  const { organization } = useOrganization();
   const { integrationDetails } = Route.useLoaderData();
   const { createClient } = useAuthenticatedApi();
   const zero = useZero();
@@ -45,7 +64,7 @@ function RouteComponent() {
   const [integrationConnections] = useQuery(
     queries.integrations.byIntegrationType({
       integrationType: integrationDetails.id,
-      organizationId: organizationId,
+      organizationId: organization?.id || "",
     })
   );
 
@@ -60,7 +79,7 @@ function RouteComponent() {
     try {
       setIsConnecting(true);
       const client = await createClient();
-      const redirectUrl = `/w/${organizationId}/settings/integrations/${integrationDetails.id}`;
+      const redirectUrl = `/w/${organization?.slug}/settings/integrations/${integrationDetails.id}`;
       const response = await client.internal.integrations[
         ":type"
       ].oauth.authorize
@@ -91,7 +110,7 @@ function RouteComponent() {
         zero.mutate(
           mutators.integrationConnection.disconnect({
             connectionId: integrationConnections[0].id,
-            organizationId: organizationId,
+            organizationId: organization?.id || "",
           })
         );
       },
@@ -101,11 +120,11 @@ function RouteComponent() {
   const pages = [
     {
       label: "Connections",
-      href: `/w/$organizationId/settings/integrations/${integrationDetails.id}`,
+      href: `/w/$organizationSlug/settings/integrations/${integrationDetails.id}`,
     },
     {
       label: "Activity",
-      href: `/w/$organizationId/settings/integrations/${integrationDetails.id}/activity`,
+      href: `/w/$organizationSlug/settings/integrations/${integrationDetails.id}/activity`,
     },
   ];
 
@@ -151,7 +170,7 @@ function RouteComponent() {
                     <div className="p-4">
                       {integrationDetails.id === "wordpress" && (
                         <WordPressConnectionForm
-                          organizationId={organizationId}
+                          organizationId={organization?.id || ""}
                           integrationType={integrationDetails.id}
                           onSuccess={handleConnectionSuccess}
                           onCancel={() => setIsConnectionDialogOpen(false)}

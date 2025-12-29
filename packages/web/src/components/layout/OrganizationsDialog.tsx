@@ -24,14 +24,14 @@ export function OrganizationsDialog({
 
   const navigate = useNavigate();
 
-  const goToOrganization = async (organizationId: string) => {
-    if (organization?.id === organizationId) {
+  const goToOrganization = async (organizationSlug: string) => {
+    if (organization?.slug === organizationSlug) {
       return;
     }
 
     navigate({
-      to: "/w/$organizationId",
-      params: { organizationId },
+      to: "/w/$organizationSlug",
+      params: { organizationSlug },
     });
     onOpenChange(false);
   };
@@ -53,14 +53,14 @@ export function OrganizationsDialog({
                 className="flex flex-col relative after:absolute after:content-[''] after:left-12 after:right-0 after:bottom-0 after:border-b after:border-black/5 last:after:border-b-0 hover:after:border-transparent"
               >
                 <RACButton
-                  onPress={() => goToOrganization(o.id)}
-                  isDisabled={organization?.id === o.id}
+                  onPress={() => goToOrganization(o.slug || o.id)}
+                  isDisabled={organization?.slug === o.slug}
                   className="flex items-center gap-x-2 relative p-1.5 hover:bg-black/5 rounded-md group"
                 >
                   <OrganizationAvatar organization={o} size="lg" />
                   <div className="font-medium text-black text-sm">
                     {o.name}
-                    {organization?.id === o.id && (
+                    {organization?.slug === o.slug && (
                       <span className="text-gray-500 ml-1">current</span>
                     )}
                   </div>

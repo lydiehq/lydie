@@ -9,7 +9,7 @@ test.describe("command menu", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
     await page.waitForLoadState("networkidle");
 
     // Wait for the sidebar to be visible (ensures page is fully loaded)
@@ -25,7 +25,7 @@ test.describe("command menu", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
     await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: "Quick Action" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
@@ -36,7 +36,7 @@ test.describe("command menu", () => {
     organization,
   }) => {
     // Navigate to a different page first
-    await page.goto(`/w/${organization.id}/assistant`);
+    await page.goto(`/w/${organization.slug}/assistant`);
     await page.waitForLoadState("networkidle");
 
     // Wait for the page to be fully loaded
@@ -51,7 +51,7 @@ test.describe("command menu", () => {
     await page.getByRole("option", { name: "Go home" }).click();
 
     // Verify navigation to home
-    await page.waitForURL(`/w/${organization.id}`, {
+    await page.waitForURL(`/w/${organization.slug}`, {
       waitUntil: "networkidle",
     });
   });
@@ -60,7 +60,7 @@ test.describe("command menu", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
     await page.waitForLoadState("networkidle");
 
     await page.getByRole("button", { name: "Quick Action" }).waitFor();
@@ -68,7 +68,7 @@ test.describe("command menu", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.getByRole("option", { name: "Go to assistant" }).click();
 
-    await page.waitForURL(`/w/${organization.id}/assistant`, {
+    await page.waitForURL(`/w/${organization.slug}/assistant`, {
       waitUntil: "networkidle",
     });
   });
@@ -103,8 +103,8 @@ test.describe("command menu", () => {
     });
 
     try {
-      await page.goto(`/w/${organization.id}`);
-      await page.waitForURL(`/w/${organization.id}`, {
+      await page.goto(`/w/${organization.slug}`);
+      await page.waitForURL(`/w/${organization.slug}`, {
         waitUntil: "networkidle",
       });
       await triggerCommandMenuShortcut(page);
@@ -144,7 +144,7 @@ test.describe("command menu", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
     await page.waitForLoadState("networkidle");
 
     // Wait for the sidebar to be visible (ensures page is fully loaded)

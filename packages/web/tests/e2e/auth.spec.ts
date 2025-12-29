@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm";
 testUnauthenticated(
   "should not allow unauthed workspace access",
   async ({ page }) => {
-    await page.goto("/w/test-org-id");
+    await page.goto("/w/test-org-slug");
     await page.waitForURL(/\/auth/);
   }
 );
@@ -21,7 +21,7 @@ test.describe("workspace auth", () => {
     organization,
   }) => {
     await page.goto("/auth");
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.waitForURL(`/w/${organization.slug}`);
   });
 
   test("authenticated users should be be redirected to workspace if accessing root", async ({
@@ -30,7 +30,7 @@ test.describe("workspace auth", () => {
     user,
   }) => {
     await page.goto("/");
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.waitForURL(`/w/${organization.slug}`);
     await expect(
       page.getByText(`Welcome back, ${user.name.split(" ")[0]}!`)
     ).toBeVisible();
@@ -40,8 +40,8 @@ test.describe("workspace auth", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
     await page.getByRole("button", { name: organization.name }).first().click();
 
     await page.getByRole("menuitem", { name: "Sign Out" }).click();
@@ -63,7 +63,7 @@ test.describe("session expiration", () => {
 
     await setSessionCookie(page, token, expiresAt);
 
-    await page.goto(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
     await page.waitForURL(/\/auth/);
 
     // Cleanup
@@ -83,14 +83,14 @@ test.describe("session expiration", () => {
     await setSessionCookie(page, token, expiresAt);
 
     // First, verify the session works
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
 
     // Revoke the session on the server
     await deleteSessionFromDB(sessionId);
 
     // Try to access the page again - should redirect to auth
-    await page.goto(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
     await page.waitForURL(/\/auth/);
   });
 });

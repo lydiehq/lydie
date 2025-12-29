@@ -57,7 +57,8 @@ body {
 }
 
 /* TipTap Placeholder extension styling */
-.ProseMirror p.is-empty::before {
+.ProseMirror p.is-empty::before,
+.ProseMirror h1.is-empty::before {
   color: #adb5bd;
   content: attr(data-placeholder);
   float: left;

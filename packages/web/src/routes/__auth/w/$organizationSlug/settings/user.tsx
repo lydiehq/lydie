@@ -17,7 +17,7 @@ import { Select, SelectItem } from "@/components/generic/Select";
 import { mutators } from "@lydie/zero/mutators";
 import { Card } from "@/components/layout/Card";
 
-export const Route = createFileRoute("/__auth/w/$organizationId/settings/user")(
+export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user")(
   {
     component: RouteComponent,
   }

@@ -3,6 +3,31 @@
  */
 
 /**
+ * Custom field types supported for document metadata
+ */
+export type CustomFieldType = 'string' | 'number';
+
+/**
+ * Definition of a single custom field
+ */
+export interface CustomFieldDefinition {
+  key: string;
+  label: string;
+  type: CustomFieldType;
+  required?: boolean;
+  defaultValue?: string | number;
+  description?: string;
+  placeholder?: string;
+}
+
+/**
+ * Schema defining a set of custom fields for an integration
+ */
+export interface CustomFieldSchema {
+  fields: CustomFieldDefinition[];
+}
+
+/**
  * The document structure that integrations will work with
  */
 export interface SyncDocument {
@@ -15,6 +40,7 @@ export interface SyncDocument {
   organizationId: string;
   folderId?: string | null; // Optional folder ID for maintaining folder structure
   folderPath?: string | null; // Optional folder path (e.g., "docs/guides") for folder creation
+  customFields?: Record<string, string | number>;
 }
 
 /**
@@ -181,6 +207,12 @@ export interface Integration {
    * Optional - integrations can override this method
    */
   onConnect?(): { links?: DefaultLink[] };
+
+  /**
+   * Define custom fields that documents should have for this integration
+   * Optional - if not defined, no custom fields are required
+   */
+  getCustomFieldSchema?(): CustomFieldSchema;
 }
 
 /**

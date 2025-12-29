@@ -128,11 +128,11 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div
-        className={`flex flex-col gap-y-4 px-2 pb-2 ${
+        className={`flex flex-col gap-y-4 pb-2 ${
           isCollapsed ? "hidden" : ""
         } grow min-h-0`}
       >
-        <div className="flex gap-x-1 max-w-[300px]">
+        <div className="flex gap-x-1 max-w-[300px] px-2">
           <Button
             intent="secondary"
             size="sm"
@@ -158,10 +158,10 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <Search size={14} className="text-gray-600" />
           </Button>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col px-2">
           <Link
-            to="/w/$organizationId"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
@@ -171,8 +171,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Link>
           <Link
-            to="/w/$organizationId/assistant"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug/assistant"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
@@ -182,8 +182,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Link>
           <Link
-            to="/w/$organizationId/settings/integrations"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug/settings/integrations"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
@@ -193,9 +193,9 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Link>
         </div>
-        <Separator />
-        <div className="flex flex-col gap-y-2 grow min-h-0">
-          <div className="flex items-center justify-between px-2 shrink-0">
+        <Separator className="mx-2" />
+        <div className="flex flex-col grow min-h-0">
+          <div className="flex items-center justify-between shrink-0 px-4">
             <Eyebrow>Documents</Eyebrow>
             <div className="flex gap-x-1">
               <TooltipTrigger delay={500}>
@@ -220,20 +220,22 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               </TooltipTrigger>
             </div>
           </div>
-          <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white pr-2 -mr-2">
+          <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
             <DocumentTree />
           </div>
         </div>
-        {isFreePlan && <UsageStats />}
-        {userIsAdmin && <ZeroConnectionStatus />}
+        <div className="px-2">
+          {isFreePlan && <UsageStats />}
+          {userIsAdmin && <ZeroConnectionStatus />}
+        </div>
         {/* <div className="flex flex-col">
           <Separator />
           <nav className="py-2">
             <ul className="flex flex-col gap-y-2">
               <li>
                 <Link
-                  to="/w/$organizationId/settings"
-                  from="/w/$organizationId"
+                  to="/w/$organizationSlug/settings"
+                  from="/w/$organizationSlug"
                   className="text-xs font-medium text-gray-700"
                 >
                   Send feedback

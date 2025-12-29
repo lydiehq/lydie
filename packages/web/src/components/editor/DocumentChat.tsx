@@ -133,7 +133,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
               label: "Upgrade to Pro →",
               onClick: () => {
                 router.navigate({
-                  to: "/w/$organizationId/settings/billing",
+                  to: "/w/$organizationSlug/settings/billing",
                   params: { organizationId: organization?.id || "" },
                 });
               },

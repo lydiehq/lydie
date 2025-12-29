@@ -10,16 +10,18 @@ import { useRef, useState } from "react";
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
 import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
-import { setActiveOrganizationId } from "@/lib/active-organization";
+import { setActiveOrganizationSlug } from "@/lib/active-organization";
 
-export const Route = createFileRoute("/__auth/w/$organizationId")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
   beforeLoad: async ({ context, params }) => {
     // Set as active organization when navigating to it (handles direct navigation via URLs)
-    setActiveOrganizationId(params.organizationId);
+    setActiveOrganizationSlug(params.organizationSlug);
 
     context.zero.run(
-      queries.organizations.byId({ organizationId: params.organizationId })
+      queries.organizations.bySlug({
+        organizationSlug: params.organizationSlug,
+      })
     );
   },
   ssr: false,

@@ -2,11 +2,25 @@ import { Heading } from "@/components/generic/Heading";
 import { Separator } from "@/components/generic/Separator";
 import { createFileRoute } from "@tanstack/react-router";
 import { IntegrationsList } from "@/components/integrations/IntegrationsList";
+import { queries } from "@lydie/zero/queries";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/integrations/"
+  "/__auth/w/$organizationSlug/settings/integrations/"
 )({
   component: RouteComponent,
+  loader: async ({ context, params }) => {
+    const { zero } = context;
+    const { organizationSlug } = params;
+    // Get organization by slug first to get the ID
+    const org = await zero.run(
+      queries.organizations.bySlug({ organizationSlug })
+    );
+    if (org) {
+      // Preload all integration connections for the organization
+      zero.run(queries.integrations.byOrganization({ organizationId: org.id }));
+    }
+  },
+  ssr: false,
 });
 
 function RouteComponent() {

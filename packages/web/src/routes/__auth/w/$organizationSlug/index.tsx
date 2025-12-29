@@ -3,7 +3,7 @@ import { HomeFileExplorer } from "@/components/home-file-explorer";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-export const Route = createFileRoute("/__auth/w/$organizationId/")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
   component: RouteComponent,
   validateSearch: z.object({
     tree: z.string().optional(),

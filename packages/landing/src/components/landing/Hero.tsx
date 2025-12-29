@@ -9,7 +9,7 @@ import { WaitlistForm } from "./WaitlistForm";
 export function Hero() {
   return (
     <section className="-mb-20 z-0 relative">
-      <div className="absolute inset-y-0 right-0 z-20 w-40 bg-linear-to-l from-white"></div>
+      <div className="absolute inset-y-0 right-0 z-20 w-40 md:block hidden bg-linear-to-l from-white"></div>
       <div className="absolute -inset-x-4 -bottom-px z-20 hidden h-80 bg-linear-to-t from-white via-white md:block"></div>
       <Container className="flex flex-col items-center md:items-end py-4 md:flex-row md:py-0 relative">
         <motion.div
@@ -33,9 +33,9 @@ export function Hero() {
           />
         </motion.div>
         <div className="relative flex flex-col gap-y-4 md:flex-row overflow-visible w-full">
-          <div className="flex flex-col mr-0 gap-4 mt-8 md:mt-44 relative self-start z-10 to-20% to-white pr-0 py-2 rounded-3xl w-full md:w-[36ch] shrink-0 md:mr-8">
+          <div className="flex flex-col mr-0 gap-4 mt-0 md:mt-44 relative self-start z-10 to-20% to-white pr-0 py-2 rounded-3xl w-full md:w-[36ch] shrink-0 md:mr-8">
             <motion.h1
-              className="text-4xl md:text-5xl font-heading font-medium tracking-tight text-gray-800"
+              className="text-5xl font-heading font-medium tracking-tight text-gray-800 md:text-start text-center"
               initial="hidden"
               animate="visible"
               variants={{
@@ -54,7 +54,7 @@ export function Hero() {
               <AnimatedWord>Lydie.</AnimatedWord>
             </motion.h1>
             <motion.span
-              className="text-[15px]/relaxed text-gray-600"
+              className="text-[15px]/relaxed text-gray-600 w-[220px] mx-auto md:w-full md:text-start md:mx-0 text-center md:text-balance"
               initial={{
                 opacity: 0,
                 x: -14,

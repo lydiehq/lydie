@@ -1,9 +1,9 @@
 const ACTIVE_ORG_KEY = "lydie:active-organization";
 
 /**
- * Get the currently active organization ID from localStorage
+ * Get the currently active organization slug from localStorage
  */
-export function getActiveOrganizationId(): string | null {
+export function getActiveOrganizationSlug(): string | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -16,24 +16,24 @@ export function getActiveOrganizationId(): string | null {
 }
 
 /**
- * Set the active organization ID in localStorage
+ * Set the active organization slug in localStorage
  */
-export function setActiveOrganizationId(organizationId: string): void {
+export function setActiveOrganizationSlug(organizationSlug: string): void {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    localStorage.setItem(ACTIVE_ORG_KEY, organizationId);
+    localStorage.setItem(ACTIVE_ORG_KEY, organizationSlug);
   } catch {
     // Silently fail - localStorage might be disabled
   }
 }
 
 /**
- * Clear the active organization ID from localStorage
+ * Clear the active organization slug from localStorage
  */
-export function clearActiveOrganizationId(): void {
+export function clearActiveOrganizationSlug(): void {
   if (typeof window === "undefined") {
     return;
   }

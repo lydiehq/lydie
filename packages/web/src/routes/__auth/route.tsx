@@ -1,11 +1,5 @@
-import { ErrorPage } from "@/components/layout/ErrorPage";
 import { ZeroInit } from "@/components/zero/ZeroInit";
-import {
-  CatchBoundary,
-  createFileRoute,
-  Outlet,
-  redirect,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/__auth")({
   component: RouteComponent,
@@ -23,10 +17,8 @@ export const Route = createFileRoute("/__auth")({
 function RouteComponent() {
   const { auth } = Route.useRouteContext();
   return (
-    <CatchBoundary getResetKey={() => "auth"} errorComponent={ErrorPage}>
-      <ZeroInit session={auth.session}>
-        <Outlet />
-      </ZeroInit>
-    </CatchBoundary>
+    <ZeroInit session={auth.session}>
+      <Outlet />
+    </ZeroInit>
   );
 }

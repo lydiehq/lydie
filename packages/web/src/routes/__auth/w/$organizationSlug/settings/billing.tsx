@@ -25,9 +25,16 @@ import { useAuth } from "@/context/auth.context";
 import { Card } from "@/components/layout/Card";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationId/settings/billing"
+  "/__auth/w/$organizationSlug/settings/billing"
 )({
   component: RouteComponent,
+  loader: async ({ context, params }) => {
+    const { zero } = context;
+    const { organizationId } = params;
+    // Preload billing data including LLM usage
+    zero.run(queries.organizations.billing({ organizationId }));
+  },
+  ssr: false,
 });
 
 function RouteComponent() {

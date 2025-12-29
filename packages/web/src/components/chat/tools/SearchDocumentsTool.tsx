@@ -100,8 +100,8 @@ export function SearchDocumentsTool({
                 className="text-gray-500 text-[13px] hover:underline hover:text-gray-900 truncate"
               >
                 <Link
-                  to="/w/$organizationid/$id"
-                  from="/w/$organizationId"
+                  to="/w/$organizationSlug/$id"
+                  from="/w/$organizationSlug"
                   params={{ id: result.documentId }}
                 >
                   {result.documentTitle}

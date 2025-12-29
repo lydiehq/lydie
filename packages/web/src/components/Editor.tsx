@@ -11,7 +11,8 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { EditorToolbar } from "./editor/EditorToolbar";
 import { PanelResizer } from "./panels/PanelResizer";
 import { BottomBar } from "./editor/BottomBar";
-import { useCollaborativeEditor } from "@/utils/collaborative-editor";
+import { useTitleEditor } from "@/utils/editor";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import {
   SelectedContentProvider,
   useSelectedContent,
@@ -21,11 +22,11 @@ import { BubbleMenu } from "./editor/BubbleMenu";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { Surface } from "./layout/Surface";
-import { Input } from "react-aria-components";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
+import { CustomFieldsEditor } from "./editor/CustomFieldsEditor";
 import { useAuth } from "@/context/auth.context";
-import { PresenceIndicators } from "./editor/PresenceIndicators";
+import { useCollaborativeEditor } from "@/utils/collaborative-editor";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -46,7 +47,7 @@ function EditorContainer({ doc }: Props) {
   const z = useZero();
   const { session } = useAuth();
   const [sidebarSize, setSidebarSize] = useState(25);
-  const [title, setTitle] = useState(doc.title || "Untitled document");
+  const [title, setTitle] = useState(doc.title || "");
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { setFocusedContent } = useSelectedContent();
   const openLinkDialogRef = useRef<(() => void) | null>(null);
@@ -57,32 +58,9 @@ function EditorContainer({ doc }: Props) {
     panel.isCollapsed() ? panel.expand() : panel.collapse();
   };
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value;
-    setTitle(newTitle);
-  };
-
-  const handleTitleBlur = () => {
-    z.mutate(
-      mutators.document.update({
-        documentId: doc.id,
-        title: title || "Untitled document",
-        indexStatus: "outdated",
-        organizationId: doc.organization_id,
-      })
-    );
-  };
-
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      // Blur the title input to trigger save
-      e.currentTarget.blur();
-      // Focus the content editor
-      if (contentEditor.editor) {
-        contentEditor.editor.commands.focus();
-      }
-    }
+  const handleTitleUpdate = (newTitle: string) => {
+    const finalTitle = newTitle.trim();
+    setTitle(finalTitle);
   };
 
   const handleContentUpdate = () => {
@@ -97,7 +75,8 @@ function EditorContainer({ doc }: Props) {
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
-        title: title || "Untitled document",
+        title: title || "",
+        jsonContent: contentEditor.editor.getJSON(),
         indexStatus: "outdated",
         organizationId: doc.organization_id,
       })
@@ -138,94 +117,45 @@ function EditorContainer({ doc }: Props) {
           name: session.user.name,
         }
       : undefined,
-    yjsServerUrl:
-      import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:1234",
+    yjsServerUrl: import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:1234",
   });
 
-  // Cleanup Yjs provider on unmount
+  const titleEditor = useTitleEditor({
+    initialTitle: title,
+    onUpdate: handleTitleUpdate,
+    onEnter: () => {
+      // Focus the content editor when Enter is pressed in title
+      if (contentEditor.editor) {
+        contentEditor.editor.commands.focus();
+      }
+    },
+  });
+
+  // Handle blur event for title editor
   useEffect(() => {
-    return () => {
-      if (contentEditor.provider) {
-        contentEditor.provider.destroy();
-      }
-      if (contentEditor.ydoc) {
-        contentEditor.ydoc.destroy();
-      }
+    if (!titleEditor.editor) return;
+
+    const handleBlur = () => {
+      const finalTitle = title.trim();
+      z.mutate(
+        mutators.document.update({
+          documentId: doc.id,
+          title: finalTitle,
+          indexStatus: "outdated",
+          organizationId: doc.organization_id,
+        })
+      );
     };
-  }, [contentEditor.provider, contentEditor.ydoc]);
 
-  // Extract a good title suggestion from the document content
-  const extractTitleSuggestion = () => {
-    if (!contentEditor.editor) return null;
+    const editorElement = titleEditor.editor.view.dom;
+    editorElement.addEventListener("blur", handleBlur);
 
-    const json = contentEditor.editor.getJSON();
-    if (!json.content) return null;
+    return () => {
+      editorElement.removeEventListener("blur", handleBlur);
+    };
+  }, [titleEditor.editor, title, z, doc.id, doc.organization_id]);
 
-    // First, try to find an h1 heading
-    for (const node of json.content) {
-      if (node.type === "heading" && node.attrs?.level === 1) {
-        const text = node.content
-          ?.map((n: any) => n.text || "")
-          .join("")
-          .trim();
-
-        // Only suggest if it's not too long (not a full sentence)
-        if (text && text.length > 0 && text.length <= 100) {
-          return text;
-        }
-      }
-    }
-
-    // If no h1, try to get initial text from first paragraph
-    for (const node of json.content) {
-      if (node.type === "paragraph" && node.content) {
-        const text = node.content
-          ?.map((n: any) => n.text || "")
-          .join("")
-          .trim();
-
-        // Only suggest if it's short enough (not a full sentence)
-        // Stop at first period, comma, or newline, or limit to ~50 chars
-        if (text) {
-          const truncated = text
-            .split(/[.,\n]/)[0]
-            .trim()
-            .substring(0, 50);
-
-          if (truncated.length > 0 && truncated.length < text.length) {
-            return truncated;
-          } else if (truncated.length > 0 && truncated.length <= 50) {
-            return truncated;
-          }
-        }
-      }
-    }
-
-    return null;
-  };
-
-  const handleTitleFocus = () => {
-    // Only suggest a title if current title is "Untitled document" or empty
-    const isUntitled = !title || title === "Untitled document";
-
-    if (isUntitled) {
-      const suggestion = extractTitleSuggestion();
-      if (suggestion) {
-        setTitle(suggestion);
-        // Select the text so user can easily replace it if they don't like it
-        setTimeout(() => {
-          const input = document.querySelector(
-            'input[type="text"]'
-          ) as HTMLInputElement;
-          if (input) {
-            input.select();
-          }
-        }, 0);
-      }
-    }
-  };
-
-  if (!contentEditor.editor) {
+  if (!contentEditor.editor || !titleEditor.editor) {
     return null;
   }
 
@@ -238,32 +168,6 @@ function EditorContainer({ doc }: Props) {
             defaultSize={75}
             className="flex flex-col grow relative"
           >
-            <div className="py-1.5 flex items-start gap-4 h-10 shrink-0 border-b border-black/8">
-              <div className="flex max-w-[40ch] items-center">
-                <Input
-                  type="text"
-                  value={title}
-                  name="document-title"
-                  aria-label="Document title"
-                  onChange={handleTitleChange}
-                  onFocus={handleTitleFocus}
-                  onBlur={handleTitleBlur}
-                  onKeyDown={handleTitleKeyDown}
-                  size={title.length || 1}
-                  placeholder="Untitled document"
-                  className="font-medium text-gray-950 border-none outline-none focus:ring-0 w-auto max-w-full truncate px-2 pt-0.5"
-                  style={{
-                    width: `${Math.max(
-                      Math.min(title.length || 20, 34),
-                      20
-                    )}ch`,
-                  }}
-                />
-              </div>
-              <div className="flex-1 flex items-center justify-end px-4">
-                <PresenceIndicators provider={contentEditor.provider} />
-              </div>
-            </div>
             <EditorToolbar
               editor={contentEditor.editor}
               saveDocument={handleManualSave}
@@ -275,6 +179,22 @@ function EditorContainer({ doc }: Props) {
               className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"
             >
               <div className="mx-auto w-full h-full max-w-[65ch]">
+                <div className="mb-6">
+                  <EditorContent
+                    editor={titleEditor.editor}
+                    aria-label="Document title"
+                  />
+                </div>
+                <div className="mb-6">
+                  <CustomFieldsEditor
+                    documentId={doc.id}
+                    organizationId={doc.organization_id}
+                    initialFields={
+                      (doc.custom_fields as Record<string, string | number>) ||
+                      {}
+                    }
+                  />
+                </div>
                 <LinkPopover
                   editor={contentEditor.editor}
                   onOpenLinkDialog={registerLinkDialogCallback}

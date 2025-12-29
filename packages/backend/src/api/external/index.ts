@@ -8,10 +8,7 @@ import {
   getDocumentByPath,
   getFoldersWithPaths,
 } from "../../utils/document-path";
-import {
-  transformDocumentLinks,
-  transformDocumentLinksSync,
-} from "../utils/link-transformer";
+import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
 import type { ContentNode } from "../utils/types";
 import { findRelatedDocuments } from "@lydie/core/embedding/index";
 
@@ -29,8 +26,6 @@ export const ExternalApi = new Hono()
     const slug = c.req.param("slug");
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
-    const transformLinks = c.req.query("transform_links") !== "false"; // Default: true
-    const useIds = c.req.query("use_ids") === "true"; // Default: false (use slugs)
 
     const document = await getDocumentWithPath(slug, organizationId, true);
 
@@ -40,27 +35,17 @@ export const ExternalApi = new Hono()
       });
     }
 
-    // Transform internal:// links to relative URLs
+    // Always transform internal:// links to internal-link marks with metadata
     let transformedContent = document.jsonContent;
-    if (transformLinks) {
-      try {
-        if (useIds) {
-          // Fast path: just convert internal://ID to /ID without DB lookups
-          transformedContent = transformDocumentLinksSync(
-            document.jsonContent as ContentNode
-          );
-        } else {
-          // Resolve slugs for SEO-friendly URLs
-          transformedContent = await transformDocumentLinks(
-            document.jsonContent as ContentNode,
-            { organizationId, useIds }
-          );
-        }
-      } catch (error) {
-        console.error("Error transforming document links:", error);
-        // Don't fail the request if link transformation fails
-        transformedContent = document.jsonContent;
-      }
+    try {
+      transformedContent = await transformDocumentLinksToInternalLinkMarks(
+        document.jsonContent as ContentNode,
+        organizationId
+      );
+    } catch (error) {
+      console.error("Error transforming document links:", error);
+      // Don't fail the request if link transformation fails
+      transformedContent = document.jsonContent;
     }
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
@@ -104,8 +89,6 @@ export const ExternalApi = new Hono()
     const fullPath = c.req.param("*"); // Get the full path after /by-path/
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
-    const transformLinks = c.req.query("transform_links") !== "false"; // Default: true
-    const useIds = c.req.query("use_ids") === "true"; // Default: false (use slugs)
 
     if (!fullPath) {
       throw new HTTPException(400, {
@@ -121,27 +104,17 @@ export const ExternalApi = new Hono()
       });
     }
 
-    // Transform internal:// links to relative URLs
+    // Always transform internal:// links to internal-link marks with metadata
     let transformedContent = document.jsonContent;
-    if (transformLinks) {
-      try {
-        if (useIds) {
-          // Fast path: just convert internal://ID to /ID without DB lookups
-          transformedContent = transformDocumentLinksSync(
-            document.jsonContent as ContentNode
-          );
-        } else {
-          // Resolve slugs for SEO-friendly URLs
-          transformedContent = await transformDocumentLinks(
-            document.jsonContent as ContentNode,
-            { organizationId, useIds }
-          );
-        }
-      } catch (error) {
-        console.error("Error transforming document links:", error);
-        // Don't fail the request if link transformation fails
-        transformedContent = document.jsonContent;
-      }
+    try {
+      transformedContent = await transformDocumentLinksToInternalLinkMarks(
+        document.jsonContent as ContentNode,
+        organizationId
+      );
+    } catch (error) {
+      console.error("Error transforming document links:", error);
+      // Don't fail the request if link transformation fails
+      transformedContent = document.jsonContent;
     }
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];

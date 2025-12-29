@@ -9,4 +9,5 @@ export type {
   MDXComponent,
 } from "./mdx-deserializer";
 
-
+export { parseFrontmatter } from "./frontmatter";
+export type { FrontmatterResult } from "./frontmatter";

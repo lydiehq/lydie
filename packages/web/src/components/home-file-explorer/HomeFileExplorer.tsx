@@ -36,6 +36,7 @@ export function HomeFileExplorer() {
   // todo: could probably be made non-strict
   const { tree } = useSearch({ strict: false });
   const organizationId = organization?.id || "";
+  const organizationSlug = organization?.slug || "";
   const { createDocument } = useDocumentActions();
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     // Initialize from localStorage, defaulting to "grid"
@@ -63,20 +64,24 @@ export function HomeFileExplorer() {
     onSearchChange,
     allDocuments,
     allFolders,
-  } = useDocumentSearch(organizationId, session, "/__auth/w/$organizationId/");
+  } = useDocumentSearch(
+    organizationId,
+    organizationSlug,
+    "/__auth/w/$organizationSlug/"
+  );
 
   // When searching, show all results. Otherwise filter by folder
   const documents = search.trim()
     ? allDocuments
     : tree
-    ? allDocuments.filter((doc) => doc.folder_id === tree)
-    : allDocuments.filter((doc) => !doc.folder_id);
+      ? allDocuments.filter((doc) => doc.folder_id === tree)
+      : allDocuments.filter((doc) => !doc.folder_id);
 
   const folders = search.trim()
     ? allFolders
     : tree
-    ? allFolders.filter((folder) => folder.parent_id === tree)
-    : allFolders.filter((folder) => !folder.parent_id);
+      ? allFolders.filter((folder) => folder.parent_id === tree)
+      : allFolders.filter((folder) => !folder.parent_id);
 
   // Create separate items for folders and documents
   const folderItems: ItemType[] = useMemo(

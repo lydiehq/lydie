@@ -29,6 +29,10 @@ import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
+function getDisplayName(name: string): string {
+  return name.trim() || "Untitled document";
+}
+
 export type DocumentTreeItemProps = {
   item: {
     id: string;
@@ -81,9 +85,9 @@ export function DocumentTreeItem({
   const handleAction = () => {
     if (isGroup)
       navigate({
-        to: "/w/$organizationId/settings/integrations/$integrationId",
+        to: "/w/$organizationSlug/settings/integrations/$integrationId",
         params: { integrationId: item.integrationType },
-        from: "/w/$organizationId",
+        from: "/w/$organizationSlug",
       });
 
     // For folders and integration links, trigger expansion by clicking the chevron button
@@ -97,9 +101,9 @@ export function DocumentTreeItem({
     }
     if (item.type === "document") {
       navigate({
-        to: "/w/$organizationId/$id",
+        to: "/w/$organizationSlug/$id",
         params: { id: item.id },
-        from: "/w/$organizationId",
+        from: "/w/$organizationSlug",
       });
     }
   };
@@ -219,7 +223,7 @@ export function DocumentTreeItem({
                     </div>
                   );
                 })()}
-              <span className="truncate">{item.name}</span>
+              <span className="truncate">{getDisplayName(item.name)}</span>
             </div>
 
             {/* Context menu */}
@@ -237,9 +241,9 @@ export function DocumentTreeItem({
                       onAction={() => {
                         if (item.integrationLinkId) {
                           navigate({
-                            to: "/w/$organizationId/settings/integrations/$integrationId",
+                            to: "/w/$organizationSlug/settings/integrations/$integrationId",
                             params: { integrationId: item.integrationType },
-                            from: "/w/$organizationId",
+                            from: "/w/$organizationSlug",
                           });
                         }
                       }}

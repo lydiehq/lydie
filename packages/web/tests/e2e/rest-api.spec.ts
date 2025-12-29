@@ -9,8 +9,8 @@ test.describe("API key REST API", () => {
     organization,
   }) => {
     // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.id}/settings`);
-    await page.waitForURL(`/w/${organization.id}/settings`);
+    await page.goto(`/w/${organization.slug}/settings`);
+    await page.waitForURL(`/w/${organization.slug}/settings`);
 
     // Create an API key through the UI
     await page
@@ -88,8 +88,8 @@ test.describe("API key REST API", () => {
     organization,
   }) => {
     // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
 
     // Create an API key directly in the database
     const { createHash } = await import("crypto");
@@ -149,8 +149,8 @@ test.describe("API key REST API", () => {
     organization,
   }) => {
     // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
 
     // Create a different organization and API key
     const { organization: otherOrg, cleanup } = await createTestUser({
@@ -216,8 +216,8 @@ test.describe("API key REST API", () => {
     organization,
   }) => {
     // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
 
     const pageURL = new URL(page.url());
     const baseURL = `${pageURL.protocol}//${pageURL.host}`;
@@ -238,8 +238,8 @@ test.describe("API key REST API", () => {
     organization,
   }) => {
     // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`, { timeout: 5000 });
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`, { timeout: 5000 });
 
     const pageURL = new URL(page.url());
     const baseURL = `${pageURL.protocol}//${pageURL.host}`;
@@ -265,8 +265,8 @@ test.describe("API key REST API", () => {
     organization,
   }) => {
     // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.id}`);
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
 
     // Create an API key directly in the database
     const { createHash } = await import("crypto");

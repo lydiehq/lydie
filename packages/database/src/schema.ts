@@ -100,7 +100,7 @@ export const organizationsTable = pgTable("organizations", {
     .notNull()
     .$default(() => createId()),
   name: text("name").notNull(),
-  slug: text("slug").unique(),
+  slug: text("slug").unique().notNull(),
   logo: text("logo"),
   metadata: text("metadata"),
   // Subscription info synced from Polar via webhooks
@@ -218,6 +218,8 @@ export const documentsTable = pgTable(
       }
     ),
     externalId: text("external_id"), // Path/ID in external system (e.g., "docs/guide.md" in GitHub)
+    customFields:
+      jsonb("custom_fields").$type<Record<string, string | number>>(),
     indexStatus: text("index_status").notNull().default("outdated"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),

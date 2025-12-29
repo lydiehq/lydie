@@ -45,6 +45,16 @@ export interface Document {
   toc?: TocItem[];
 }
 
+export interface LinkReference {
+  href: string;
+  id?: string;
+  slug?: string;
+  title?: string;
+  type?: "internal" | "external";
+}
+
+export type LinkResolver = (ref: LinkReference) => string;
+
 export interface DocumentListItem {
   id: string;
   title: string;
@@ -91,6 +101,10 @@ export interface Mark {
     rel?: string;
     target?: string;
     class?: string | null;
+    "document-id"?: string;
+    "document-slug"?: string;
+    "document-title"?: string;
+    [key: string]: any;
   };
 }
 
@@ -107,6 +121,7 @@ export interface NodeBuilder<T> {
   bold(content: T): T;
   italic(content: T): T;
   link(content: T, href?: string, rel?: string, target?: string): T;
+  internalLink?(content: T, documentId?: string, documentSlug?: string, documentTitle?: string): T;
 
   // Block elements
   doc(children: T[]): T;
@@ -163,6 +178,19 @@ export function renderWithBuilder<T>(
               mark.attrs?.rel,
               mark.attrs?.target
             );
+          case "internal-link":
+            // Internal links are handled by the builder's internalLink method
+            // If not implemented, fall back to link with document-id
+            if (builder.internalLink) {
+              return builder.internalLink(
+                wrapped,
+                mark.attrs?.["document-id"],
+                mark.attrs?.["document-slug"],
+                mark.attrs?.["document-title"]
+              );
+            }
+            // Fallback: treat as regular link if builder doesn't support internal-link
+            return wrapped;
           default:
             return wrapped;
         }
@@ -340,8 +368,6 @@ export class LydieClient {
     options?: {
       related?: boolean;
       toc?: boolean;
-      transformLinks?: boolean;
-      useIds?: boolean;
     }
   ): Promise<Document> {
     try {
@@ -352,15 +378,10 @@ export class LydieClient {
       if (options?.toc) {
         params.set("include_toc", "true");
       }
-      if (options?.transformLinks === false) {
-        params.set("transform_links", "false");
-      }
-      if (options?.useIds) {
-        params.set("use_ids", "true");
-      }
 
-      const url = `${this.getBaseUrl()}/documents/${slug}${params.toString() ? `?${params.toString()}` : ""
-        }`;
+      const url = `${this.getBaseUrl()}/documents/${slug}${
+        params.toString() ? `?${params.toString()}` : ""
+      }`;
 
       if (this.debug) {
         console.log(`[Lydie] Fetching document from url: ${url}`);
@@ -370,12 +391,6 @@ export class LydieClient {
         }
         if (options?.toc) {
           console.log(`[Lydie] Including table of contents`);
-        }
-        if (options?.transformLinks === false) {
-          console.log(`[Lydie] Link transformation disabled`);
-        }
-        if (options?.useIds) {
-          console.log(`[Lydie] Using document IDs in links`);
         }
       }
 
@@ -422,8 +437,6 @@ export class LydieClient {
     options?: {
       related?: boolean;
       toc?: boolean;
-      transformLinks?: boolean;
-      useIds?: boolean;
     }
   ): Promise<Document> {
     try {
@@ -434,25 +447,14 @@ export class LydieClient {
       if (options?.toc) {
         params.set("include_toc", "true");
       }
-      if (options?.transformLinks === false) {
-        params.set("transform_links", "false");
-      }
-      if (options?.useIds) {
-        params.set("use_ids", "true");
-      }
 
-      const url = `${this.getBaseUrl()}/documents/by-path/${path}${params.toString() ? `?${params.toString()}` : ""
-        }`;
+      const url = `${this.getBaseUrl()}/documents/by-path/${path}${
+        params.toString() ? `?${params.toString()}` : ""
+      }`;
 
       if (this.debug) {
         console.log(`[Lydie] Fetching document by path from url: ${url}`);
         console.log(`[Lydie] Using headers:`, this.getHeaders());
-        if (options?.transformLinks === false) {
-          console.log(`[Lydie] Link transformation disabled`);
-        }
-        if (options?.useIds) {
-          console.log(`[Lydie] Using document IDs in links`);
-        }
       }
 
       const response = await fetch(url, {

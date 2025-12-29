@@ -32,9 +32,9 @@ export function useDocumentActions() {
     console.log("createDocument", folderId);
 
     await navigate({
-      from: "/w/$organizationId",
-      to: "/w/$organizationId/$id",
-      params: { id },
+      from: "/w/$organizationSlug",
+      to: "/w/$organizationSlug/$id",
+      params: { id, organizationSlug: organization.slug || "" },
     });
   };
 

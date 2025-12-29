@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { listOrganizationsQuery } from "@/utils/auth";
-import { getActiveOrganizationId } from "@/lib/active-organization";
+import { getActiveOrganizationSlug } from "@/lib/active-organization";
 import { getIntegrationMetadata } from "@lydie/integrations/client";
 import { notFound } from "@tanstack/react-router";
 
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/integrations/$integrationId/enable")({
   component: RouteComponent,
   beforeLoad: async ({ params, context }) => {
     const { integrationId } = params;
-    
+
     // Verify integration exists
     const integration = getIntegrationMetadata(integrationId);
     if (!integration) {
@@ -28,13 +28,13 @@ export const Route = createFileRoute("/integrations/$integrationId/enable")({
 
     // User is authenticated, get organization and redirect to integration page
     const { queryClient } = context;
-    const activeOrganizationId = getActiveOrganizationId();
+    const activeOrganizationSlug = getActiveOrganizationSlug();
 
-    if (activeOrganizationId) {
+    if (activeOrganizationSlug) {
       throw redirect({
-        to: "/w/$organizationId/settings/integrations/$integrationType",
+        to: "/w/$organizationSlug/settings/integrations/$integrationType",
         params: {
-          organizationId: activeOrganizationId,
+          organizationSlug: activeOrganizationSlug,
           integrationType: integrationId,
         },
       });
@@ -45,13 +45,16 @@ export const Route = createFileRoute("/integrations/$integrationId/enable")({
     });
 
     if (organizations && organizations.length > 0) {
-      throw redirect({
-        to: "/w/$organizationId/settings/integrations/$integrationType",
-        params: {
-          organizationId: organizations[0].id,
-          integrationType: integrationId,
-        },
-      });
+      const firstOrg = organizations[0];
+      if (firstOrg.slug) {
+        throw redirect({
+          to: "/w/$organizationSlug/settings/integrations/$integrationType",
+          params: {
+            organizationSlug: firstOrg.slug,
+            integrationType: integrationId,
+          },
+        });
+      }
     }
 
     // No organizations found - redirect to onboarding
@@ -62,4 +65,3 @@ export const Route = createFileRoute("/integrations/$integrationId/enable")({
 function RouteComponent() {
   return null; // This component should never render as we always redirect
 }
-

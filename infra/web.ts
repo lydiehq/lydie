@@ -2,7 +2,28 @@
 import { secret } from "./secret";
 import { zero } from "./zero";
 
+
 const frontendRouter = new sst.aws.Router("Frontend", {
+  transform: {
+    cachePolicy: {
+      defaultTtl: 86400,
+      maxTtl: 31536000,
+      minTtl: 1,
+      parametersInCacheKeyAndForwardedToOrigin: {
+        cookiesConfig: {
+          cookieBehavior: "none",
+        },
+        headersConfig: {
+          headerBehavior: "none",
+        },
+        queryStringsConfig: {
+          queryStringBehavior: "none",
+        },
+        enableAcceptEncodingBrotli: true,
+        enableAcceptEncodingGzip: true,
+      },
+    }
+  },
   ...($dev
     ? {}
     : {

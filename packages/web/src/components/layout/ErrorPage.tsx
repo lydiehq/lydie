@@ -3,7 +3,7 @@ import { Button } from "@/components/generic/Button";
 import { Logo } from "@/components/layout/Logo";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { authClient } from "@/utils/auth";
-import { clearActiveOrganizationId } from "@/lib/active-organization";
+import { clearActiveOrganizationSlug } from "@/lib/active-organization";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ErrorPageProps {
@@ -42,7 +42,7 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
   const queryClient = useQueryClient();
 
   const signOut = async () => {
-    clearActiveOrganizationId();
+    clearActiveOrganizationSlug();
     await authClient.signOut();
     queryClient.removeQueries({
       queryKey: ["auth", "getSession"],

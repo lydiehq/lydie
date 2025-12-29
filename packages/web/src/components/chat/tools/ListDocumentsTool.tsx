@@ -114,8 +114,8 @@ export function ListDocumentsTool({
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <Link
-                          to="/w/$organizationId/$id"
-                          from="/w/$organizationId"
+                          to="/w/$organizationSlug/$id"
+                          from="/w/$organizationSlug"
                           params={{ id: doc.id }}
                           className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 text-sm"
                         >

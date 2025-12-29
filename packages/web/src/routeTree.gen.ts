@@ -16,22 +16,22 @@ import { Route as LandingBlogIndexRouteImport } from './routes/_landing/blog/ind
 import { Route as LandingAuthIndexRouteImport } from './routes/_landing/auth/index'
 import { Route as _authOnboardingIndexRouteImport } from './routes/__auth/onboarding/index'
 import { Route as IntegrationsIntegrationIdEnableRouteImport } from './routes/integrations/$integrationId/enable'
-import { Route as _authWOrganizationIdRouteRouteImport } from './routes/__auth/w/$organizationId/route'
-import { Route as _authWOrganizationIdIndexRouteImport } from './routes/__auth/w/$organizationId/index'
-import { Route as _authWOrganizationIdAssistantRouteImport } from './routes/__auth/w/$organizationId/assistant'
-import { Route as _authWOrganizationIdSettingsRouteRouteImport } from './routes/__auth/w/$organizationId/settings/route'
-import { Route as _authWOrganizationIdSettingsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/index'
-import { Route as _authWOrganizationIdIdIndexRouteImport } from './routes/__auth/w/$organizationId/$id/index'
-import { Route as _authWOrganizationIdSettingsUserRouteImport } from './routes/__auth/w/$organizationId/settings/user'
-import { Route as _authWOrganizationIdSettingsImportRouteImport } from './routes/__auth/w/$organizationId/settings/import'
-import { Route as _authWOrganizationIdSettingsComponentsRouteImport } from './routes/__auth/w/$organizationId/settings/components'
-import { Route as _authWOrganizationIdSettingsBillingRouteImport } from './routes/__auth/w/$organizationId/settings/billing'
-import { Route as _authWOrganizationIdSettingsAiRouteImport } from './routes/__auth/w/$organizationId/settings/ai'
-import { Route as _authWOrganizationIdSettingsAdminRouteImport } from './routes/__auth/w/$organizationId/settings/admin'
-import { Route as _authWOrganizationIdSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/index'
-import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationType/route'
-import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationType/index'
-import { Route as _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRouteImport } from './routes/__auth/w/$organizationId/settings/integrations/$integrationType/activity'
+import { Route as _authWOrganizationSlugRouteRouteImport } from './routes/__auth/w/$organizationSlug/route'
+import { Route as _authWOrganizationSlugIndexRouteImport } from './routes/__auth/w/$organizationSlug/index'
+import { Route as _authWOrganizationSlugAssistantRouteImport } from './routes/__auth/w/$organizationSlug/assistant'
+import { Route as _authWOrganizationSlugSettingsRouteRouteImport } from './routes/__auth/w/$organizationSlug/settings/route'
+import { Route as _authWOrganizationSlugSettingsIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/index'
+import { Route as _authWOrganizationSlugIdIndexRouteImport } from './routes/__auth/w/$organizationSlug/$id/index'
+import { Route as _authWOrganizationSlugSettingsUserRouteImport } from './routes/__auth/w/$organizationSlug/settings/user'
+import { Route as _authWOrganizationSlugSettingsImportRouteImport } from './routes/__auth/w/$organizationSlug/settings/import'
+import { Route as _authWOrganizationSlugSettingsComponentsRouteImport } from './routes/__auth/w/$organizationSlug/settings/components'
+import { Route as _authWOrganizationSlugSettingsBillingRouteImport } from './routes/__auth/w/$organizationSlug/settings/billing'
+import { Route as _authWOrganizationSlugSettingsAiRouteImport } from './routes/__auth/w/$organizationSlug/settings/ai'
+import { Route as _authWOrganizationSlugSettingsAdminRouteImport } from './routes/__auth/w/$organizationSlug/settings/admin'
+import { Route as _authWOrganizationSlugSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/index'
+import { Route as _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/route'
+import { Route as _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/index'
+import { Route as _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity'
 
 const LandingRouteRoute = LandingRouteRouteImport.update({
   id: '/_landing',
@@ -67,133 +67,133 @@ const IntegrationsIntegrationIdEnableRoute =
     path: '/integrations/$integrationId/enable',
     getParentRoute: () => rootRouteImport,
   } as any)
-const _authWOrganizationIdRouteRoute =
-  _authWOrganizationIdRouteRouteImport.update({
-    id: '/w/$organizationId',
-    path: '/w/$organizationId',
+const _authWOrganizationSlugRouteRoute =
+  _authWOrganizationSlugRouteRouteImport.update({
+    id: '/w/$organizationSlug',
+    path: '/w/$organizationSlug',
     getParentRoute: () => _authRouteRoute,
   } as any)
-const _authWOrganizationIdIndexRoute =
-  _authWOrganizationIdIndexRouteImport.update({
+const _authWOrganizationSlugIndexRoute =
+  _authWOrganizationSlugIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => _authWOrganizationIdRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugRouteRoute,
   } as any)
-const _authWOrganizationIdAssistantRoute =
-  _authWOrganizationIdAssistantRouteImport.update({
+const _authWOrganizationSlugAssistantRoute =
+  _authWOrganizationSlugAssistantRouteImport.update({
     id: '/assistant',
     path: '/assistant',
-    getParentRoute: () => _authWOrganizationIdRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsRouteRoute =
-  _authWOrganizationIdSettingsRouteRouteImport.update({
+const _authWOrganizationSlugSettingsRouteRoute =
+  _authWOrganizationSlugSettingsRouteRouteImport.update({
     id: '/settings',
     path: '/settings',
-    getParentRoute: () => _authWOrganizationIdRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsIndexRoute =
-  _authWOrganizationIdSettingsIndexRouteImport.update({
+const _authWOrganizationSlugSettingsIndexRoute =
+  _authWOrganizationSlugSettingsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdIdIndexRoute =
-  _authWOrganizationIdIdIndexRouteImport.update({
+const _authWOrganizationSlugIdIndexRoute =
+  _authWOrganizationSlugIdIndexRouteImport.update({
     id: '/$id/',
     path: '/$id/',
-    getParentRoute: () => _authWOrganizationIdRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsUserRoute =
-  _authWOrganizationIdSettingsUserRouteImport.update({
+const _authWOrganizationSlugSettingsUserRoute =
+  _authWOrganizationSlugSettingsUserRouteImport.update({
     id: '/user',
     path: '/user',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsImportRoute =
-  _authWOrganizationIdSettingsImportRouteImport.update({
+const _authWOrganizationSlugSettingsImportRoute =
+  _authWOrganizationSlugSettingsImportRouteImport.update({
     id: '/import',
     path: '/import',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsComponentsRoute =
-  _authWOrganizationIdSettingsComponentsRouteImport.update({
+const _authWOrganizationSlugSettingsComponentsRoute =
+  _authWOrganizationSlugSettingsComponentsRouteImport.update({
     id: '/components',
     path: '/components',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsBillingRoute =
-  _authWOrganizationIdSettingsBillingRouteImport.update({
+const _authWOrganizationSlugSettingsBillingRoute =
+  _authWOrganizationSlugSettingsBillingRouteImport.update({
     id: '/billing',
     path: '/billing',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsAiRoute =
-  _authWOrganizationIdSettingsAiRouteImport.update({
+const _authWOrganizationSlugSettingsAiRoute =
+  _authWOrganizationSlugSettingsAiRouteImport.update({
     id: '/ai',
     path: '/ai',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsAdminRoute =
-  _authWOrganizationIdSettingsAdminRouteImport.update({
+const _authWOrganizationSlugSettingsAdminRoute =
+  _authWOrganizationSlugSettingsAdminRouteImport.update({
     id: '/admin',
     path: '/admin',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsIntegrationsIndexRoute =
-  _authWOrganizationIdSettingsIntegrationsIndexRouteImport.update({
+const _authWOrganizationSlugSettingsIntegrationsIndexRoute =
+  _authWOrganizationSlugSettingsIntegrationsIndexRouteImport.update({
     id: '/integrations/',
     path: '/integrations/',
-    getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute =
-  _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteImport.update(
+const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute =
+  _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteImport.update(
     {
       id: '/integrations/$integrationType',
       path: '/integrations/$integrationType',
-      getParentRoute: () => _authWOrganizationIdSettingsRouteRoute,
+      getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
     } as any,
   )
-const _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute =
-  _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRouteImport.update(
+const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute =
+  _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRouteImport.update(
     {
       id: '/',
       path: '/',
       getParentRoute: () =>
-        _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute,
+        _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute,
     } as any,
   )
-const _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute =
-  _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRouteImport.update(
+const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute =
+  _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRouteImport.update(
     {
       id: '/activity',
       path: '/activity',
       getParentRoute: () =>
-        _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute,
+        _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute,
     } as any,
   )
 
 export interface FileRoutesByFullPath {
   '/': typeof _authIndexRoute
-  '/w/$organizationId': typeof _authWOrganizationIdRouteRouteWithChildren
+  '/w/$organizationSlug': typeof _authWOrganizationSlugRouteRouteWithChildren
   '/integrations/$integrationId/enable': typeof IntegrationsIntegrationIdEnableRoute
   '/onboarding': typeof _authOnboardingIndexRoute
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
-  '/w/$organizationId/settings': typeof _authWOrganizationIdSettingsRouteRouteWithChildren
-  '/w/$organizationId/assistant': typeof _authWOrganizationIdAssistantRoute
-  '/w/$organizationId/': typeof _authWOrganizationIdIndexRoute
-  '/w/$organizationId/settings/admin': typeof _authWOrganizationIdSettingsAdminRoute
-  '/w/$organizationId/settings/ai': typeof _authWOrganizationIdSettingsAiRoute
-  '/w/$organizationId/settings/billing': typeof _authWOrganizationIdSettingsBillingRoute
-  '/w/$organizationId/settings/components': typeof _authWOrganizationIdSettingsComponentsRoute
-  '/w/$organizationId/settings/import': typeof _authWOrganizationIdSettingsImportRoute
-  '/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
-  '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
-  '/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
-  '/w/$organizationId/settings/integrations/$integrationType': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
-  '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
-  '/w/$organizationId/settings/integrations/$integrationType/activity': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute
-  '/w/$organizationId/settings/integrations/$integrationType/': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute
+  '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
+  '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantRoute
+  '/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
+  '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
+  '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
+  '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
+  '/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
+  '/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
+  '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
+  '/w/$organizationSlug/$id': typeof _authWOrganizationSlugIdIndexRoute
+  '/w/$organizationSlug/settings/': typeof _authWOrganizationSlugSettingsIndexRoute
+  '/w/$organizationSlug/settings/integrations/$integrationType': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
+  '/w/$organizationSlug/settings/integrations': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
+  '/w/$organizationSlug/settings/integrations/$integrationType/activity': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
+  '/w/$organizationSlug/settings/integrations/$integrationType/': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof _authIndexRoute
@@ -201,70 +201,70 @@ export interface FileRoutesByTo {
   '/onboarding': typeof _authOnboardingIndexRoute
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
-  '/w/$organizationId/assistant': typeof _authWOrganizationIdAssistantRoute
-  '/w/$organizationId': typeof _authWOrganizationIdIndexRoute
-  '/w/$organizationId/settings/admin': typeof _authWOrganizationIdSettingsAdminRoute
-  '/w/$organizationId/settings/ai': typeof _authWOrganizationIdSettingsAiRoute
-  '/w/$organizationId/settings/billing': typeof _authWOrganizationIdSettingsBillingRoute
-  '/w/$organizationId/settings/components': typeof _authWOrganizationIdSettingsComponentsRoute
-  '/w/$organizationId/settings/import': typeof _authWOrganizationIdSettingsImportRoute
-  '/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
-  '/w/$organizationId/$id': typeof _authWOrganizationIdIdIndexRoute
-  '/w/$organizationId/settings': typeof _authWOrganizationIdSettingsIndexRoute
-  '/w/$organizationId/settings/integrations': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
-  '/w/$organizationId/settings/integrations/$integrationType/activity': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute
-  '/w/$organizationId/settings/integrations/$integrationType': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute
+  '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantRoute
+  '/w/$organizationSlug': typeof _authWOrganizationSlugIndexRoute
+  '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
+  '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
+  '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
+  '/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
+  '/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
+  '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
+  '/w/$organizationSlug/$id': typeof _authWOrganizationSlugIdIndexRoute
+  '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsIndexRoute
+  '/w/$organizationSlug/settings/integrations': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
+  '/w/$organizationSlug/settings/integrations/$integrationType/activity': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
+  '/w/$organizationSlug/settings/integrations/$integrationType': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/__auth': typeof _authRouteRouteWithChildren
   '/_landing': typeof LandingRouteRouteWithChildren
   '/__auth/': typeof _authIndexRoute
-  '/__auth/w/$organizationId': typeof _authWOrganizationIdRouteRouteWithChildren
+  '/__auth/w/$organizationSlug': typeof _authWOrganizationSlugRouteRouteWithChildren
   '/integrations/$integrationId/enable': typeof IntegrationsIntegrationIdEnableRoute
   '/__auth/onboarding/': typeof _authOnboardingIndexRoute
   '/_landing/auth/': typeof LandingAuthIndexRoute
   '/_landing/blog/': typeof LandingBlogIndexRoute
-  '/__auth/w/$organizationId/settings': typeof _authWOrganizationIdSettingsRouteRouteWithChildren
-  '/__auth/w/$organizationId/assistant': typeof _authWOrganizationIdAssistantRoute
-  '/__auth/w/$organizationId/': typeof _authWOrganizationIdIndexRoute
-  '/__auth/w/$organizationId/settings/admin': typeof _authWOrganizationIdSettingsAdminRoute
-  '/__auth/w/$organizationId/settings/ai': typeof _authWOrganizationIdSettingsAiRoute
-  '/__auth/w/$organizationId/settings/billing': typeof _authWOrganizationIdSettingsBillingRoute
-  '/__auth/w/$organizationId/settings/components': typeof _authWOrganizationIdSettingsComponentsRoute
-  '/__auth/w/$organizationId/settings/import': typeof _authWOrganizationIdSettingsImportRoute
-  '/__auth/w/$organizationId/settings/user': typeof _authWOrganizationIdSettingsUserRoute
-  '/__auth/w/$organizationId/$id/': typeof _authWOrganizationIdIdIndexRoute
-  '/__auth/w/$organizationId/settings/': typeof _authWOrganizationIdSettingsIndexRoute
-  '/__auth/w/$organizationId/settings/integrations/$integrationType': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
-  '/__auth/w/$organizationId/settings/integrations/': typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
-  '/__auth/w/$organizationId/settings/integrations/$integrationType/activity': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute
-  '/__auth/w/$organizationId/settings/integrations/$integrationType/': typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute
+  '/__auth/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
+  '/__auth/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantRoute
+  '/__auth/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
+  '/__auth/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
+  '/__auth/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
+  '/__auth/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
+  '/__auth/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
+  '/__auth/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
+  '/__auth/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
+  '/__auth/w/$organizationSlug/$id/': typeof _authWOrganizationSlugIdIndexRoute
+  '/__auth/w/$organizationSlug/settings/': typeof _authWOrganizationSlugSettingsIndexRoute
+  '/__auth/w/$organizationSlug/settings/integrations/$integrationType': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
+  '/__auth/w/$organizationSlug/settings/integrations/': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
+  '/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
+  '/__auth/w/$organizationSlug/settings/integrations/$integrationType/': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/w/$organizationId'
+    | '/w/$organizationSlug'
     | '/integrations/$integrationId/enable'
     | '/onboarding'
     | '/auth'
     | '/blog'
-    | '/w/$organizationId/settings'
-    | '/w/$organizationId/assistant'
-    | '/w/$organizationId/'
-    | '/w/$organizationId/settings/admin'
-    | '/w/$organizationId/settings/ai'
-    | '/w/$organizationId/settings/billing'
-    | '/w/$organizationId/settings/components'
-    | '/w/$organizationId/settings/import'
-    | '/w/$organizationId/settings/user'
-    | '/w/$organizationId/$id'
-    | '/w/$organizationId/settings/'
-    | '/w/$organizationId/settings/integrations/$integrationType'
-    | '/w/$organizationId/settings/integrations'
-    | '/w/$organizationId/settings/integrations/$integrationType/activity'
-    | '/w/$organizationId/settings/integrations/$integrationType/'
+    | '/w/$organizationSlug/settings'
+    | '/w/$organizationSlug/assistant'
+    | '/w/$organizationSlug/'
+    | '/w/$organizationSlug/settings/admin'
+    | '/w/$organizationSlug/settings/ai'
+    | '/w/$organizationSlug/settings/billing'
+    | '/w/$organizationSlug/settings/components'
+    | '/w/$organizationSlug/settings/import'
+    | '/w/$organizationSlug/settings/user'
+    | '/w/$organizationSlug/$id'
+    | '/w/$organizationSlug/settings/'
+    | '/w/$organizationSlug/settings/integrations/$integrationType'
+    | '/w/$organizationSlug/settings/integrations'
+    | '/w/$organizationSlug/settings/integrations/$integrationType/activity'
+    | '/w/$organizationSlug/settings/integrations/$integrationType/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -272,44 +272,44 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/auth'
     | '/blog'
-    | '/w/$organizationId/assistant'
-    | '/w/$organizationId'
-    | '/w/$organizationId/settings/admin'
-    | '/w/$organizationId/settings/ai'
-    | '/w/$organizationId/settings/billing'
-    | '/w/$organizationId/settings/components'
-    | '/w/$organizationId/settings/import'
-    | '/w/$organizationId/settings/user'
-    | '/w/$organizationId/$id'
-    | '/w/$organizationId/settings'
-    | '/w/$organizationId/settings/integrations'
-    | '/w/$organizationId/settings/integrations/$integrationType/activity'
-    | '/w/$organizationId/settings/integrations/$integrationType'
+    | '/w/$organizationSlug/assistant'
+    | '/w/$organizationSlug'
+    | '/w/$organizationSlug/settings/admin'
+    | '/w/$organizationSlug/settings/ai'
+    | '/w/$organizationSlug/settings/billing'
+    | '/w/$organizationSlug/settings/components'
+    | '/w/$organizationSlug/settings/import'
+    | '/w/$organizationSlug/settings/user'
+    | '/w/$organizationSlug/$id'
+    | '/w/$organizationSlug/settings'
+    | '/w/$organizationSlug/settings/integrations'
+    | '/w/$organizationSlug/settings/integrations/$integrationType/activity'
+    | '/w/$organizationSlug/settings/integrations/$integrationType'
   id:
     | '__root__'
     | '/__auth'
     | '/_landing'
     | '/__auth/'
-    | '/__auth/w/$organizationId'
+    | '/__auth/w/$organizationSlug'
     | '/integrations/$integrationId/enable'
     | '/__auth/onboarding/'
     | '/_landing/auth/'
     | '/_landing/blog/'
-    | '/__auth/w/$organizationId/settings'
-    | '/__auth/w/$organizationId/assistant'
-    | '/__auth/w/$organizationId/'
-    | '/__auth/w/$organizationId/settings/admin'
-    | '/__auth/w/$organizationId/settings/ai'
-    | '/__auth/w/$organizationId/settings/billing'
-    | '/__auth/w/$organizationId/settings/components'
-    | '/__auth/w/$organizationId/settings/import'
-    | '/__auth/w/$organizationId/settings/user'
-    | '/__auth/w/$organizationId/$id/'
-    | '/__auth/w/$organizationId/settings/'
-    | '/__auth/w/$organizationId/settings/integrations/$integrationType'
-    | '/__auth/w/$organizationId/settings/integrations/'
-    | '/__auth/w/$organizationId/settings/integrations/$integrationType/activity'
-    | '/__auth/w/$organizationId/settings/integrations/$integrationType/'
+    | '/__auth/w/$organizationSlug/settings'
+    | '/__auth/w/$organizationSlug/assistant'
+    | '/__auth/w/$organizationSlug/'
+    | '/__auth/w/$organizationSlug/settings/admin'
+    | '/__auth/w/$organizationSlug/settings/ai'
+    | '/__auth/w/$organizationSlug/settings/billing'
+    | '/__auth/w/$organizationSlug/settings/components'
+    | '/__auth/w/$organizationSlug/settings/import'
+    | '/__auth/w/$organizationSlug/settings/user'
+    | '/__auth/w/$organizationSlug/$id/'
+    | '/__auth/w/$organizationSlug/settings/'
+    | '/__auth/w/$organizationSlug/settings/integrations/$integrationType'
+    | '/__auth/w/$organizationSlug/settings/integrations/'
+    | '/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity'
+    | '/__auth/w/$organizationSlug/settings/integrations/$integrationType/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -369,207 +369,209 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntegrationsIntegrationIdEnableRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/__auth/w/$organizationId': {
-      id: '/__auth/w/$organizationId'
-      path: '/w/$organizationId'
-      fullPath: '/w/$organizationId'
-      preLoaderRoute: typeof _authWOrganizationIdRouteRouteImport
+    '/__auth/w/$organizationSlug': {
+      id: '/__auth/w/$organizationSlug'
+      path: '/w/$organizationSlug'
+      fullPath: '/w/$organizationSlug'
+      preLoaderRoute: typeof _authWOrganizationSlugRouteRouteImport
       parentRoute: typeof _authRouteRoute
     }
-    '/__auth/w/$organizationId/': {
-      id: '/__auth/w/$organizationId/'
+    '/__auth/w/$organizationSlug/': {
+      id: '/__auth/w/$organizationSlug/'
       path: '/'
-      fullPath: '/w/$organizationId/'
-      preLoaderRoute: typeof _authWOrganizationIdIndexRouteImport
-      parentRoute: typeof _authWOrganizationIdRouteRoute
+      fullPath: '/w/$organizationSlug/'
+      preLoaderRoute: typeof _authWOrganizationSlugIndexRouteImport
+      parentRoute: typeof _authWOrganizationSlugRouteRoute
     }
-    '/__auth/w/$organizationId/assistant': {
-      id: '/__auth/w/$organizationId/assistant'
+    '/__auth/w/$organizationSlug/assistant': {
+      id: '/__auth/w/$organizationSlug/assistant'
       path: '/assistant'
-      fullPath: '/w/$organizationId/assistant'
-      preLoaderRoute: typeof _authWOrganizationIdAssistantRouteImport
-      parentRoute: typeof _authWOrganizationIdRouteRoute
+      fullPath: '/w/$organizationSlug/assistant'
+      preLoaderRoute: typeof _authWOrganizationSlugAssistantRouteImport
+      parentRoute: typeof _authWOrganizationSlugRouteRoute
     }
-    '/__auth/w/$organizationId/settings': {
-      id: '/__auth/w/$organizationId/settings'
+    '/__auth/w/$organizationSlug/settings': {
+      id: '/__auth/w/$organizationSlug/settings'
       path: '/settings'
-      fullPath: '/w/$organizationId/settings'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsRouteRouteImport
-      parentRoute: typeof _authWOrganizationIdRouteRoute
+      fullPath: '/w/$organizationSlug/settings'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsRouteRouteImport
+      parentRoute: typeof _authWOrganizationSlugRouteRoute
     }
-    '/__auth/w/$organizationId/settings/': {
-      id: '/__auth/w/$organizationId/settings/'
+    '/__auth/w/$organizationSlug/settings/': {
+      id: '/__auth/w/$organizationSlug/settings/'
       path: '/'
-      fullPath: '/w/$organizationId/settings/'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIndexRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsIndexRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/$id/': {
-      id: '/__auth/w/$organizationId/$id/'
+    '/__auth/w/$organizationSlug/$id/': {
+      id: '/__auth/w/$organizationSlug/$id/'
       path: '/$id'
-      fullPath: '/w/$organizationId/$id'
-      preLoaderRoute: typeof _authWOrganizationIdIdIndexRouteImport
-      parentRoute: typeof _authWOrganizationIdRouteRoute
+      fullPath: '/w/$organizationSlug/$id'
+      preLoaderRoute: typeof _authWOrganizationSlugIdIndexRouteImport
+      parentRoute: typeof _authWOrganizationSlugRouteRoute
     }
-    '/__auth/w/$organizationId/settings/user': {
-      id: '/__auth/w/$organizationId/settings/user'
+    '/__auth/w/$organizationSlug/settings/user': {
+      id: '/__auth/w/$organizationSlug/settings/user'
       path: '/user'
-      fullPath: '/w/$organizationId/settings/user'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsUserRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/user'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsUserRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/import': {
-      id: '/__auth/w/$organizationId/settings/import'
+    '/__auth/w/$organizationSlug/settings/import': {
+      id: '/__auth/w/$organizationSlug/settings/import'
       path: '/import'
-      fullPath: '/w/$organizationId/settings/import'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsImportRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/import'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsImportRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/components': {
-      id: '/__auth/w/$organizationId/settings/components'
+    '/__auth/w/$organizationSlug/settings/components': {
+      id: '/__auth/w/$organizationSlug/settings/components'
       path: '/components'
-      fullPath: '/w/$organizationId/settings/components'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsComponentsRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/components'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsComponentsRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/billing': {
-      id: '/__auth/w/$organizationId/settings/billing'
+    '/__auth/w/$organizationSlug/settings/billing': {
+      id: '/__auth/w/$organizationSlug/settings/billing'
       path: '/billing'
-      fullPath: '/w/$organizationId/settings/billing'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsBillingRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/billing'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsBillingRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/ai': {
-      id: '/__auth/w/$organizationId/settings/ai'
+    '/__auth/w/$organizationSlug/settings/ai': {
+      id: '/__auth/w/$organizationSlug/settings/ai'
       path: '/ai'
-      fullPath: '/w/$organizationId/settings/ai'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsAiRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/ai'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsAiRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/admin': {
-      id: '/__auth/w/$organizationId/settings/admin'
+    '/__auth/w/$organizationSlug/settings/admin': {
+      id: '/__auth/w/$organizationSlug/settings/admin'
       path: '/admin'
-      fullPath: '/w/$organizationId/settings/admin'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsAdminRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/admin'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsAdminRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/integrations/': {
-      id: '/__auth/w/$organizationId/settings/integrations/'
+    '/__auth/w/$organizationSlug/settings/integrations/': {
+      id: '/__auth/w/$organizationSlug/settings/integrations/'
       path: '/integrations'
-      fullPath: '/w/$organizationId/settings/integrations'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/integrations'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsIntegrationsIndexRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/integrations/$integrationType': {
-      id: '/__auth/w/$organizationId/settings/integrations/$integrationType'
+    '/__auth/w/$organizationSlug/settings/integrations/$integrationType': {
+      id: '/__auth/w/$organizationSlug/settings/integrations/$integrationType'
       path: '/integrations/$integrationType'
-      fullPath: '/w/$organizationId/settings/integrations/$integrationType'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsRouteRoute
+      fullPath: '/w/$organizationSlug/settings/integrations/$integrationType'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationId/settings/integrations/$integrationType/': {
-      id: '/__auth/w/$organizationId/settings/integrations/$integrationType/'
+    '/__auth/w/$organizationSlug/settings/integrations/$integrationType/': {
+      id: '/__auth/w/$organizationSlug/settings/integrations/$integrationType/'
       path: '/'
-      fullPath: '/w/$organizationId/settings/integrations/$integrationType/'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute
+      fullPath: '/w/$organizationSlug/settings/integrations/$integrationType/'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute
     }
-    '/__auth/w/$organizationId/settings/integrations/$integrationType/activity': {
-      id: '/__auth/w/$organizationId/settings/integrations/$integrationType/activity'
+    '/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity': {
+      id: '/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity'
       path: '/activity'
-      fullPath: '/w/$organizationId/settings/integrations/$integrationType/activity'
-      preLoaderRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRouteImport
-      parentRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute
+      fullPath: '/w/$organizationSlug/settings/integrations/$integrationType/activity'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute
     }
   }
 }
 
-interface _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteChildren {
-  _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute
-  _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute
+interface _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteChildren {
+  _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
+  _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
 }
 
-const _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteChildren: _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteChildren =
+const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteChildren: _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteChildren =
   {
-    _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute:
-      _authWOrganizationIdSettingsIntegrationsIntegrationTypeActivityRoute,
-    _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute:
-      _authWOrganizationIdSettingsIntegrationsIntegrationTypeIndexRoute,
+    _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute:
+      _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute,
+    _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute:
+      _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute,
   }
 
-const _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren =
-  _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute._addFileChildren(
-    _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteChildren,
+const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren =
+  _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute._addFileChildren(
+    _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteChildren,
   )
 
-interface _authWOrganizationIdSettingsRouteRouteChildren {
-  _authWOrganizationIdSettingsAdminRoute: typeof _authWOrganizationIdSettingsAdminRoute
-  _authWOrganizationIdSettingsAiRoute: typeof _authWOrganizationIdSettingsAiRoute
-  _authWOrganizationIdSettingsBillingRoute: typeof _authWOrganizationIdSettingsBillingRoute
-  _authWOrganizationIdSettingsComponentsRoute: typeof _authWOrganizationIdSettingsComponentsRoute
-  _authWOrganizationIdSettingsImportRoute: typeof _authWOrganizationIdSettingsImportRoute
-  _authWOrganizationIdSettingsUserRoute: typeof _authWOrganizationIdSettingsUserRoute
-  _authWOrganizationIdSettingsIndexRoute: typeof _authWOrganizationIdSettingsIndexRoute
-  _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute: typeof _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
-  _authWOrganizationIdSettingsIntegrationsIndexRoute: typeof _authWOrganizationIdSettingsIntegrationsIndexRoute
+interface _authWOrganizationSlugSettingsRouteRouteChildren {
+  _authWOrganizationSlugSettingsAdminRoute: typeof _authWOrganizationSlugSettingsAdminRoute
+  _authWOrganizationSlugSettingsAiRoute: typeof _authWOrganizationSlugSettingsAiRoute
+  _authWOrganizationSlugSettingsBillingRoute: typeof _authWOrganizationSlugSettingsBillingRoute
+  _authWOrganizationSlugSettingsComponentsRoute: typeof _authWOrganizationSlugSettingsComponentsRoute
+  _authWOrganizationSlugSettingsImportRoute: typeof _authWOrganizationSlugSettingsImportRoute
+  _authWOrganizationSlugSettingsUserRoute: typeof _authWOrganizationSlugSettingsUserRoute
+  _authWOrganizationSlugSettingsIndexRoute: typeof _authWOrganizationSlugSettingsIndexRoute
+  _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
+  _authWOrganizationSlugSettingsIntegrationsIndexRoute: typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
 }
 
-const _authWOrganizationIdSettingsRouteRouteChildren: _authWOrganizationIdSettingsRouteRouteChildren =
+const _authWOrganizationSlugSettingsRouteRouteChildren: _authWOrganizationSlugSettingsRouteRouteChildren =
   {
-    _authWOrganizationIdSettingsAdminRoute:
-      _authWOrganizationIdSettingsAdminRoute,
-    _authWOrganizationIdSettingsAiRoute: _authWOrganizationIdSettingsAiRoute,
-    _authWOrganizationIdSettingsBillingRoute:
-      _authWOrganizationIdSettingsBillingRoute,
-    _authWOrganizationIdSettingsComponentsRoute:
-      _authWOrganizationIdSettingsComponentsRoute,
-    _authWOrganizationIdSettingsImportRoute:
-      _authWOrganizationIdSettingsImportRoute,
-    _authWOrganizationIdSettingsUserRoute:
-      _authWOrganizationIdSettingsUserRoute,
-    _authWOrganizationIdSettingsIndexRoute:
-      _authWOrganizationIdSettingsIndexRoute,
-    _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRoute:
-      _authWOrganizationIdSettingsIntegrationsIntegrationTypeRouteRouteWithChildren,
-    _authWOrganizationIdSettingsIntegrationsIndexRoute:
-      _authWOrganizationIdSettingsIntegrationsIndexRoute,
+    _authWOrganizationSlugSettingsAdminRoute:
+      _authWOrganizationSlugSettingsAdminRoute,
+    _authWOrganizationSlugSettingsAiRoute:
+      _authWOrganizationSlugSettingsAiRoute,
+    _authWOrganizationSlugSettingsBillingRoute:
+      _authWOrganizationSlugSettingsBillingRoute,
+    _authWOrganizationSlugSettingsComponentsRoute:
+      _authWOrganizationSlugSettingsComponentsRoute,
+    _authWOrganizationSlugSettingsImportRoute:
+      _authWOrganizationSlugSettingsImportRoute,
+    _authWOrganizationSlugSettingsUserRoute:
+      _authWOrganizationSlugSettingsUserRoute,
+    _authWOrganizationSlugSettingsIndexRoute:
+      _authWOrganizationSlugSettingsIndexRoute,
+    _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute:
+      _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren,
+    _authWOrganizationSlugSettingsIntegrationsIndexRoute:
+      _authWOrganizationSlugSettingsIntegrationsIndexRoute,
   }
 
-const _authWOrganizationIdSettingsRouteRouteWithChildren =
-  _authWOrganizationIdSettingsRouteRoute._addFileChildren(
-    _authWOrganizationIdSettingsRouteRouteChildren,
+const _authWOrganizationSlugSettingsRouteRouteWithChildren =
+  _authWOrganizationSlugSettingsRouteRoute._addFileChildren(
+    _authWOrganizationSlugSettingsRouteRouteChildren,
   )
 
-interface _authWOrganizationIdRouteRouteChildren {
-  _authWOrganizationIdSettingsRouteRoute: typeof _authWOrganizationIdSettingsRouteRouteWithChildren
-  _authWOrganizationIdAssistantRoute: typeof _authWOrganizationIdAssistantRoute
-  _authWOrganizationIdIndexRoute: typeof _authWOrganizationIdIndexRoute
-  _authWOrganizationIdIdIndexRoute: typeof _authWOrganizationIdIdIndexRoute
+interface _authWOrganizationSlugRouteRouteChildren {
+  _authWOrganizationSlugSettingsRouteRoute: typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
+  _authWOrganizationSlugAssistantRoute: typeof _authWOrganizationSlugAssistantRoute
+  _authWOrganizationSlugIndexRoute: typeof _authWOrganizationSlugIndexRoute
+  _authWOrganizationSlugIdIndexRoute: typeof _authWOrganizationSlugIdIndexRoute
 }
 
-const _authWOrganizationIdRouteRouteChildren: _authWOrganizationIdRouteRouteChildren =
+const _authWOrganizationSlugRouteRouteChildren: _authWOrganizationSlugRouteRouteChildren =
   {
-    _authWOrganizationIdSettingsRouteRoute:
-      _authWOrganizationIdSettingsRouteRouteWithChildren,
-    _authWOrganizationIdAssistantRoute: _authWOrganizationIdAssistantRoute,
-    _authWOrganizationIdIndexRoute: _authWOrganizationIdIndexRoute,
-    _authWOrganizationIdIdIndexRoute: _authWOrganizationIdIdIndexRoute,
+    _authWOrganizationSlugSettingsRouteRoute:
+      _authWOrganizationSlugSettingsRouteRouteWithChildren,
+    _authWOrganizationSlugAssistantRoute: _authWOrganizationSlugAssistantRoute,
+    _authWOrganizationSlugIndexRoute: _authWOrganizationSlugIndexRoute,
+    _authWOrganizationSlugIdIndexRoute: _authWOrganizationSlugIdIndexRoute,
   }
 
-const _authWOrganizationIdRouteRouteWithChildren =
-  _authWOrganizationIdRouteRoute._addFileChildren(
-    _authWOrganizationIdRouteRouteChildren,
+const _authWOrganizationSlugRouteRouteWithChildren =
+  _authWOrganizationSlugRouteRoute._addFileChildren(
+    _authWOrganizationSlugRouteRouteChildren,
   )
 
 interface _authRouteRouteChildren {
   _authIndexRoute: typeof _authIndexRoute
-  _authWOrganizationIdRouteRoute: typeof _authWOrganizationIdRouteRouteWithChildren
+  _authWOrganizationSlugRouteRoute: typeof _authWOrganizationSlugRouteRouteWithChildren
   _authOnboardingIndexRoute: typeof _authOnboardingIndexRoute
 }
 
 const _authRouteRouteChildren: _authRouteRouteChildren = {
   _authIndexRoute: _authIndexRoute,
-  _authWOrganizationIdRouteRoute: _authWOrganizationIdRouteRouteWithChildren,
+  _authWOrganizationSlugRouteRoute:
+    _authWOrganizationSlugRouteRouteWithChildren,
   _authOnboardingIndexRoute: _authOnboardingIndexRoute,
 }
 

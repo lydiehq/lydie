@@ -12,7 +12,7 @@ export interface Props {
 }
 
 const { title, description } = Astro.props;
-// Astro.response.headers.set("Cache-Control", "public, max-age=604800");
+Astro.response.headers.set("Cache-Control", "public, max-age=604800");
 
 const linkGroups = [
   {
@@ -26,6 +26,10 @@ const linkGroups = [
         href: "/blog",
         label: "Blog",
       },
+      {
+        href: "/about",
+        label: "About",
+      },
     ],
   },
   {
@@ -34,6 +38,10 @@ const linkGroups = [
       {
         href: "/pricing",
         label: "Pricing",
+      },
+      {
+        href: "/use-cases",
+        label: "Use Cases",
       },
       {
         href: "/roadmap",

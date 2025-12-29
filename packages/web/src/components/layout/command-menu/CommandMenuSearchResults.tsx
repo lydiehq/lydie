@@ -3,7 +3,7 @@ import { FileText, Folder, Plug } from "lucide-react";
 
 function getIntegrationIcon(integrationType: string | null | undefined) {
   if (!integrationType) return null;
-  
+
   switch (integrationType.toLowerCase()) {
     case "github":
     case "shopify":
@@ -53,7 +53,7 @@ export function SearchResults({
             value={`search-folder-${folder.id}-${folder.name}`}
             onSelect={() =>
               onNavigate({
-                to: "/w/$organizationId",
+                to: "/w/$organizationSlug",
                 params: {
                   organizationId,
                 },
@@ -92,7 +92,7 @@ export function SearchResults({
             }`}
             onSelect={() =>
               onNavigate({
-                to: "/w/$organizationId/$id",
+                to: "/w/$organizationSlug/$id",
                 params: {
                   organizationId,
                   id: doc.id,
@@ -107,9 +107,7 @@ export function SearchResults({
                 <IntegrationIcon className="size-3 text-blue-500" />
               )}
             </div>
-            <span className="truncate">
-              {doc.title || "Untitled Document"}
-            </span>
+            <span className="truncate">{doc.title || "Untitled Document"}</span>
           </Command.Item>
         );
       })}
