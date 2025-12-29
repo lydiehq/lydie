@@ -6,6 +6,7 @@ import type {
   DeleteOptions,
   SyncResult,
   ExternalResource,
+  CustomFieldSchema,
 } from "@lydie/core/integrations";
 import { createErrorResult } from "@lydie/core/integrations";
 import type {
@@ -371,6 +372,29 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
         error.message || "Failed to delete from Shopify"
       );
     }
+  },
+
+  getCustomFieldSchema(): CustomFieldSchema {
+    return {
+      fields: [
+        {
+          key: 'teaser',
+          label: 'Blog Post Teaser',
+          type: 'string',
+          required: false,
+          description: 'Short summary for blog listing pages',
+          placeholder: 'Enter a brief teaser...'
+        },
+        {
+          key: 'metaDescription',
+          label: 'SEO Meta Description',
+          type: 'string',
+          required: false,
+          description: 'Meta description for search engines',
+          placeholder: 'SEO description for search engines'
+        }
+      ]
+    };
   },
 
   async pull(options: PullOptions): Promise<SyncResult[]> {

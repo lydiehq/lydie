@@ -17,6 +17,7 @@ import { Resource } from "sst";
 import {
   serializeToMarkdown,
   deserializeFromMarkdown,
+  parseFrontmatter,
 } from "@lydie/core/serialization/markdown";
 import { deserializeFromMDX } from "@lydie/core/serialization/mdx";
 import { deserializeFromText } from "@lydie/core/serialization/text";
@@ -602,21 +603,36 @@ export const githubIntegration: GitHubIntegrationExtended = {
 
       for (const file of files) {
         try {
-          // Determine deserializer based on file extension
+          // Parse frontmatter first (for MD and MDX files)
           const extension =
             file.name.toLowerCase().match(/\.([^.]+)$/)?.[1] || "";
+          const isMarkdownFile = extension === "md" || extension === "mdx";
+
+          let frontmatter: Record<string, any> = {};
+          let contentWithoutFrontmatter = file.content;
+
+          if (isMarkdownFile) {
+            const frontmatterResult = parseFrontmatter(file.content);
+            frontmatter = frontmatterResult.frontmatter;
+            contentWithoutFrontmatter =
+              frontmatterResult.contentWithoutFrontmatter;
+          }
+
+          // Determine deserializer based on file extension
           let tipTapContent: any;
 
           switch (extension) {
             case "mdx":
-              tipTapContent = deserializeFromMDX(file.content);
+              tipTapContent = deserializeFromMDX(contentWithoutFrontmatter);
               break;
             case "txt":
-              tipTapContent = deserializeFromText(file.content);
+              tipTapContent = deserializeFromText(contentWithoutFrontmatter);
               break;
             case "md":
             default:
-              tipTapContent = deserializeFromMarkdown(file.content);
+              tipTapContent = deserializeFromMarkdown(
+                contentWithoutFrontmatter
+              );
           }
 
           // Extract folder path from file path
@@ -637,9 +653,23 @@ export const githubIntegration: GitHubIntegrationExtended = {
             .replace(/\//g, "-")
             .toLowerCase();
 
-          // Preserve the full
-          // This is crucial for GitHub integration to know what extension to use when pushing
-          const title = fileName;
+          // Title priority: frontmatter.title > filename
+          // Preserve the full filename for GitHub integration to know what extension to use when pushing
+          const title = frontmatter.title || fileName;
+
+          // Convert frontmatter to customFields format (only string and number values)
+          // Exclude title and slug as they're handled separately
+          const customFields: Record<string, string | number> = {};
+          for (const [key, value] of Object.entries(frontmatter)) {
+            if (key !== "title" && key !== "slug") {
+              if (typeof value === "string" || typeof value === "number") {
+                customFields[key] = value;
+              } else if (typeof value === "boolean") {
+                // Convert boolean to string
+                customFields[key] = String(value);
+              }
+            }
+          }
 
           results.push({
             success: true,
@@ -648,9 +678,11 @@ export const githubIntegration: GitHubIntegrationExtended = {
             message: `Pulled ${file.path}`,
             metadata: {
               title,
-              slug,
+              slug: frontmatter.slug || slug,
               content: tipTapContent,
               folderPath, // Include folder path for folder creation
+              customFields:
+                Object.keys(customFields).length > 0 ? customFields : undefined,
             },
           });
         } catch (error) {

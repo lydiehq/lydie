@@ -60,6 +60,7 @@ const documents = table("documents")
     folder_id: string().optional(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
+    custom_fields: json().optional(),
     published: boolean(),
     deleted_at: number().optional(),
     ...timestamps,

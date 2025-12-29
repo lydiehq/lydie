@@ -220,6 +220,9 @@ export async function pullFromIntegrationLink(
 
           if (existingDocument) {
             // Update existing document
+            const customFields = result.metadata.customFields as
+              | Record<string, string | number>
+              | undefined;
             await db
               .update(documentsTable)
               .set({
@@ -227,6 +230,7 @@ export async function pullFromIntegrationLink(
                 jsonContent: result.metadata.content,
                 folderId: folderId || null,
                 externalId: result.externalId ?? null,
+                customFields: customFields || null,
                 indexStatus: "pending", // Re-index when content changes
                 updatedAt: new Date(),
                 deletedAt: null, // Ensure document is not marked as deleted
@@ -242,6 +246,9 @@ export async function pullFromIntegrationLink(
           } else {
             // Insert new document
             const documentId = createId();
+            const customFields = result.metadata.customFields as
+              | Record<string, string | number>
+              | undefined;
             await db.insert(documentsTable).values({
               id: documentId,
               title: result.metadata.title,
@@ -252,6 +259,7 @@ export async function pullFromIntegrationLink(
               folderId: folderId || null, // Use created folder or null for root
               integrationLinkId: link.id,
               externalId: result.externalId ?? null,
+              customFields: customFields || null,
               indexStatus: "pending",
               published: true, // Documents from integrations are published by default
               createdAt: new Date(),

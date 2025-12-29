@@ -1,0 +1,185 @@
+import { db } from "@lydie/database";
+import {
+  integrationConnectionsTable,
+  integrationLinksTable,
+  documentsTable,
+} from "@lydie/database";
+import { eq } from "drizzle-orm";
+import type { Integration, SyncDocument } from "./types";
+import { validateCustomFields } from "./validation";
+
+export interface PushDocumentOptions {
+  documentId: string;
+  organizationId: string;
+  integration?: Integration; // Optional if caller already has it
+}
+
+export interface PushDocumentResult {
+  success: boolean;
+  externalId?: string;
+  message?: string;
+  error?: string;
+}
+
+/**
+ * Push a document to its integration platform
+ * This function encapsulates the business logic for:
+ * - Fetching the document and its integration link
+ * - Validating custom fields against integration schema
+ * - Calling integration.push()
+ * - Updating document status
+ */
+export async function pushDocumentToIntegration(
+  options: PushDocumentOptions
+): Promise<PushDocumentResult> {
+  const { documentId, organizationId, integration: providedIntegration } = options;
+
+  try {
+    console.log(`[Integration Push] Starting push for document ${documentId}`);
+
+    // Fetch document with its integration link and connection
+    const document = await db.query.documentsTable.findFirst({
+      where: { id: documentId },
+      with: {
+        integrationLink: {
+          with: {
+            connection: true,
+          },
+        },
+      },
+    });
+
+    if (!document || document.organizationId !== organizationId) {
+      return {
+        success: false,
+        error: "Document not found or access denied",
+      };
+    }
+
+    // Check if document is linked to an integration
+    if (!document.integrationLinkId || !document.integrationLink) {
+      return {
+        success: false,
+        error: "Document is not linked to an integration",
+      };
+    }
+
+    const link = document.integrationLink;
+    const connection = link.connection;
+
+    if (!connection) {
+      return {
+        success: false,
+        error: "Integration connection not found",
+      };
+    }
+
+    // Get integration instance
+    const integration = providedIntegration;
+    if (!integration) {
+      return {
+        success: false,
+        error: "Integration not available",
+      };
+    }
+
+    console.log(
+      `[Integration Push] Pushing to ${connection.integrationType}: ${document.title}`
+    );
+
+    // Validate custom fields against integration schema
+    const schema = integration.getCustomFieldSchema?.();
+    const validation = validateCustomFields(
+      document.customFields as Record<string, string | number> | undefined,
+      schema
+    );
+
+    if (!validation.valid) {
+      const errorMessage = `Custom field validation failed: ${validation.errors.join(', ')}`;
+      console.error(`[Integration Push] ${errorMessage}`);
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+
+    // Merge connection config with link config for the push
+    const mergedConfig = {
+      ...(connection.config as Record<string, any>),
+      ...(link.config as Record<string, any>),
+    };
+
+    // Create sync document
+    const syncDocument: SyncDocument = {
+      id: document.id,
+      title: document.title,
+      slug: document.slug,
+      content: document.jsonContent,
+      published: document.published,
+      updatedAt: document.updatedAt,
+      organizationId: document.organizationId,
+      folderId: document.folderId,
+      customFields: document.customFields as Record<string, string | number> | undefined,
+    };
+
+    // Call integration's push method
+    const result = await integration.push({
+      document: syncDocument,
+      connection: {
+        id: connection.id,
+        integrationType: connection.integrationType,
+        organizationId: connection.organizationId,
+        config: mergedConfig,
+        createdAt: connection.createdAt,
+        updatedAt: connection.updatedAt,
+      },
+    });
+
+    if (result.success) {
+      // Update document with external ID if provided
+      if (result.externalId) {
+        await db
+          .update(documentsTable)
+          .set({
+            externalId: result.externalId,
+            updatedAt: new Date(),
+          })
+          .where(eq(documentsTable.id, documentId));
+      }
+
+      // Ensure connection status is active on successful push
+      if (connection.status !== "active") {
+        await db
+          .update(integrationConnectionsTable)
+          .set({
+            status: "active",
+            statusMessage: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(integrationConnectionsTable.id, connection.id));
+      }
+
+      console.log(
+        `[Integration Push] Successfully pushed document ${documentId} to ${connection.integrationType}`
+      );
+    } else {
+      console.error(
+        `[Integration Push] Failed to push document ${documentId}: ${result.error}`
+      );
+    }
+
+    return result;
+  } catch (error) {
+    console.error("[Integration Push] Error during push:", error);
+    console.error(
+      "[Integration Push] Error stack:",
+      error instanceof Error ? error.stack : "No stack"
+    );
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+

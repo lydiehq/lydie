@@ -24,4 +24,6 @@ export function serializeToMarkdown(content: ContentNode): string {
   return renderWithBuilder(content, serializer);
 }
 
+export { parseFrontmatter } from "./frontmatter";
+export type { FrontmatterResult } from "./frontmatter";
 

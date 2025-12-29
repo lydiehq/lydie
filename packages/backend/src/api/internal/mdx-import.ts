@@ -13,6 +13,7 @@ import { slugify } from "@lydie/core/utils";
 import {
   deserializeFromMDX,
   extractMDXComponents,
+  parseFrontmatter,
   type MDXComponent,
 } from "@lydie/core/serialization/mdx";
 
@@ -34,52 +35,13 @@ interface MDXFrontmatter {
   [key: string]: any;
 }
 
-// extractMDXComponents is now imported from @lydie/core/serialization
-
-function parseFrontmatter(mdxContent: string): {
-  frontmatter: MDXFrontmatter;
-  contentWithoutFrontmatter: string;
-} {
-  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
-  const match = mdxContent.match(frontmatterRegex);
-
-  if (!match) {
-    return {
-      frontmatter: {},
-      contentWithoutFrontmatter: mdxContent,
-    };
-  }
-
-  const frontmatterYaml = match[1];
-  const contentWithoutFrontmatter = match[2];
-  const frontmatter: MDXFrontmatter = {};
-
-  // Simple YAML parsing for title and slug
-  const lines = frontmatterYaml.split("\n");
-  for (const line of lines) {
-    const colonIndex = line.indexOf(":");
-    if (colonIndex > 0) {
-      const key = line.substring(0, colonIndex).trim();
-      const value = line
-        .substring(colonIndex + 1)
-        .trim()
-        .replace(/^["']|["']$/g, "");
-      if (key === "title" || key === "slug") {
-        frontmatter[key] = value;
-      }
-    }
-  }
-
-  return { frontmatter, contentWithoutFrontmatter };
-}
-
 // mdxToTipTapJSON is now replaced by deserializeFromMDX from @lydie/core/serialization
 
 function parseMDXContent(
   mdxContent: string,
   filename: string | undefined,
   componentSchemas: Record<string, any> = {}
-): ParsedMDXContent {
+): ParsedMDXContent & { customFields?: Record<string, string | number> } {
   // Parse frontmatter first
   const { frontmatter, contentWithoutFrontmatter } =
     parseFrontmatter(mdxContent);
@@ -136,11 +98,26 @@ function parseMDXContent(
     componentSchemas,
   });
 
+  // Convert frontmatter to customFields format (only string and number values)
+  // Exclude title and slug as they're handled separately
+  const customFields: Record<string, string | number> = {};
+  for (const [key, value] of Object.entries(frontmatter)) {
+    if (key !== "title" && key !== "slug") {
+      if (typeof value === "string" || typeof value === "number") {
+        customFields[key] = value;
+      } else if (typeof value === "boolean") {
+        // Convert boolean to string
+        customFields[key] = String(value);
+      }
+    }
+  }
+
   const result = {
     title,
     slug,
     content: tipTapContent,
     components,
+    customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
   };
 
   return result;
@@ -305,6 +282,7 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         userId,
         organizationId,
         folderId: finalFolderId || null,
+        customFields: parsed.customFields || null,
         indexStatus: "outdated" as const,
         published: false,
       };

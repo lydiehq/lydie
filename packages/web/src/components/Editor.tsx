@@ -25,6 +25,7 @@ import { Surface } from "./layout/Surface";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
 import { useEffect } from "react";
+import { CustomFieldsEditor } from "./editor/CustomFieldsEditor";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -178,6 +179,16 @@ function EditorContainer({ doc }: Props) {
                   <EditorContent
                     editor={titleEditor.editor}
                     aria-label="Document title"
+                  />
+                </div>
+                <div className="mb-6">
+                  <CustomFieldsEditor
+                    documentId={doc.id}
+                    organizationId={doc.organization_id}
+                    initialFields={
+                      (doc.custom_fields as Record<string, string | number>) ||
+                      {}
+                    }
                   />
                 </div>
                 <LinkPopover

@@ -218,6 +218,7 @@ export const documentsTable = pgTable(
       }
     ),
     externalId: text("external_id"), // Path/ID in external system (e.g., "docs/guide.md" in GitHub)
+    customFields: jsonb("custom_fields").$type<Record<string, string | number>>(),
     indexStatus: text("index_status").notNull().default("outdated"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
