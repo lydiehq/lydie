@@ -30,6 +30,14 @@ import { mutators } from "@lydie/zero/mutators";
 
 export const Route = createFileRoute("/__auth/w/$organizationId/assistant")({
   component: AssistantPage,
+  loader: async ({ context, params }) => {
+    const { zero } = context;
+    const { organizationId } = params;
+    // Preload assistant conversations and documents for mentions
+    zero.run(queries.assistant.conversations({ organizationId }));
+    zero.run(queries.documents.byUpdated({ organizationId }));
+  },
+  ssr: false,
 });
 
 function AssistantPage() {

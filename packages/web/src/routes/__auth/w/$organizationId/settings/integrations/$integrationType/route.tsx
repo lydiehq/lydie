@@ -25,8 +25,18 @@ export const Route = createFileRoute(
   validateSearch: z.object({
     integrationType: z.string().optional(),
   }),
-  loader: async ({ params }) => {
-    const { integrationType } = params;
+  loader: async ({ context, params }) => {
+    const { zero } = context;
+    const { integrationType, organizationId } = params;
+    
+    // Preload integration connections
+    zero.run(
+      queries.integrations.byIntegrationType({
+        integrationType,
+        organizationId,
+      })
+    );
+
     const integration = getIntegrationMetadata(integrationType);
     if (!integration) throw notFound();
     // TODO: default image
@@ -34,6 +44,7 @@ export const Route = createFileRoute(
     const integrationDetails = { ...integration, iconUrl };
     return { integrationDetails };
   },
+  ssr: false,
 });
 
 function RouteComponent() {

@@ -3,7 +3,6 @@ import { loadSession } from "@/lib/auth/session";
 import {
   Outlet,
   createRootRouteWithContext,
-  redirect,
   useRouter,
   type NavigateOptions,
   type ToOptions,
@@ -23,6 +22,19 @@ declare module "react-aria-components" {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   ssr: false,
+  head: () => {
+    const zeroCacheURL = import.meta.env.VITE_ZERO_URL;
+    return {
+      links: zeroCacheURL
+        ? [
+            {
+              rel: "preconnect",
+              href: zeroCacheURL,
+            },
+          ]
+        : [],
+    };
+  },
   pendingComponent: LoadingScreen,
   errorComponent: ({ error, reset }) => (
     <ErrorPage error={error} reset={reset} />

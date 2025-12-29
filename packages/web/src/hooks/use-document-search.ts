@@ -3,13 +3,8 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@rocicorp/zero/react";
 import { useDebounceCallback } from "usehooks-ts";
 import { queries } from "@lydie/zero/queries";
-import type { Session } from "better-auth";
 
-export function useDocumentSearch(
-  organizationId: string,
-  session: Session,
-  routePath: string
-) {
+export function useDocumentSearch(organizationId: string, routePath: string) {
   const { q, focusSearch } = useSearch({
     from: routePath as any,
   });

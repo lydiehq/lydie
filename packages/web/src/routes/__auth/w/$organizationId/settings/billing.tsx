@@ -28,6 +28,13 @@ export const Route = createFileRoute(
   "/__auth/w/$organizationId/settings/billing"
 )({
   component: RouteComponent,
+  loader: async ({ context, params }) => {
+    const { zero } = context;
+    const { organizationId } = params;
+    // Preload billing data including LLM usage
+    zero.run(queries.organizations.billing({ organizationId }));
+  },
+  ssr: false,
 });
 
 function RouteComponent() {
