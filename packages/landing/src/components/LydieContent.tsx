@@ -9,12 +9,19 @@ interface LydieContentProps {
   content: ContentNode;
   customComponents?: Record<string, React.ComponentType<CustomBlockProps>>;
   linkPrefix?: string;
+  linkResolver?: (ref: {
+    href: string;
+    id?: string;
+    slug?: string;
+    type?: "internal" | "external";
+  }) => string;
 }
 
 export function LydieContent({
   content,
   customComponents = {},
   linkPrefix,
+  linkResolver,
 }: LydieContentProps) {
   return (
     <div>
@@ -22,6 +29,7 @@ export function LydieContent({
         content={content}
         components={customComponents}
         linkPrefix={linkPrefix}
+        linkResolver={linkResolver}
       />
     </div>
   );

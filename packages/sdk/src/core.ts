@@ -10,6 +10,8 @@ export type {
   TextNode,
   Mark,
   NodeBuilder,
+  LinkReference,
+  LinkResolver,
 } from "@lydie/core/content";
 
 export {

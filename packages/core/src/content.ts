@@ -43,7 +43,18 @@ export interface Document {
   fullPath: string;
   related?: RelatedDocument[];
   toc?: TocItem[];
+  linkMetadata?: Record<string, { id: string; slug: string; title: string }>;
 }
+
+export interface LinkReference {
+  href: string;
+  id?: string;
+  slug?: string;
+  title?: string;
+  type?: "internal" | "external";
+}
+
+export type LinkResolver = (ref: LinkReference) => string;
 
 export interface DocumentListItem {
   id: string;
@@ -342,7 +353,7 @@ export class LydieClient {
       toc?: boolean;
       transformLinks?: boolean;
       useIds?: boolean;
-      basePath?: string;
+      linkMetadata?: boolean;
     }
   ): Promise<Document> {
     try {
@@ -359,8 +370,8 @@ export class LydieClient {
       if (options?.useIds) {
         params.set("use_ids", "true");
       }
-      if (options?.basePath) {
-        params.set("base_path", options.basePath);
+      if (options?.linkMetadata) {
+        params.set("include_link_metadata", "true");
       }
 
       const url = `${this.getBaseUrl()}/documents/${slug}${
@@ -429,7 +440,7 @@ export class LydieClient {
       toc?: boolean;
       transformLinks?: boolean;
       useIds?: boolean;
-      basePath?: string;
+      linkMetadata?: boolean;
     }
   ): Promise<Document> {
     try {
@@ -446,8 +457,8 @@ export class LydieClient {
       if (options?.useIds) {
         params.set("use_ids", "true");
       }
-      if (options?.basePath) {
-        params.set("base_path", options.basePath);
+      if (options?.linkMetadata) {
+        params.set("include_link_metadata", "true");
       }
 
       const url = `${this.getBaseUrl()}/documents/by-path/${path}${
@@ -463,8 +474,8 @@ export class LydieClient {
         if (options?.useIds) {
           console.log(`[Lydie] Using document IDs in links`);
         }
-        if (options?.basePath) {
-          console.log(`[Lydie] Using base path for links: ${options.basePath}`);
+        if (options?.linkMetadata) {
+          console.log(`[Lydie] Including link metadata for frontend resolution`);
         }
       }
 

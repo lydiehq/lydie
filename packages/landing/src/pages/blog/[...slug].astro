@@ -27,8 +27,8 @@ let document: Document;
 try {
   document = await lydieClient.getDocument(slug!, {
     related: true,
-    transformLinks: true,
-    basePath: "/blog",
+    transformLinks: false, // Keep internal:// references, resolve in frontend
+    linkMetadata: true, // Get document metadata for link resolution
   });
 } catch (error) {
   console.error(`Failed to fetch document with slug "${slug}":`, error);
@@ -64,6 +64,16 @@ const blogPostProps = {
       <LydieContent
         content={document.jsonContent}
         customComponents={{}}
+        linkResolver={(ref) => {
+          // Resolve internal:// links to /blog/[slug]
+          if (ref.type === "internal" && ref.id) {
+            // Use the linkMetadata to get the slug for SEO-friendly URLs
+            const metadata = document.linkMetadata?.[ref.id];
+            const slug = metadata?.slug || ref.id;
+            return `/blog/${slug}`;
+          }
+          return ref.href;
+        }}
         client:load
       />
     </div>

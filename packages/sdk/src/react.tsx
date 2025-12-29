@@ -101,15 +101,28 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
     React.ComponentType<CustomBlockProps>
   >;
   private linkPrefix?: string;
+  private linkResolver?: (ref: {
+    href: string;
+    id?: string;
+    slug?: string;
+    type?: "internal" | "external";
+  }) => string;
 
   constructor(
     customComponents?: Record<string, React.ComponentType<CustomBlockProps>>,
     options?: {
       linkPrefix?: string;
+      linkResolver?: (ref: {
+        href: string;
+        id?: string;
+        slug?: string;
+        type?: "internal" | "external";
+      }) => string;
     }
   ) {
     this.customComponents = customComponents;
     this.linkPrefix = options?.linkPrefix;
+    this.linkResolver = options?.linkResolver;
   }
 
   text(content: string): React.ReactNode {
@@ -130,14 +143,25 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
     rel?: string,
     target?: string
   ): React.ReactNode {
-    // Apply link prefix if provided and href is a relative path
     let finalHref = href;
-    if (
+
+    // If linkResolver is provided, use it to resolve internal:// links
+    if (this.linkResolver && href?.startsWith("internal://")) {
+      const documentId = href.replace("internal://", "");
+      finalHref = this.linkResolver({
+        href,
+        id: documentId,
+        type: "internal",
+      });
+    }
+    // Otherwise, apply link prefix if provided and href is a relative path
+    else if (
       this.linkPrefix &&
       href &&
       !href.startsWith("http") &&
       !href.startsWith("mailto:") &&
-      !href.startsWith("tel:")
+      !href.startsWith("tel:") &&
+      !href.startsWith("internal://")
     ) {
       // Only prefix relative paths (not absolute URLs or protocols)
       finalHref = `${this.linkPrefix}${
@@ -232,6 +256,12 @@ export function renderContentToReact(
   customComponents?: Record<string, React.ComponentType<CustomBlockProps>>,
   options?: {
     linkPrefix?: string;
+    linkResolver?: (ref: {
+      href: string;
+      id?: string;
+      slug?: string;
+      type?: "internal" | "external";
+    }) => string;
   }
 ): React.ReactNode {
   const builder = new ReactBuilder(customComponents, options);
@@ -243,14 +273,23 @@ export interface LydieContentProps {
   content: ContentNode;
   components?: Record<string, React.ComponentType<CustomBlockProps>>;
   linkPrefix?: string;
+  linkResolver?: (ref: {
+    href: string;
+    id?: string;
+    slug?: string;
+    type?: "internal" | "external";
+  }) => string;
 }
 
 export function LydieContent({
   content,
   components,
   linkPrefix,
+  linkResolver,
 }: LydieContentProps) {
-  return <>{renderContentToReact(content, components, { linkPrefix })}</>;
+  return (
+    <>{renderContentToReact(content, components, { linkPrefix, linkResolver })}</>
+  );
 }
 
 // Re-export utility functions

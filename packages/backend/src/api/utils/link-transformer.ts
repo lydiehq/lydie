@@ -53,7 +53,7 @@ function transformInternalLink(
 /**
  * Extracts all internal:// links from document content
  */
-function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
+export function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
   const internalLinks = new Set<string>();
 
   function traverse(node: ContentNode | TextNode) {
@@ -85,7 +85,7 @@ function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
 /**
  * Fetches metadata for multiple document IDs
  */
-async function fetchDocumentMetadata(
+export async function fetchDocumentMetadata(
   documentIds: string[],
   organizationId: string
 ): Promise<Map<string, LinkMetadata>> {
