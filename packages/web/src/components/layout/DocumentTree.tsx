@@ -9,6 +9,9 @@ import { useAtom } from "jotai";
 import { useMemo, useEffect, useState } from "react";
 import type { Key } from "react-aria-components";
 import { atom } from "jotai";
+import { useParams } from "@tanstack/react-router";
+import type { QueryResultType } from "@rocicorp/zero";
+
 import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 
 type TreeItem = {
@@ -45,8 +48,37 @@ function saveToStorage(keys: string[]): void {
 
 const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
+type QueryResult = NonNullable<
+  QueryResultType<typeof queries.organizations.documentsAndFolders>
+>;
+
+// Finds all parent folder IDs for a given document by traversing up the folder hierarchy.
+function findParentFolderIds(
+  documentId: string,
+  documents: QueryResult["documents"],
+  folders: QueryResult["folders"]
+): string[] {
+  const document = documents.find((doc) => doc.id === documentId);
+  if (!document || !document.folder_id) {
+    return [];
+  }
+
+  const parentIds: string[] = [];
+  let currentFolderId: string | null = document.folder_id;
+
+  while (currentFolderId) {
+    parentIds.push(currentFolderId);
+    const folder = folders.find((f) => f.id === currentFolderId);
+    currentFolderId = folder?.parent_id ?? null;
+  }
+
+  // Return in order from root to immediate parent
+  return parentIds.reverse();
+}
+
 export function DocumentTree() {
   const { organization } = useOrganization();
+  const { id: currentDocumentId } = useParams({ strict: false });
 
   // Get user settings to determine if we should persist to local storage
   const [userSettings] = useQuery(queries.settings.user({}));
@@ -118,6 +150,36 @@ export function DocumentTree() {
   const documents = orgData?.documents || [];
   const folders = orgData?.folders || [];
 
+  // Expand all parent folders when a document is opened
+  useEffect(() => {
+    if (
+      currentDocumentId &&
+      initialized &&
+      documents.length > 0 &&
+      folders.length > 0
+    ) {
+      const parentFolderIds = findParentFolderIds(
+        currentDocumentId,
+        documents,
+        folders
+      );
+
+      if (parentFolderIds.length > 0) {
+        // Merge with existing expanded keys, avoiding duplicates
+        setExpandedKeysArray((prev) => {
+          const newKeys = new Set([...prev, ...parentFolderIds]);
+          return Array.from(newKeys);
+        });
+      }
+    }
+  }, [
+    currentDocumentId,
+    initialized,
+    documents,
+    folders,
+    setExpandedKeysArray,
+  ]);
+
   // Build tree items for regular folders/documents (excluding extension items)
   const buildTreeItems = (folderId: string | null): TreeItem[] => {
     // Only include documents that don't belong to an extension link
@@ -186,10 +248,10 @@ export function DocumentTree() {
   const linkGroups = useMemo(() => {
     // Get all active connections grouped by integration type
     const connectionGroups = new Map<string, typeof connections>();
-
+    
     connections?.forEach((connection) => {
       if (connection.status !== "active") return;
-
+      
       const type = connection.integration_type;
       if (!type) return;
 
