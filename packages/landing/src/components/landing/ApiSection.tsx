@@ -99,7 +99,7 @@ const doc = await client.getDocument("getting-started");`}</code>
             </span>
             <div className="flex items-center gap-x-3">
               <Button
-                href="https://cloud.lydie.co/auth"
+                href="https://app.lydie.co/auth"
                 size="lg"
                 className="self-start"
               >

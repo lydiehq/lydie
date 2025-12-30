@@ -58,7 +58,7 @@ new sst.aws.StaticSite("Web", {
   },
   router: {
     instance: frontendRouter,
-    ...($dev ? {} : { domain: "cloud.lydie.co" }),
+    ...($dev ? {} : { domain: "app.lydie.co" }),
   },
 });
 

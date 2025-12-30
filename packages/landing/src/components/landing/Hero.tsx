@@ -92,7 +92,7 @@ export function Hero() {
                 }}
               >
                 <Button
-                  href="https://cloud.lydie.co/auth"
+                  href="https://app.lydie.co/auth"
                   size="lg"
                   className="self-start w-full md:w-auto justify-center md:justify-start"
                 >

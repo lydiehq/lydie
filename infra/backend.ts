@@ -46,7 +46,7 @@ export const backend = new sst.aws.Service("Backend", {
     dockerfile: "./packages/backend/Dockerfile",
   },
   environment: {
-    FRONTEND_URL: $dev ? "http://localhost:3000" : "https://cloud.lydie.co",
+    FRONTEND_URL: $dev ? "http://localhost:3000" : "https://app.lydie.co",
     NODE_ENV: $dev ? "development" : "production",
   },
   link: [...commonSecrets, embeddingQueue, email],

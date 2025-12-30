@@ -11,7 +11,7 @@ export const app = new Hono()
   .use(
     cors({
       origin: [
-        "https://cloud.lydie.co",
+        "https://app.lydie.co",
         "https://lydie.co",
         "http://localhost:3000",
       ],

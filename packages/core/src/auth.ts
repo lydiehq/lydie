@@ -60,7 +60,7 @@ export const authClient = betterAuth({
   },
   trustedOrigins: [
     ...(Resource.App.stage === "production"
-      ? ["https://lydie.co", "https://api.lydie.co", "https://cloud.lydie.co"]
+      ? ["https://lydie.co", "https://api.lydie.co", "https://app.lydie.co"]
       : ["http://localhost:3001", "http://localhost:3000"]),
   ],
   advanced: {
