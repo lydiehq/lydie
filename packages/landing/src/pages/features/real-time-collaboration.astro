@@ -1,0 +1,100 @@
+---
+import { Container } from "../../components/Container";
+import { Eyebrow } from "../../components/landing/Eyebrow";
+import FAQ, {
+  getFAQStructuredData,
+  type FAQItem,
+} from "../../components/landing/FAQ.astro";
+import Layout from "../../layouts/Layout.astro";
+
+const faqs: FAQItem[] = [
+  {
+    question: "Can multiple people edit a document at the same time?",
+    answer:
+      "Yes. Lydie allows multiple people to edit the same document simultaneously. Everyone sees changes in real time, making it easy to collaborate without overwriting each other's work.",
+  },
+  {
+    question: "Is Lydie similar to Google Docs?",
+    answer:
+      "In many ways, yes. Lydie offers real-time document collaboration and shared editing, much like Google Docs. Where it differs is its focus on connected workflows, allowing teams to edit content that lives across tools like GitHub, WordPress, and Shopify.",
+  },
+  {
+    question: "What is real-time collaboration?",
+    answer:
+      "Real-time collaboration means that changes to a document appear instantly for everyone working on it. Instead of sending files back and forth, teams can write, edit, and review content together in a single shared document.",
+  },
+  {
+    question: "Who is collaborative writing for?",
+    answer:
+      "Collaborative writing is useful for teams, startups, and individuals who work together on content. This includes documentation, blog posts, product content, and shared notes — especially for remote or distributed teams.",
+  },
+];
+
+const faqStructuredData = getFAQStructuredData(faqs);
+---
+
+<Layout
+  title="Real-time collaboration - Lydie"
+  description="Collaborate with others in real-time with Lydie."
+>
+  <script
+    type="application/ld+json"
+    is:inline
+    set:html={JSON.stringify(faqStructuredData)}
+  />
+  <div class="flex flex-col gap-y-10 py-8 md:py-12">
+    <Container className="flex flex-col gap-y-4">
+      <Eyebrow>Features</Eyebrow>
+      <h1
+        class="text-4xl md:text-5xl font-heading font-medium tracking-tight text-gray-800"
+      >
+        Real-time collaboration
+      </h1>
+
+      <p class="text-[16px]/relaxed text-gray-600 max-w-2xl mt-3">
+        Work on the same document at the same time — without version conflicts
+        or duplicated files. Lydie makes it easy to edit documents together, see
+        changes instantly, and collaborate naturally, whether you’re writing
+        notes, documentation, or content for the web.
+      </p>
+      <hr />
+      <h2 class="text-lg font-medium text-gray-900">
+        Edit documents together, in real time
+      </h2>
+
+      <p class="text-[15px]/relaxed text-gray-600 max-w-2xl">
+        At its core, Lydie is a collaborative document editor — similar to
+        Google Docs. It allows multiple people to work on the same document at
+        the same time, making it easy to write, review, and improve content
+        together. Changes appear instantly, so everyone stays aligned without
+        worrying about outdated versions or duplicate files.
+      </p>
+
+      <h3 class="text-base font-medium text-gray-900 mt-6">
+        Write together without version conflicts
+      </h3>
+
+      <p class="text-[15px]/relaxed text-gray-600 max-w-2xl">
+        Real-time collaboration in Lydie is designed to feel simple and
+        predictable. You can see edits as they happen, understand who is working
+        where, and focus on the content instead of managing files. Whether
+        you're drafting documentation, writing blog posts, or maintaining shared
+        notes, Lydie makes collaborative writing online feel effortless.
+      </p>
+
+      <h3 class="text-base font-medium text-gray-900 mt-6">
+        A shared editor that works where your content lives
+      </h3>
+
+      <p class="text-[15px]/relaxed text-gray-600 max-w-2xl">
+        Lydie goes beyond traditional document collaboration. With integrations
+        for platforms like GitHub, WordPress, and Shopify, teams can
+        collaboratively edit content directly on the web. This makes Lydie a
+        Google Docs–like editor built for modern workflows, where writing and
+        publishing are closely connected.
+      </p>
+    </Container>
+
+    <FAQ title="Frequently asked questions" items={faqs} />
+  </div>
+</Layout>

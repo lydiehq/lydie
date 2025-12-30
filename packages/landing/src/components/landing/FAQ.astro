@@ -1,0 +1,55 @@
+---
+import { Container } from "../Container";
+
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export function getFAQStructuredData(items: FAQItem[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+interface Props {
+  title?: string;
+  items: FAQItem[];
+  className?: string;
+}
+
+const {
+  title = "Frequently asked questions",
+  items,
+  className = "",
+} = Astro.props;
+---
+
+<Container className={`flex flex-col gap-y-4 ${className}`}>
+  <div
+    class="flex flex-col gap-y-6 p-8 rounded-2xl border border-gray-200 bg-linear-to-br from-gray-50 to-white"
+  >
+    <h2 class="text-lg font-medium text-gray-900">{title}</h2>
+
+    <div class="flex flex-col gap-y-6">
+      {items.map((item) => (
+        <div class="flex flex-col gap-y-2">
+          <h3 class="text-base font-medium text-gray-900">{item.question}</h3>
+          <p class="text-[15px]/relaxed text-gray-600 max-w-2xl">
+            {item.answer}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</Container>
+

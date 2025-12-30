@@ -11,12 +11,12 @@ import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
 import { useCallback, useMemo, useEffect, useState } from "react";
 import { TableKit } from "@tiptap/extension-table";
 import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
+import { HocuspocusProvider } from "@hocuspocus/provider";
 
 export type CollaborativeEditorHookResult = {
   editor: Editor | null;
   setContent: (content: string) => void;
-  provider: WebsocketProvider | null;
+  provider: HocuspocusProvider | null;
   ydoc: Y.Doc | null;
 };
 
@@ -51,7 +51,7 @@ export function useCollaborativeEditor({
   onTextSelect,
   onAddLink,
   currentUser,
-  yjsServerUrl = "ws://localhost:1234",
+  yjsServerUrl = "ws://localhost:3001/yjs",
 }: {
   initialContent: any;
   documentId: string;
@@ -63,47 +63,27 @@ export function useCollaborativeEditor({
   currentUser?: { id: string; name: string };
   yjsServerUrl?: string;
 }): CollaborativeEditorHookResult {
-  const [token, setToken] = useState<string | null>(null);
-
-  // Fetch session token from API
-  useEffect(() => {
-    if (!documentId) return;
-
-    const fetchToken = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, "") || "";
-        const response = await fetch(`${apiUrl}/internal/public/yjs-token`, {
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to get session token: ${response.statusText}`
-          );
-        }
-
-        const data = await response.json();
-        setToken(data.token);
-      } catch (error) {
-        console.error("Error fetching Yjs token:", error);
-      }
-    };
-
-    fetchToken();
-  }, [documentId]);
-
   // Create Yjs document and provider
   const { ydoc, provider } = useMemo(() => {
-    if (!documentId || !token) return { ydoc: null, provider: null };
+    if (!documentId) return { ydoc: null, provider: null };
 
     const doc = new Y.Doc();
 
-    const wsProvider = new WebsocketProvider(yjsServerUrl, documentId, doc, {
-      params: { token },
+    // Construct the WebSocket URL - the server expects /yjs/:documentId
+    // Remove the /yjs suffix from the base URL if present, then add /yjs/:documentId
+    const baseUrl = yjsServerUrl.replace(/\/yjs\/?$/, "");
+    const wsUrl = `${baseUrl}/yjs/${documentId}`;
+
+    console.log(`[CollaborativeEditor] Connecting to: ${wsUrl}`);
+
+    const hocuspocusProvider = new HocuspocusProvider({
+      name: documentId,
+      url: wsUrl,
+      document: doc,
     });
 
-    return { ydoc: doc, provider: wsProvider };
-  }, [documentId, yjsServerUrl, token]);
+    return { ydoc: doc, provider: hocuspocusProvider };
+  }, [documentId, yjsServerUrl]);
 
   const editor = useEditor(
     {
@@ -111,6 +91,7 @@ export function useCollaborativeEditor({
       extensions: [
         StarterKit.configure({
           heading: {},
+          undoRedo: false,
           link: {
             openOnClick: false,
             protocols: ["internal"],
@@ -149,7 +130,9 @@ export function useCollaborativeEditor({
             ]
           : []),
       ],
-      content: initialContent,
+      // Don't set content when using Collaboration - Yjs document is the source of truth
+      // We'll initialize it after provider syncs if the document is empty
+      content: ydoc ? undefined : initialContent,
       editorProps: {
         attributes: {
           class: "size-full outline-none editor-content",
@@ -157,8 +140,57 @@ export function useCollaborativeEditor({
       },
       onUpdate,
     },
-    [ydoc, provider]
+    [ydoc, provider, initialContent]
   );
+
+  // Initialize Yjs document with existing content if it's empty
+  // This happens after the provider syncs and we confirm the document is empty
+  useEffect(() => {
+    if (!editor || !provider || !ydoc || !initialContent) return;
+
+    let hasInitialized = false;
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    // Wait for provider to sync before checking/initializing
+    const initializeIfEmpty = () => {
+      if (!provider.synced || !editor || hasInitialized) return;
+
+      // Check if Yjs document is empty by checking the XML fragment
+      // Collaboration extension uses "default" as the fragment name
+      const fragment = ydoc.getXmlFragment("default");
+      const isEmpty = fragment.length === 0;
+
+      // Also check if editor is empty (double check)
+      if (isEmpty && editor.isEmpty && initialContent) {
+        // Initialize with existing content - this will sync to Yjs
+        console.log(
+          "[CollaborativeEditor] Initializing empty Yjs document with existing content"
+        );
+        hasInitialized = true;
+
+        // Use a small delay to ensure Collaboration extension is fully ready
+        timeoutId = setTimeout(() => {
+          if (editor && !editor.isDestroyed && editor.isEmpty) {
+            // Only set if still empty (another client might have added content)
+            editor.commands.setContent(initialContent);
+          }
+        }, 200);
+      }
+    };
+
+    // Try immediately if already synced
+    if (provider.synced) {
+      initializeIfEmpty();
+    } else {
+      // Wait for sync event
+      provider.on("synced", initializeIfEmpty);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      provider.off("synced", initializeIfEmpty);
+    };
+  }, [editor, provider, ydoc, initialContent]);
 
   const setContent = useCallback(
     (content: string) => {

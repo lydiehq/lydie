@@ -1,12 +1,24 @@
-import { app } from "./api";
-import type { Serve } from "bun";
-import { createYjsServer } from "./yjs-server";
+import { app, injectWebSocket } from "./api";
+import { serve } from "@hono/node-server";
+import { hocuspocus } from "./hocuspocus-server";
 
-// Start Yjs WebSocket server on port 1234
-createYjsServer(1234);
+const port = 3001;
 
-export default {
-  port: 3001,
-  fetch: app.fetch,
-  idleTimeout: 60,
-} satisfies Serve.Options<undefined>;
+// Start server
+const server = serve(
+  {
+    fetch: app.fetch,
+    port,
+  },
+  (info) => {
+    console.log(`Started development server: http://localhost:${info.port}`);
+    hocuspocus.hooks("onListen", {
+      instance: hocuspocus,
+      configuration: hocuspocus.configuration,
+      port: info.port,
+    });
+  }
+);
+
+// Setup WebSocket support (Node.js specific)
+injectWebSocket(server);

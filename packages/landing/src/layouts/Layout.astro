@@ -12,7 +12,6 @@ export interface Props {
 }
 
 const { title, description } = Astro.props;
-Astro.response.headers.set("Cache-Control", "public, max-age=604800");
 
 const linkGroups = [
   {

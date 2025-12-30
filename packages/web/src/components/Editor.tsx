@@ -12,7 +12,6 @@ import { EditorToolbar } from "./editor/EditorToolbar";
 import { PanelResizer } from "./panels/PanelResizer";
 import { BottomBar } from "./editor/BottomBar";
 import { useTitleEditor } from "@/utils/editor";
-import { useAutoSave } from "@/hooks/use-auto-save";
 import {
   SelectedContentProvider,
   useSelectedContent,
@@ -117,7 +116,8 @@ function EditorContainer({ doc }: Props) {
           name: session.user.name,
         }
       : undefined,
-    yjsServerUrl: import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:1234",
+    yjsServerUrl:
+      import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001",
   });
 
   const titleEditor = useTitleEditor({
@@ -154,6 +154,62 @@ function EditorContainer({ doc }: Props) {
       editorElement.removeEventListener("blur", handleBlur);
     };
   }, [titleEditor.editor, title, z, doc.id, doc.organization_id]);
+
+  // Periodic sync of Yjs document content to Zero/PostgreSQL
+  // This ensures embeddings and integrations stay in sync
+  useEffect(() => {
+    if (!contentEditor.editor || !contentEditor.provider) return;
+
+    let syncInterval: NodeJS.Timeout | null = null;
+
+    // Only sync when provider is synced (connected and ready)
+    // Don't sync if editor is empty (might not be initialized yet)
+    const checkAndSync = () => {
+      if (
+        contentEditor.provider?.synced &&
+        contentEditor.editor &&
+        !contentEditor.editor.isEmpty
+      ) {
+        const jsonContent = contentEditor.editor.getJSON();
+        z.mutate(
+          mutators.document.update({
+            documentId: doc.id,
+            jsonContent: jsonContent,
+            indexStatus: "outdated",
+            organizationId: doc.organization_id,
+          })
+        );
+      }
+    };
+
+    // Start periodic sync after a delay to ensure initialization happens first
+    const startSyncTimeout = setTimeout(() => {
+      // Sync every 30 seconds (matching server-side persistence debounce)
+      syncInterval = setInterval(checkAndSync, 30000);
+    }, 5000); // Wait 5 seconds before starting periodic sync
+
+    // Also sync when provider becomes synced (but only if not empty)
+    const handleSync = () => {
+      if (contentEditor.provider?.synced) {
+        // Wait a bit before syncing to allow initialization
+        setTimeout(checkAndSync, 1000);
+      }
+    };
+
+    contentEditor.provider.on("synced", handleSync);
+
+    return () => {
+      clearTimeout(startSyncTimeout);
+      if (syncInterval) clearInterval(syncInterval);
+      contentEditor.provider?.off("synced", handleSync);
+    };
+  }, [
+    contentEditor.editor,
+    contentEditor.provider,
+    z,
+    doc.id,
+    doc.organization_id,
+  ]);
 
   if (!contentEditor.editor || !titleEditor.editor) {
     return null;

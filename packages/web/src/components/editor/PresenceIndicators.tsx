@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { WebsocketProvider } from "y-websocket";
+import type { HocuspocusProvider } from "@hocuspocus/provider";
 import { Users } from "lucide-react";
 
 type AwarenessUser = {
@@ -11,7 +11,7 @@ type AwarenessUser = {
 };
 
 type Props = {
-  provider: WebsocketProvider | null;
+  provider: HocuspocusProvider | null;
 };
 
 export function PresenceIndicators({ provider }: Props) {
@@ -48,7 +48,7 @@ export function PresenceIndicators({ provider }: Props) {
 
     // Initial update
     updateUsers();
-    setIsConnected(provider.wsconnected);
+    setIsConnected(provider.status === "connected");
 
     // Listen for awareness changes
     awareness.on("change", updateUsers);
