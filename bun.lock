@@ -30,6 +30,7 @@
         "@lydie/zero": "workspace:*",
         "@polar-sh/better-auth": "catalog:",
         "@rocicorp/zero": "catalog:",
+        "@tiptap/y-tiptap": "^3.0.1",
         "ai": "catalog:",
         "better-auth": "catalog:",
         "drizzle-orm": "catalog:",

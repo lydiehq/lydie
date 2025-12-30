@@ -11,6 +11,7 @@ import {
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
 import type { ContentNode } from "../utils/types";
 import { findRelatedDocuments } from "@lydie/core/embedding/index";
+import { convertYjsToJson } from "../../utils/yjs-to-json";
 
 export const ExternalApi = new Hono()
   .use(apiKeyAuth)
@@ -35,17 +36,35 @@ export const ExternalApi = new Hono()
       });
     }
 
+    // Use Yjs as source of truth if available, otherwise fall back to jsonContent
+    let jsonContent = document.jsonContent;
+    if (document.yjsState) {
+      try {
+        const yjsJson = convertYjsToJson(document.yjsState);
+        if (yjsJson) {
+          jsonContent = yjsJson;
+        } else {
+          console.warn(
+            `Failed to convert Yjs state for document ${document.id}, falling back to jsonContent`
+          );
+        }
+      } catch (error) {
+        console.error("Error converting Yjs to JSON:", error);
+        // Fall back to jsonContent if conversion fails
+      }
+    }
+
     // Always transform internal:// links to internal-link marks with metadata
-    let transformedContent = document.jsonContent;
+    let transformedContent = jsonContent;
     try {
       transformedContent = await transformDocumentLinksToInternalLinkMarks(
-        document.jsonContent as ContentNode,
+        jsonContent as ContentNode,
         organizationId
       );
     } catch (error) {
       console.error("Error transforming document links:", error);
       // Don't fail the request if link transformation fails
-      transformedContent = document.jsonContent;
+      transformedContent = jsonContent;
     }
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
@@ -75,8 +94,10 @@ export const ExternalApi = new Hono()
     }
 
     // Add optional fields to the already-transformed document
+    // Remove yjsState from response - we don't want to expose the binary state
+    const { yjsState, ...documentWithoutYjs } = document;
     const response = {
-      ...document,
+      ...documentWithoutYjs,
       jsonContent: transformedContent,
       ...(includeRelated && { related }),
       ...(includeToc && { toc }),
@@ -104,17 +125,35 @@ export const ExternalApi = new Hono()
       });
     }
 
+    // Use Yjs as source of truth if available, otherwise fall back to jsonContent
+    let jsonContent = document.jsonContent;
+    if (document.yjsState) {
+      try {
+        const yjsJson = convertYjsToJson(document.yjsState);
+        if (yjsJson) {
+          jsonContent = yjsJson;
+        } else {
+          console.warn(
+            `Failed to convert Yjs state for document ${document.id}, falling back to jsonContent`
+          );
+        }
+      } catch (error) {
+        console.error("Error converting Yjs to JSON:", error);
+        // Fall back to jsonContent if conversion fails
+      }
+    }
+
     // Always transform internal:// links to internal-link marks with metadata
-    let transformedContent = document.jsonContent;
+    let transformedContent = jsonContent;
     try {
       transformedContent = await transformDocumentLinksToInternalLinkMarks(
-        document.jsonContent as ContentNode,
+        jsonContent as ContentNode,
         organizationId
       );
     } catch (error) {
       console.error("Error transforming document links:", error);
       // Don't fail the request if link transformation fails
-      transformedContent = document.jsonContent;
+      transformedContent = jsonContent;
     }
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
@@ -142,8 +181,10 @@ export const ExternalApi = new Hono()
     }
 
     // Add optional fields to the already-transformed document
+    // Remove yjsState from response - we don't want to expose the binary state
+    const { yjsState, ...documentWithoutYjs } = document;
     const response = {
-      ...document,
+      ...documentWithoutYjs,
       jsonContent: transformedContent,
       ...(includeRelated && { related }),
       ...(includeToc && { toc }),

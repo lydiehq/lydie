@@ -43,6 +43,7 @@ export function transformDocument(document: any): any {
     title: document.title,
     slug: document.slug,
     jsonContent: document.json_content || document.jsonContent,
+    yjsState: document.yjs_state || document.yjsState, // Include Yjs state for conversion
     userId: document.user_id || document.userId,
     folderId: document.folder_id || document.folderId,
     organizationId: document.organization_id || document.organizationId,
