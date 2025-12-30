@@ -32,7 +32,6 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
         .select({
           id: documentsTable.id,
           title: documentsTable.title,
-          jsonContent: documentsTable.jsonContent,
           yjsState: documentsTable.yjsState,
         })
         .from(documentsTable)
@@ -57,26 +56,16 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
       // Add fake delay to see loading state (remove in production)
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Use Yjs as source of truth if available, otherwise fall back to jsonContent
-      let jsonContent = document.jsonContent;
-      if (document.yjsState) {
-        try {
-          const yjsJson = convertYjsToJson(document.yjsState);
-          if (yjsJson) {
-            jsonContent = yjsJson;
-          } else {
-            console.warn(
-              `[ReadCurrentDocument] Failed to convert Yjs state for document ${document.id}, falling back to jsonContent`
-            );
-          }
-        } catch (error) {
-          console.error(
-            "[ReadCurrentDocument] Error converting Yjs to JSON:",
-            error
-          );
-          // Fall back to jsonContent if conversion fails
-        }
+      // Use Yjs as source of truth
+      if (!document.yjsState) {
+        yield {
+          state: "error",
+          error: "Document has no content (yjsState is missing)",
+        };
+        return;
       }
+
+      const jsonContent = convertYjsToJson(document.yjsState);
 
       // Convert jsonContent to HTML using our custom renderer
       let htmlContent: string;

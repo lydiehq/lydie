@@ -117,19 +117,13 @@ function parseMDXContent(
     slug,
     content: tipTapContent,
     components,
-    customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+    customFields:
+      Object.keys(customFields).length > 0 ? customFields : undefined,
   };
 
   return result;
 }
 
-/**
- * Gets or creates a folder by path, creating parent folders as needed
- * @param folderPath - Path like "folder1/subfolder2" or null/empty for root
- * @param userId - User ID
- * @param organizationId - Organization ID
- * @returns Promise<string | undefined> - Folder ID or undefined for root
- */
 async function getOrCreateFolderByPath(
   folderPath: string | null | undefined,
   userId: string,

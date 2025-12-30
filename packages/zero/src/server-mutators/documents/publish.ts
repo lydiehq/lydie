@@ -6,6 +6,7 @@ import { db } from "@lydie/database";
 import { sql } from "drizzle-orm";
 import { logIntegrationActivity } from "@lydie/core/integrations";
 import { mutators as sharedMutators } from "../../mutators";
+import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 
 import { integrationRegistry } from "@lydie/integrations";
 
@@ -145,13 +146,23 @@ async function pushToIntegration(
       `[Push] Pushing document ${documentId} to ${link.connection.integrationType} link: ${link.name}`
     );
 
+    // Use Yjs as source of truth
+    if (!document.yjsState) {
+      console.error(
+        `[Push] Document ${documentId} has no content (yjsState is missing)`
+      );
+      return;
+    }
+
+    const jsonContent = convertYjsToJson(document.yjsState);
+
     // Call integration's push method
     const result = await integration.push({
       document: {
         id: document.id,
         title: document.title,
         slug: document.slug,
-        content: document.jsonContent,
+        content: jsonContent,
         published: document.published,
         updatedAt: document.updatedAt,
         organizationId: document.organizationId,

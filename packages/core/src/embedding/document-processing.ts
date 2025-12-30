@@ -12,34 +12,37 @@ import {
 } from "@lydie/database/schema-only";
 import { eq } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import { generateContentHash } from "../hash";
 import { convertTipTapToPlaintext } from "../utils";
 import { generateHeadingAwareChunks, generateSimpleChunks } from "./chunking";
 import { generateTitleEmbedding, generateManyEmbeddings } from "./generation";
+import { convertYjsToJson } from "../yjs-to-json";
 
-// Support both the default Bun SQL database and postgres-js database (for Lambda)
-type Database = PostgresJsDatabase<any> | BunSQLiteDatabase<any> | any;
+type Database = PostgresJsDatabase<any>;
 
-/**
- * Process a document to generate embeddings for title and content.
- * This function handles:
- * - Checking if title/content changed
- * - Generating title embeddings
- * - Generating content embeddings with heading-aware chunking
- * - Updating the document's index status
- *
- * @param doc - The document to process
- * @param db - Database connection (required - must be passed from calling context)
- * @returns Promise with result indicating if processing was skipped
- */
 export async function processDocumentEmbedding(
   doc: typeof documentsTable.$inferSelect,
   db: Database
 ): Promise<{ skipped: boolean; reason?: string }> {
   const dbToUse = db;
-  // Convert TipTap JSON to plaintext for consistent hashing and embedding
-  const plaintextContent = convertTipTapToPlaintext(doc.jsonContent);
+
+  // Convert Yjs state to JSON, then to plaintext for consistent hashing and embedding
+  if (!doc.yjsState) {
+    console.warn(
+      `Document ${doc.id} has no yjsState, skipping embedding processing`
+    );
+    return { skipped: true, reason: "no_content" };
+  }
+
+  const jsonContent = convertYjsToJson(doc.yjsState);
+  if (!jsonContent) {
+    console.warn(
+      `Document ${doc.id} failed to convert yjsState to JSON, skipping embedding processing`
+    );
+    return { skipped: true, reason: "conversion_failed" };
+  }
+
+  const plaintextContent = convertTipTapToPlaintext(jsonContent);
   const currentContentHash = generateContentHash(plaintextContent);
   const titleChanged = doc.lastIndexedTitle !== doc.title;
   const contentChanged = doc.lastIndexedContentHash !== currentContentHash;
@@ -100,7 +103,7 @@ export async function processDocumentEmbedding(
           // Generate heading-aware chunks from JSON content (expensive operation)
           let chunks;
           try {
-            chunks = generateHeadingAwareChunks(doc.jsonContent);
+            chunks = generateHeadingAwareChunks(jsonContent);
             console.log(
               `Generated ${chunks.length} heading-aware chunks for document ${doc.id}`
             );

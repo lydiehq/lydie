@@ -7,6 +7,7 @@ import {
 import { eq } from "drizzle-orm";
 import type { Integration, SyncDocument } from "./types";
 import { validateCustomFields } from "./validation";
+import { convertYjsToJson } from "../yjs-to-json";
 
 export interface PushDocumentOptions {
   documentId: string;
@@ -32,7 +33,11 @@ export interface PushDocumentResult {
 export async function pushDocumentToIntegration(
   options: PushDocumentOptions
 ): Promise<PushDocumentResult> {
-  const { documentId, organizationId, integration: providedIntegration } = options;
+  const {
+    documentId,
+    organizationId,
+    integration: providedIntegration,
+  } = options;
 
   try {
     console.log(`[Integration Push] Starting push for document ${documentId}`);
@@ -95,7 +100,9 @@ export async function pushDocumentToIntegration(
     );
 
     if (!validation.valid) {
-      const errorMessage = `Custom field validation failed: ${validation.errors.join(', ')}`;
+      const errorMessage = `Custom field validation failed: ${validation.errors.join(
+        ", "
+      )}`;
       console.error(`[Integration Push] ${errorMessage}`);
       return {
         success: false,
@@ -109,17 +116,29 @@ export async function pushDocumentToIntegration(
       ...(link.config as Record<string, any>),
     };
 
+    // Use Yjs as source of truth
+    if (!document.yjsState) {
+      return {
+        success: false,
+        error: "Document has no content (yjsState is missing)",
+      };
+    }
+
+    const jsonContent = convertYjsToJson(document.yjsState);
+
     // Create sync document
     const syncDocument: SyncDocument = {
       id: document.id,
       title: document.title,
       slug: document.slug,
-      content: document.jsonContent,
+      content: jsonContent,
       published: document.published,
       updatedAt: document.updatedAt,
       organizationId: document.organizationId,
       folderId: document.folderId,
-      customFields: document.customFields as Record<string, string | number> | undefined,
+      customFields: document.customFields as
+        | Record<string, string | number>
+        | undefined,
     };
 
     // Call integration's push method
@@ -182,4 +201,3 @@ export async function pushDocumentToIntegration(
     };
   }
 }
-

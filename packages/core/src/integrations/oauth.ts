@@ -92,14 +92,6 @@ export interface OAuthIntegration {
     params?: Record<string, string>
   ): string;
 
-  /**
-   * Handle OAuth callback parameters and create connection config
-   * This allows integrations to handle different OAuth flows (standard OAuth, GitHub App, etc.)
-   * @param queryParams - All query parameters from the OAuth callback
-   * @param credentials - OAuth credentials for the integration
-   * @param redirectUri - The callback URL
-   * @returns Integration configuration to store in the database
-   */
   handleOAuthCallback(
     queryParams: Record<string, string>,
     credentials: OAuthCredentials,
@@ -145,4 +137,3 @@ export function encodeOAuthState(state: OAuthState): string {
 export function decodeOAuthState(token: string): OAuthState {
   return JSON.parse(Buffer.from(token, "base64url").toString());
 }
-

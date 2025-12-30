@@ -6,12 +6,6 @@ import {
   transformFolder,
 } from "./field-transformer";
 
-/**
- * Gets documents with their computed folder paths using a recursive CTE
- * @param organizationId - Organization ID for scoping
- * @param publishedOnly - Whether to only include published documents
- * @returns Promise<Array> - Documents with computed path and fullPath
- */
 export async function getDocumentsWithPaths(
   organizationId: string,
   publishedOnly: boolean = false
@@ -71,13 +65,6 @@ export async function getDocumentsWithPaths(
   return result.map(transformDocumentListItem);
 }
 
-/**
- * Gets a single document with its computed path
- * @param slug - Document slug
- * @param organizationId - Organization ID for scoping
- * @param publishedOnly - Whether to only include published documents
- * @returns Promise<object | null> - Document with computed path and fullPath
- */
 export async function getDocumentWithPath(
   slug: string,
   organizationId: string,
@@ -196,12 +183,6 @@ export async function getDocumentByPath(
   return document ? transformDocument(document) : null;
 }
 
-/**
- * Gets folder hierarchy with document counts
- * @param organizationId - Organization ID for scoping
- * @param publishedOnly - Whether to only count published documents
- * @returns Promise<Array> - Folders with paths and document counts
- */
 export async function getFoldersWithPaths(
   organizationId: string,
   publishedOnly: boolean = false

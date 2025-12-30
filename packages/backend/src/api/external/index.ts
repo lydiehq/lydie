@@ -36,36 +36,23 @@ export const ExternalApi = new Hono()
       });
     }
 
-    // Use Yjs as source of truth if available, otherwise fall back to jsonContent
-    let jsonContent = document.jsonContent;
-    if (document.yjsState) {
-      try {
-        const yjsJson = convertYjsToJson(document.yjsState);
-        if (yjsJson) {
-          jsonContent = yjsJson;
-        } else {
-          console.warn(
-            `Failed to convert Yjs state for document ${document.id}, falling back to jsonContent`
-          );
-        }
-      } catch (error) {
-        console.error("Error converting Yjs to JSON:", error);
-        // Fall back to jsonContent if conversion fails
-      }
+    if (!document.yjsState) {
+      throw new HTTPException(404, {
+        message: "Document has no content",
+      });
     }
 
-    // Always transform internal:// links to internal-link marks with metadata
-    let transformedContent = jsonContent;
-    try {
-      transformedContent = await transformDocumentLinksToInternalLinkMarks(
-        jsonContent as ContentNode,
-        organizationId
-      );
-    } catch (error) {
-      console.error("Error transforming document links:", error);
-      // Don't fail the request if link transformation fails
-      transformedContent = jsonContent;
+    const json = convertYjsToJson(document.yjsState);
+    if (!json) {
+      throw new HTTPException(500, {
+        message: "Failed to convert document content",
+      });
     }
+
+    const transformedContent = await transformDocumentLinksToInternalLinkMarks(
+      json,
+      organizationId
+    );
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
     if (includeRelated) {
@@ -125,36 +112,23 @@ export const ExternalApi = new Hono()
       });
     }
 
-    // Use Yjs as source of truth if available, otherwise fall back to jsonContent
-    let jsonContent = document.jsonContent;
-    if (document.yjsState) {
-      try {
-        const yjsJson = convertYjsToJson(document.yjsState);
-        if (yjsJson) {
-          jsonContent = yjsJson;
-        } else {
-          console.warn(
-            `Failed to convert Yjs state for document ${document.id}, falling back to jsonContent`
-          );
-        }
-      } catch (error) {
-        console.error("Error converting Yjs to JSON:", error);
-        // Fall back to jsonContent if conversion fails
-      }
+    if (!document.yjsState) {
+      throw new HTTPException(404, {
+        message: "Document has no content",
+      });
     }
 
-    // Always transform internal:// links to internal-link marks with metadata
-    let transformedContent = jsonContent;
-    try {
-      transformedContent = await transformDocumentLinksToInternalLinkMarks(
-        jsonContent as ContentNode,
-        organizationId
-      );
-    } catch (error) {
-      console.error("Error transforming document links:", error);
-      // Don't fail the request if link transformation fails
-      transformedContent = jsonContent;
+    const json = convertYjsToJson(document.yjsState);
+    if (!json) {
+      throw new HTTPException(500, {
+        message: "Failed to convert document content",
+      });
     }
+
+    const transformedContent = await transformDocumentLinksToInternalLinkMarks(
+      json,
+      organizationId
+    );
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
     if (includeRelated) {

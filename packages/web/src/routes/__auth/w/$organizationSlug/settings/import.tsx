@@ -225,12 +225,6 @@ function RouteComponent() {
     e.stopPropagation();
   }, []);
 
-  /**
-   * Pre-create all unique folders before importing files
-   * This prevents duplicate folder creation when importing multiple files in parallel
-   * @param files - Array of files with folder paths
-   * @returns Promise that resolves to a map of folderPath -> folderId
-   */
   const preCreateFolders = async (
     files: FileWithPath[]
   ): Promise<Map<string, string>> => {
@@ -274,13 +268,6 @@ function RouteComponent() {
     return folderCache;
   };
 
-  /**
-   * Process files in parallel batches with a concurrency limit
-   * @param files - Array of files to process
-   * @param folderCache - Pre-created folder path to ID mapping
-   * @param batchSize - Number of files to process concurrently (default: 5)
-   * @returns Promise that resolves when all files are processed
-   */
   const processFilesInBatches = async (
     files: FileWithPath[],
     folderCache: Map<string, string>,
@@ -418,7 +405,7 @@ function RouteComponent() {
     navigate({
       to: "/w/$organizationSlug/$id",
       params: {
-        organizationId: organization.id,
+        organizationSlug: organization.slug,
         id: documentId,
       },
     });

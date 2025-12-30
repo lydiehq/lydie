@@ -1,11 +1,5 @@
 import type { CustomFieldSchema } from "./types";
 
-/**
- * Validate custom fields against a schema
- * @param customFields The custom fields to validate
- * @param schema The schema to validate against
- * @returns Validation result with any errors
- */
 export function validateCustomFields(
   customFields: Record<string, string | number> | undefined,
   schema: CustomFieldSchema | undefined

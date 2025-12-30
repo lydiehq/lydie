@@ -92,17 +92,12 @@ function stripHtmlTags(html: string): string {
 }
 
 /**
- * Generate heading-aware chunks from TipTap JSON content
+ * Generate heading-aware chunks from TipTap JSON content *
  *
  * Strategy:
  * 1. Group paragraphs under their parent headings
  * 2. Split large sections into smaller chunks while preserving heading context
  * 3. Each chunk includes the heading it belongs to for better context
- *
- * @param jsonContent - TipTap JSON document structure
- * @param maxChunkSize - Maximum characters per chunk (default: 500)
- * @param minChunkSize - Minimum characters per chunk (default: 50)
- * @returns Array of chunks with heading context
  */
 export function generateHeadingAwareChunks(
   jsonContent: any,

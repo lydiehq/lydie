@@ -71,6 +71,9 @@ function RouteComponent() {
       // Create a folder structure based on document paths
       for (const doc of documents) {
         try {
+          // Note: Zero queries don't sync yjs_state, so we use json_content here.
+          // If the document has collaborative edits in Yjs, json_content might be outdated.
+          // For the most up-to-date content, users should ensure documents are saved before exporting.
           // Convert the JSON content to markdown
           const markdown = serializeToMarkdown(doc.json_content as ContentNode);
           
