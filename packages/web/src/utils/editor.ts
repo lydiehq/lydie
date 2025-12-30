@@ -6,6 +6,7 @@ import { CharacterCount } from "@tiptap/extension-character-count";
 import { DocumentComponent } from "../editor/extensions/document-components";
 import { KeyboardShortcutExtension } from "@/editor/extensions/keyboard-shortcuts";
 import { IndentHandlerExtension } from "@/editor/extensions/indent-handler";
+import { ImageUpload } from "@/editor/extensions/image-upload";
 import { useCallback } from "react";
 import { TableKit } from "@tiptap/extension-table";
 import { Extension } from "@tiptap/core";
@@ -57,6 +58,7 @@ export function useContentEditor({
       }),
       DocumentComponent,
       IndentHandlerExtension,
+      ImageUpload,
     ],
     content: initialContent,
     editorProps: {

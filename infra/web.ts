@@ -2,6 +2,11 @@
 import { secret } from "./secret";
 import { zero } from "./zero";
 
+// Create S3 bucket for images with CloudFront access
+const imagesBucket = new sst.aws.Bucket("Images", {
+  access: "cloudfront",
+});
+
 const fileOptions = [
   {
     files: "**/*",
@@ -61,6 +66,8 @@ new sst.aws.StaticSite("Web", {
     ...($dev ? {} : { domain: "app.lydie.co" }),
   },
 });
+
+export { imagesBucket };
 
 new sst.aws.StaticSite("Landing", {
   path: "./packages/landing",

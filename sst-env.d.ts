@@ -55,6 +55,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Images": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "Landing": {
       "type": "sst.aws.StaticSite"
       "url": string

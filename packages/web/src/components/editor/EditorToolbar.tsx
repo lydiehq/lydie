@@ -26,8 +26,10 @@ import {
   Heading3,
   MoreVertical,
   Link,
+  Image as ImageIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useImageUpload } from "@/hooks/use-image-upload";
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
 import { Menu, MenuItem } from "../generic/Menu";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -45,6 +47,8 @@ type Props = {
 export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { deleteDocument } = useDocumentActions();
+  const { uploadImage } = useImageUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Detect platform for keyboard shortcuts
   const isMac =
@@ -179,6 +183,46 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
               icon={Link}
               editor={editor}
               isDisabled={editor.state.selection.empty}
+            />
+          </Group>
+
+          <Separator
+            orientation="vertical"
+            className="mx-1 h-6 w-px bg-gray-200"
+          />
+
+          <Group aria-label="Image" className="flex gap-1">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                try {
+                  const url = await uploadImage(file);
+                  const alt = prompt("Enter alt text for the image (optional):") || "";
+                  editor.chain().focus().setImage({ src: url, alt }).run();
+                } catch (error) {
+                  console.error("Failed to upload image:", error);
+                  alert("Failed to upload image. Please try again.");
+                } finally {
+                  // Reset input so the same file can be selected again
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                }
+              }}
+            />
+            <ToolbarButton
+              onPress={() => {
+                fileInputRef.current?.click();
+              }}
+              title="Insert Image"
+              icon={ImageIcon}
+              editor={editor}
             />
           </Group>
 

@@ -8,6 +8,7 @@ import { KeyboardShortcutExtension } from "@/editor/extensions/keyboard-shortcut
 import { IndentHandlerExtension } from "@/editor/extensions/indent-handler";
 import { Collaboration } from "@tiptap/extension-collaboration";
 import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+import { ImageUpload } from "@/editor/extensions/image-upload";
 import { useCallback, useMemo } from "react";
 import { TableKit } from "@tiptap/extension-table";
 import * as Y from "yjs";
@@ -106,6 +107,7 @@ export function useCollaborativeEditor({
         }),
         DocumentComponent,
         IndentHandlerExtension,
+        ImageUpload,
         // Add collaboration extensions
         ...(ydoc
           ? [
