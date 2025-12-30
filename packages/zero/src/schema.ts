@@ -19,6 +19,7 @@ const users = table("users")
     id: string(),
     name: string(),
     email: string(),
+    image: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -44,6 +45,19 @@ const members = table("members")
     organization_id: string(),
     user_id: string(),
     role: string(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const invitations = table("invitations")
+  .columns({
+    id: string(),
+    organization_id: string(),
+    email: string(),
+    role: string().optional(),
+    status: string(),
+    expires_at: number(),
+    inviter_id: string(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -326,6 +340,11 @@ const organizationsRelations = relationships(
       destField: ["organization_id"],
       destSchema: members,
     }),
+    invitations: many({
+      sourceField: ["id"],
+      destField: ["organization_id"],
+      destSchema: invitations,
+    }),
     documentComponents: many({
       sourceField: ["id"],
       destField: ["organization_id"],
@@ -367,6 +386,19 @@ const membersRelations = relationships(members, ({ one }) => ({
   }),
   user: one({
     sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
+const invitationsRelations = relationships(invitations, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  inviter: one({
+    sourceField: ["inviter_id"],
     destField: ["id"],
     destSchema: users,
   }),
@@ -609,6 +641,7 @@ export const schema = createSchema({
     folders,
     organizations,
     members,
+    invitations,
     documentComponents,
     documentConversations,
     documentMessages,
@@ -629,6 +662,7 @@ export const schema = createSchema({
     foldersRelations,
     organizationsRelations,
     membersRelations,
+    invitationsRelations,
     usersRelations,
     documentComponentsRelations,
     documentConversationsRelations,

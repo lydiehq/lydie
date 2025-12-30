@@ -11,10 +11,10 @@ interface EmailParams {
 const sesClient = new SESv2Client({});
 
 export async function sendEmail({ to, subject, text, html }: EmailParams) {
-  if (Resource.App.stage !== "production") {
-    console.log(`[Info] Skipping email sending in non-production stage`);
-    return;
-  }
+  // if (Resource.App.stage !== "production") {
+  //   console.log(`[Info] Skipping email sending in non-production stage`);
+  //   return;
+  // }
 
   await sesClient.send(
     new SendEmailCommand({

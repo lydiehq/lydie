@@ -23,6 +23,7 @@ import { Route as _authWOrganizationSlugSettingsRouteRouteImport } from './route
 import { Route as _authWOrganizationSlugSettingsIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/index'
 import { Route as _authWOrganizationSlugIdIndexRouteImport } from './routes/__auth/w/$organizationSlug/$id/index'
 import { Route as _authWOrganizationSlugSettingsUserRouteImport } from './routes/__auth/w/$organizationSlug/settings/user'
+import { Route as _authWOrganizationSlugSettingsProfileRouteImport } from './routes/__auth/w/$organizationSlug/settings/profile'
 import { Route as _authWOrganizationSlugSettingsImportRouteImport } from './routes/__auth/w/$organizationSlug/settings/import'
 import { Route as _authWOrganizationSlugSettingsComponentsRouteImport } from './routes/__auth/w/$organizationSlug/settings/components'
 import { Route as _authWOrganizationSlugSettingsBillingRouteImport } from './routes/__auth/w/$organizationSlug/settings/billing'
@@ -109,6 +110,12 @@ const _authWOrganizationSlugSettingsUserRoute =
     path: '/user',
     getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
+const _authWOrganizationSlugSettingsProfileRoute =
+  _authWOrganizationSlugSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
+  } as any)
 const _authWOrganizationSlugSettingsImportRoute =
   _authWOrganizationSlugSettingsImportRouteImport.update({
     id: '/import',
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
   '/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
   '/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
+  '/w/$organizationSlug/settings/profile': typeof _authWOrganizationSlugSettingsProfileRoute
   '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
   '/w/$organizationSlug/$id': typeof _authWOrganizationSlugIdIndexRoute
   '/w/$organizationSlug/settings/': typeof _authWOrganizationSlugSettingsIndexRoute
@@ -208,6 +216,7 @@ export interface FileRoutesByTo {
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
   '/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
   '/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
+  '/w/$organizationSlug/settings/profile': typeof _authWOrganizationSlugSettingsProfileRoute
   '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
   '/w/$organizationSlug/$id': typeof _authWOrganizationSlugIdIndexRoute
   '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsIndexRoute
@@ -233,6 +242,7 @@ export interface FileRoutesById {
   '/__auth/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
   '/__auth/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
   '/__auth/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
+  '/__auth/w/$organizationSlug/settings/profile': typeof _authWOrganizationSlugSettingsProfileRoute
   '/__auth/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
   '/__auth/w/$organizationSlug/$id/': typeof _authWOrganizationSlugIdIndexRoute
   '/__auth/w/$organizationSlug/settings/': typeof _authWOrganizationSlugSettingsIndexRoute
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/settings/billing'
     | '/w/$organizationSlug/settings/components'
     | '/w/$organizationSlug/settings/import'
+    | '/w/$organizationSlug/settings/profile'
     | '/w/$organizationSlug/settings/user'
     | '/w/$organizationSlug/$id'
     | '/w/$organizationSlug/settings/'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/settings/billing'
     | '/w/$organizationSlug/settings/components'
     | '/w/$organizationSlug/settings/import'
+    | '/w/$organizationSlug/settings/profile'
     | '/w/$organizationSlug/settings/user'
     | '/w/$organizationSlug/$id'
     | '/w/$organizationSlug/settings'
@@ -303,6 +315,7 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationSlug/settings/billing'
     | '/__auth/w/$organizationSlug/settings/components'
     | '/__auth/w/$organizationSlug/settings/import'
+    | '/__auth/w/$organizationSlug/settings/profile'
     | '/__auth/w/$organizationSlug/settings/user'
     | '/__auth/w/$organizationSlug/$id/'
     | '/__auth/w/$organizationSlug/settings/'
@@ -418,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationSlugSettingsUserRouteImport
       parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
+    '/__auth/w/$organizationSlug/settings/profile': {
+      id: '/__auth/w/$organizationSlug/settings/profile'
+      path: '/profile'
+      fullPath: '/w/$organizationSlug/settings/profile'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsProfileRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
+    }
     '/__auth/w/$organizationSlug/settings/import': {
       id: '/__auth/w/$organizationSlug/settings/import'
       path: '/import'
@@ -508,6 +528,7 @@ interface _authWOrganizationSlugSettingsRouteRouteChildren {
   _authWOrganizationSlugSettingsBillingRoute: typeof _authWOrganizationSlugSettingsBillingRoute
   _authWOrganizationSlugSettingsComponentsRoute: typeof _authWOrganizationSlugSettingsComponentsRoute
   _authWOrganizationSlugSettingsImportRoute: typeof _authWOrganizationSlugSettingsImportRoute
+  _authWOrganizationSlugSettingsProfileRoute: typeof _authWOrganizationSlugSettingsProfileRoute
   _authWOrganizationSlugSettingsUserRoute: typeof _authWOrganizationSlugSettingsUserRoute
   _authWOrganizationSlugSettingsIndexRoute: typeof _authWOrganizationSlugSettingsIndexRoute
   _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
@@ -526,6 +547,8 @@ const _authWOrganizationSlugSettingsRouteRouteChildren: _authWOrganizationSlugSe
       _authWOrganizationSlugSettingsComponentsRoute,
     _authWOrganizationSlugSettingsImportRoute:
       _authWOrganizationSlugSettingsImportRoute,
+    _authWOrganizationSlugSettingsProfileRoute:
+      _authWOrganizationSlugSettingsProfileRoute,
     _authWOrganizationSlugSettingsUserRoute:
       _authWOrganizationSlugSettingsUserRoute,
     _authWOrganizationSlugSettingsIndexRoute:

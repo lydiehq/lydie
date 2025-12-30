@@ -11,6 +11,7 @@ import {
   Book,
   ExternalLink,
   ShieldCheck,
+  UserCircle,
   type LucideIcon,
 } from "lucide-react";
 import { sidebarItemStyles } from "@/components/layout/Sidebar";
@@ -39,6 +40,11 @@ const settingsRoutes: SettingsSection[] = [
   {
     title: "Account",
     routes: [
+      {
+        path: "/w/$organizationSlug/settings/profile",
+        label: "Profile",
+        icon: UserCircle,
+      },
       {
         path: "/w/$organizationSlug/settings/user",
         label: "Preferences",

@@ -84,7 +84,29 @@ export const authClient = betterAuth({
       adminRoles: ["admin"],
       adminUserIds: [], // Add specific user IDs here if needed
     }),
-    organization(),
+    organization({
+      sendInvitationEmail: async (data) => {
+        // Use FRONTEND_URL from environment if available, otherwise fallback to defaults
+        const frontendUrl =
+          process.env.FRONTEND_URL ||
+          (Resource.App.stage === "production"
+            ? "https://app.lydie.co"
+            : "http://localhost:3000");
+        // Use invitation ID to construct the invitation link
+        const invitationUrl = `${frontendUrl}/invitations/${data.invitation.id}`;
+
+        await sendEmail({
+          to: data.email,
+          subject: `You've been invited to join ${data.organization.name}`,
+          html: `
+            <p>You've been invited to join <strong>${data.organization.name}</strong> on Lydie.</p>
+            <p>Click the link below to accept the invitation:</p>
+            <p><a href="${invitationUrl}">${invitationUrl}</a></p>
+            <p>This invitation will expire in 48 hours.</p>
+          `,
+        });
+      },
+    }),
     // Auto-create organization plugin - runs during user creation
     {
       id: "auto-create-organization",

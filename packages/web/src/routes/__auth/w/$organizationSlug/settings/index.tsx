@@ -12,28 +12,21 @@ import {
   Form,
   MenuTrigger,
   Button as RACButton,
-  TableBody,
 } from "react-aria-components";
 import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
 import { AlertDialog } from "@/components/generic/AlertDialog";
 import { Menu, MenuItem } from "@/components/generic/Menu";
-import { Copy, Eye, EyeOff, Plus, MoreHorizontal } from "lucide-react";
+import { Copy, Eye, EyeOff, Plus, MoreHorizontal, X, User, Mail, Shield, Clock, Key } from "lucide-react";
 import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { useAppForm } from "@/hooks/use-app-form";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Table,
-  TableHeader,
-  Column,
-  Row,
-  Cell,
-} from "@/components/generic/Table";
 import { mutators } from "@lydie/zero/mutators";
 import { Card } from "@/components/layout/Card";
 import { slugify } from "@lydie/core/utils";
+import { authClient } from "@/utils/auth";
 
 type ApiKeyDialogStep = "create" | "success";
 
@@ -53,6 +46,7 @@ function RouteComponent() {
   const [copied, setCopied] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
   // Workspace name form
   const workspaceForm = useAppForm({
@@ -219,6 +213,106 @@ function RouteComponent() {
     queries.apiKeys.byOrganization({ organizationId: organization?.id || "" })
   );
 
+  const [members] = useQuery(
+    queries.members.byOrganization({ organizationId: organization?.id || "" })
+  );
+
+  const [invitations] = useQuery(
+    queries.invitations.byOrganization({ organizationId: organization?.id || "" })
+  );
+
+  // Invitation form
+  const invitationForm = useAppForm({
+    defaultValues: {
+      email: "",
+      role: "member" as "member" | "admin",
+    },
+    onSubmit: async (values) => {
+      if (!organization) {
+        toast.error("Organization not found");
+        return;
+      }
+
+      if (!values.value.email.trim()) {
+        toast.error("Please enter an email address");
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(values.value.email.trim())) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+
+      try {
+        await authClient.organization.inviteMember({
+          organizationId: organization.id,
+          email: values.value.email.trim(),
+          role: values.value.role,
+        });
+        toast.success("Invitation sent successfully");
+        invitationForm.reset();
+        setIsInviteDialogOpen(false);
+      } catch (error: any) {
+        const errorMessage =
+          error?.message?.includes("already")
+            ? "This user is already a member or has a pending invitation"
+            : "Failed to send invitation";
+        toast.error(errorMessage);
+        console.error("Invitation error:", error);
+      }
+    },
+  });
+
+  const handleCancelInvitation = async (invitationId: string, email: string) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+
+    confirmDialog({
+      title: `Cancel Invitation`,
+      message: `Are you sure you want to cancel the invitation for ${email}?`,
+      onConfirm: async () => {
+        try {
+          await authClient.organization.cancelInvitation({
+            organizationId: organization.id,
+            invitationId,
+          });
+          toast.success("Invitation canceled");
+        } catch (error) {
+          toast.error("Failed to cancel invitation");
+          console.error("Cancel invitation error:", error);
+        }
+      },
+    });
+  };
+
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+
+    confirmDialog({
+      title: `Remove Member`,
+      message: `Are you sure you want to remove ${memberName} from this organization?`,
+      onConfirm: async () => {
+        try {
+          await authClient.organization.removeMember({
+            organizationId: organization.id,
+            memberId,
+          });
+          toast.success("Member removed successfully");
+        } catch (error) {
+          toast.error("Failed to remove member");
+          console.error("Remove member error:", error);
+        }
+      },
+    });
+  };
+
   return (
     <div className="flex flex-col gap-y-6">
       <div>
@@ -279,6 +373,160 @@ function RouteComponent() {
       </div>
       <Separator />
 
+      {/* Members & Invitations Section */}
+      <div className="flex flex-col gap-y-4">
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-y-0.5">
+            <Heading level={2}>Members & Invitations</Heading>
+            <p className="text-sm/relaxed text-gray-600">
+              Manage who has access to this workspace.
+            </p>
+          </div>
+          <Button
+            onPress={() => setIsInviteDialogOpen(true)}
+            size="sm"
+            intent="secondary"
+          >
+            <Plus className="size-3.5 mr-1" />
+            Invite Member
+          </Button>
+        </div>
+
+        {/* Members */}
+        {members && members.length > 0 && (
+          <div className="flex flex-col gap-y-2">
+            <h3 className="text-sm font-medium text-gray-700">Members</h3>
+            <div className="flex flex-col gap-y-3">
+              {members.map((member) => (
+                <Card key={member.id} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <User className="size-4 text-gray-500" />
+                        <span className="font-medium text-gray-900">
+                          {member.user?.name || "Unknown"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5">
+                          <Mail className="size-3.5" />
+                          <span>{member.user?.email || "Unknown"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Shield className="size-3.5" />
+                          <span>
+                            Role: <span className="capitalize font-medium">{member.role}</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="size-3.5" />
+                          <span>
+                            Joined {formatDistanceToNow(member.created_at, {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <MenuTrigger>
+                        <RACButton>
+                          <MoreHorizontal className="size-4 text-gray-500" />
+                        </RACButton>
+                        <Menu>
+                          <MenuItem
+                            onAction={() =>
+                              handleRemoveMember(
+                                member.id,
+                                member.user?.name || member.user?.email || "this member"
+                              )
+                            }
+                            className="text-red-600"
+                          >
+                            Remove Member
+                          </MenuItem>
+                        </Menu>
+                      </MenuTrigger>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pending Invitations */}
+        {invitations && invitations.length > 0 && (
+          <div className="flex flex-col gap-y-2">
+            <h3 className="text-sm font-medium text-gray-700">Pending Invitations</h3>
+            <div className="flex flex-col gap-y-3">
+              {invitations.map((invitation) => (
+                <Card key={invitation.id} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Mail className="size-4 text-gray-500" />
+                        <span className="font-medium text-gray-900">
+                          {invitation.email}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5">
+                          <Shield className="size-3.5" />
+                          <span>
+                            Role: <span className="capitalize font-medium">{invitation.role || "member"}</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <User className="size-3.5" />
+                          <span>
+                            Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="size-3.5" />
+                          <span>
+                            Expires {formatDistanceToNow(invitation.expires_at, {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Button
+                        intent="secondary"
+                        size="sm"
+                        onPress={() =>
+                          handleCancelInvitation(invitation.id, invitation.email)
+                        }
+                      >
+                        <X className="size-3.5 mr-1" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(!members || members.length === 0) &&
+          (!invitations || invitations.length === 0) && (
+            <Card className="p-8 text-center">
+              <div className="text-sm font-medium text-gray-700">
+                No members or invitations yet
+              </div>
+              <div className="text-xs mt-1 text-gray-500">
+                Invite your first team member to get started
+              </div>
+            </Card>
+          )}
+      </div>
+
+      <Separator />
+
       {/* API Keys Section */}
       <div className="flex flex-col gap-y-2">
         <div className="flex justify-between">
@@ -302,35 +550,45 @@ function RouteComponent() {
         </div>
 
         {keys && keys.length > 0 ? (
-          <Table
-            aria-label="API Keys"
-            className="w-full max-h-none rounded-lg ring ring-black/8 bg-white"
-          >
-            <TableHeader>
-              <Column>Name</Column>
-              <Column>Created</Column>
-              <Column>Last Used</Column>
-              <Column>Key</Column>
-              <Column width={48}>Actions</Column>
-            </TableHeader>
-            <TableBody items={keys}>
-              {(key) => (
-                <Row id={key.id}>
-                  <Cell>{key.name}</Cell>
-                  <Cell>
-                    {formatDistanceToNow(key.created_at, {
-                      addSuffix: true,
-                    })}
-                  </Cell>
-                  <Cell>
-                    {key.last_used_at
-                      ? formatDistanceToNow(key.last_used_at, {
-                          addSuffix: true,
-                        })
-                      : "Never used"}
-                  </Cell>
-                  <Cell>{key.partial_key}</Cell>
-                  <Cell>
+          <div className="flex flex-col gap-y-3">
+            {keys.map((key) => (
+              <Card key={key.id} className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Key className="size-4 text-gray-500" />
+                      <span className="font-medium text-gray-900">
+                        {key.name}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="size-3.5" />
+                        <span>
+                          Created {formatDistanceToNow(key.created_at, {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="size-3.5" />
+                        <span>
+                          Last used: {key.last_used_at
+                            ? formatDistanceToNow(key.last_used_at, {
+                                addSuffix: true,
+                              })
+                            : "Never"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Key className="size-3.5" />
+                        <code className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+                          {key.partial_key}
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="ml-4">
                     <MenuTrigger>
                       <RACButton>
                         <MoreHorizontal className="size-4 text-gray-500" />
@@ -344,11 +602,11 @@ function RouteComponent() {
                         </MenuItem>
                       </Menu>
                     </MenuTrigger>
-                  </Cell>
-                </Row>
-              )}
-            </TableBody>
-          </Table>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         ) : (
           <Card className="p-8 text-center">
             <div className="text-sm font-medium text-gray-700">
@@ -407,6 +665,12 @@ function RouteComponent() {
         onShowKeyChange={setShowKey}
         onCopyKey={handleCopyKey}
         onClose={handleCloseApiKeyDialog}
+      />
+
+      <InviteDialog
+        isOpen={isInviteDialogOpen}
+        onOpenChange={setIsInviteDialogOpen}
+        invitationForm={invitationForm}
       />
 
       <DialogTrigger
@@ -569,6 +833,98 @@ function ApiKeyDialog({
               </div>
             </div>
           )}
+        </Dialog>
+      </Modal>
+    </DialogTrigger>
+  );
+}
+
+type InviteDialogProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  invitationForm: any;
+};
+
+function InviteDialog({
+  isOpen,
+  onOpenChange,
+  invitationForm,
+}: InviteDialogProps) {
+  return (
+    <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
+      <Modal isDismissable>
+        <Dialog>
+          <Form
+            onSubmit={(e) => {
+              e.preventDefault();
+              invitationForm.handleSubmit();
+            }}
+          >
+            <div className="p-4 flex flex-col gap-y-4">
+              <Heading level={2}>Invite Member</Heading>
+              <invitationForm.AppField
+                name="email"
+                children={(field: any) => (
+                  <field.TextField
+                    label="Email Address"
+                    placeholder="colleague@example.com"
+                    autoFocus
+                    isRequired
+                    type="email"
+                  />
+                )}
+              />
+              <invitationForm.AppField
+                name="role"
+                children={(field: any) => (
+                  <div className="flex flex-col gap-y-1">
+                    <label className="text-sm font-medium text-gray-900">
+                      Role
+                    </label>
+                    <select
+                      className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                      value={field.state.value}
+                      onChange={(e) =>
+                        field.handleChange(e.target.value as "member" | "admin")
+                      }
+                      onBlur={field.handleBlur}
+                    >
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-xs text-red-600">
+                        {field.state.meta.errors.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                )}
+              />
+              <div className="flex justify-end gap-1.5">
+                <Button
+                  intent="secondary"
+                  onPress={() => {
+                    onOpenChange(false);
+                    invitationForm.reset();
+                  }}
+                  type="button"
+                  size="sm"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  type="submit"
+                  isPending={invitationForm.state.isSubmitting}
+                  isDisabled={invitationForm.state.isSubmitting}
+                >
+                  {invitationForm.state.isSubmitting
+                    ? "Sending..."
+                    : "Send Invitation"}
+                </Button>
+              </div>
+            </div>
+          </Form>
         </Dialog>
       </Modal>
     </DialogTrigger>

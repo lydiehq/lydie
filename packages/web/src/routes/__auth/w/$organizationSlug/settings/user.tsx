@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
 import { useQuery } from "@rocicorp/zero/react";
@@ -16,6 +16,10 @@ import {
 import { Select, SelectItem } from "@/components/generic/Select";
 import { mutators } from "@lydie/zero/mutators";
 import { Card } from "@/components/layout/Card";
+import { authClient } from "@/utils/auth";
+import { Button } from "@/components/generic/Button";
+import { formatDistanceToNow } from "date-fns";
+import { Check, X, Building2, User as UserIcon, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user")(
   {
@@ -25,9 +29,11 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user"
 
 function RouteComponent() {
   const z = useZero();
+  const navigate = useNavigate();
 
   const [userSettings] = useQuery(queries.settings.user({}));
   const [fontSize, setFontSize] = useAtom(rootFontSizeAtom);
+  const [userInvitations] = useQuery(queries.invitations.byUser({}));
 
   const handleTogglePersistDocumentTreeExpansion = async (
     isSelected: boolean
@@ -46,6 +52,39 @@ function RouteComponent() {
     } catch (error) {
       toast.error("Failed to update preference");
       console.error("Settings update error:", error);
+    }
+  };
+
+  const handleAcceptInvitation = async (invitationId: string, organizationSlug: string) => {
+    try {
+      await authClient.organization.acceptInvitation({
+        invitationId,
+      });
+      toast.success("Invitation accepted successfully");
+      // Navigate to the organization
+      navigate({
+        to: "/w/$organizationSlug",
+        params: { organizationSlug },
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error?.message || "Failed to accept invitation";
+      toast.error(errorMessage);
+      console.error("Accept invitation error:", error);
+    }
+  };
+
+  const handleRejectInvitation = async (invitationId: string) => {
+    try {
+      await authClient.organization.rejectInvitation({
+        invitationId,
+      });
+      toast.success("Invitation rejected");
+    } catch (error: any) {
+      const errorMessage =
+        error?.message || "Failed to reject invitation";
+      toast.error(errorMessage);
+      console.error("Reject invitation error:", error);
     }
   };
 
@@ -136,6 +175,90 @@ function RouteComponent() {
             </div>
           </div>
         </Card>
+      </div>
+
+      <Separator />
+
+      {/* Pending Invitations Section */}
+      <div className="flex flex-col gap-y-4">
+        <div className="flex flex-col gap-y-0.5">
+          <Heading level={2}>Pending Invitations</Heading>
+          <p className="text-sm/relaxed text-gray-600">
+            You have been invited to join these organizations.
+          </p>
+        </div>
+
+        {userInvitations && userInvitations.length > 0 ? (
+          <div className="flex flex-col gap-y-3">
+            {userInvitations.map((invitation) => (
+              <Card key={invitation.id} className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="size-4 text-gray-500" />
+                      <span className="font-medium text-gray-900">
+                        {invitation.organization?.name || "Unknown Organization"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <UserIcon className="size-3.5" />
+                        <span>
+                          Role: <span className="capitalize font-medium">{invitation.role || "member"}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <UserIcon className="size-3.5" />
+                        <span>
+                          Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="size-3.5" />
+                        <span>
+                          Expires {formatDistanceToNow(invitation.expires_at, {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      size="sm"
+                      onPress={() =>
+                        handleAcceptInvitation(
+                          invitation.id,
+                          invitation.organization?.slug || ""
+                        )
+                      }
+                    >
+                      <Check className="size-3.5 mr-1" />
+                      Accept
+                    </Button>
+                    <Button
+                      intent="secondary"
+                      size="sm"
+                      onPress={() => handleRejectInvitation(invitation.id)}
+                    >
+                      <X className="size-3.5 mr-1" />
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-8 text-center">
+            <div className="text-sm font-medium text-gray-700">
+              No pending invitations
+            </div>
+            <div className="text-xs mt-1 text-gray-500">
+              You don't have any pending organization invitations
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );
