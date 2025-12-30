@@ -36,6 +36,7 @@ export function ToolbarButton(props: Props) {
         {...rest}
         className={computedClassName}
         isDisabled={isDisabled}
+        aria-label={props.title}
       >
         <props.icon className="size-[15px] text-gray-700" />
       </RACButton>

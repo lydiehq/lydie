@@ -210,7 +210,10 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
                 />
 
                 <MenuTrigger>
-                  <RACButton className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100">
+                  <RACButton
+                    className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100"
+                    aria-label="Table Columns"
+                  >
                     <Columns className="size-4" />
                   </RACButton>
                   <Menu>
@@ -246,7 +249,10 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
                 </MenuTrigger>
 
                 <MenuTrigger>
-                  <RACButton className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100">
+                  <RACButton
+                    className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100"
+                    aria-label="Table Rows"
+                  >
                     <Rows className="size-4" />
                   </RACButton>
                   <Menu>
@@ -358,7 +364,7 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
           )}
         </div> */}
         <MenuTrigger>
-          <RACButton>
+          <RACButton aria-label="Document Options">
             <MoreVertical className="size-4" />
           </RACButton>
           <Menu>
