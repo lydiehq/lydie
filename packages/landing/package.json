@@ -17,7 +17,7 @@
     "@lydie-app/sdk": "^0.0.1",
     "@lydie/integrations": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-form": "^1.27.6",
+    "@tanstack/react-form": "^1.27.7",
     "@tiptap/core": "^3.14.0",
     "@tiptap/react": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",
