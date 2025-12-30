@@ -11,7 +11,7 @@ import {
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
 import type { ContentNode } from "../utils/types";
 import { findRelatedDocuments } from "@lydie/core/embedding/index";
-import { convertYjsToJson } from "../../utils/yjs-to-json";
+import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 
 export const ExternalApi = new Hono()
   .use(apiKeyAuth)

@@ -17,11 +17,13 @@
     "@lydie/database": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
     "@polar-sh/sdk": "^0.42.1",
+    "@tiptap/y-tiptap": "^3.0.1",
     "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "nanoid": "^5.1.6",
     "node-html-parser": "^7.0.1",
+    "yjs": "^13.6.28",
     "zod": "catalog:"
   },
   "devDependencies": {

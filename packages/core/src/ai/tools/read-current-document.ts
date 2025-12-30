@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db, documentsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 import { serializeToHTML } from "../../serialization/html";
+import { convertYjsToJson } from "../../yjs-to-json";
 
 export const readCurrentDocument = (documentId: string) =>
   tool({
@@ -32,6 +33,7 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
           id: documentsTable.id,
           title: documentsTable.title,
           jsonContent: documentsTable.jsonContent,
+          yjsState: documentsTable.yjsState,
         })
         .from(documentsTable)
         .where(eq(documentsTable.id, documentId))
@@ -55,10 +57,31 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
       // Add fake delay to see loading state (remove in production)
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
+      // Use Yjs as source of truth if available, otherwise fall back to jsonContent
+      let jsonContent = document.jsonContent;
+      if (document.yjsState) {
+        try {
+          const yjsJson = convertYjsToJson(document.yjsState);
+          if (yjsJson) {
+            jsonContent = yjsJson;
+          } else {
+            console.warn(
+              `[ReadCurrentDocument] Failed to convert Yjs state for document ${document.id}, falling back to jsonContent`
+            );
+          }
+        } catch (error) {
+          console.error(
+            "[ReadCurrentDocument] Error converting Yjs to JSON:",
+            error
+          );
+          // Fall back to jsonContent if conversion fails
+        }
+      }
+
       // Convert jsonContent to HTML using our custom renderer
       let htmlContent: string;
       try {
-        htmlContent = serializeToHTML(document.jsonContent as any);
+        htmlContent = serializeToHTML(jsonContent as any);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);

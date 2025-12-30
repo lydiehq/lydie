@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db, documentsTable } from "@lydie/database";
 import { eq, and, ilike } from "drizzle-orm";
 import { serializeToHTML } from "../../serialization/html";
+import { convertYjsToJson } from "../../yjs-to-json";
 
 export const readDocument = (userId: string, organizationId: string) =>
   tool({
@@ -53,6 +54,7 @@ Use this tool when you need to access the complete content of a document to refe
           id: documentsTable.id,
           title: documentsTable.title,
           jsonContent: documentsTable.jsonContent,
+          yjsState: documentsTable.yjsState,
           slug: documentsTable.slug,
           createdAt: documentsTable.createdAt,
           updatedAt: documentsTable.updatedAt,
@@ -108,17 +110,35 @@ Use this tool when you need to access the complete content of a document to refe
       // Add fake delay to see loading state (remove in production)
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
+      // Use Yjs as source of truth if available, otherwise fall back to jsonContent
+      let jsonContent = document.jsonContent;
+      if (document.yjsState) {
+        try {
+          const yjsJson = convertYjsToJson(document.yjsState);
+          if (yjsJson) {
+            jsonContent = yjsJson;
+          } else {
+            console.warn(
+              `[ReadDocument] Failed to convert Yjs state for document ${document.id}, falling back to jsonContent`
+            );
+          }
+        } catch (error) {
+          console.error("[ReadDocument] Error converting Yjs to JSON:", error);
+          // Fall back to jsonContent if conversion fails
+        }
+      }
+
       // Convert jsonContent to HTML using our custom renderer
       let htmlContent: string;
       try {
-        htmlContent = serializeToHTML(document.jsonContent as any);
+        htmlContent = serializeToHTML(jsonContent as any);
       } catch (error) {
         console.error(
           "[ReadDocument] Error converting jsonContent to HTML:",
           error
         );
         // Fallback to raw JSON string if conversion fails
-        htmlContent = JSON.stringify(document.jsonContent, null, 2);
+        htmlContent = JSON.stringify(jsonContent, null, 2);
       }
 
       const result: any = {
