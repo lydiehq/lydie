@@ -11,7 +11,6 @@ const server = serve(
     port,
   },
   (info) => {
-    console.log(`Started development server: http://localhost:${info.port}`);
     hocuspocus.hooks("onListen", {
       instance: hocuspocus,
       configuration: hocuspocus.configuration,
