@@ -8,7 +8,7 @@ import { KeyboardShortcutExtension } from "@/editor/extensions/keyboard-shortcut
 import { IndentHandlerExtension } from "@/editor/extensions/indent-handler";
 import { Collaboration } from "@tiptap/extension-collaboration";
 import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
-import { useCallback, useMemo, useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { TableKit } from "@tiptap/extension-table";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
@@ -44,7 +44,6 @@ function getUserColor(userId: string): string {
 }
 
 export function useCollaborativeEditor({
-  initialContent,
   documentId,
   onUpdate,
   onSave,
@@ -53,10 +52,8 @@ export function useCollaborativeEditor({
   currentUser,
   yjsServerUrl = "ws://localhost:3001/yjs",
 }: {
-  initialContent: any;
   documentId: string;
   onUpdate?: () => void;
-  getApiClient: () => any;
   onSave?: () => void;
   onTextSelect?: (e: any) => void;
   onAddLink?: () => void;
@@ -131,8 +128,7 @@ export function useCollaborativeEditor({
           : []),
       ],
       // Don't set content when using Collaboration - Yjs document is the source of truth
-      // We'll initialize it after provider syncs if the document is empty
-      content: ydoc ? undefined : initialContent,
+      content: undefined,
       editorProps: {
         attributes: {
           class: "size-full outline-none editor-content",
@@ -140,57 +136,8 @@ export function useCollaborativeEditor({
       },
       onUpdate,
     },
-    [ydoc, provider, initialContent]
+    [ydoc, provider]
   );
-
-  // Initialize Yjs document with existing content if it's empty
-  // This happens after the provider syncs and we confirm the document is empty
-  useEffect(() => {
-    if (!editor || !provider || !ydoc || !initialContent) return;
-
-    let hasInitialized = false;
-    let timeoutId: NodeJS.Timeout | null = null;
-
-    // Wait for provider to sync before checking/initializing
-    const initializeIfEmpty = () => {
-      if (!provider.synced || !editor || hasInitialized) return;
-
-      // Check if Yjs document is empty by checking the XML fragment
-      // Collaboration extension uses "default" as the fragment name
-      const fragment = ydoc.getXmlFragment("default");
-      const isEmpty = fragment.length === 0;
-
-      // Also check if editor is empty (double check)
-      if (isEmpty && editor.isEmpty && initialContent) {
-        // Initialize with existing content - this will sync to Yjs
-        console.log(
-          "[CollaborativeEditor] Initializing empty Yjs document with existing content"
-        );
-        hasInitialized = true;
-
-        // Use a small delay to ensure Collaboration extension is fully ready
-        timeoutId = setTimeout(() => {
-          if (editor && !editor.isDestroyed && editor.isEmpty) {
-            // Only set if still empty (another client might have added content)
-            editor.commands.setContent(initialContent);
-          }
-        }, 200);
-      }
-    };
-
-    // Try immediately if already synced
-    if (provider.synced) {
-      initializeIfEmpty();
-    } else {
-      // Wait for sync event
-      provider.on("synced", initializeIfEmpty);
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      provider.off("synced", initializeIfEmpty);
-    };
-  }, [editor, provider, ydoc, initialContent]);
 
   const setContent = useCallback(
     (content: string) => {

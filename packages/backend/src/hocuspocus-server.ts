@@ -1,5 +1,4 @@
 import { Hocuspocus, onAuthenticatePayload } from "@hocuspocus/server";
-import { Logger } from "@hocuspocus/extension-logger";
 import { Database } from "@hocuspocus/extension-database";
 import { db } from "@lydie/database";
 import { documentsTable, membersTable } from "@lydie/database/schema";
@@ -20,7 +19,6 @@ async function verifyDocumentAccess(
       .limit(1);
 
     if (!doc[0]) {
-      console.error(`[Hocuspocus] Document not found: ${documentId}`);
       return false;
     }
 
@@ -40,24 +38,17 @@ async function verifyDocumentAccess(
 
     return membership.length > 0;
   } catch (error) {
-    console.error(`[Hocuspocus] Error verifying document access:`, error);
     return false;
   }
 }
 
 // Create Hocuspocus server instance
 export const hocuspocus = new Hocuspocus({
-  // Enable development logging and persistence
   extensions: [
-    new Logger({
-      log: (message: string) => console.log(`[Hocuspocus] ${message}`),
-    }),
     new Database({
       // Fetch document state from database
       fetch: async ({ documentName }) => {
         try {
-          console.log(`[Hocuspocus] Fetching document: ${documentName}`);
-
           const result = await db
             .select({ yjsState: documentsTable.yjsState })
             .from(documentsTable)
@@ -65,24 +56,13 @@ export const hocuspocus = new Hocuspocus({
             .limit(1);
 
           if (!result[0] || !result[0].yjsState) {
-            console.log(
-              `[Hocuspocus] No persisted state found for: ${documentName}`
-            );
             return null;
           }
 
           // Convert base64 string back to Uint8Array
           const buffer = Buffer.from(result[0].yjsState, "base64");
-          const uint8Array = new Uint8Array(buffer);
-          console.log(
-            `[Hocuspocus] Loaded ${uint8Array.length} bytes for: ${documentName}`
-          );
-          return uint8Array;
+          return new Uint8Array(buffer);
         } catch (error) {
-          console.error(
-            `[Hocuspocus] Error fetching document ${documentName}:`,
-            error
-          );
           return null;
         }
       },
@@ -92,10 +72,6 @@ export const hocuspocus = new Hocuspocus({
           // Convert Uint8Array to base64 string for storage
           const base64State = Buffer.from(state).toString("base64");
 
-          console.log(
-            `[Hocuspocus] Storing ${state.length} bytes for: ${documentName}`
-          );
-
           await db
             .update(documentsTable)
             .set({
@@ -103,15 +79,8 @@ export const hocuspocus = new Hocuspocus({
               updatedAt: new Date(),
             })
             .where(eq(documentsTable.id, documentName));
-
-          console.log(
-            `[Hocuspocus] Successfully stored state for: ${documentName}`
-          );
         } catch (error) {
-          console.error(
-            `[Hocuspocus] Error storing document ${documentName}:`,
-            error
-          );
+          // Silently fail - state will be retried on next update
         }
       },
     }),
@@ -122,12 +91,7 @@ export const hocuspocus = new Hocuspocus({
     documentName,
     request,
   }: onAuthenticatePayload): Promise<any> {
-    console.log("Authenticating...");
-    // Read cookie header from request
     if (!request?.headers) {
-      console.warn(
-        `[Hocuspocus] Connection without headers for document ${documentName}`
-      );
       throw new Error("Authentication required");
     }
 
@@ -139,13 +103,8 @@ export const hocuspocus = new Hocuspocus({
       });
 
       if (!session?.user) {
-        console.warn(
-          `[Hocuspocus] Invalid session for document ${documentName}`
-        );
         throw new Error("Invalid authentication");
       }
-
-      console.log("siosss", documentName);
 
       // Verify user has access to the document
       const hasAccess = await verifyDocumentAccess(
@@ -154,15 +113,8 @@ export const hocuspocus = new Hocuspocus({
       );
 
       if (!hasAccess) {
-        console.warn(
-          `[Hocuspocus] User ${session.user.id} does not have access to document ${documentName}`
-        );
         throw new Error("Access denied");
       }
-
-      console.log(
-        `[Hocuspocus] Authenticated connection for document: ${documentName} by user: ${session.user.name}`
-      );
 
       // Return user data for awareness
       return {
@@ -170,30 +122,9 @@ export const hocuspocus = new Hocuspocus({
         name: session.user.name,
       };
     } catch (error) {
-      console.error(`[Hocuspocus] Authentication error:`, error);
       throw new Error("Authentication failed");
     }
   },
 
   debounce: 30000,
-
-  // Add onConnect hook for logging
-  async onConnect({ documentName, socketId }) {
-    console.log(
-      `[Hocuspocus] Client connected - Document: ${documentName}, Socket: ${socketId}`
-    );
-  },
-
-  // Add connected hook for logging
-  async connected({ documentName, socketId }) {
-    console.log(
-      `[Hocuspocus] Client fully synced - Document: ${documentName}, Socket: ${socketId}`
-    );
-  },
-
-  async onDisconnect({ documentName, socketId }) {
-    console.log(
-      `[Hocuspocus] Client disconnected - Document: ${documentName}, Socket: ${socketId}`
-    );
-  },
 });
