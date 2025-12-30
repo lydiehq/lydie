@@ -7,12 +7,11 @@ import {
   type ImperativePanelHandle,
 } from "react-resizable-panels";
 import { EditorSidebar } from "./editor/EditorSidebar";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { EditorToolbar } from "./editor/EditorToolbar";
 import { PanelResizer } from "./panels/PanelResizer";
 import { BottomBar } from "./editor/BottomBar";
-import { useContentEditor, useTitleEditor } from "@/utils/editor";
-import { useAutoSave } from "@/hooks/use-auto-save";
+import { useTitleEditor } from "@/utils/editor";
 import {
   SelectedContentProvider,
   useSelectedContent,
@@ -24,8 +23,9 @@ import { queries } from "@lydie/zero/queries";
 import { Surface } from "./layout/Surface";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
-import { useEffect } from "react";
 import { CustomFieldsEditor } from "./editor/CustomFieldsEditor";
+import { useAuth } from "@/context/auth.context";
+import { useCollaborativeEditor } from "@/utils/collaborative-editor";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -44,16 +44,12 @@ const COLLAPSED_SIZE = 3.5;
 function EditorContainer({ doc }: Props) {
   const api = useAuthenticatedApi();
   const z = useZero();
+  const { session } = useAuth();
   const [sidebarSize, setSidebarSize] = useState(25);
   const [title, setTitle] = useState(doc.title || "");
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { setFocusedContent } = useSelectedContent();
   const openLinkDialogRef = useRef<(() => void) | null>(null);
-
-  const { saveDocument } = useAutoSave({
-    documentId: doc.id,
-    debounceMs: 500,
-  });
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current;
@@ -67,14 +63,14 @@ function EditorContainer({ doc }: Props) {
   };
 
   const handleContentUpdate = () => {
-    if (!contentEditor.editor) return;
-    saveDocument({
-      json_content: contentEditor.editor.getJSON(),
-    });
+    // Content sync is now handled by Yjs, no need for auto-save
+    // We keep this callback for potential future use
   };
 
   const handleManualSave = () => {
     if (!contentEditor.editor) return;
+    // Manual save now only updates the title and marks index as outdated
+    // Content is auto-synced by Yjs
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
@@ -106,7 +102,7 @@ function EditorContainer({ doc }: Props) {
     }
   };
 
-  const contentEditor = useContentEditor({
+  const contentEditor = useCollaborativeEditor({
     initialContent: doc?.json_content ? doc.json_content : null,
     documentId: doc.id,
     onUpdate: handleContentUpdate,
@@ -114,6 +110,14 @@ function EditorContainer({ doc }: Props) {
     onSave: handleManualSave,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
+    currentUser: session?.user
+      ? {
+          id: session.user.id,
+          name: session.user.name,
+        }
+      : undefined,
+    yjsServerUrl:
+      import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001",
   });
 
   const titleEditor = useTitleEditor({
@@ -150,6 +154,62 @@ function EditorContainer({ doc }: Props) {
       editorElement.removeEventListener("blur", handleBlur);
     };
   }, [titleEditor.editor, title, z, doc.id, doc.organization_id]);
+
+  // Periodic sync of Yjs document content to Zero/PostgreSQL
+  // This ensures embeddings and integrations stay in sync
+  useEffect(() => {
+    if (!contentEditor.editor || !contentEditor.provider) return;
+
+    let syncInterval: NodeJS.Timeout | null = null;
+
+    // Only sync when provider is synced (connected and ready)
+    // Don't sync if editor is empty (might not be initialized yet)
+    const checkAndSync = () => {
+      if (
+        contentEditor.provider?.synced &&
+        contentEditor.editor &&
+        !contentEditor.editor.isEmpty
+      ) {
+        const jsonContent = contentEditor.editor.getJSON();
+        z.mutate(
+          mutators.document.update({
+            documentId: doc.id,
+            jsonContent: jsonContent,
+            indexStatus: "outdated",
+            organizationId: doc.organization_id,
+          })
+        );
+      }
+    };
+
+    // Start periodic sync after a delay to ensure initialization happens first
+    const startSyncTimeout = setTimeout(() => {
+      // Sync every 30 seconds (matching server-side persistence debounce)
+      syncInterval = setInterval(checkAndSync, 30000);
+    }, 5000); // Wait 5 seconds before starting periodic sync
+
+    // Also sync when provider becomes synced (but only if not empty)
+    const handleSync = () => {
+      if (contentEditor.provider?.synced) {
+        // Wait a bit before syncing to allow initialization
+        setTimeout(checkAndSync, 1000);
+      }
+    };
+
+    contentEditor.provider.on("synced", handleSync);
+
+    return () => {
+      clearTimeout(startSyncTimeout);
+      if (syncInterval) clearInterval(syncInterval);
+      contentEditor.provider?.off("synced", handleSync);
+    };
+  }, [
+    contentEditor.editor,
+    contentEditor.provider,
+    z,
+    doc.id,
+    doc.organization_id,
+  ]);
 
   if (!contentEditor.editor || !titleEditor.editor) {
     return null;

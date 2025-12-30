@@ -202,6 +202,7 @@ export const documentsTable = pgTable(
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     jsonContent: jsonb("json_content").notNull(),
+    yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),

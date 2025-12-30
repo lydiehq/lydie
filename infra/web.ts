@@ -2,6 +2,12 @@
 import { secret } from "./secret";
 import { zero } from "./zero";
 
+const fileOptions = [
+  {
+    files: "**/*",
+    cacheControl: "max-age=31536000,public,immutable",
+  },
+];
 
 const frontendRouter = new sst.aws.Router("Frontend", {
   transform: {
@@ -22,7 +28,7 @@ const frontendRouter = new sst.aws.Router("Frontend", {
         enableAcceptEncodingBrotli: true,
         enableAcceptEncodingGzip: true,
       },
-    }
+    },
   },
   ...($dev
     ? {}
@@ -40,9 +46,15 @@ new sst.aws.StaticSite("Web", {
     command: "bun run build",
     output: "dist",
   },
+  assets: {
+    fileOptions: fileOptions,
+  },
   environment: {
     VITE_ZERO_URL: zero.url,
     VITE_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
+    VITE_YJS_SERVER_URL: $dev
+      ? "ws://localhost:3001/yjs"
+      : "wss://api.lydie.co/yjs",
   },
   router: {
     instance: frontendRouter,

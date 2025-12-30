@@ -56,7 +56,7 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
       <Toolbar aria-label="Editor formatting" className="flex items-center">
         <div className="flex">
-          <Group aria-label="History" className="flex gap-1">
+          {/* <Group aria-label="History" className="flex gap-1">
             <ToolbarButton
               onPress={() => editor.chain().focus().undo().run()}
               title="Undo"
@@ -73,7 +73,7 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
               isDisabled={!editor.can().redo()}
               hotkeys={[mod, "Shift", "Z"]}
             />
-          </Group>
+          </Group> */}
 
           <Separator
             orientation="vertical"

@@ -105,6 +105,7 @@ export const zero = new sst.aws.Service("Zero", {
   },
   environment: {
     ...commonEnv,
+    ZERO_NUM_SYNC_WORKERS: "4", // Must be <= (ZERO_UPSTREAM_MAX_CONNS - 1) for replication stream
     ...($dev ? {} : { ZERO_CHANGE_STREAMER_MODE: "discover" }),
   },
   logging: {

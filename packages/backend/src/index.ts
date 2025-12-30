@@ -1,8 +1,24 @@
-import { app } from "./api";
-import type { Serve } from "bun";
+import { app, injectWebSocket } from "./api";
+import { serve } from "@hono/node-server";
+import { hocuspocus } from "./hocuspocus-server";
 
-export default {
-  port: 3001,
-  fetch: app.fetch,
-  idleTimeout: 60,
-} satisfies Serve.Options<undefined>;
+const port = 3001;
+
+// Start server
+const server = serve(
+  {
+    fetch: app.fetch,
+    port,
+  },
+  (info) => {
+    console.log(`Started development server: http://localhost:${info.port}`);
+    hocuspocus.hooks("onListen", {
+      instance: hocuspocus,
+      configuration: hocuspocus.configuration,
+      port: info.port,
+    });
+  }
+);
+
+// Setup WebSocket support (Node.js specific)
+injectWebSocket(server);

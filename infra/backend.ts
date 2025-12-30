@@ -47,8 +47,18 @@ export const backend = new sst.aws.Service("Backend", {
   },
   environment: {
     FRONTEND_URL: $dev ? "http://localhost:3000" : "https://cloud.lydie.co",
+    NODE_ENV: $dev ? "development" : "production",
   },
   link: [...commonSecrets, embeddingQueue, email],
+  transform: {
+    target: {
+      stickiness: {
+        enabled: true,
+        type: "lb_cookie",
+        cookieDuration: 86400, // 24 hours for WebSocket sticky sessions
+      },
+    },
+  },
   dev: {
     command: "bun dev",
     directory: "packages/backend",
