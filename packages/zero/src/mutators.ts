@@ -3,6 +3,75 @@ import { createId } from "@lydie/core/id";
 import { z } from "zod";
 import { isAuthenticated, hasOrganizationAccess } from "./auth";
 import { zql } from "./schema";
+import * as Y from "yjs";
+
+// Helper function to convert base64 to Uint8Array
+function base64ToArrayBuffer(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// Helper function to convert Uint8Array to base64
+function arrayBufferToBase64(buffer: Uint8Array): string {
+  let binary = "";
+  const len = buffer.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(buffer[i]);
+  }
+  return btoa(binary);
+}
+
+// Helper function for compaction
+async function compactDocument(tx: any, documentId: string) {
+  // Get document
+  const doc = await tx.run(zql.documents.where("id", documentId).one());
+
+  if (!doc) {
+    throw new Error(`Document ${documentId} not found`);
+  }
+
+  const patches = await tx.run(
+    zql.document_patches
+      .where("document_id", documentId)
+      .orderBy("timestamp", "asc")
+  );
+
+  if (!patches.length) return;
+
+  const ydoc = new Y.Doc();
+
+  // Apply base snapshot if exists
+  if (doc.yjs_snapshot) {
+    Y.applyUpdate(ydoc, base64ToArrayBuffer(doc.yjs_snapshot));
+  }
+
+  // Apply all patches
+  for (const patch of patches) {
+    Y.applyUpdate(ydoc, base64ToArrayBuffer(patch.patch));
+  }
+
+  // Create new snapshot
+  const newSnapshot = arrayBufferToBase64(Y.encodeStateAsUpdate(ydoc));
+
+  // Update document with new snapshot
+  await tx.mutate.documents.update({
+    id: documentId,
+    yjs_snapshot: newSnapshot,
+  });
+
+  // Delete all patches using raw SQL for efficiency
+  const patchIds = patches.map((p) => p.id);
+  if (patchIds.length > 0) {
+    // Use Promise.all for parallel deletion
+    await Promise.all(
+      patchIds.map((id) => tx.mutate.document_patches.delete({ id }))
+    );
+  }
+}
 
 export const mutators = defineMutators({
   folder: {
@@ -405,6 +474,59 @@ export const mutators = defineMutators({
             deleted_at: Date.now(),
             updated_at: Date.now(),
           });
+        }
+      }
+    ),
+    applyUpdate: defineMutator(
+      z.object({
+        documentId: z.string(),
+        update: z.string(), // Base64 Yjs update
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { documentId, update, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        // Verify document exists and user has access
+        const document = await tx.run(
+          zql.documents
+            .where("id", documentId)
+            .where("organization_id", organizationId)
+            .where("deleted_at", "IS", null)
+            .one()
+        );
+
+        if (!document) {
+          throw new Error(`Document not found: ${documentId}`);
+        }
+
+        const timestamp = Date.now();
+
+        // Create a new patch
+        await tx.mutate.document_patches.insert({
+          id: createId(),
+          document_id: documentId,
+          patch: update,
+          timestamp,
+          created_at: timestamp,
+          updated_at: timestamp,
+        });
+
+        // Update document metadata
+        await tx.mutate.documents.update({
+          id: documentId,
+          updated_at: timestamp,
+        });
+
+        // Trigger compaction if we have many patches (server-side only)
+        if (tx.location === "server") {
+          const patchCount = await tx.run(
+            zql.document_patches.where("document_id", documentId)
+          );
+
+          if (patchCount.length >= 100) {
+            // Call compact helper function
+            await compactDocument(tx, documentId);
+          }
         }
       }
     ),

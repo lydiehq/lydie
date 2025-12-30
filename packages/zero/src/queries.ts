@@ -66,6 +66,20 @@ export const queries = defineQueries({
           .limit(20);
       }
     ),
+    patches: defineQuery(
+      z.object({
+        documentId: z.string(),
+        organizationId: z.string(),
+      }),
+      ({ args: { documentId, organizationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        // Verify user has access to the document via organization
+        return zql.document_patches
+          .where("document_id", documentId)
+          .orderBy("timestamp", "asc");
+      }
+    ),
   },
   components: {
     byOrganization: defineQuery(

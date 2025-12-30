@@ -98,6 +98,7 @@ function EditorContainer({ doc }: Props) {
 
   const contentEditor = useCollaborativeEditor({
     documentId: doc.id,
+    organizationId: doc.organization_id,
     onSave: handleManualSave,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
@@ -107,7 +108,7 @@ function EditorContainer({ doc }: Props) {
           name: session.user.name,
         }
       : undefined,
-    yjsServerUrl: import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001",
+    yjsServerUrl: undefined,
   });
 
   const titleEditor = useTitleEditor({

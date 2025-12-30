@@ -68,6 +68,7 @@ const documents = table("documents")
     title: string(),
     slug: string(),
     json_content: json().optional(),
+    yjs_snapshot: string().optional(), // Base64 Yjs snapshot for collaborative editing
     user_id: string(),
     organization_id: string(),
     index_status: string(),
@@ -77,6 +78,16 @@ const documents = table("documents")
     custom_fields: json().optional(),
     published: boolean(),
     deleted_at: number().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const documentPatches = table("document_patches")
+  .columns({
+    id: string(),
+    document_id: string(),
+    patch: string(), // Base64 Yjs binary update
+    timestamp: number(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -287,7 +298,23 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["document_id"],
     destSchema: documentPublications,
   }),
+  patches: many({
+    sourceField: ["id"],
+    destField: ["document_id"],
+    destSchema: documentPatches,
+  }),
 }));
+
+const documentPatchesRelations = relationships(
+  documentPatches,
+  ({ one }) => ({
+    document: one({
+      sourceField: ["document_id"],
+      destField: ["id"],
+      destSchema: documents,
+    }),
+  })
+);
 
 const foldersRelations = relationships(folders, ({ one, many }) => ({
   user: one({
@@ -638,6 +665,7 @@ export const schema = createSchema({
   tables: [
     users,
     documents,
+    documentPatches,
     folders,
     organizations,
     members,
@@ -659,6 +687,7 @@ export const schema = createSchema({
   ],
   relationships: [
     documentsRelations,
+    documentPatchesRelations,
     foldersRelations,
     organizationsRelations,
     membersRelations,

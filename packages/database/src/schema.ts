@@ -202,7 +202,8 @@ export const documentsTable = pgTable(
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     jsonContent: jsonb("json_content").notNull(),
-    yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing
+    yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing (legacy)
+    yjsSnapshot: text("yjs_snapshot"), // Y.js snapshot stored as base64 for Zero-based collaboration
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
@@ -242,6 +243,26 @@ export const documentsTable = pgTable(
     index("documents_organization_id_idx").on(table.organizationId),
     index("documents_folder_id_idx").on(table.folderId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
+  ]
+);
+
+export const documentPatchesTable = pgTable(
+  "document_patches",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    patch: text("patch").notNull(), // Base64 Yjs binary update
+    timestamp: timestamp("timestamp").notNull().defaultNow(),
+    ...timestamps,
+  },
+  (table) => [
+    index("document_patches_document_id_idx").on(table.documentId),
+    index("document_patches_timestamp_idx").on(table.timestamp),
   ]
 );
 

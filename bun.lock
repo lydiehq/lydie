@@ -254,6 +254,7 @@
         "@rocicorp/zero": "catalog:",
         "better-auth": "catalog:",
         "drizzle-orm": "catalog:",
+        "yjs": "^13.6.28",
         "zod": "catalog:",
       },
       "devDependencies": {
