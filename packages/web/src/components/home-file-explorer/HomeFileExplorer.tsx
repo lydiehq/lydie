@@ -31,7 +31,7 @@ interface ItemType {
 const VIEW_MODE_STORAGE_KEY = "lydie:view:mode";
 
 export function HomeFileExplorer() {
-  const { session, user } = useAuth();
+  const { user } = useAuth();
   const { organization } = useOrganization();
   // todo: could probably be made non-strict
   const { tree } = useSearch({ strict: false });
@@ -74,14 +74,14 @@ export function HomeFileExplorer() {
   const documents = search.trim()
     ? allDocuments
     : tree
-      ? allDocuments.filter((doc) => doc.folder_id === tree)
-      : allDocuments.filter((doc) => !doc.folder_id);
+    ? allDocuments.filter((doc) => doc.folder_id === tree)
+    : allDocuments.filter((doc) => !doc.folder_id);
 
   const folders = search.trim()
     ? allFolders
     : tree
-      ? allFolders.filter((folder) => folder.parent_id === tree)
-      : allFolders.filter((folder) => !folder.parent_id);
+    ? allFolders.filter((folder) => folder.parent_id === tree)
+    : allFolders.filter((folder) => !folder.parent_id);
 
   // Create separate items for folders and documents
   const folderItems: ItemType[] = useMemo(
@@ -173,7 +173,68 @@ export function HomeFileExplorer() {
   // Find current folder info if we're in a folder
   const currentFolder = tree ? allFolders.find((f) => f.id === tree) : null;
 
+  // Get 4 latest opened documents (sorted by updated_at)
+  // Only show at root level when not searching
+  const recentlyOpenedDocuments: ItemType[] = useMemo(() => {
+    if (search.trim() || tree) {
+      return [];
+    }
+
+    return allDocuments
+      .filter((doc) => doc.updated_at) // Only include documents with updated_at
+      .sort((a, b) => {
+        const aTime =
+          typeof a.updated_at === "number"
+            ? a.updated_at
+            : new Date(a.updated_at || 0).getTime();
+        const bTime =
+          typeof b.updated_at === "number"
+            ? b.updated_at
+            : new Date(b.updated_at || 0).getTime();
+        return bTime - aTime; // Descending order (newest first)
+      })
+      .slice(0, 4) // Take top 4
+      .map((doc) => ({
+        id: doc.id,
+        name: doc.title || "Untitled document",
+        type: "document" as const,
+        updated_at: doc.updated_at,
+      }));
+  }, [allDocuments, search, tree]);
+
+  // List state management for recently opened documents
+  const recentlyOpenedList = useListData<ItemType>({
+    initialItems: recentlyOpenedDocuments,
+    getKey: (item) => item.id,
+  });
+
+  // Sync recently opened list data when items change
+  useEffect(() => {
+    const currentIds = new Set(recentlyOpenedList.items.map((item) => item.id));
+    const newIds = new Set(recentlyOpenedDocuments.map((item) => item.id));
+
+    // Remove items that no longer exist
+    recentlyOpenedList.items.forEach((item) => {
+      if (!newIds.has(item.id)) {
+        recentlyOpenedList.remove(item.id);
+      }
+    });
+
+    // Add new items
+    recentlyOpenedDocuments.forEach((item) => {
+      if (!currentIds.has(item.id)) {
+        recentlyOpenedList.append(item);
+      }
+    });
+  }, [recentlyOpenedDocuments.map((i) => i.id).join(",")]);
+
   const allSelectedItems = [
+    ...recentlyOpenedList.items.filter((item) =>
+      recentlyOpenedList.selectedKeys === "all"
+        ? true
+        : recentlyOpenedList.selectedKeys instanceof Set &&
+          recentlyOpenedList.selectedKeys.has(item.id)
+    ),
     ...folderList.items.filter((item) =>
       folderList.selectedKeys === "all"
         ? true
@@ -191,6 +252,7 @@ export function HomeFileExplorer() {
   const { handleDelete } = useBulkDelete();
   const onDelete = () => {
     handleDelete(allSelectedItems, () => {
+      recentlyOpenedList.setSelectedKeys(new Set());
       folderList.setSelectedKeys(new Set());
       documentList.setSelectedKeys(new Set());
     });
@@ -228,10 +290,48 @@ export function HomeFileExplorer() {
             onBackClick={handleBackClick}
           />
         )}
-        {folderList.items.length === 0 && documentList.items.length === 0 ? (
+        {folderList.items.length === 0 &&
+        documentList.items.length === 0 &&
+        recentlyOpenedList.items.length === 0 ? (
           <EmptyState hasSearch={search.trim().length > 0} />
         ) : (
           <div className="flex flex-col gap-y-4">
+            {recentlyOpenedList.items.length > 0 && (
+              <div className="flex flex-col gap-y-2">
+                <span className="text-xs font-medium text-gray-500">
+                  Recently opened
+                </span>
+                <GridList
+                  key={`recently-opened-${viewMode}`}
+                  aria-label="Recently opened documents"
+                  items={recentlyOpenedList.items}
+                  selectedKeys={recentlyOpenedList.selectedKeys}
+                  onSelectionChange={recentlyOpenedList.setSelectedKeys}
+                  selectionMode="multiple"
+                  dragAndDropHooks={dragAndDropHooks}
+                  className={
+                    viewMode === "grid"
+                      ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2"
+                      : "flex flex-col ring ring-black/10 rounded-lg divide-y divide-black/10 overflow-hidden"
+                  }
+                >
+                  {(item: ItemType) => (
+                    <DocumentItem
+                      id={item.id}
+                      name={item.name}
+                      updated_at={item.updated_at}
+                      viewMode={viewMode}
+                      isSelected={
+                        recentlyOpenedList.selectedKeys === "all"
+                          ? true
+                          : recentlyOpenedList.selectedKeys instanceof Set &&
+                            recentlyOpenedList.selectedKeys.has(item.id)
+                      }
+                    />
+                  )}
+                </GridList>
+              </div>
+            )}
             <div className="flex flex-col gap-y-2">
               <span className="text-xs font-medium text-gray-500">Folders</span>
               <GridList
