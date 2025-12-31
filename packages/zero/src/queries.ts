@@ -147,12 +147,12 @@ export const queries = defineQueries({
       }
     ),
     billing: defineQuery(
-      z.object({ organizationId: z.string() }),
-      ({ args: { organizationId }, ctx }) => {
-        hasOrganizationAccess(ctx, organizationId);
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
 
         return zql.organizations
-          .where("id", organizationId)
+          .where("slug", organizationSlug)
           .one()
           .related("llmUsage", (q) => q.orderBy("created_at", "desc"));
       }

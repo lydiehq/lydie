@@ -1,5 +1,5 @@
 import { Button } from "@/components/generic/Button";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useOrganization } from "@/context/organization.context";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { authClient } from "@/utils/auth";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
 import { Card } from "@/components/layout/Card";
 
 export const Route = createFileRoute(
@@ -30,20 +29,22 @@ export const Route = createFileRoute(
   component: RouteComponent,
   loader: async ({ context, params }) => {
     const { zero } = context;
-    const { organizationId } = params;
+    const { organizationSlug } = params;
     // Preload billing data including LLM usage
-    zero.run(queries.organizations.billing({ organizationId }));
+    zero.run(queries.organizations.billing({ organizationSlug }));
   },
   ssr: false,
 });
 
 function RouteComponent() {
+  const { organizationSlug } = useParams({
+    from: "/__auth/w/$organizationSlug/settings/billing",
+  });
   const { organization } = useOrganization();
-  const { session } = useAuth();
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   const [billingData] = useQuery(
-    queries.organizations.billing({ organizationId: organization?.id || "" })
+    queries.organizations.billing({ organizationSlug })
   );
 
   const currentPlan = useMemo(() => {
