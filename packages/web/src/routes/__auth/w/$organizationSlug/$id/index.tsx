@@ -3,6 +3,8 @@ import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
+import { Surface } from "@/components/layout/Surface";
+import { Button } from "@/components/generic/Button";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   component: RouteComponent,
@@ -35,8 +37,26 @@ function RouteComponent() {
     })
   );
 
-  if (!doc && status.type === "complete")
-    return <span>Document not found</span>;
+  if (!doc && status.type === "complete") {
+    return (
+      <div className="h-screen py-1 pr-1 flex flex-col pl-1">
+        <Surface className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-y-2">
+            <span className="text-sm font-medium text-gray-900">
+              Document not found
+            </span>
+            <p className="text-sm text-gray-500">
+              {" "}
+              The document you are looking for does not exist.
+            </p>
+            <Button size="sm" href={`/w/${organization?.slug}`}>
+              Go back
+            </Button>
+          </div>
+        </Surface>
+      </div>
+    );
+  }
   if (!doc) return null;
 
   return <Editor doc={doc} key={id} />;
