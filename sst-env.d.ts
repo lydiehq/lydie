@@ -23,10 +23,6 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
-    "Frontend": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
     "GitHubAppSlug": {
       "type": "sst.sst.Secret"
       "value": string

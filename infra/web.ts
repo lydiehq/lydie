@@ -7,52 +7,11 @@ const imagesBucket = new sst.aws.Bucket("Images", {
   access: "cloudfront",
 });
 
-const fileOptions = [
-  {
-    files: "**/*",
-    cacheControl: "max-age=31536000,public,immutable",
-  },
-];
-
-const frontendRouter = new sst.aws.Router("Frontend", {
-  transform: {
-    cachePolicy: {
-      defaultTtl: 86400,
-      maxTtl: 31536000,
-      minTtl: 1,
-      parametersInCacheKeyAndForwardedToOrigin: {
-        cookiesConfig: {
-          cookieBehavior: "none",
-        },
-        headersConfig: {
-          headerBehavior: "none",
-        },
-        queryStringsConfig: {
-          queryStringBehavior: "none",
-        },
-        enableAcceptEncodingBrotli: true,
-        enableAcceptEncodingGzip: true,
-      },
-    },
-  },
-  ...($dev
-    ? {}
-    : {
-        domain: {
-          name: "lydie.co",
-          aliases: ["*.lydie.co"],
-        },
-      }),
-});
-
 new sst.aws.StaticSite("Web", {
   path: "./packages/web",
   build: {
     command: "bun run build",
     output: "dist",
-  },
-  assets: {
-    fileOptions: fileOptions,
   },
   environment: {
     VITE_ZERO_URL: zero.url,
@@ -61,10 +20,7 @@ new sst.aws.StaticSite("Web", {
       ? "ws://localhost:3001/yjs"
       : "wss://api.lydie.co/yjs",
   },
-  router: {
-    instance: frontendRouter,
-    ...($dev ? {} : { domain: "app.lydie.co" }),
-  },
+  ...($dev ? {} : { domain: "app.lydie.co" }),
 });
 
 export { imagesBucket };
@@ -81,8 +37,5 @@ new sst.aws.StaticSite("Landing", {
       : "https://api.lydie.co",
     LYDIE_API_KEY: secret.lydieApiKey.value,
   },
-  router: {
-    instance: frontendRouter,
-    ...($dev ? {} : { domain: "lydie.co" }),
-  },
+  ...($dev ? {} : { domain: "lydie.co" }),
 });

@@ -1,4 +1,5 @@
 ---
+import { getImage } from "astro:assets";
 import { Hero } from "../components/landing/Hero";
 import { ChatSection } from "../components/landing/ChatSection";
 import Layout from "../layouts/Layout.astro";
@@ -13,6 +14,44 @@ import {
   Share2,
 } from "lucide-react";
 import { Container } from "../components/Container";
+
+// Import images for optimization
+import screenshotSidebar from "../../public/screenshot_sidebar.png";
+import screenshotChat from "../../public/screenshot_document_chat.png";
+
+// Generate optimized images for Hero
+const heroWidths = [400, 640, 980, 1280, 1920];
+const heroOptimizedImages = await Promise.all(
+  heroWidths.map((width) =>
+    getImage({
+      src: screenshotSidebar,
+      width,
+      format: "webp",
+      quality: 85,
+    })
+  )
+);
+const heroSrcset = heroOptimizedImages
+  .map((img) => `${img.src} ${img.options.width}w`)
+  .join(", ");
+const heroDefaultImage = heroOptimizedImages[heroOptimizedImages.length - 1];
+
+// Generate optimized images for ChatSection
+const chatWidths = [400, 640, 980, 1280, 1920];
+const chatOptimizedImages = await Promise.all(
+  chatWidths.map((width) =>
+    getImage({
+      src: screenshotChat,
+      width,
+      format: "webp",
+      quality: 100,
+    })
+  )
+);
+const chatSrcset = chatOptimizedImages
+  .map((img) => `${img.src} ${img.options.width}w`)
+  .join(", ");
+const chatDefaultImage = chatOptimizedImages[chatOptimizedImages.length - 1];
 
 const keyBenefits = [
   {
@@ -87,7 +126,15 @@ const productFeatures = [
   description="A minimal, powerful writing environment supercharged with AI."
 >
   <div class="flex flex-col gap-y-16 overflow-hidden">
-    <Hero client:load />
+    <Hero
+      client:load
+      imageSrc={heroDefaultImage.src}
+      imageSrcSet={heroSrcset}
+      imageSizes="(max-width: 768px) 100vw, 980px"
+      imageAlt="Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
+      imageWidth={heroDefaultImage.options.width}
+      imageHeight={heroDefaultImage.options.height}
+    />
 
     <!-- Key Benefits -->
     <Container className="flex flex-col gap-y-12 relative">
@@ -110,7 +157,15 @@ const productFeatures = [
       </div>
       <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
     </Container>
-    <ChatSection client:load />
+    <ChatSection
+      client:load
+      imageSrc={chatDefaultImage.src}
+      imageSrcSet={chatSrcset}
+      imageSizes="(max-width: 768px) 100vw, 980px"
+      imageAlt="Screenshot showing AI chat interface with document editing suggestions"
+      imageWidth={chatDefaultImage.options.width}
+      imageHeight={chatDefaultImage.options.height}
+    />
     <!-- <Container className="flex flex-col gap-y-8 relative">
       <div class="flex flex-col gap-y-2 text-center mb-8">
         <h2

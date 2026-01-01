@@ -1,8 +1,6 @@
-import { Container } from "../Container";
-import { ChevronRight, Search } from "lucide-react";
 import { Eyebrow } from "./Eyebrow";
 import { AsciiBackground } from "./AsciiBackground";
-import { Button } from "../generic/Button";
+import { Container } from "../Container";
 
 const points = [
   {
@@ -17,11 +15,26 @@ const points = [
   },
 ];
 
-export function ChatSection() {
+interface ChatSectionProps {
+  imageSrc: string;
+  imageSrcSet: string;
+  imageSizes: string;
+  imageAlt: string;
+  imageWidth?: number;
+  imageHeight?: number;
+}
+
+export function ChatSection({
+  imageSrc,
+  imageSrcSet,
+  imageSizes,
+  imageAlt,
+  imageWidth,
+  imageHeight,
+}: ChatSectionProps) {
   return (
     <section className="pt-px z-0 relative md:-mb-40">
       <div className="absolute inset-y-0 left-0 z-20 w-40 bg-linear-to-r from-white hidden md:block" />
-
       <div className="absolute -inset-x-4 -bottom-px z-20 hidden h-80 bg-linear-to-t from-white via-white md:block" />
       <Container className="relative flex flex-col items-center md:items-end py-4 md:flex-row md:py-0">
         <AsciiBackground
@@ -32,10 +45,15 @@ export function ChatSection() {
           <div className="relative w-full md:-ml-[500px]">
             <div className="w-full md:w-[980px] md:h-[800px] z-10 relative p-2 bg-white ring ring-black/4 rounded-2xl">
               <img
-                src="/screenshot_document_chat.png"
-                height="1600"
-                width="2360"
+                src={imageSrc}
+                srcSet={imageSrcSet}
+                sizes={imageSizes}
+                alt={imageAlt}
+                width={imageWidth}
+                height={imageHeight}
                 className="rounded-[10px] ring ring-black/8 shadow-legit w-full h-auto"
+                loading="lazy"
+                decoding="async"
               />
             </div>
           </div>
@@ -68,3 +86,4 @@ export function ChatSection() {
     </section>
   );
 }
+

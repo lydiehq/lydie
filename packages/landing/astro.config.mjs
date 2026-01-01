@@ -15,4 +15,15 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   trailingSlash: "never",
+  image: {
+    // Enable image optimization
+    service: {
+      entrypoint: "astro/assets/services/sharp",
+      config: {
+        limitInputPixels: false, // Allow processing large images
+      },
+    },
+    // Allow remote image domains if needed
+    remotePatterns: [],
+  },
 });

@@ -1,12 +1,26 @@
-import { Container } from "../Container";
 import { motion } from "motion/react";
 import { AnimatedWord } from "../AnimatedWord";
-import { ChevronRight, Github } from "lucide-react";
 import { AsciiBackground } from "./AsciiBackground";
-import { Button } from "../generic/Button";
 import { WaitlistForm } from "./WaitlistForm";
+import { Container } from "../Container";
 
-export function Hero() {
+interface HeroProps {
+  imageSrc: string;
+  imageSrcSet: string;
+  imageSizes: string;
+  imageAlt: string;
+  imageWidth?: number;
+  imageHeight?: number;
+}
+
+export function Hero({
+  imageSrc,
+  imageSrcSet,
+  imageSizes,
+  imageAlt,
+  imageWidth,
+  imageHeight,
+}: HeroProps) {
   return (
     <section className="-mb-20 z-0 relative">
       <div className="absolute inset-y-0 right-0 z-20 w-40 md:block hidden bg-linear-to-l from-white"></div>
@@ -74,64 +88,6 @@ export function Hero() {
               you stay in control.
             </motion.span>
             <motion.div className="flex items-center gap-x-1.5 w-full md:w-auto">
-              {/* <motion.div
-                className="flex-1 md:flex-none"
-                initial={{
-                  opacity: 0,
-                  x: -14,
-                  filter: "blur(10px)",
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  filter: "blur(0px)",
-                }}
-                transition={{
-                  delay: 1.1,
-                  duration: 0.6,
-                }}
-              >
-                <Button
-                  href="https://app.lydie.co/auth"
-                  size="lg"
-                  className="self-start w-full md:w-auto justify-center md:justify-start"
-                >
-                  <div className="flex items-center gap-x-1">
-                    <span>Start writing</span>
-                    <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
-                  </div>
-                </Button>
-              </motion.div> */}
-              {/* <motion.div
-                className="flex-1 md:flex-none"
-                initial={{
-                  opacity: 0,
-                  x: -14,
-                  filter: "blur(10px)",
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  filter: "blur(0px)",
-                }}
-                transition={{
-                  delay: 1.2,
-                  duration: 0.6,
-                }}
-              >
-                <Button
-                  href="https://github.com/lsalling/lydie"
-                  size="lg"
-                  target="_blank"
-                  intent="ghost"
-                  className="self-start w-full md:w-auto justify-center md:justify-start"
-                >
-                  <div className="flex items-center gap-x-1.5">
-                    <Github className="size-3.5" />
-                    <span>Star on GitHub</span>
-                  </div>
-                </Button>
-              </motion.div> */}
               <motion.div
                 className="flex-1 w-full"
                 initial={{
@@ -173,11 +129,15 @@ export function Hero() {
               }}
             >
               <img
-                src="/screenshot_sidebar.png"
-                alt="Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
-                height="1600"
-                width="2360"
+                src={imageSrc}
+                srcSet={imageSrcSet}
+                sizes={imageSizes}
+                alt={imageAlt}
+                width={imageWidth}
+                height={imageHeight}
                 className="rounded-xl bg-cover bg-center ring ring-black/4 shadow-legit w-full h-auto"
+                loading="eager"
+                decoding="async"
               />
             </motion.div>
           </div>
@@ -186,3 +146,4 @@ export function Hero() {
     </section>
   );
 }
+
