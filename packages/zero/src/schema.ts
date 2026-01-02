@@ -72,6 +72,7 @@ const documents = table("documents")
     organization_id: string(),
     index_status: string(),
     folder_id: string().optional(),
+    yjs_state: string().optional(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
     custom_fields: json().optional(),

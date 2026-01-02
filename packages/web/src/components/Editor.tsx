@@ -1,4 +1,3 @@
-import { useAuthenticatedApi } from "@/services/api";
 import { EditorContent } from "@tiptap/react";
 import { useZero } from "@/services/zero";
 import {
@@ -24,7 +23,6 @@ import { Surface } from "./layout/Surface";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
 import { CustomFieldsEditor } from "./editor/CustomFieldsEditor";
-import { useAuth } from "@/context/auth.context";
 import { useCollaborativeEditor } from "@/utils/collaborative-editor";
 
 type Props = {
@@ -43,7 +41,6 @@ const COLLAPSED_SIZE = 3.5;
 
 function EditorContainer({ doc }: Props) {
   const z = useZero();
-  const { session } = useAuth();
   const [sidebarSize, setSidebarSize] = useState(25);
   const [title, setTitle] = useState(doc.title || "");
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
@@ -97,17 +94,10 @@ function EditorContainer({ doc }: Props) {
   };
 
   const contentEditor = useCollaborativeEditor({
-    documentId: doc.id,
+    doc,
     onSave: handleManualSave,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
-    currentUser: session?.user
-      ? {
-          id: session.user.id,
-          name: session.user.name,
-        }
-      : undefined,
-    yjsServerUrl: import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001",
   });
 
   const titleEditor = useTitleEditor({

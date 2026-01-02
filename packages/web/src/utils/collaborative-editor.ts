@@ -13,6 +13,9 @@ import { useCallback, useMemo } from "react";
 import { TableKit } from "@tiptap/extension-table";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
+import type { QueryResultType } from "@rocicorp/zero";
+import type { queries } from "@lydie/zero/queries";
+import { useAuth } from "@/context/auth.context";
 
 export type CollaborativeEditorHookResult = {
   editor: Editor | null;
@@ -21,7 +24,6 @@ export type CollaborativeEditorHookResult = {
   ydoc: Y.Doc | null;
 };
 
-// Generate a consistent color for each user based on their ID
 function getUserColor(userId: string): string {
   const colors = [
     "#30bced",
@@ -44,44 +46,53 @@ function getUserColor(userId: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
-export function useCollaborativeEditor({
-  documentId,
-  onUpdate,
-  onSave,
-  onTextSelect,
-  onAddLink,
-  currentUser,
-  yjsServerUrl = "ws://localhost:3001/yjs",
-}: {
-  documentId: string;
+type UseCollaborativeEditorProps = {
   onUpdate?: () => void;
   onSave?: () => void;
   onTextSelect?: (e: any) => void;
   onAddLink?: () => void;
-  currentUser?: { id: string; name: string };
-  yjsServerUrl?: string;
-}): CollaborativeEditorHookResult {
-  // Create Yjs document and provider
+  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
+};
+
+const yjsServerUrl =
+  import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001";
+
+export function useCollaborativeEditor({
+  doc,
+  onUpdate,
+  onSave,
+  onTextSelect,
+  onAddLink,
+}: UseCollaborativeEditorProps): CollaborativeEditorHookResult {
+  const { user } = useAuth();
   const { ydoc, provider } = useMemo(() => {
-    if (!documentId) return { ydoc: null, provider: null };
+    if (!doc.id) return { ydoc: null, provider: null };
 
-    const doc = new Y.Doc();
+    const yjsState = new Y.Doc();
 
-    // Construct the WebSocket URL - the server expects /yjs/:documentId
-    // Remove the /yjs suffix from the base URL if present, then add /yjs/:documentId
-    const baseUrl = yjsServerUrl.replace(/\/yjs\/?$/, "");
-    const wsUrl = `${baseUrl}/yjs/${documentId}`;
-
-    console.log(`[CollaborativeEditor] Connecting to: ${wsUrl}`);
+    // Initialize document with existing state if available
+    if (doc.yjs_state) {
+      try {
+        const bytes = Uint8Array.from(atob(doc.yjs_state), (c) =>
+          c.charCodeAt(0)
+        );
+        Y.applyUpdate(yjsState, bytes);
+      } catch (error) {
+        console.error(
+          "[CollaborativeEditor] Error applying initial Yjs state:",
+          error
+        );
+      }
+    }
 
     const hocuspocusProvider = new HocuspocusProvider({
-      name: documentId,
-      url: wsUrl,
-      document: doc,
+      name: doc.id,
+      url: `${yjsServerUrl}/${doc.id}`,
+      document: yjsState,
     });
 
-    return { ydoc: doc, provider: hocuspocusProvider };
-  }, [documentId, yjsServerUrl]);
+    return { ydoc: yjsState, provider: hocuspocusProvider };
+  }, [doc.id, doc.yjs_state, yjsServerUrl]);
 
   const editor = useEditor(
     {
@@ -108,29 +119,22 @@ export function useCollaborativeEditor({
         DocumentComponent,
         IndentHandlerExtension,
         ImageUpload,
-        // Add collaboration extensions
-        ...(ydoc
-          ? [
-              Collaboration.configure({
-                document: ydoc,
-              }),
-              CollaborationCaret.configure({
-                provider: provider!,
-                user: currentUser
-                  ? {
-                      name: currentUser.name,
-                      color: getUserColor(currentUser.id),
-                    }
-                  : {
-                      name: "Anonymous",
-                      color: "#808080",
-                    },
-              }),
-            ]
-          : []),
+        Collaboration.configure({
+          document: ydoc,
+        }),
+        CollaborationCaret.configure({
+          provider,
+          user: user
+            ? {
+                name: user.name,
+                color: getUserColor(user.id),
+              }
+            : {
+                name: "Anonymous",
+                color: "#808080",
+              },
+        }),
       ],
-      // Don't set content when using Collaboration - Yjs document is the source of truth
-      content: undefined,
       editorProps: {
         attributes: {
           class: "size-full outline-none editor-content",
