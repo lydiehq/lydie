@@ -1,0 +1,49 @@
+FROM mirror.gcr.io/oven/bun:1.3.4 AS builder
+
+WORKDIR /app
+
+# Copy workspace root files
+COPY package.json bun.lock ./
+COPY bunfig.toml ./
+
+# Copy package.json files for all workspace dependencies
+COPY packages/core/package.json ./packages/core/package.json
+COPY packages/database/package.json ./packages/database/package.json
+COPY packages/integrations/package.json ./packages/integrations/package.json
+COPY packages/zero/package.json ./packages/zero/package.json
+COPY packages/backend/package.json ./packages/backend/package.json
+COPY packages/web/package.json ./packages/web/package.json
+COPY packages/scripts/package.json ./packages/scripts/package.json
+
+# Install dependencies
+RUN bun install --frozen-lockfile
+
+# Copy source code for all packages
+COPY packages/core ./packages/core
+COPY packages/database ./packages/database
+COPY packages/integrations ./packages/integrations
+COPY packages/zero ./packages/zero
+COPY packages/backend ./packages/backend
+COPY packages/web ./packages/web
+COPY packages/scripts ./packages/scripts
+
+# Build the web application
+WORKDIR /app/packages/web
+RUN bun run build
+
+# Production stage - serve the built app
+FROM mirror.gcr.io/oven/bun:1.3.4
+
+WORKDIR /app
+
+# Copy built assets
+COPY --from=builder /app/packages/web/dist ./dist
+
+# Install a simple static file server
+RUN bun add -g serve
+
+EXPOSE 3000
+
+# Serve the built application
+CMD ["serve", "-s", "dist", "-l", "3000"]
+

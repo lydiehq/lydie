@@ -2,6 +2,10 @@
 .sst
 
 .env
+.env.e2e
 .DS_Store
 
 node_modules
+
+# E2E test data
+postgres-data/

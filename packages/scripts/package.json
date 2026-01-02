@@ -3,13 +3,15 @@
   "scripts": {
     "db:delete-user": "sst shell bun run src/delete-user.ts",
     "db:embed-all-documents": "sst shell bun run src/embed-all-documents.ts",
-    "copy-integration-assets": "bun run src/copy-integration-assets.ts"
+    "copy-integration-assets": "bun run src/copy-integration-assets.ts",
+    "setup-test-db": "bun run src/setup-test-db.ts"
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "ai": "catalog:",
     "drizzle-orm": "catalog:",
+    "postgres": "^3.4.7",
     "sst": "catalog:"
   },
   "devDependencies": {

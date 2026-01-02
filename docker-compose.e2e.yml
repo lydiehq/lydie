@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lydie-e2e-postgres
+    environment:
+      POSTGRES_DB: lydie_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_test_password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - lydie-e2e
+
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    container_name: lydie-e2e-backend
+    environment:
+      NODE_ENV: test
+      FRONTEND_URL: http://web:3000
+      # Database connections
+      POSTGRES_CONNECTION_STRING_POOLED: postgresql://postgres:postgres_test_password@postgres:5432/lydie_test
+      POSTGRES_CONNECTION_STRING_DIRECT: postgresql://postgres:postgres_test_password@postgres:5432/lydie_test
+      # Auth
+      BETTER_AUTH_SECRET: test-secret-key-for-e2e-testing-only
+      # API Keys (mock values for testing)
+      GOOGLE_AI_STUDIO_API_KEY: test-google-key
+      OPEN_AI_API_KEY: test-openai-key
+      # OAuth (mock values)
+      GOOGLE_CLIENT_ID: test-google-client-id
+      GOOGLE_CLIENT_SECRET: test-google-client-secret
+      GITHUB_CLIENT_ID: test-github-client-id
+      GITHUB_CLIENT_SECRET: test-github-client-secret
+      GITHUB_PRIVATE_KEY: test-github-private-key
+      GITHUB_APP_SLUG: test-github-app
+      SHOPIFY_CLIENT_ID: test-shopify-client-id
+      SHOPIFY_CLIENT_SECRET: test-shopify-client-secret
+      # Billing (mock values)
+      POLAR_API_KEY: test-polar-key
+      POLAR_PRO_PRODUCT_ID: test-product-id
+      POLAR_WEBHOOK_SECRET: test-webhook-secret
+      LYDIE_API_KEY: test-lydie-api-key
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zero:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - lydie-e2e
+
+  zero:
+    image: registry.hub.docker.com/rocicorp/zero:latest
+    container_name: lydie-e2e-zero
+    environment:
+      ZERO_ADMIN_PASSWORD: test-admin-password
+      ZERO_UPSTREAM_DB: postgresql://postgres:postgres_test_password@postgres:5432/lydie_test
+      ZERO_CVR_DB: postgresql://postgres:postgres_test_password@postgres:5432/lydie_test
+      ZERO_CHANGE_DB: postgresql://postgres:postgres_test_password@postgres:5432/lydie_test
+      ZERO_MUTATE_FORWARD_COOKIES: "true"
+      ZERO_QUERY_FORWARD_COOKIES: "true"
+      ZERO_NUM_SYNC_WORKERS: "4"
+      ZERO_MUTATE_URL: http://backend:3001/internal/zero/mutate
+      ZERO_QUERY_URL: http://backend:3001/internal/zero/queries
+    ports:
+      - "4848:4848"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4848/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    networks:
+      - lydie-e2e
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile.e2e
+    container_name: lydie-e2e-web
+    environment:
+      VITE_ZERO_URL: http://localhost:4848
+      VITE_API_URL: http://localhost:3001
+      VITE_YJS_SERVER_URL: ws://localhost:3001/yjs
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+      zero:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - lydie-e2e
+
+  playwright:
+    build:
+      context: ./packages/web
+      dockerfile: Dockerfile.playwright
+    container_name: lydie-e2e-playwright
+    environment:
+      # Point to containerized services from host network perspective
+      BASE_URL: http://localhost:3000
+      API_URL: http://localhost:3001
+      ZERO_URL: http://localhost:4848
+      # Database connection for test fixtures
+      POSTGRES_CONNECTION_STRING_POOLED: postgresql://postgres:postgres_test_password@postgres:5432/lydie_test
+      POSTGRES_CONNECTION_STRING_DIRECT: postgresql://postgres:postgres_test_password@postgres:5432/lydie_test
+      BETTER_AUTH_SECRET: test-secret-key-for-e2e-testing-only
+      # CI mode
+      CI: "true"
+    volumes:
+      - ./packages/web/playwright-report:/app/playwright-report
+      - ./packages/web/test-results:/app/test-results
+    depends_on:
+      web:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      zero:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    network_mode: host
+    command: ["npx", "playwright", "test"]
+
+networks:
+  lydie-e2e:
+    driver: bridge
+
+volumes:
+  postgres-data:
+

@@ -12,6 +12,9 @@
     "sso": "aws sso login --sso-session=lydie --use-device-code",
     "sdk:publish": "bun --filter=@lydie-app/sdk sdk:publish",
     "test:e2e": "bun --filter=@lydie/web test:e2e",
+    "test:e2e:containerized": "./scripts/test-e2e-containerized.sh",
+    "test:e2e:containerized:ui": "./scripts/test-e2e-containerized.sh --ui",
+    "test:e2e:containerized:debug": "./scripts/test-e2e-containerized.sh --debug",
     "copy-integration-assets": "bun --filter=@trawle/scripts copy-integration-assets"
   },
   "engines": {

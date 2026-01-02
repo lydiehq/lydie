@@ -1,0 +1,44 @@
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json ./
+COPY ../../package.json ../../package.json
+COPY ../../bun.lock ../../bun.lock
+
+# Install bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+# Copy all workspace package.json files
+COPY ../../packages/core/package.json ../../packages/core/package.json
+COPY ../../packages/database/package.json ../../packages/database/package.json
+COPY ../../packages/integrations/package.json ../../packages/integrations/package.json
+COPY ../../packages/zero/package.json ../../packages/zero/package.json
+COPY ../../packages/backend/package.json ../../packages/backend/package.json
+COPY ../../packages/scripts/package.json ../../packages/scripts/package.json
+
+# Install dependencies
+WORKDIR /app/../..
+RUN bun install --frozen-lockfile
+
+# Copy source code
+COPY ../../packages/core ../../packages/core
+COPY ../../packages/database ../../packages/database
+COPY ../../packages/integrations ../../packages/integrations
+COPY ../../packages/zero ../../packages/zero
+COPY ../../packages/backend ../../packages/backend
+COPY ../../packages/scripts ../../packages/scripts
+
+# Copy web package
+WORKDIR /app
+COPY . .
+
+# Install Playwright browsers
+RUN bunx playwright install chromium
+
+WORKDIR /app
+
+CMD ["bun", "run", "playwright", "test"]
+
