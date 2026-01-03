@@ -1,0 +1,89 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { getTemplates, getTemplateCategories } from "../../utils/templates";
+---
+
+<Layout
+  title="Templates - Lydie"
+  description="Document templates for Lydie. Get started quickly with pre-built templates."
+>
+  <Container className="flex flex-col gap-y-12">
+    <div class="flex flex-col gap-y-4">
+      <h1
+        class="text-2xl font-heading font-medium tracking-tight text-gray-800"
+      >
+        Templates
+      </h1>
+      <p class="text-[15px]/relaxed text-gray-600 max-w-[65ch] text-balance">
+        Start with a template to get your documents up and running quickly.
+        Choose from a variety of pre-built templates for different use cases.
+
+        <br />
+        <br />
+        Want to contribute a template? <a
+          href="https://github.com/lsalling/lydie/issues/new?labels=template&title=Template+Request%3A+"
+          target="_blank"
+          class="text-gray-900 hover:text-gray-800 transition-colors"
+          >Let us know</a
+        >.
+      </p>
+    </div>
+
+    {
+      (() => {
+        const templates = getTemplates();
+        const categories = getTemplateCategories();
+
+        if (templates.length === 0) {
+          return (
+            <div class="text-center py-12">
+              <p class="text-gray-600">No templates available yet. Check back soon!</p>
+            </div>
+          );
+        }
+
+        return categories.map((category) => {
+          const categoryTemplates = templates.filter(
+            (t) => t.category === category
+          );
+
+          return (
+            <div class="flex flex-col gap-y-6">
+              <h2
+                class="text-xl font-heading font-medium tracking-tight text-gray-800"
+              >
+                {category}
+              </h2>
+              <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categoryTemplates.map((template) => (
+                  <a
+                    href={`/templates/${template.id}`}
+                    class="flex flex-col gap-y-3 p-4 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all group"
+                  >
+                    {template.thumbnail && (
+                      <img
+                        src={template.thumbnail}
+                        alt={`${template.title} thumbnail`}
+                        class="w-full h-48 object-cover rounded-lg"
+                      />
+                    )}
+                    <div class="flex flex-col gap-y-1">
+                      <h3 class="text-base font-medium text-gray-900 group-hover:text-gray-800">
+                        {template.title}
+                      </h3>
+                      <p class="text-[0.8125rem] text-gray-600">
+                        {template.description}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          );
+        });
+      })()
+    }
+  </Container>
+</Layout>
+

@@ -111,6 +111,7 @@
         "@astrojs/sitemap": "^3.6.0",
         "@fontsource-variable/inter": "^5.2.8",
         "@lydie-app/sdk": "^0.0.1",
+        "@lydie/core": "workspace:*",
         "@lydie/integrations": "workspace:*",
         "@tailwindcss/vite": "^4.1.18",
         "@tanstack/react-form": "^1.27.7",
