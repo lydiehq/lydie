@@ -1,0 +1,110 @@
+---
+import { readFile } from "fs/promises";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { getTemplate } from "../../utils/templates";
+import { ChevronLeft } from "lucide-react";
+import { LydieContent } from "../../components/LydieContent";
+import type { ContentNode } from "@lydie-app/sdk";
+
+export async function getStaticPaths() {
+  const { getTemplates } = await import("../../utils/templates");
+  const templates = getTemplates();
+  return templates.map((template) => ({
+    params: { slug: template.id },
+  }));
+}
+
+const { slug } = Astro.params;
+const template = getTemplate(slug!);
+
+if (!template) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Template not found",
+  });
+}
+
+// Load the full template content from the JSON file
+let templateContent: ContentNode | null = null;
+try {
+  // Get the landing package directory (3 levels up from this file)
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const landingPackageRoot = join(__dirname, "../../..");
+  const templatePath = join(
+    landingPackageRoot,
+    "public/templates",
+    `${slug}.json`
+  );
+  const templateFile = await readFile(templatePath, "utf-8");
+  const templateData = JSON.parse(templateFile);
+  templateContent = templateData.content;
+} catch (error) {
+  console.error(`Failed to load template content for ${slug}:`, error);
+}
+---
+
+<Layout
+  title={`${template.title} - Templates - Lydie`}
+  description={template.description}
+>
+  <Container className="flex flex-col gap-y-8">
+    <a
+      href="/templates"
+      class="flex items-center gap-x-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors w-fit"
+    >
+      <ChevronLeft className="size-4" />
+      Back to Templates
+    </a>
+
+    <div class="flex flex-col gap-y-6">
+      <div class="flex flex-col gap-y-4">
+        <div class="flex items-center gap-x-4">
+          {template.thumbnail && (
+            <div class="rounded-lg overflow-hidden ring ring-black/5">
+              <img
+                src={template.thumbnail}
+                alt={`${template.title} thumbnail`}
+                class="w-32 h-32 object-cover"
+              />
+            </div>
+          )}
+          <div class="flex flex-col gap-y-2">
+            <div class="flex items-center gap-x-2">
+              <span class="text-sm font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded">
+                {template.category}
+              </span>
+            </div>
+            <h1
+              class="text-3xl font-heading font-medium tracking-tight text-gray-800"
+            >
+              {template.title}
+            </h1>
+            <p class="text-[15px]/relaxed text-gray-600 max-w-[65ch]">
+              {template.description}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {templateContent && (
+        <div class="flex flex-col gap-y-6">
+          <div class="border-t border-gray-200 pt-6">
+            <h2
+              class="text-xl font-heading font-medium tracking-tight text-gray-800 mb-4"
+            >
+              Preview
+            </h2>
+            <div class="prose max-w-none bg-white rounded-lg border border-gray-200 p-8">
+              <LydieContent client:load content={templateContent} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </Container>
+</Layout>
+

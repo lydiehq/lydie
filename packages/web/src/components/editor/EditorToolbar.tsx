@@ -9,8 +9,6 @@ import {
 import {
   List,
   ListOrdered,
-  Undo,
-  Redo,
   Table,
   Plus,
   Minus,
@@ -27,6 +25,7 @@ import {
   MoreVertical,
   Link,
   Image as ImageIcon,
+  Download,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useImageUpload } from "@/hooks/use-image-upload";
@@ -36,6 +35,9 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
+import { useAuth } from "@/context/auth.context";
+import { isAdmin } from "@/utils/admin";
+import { toast } from "sonner";
 
 type Props = {
   editor: Editor;
@@ -49,12 +51,60 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
   const { deleteDocument } = useDocumentActions();
   const { uploadImage } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
 
   // Detect platform for keyboard shortcuts
   const isMac =
     typeof navigator !== "undefined" &&
     navigator.platform.toUpperCase().indexOf("MAC") >= 0;
   const mod = isMac ? "⌘" : "Ctrl";
+
+  const handleDownloadTemplate = () => {
+    try {
+      // Get current content from editor
+      const jsonContent = editor.getJSON();
+
+      // Prompt for template metadata
+      const category =
+        prompt(
+          "Enter template category (e.g., 'Getting Started', 'API Documentation'):"
+        ) || "";
+      const description = prompt("Enter template description:") || "";
+
+      if (!category || !description) {
+        toast.error("Category and description are required");
+        return;
+      }
+
+      // Create template object
+      const template = {
+        title: doc.title,
+        category,
+        description,
+        content: jsonContent,
+      };
+
+      // Convert to JSON and download
+      const jsonString = JSON.stringify(template, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${
+        doc.slug || doc.title.toLowerCase().replace(/\s+/g, "-")
+      }-template.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("Template downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      toast.error("Failed to download template");
+    }
+  };
 
   return (
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
@@ -203,7 +253,8 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
 
                 try {
                   const url = await uploadImage(file);
-                  const alt = prompt("Enter alt text for the image (optional):") || "";
+                  const alt =
+                    prompt("Enter alt text for the image (optional):") || "";
                   editor.chain().focus().setImage({ src: url, alt }).run();
                 } catch (error) {
                   console.error("Failed to upload image:", error);
@@ -416,6 +467,12 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
             <MenuItem onAction={() => setIsSettingsOpen(true)}>
               Settings
             </MenuItem>
+            {userIsAdmin && (
+              <MenuItem onAction={handleDownloadTemplate}>
+                <Download className="size-3.5 mr-1.5" />
+                Download as Template
+              </MenuItem>
+            )}
             <MenuItem onAction={() => deleteDocument(doc.id, true)}>
               Delete
             </MenuItem>
