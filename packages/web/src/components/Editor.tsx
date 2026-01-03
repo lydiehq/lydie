@@ -24,6 +24,7 @@ import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
 import { CustomFieldsEditor } from "./editor/CustomFieldsEditor";
 import { useCollaborativeEditor } from "@/utils/collaborative-editor";
+import { ChildPages } from "./editor/ChildPages";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -191,6 +192,10 @@ function EditorContainer({ doc }: Props) {
                   aria-label="Document content"
                   editor={contentEditor.editor}
                   className="min-h-full size-full pb-12 block"
+                />
+                <ChildPages
+                  documentId={doc.id}
+                  organizationId={doc.organization_id}
                 />
               </div>
             </div>

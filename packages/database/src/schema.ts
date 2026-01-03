@@ -209,6 +209,9 @@ export const documentsTable = pgTable(
     folderId: text("folder_id").references(() => foldersTable.id, {
       onDelete: "set null",
     }),
+    parentId: text("parent_id").references((): PgColumn<any> => documentsTable.id, {
+      onDelete: "set null",
+    }),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
@@ -241,6 +244,7 @@ export const documentsTable = pgTable(
       .where(sql`deleted_at IS NULL`),
     index("documents_organization_id_idx").on(table.organizationId),
     index("documents_folder_id_idx").on(table.folderId),
+    index("documents_parent_id_idx").on(table.parentId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
   ]
 );

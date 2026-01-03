@@ -57,10 +57,6 @@ export type DocumentTreeItemProps = {
   >["documents"];
 };
 
-type DocumentIndexStatusIndicatorProps = {
-  indexStatus: string;
-};
-
 export function DocumentTreeItem({
   item,
   renderItem,
@@ -72,6 +68,7 @@ export function DocumentTreeItem({
   const { user } = useAuth();
   const folderChevronRef = useRef<HTMLButtonElement>(null);
   const integrationLinkChevronRef = useRef<HTMLButtonElement>(null);
+  const documentChevronRef = useRef<HTMLButtonElement>(null);
 
   const isCurrentDocument =
     item.type === "document" && currentDocId === item.id;
@@ -120,7 +117,9 @@ export function DocumentTreeItem({
           className: `
             dragging:opacity-50 dragging:bg-gray-50 
             ${
-              item.type === "folder" || isIntegrationLink
+              item.type === "folder" ||
+              item.type === "document" ||
+              isIntegrationLink
                 ? "drop-target:bg-gray-200"
                 : ""
             }
@@ -211,16 +210,20 @@ export function DocumentTreeItem({
               {item.type === "document" &&
                 (() => {
                   const document = documents.find((doc) => doc.id === item.id);
-                  const indexStatus = document?.index_status || "outdated";
+                  const hasChildren = item.children && item.children.length > 0;
                   return (
-                    <div className="relative flex items-center gap-0.5">
-                      {isAdmin(user) && (
-                        <DocumentIndexStatusIndicator
-                          indexStatus={indexStatus}
-                        />
-                      )}
-                      <File className="size-3.5 text-gray-500 shrink-0" />
-                    </div>
+                    <Button
+                      ref={documentChevronRef}
+                      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+                      slot="chevron"
+                    >
+                      <File className="size-3.5 text-gray-500 shrink-0 group-hover/chevron:hidden" />
+                      <ChevronRight
+                        className={`size-3 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+                          hasChildren && isExpanded ? "rotate-90" : ""
+                        }`}
+                      />
+                    </Button>
                   );
                 })()}
               <span className="truncate">{getDisplayName(item.name)}</span>
@@ -281,33 +284,5 @@ export function DocumentTreeItem({
         <Collection items={item.children}>{renderItem}</Collection>
       )}
     </TreeItem>
-  );
-}
-
-function DocumentIndexStatusIndicator({
-  indexStatus,
-}: DocumentIndexStatusIndicatorProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "indexed":
-        return "bg-green-500";
-      case "indexing":
-        return "bg-yellow-500";
-      case "pending":
-        return "bg-yellow-400";
-      case "failed":
-        return "bg-red-500";
-      case "outdated":
-      default:
-        return "bg-gray-400";
-    }
-  };
-
-  return (
-    <div
-      className={`rounded absolute top-0 left-0 transition-all duration-200 ease-in-out ring-1 ring-surface ${getStatusColor(
-        indexStatus
-      )} size-1`}
-    />
   );
 }

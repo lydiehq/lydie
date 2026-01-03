@@ -13,7 +13,7 @@ export function useDocumentActions() {
   const { navigate: routerNavigate } = useRouter();
   const { organization } = useOrganization();
 
-  const createDocument = async (folderId?: string) => {
+  const createDocument = async (folderId?: string, parentId?: string) => {
     if (!organization) {
       toast.error("Something went wrong, please try again or contact support.");
       return;
@@ -26,16 +26,19 @@ export function useDocumentActions() {
         organizationId: organization.id,
         title: "",
         folderId,
+        parentId,
       })
     );
 
-    console.log("createDocument", folderId);
+    console.log("createDocument", folderId, parentId);
 
     await navigate({
       from: "/w/$organizationSlug",
       to: "/w/$organizationSlug/$id",
       params: { id, organizationSlug: organization.slug || "" },
     });
+    
+    return id;
   };
 
   const createFolder = async () => {

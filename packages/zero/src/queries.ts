@@ -33,6 +33,12 @@ export const queries = defineQueries({
           .where("deleted_at", "IS", null)
           .one()
           .related("folder")
+          .related("parent")
+          .related("children", (q) =>
+            q
+              .where("deleted_at", "IS", null)
+              .orderBy("created_at", "asc")
+          )
           .related("organization")
           .related("conversations", (q) =>
             q

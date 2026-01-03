@@ -72,6 +72,7 @@ const documents = table("documents")
     organization_id: string(),
     index_status: string(),
     folder_id: string().optional(),
+    parent_id: string().optional(),
     yjs_state: string().optional(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
@@ -267,6 +268,16 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     sourceField: ["folder_id"],
     destField: ["id"],
     destSchema: folders,
+  }),
+  parent: one({
+    sourceField: ["parent_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  children: many({
+    sourceField: ["id"],
+    destField: ["parent_id"],
+    destSchema: documents,
   }),
   organization: one({
     sourceField: ["organization_id"],

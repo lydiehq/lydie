@@ -204,12 +204,13 @@ export const mutators = defineMutators({
         organizationId: z.string(),
         title: z.string().optional(),
         folderId: z.string().optional(),
+        parentId: z.string().optional(),
         jsonContent: z.any().optional(),
       }),
       async ({
         tx,
         ctx,
-        args: { id, organizationId, title = "", folderId, jsonContent },
+        args: { id, organizationId, title = "", folderId, parentId, jsonContent },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
 
@@ -228,6 +229,21 @@ export const mutators = defineMutators({
           }
         }
 
+        // If creating as a child page, verify parent document belongs to same organization
+        if (parentId) {
+          const parent = await tx.run(
+            zql.documents
+              .where("id", parentId)
+              .where("organization_id", organizationId)
+              .where("deleted_at", "IS", null)
+              .one()
+          );
+
+          if (!parent) {
+            throw new Error(`Parent document not found: ${parentId}`);
+          }
+        }
+
         await tx.mutate.documents.insert({
           id,
           slug: id,
@@ -238,6 +254,7 @@ export const mutators = defineMutators({
           index_status: "pending",
           published: false,
           folder_id: folderId || null,
+          parent_id: parentId || null,
           created_at: Date.now(),
           updated_at: Date.now(),
         });
@@ -331,9 +348,10 @@ export const mutators = defineMutators({
       z.object({
         documentId: z.string(),
         folderId: z.string().optional(),
+        parentId: z.string().optional(),
         organizationId: z.string(),
       }),
-      async ({ tx, ctx, args: { documentId, folderId, organizationId } }) => {
+      async ({ tx, ctx, args: { documentId, folderId, parentId, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
 
         // Verify document belongs to the organization
@@ -364,9 +382,47 @@ export const mutators = defineMutators({
           }
         }
 
+        // If moving to a parent document, verify parent belongs to same organization
+        // and check for circular references
+        if (parentId) {
+          if (parentId === documentId) {
+            throw new Error("Cannot move document into itself");
+          }
+
+          const parent = await tx.run(
+            zql.documents
+              .where("id", parentId)
+              .where("organization_id", organizationId)
+              .where("deleted_at", "IS", null)
+              .one()
+          );
+
+          if (!parent) {
+            throw new Error(`Parent document not found: ${parentId}`);
+          }
+
+          // Check for circular reference - ensure parent is not a descendant of this document
+          let currentParentId: string | null = parent.parent_id;
+          while (currentParentId) {
+            if (currentParentId === documentId) {
+              throw new Error("Cannot move document into its own descendant");
+            }
+            const currentParent = await tx.run(
+              zql.documents
+                .where("id", currentParentId)
+                .where("organization_id", organizationId)
+                .where("deleted_at", "IS", null)
+                .one()
+            );
+            if (!currentParent) break;
+            currentParentId = currentParent.parent_id;
+          }
+        }
+
         await tx.mutate.documents.update({
           id: documentId,
           folder_id: folderId || null,
+          parent_id: parentId || null,
           updated_at: Date.now(),
         });
       }
