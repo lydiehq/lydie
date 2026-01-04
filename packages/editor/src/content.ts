@@ -17,6 +17,7 @@ export interface GetContentExtensionsOptions {
   markdownPaste?: Partial<E.MarkdownPasteOptions>;
   keyboardShortcuts?: Partial<E.KeyboardShortcutOptions>;
   documentComponent?: Partial<E.DocumentComponentOptions>;
+  codeBlock?: Partial<E.CodeBlockOptions>;
   collaboration?: Partial<CollaborationOptions>;
   collaborationCaret?: Partial<CollaborationCaretOptions>;
 }
@@ -30,6 +31,8 @@ export function getContentExtensions(options?: GetContentExtensionsOptions) {
         openOnClick: false,
         protocols: ["internal"],
       },
+      code: false,
+      codeBlock: false,
     }),
     TableKit,
     CharacterCount,
@@ -37,6 +40,7 @@ export function getContentExtensions(options?: GetContentExtensionsOptions) {
     E.MarkdownPasteExtension.configure(options?.markdownPaste),
     E.KeyboardShortcutExtension.configure(options?.keyboardShortcuts),
     E.DocumentComponent.configure(options?.documentComponent),
+    E.CodeBlock.configure(options?.codeBlock),
     E.IndentHandlerExtension,
     E.ImageUpload,
     options?.collaboration
@@ -45,5 +49,5 @@ export function getContentExtensions(options?: GetContentExtensionsOptions) {
     ...(options?.collaborationCaret
       ? [CollaborationCaret.configure(options.collaborationCaret)]
       : []),
-  ];
+  ].filter((ext): ext is NonNullable<typeof ext> => ext !== undefined);
 }

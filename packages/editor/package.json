@@ -14,6 +14,7 @@
   "dependencies": {
     "@tiptap/core": "^3.14.0",
     "@tiptap/extension-character-count": "^3.14.0",
+    "@tiptap/extension-code-block-lowlight": "^3.14.0",
     "@tiptap/extension-collaboration": "^3.14.0",
     "@tiptap/extension-collaboration-caret": "^3.14.0",
     "@tiptap/extension-document": "^3.14.0",
@@ -28,6 +29,7 @@
     "@tiptap/react": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",
     "@tiptap/y-tiptap": "^3.0.1",
+    "lowlight": "^3.3.0",
     "yjs": "^13.6.29"
   },
   "devDependencies": {

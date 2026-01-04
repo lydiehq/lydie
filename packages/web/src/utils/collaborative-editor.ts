@@ -2,6 +2,7 @@ import { useEditor, Editor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { getContentExtensions } from "@lydie/editor/content";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
+import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { useCallback, useMemo } from "react";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
@@ -101,6 +102,9 @@ export function useCollaborativeEditor({
       },
       documentComponent: {
         addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
+      },
+      codeBlock: {
+        addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
       },
       collaboration: {
         document: ydoc,

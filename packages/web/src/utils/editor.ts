@@ -3,6 +3,7 @@ import { ReactNodeViewRenderer } from "@tiptap/react";
 import { getContentExtensions } from "@lydie/editor/content";
 import { getTitleExtensions } from "@lydie/editor/title";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
+import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { useCallback } from "react";
 
 export type EditorHookResult = {
@@ -55,6 +56,9 @@ export function useContentEditor({
     },
     documentComponent: {
       addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
+    },
+    codeBlock: {
+      addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
     },
   });
 

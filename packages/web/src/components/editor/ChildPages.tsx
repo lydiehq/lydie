@@ -28,7 +28,7 @@ export function ChildPages({ documentId, organizationId }: Props) {
 
   if (children.length === 0) {
     return (
-      <div className="mt-12 pt-8 border-t border-gray-200">
+      <div className="border-t border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-gray-900">Child pages</h3>
           <Button
@@ -49,7 +49,7 @@ export function ChildPages({ documentId, organizationId }: Props) {
   }
 
   return (
-    <div className="mt-12 pt-8 border-t border-gray-200">
+    <div className="border-t border-gray-200">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-gray-900">Child pages</h3>
         <Button

@@ -14,3 +14,6 @@ export { ImageUpload } from "./image-upload";
 export { DocumentComponent } from "./document-component";
 export type { DocumentComponentOptions } from "./document-component";
 
+export { CodeBlock } from "./code-block";
+export type { CodeBlockOptions } from "./code-block";
+
