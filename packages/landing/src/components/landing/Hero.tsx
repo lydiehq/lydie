@@ -1,8 +1,9 @@
 import { motion } from "motion/react";
 import { AnimatedWord } from "../AnimatedWord";
 import { AsciiBackground } from "./AsciiBackground";
-import { WaitlistForm } from "./WaitlistForm";
+import { Button } from "../generic/Button";
 import { Container } from "../Container";
+import { ChevronRight, Github } from "lucide-react";
 
 interface HeroProps {
   imageSrc: string;
@@ -90,7 +91,7 @@ export function Hero({
             </motion.span>
             <motion.div className="flex items-center gap-x-1.5 w-full md:w-auto">
               <motion.div
-                className="flex-1 w-full"
+                className="flex-1 md:flex-none"
                 initial={{
                   opacity: 0,
                   x: -14,
@@ -106,7 +107,46 @@ export function Hero({
                   duration: 0.6,
                 }}
               >
-                <WaitlistForm />
+                <Button
+                  href="https://app.lydie.co/auth"
+                  size="lg"
+                  className="self-start w-full md:w-auto justify-center md:justify-start"
+                >
+                  <div className="flex items-center gap-x-1">
+                    <span>Start writing</span>
+                    <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
+                  </div>
+                </Button>
+              </motion.div>
+              <motion.div
+                className="flex-1 md:flex-none"
+                initial={{
+                  opacity: 0,
+                  x: -14,
+                  filter: "blur(10px)",
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  filter: "blur(0px)",
+                }}
+                transition={{
+                  delay: 1.2,
+                  duration: 0.6,
+                }}
+              >
+                <Button
+                  href="https://github.com/lsalling/lydie"
+                  size="lg"
+                  target="_blank"
+                  intent="ghost"
+                  className="self-start w-full md:w-auto justify-center md:justify-start"
+                >
+                  <div className="flex items-center gap-x-1.5">
+                    <Github className="size-3.5" />
+                    <span>Star on GitHub</span>
+                  </div>
+                </Button>
               </motion.div>
             </motion.div>
           </div>
