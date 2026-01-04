@@ -1,13 +1,3 @@
-/**
- * MDX to TipTap JSON deserializer
- * Deserializes MDX strings (Markdown with JSX components) to TipTap JSON format
- *
- * This deserializer extends the basic markdown deserializer with support for:
- * - MDX components (<Component /> or <Component>content</Component>)
- * - Frontmatter parsing
- * - Component properties
- */
-
 export interface MDXComponent {
   name: string;
   props: Record<string, any>;
@@ -15,16 +5,7 @@ export interface MDXComponent {
 }
 
 export interface MDXDeserializeOptions {
-  /**
-   * Component schemas to use when deserializing components
-   * Maps component names to their property schemas
-   */
   componentSchemas?: Record<string, any>;
-  /**
-   * Whether to preserve empty paragraphs
-   * @default false
-   */
-  preserveEmptyParagraphs?: boolean;
 }
 
 // MDX Component regex patterns
@@ -96,7 +77,7 @@ export function deserializeFromMDX(
   mdxContent: string,
   options: MDXDeserializeOptions = {}
 ): any {
-  const { componentSchemas = {}, preserveEmptyParagraphs = false } = options;
+  const { componentSchemas = {} } = options;
 
   // Extract MDX components first
   const { components, cleanContent } = extractMDXComponents(mdxContent);
@@ -117,11 +98,8 @@ export function deserializeFromMDX(
 
   const closeParagraph = () => {
     if (currentParagraph) {
-      // Only add non-empty paragraphs unless preserveEmptyParagraphs is true
-      if (
-        currentParagraph.content.length > 0 ||
-        preserveEmptyParagraphs
-      ) {
+      // Only add non-empty paragraphs
+      if (currentParagraph.content.length > 0) {
         content.push(currentParagraph);
       }
       currentParagraph = null;
@@ -395,4 +373,3 @@ export function deserializeFromMDX(
     content,
   };
 }
-

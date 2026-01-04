@@ -1,10 +1,3 @@
-/**
- * Document embedding processing utilities
- *
- * This module provides functions for processing documents to generate embeddings
- * for semantic search and retrieval.
- */
-
 import {
   documentsTable,
   documentEmbeddingsTable,
@@ -13,7 +6,7 @@ import {
 import { eq } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { generateContentHash } from "../hash";
-import { convertTipTapToPlaintext } from "../utils";
+import { serializeToPlainText } from "../serialization/text";
 import { generateHeadingAwareChunks, generateSimpleChunks } from "./chunking";
 import { generateTitleEmbedding, generateManyEmbeddings } from "./generation";
 import { convertYjsToJson } from "../yjs-to-json";
@@ -42,7 +35,7 @@ export async function processDocumentEmbedding(
     return { skipped: true, reason: "conversion_failed" };
   }
 
-  const plaintextContent = convertTipTapToPlaintext(jsonContent);
+  const plaintextContent = serializeToPlainText(jsonContent as any);
   const currentContentHash = generateContentHash(plaintextContent);
   const titleChanged = doc.lastIndexedTitle !== doc.title;
   const contentChanged = doc.lastIndexedContentHash !== currentContentHash;
