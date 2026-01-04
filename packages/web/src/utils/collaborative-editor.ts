@@ -93,47 +93,34 @@ export function useCollaborativeEditor({
     editable: !isLocked,
     extensions: getContentExtensions({
       textSelection: {
-        enabled: true,
         onSelect: onTextSelect,
       },
       keyboardShortcuts: {
-        enabled: true,
         onSave,
         onAddLink,
       },
-      starterKit: {
-        heading: {},
-        undoRedo: false,
-        link: {
-          openOnClick: false,
-          protocols: ["internal"],
-        },
-      },
       documentComponent: {
-        enabled: true,
         addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
       },
-      collaboration: ydoc
-        ? {
-            document: ydoc,
-            provider: provider || undefined,
-            user: user
-              ? {
-                  name: user.name,
-                  color: getUserColor(user.id),
-                }
-              : {
-                  name: "Anonymous",
-                  color: "#808080",
-                },
-          }
-        : undefined,
+      collaboration: {
+        document: ydoc,
+      },
+      collaborationCaret: {
+        provider,
+        user: user
+          ? {
+              name: user.name,
+              color: getUserColor(user.id),
+            }
+          : {
+              name: "Anonymous",
+              color: "#808080",
+            },
+      },
     }),
     editorProps: {
       attributes: {
-        class: `size-full outline-none editor-content ${
-          isLocked ? "cursor-default" : ""
-        }`,
+        class: "size-full outline-none editor-content",
       },
     },
     onUpdate: isLocked ? undefined : onUpdate,

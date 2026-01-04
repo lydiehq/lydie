@@ -1,7 +1,7 @@
 import { useEditor, Editor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { getContentExtensions } from "@lydie/editor/content";
-import { useTitleEditor } from "@lydie/editor/title";
+import { getTitleExtensions } from "@lydie/editor/title";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
 import { useCallback } from "react";
 
@@ -9,6 +9,19 @@ export type EditorHookResult = {
   editor: Editor;
   setContent: (content: string) => void;
 };
+
+export type TitleEditorHookResult = {
+  editor: Editor | null;
+  setContent: (title: string) => void;
+};
+
+export interface UseTitleEditorOptions {
+  initialTitle?: string;
+  onUpdate?: (title: string) => void;
+  onEnter?: () => void;
+  editable?: boolean;
+  placeholder?: string;
+}
 
 export function useContentEditor({
   initialContent,
@@ -27,11 +40,9 @@ export function useContentEditor({
 }): EditorHookResult {
   const extensions = getContentExtensions({
     textSelection: {
-      enabled: true,
       onSelect: onTextSelect,
     },
     keyboardShortcuts: {
-      enabled: true,
       onSave,
       onAddLink,
     },
@@ -43,7 +54,6 @@ export function useContentEditor({
       },
     },
     documentComponent: {
-      enabled: true,
       addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
     },
   });
@@ -71,4 +81,69 @@ export function useContentEditor({
   return { editor, setContent };
 }
 
-export { useTitleEditor } from "@lydie/editor/title";
+export function useTitleEditor({
+  initialTitle = "",
+  onUpdate,
+  onEnter,
+  editable = true,
+  placeholder,
+}: UseTitleEditorOptions): TitleEditorHookResult {
+  const extensions = getTitleExtensions({
+    onEnter,
+    placeholder,
+  });
+
+  const editor = useEditor({
+    autofocus: editable,
+    editable,
+    extensions,
+    content: initialTitle
+      ? {
+          type: "doc",
+          content: [
+            {
+              type: "heading",
+              attrs: { level: 1 },
+              content: [{ type: "text", text: initialTitle }],
+            },
+          ],
+        }
+      : {
+          type: "doc",
+          content: [
+            {
+              type: "heading",
+              attrs: { level: 1 },
+              content: [],
+            },
+          ],
+        },
+    onUpdate: ({ editor }) => {
+      onUpdate?.(editor.state.doc.textContent);
+    },
+    editorProps: {
+      attributes: {
+        class: "editor-content focus:outline-none",
+      },
+    },
+  });
+
+  const setContent = useCallback(
+    (title: string) => {
+      if (!editor) return;
+      editor.commands.setContent({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 1 },
+            content: title ? [{ type: "text", text: title }] : [],
+          },
+        ],
+      });
+    },
+    [editor]
+  );
+
+  return { editor, setContent };
+}

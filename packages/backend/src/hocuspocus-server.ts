@@ -116,7 +116,7 @@ export const hocuspocus = new Hocuspocus({
         throw new Error("Access denied");
       }
 
-      // Return user data for awareness
+      // For awareness
       return {
         id: session.user.id,
         name: session.user.name,
