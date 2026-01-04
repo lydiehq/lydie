@@ -47,6 +47,7 @@ function EditorContainer({ doc }: Props) {
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { setFocusedContent } = useSelectedContent();
   const openLinkDialogRef = useRef<(() => void) | null>(null);
+  const isLocked = doc.is_locked ?? false;
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current;
@@ -67,7 +68,6 @@ function EditorContainer({ doc }: Props) {
       mutators.document.update({
         documentId: doc.id,
         title: title || "",
-        jsonContent: contentEditor.editor.getJSON(),
         indexStatus: "outdated",
         organizationId: doc.organization_id,
       })
@@ -110,6 +110,7 @@ function EditorContainer({ doc }: Props) {
         contentEditor.editor.commands.focus(0);
       }
     },
+    editable: !isLocked,
   });
 
   useEffect(() => {
@@ -159,6 +160,11 @@ function EditorContainer({ doc }: Props) {
               doc={doc}
               onAddLink={handleOpenLinkDialog}
             />
+            {isLocked && (
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
+                This page is managed by an integration and cannot be edited.
+              </div>
+            )}
             <div
               ref={scrollContainerRef}
               className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"

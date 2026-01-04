@@ -46,7 +46,6 @@ export const updateDocumentMutation = (
     z.object({
       documentId: z.string(),
       title: z.string().optional(),
-      jsonContent: z.any().optional(),
       slug: z.string().optional(),
       indexStatus: z.string().optional(),
       organizationId: z.string(),
@@ -57,7 +56,6 @@ export const updateDocumentMutation = (
       args: {
         documentId,
         title,
-        jsonContent,
         slug,
         indexStatus,
         organizationId,
@@ -71,7 +69,6 @@ export const updateDocumentMutation = (
           documentId,
           organizationId,
           title,
-          jsonContent,
           slug,
           indexStatus,
         },
@@ -81,11 +78,9 @@ export const updateDocumentMutation = (
       const doc = await tx.run(zql.documents.where("id", documentId).one());
 
       if (doc) {
-        // Queue async task to trigger embedding generation if content/title changed
-        const shouldTriggerEmbedding =
-          title !== undefined || jsonContent !== undefined;
-
-        if (shouldTriggerEmbedding) {
+        // Queue async task to trigger embedding generation if title changed
+        // Content changes are handled by Yjs sync
+        if (title !== undefined) {
           asyncTasks.push(async () => {
             await triggerEmbeddingGeneration(documentId, doc.organization_id);
           });

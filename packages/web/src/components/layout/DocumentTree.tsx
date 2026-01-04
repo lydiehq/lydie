@@ -17,11 +17,12 @@ import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 type TreeItem = {
   id: string;
   name: string;
-  type: "folder" | "document" | "integration-link" | "integration-group";
+  type: "document" | "integration-link" | "integration-group";
   children?: TreeItem[];
   integrationLinkId?: string | null;
   integrationType?: string;
   syncStatus?: string | null;
+  isLocked?: boolean;
 };
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
@@ -147,7 +148,6 @@ export function DocumentTree() {
   );
 
   const documents = orgData?.documents || [];
-  const folders = orgData?.folders || [];
 
   // Expand all parent documents when a document is opened
   useEffect(() => {
@@ -193,44 +193,45 @@ export function DocumentTree() {
         name: doc.title || "Untitled document",
         type: "document" as const,
         children: children.length > 0 ? children : undefined,
+        isLocked: doc.is_locked ?? false,
       };
     });
   };
 
   // Build tree items for an extension link (documents that belong to this link)
+  // Uses parent_id for page-hierarchy structure
   const buildLinkItems = (linkId: string): TreeItem[] => {
     const linkDocs = documents.filter(
       (doc) => doc.integration_link_id === linkId
     );
-    const linkFolders = folders.filter(
-      (folder) => folder.integration_link_id === linkId
-    );
 
-    // Build nested structure for link folders
-    const buildNestedFolders = (parentId: string | null): TreeItem[] => {
-      const subFolders = linkFolders.filter((f) => f.parent_id === parentId);
-      const folderDocs = linkDocs.filter(
-        (d) => d.folder_id === parentId || (!parentId && !d.folder_id)
+    // Build nested structure using parent_id (pages-in-pages)
+    const buildNestedDocs = (parentId: string | null): TreeItem[] => {
+      const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
+
+      // Sort documents alphabetically by title
+      const sortedDocs = [...childDocs].sort((a, b) =>
+        (a.title || "Untitled document").localeCompare(
+          b.title || "Untitled document",
+          undefined,
+          { sensitivity: "base" }
+        )
       );
 
-      return [
-        ...subFolders.map((folder) => ({
-          id: folder.id,
-          name: folder.name,
-          type: "folder" as const,
-          children: buildNestedFolders(folder.id),
-          integrationLinkId: folder.integration_link_id,
-        })),
-        ...folderDocs.map((doc) => ({
+      return sortedDocs.map((doc) => {
+        const children = buildNestedDocs(doc.id);
+        return {
           id: doc.id,
           name: doc.title || "Untitled document",
           type: "document" as const,
+          children: children.length > 0 ? children : undefined,
           integrationLinkId: doc.integration_link_id,
-        })),
-      ];
+          isLocked: doc.is_locked ?? false,
+        };
+      });
     };
 
-    return buildNestedFolders(null);
+    return buildNestedDocs(null);
   };
 
   // Build integration link entries grouped by type
@@ -304,7 +305,7 @@ export function DocumentTree() {
     );
 
     return items;
-  }, [connections, extensionLinks, documents, folders]); // Re-compute when data changes
+  }, [connections, extensionLinks, documents]); // Re-compute when data changes
 
   // Combine integration groups (at top) with regular tree items
   const treeItems = [...linkGroups, ...buildTreeItems(null)];
@@ -318,7 +319,6 @@ export function DocumentTree() {
   );
 
   const { dragAndDropHooks } = useDocumentDragDrop({
-    allFolders: folders,
     allDocuments: documents,
   });
 

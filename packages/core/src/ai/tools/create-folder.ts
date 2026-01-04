@@ -1,142 +1,136 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { db, foldersTable } from "@lydie/database";
+import { db, documentsTable } from "@lydie/database";
 import { eq, and, isNull } from "drizzle-orm";
 import { createId } from "../../id";
+import { convertJsonToYjs } from "../../yjs-to-json";
 
 export const createFolder = (userId: string, organizationId: string) =>
   tool({
-    description: `Create a new folder in the user's workspace. 
-Use this tool when the user asks to create a folder, organize documents into folders, or set up folder structure.
-You can create folders at the root level or inside other folders (nested folders).`,
+    description: `Create a new page in the user's workspace. 
+Use this tool when the user asks to create a page, organize documents, or set up page structure.
+You can create pages at the root level or as children of other pages (nested pages).`,
     inputSchema: z.object({
       name: z
         .string()
-        .describe("The name of the folder to create")
+        .describe("The title/name of the page to create")
         .min(1)
         .max(255),
-      parentFolderId: z
+      parentId: z
         .string()
         .describe(
-          "Optional ID of the parent folder if creating a nested folder. Leave empty for root level."
+          "Optional ID of the parent page if creating a nested page. Leave empty for root level."
         )
         .optional(),
-      parentFolderName: z
+      parentTitle: z
         .string()
         .describe(
-          "Optional name of the parent folder if creating a nested folder. Will search for existing folder by name."
+          "Optional title of the parent page if creating a nested page. Will search for existing page by title."
         )
         .optional(),
     }),
-    execute: async function* ({ name, parentFolderId, parentFolderName }) {
+    execute: async function* ({ name, parentId, parentTitle }) {
       // Yield initial creating state
       yield {
         state: "creating",
-        message: `Creating folder "${name}"...`,
+        message: `Creating page "${name}"...`,
       };
 
-      // Validate parent folder if provided
+      // Validate parent page if provided
       let resolvedParentId: string | null = null;
-      if (parentFolderId) {
-        const [parentFolder] = await db
-          .select()
-          .from(foldersTable)
-          .where(
-            and(
-              eq(foldersTable.id, parentFolderId),
-              eq(foldersTable.organizationId, organizationId),
-              isNull(foldersTable.deletedAt)
-            )
-          )
-          .limit(1);
+      if (parentId) {
+        const parent = await db.query.documentsTable.findFirst({
+          where: and(
+            eq(documentsTable.id, parentId),
+            eq(documentsTable.organizationId, organizationId),
+            isNull(documentsTable.deletedAt)
+          ),
+        });
 
-        if (!parentFolder) {
+        if (!parent) {
           yield {
             state: "error",
-            error: `Parent folder with ID "${parentFolderId}" not found or you don't have access to it`,
+            error: `Parent page with ID "${parentId}" not found or you don't have access to it`,
           };
           return;
         }
 
-        resolvedParentId = parentFolderId;
-      } else if (parentFolderName) {
-        // Search for parent folder by name
-        const [parentFolder] = await db
-          .select()
-          .from(foldersTable)
-          .where(
-            and(
-              eq(foldersTable.name, parentFolderName),
-              eq(foldersTable.organizationId, organizationId),
-              isNull(foldersTable.deletedAt),
-              isNull(foldersTable.parentId) // Root level folder
-            )
-          )
-          .limit(1);
+        resolvedParentId = parentId;
+      } else if (parentTitle) {
+        // Search for parent page by title (check root level first)
+        const parent = await db.query.documentsTable.findFirst({
+          where: and(
+            eq(documentsTable.title, parentTitle),
+            eq(documentsTable.organizationId, organizationId),
+            isNull(documentsTable.deletedAt),
+            isNull(documentsTable.parentId) // Root level document
+          ),
+        });
 
-        if (!parentFolder) {
+        if (!parent) {
           yield {
             state: "error",
-            error: `Parent folder "${parentFolderName}" not found at root level`,
+            error: `Parent page "${parentTitle}" not found at root level`,
           };
           return;
         }
 
-        resolvedParentId = parentFolder.id;
+        resolvedParentId = parent.id;
       }
 
-      // Check if folder with same name already exists at this location
-      const existingFolderConditions = [
-        eq(foldersTable.name, name),
-        eq(foldersTable.organizationId, organizationId),
-        isNull(foldersTable.deletedAt),
+      // Check if page with same title already exists at this location
+      const existingPageConditions = [
+        eq(documentsTable.title, name),
+        eq(documentsTable.organizationId, organizationId),
+        isNull(documentsTable.deletedAt),
       ];
 
       if (resolvedParentId) {
-        existingFolderConditions.push(
-          eq(foldersTable.parentId, resolvedParentId)
+        existingPageConditions.push(
+          eq(documentsTable.parentId, resolvedParentId)
         );
       } else {
-        existingFolderConditions.push(isNull(foldersTable.parentId));
+        existingPageConditions.push(isNull(documentsTable.parentId));
       }
 
-      const [existingFolder] = await db
-        .select()
-        .from(foldersTable)
-        .where(and(...existingFolderConditions))
-        .limit(1);
+      const existingPage = await db.query.documentsTable.findFirst({
+        where: and(...existingPageConditions),
+      });
 
-      if (existingFolder) {
+      if (existingPage) {
         yield {
           state: "success",
-          message: `Folder "${name}" already exists`,
-          folder: {
-            id: existingFolder.id,
-            name: existingFolder.name,
-            parentId: existingFolder.parentId,
-            createdAt: existingFolder.createdAt.toISOString(),
+          message: `Page "${name}" already exists`,
+          page: {
+            id: existingPage.id,
+            title: existingPage.title,
+            parentId: existingPage.parentId,
+            createdAt: existingPage.createdAt.toISOString(),
           },
         };
         return;
       }
 
-      // Create the folder
-      const folderId = createId();
-      const [newFolder] = await db
-        .insert(foldersTable)
-        .values({
-          id: folderId,
-          name,
-          userId,
-          organizationId,
-          parentId: resolvedParentId,
-        })
-        .returning();
+      // Create the page
+      const pageId = createId();
+      const emptyContent = { type: "doc", content: [] };
+      const yjsState = convertJsonToYjs(emptyContent);
+      const newPage = await db.insert(documentsTable).values({
+        id: pageId,
+        title: name,
+        slug: pageId,
+        yjsState: yjsState,
+        userId,
+        organizationId,
+        parentId: resolvedParentId,
+        indexStatus: "pending",
+        published: false,
+      }).returning();
 
-      if (!newFolder) {
+      if (!newPage || newPage.length === 0) {
         yield {
           state: "error",
-          error: "Failed to create folder",
+          error: "Failed to create page",
         };
         return;
       }
@@ -144,12 +138,12 @@ You can create folders at the root level or inside other folders (nested folders
       // Yield final success state
       yield {
         state: "success",
-        message: `Successfully created folder "${name}"`,
-        folder: {
-          id: newFolder.id,
-          name: newFolder.name,
-          parentId: newFolder.parentId,
-          createdAt: newFolder.createdAt.toISOString(),
+        message: `Successfully created page "${name}"`,
+        page: {
+          id: newPage[0].id,
+          title: newPage[0].title,
+          parentId: newPage[0].parentId,
+          createdAt: newPage[0].createdAt.toISOString(),
         },
       };
     },

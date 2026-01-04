@@ -32,7 +32,6 @@ export const queries = defineQueries({
           .where("organization_id", organizationId)
           .where("deleted_at", "IS", null)
           .one()
-          .related("folder")
           .related("parent")
           .related("children", (q) =>
             q
@@ -167,15 +166,11 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        // Get all documents and folders, we'll filter by folder on the client
-        // Exclude deleted items
+        // Get all documents, exclude deleted items
         return zql.organizations
           .where("id", organizationId)
           .one()
           .related("documents", (q) =>
-            q.where("deleted_at", "IS", null).orderBy("created_at", "desc")
-          )
-          .related("folders", (q) =>
             q.where("deleted_at", "IS", null).orderBy("created_at", "desc")
           );
       }
@@ -203,16 +198,10 @@ export const queries = defineQueries({
                 .where("deleted_at", "IS", null)
                 .orderBy("created_at", "desc")
                 .limit(20)
-            )
-            .related("folders", (q) =>
-              q
-                .where("deleted_at", "IS", null)
-                .orderBy("created_at", "desc")
-                .limit(20)
             );
         }
 
-        // Search documents by title and folders by name
+        // Search documents by title
         // Exclude deleted items
         return zql.organizations
           .where("id", organizationId)
@@ -221,13 +210,6 @@ export const queries = defineQueries({
             q
               .where("deleted_at", "IS", null)
               .where("title", "ILIKE", searchPattern)
-              .orderBy("updated_at", "desc")
-              .limit(20)
-          )
-          .related("folders", (q) =>
-            q
-              .where("deleted_at", "IS", null)
-              .where("name", "ILIKE", searchPattern)
               .orderBy("updated_at", "desc")
               .limit(20)
           );

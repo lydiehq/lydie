@@ -9,30 +9,12 @@ const enableLogging = false;
 interface ItemType {
   id: string;
   name: string;
-  type: "folder" | "document";
+  type: "document";
   updated_at?: number | string | null;
 }
 
 interface UseDocumentDragDropOptions {
-  allFolders: ReadonlyArray<{ id: string; parent_id: string | null }>;
-  allDocuments: ReadonlyArray<{ id: string; folder_id: string | null; parent_id: string | null }>;
-  currentFolderId?: string | null;
-}
-
-function isDescendant(
-  ancestorId: string,
-  descendantId: string,
-  folders: ReadonlyArray<{ id: string; parent_id: string | null }>
-): boolean {
-  const descendant = folders.find((f) => f.id === descendantId);
-  if (!descendant) return false;
-
-  if (descendant.parent_id === ancestorId) return true;
-  if (descendant.parent_id) {
-    return isDescendant(ancestorId, descendant.parent_id, folders);
-  }
-
-  return false;
+  allDocuments: ReadonlyArray<{ id: string; parent_id: string | null }>;
 }
 
 function isDocumentDescendant(
@@ -52,49 +34,17 @@ function isDocumentDescendant(
 }
 
 /**
- * Unified drag and drop hook for documents and folders.
+ * Drag and drop hook for documents using page-hierarchy (parent_id).
  * Works with both GridList and Tree components from react-aria-components.
  */
 export function useDocumentDragDrop({
-  allFolders,
   allDocuments,
-  currentFolderId,
 }: UseDocumentDragDropOptions) {
   const z = useZero();
   const { organization } = useOrganization();
 
-  const moveDocumentToFolder = (
+  const moveDocument = (
     documentId: string,
-    targetFolderId: string | null | undefined,
-    targetParentId?: string | null | undefined
-  ) => {
-    if (!organization) {
-      toast.error("Organization not found");
-      return false;
-    }
-    
-    const doc = allDocuments.find((d) => d.id === documentId);
-    const normalizedFolderTarget = targetFolderId ?? null;
-    const normalizedParentTarget = targetParentId ?? null;
-
-    // Skip if document is already in target location
-    if (doc && (doc.folder_id ?? null) === normalizedFolderTarget && (doc.parent_id ?? null) === normalizedParentTarget) {
-      return false;
-    }
-
-    z.mutate(
-      mutators.document.moveToFolder({
-        documentId,
-        folderId: targetFolderId === null ? undefined : targetFolderId,
-        parentId: targetParentId === null ? undefined : targetParentId,
-        organizationId: organization.id,
-      })
-    );
-    return true;
-  };
-
-  const moveFolderToParent = (
-    folderId: string,
     targetParentId: string | null | undefined
   ) => {
     if (!organization) {
@@ -102,40 +52,22 @@ export function useDocumentDragDrop({
       return false;
     }
     
-    const folder = allFolders.find((f) => f.id === folderId);
-    const normalizedTarget = targetParentId ?? null;
+    const doc = allDocuments.find((d) => d.id === documentId);
+    const normalizedParentTarget = targetParentId ?? null;
 
-    // Skip if folder is already in target location
-    if (folder && (folder.parent_id ?? null) === normalizedTarget) {
-      return false;
-    }
-
-    // Check for circular reference when moving into a folder
-    if (targetParentId && isDescendant(folderId, targetParentId, allFolders)) {
-      toast.error("Cannot move folder into itself or its descendants");
+    // Skip if document is already in target location
+    if (doc && (doc.parent_id ?? null) === normalizedParentTarget) {
       return false;
     }
 
     z.mutate(
-      mutators.folder.move({
-        folderId,
-        newParentId: targetParentId || undefined,
+      mutators.document.moveToFolder({
+        documentId,
+        parentId: targetParentId === null ? undefined : targetParentId,
         organizationId: organization.id,
       })
     );
     return true;
-  };
-
-  const moveItemToFolder = (
-    item: ItemType,
-    targetFolderId: string | null | undefined,
-    targetParentId?: string | null | undefined
-  ) => {
-    if (item.type === "document") {
-      return moveDocumentToFolder(item.id, targetFolderId, targetParentId);
-    } else {
-      return moveFolderToParent(item.id, targetFolderId);
-    }
   };
 
   // Create item from ID (for tree where we only have keys)
@@ -146,15 +78,6 @@ export function useDocumentDragDrop({
         id: doc.id,
         name: (doc as any).title || "Untitled document",
         type: "document" as const,
-      };
-    }
-
-    const folder = allFolders.find((f) => f.id === itemId);
-    if (folder) {
-      return {
-        id: folder.id,
-        name: (folder as any).name,
-        type: "folder" as const,
       };
     }
 
@@ -223,24 +146,14 @@ export function useDocumentDragDrop({
         const targetId = e.target.key as string;
 
         if (e.target.dropPosition === "on") {
-          // Dropping directly on a folder or document - move items into that container
-          const targetFolder = allFolders.find((f) => f.id === targetId);
+          // Dropping directly on a document - make items children of that document
           const targetDocument = allDocuments.find((d) => d.id === targetId);
           
-          if (targetFolder) {
-            // Dropping on a folder - move items into that folder
-            for (const item of processedItems) {
-              moveItemToFolder(item, targetId, undefined);
-            }
-          } else if (targetDocument) {
+          if (targetDocument) {
             // Dropping on a document - make items children of that document
             for (const item of processedItems) {
               if (item.type === "document") {
-                moveItemToFolder(item, undefined, targetId);
-              } else {
-                // Folders can't be children of documents, move to same parent as target
-                const targetParent = targetDocument.parent_id;
-                moveItemToFolder(item, undefined, targetParent);
+                moveDocument(item.id, targetId);
               }
             }
           }
@@ -249,24 +162,16 @@ export function useDocumentDragDrop({
           e.target.dropPosition === "after"
         ) {
           // Dropping before/after an item - move to the same parent as the target
-          const targetItem = createItemFromId(targetId);
-          if (!targetItem) return;
+          const targetDoc = allDocuments.find((d) => d.id === targetId);
+          if (!targetDoc) return;
 
-          // Find target's parent folder and parent document
-          let targetFolder: string | null = null;
-          let targetParent: string | null = null;
-          
-          if (targetItem.type === "folder") {
-            targetFolder = allFolders.find((f) => f.id === targetId)?.parent_id ?? null;
-          } else {
-            const targetDoc = allDocuments.find((d) => d.id === targetId);
-            targetFolder = targetDoc?.folder_id ?? null;
-            targetParent = targetDoc?.parent_id ?? null;
-          }
+          const targetParent = targetDoc.parent_id ?? null;
 
           // Move all items to target's parent
           for (const item of processedItems) {
-            moveItemToFolder(item, targetFolder, targetParent);
+            if (item.type === "document") {
+              moveDocument(item.id, targetParent);
+            }
           }
         }
       } catch (error) {
@@ -288,79 +193,30 @@ export function useDocumentDragDrop({
       try {
         const targetId = e.target.key as string;
 
-        if (e.target.dropPosition === "before") {
-          // Move before target - move to same parent as target
-          const targetItem = createItemFromId(targetId);
-          if (!targetItem) return;
+        if (e.target.dropPosition === "before" || e.target.dropPosition === "after") {
+          // Move before/after target - move to same parent as target
+          const targetDoc = allDocuments.find((d) => d.id === targetId);
+          if (!targetDoc) return;
 
-          // Find target's parent folder and parent document
-          let targetFolder: string | null = null;
-          let targetParent: string | null = null;
-          
-          if (targetItem.type === "folder") {
-            targetFolder = allFolders.find((f) => f.id === targetId)?.parent_id ?? null;
-          } else {
-            const targetDoc = allDocuments.find((d) => d.id === targetId);
-            targetFolder = targetDoc?.folder_id ?? null;
-            targetParent = targetDoc?.parent_id ?? null;
-          }
+          const targetParent = targetDoc.parent_id ?? null;
 
           // Move all dragged items to target's parent
           for (const key of e.keys) {
             const item = createItemFromId(key as string);
-            if (item) {
-              moveItemToFolder(item, targetFolder, targetParent);
-            }
-          }
-        } else if (e.target.dropPosition === "after") {
-          // Move after target - move to same parent as target
-          const targetItem = createItemFromId(targetId);
-          if (!targetItem) return;
-
-          // Find target's parent folder and parent document
-          let targetFolder: string | null = null;
-          let targetParent: string | null = null;
-          
-          if (targetItem.type === "folder") {
-            targetFolder = allFolders.find((f) => f.id === targetId)?.parent_id ?? null;
-          } else {
-            const targetDoc = allDocuments.find((d) => d.id === targetId);
-            targetFolder = targetDoc?.folder_id ?? null;
-            targetParent = targetDoc?.parent_id ?? null;
-          }
-
-          // Move all dragged items to target's parent
-          for (const key of e.keys) {
-            const item = createItemFromId(key as string);
-            if (item) {
-              moveItemToFolder(item, targetFolder, targetParent);
+            if (item && item.type === "document") {
+              moveDocument(item.id, targetParent);
             }
           }
         } else if (e.target.dropPosition === "on") {
-          // Move into target - can be a folder or a document
-          const targetFolder = allFolders.find((f) => f.id === targetId);
+          // Move into target document - make items children of that document
           const targetDocument = allDocuments.find((d) => d.id === targetId);
           
-          if (targetFolder) {
-            // Move all dragged items into the target folder
-            for (const key of e.keys) {
-              const item = createItemFromId(key as string);
-              if (item) {
-                moveItemToFolder(item, targetId, undefined);
-              }
-            }
-          } else if (targetDocument) {
+          if (targetDocument) {
             // Move all dragged items to be children of the target document
             for (const key of e.keys) {
               const item = createItemFromId(key as string);
-              if (item) {
-                if (item.type === "document") {
-                  moveItemToFolder(item, undefined, targetId);
-                } else {
-                  // Folders can't be children of documents, move to same parent as target
-                  const targetParent = targetDocument.parent_id;
-                  moveItemToFolder(item, undefined, targetParent);
-                }
+              if (item && item.type === "document") {
+                moveDocument(item.id, targetId);
               }
             }
           }
@@ -382,29 +238,14 @@ export function useDocumentDragDrop({
 
       try {
         const targetId = e.target.key as string;
-        const targetFolder = allFolders.find((f) => f.id === targetId);
         const targetDocument = allDocuments.find((d) => d.id === targetId);
         
-        if (targetFolder) {
-          // Dropping on a folder - move items into that folder
-          for (const key of e.keys) {
-            const item = createItemFromId(key as string);
-            if (item) {
-              moveItemToFolder(item, targetId, undefined);
-            }
-          }
-        } else if (targetDocument) {
+        if (targetDocument) {
           // Dropping on a document - make items children of that document
           for (const key of e.keys) {
             const item = createItemFromId(key as string);
-            if (item) {
-              if (item.type === "document") {
-                moveItemToFolder(item, undefined, targetId);
-              } else {
-                // Folders can't be children of documents, move to same parent as target
-                const targetParent = targetDocument.parent_id;
-                moveItemToFolder(item, undefined, targetParent);
-              }
+            if (item && item.type === "document") {
+              moveDocument(item.id, targetId);
             }
           }
         }

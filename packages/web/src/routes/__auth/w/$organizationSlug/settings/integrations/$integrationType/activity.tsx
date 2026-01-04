@@ -1,8 +1,8 @@
 import { IntegrationActivityLog } from "@/components/integrations/IntegrationActivityLog";
 import { createFileRoute } from "@tanstack/react-router";
-import { Route as IntegrationRoute } from "@/routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/route";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
+import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity"
@@ -11,12 +11,12 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { organizationId } = Route.useParams();
-  const { integrationDetails } = IntegrationRoute.useLoaderData();
+  const { integrationType } = Route.useParams();
+  const { organization } = useOrganization();
   const [activityLogs] = useQuery(
     queries.integrationActivityLogs.byIntegrationType({
-      integrationType: integrationDetails.id,
-      organizationId: organizationId,
+      integrationType,
+      organizationId: organization.id,
     })
   );
   return (

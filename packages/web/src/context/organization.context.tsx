@@ -1,17 +1,13 @@
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "./auth.context";
 import { useMemo } from "react";
 
 export function useOrganization() {
   const { organizationSlug } = useParams({
     from: "/__auth/w/$organizationSlug",
   });
-  const { session } = useAuth();
-  const [org] = useQuery(
-    queries.organizations.bySlug({ organizationSlug })
-  );
+  const [org] = useQuery(queries.organizations.bySlug({ organizationSlug }));
   const organization = useMemo(() => {
     if (!org) return undefined;
 

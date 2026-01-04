@@ -1,12 +1,12 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { db, documentsTable, foldersTable } from "@lydie/database";
+import { db, documentsTable } from "@lydie/database";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 
 export const moveDocuments = (userId: string, organizationId: string) =>
   tool({
-    description: `Move one or more documents to a folder (or to root level if no folder specified).
-Use this tool when the user asks to move documents, organize documents into folders, or rearrange their workspace.
+    description: `Move one or more documents to be children of another document (or to root level if no parent specified).
+Use this tool when the user asks to move documents, organize documents into pages, or rearrange their workspace.
 You can move documents by their IDs or by searching for documents matching certain criteria.`,
     inputSchema: z.object({
       documentIds: z
@@ -16,30 +16,30 @@ You can move documents by their IDs or by searching for documents matching certa
         )
         .optional()
         .default([]),
-      folderId: z
+      parentId: z
         .string()
         .describe(
-          "ID of the destination folder. Leave empty or set to null to move documents to root level."
+          "ID of the destination parent document. Leave empty or set to null to move documents to root level."
         )
         .optional()
         .nullable(),
-      folderName: z
+      parentTitle: z
         .string()
         .describe(
-          "Name of the destination folder. Will search for existing folder by name. Use this if you don't have the folder ID."
+          "Title of the destination parent document. Will search for existing document by title. Use this if you don't have the document ID."
         )
         .optional(),
       moveAll: z
         .boolean()
         .describe(
-          "If true, move all documents in the workspace to the specified folder. Overrides documentIds."
+          "If true, move all documents in the workspace to the specified parent. Overrides documentIds."
         )
         .default(false),
     }),
     execute: async function* ({
       documentIds = [],
-      folderId,
-      folderName,
+      parentId,
+      parentTitle,
       moveAll = false,
     }) {
       // Yield initial moving state
@@ -52,56 +52,57 @@ You can move documents by their IDs or by searching for documents matching certa
             }...`,
       };
 
-      // Resolve destination folder
-      let resolvedFolderId: string | null = null;
+      // Resolve destination parent document
+      let resolvedParentId: string | null = null;
 
-      if (folderId) {
-        // Verify folder exists and user has access
-        const [folder] = await db
-          .select()
-          .from(foldersTable)
-          .where(
-            and(
-              eq(foldersTable.id, folderId),
-              eq(foldersTable.organizationId, organizationId),
-              isNull(foldersTable.deletedAt)
-            )
-          )
-          .limit(1);
+      if (parentId) {
+        // Verify parent document exists and user has access
+        const parent = await db.query.documentsTable.findFirst({
+          where: and(
+            eq(documentsTable.id, parentId),
+            eq(documentsTable.organizationId, organizationId),
+            isNull(documentsTable.deletedAt)
+          ),
+        });
 
-        if (!folder) {
+        if (!parent) {
           yield {
             state: "error",
-            error: `Folder with ID "${folderId}" not found or you don't have access to it`,
+            error: `Parent document with ID "${parentId}" not found or you don't have access to it`,
           };
           return;
         }
 
-        resolvedFolderId = folderId;
-      } else if (folderName) {
-        // Search for folder by name (check root level first)
-        const [folder] = await db
-          .select()
-          .from(foldersTable)
-          .where(
-            and(
-              eq(foldersTable.name, folderName),
-              eq(foldersTable.organizationId, organizationId),
-              isNull(foldersTable.deletedAt),
-              isNull(foldersTable.parentId) // Root level folder
-            )
-          )
-          .limit(1);
-
-        if (!folder) {
+        // Check for circular reference
+        if (documentIds.includes(parentId)) {
           yield {
             state: "error",
-            error: `Folder "${folderName}" not found at root level`,
+            error: "Cannot move a document into itself",
           };
           return;
         }
 
-        resolvedFolderId = folder.id;
+        resolvedParentId = parentId;
+      } else if (parentTitle) {
+        // Search for parent document by title (check root level first)
+        const parent = await db.query.documentsTable.findFirst({
+          where: and(
+            eq(documentsTable.title, parentTitle),
+            eq(documentsTable.organizationId, organizationId),
+            isNull(documentsTable.deletedAt),
+            isNull(documentsTable.parentId) // Root level document
+          ),
+        });
+
+        if (!parent) {
+          yield {
+            state: "error",
+            error: `Parent document "${parentTitle}" not found at root level`,
+          };
+          return;
+        }
+
+        resolvedParentId = parent.id;
       }
 
       // Get documents to move
@@ -113,7 +114,7 @@ You can move documents by their IDs or by searching for documents matching certa
           .select({
             id: documentsTable.id,
             title: documentsTable.title,
-            folderId: documentsTable.folderId,
+            parentId: documentsTable.parentId,
           })
           .from(documentsTable)
           .where(
@@ -135,7 +136,7 @@ You can move documents by their IDs or by searching for documents matching certa
           .select({
             id: documentsTable.id,
             title: documentsTable.title,
-            folderId: documentsTable.folderId,
+            parentId: documentsTable.parentId,
           })
           .from(documentsTable)
           .where(
@@ -155,11 +156,33 @@ You can move documents by their IDs or by searching for documents matching certa
         return;
       }
 
+      // Check for circular references
+      if (resolvedParentId) {
+        for (const doc of documentsToMove) {
+          // Check if parent is a descendant of any document being moved
+          let currentParentId: string | null = resolvedParentId;
+          while (currentParentId) {
+            if (documentIds.includes(currentParentId)) {
+              yield {
+                state: "error",
+                error: "Cannot move documents into their own descendants",
+              };
+              return;
+            }
+            const parentDoc = await db.query.documentsTable.findFirst({
+              where: eq(documentsTable.id, currentParentId),
+            });
+            currentParentId = parentDoc?.parentId ?? null;
+          }
+        }
+      }
+
       // Update documents
       const updatedDocuments = await db
         .update(documentsTable)
         .set({
-          folderId: resolvedFolderId,
+          parentId: resolvedParentId,
+          updatedAt: new Date(),
         })
         .where(
           and(
@@ -174,11 +197,11 @@ You can move documents by their IDs or by searching for documents matching certa
         .returning({
           id: documentsTable.id,
           title: documentsTable.title,
-          folderId: documentsTable.folderId,
+          parentId: documentsTable.parentId,
         });
 
-      const folderInfo = resolvedFolderId
-        ? `folder "${folderName || folderId}"`
+      const parentInfo = resolvedParentId
+        ? `parent document "${parentTitle || parentId}"`
         : "root level";
 
       // Yield final success state
@@ -186,11 +209,11 @@ You can move documents by their IDs or by searching for documents matching certa
         state: "success",
         message: `Successfully moved ${updatedDocuments.length} document${
           updatedDocuments.length === 1 ? "" : "s"
-        } to ${folderInfo}`,
+        } to ${parentInfo}`,
         movedDocuments: updatedDocuments.map((doc) => ({
           id: doc.id,
           title: doc.title,
-          folderId: doc.folderId,
+          parentId: doc.parentId,
         })),
         totalMoved: updatedDocuments.length,
       };

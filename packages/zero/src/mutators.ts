@@ -1,170 +1,11 @@
 import { defineMutators, defineMutator } from "@rocicorp/zero";
 import { createId } from "@lydie/core/id";
+import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { z } from "zod";
 import { isAuthenticated, hasOrganizationAccess } from "./auth";
 import { zql } from "./schema";
 
 export const mutators = defineMutators({
-  folder: {
-    create: defineMutator(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        organizationId: z.string(),
-        parentId: z.string().optional(),
-      }),
-      async ({ tx, ctx, args: { id, name, organizationId, parentId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        await tx.mutate.folders.insert({
-          id,
-          name,
-          parent_id: parentId || null,
-          user_id: ctx.userId,
-          organization_id: organizationId,
-          created_at: Date.now(),
-          updated_at: Date.now(),
-        });
-      }
-    ),
-    rename: defineMutator(
-      z.object({
-        folderId: z.string(),
-        name: z.string(),
-        organizationId: z.string(),
-      }),
-      async ({ tx, ctx, args: { folderId, name, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        // Verify folder belongs to the organization
-        const folder = await tx.run(
-          zql.folders
-            .where("id", folderId)
-            .where("organization_id", organizationId)
-            .where("deleted_at", "IS", null)
-            .one()
-        );
-
-        if (!folder) {
-          throw new Error(`Folder not found: ${folderId}`);
-        }
-
-        await tx.mutate.folders.update({
-          id: folderId,
-          name,
-          updated_at: Date.now(),
-        });
-      }
-    ),
-    move: defineMutator(
-      z.object({
-        folderId: z.string(),
-        newParentId: z.string().optional(),
-        organizationId: z.string(),
-      }),
-      async ({ tx, ctx, args: { folderId, newParentId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        // Verify folder belongs to the organization
-        const folder = await tx.run(
-          zql.folders
-            .where("id", folderId)
-            .where("organization_id", organizationId)
-            .where("deleted_at", "IS", null)
-            .one()
-        );
-
-        if (!folder) {
-          throw new Error(`Folder not found: ${folderId}`);
-        }
-
-        // If moving to a parent folder, verify parent belongs to same organization
-        if (newParentId) {
-          const parentFolder = await tx.run(
-            zql.folders
-              .where("id", newParentId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-              .one()
-          );
-
-          if (!parentFolder) {
-            throw new Error(`Parent folder not found: ${newParentId}`);
-          }
-        }
-
-        await tx.mutate.folders.update({
-          id: folderId,
-          parent_id: newParentId || null,
-          updated_at: Date.now(),
-        });
-      }
-    ),
-    delete: defineMutator(
-      z.object({
-        folderId: z.string(),
-        organizationId: z.string(),
-      }),
-      async ({ tx, ctx, args: { folderId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        // Verify folder belongs to the organization
-        const folder = await tx.run(
-          zql.folders
-            .where("id", folderId)
-            .where("organization_id", organizationId)
-            .where("deleted_at", "IS", null)
-            .one()
-        );
-
-        if (!folder) {
-          throw new Error(`Folder not found: ${folderId}`);
-        }
-
-        // Helper function for recursive folder soft deletion
-        const softDeleteFolderRecursive = async (folderId: string) => {
-          // Recursively soft-delete all child folders (only within same organization)
-          const childFolders = await tx.run(
-            zql.folders
-              .where("parent_id", folderId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-          );
-
-          for (const childFolder of childFolders) {
-            // Recursively soft-delete each child folder (which will handle their children)
-            await softDeleteFolderRecursive(childFolder.id);
-          }
-
-          // Soft-delete all documents in this folder (only within same organization)
-          const documents = await tx.run(
-            zql.documents
-              .where("folder_id", folderId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-          );
-
-          for (const document of documents) {
-            await tx.mutate.documents.update({
-              id: document.id,
-              deleted_at: Date.now(),
-              updated_at: Date.now(),
-            });
-          }
-
-          // Finally, soft-delete the folder itself
-          await tx.mutate.folders.update({
-            id: folderId,
-            deleted_at: Date.now(),
-            updated_at: Date.now(),
-          });
-        };
-
-        // Soft-delete the folder and all its children recursively
-        await softDeleteFolderRecursive(folderId);
-      }
-    ),
-  },
   document: {
     publish: defineMutator(
       z.object({
@@ -203,31 +44,14 @@ export const mutators = defineMutators({
         id: z.string(),
         organizationId: z.string(),
         title: z.string().optional(),
-        folderId: z.string().optional(),
         parentId: z.string().optional(),
-        jsonContent: z.any().optional(),
       }),
       async ({
         tx,
         ctx,
-        args: { id, organizationId, title = "", folderId, parentId, jsonContent },
+        args: { id, organizationId, title = "", parentId },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
-
-        // If creating in a folder, verify folder belongs to same organization
-        if (folderId) {
-          const folder = await tx.run(
-            zql.folders
-              .where("id", folderId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-              .one()
-          );
-
-          if (!folder) {
-            throw new Error(`Folder not found: ${folderId}`);
-          }
-        }
 
         // If creating as a child page, verify parent document belongs to same organization
         if (parentId) {
@@ -244,16 +68,20 @@ export const mutators = defineMutators({
           }
         }
 
+        // Create empty Yjs state for new document
+        const emptyContent = { type: "doc", content: [] };
+        const yjsState = convertJsonToYjs(emptyContent);
+
         await tx.mutate.documents.insert({
           id,
           slug: id,
           title,
-          json_content: jsonContent || { type: "doc", content: [] },
+          yjs_state: yjsState,
           user_id: ctx.userId,
           organization_id: organizationId,
           index_status: "pending",
+          is_locked: false,
           published: false,
-          folder_id: folderId || null,
           parent_id: parentId || null,
           created_at: Date.now(),
           updated_at: Date.now(),
@@ -264,7 +92,6 @@ export const mutators = defineMutators({
       z.object({
         documentId: z.string(),
         title: z.string().optional(),
-        jsonContent: z.any().optional(),
         published: z.boolean().optional(),
         slug: z.string().optional(),
         indexStatus: z.string().optional(),
@@ -277,7 +104,6 @@ export const mutators = defineMutators({
         args: {
           documentId,
           title,
-          jsonContent,
           published,
           slug,
           indexStatus,
@@ -300,13 +126,19 @@ export const mutators = defineMutators({
           throw new Error(`Document not found: ${documentId}`);
         }
 
+        // Block title updates for locked pages
+        if (document.is_locked && title !== undefined) {
+          throw new Error(
+            "Cannot edit locked document. This page is managed by an integration."
+          );
+        }
+
         const updates: any = {
           id: documentId,
           updated_at: Date.now(),
         };
 
         if (title !== undefined) updates.title = title;
-        if (jsonContent !== undefined) updates.json_content = jsonContent;
         if (published !== undefined) updates.published = published;
         if (slug !== undefined) updates.slug = slug;
         if (indexStatus !== undefined) updates.index_status = indexStatus;
@@ -337,6 +169,13 @@ export const mutators = defineMutators({
           throw new Error(`Document not found: ${documentId}`);
         }
 
+        // Block rename for locked pages
+        if (document.is_locked) {
+          throw new Error(
+            "Cannot rename locked document. This page is managed by an integration."
+          );
+        }
+
         await tx.mutate.documents.update({
           id: documentId,
           title,
@@ -347,11 +186,10 @@ export const mutators = defineMutators({
     moveToFolder: defineMutator(
       z.object({
         documentId: z.string(),
-        folderId: z.string().optional(),
         parentId: z.string().optional(),
         organizationId: z.string(),
       }),
-      async ({ tx, ctx, args: { documentId, folderId, parentId, organizationId } }) => {
+      async ({ tx, ctx, args: { documentId, parentId, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
 
         // Verify document belongs to the organization
@@ -365,21 +203,6 @@ export const mutators = defineMutators({
 
         if (!document) {
           throw new Error(`Document not found: ${documentId}`);
-        }
-
-        // If moving to a folder, verify folder belongs to same organization
-        if (folderId) {
-          const folder = await tx.run(
-            zql.folders
-              .where("id", folderId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-              .one()
-          );
-
-          if (!folder) {
-            throw new Error(`Folder not found: ${folderId}`);
-          }
         }
 
         // If moving to a parent document, verify parent belongs to same organization
@@ -421,7 +244,6 @@ export const mutators = defineMutators({
 
         await tx.mutate.documents.update({
           id: documentId,
-          folder_id: folderId || null,
           parent_id: parentId || null,
           updated_at: Date.now(),
         });

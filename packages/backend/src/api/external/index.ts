@@ -9,7 +9,6 @@ import {
   getFoldersWithPaths,
 } from "../../utils/document-path";
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
-import type { ContentNode } from "../utils/types";
 import { findRelatedDocuments } from "@lydie/core/embedding/index";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 

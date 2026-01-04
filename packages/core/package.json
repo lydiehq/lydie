@@ -15,6 +15,7 @@
     "@ai-sdk/openai": "catalog:",
     "@aws-sdk/client-sesv2": "^3.958.0",
     "@lydie/database": "workspace:*",
+    "@lydie/editor": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
     "@polar-sh/sdk": "^0.42.1",
     "@tiptap/y-tiptap": "^3.0.1",

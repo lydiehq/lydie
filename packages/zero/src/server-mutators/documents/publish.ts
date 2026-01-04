@@ -89,41 +89,8 @@ async function pushToIntegration(
       return;
     }
 
-    // Get folder path if document has a folderId
-    let folderPath: string | null | undefined = undefined;
-    if (document.folderId) {
-      try {
-        // Query folder path using recursive CTE
-        const folderPathQuery = await db.execute(
-          sql`WITH RECURSIVE folder_paths AS (
-            SELECT id, name, parent_id, '/' || name || '/' as path, 1 as level
-            FROM folders 
-            WHERE parent_id IS NULL AND deleted_at IS NULL
-            UNION ALL
-            SELECT f.id, f.name, f.parent_id, fp.path || f.name || '/' as path, fp.level + 1 as level
-            FROM folders f
-            INNER JOIN folder_paths fp ON f.parent_id = fp.id
-            WHERE f.deleted_at IS NULL
-          )
-          SELECT RTRIM(path, '/') as path
-          FROM folder_paths
-          WHERE id = ${document.folderId}
-          LIMIT 1`
-        );
-        const pathResult = folderPathQuery[0] as { path?: string } | undefined;
-        if (pathResult?.path) {
-          // Remove leading slash and convert to folder path format (e.g., "docs/guides")
-          folderPath = pathResult.path.replace(/^\/+|\/+$/g, "") || null;
-        }
-      } catch (error) {
-        console.error(
-          `[Push] Failed to get folder path for document ${documentId}:`,
-          error
-        );
-
-        // Continue without folder path
-      }
-    }
+    // No need to compute folder path anymore - integrations use externalId and parentId
+    // to determine the correct path in the external system
 
     // Get integration from registry
     const integration = integrationRegistry.get(
@@ -166,8 +133,9 @@ async function pushToIntegration(
         published: document.published,
         updatedAt: document.updatedAt,
         organizationId: document.organizationId,
-        folderId: document.folderId,
-        folderPath: folderPath,
+        externalId: document.externalId,
+        isLocked: document.isLocked ?? false,
+        parentId: document.parentId,
       },
       connection: {
         id: link.connection.id,

@@ -17,6 +17,7 @@ import {
   Move,
   Blocks,
   Loader,
+  FileText,
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles } from "./Sidebar";
@@ -25,19 +26,14 @@ import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
 import { Menu, MenuItem } from "../generic/Menu";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
-import { isAdmin } from "@/utils/admin";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
-function getDisplayName(name: string): string {
-  return name.trim() || "Untitled document";
-}
-
-export type DocumentTreeItemProps = {
+type Props = {
   item: {
     id: string;
     name: string;
     type: "folder" | "document" | "integration-link" | "integration-group";
+    isLocked?: boolean;
     children?: Array<{
       id: string;
       name: string;
@@ -46,6 +42,7 @@ export type DocumentTreeItemProps = {
       integrationLinkId?: string | null;
       integrationType?: string;
       syncStatus?: string | null;
+      isLocked?: boolean;
     }>;
     integrationLinkId?: string | null;
     integrationType?: string;
@@ -57,18 +54,11 @@ export type DocumentTreeItemProps = {
   >["documents"];
 };
 
-export function DocumentTreeItem({
-  item,
-  renderItem,
-  documents,
-}: DocumentTreeItemProps) {
+export function DocumentTreeItem({ item, renderItem }: Props) {
   const { id: currentDocId } = useParams({ strict: false });
   const navigate = useNavigate();
   const { tree } = useSearch({ strict: false });
-  const { user } = useAuth();
-  const folderChevronRef = useRef<HTMLButtonElement>(null);
-  const integrationLinkChevronRef = useRef<HTMLButtonElement>(null);
-  const documentChevronRef = useRef<HTMLButtonElement>(null);
+  const chevronRef = useRef<HTMLButtonElement>(null);
 
   const isCurrentDocument =
     item.type === "document" && currentDocId === item.id;
@@ -76,26 +66,25 @@ export function DocumentTreeItem({
   const isCurrent = isCurrentDocument || isActiveFolder;
 
   const isIntegrationLink = item.type === "integration-link";
-
   const isGroup = item.type === "integration-group";
+  const isLocked = item.isLocked ?? false;
 
   const handleAction = () => {
-    if (isGroup)
+    if (isGroup && item.integrationType) {
       navigate({
-        to: "/w/$organizationSlug/settings/integrations/$integrationId",
-        params: { integrationId: item.integrationType },
+        to: "/w/$organizationSlug/settings/integrations/$integrationType",
+        params: { integrationType: item.integrationType },
         from: "/w/$organizationSlug",
       });
+      return;
+    }
 
     // For folders and integration links, trigger expansion by clicking the chevron button
-    if (item.type === "folder") {
-      folderChevronRef.current?.click();
+    if (item.type === "folder" || isIntegrationLink) {
+      chevronRef.current?.click();
       return;
     }
-    if (isIntegrationLink) {
-      integrationLinkChevronRef.current?.click();
-      return;
-    }
+
     if (item.type === "document") {
       navigate({
         to: "/w/$organizationSlug/$id",
@@ -147,135 +136,55 @@ export function DocumentTreeItem({
                 <Move size={12} />
               </Button>
             )}
+
             <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
-              {/* Integration Group item - shows as a folder with blocks icon */}
+              {/* Render appropriate chevron based on item type */}
               {isGroup && (
-                <>
-                  <Button
-                    className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
-                    slot="chevron"
-                  >
-                    <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
-                  </Button>
-                  <div className="flex items-center gap-0.5">
-                    {(() => {
-                      const iconUrl = item.integrationType
-                        ? getIntegrationIconUrl(item.integrationType)
-                        : null;
-
-                      if (iconUrl) {
-                        return (
-                          <img
-                            src={iconUrl}
-                            alt={`${item.name} icon`}
-                            className="size-3.5 rounded-[2px]"
-                          />
-                        );
-                      }
-
-                      return <Blocks className="size-3.5 text-gray-500" />;
-                    })()}
-                  </div>
-                </>
+                <IntegrationGroupChevron
+                  integrationType={item.integrationType}
+                  name={item.name}
+                  isExpanded={isExpanded}
+                />
               )}
 
-              {/* Integration link item - use sync icon as chevron to toggle expansion */}
               {isIntegrationLink && (
-                <Button
-                  ref={integrationLinkChevronRef}
-                  className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
-                  slot="chevron"
-                >
-                  {item.syncStatus === "pulling" ? (
-                    <Loader className="size-3.5 text-gray-500 animate-spin" />
-                  ) : (
-                    <FolderSync className="size-3.5 text-gray-500" />
-                  )}
-                </Button>
+                <IntegrationLinkChevron
+                  syncStatus={item.syncStatus}
+                  isExpanded={isExpanded}
+                  chevronRef={chevronRef}
+                />
               )}
-              {/* Folder item - use folder icon as chevron to toggle expansion */}
+
               {item.type === "folder" && (
-                <Button
-                  ref={folderChevronRef}
-                  className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
-                  slot="chevron"
-                >
-                  {isExpanded ? (
-                    <FolderOpen className="size-3.5" />
-                  ) : (
-                    <Folder className="size-3.5" />
-                  )}
-                </Button>
+                <FolderChevron
+                  isExpanded={isExpanded}
+                  chevronRef={chevronRef}
+                />
               )}
-              {item.type === "document" &&
-                (() => {
-                  const document = documents.find((doc) => doc.id === item.id);
-                  const hasChildren = item.children && item.children.length > 0;
-                  return (
-                    <Button
-                      ref={documentChevronRef}
-                      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
-                      slot="chevron"
-                    >
-                      <File className="size-3.5 text-gray-500 shrink-0 group-hover/chevron:hidden" />
-                      <ChevronRight
-                        className={`size-3 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
-                          hasChildren && isExpanded ? "rotate-90" : ""
-                        }`}
-                      />
-                    </Button>
-                  );
-                })()}
-              <span className="truncate">{getDisplayName(item.name)}</span>
+
+              {item.type === "document" && (
+                <DocumentChevron
+                  isExpanded={isExpanded}
+                  chevronRef={chevronRef}
+                />
+              )}
+
+              <span
+                className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}
+              >
+                {getDisplayName(item.name)}
+              </span>
             </div>
 
             {/* Context menu */}
             <div className="items-center gap-1 relative -mr-1">
-              {isGroup ? null : isIntegrationLink ? (
-                <MenuTrigger>
-                  <Button
-                    className="p-1 rounded hover:bg-gray-200"
-                    aria-label="Integration link options"
-                  >
-                    <MoreVertical size={12} />
-                  </Button>
-                  <Menu>
-                    <MenuItem
-                      onAction={() => {
-                        if (item.integrationLinkId) {
-                          navigate({
-                            to: "/w/$organizationSlug/settings/integrations/$integrationId",
-                            params: { integrationId: item.integrationType },
-                            from: "/w/$organizationSlug",
-                          });
-                        }
-                      }}
-                    >
-                      Integration settings
-                    </MenuItem>
-                  </Menu>
-                </MenuTrigger>
-              ) : item.type === "folder" ? (
-                <MenuTrigger>
-                  <Button
-                    className="p-1 rounded hover:bg-gray-200"
-                    aria-label="Folder options"
-                  >
-                    <MoreVertical size={12} />
-                  </Button>
-                  <FolderMenu folderId={item.id} folderName={item.name} />
-                </MenuTrigger>
-              ) : (
-                <MenuTrigger>
-                  <Button
-                    className="p-1 rounded hover:bg-gray-200"
-                    aria-label="Document options"
-                  >
-                    <MoreVertical size={12} />
-                  </Button>
-                  <DocumentMenu documentId={item.id} documentName={item.name} />
-                </MenuTrigger>
-              )}
+              <ItemContextMenu
+                type={item.type}
+                itemId={item.id}
+                itemName={item.name}
+                integrationLinkId={item.integrationLinkId}
+                integrationType={item.integrationType}
+              />
             </div>
           </>
         )}
@@ -284,5 +193,217 @@ export function DocumentTreeItem({
         <Collection items={item.children}>{renderItem}</Collection>
       )}
     </TreeItem>
+  );
+}
+
+function getDisplayName(name: string): string {
+  return name.trim() || "Untitled document";
+}
+
+function IntegrationGroupChevron({
+  integrationType,
+  name,
+  isExpanded,
+}: {
+  integrationType?: string;
+  name: string;
+  isExpanded: boolean;
+}) {
+  const iconUrl = integrationType
+    ? getIntegrationIconUrl(integrationType)
+    : null;
+
+  return (
+    <Button
+      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+      slot="chevron"
+    >
+      {iconUrl ? (
+        <>
+          <img
+            src={iconUrl}
+            alt={`${name} icon`}
+            className="size-3.5 rounded-[2px] group-hover/chevron:hidden"
+          />
+          <ChevronRight
+            className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+              isExpanded ? "rotate-90" : ""
+            }`}
+          />
+        </>
+      ) : (
+        <>
+          <Blocks className="size-3.5 text-gray-500 group-hover/chevron:hidden" />
+          <ChevronRight
+            className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+              isExpanded ? "rotate-90" : ""
+            }`}
+          />
+        </>
+      )}
+    </Button>
+  );
+}
+
+/**
+ * Integration Link Chevron - Shows sync icon with loading state
+ */
+function IntegrationLinkChevron({
+  syncStatus,
+  isExpanded,
+  chevronRef,
+}: {
+  syncStatus?: string | null;
+  isExpanded: boolean;
+  chevronRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  return (
+    <Button
+      ref={chevronRef}
+      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+      slot="chevron"
+    >
+      {syncStatus === "pulling" ? (
+        <Loader className="size-3.5 text-gray-500 animate-spin" />
+      ) : (
+        <>
+          <FolderSync className="size-3.5 text-gray-500 group-hover/chevron:hidden" />
+          <ChevronRight
+            className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+              isExpanded ? "rotate-90" : ""
+            }`}
+          />
+        </>
+      )}
+    </Button>
+  );
+}
+
+/**
+ * Folder Chevron - Shows folder icon (open/closed)
+ */
+function FolderChevron({
+  isExpanded,
+  chevronRef,
+}: {
+  isExpanded: boolean;
+  chevronRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  return (
+    <Button
+      ref={chevronRef}
+      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
+      slot="chevron"
+    >
+      {isExpanded ? (
+        <FolderOpen className="size-3.5" />
+      ) : (
+        <Folder className="size-3.5" />
+      )}
+    </Button>
+  );
+}
+
+/**
+ * Document Chevron - Shows file icon with hover chevron
+ */
+function DocumentChevron({
+  isExpanded,
+  chevronRef,
+}: {
+  isExpanded: boolean;
+  chevronRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  return (
+    <Button
+      ref={chevronRef}
+      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+      slot="chevron"
+    >
+      <FileText className="size-3.5 text-gray-500 shrink-0 group-hover/chevron:hidden" />
+      <ChevronRight
+        className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+          isExpanded ? "rotate-90" : ""
+        }`}
+      />
+    </Button>
+  );
+}
+
+/**
+ * Context Menu for different item types
+ */
+function ItemContextMenu({
+  type,
+  itemId,
+  itemName,
+  integrationLinkId,
+  integrationType,
+}: {
+  type: "folder" | "document" | "integration-link" | "integration-group";
+  itemId: string;
+  itemName: string;
+  integrationLinkId?: string | null;
+  integrationType?: string;
+}) {
+  const navigate = useNavigate();
+
+  if (type === "integration-group") {
+    return null;
+  }
+
+  if (type === "integration-link") {
+    return (
+      <MenuTrigger>
+        <Button
+          className="p-1 rounded hover:bg-gray-200"
+          aria-label="Integration link options"
+        >
+          <MoreVertical size={12} />
+        </Button>
+        <Menu>
+          <MenuItem
+            onAction={() => {
+              if (integrationLinkId && integrationType) {
+                navigate({
+                  to: "/w/$organizationSlug/settings/integrations/$integrationType",
+                  params: { integrationType },
+                  from: "/w/$organizationSlug",
+                });
+              }
+            }}
+          >
+            Integration settings
+          </MenuItem>
+        </Menu>
+      </MenuTrigger>
+    );
+  }
+
+  if (type === "folder") {
+    return (
+      <MenuTrigger>
+        <Button
+          className="p-1 rounded hover:bg-gray-200"
+          aria-label="Folder options"
+        >
+          <MoreVertical size={12} />
+        </Button>
+        <FolderMenu folderId={itemId} folderName={itemName} />
+      </MenuTrigger>
+    );
+  }
+
+  // Document
+  return (
+    <MenuTrigger>
+      <Button
+        className="p-1 rounded hover:bg-gray-200"
+        aria-label="Document options"
+      >
+        <MoreVertical size={12} />
+      </Button>
+      <DocumentMenu documentId={itemId} documentName={itemName} />
+    </MenuTrigger>
   );
 }
