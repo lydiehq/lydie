@@ -28,7 +28,7 @@ export function getDocumentEditorExtensions(
   return [
     StarterKit.configure({
       heading: options?.starterKit?.heading,
-      undoRedo: options?.starterKit?.undoRedo,
+      undoRedo: false,
       link: options?.starterKit?.link ?? {
         openOnClick: false,
         protocols: ["internal"],
@@ -53,4 +53,3 @@ export function getDocumentEditorExtensions(
       : []),
   ].filter((ext): ext is NonNullable<typeof ext> => ext !== undefined);
 }
-
