@@ -86,7 +86,7 @@ async function main() {
       } else {
         if (tablesToAdd.length > 0) {
           console.log(
-            `Adding ${tablesToAdd.length} tables: ${tablesToAdd.join(", ")}`
+            `Adding ${tablesToAdd.length} table(s): ${tablesToAdd.join(", ")}`
           );
           const addList = tablesToAdd.map((t) => `"${t}"`).join(", ");
           await db.execute(
@@ -94,11 +94,13 @@ async function main() {
               `ALTER PUBLICATION "${PUBLICATION_NAME}" ADD TABLE ${addList}`
             )
           );
+        } else {
+          console.log("No tables to add.");
         }
 
         if (tablesToRemove.length > 0) {
           console.log(
-            `Removing ${tablesToRemove.length} tables: ${tablesToRemove.join(
+            `Removing ${tablesToRemove.length} table(s): ${tablesToRemove.join(
               ", "
             )}`
           );
@@ -108,6 +110,8 @@ async function main() {
               `ALTER PUBLICATION "${PUBLICATION_NAME}" DROP TABLE ${removeList}`
             )
           );
+        } else {
+          console.log("No tables to remove.");
         }
         console.log("✅ Publication updated successfully.");
       }

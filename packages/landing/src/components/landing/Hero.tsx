@@ -47,7 +47,7 @@ export function Hero({
           />
         </motion.div>
         <div className="relative flex flex-col gap-y-4 md:flex-row overflow-visible w-full">
-          <div className="flex flex-col mr-0 gap-4 mt-0 md:mt-44 relative self-start z-10 to-20% to-white pr-0 py-2 rounded-3xl w-full md:w-[36ch] shrink-0 md:mr-8">
+          <div className="flex flex-col mr-0 gap-4 mt-0 md:mt-44 relative self-start z-10 to-20% to-white pr-0 py-2 rounded-3xl w-full md:w-[40ch] shrink-0 md:mr-8">
             <motion.h1
               className="text-5xl font-heading font-medium tracking-tight text-gray-800 md:text-start text-center"
               initial="hidden"
@@ -63,8 +63,9 @@ export function Hero({
               }}
             >
               <AnimatedWord>Write</AnimatedWord>{" "}
-              <AnimatedWord>once.</AnimatedWord>{" "}
-              <AnimatedWord>Use</AnimatedWord> <AnimatedWord>it</AnimatedWord>{" "}
+              <AnimatedWord>once.</AnimatedWord>
+              <br />
+              <AnimatedWord>Use</AnimatedWord>{" "}
               <AnimatedWord>everywhere.</AnimatedWord>
             </motion.h1>
             <motion.span
@@ -85,7 +86,7 @@ export function Hero({
               }}
             >
               A document-first writing workspace that adapts to blogs, docs, and
-              products — not the other way around.
+              products - not the other way around.
             </motion.span>
             <motion.div className="flex items-center gap-x-1.5 w-full md:w-auto">
               <motion.div

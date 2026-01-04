@@ -7,7 +7,7 @@
     "db:push": "bun --filter=@lydie/database db:push",
     "db:sync": "bun --filter=@lydie/database db:sync-zero-publication",
     "db:studio": "bun --filter=@lydie/database db:studio",
-    "deploy:prod": "sst deploy --stage production",
+    "deploy:prod": "bun run db:sync --stage=production && sst deploy --stage production",
     "deploy:web": "sst deploy --target Web --stage production",
     "sso": "aws sso login --sso-session=lydie --use-device-code",
     "sdk:publish": "bun --filter=@lydie-app/sdk sdk:publish",
