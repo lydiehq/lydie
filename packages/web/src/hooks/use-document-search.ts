@@ -70,14 +70,13 @@ export function useDocumentSearch(
 
   // Use local search state in query, not searchParam
   const [searchData] = useQuery(
-    queries.organizations.searchDocumentsAndFolders({
+    queries.organizations.searchDocuments({
       organizationId,
       searchTerm: search,
     })
   );
 
   const allDocuments = searchData?.documents || [];
-  const allFolders = searchData?.folders || [];
 
   const onSearchChange = (value: string) => {
     setSearch(value);
@@ -90,6 +89,5 @@ export function useDocumentSearch(
     searchFieldRef,
     onSearchChange,
     allDocuments,
-    allFolders,
   };
 }

@@ -17,7 +17,19 @@ import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
 import { AlertDialog } from "@/components/generic/AlertDialog";
 import { Menu, MenuItem } from "@/components/generic/Menu";
-import { Copy, Eye, EyeOff, Plus, MoreHorizontal, X, User, Mail, Shield, Clock, Key } from "lucide-react";
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  Plus,
+  MoreHorizontal,
+  X,
+  User,
+  Mail,
+  Shield,
+  Clock,
+  Key,
+} from "lucide-react";
 import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
 import { confirmDialog } from "@/stores/confirm-dialog";
@@ -72,7 +84,9 @@ function RouteComponent() {
 
       const slugified = slugify(values.value.slug.trim());
       if (slugified !== values.value.slug.trim()) {
-        toast.error("Slug contains invalid characters. Only letters, numbers, and hyphens are allowed.");
+        toast.error(
+          "Slug contains invalid characters. Only letters, numbers, and hyphens are allowed."
+        );
         return;
       }
 
@@ -153,14 +167,16 @@ function RouteComponent() {
       toast.error("Organization not found");
       return;
     }
-    
+
     confirmDialog({
       title: `Revoke API Key "${keyName}"`,
       message:
         "This action cannot be undone. The API key will be permanently revoked.",
       onConfirm: () => {
         try {
-          z.mutate(mutators.apiKey.revoke({ keyId, organizationId: organization.id }));
+          z.mutate(
+            mutators.apiKey.revoke({ keyId, organizationId: organization.id })
+          );
           toast.success("API key revoked successfully");
         } catch (error) {
           toast.error("Failed to revoke API key");
@@ -218,7 +234,9 @@ function RouteComponent() {
   );
 
   const [invitations] = useQuery(
-    queries.invitations.byOrganization({ organizationId: organization?.id || "" })
+    queries.invitations.byOrganization({
+      organizationId: organization?.id || "",
+    })
   );
 
   // Invitation form
@@ -255,17 +273,19 @@ function RouteComponent() {
         invitationForm.reset();
         setIsInviteDialogOpen(false);
       } catch (error: any) {
-        const errorMessage =
-          error?.message?.includes("already")
-            ? "This user is already a member or has a pending invitation"
-            : "Failed to send invitation";
+        const errorMessage = error?.message?.includes("already")
+          ? "This user is already a member or has a pending invitation"
+          : "Failed to send invitation";
         toast.error(errorMessage);
         console.error("Invitation error:", error);
       }
     },
   });
 
-  const handleCancelInvitation = async (invitationId: string, email: string) => {
+  const handleCancelInvitation = async (
+    invitationId: string,
+    email: string
+  ) => {
     if (!organization) {
       toast.error("Organization not found");
       return;
@@ -415,13 +435,17 @@ function RouteComponent() {
                         <div className="flex items-center gap-1.5">
                           <Shield className="size-3.5" />
                           <span>
-                            Role: <span className="capitalize font-medium">{member.role}</span>
+                            Role:{" "}
+                            <span className="capitalize font-medium">
+                              {member.role}
+                            </span>
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Clock className="size-3.5" />
                           <span>
-                            Joined {formatDistanceToNow(member.created_at, {
+                            Joined{" "}
+                            {formatDistanceToNow(member.created_at, {
                               addSuffix: true,
                             })}
                           </span>
@@ -438,7 +462,9 @@ function RouteComponent() {
                             onAction={() =>
                               handleRemoveMember(
                                 member.id,
-                                member.user?.name || member.user?.email || "this member"
+                                member.user?.name ||
+                                  member.user?.email ||
+                                  "this member"
                               )
                             }
                             className="text-red-600"
@@ -458,7 +484,9 @@ function RouteComponent() {
         {/* Pending Invitations */}
         {invitations && invitations.length > 0 && (
           <div className="flex flex-col gap-y-2">
-            <h3 className="text-sm font-medium text-gray-700">Pending Invitations</h3>
+            <h3 className="text-sm font-medium text-gray-700">
+              Pending Invitations
+            </h3>
             <div className="flex flex-col gap-y-3">
               {invitations.map((invitation) => (
                 <Card key={invitation.id} className="p-4">
@@ -474,19 +502,26 @@ function RouteComponent() {
                         <div className="flex items-center gap-1.5">
                           <Shield className="size-3.5" />
                           <span>
-                            Role: <span className="capitalize font-medium">{invitation.role || "member"}</span>
+                            Role:{" "}
+                            <span className="capitalize font-medium">
+                              {invitation.role || "member"}
+                            </span>
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <User className="size-3.5" />
                           <span>
-                            Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
+                            Invited by:{" "}
+                            {invitation.inviter?.name ||
+                              invitation.inviter?.email ||
+                              "Unknown"}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Clock className="size-3.5" />
                           <span>
-                            Expires {formatDistanceToNow(invitation.expires_at, {
+                            Expires{" "}
+                            {formatDistanceToNow(invitation.expires_at, {
                               addSuffix: true,
                             })}
                           </span>
@@ -498,7 +533,10 @@ function RouteComponent() {
                         intent="secondary"
                         size="sm"
                         onPress={() =>
-                          handleCancelInvitation(invitation.id, invitation.email)
+                          handleCancelInvitation(
+                            invitation.id,
+                            invitation.email
+                          )
                         }
                       >
                         <X className="size-3.5 mr-1" />
@@ -565,7 +603,8 @@ function RouteComponent() {
                       <div className="flex items-center gap-1.5">
                         <Clock className="size-3.5" />
                         <span>
-                          Created {formatDistanceToNow(key.created_at, {
+                          Created{" "}
+                          {formatDistanceToNow(key.created_at, {
                             addSuffix: true,
                           })}
                         </span>
@@ -573,7 +612,8 @@ function RouteComponent() {
                       <div className="flex items-center gap-1.5">
                         <Clock className="size-3.5" />
                         <span>
-                          Last used: {key.last_used_at
+                          Last used:{" "}
+                          {key.last_used_at
                             ? formatDistanceToNow(key.last_used_at, {
                                 addSuffix: true,
                               })
@@ -689,7 +729,7 @@ function RouteComponent() {
             action cannot be undone. This will permanently delete the
             organization and all associated data, including:
             <ul className="mt-2 ml-4 list-disc text-sm">
-              <li>All documents and folders</li>
+              <li>All documents</li>
               <li>All API keys</li>
               <li>All organization settings</li>
               <li>All conversations and messages</li>

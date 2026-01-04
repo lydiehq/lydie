@@ -72,21 +72,20 @@ export function CommandMenu() {
         })
   );
 
-  // Search documents and folders using Zero - only when on search page
+  // Search documents using Zero - only when on search page
   const [searchData] = useQuery(
     currentPage === "search"
-      ? queries.organizations.searchDocumentsAndFolders({
+      ? queries.organizations.searchDocuments({
           organizationId: organization?.id || "",
           searchTerm: search,
         })
-      : queries.organizations.searchDocumentsAndFolders({
+      : queries.organizations.searchDocuments({
           organizationId: organization?.id || "",
           searchTerm: "",
         })
   );
 
   const searchDocuments = searchData?.documents || [];
-  const searchFolders = searchData?.folders || [];
 
   // Load integration links to show appropriate icons
   const [integrationLinks] = useQuery(
@@ -187,7 +186,7 @@ export function CommandMenu() {
     const navigationItems: MenuItem[] = [
       {
         id: "search",
-        label: "Search documents and folders…",
+        label: "Search documents…",
         icon: Search,
         action: () => {
           setPages([...pages, "search"]);
@@ -353,7 +352,7 @@ export function CommandMenu() {
                   autoFocus
                   placeholder={
                     currentPage === "search"
-                      ? "Search documents and folders..."
+                      ? "Search documents..."
                       : "Type a command or search..."
                   }
                   className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -389,7 +388,6 @@ export function CommandMenu() {
                 {currentPage === "search" && (
                   <SearchResults
                     searchDocuments={[...searchDocuments]}
-                    searchFolders={[...searchFolders]}
                     integrationLinks={integrationLinks}
                     organizationId={organization?.id as string}
                     onNavigate={(options) =>

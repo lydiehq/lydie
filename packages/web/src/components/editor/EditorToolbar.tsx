@@ -203,7 +203,8 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
 
                 try {
                   const url = await uploadImage(file);
-                  const alt = prompt("Enter alt text for the image (optional):") || "";
+                  const alt =
+                    prompt("Enter alt text for the image (optional):") || "";
                   editor.chain().focus().setImage({ src: url, alt }).run();
                 } catch (error) {
                   console.error("Failed to upload image:", error);

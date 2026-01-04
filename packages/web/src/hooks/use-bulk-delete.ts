@@ -7,7 +7,7 @@ import { mutators } from "@lydie/zero/mutators";
 
 interface ItemType {
   id: string;
-  type: "folder" | "document";
+  type: "document";
 }
 
 export function useBulkDelete() {
@@ -20,15 +20,12 @@ export function useBulkDelete() {
         toast.error("Organization not found");
         return;
       }
-      
+
       const documentsToDelete = selectedItems.filter(
         (item) => item.type === "document"
       );
-      const foldersToDelete = selectedItems.filter(
-        (item) => item.type === "folder"
-      );
 
-      const totalItems = documentsToDelete.length + foldersToDelete.length;
+      const totalItems = documentsToDelete.length;
 
       confirmDialog({
         title: "Delete Items",
@@ -38,10 +35,12 @@ export function useBulkDelete() {
         onConfirm: () => {
           try {
             documentsToDelete.forEach((item) => {
-              z.mutate(mutators.document.delete({ documentId: item.id, organizationId: organization.id }));
-            });
-            foldersToDelete.forEach((item) => {
-              z.mutate(mutators.folder.delete({ folderId: item.id, organizationId: organization.id }));
+              z.mutate(
+                mutators.document.delete({
+                  documentId: item.id,
+                  organizationId: organization.id,
+                })
+              );
             });
             toast.success(
               `${totalItems} item${totalItems !== 1 ? "s" : ""} deleted`

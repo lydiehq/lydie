@@ -1,10 +1,3 @@
-// Core content types and utilities without React dependencies
-// This module contains shared functionality used across packages
-
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface CustomBlockProps {
   properties: Record<string, any>;
   [key: string]: any;
@@ -121,7 +114,12 @@ export interface NodeBuilder<T> {
   bold(content: T): T;
   italic(content: T): T;
   link(content: T, href?: string, rel?: string, target?: string): T;
-  internalLink?(content: T, documentId?: string, documentSlug?: string, documentTitle?: string): T;
+  internalLink?(
+    content: T,
+    documentId?: string,
+    documentSlug?: string,
+    documentTitle?: string
+  ): T;
 
   // Block elements
   doc(children: T[]): T;

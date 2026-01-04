@@ -235,14 +235,6 @@ export function DocumentMenu({
                     </p>
                   </div>
                 )}
-                {document.folder && (
-                  <div>
-                    <Label className="text-xs text-gray-500">Folder</Label>
-                    <p className="text-sm text-gray-900 mt-1">
-                      {document.folder.name}
-                    </p>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="text-sm text-gray-500">Loading...</div>

@@ -162,7 +162,7 @@ export const queries = defineQueries({
           .related("llmUsage", (q) => q.orderBy("created_at", "desc"));
       }
     ),
-    documentsAndFolders: defineQuery(
+    documents: defineQuery(
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
@@ -175,7 +175,7 @@ export const queries = defineQueries({
           );
       }
     ),
-    searchDocumentsAndFolders: defineQuery(
+    searchDocuments: defineQuery(
       z.object({
         organizationId: z.string(),
         searchTerm: z.string(),

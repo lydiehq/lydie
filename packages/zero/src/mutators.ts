@@ -183,7 +183,7 @@ export const mutators = defineMutators({
         });
       }
     ),
-    moveToFolder: defineMutator(
+    moveToParent: defineMutator(
       z.object({
         documentId: z.string(),
         parentId: z.string().optional(),
@@ -737,7 +737,6 @@ export const mutators = defineMutators({
         // to avoid duplicate slug violations when documents are moved to root organization
 
         // For each integration link, delete all associated documents
-        // (folders will be automatically deleted via cascade when links are deleted)
         for (const link of connection.links) {
           const linkWithDocuments = await tx.run(
             zql.integration_links

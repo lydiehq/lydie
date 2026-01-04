@@ -10,8 +10,6 @@ import { type ReactElement, useRef } from "react";
 import {
   ChevronRight,
   File,
-  Folder,
-  FolderOpen,
   FolderSync,
   MoreVertical,
   Move,
@@ -21,7 +19,6 @@ import {
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles } from "./Sidebar";
-import { FolderMenu } from "../home-file-explorer/FolderMenu";
 import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
 import { Menu, MenuItem } from "../generic/Menu";
 import type { QueryResultType } from "@rocicorp/zero";
@@ -32,12 +29,12 @@ type Props = {
   item: {
     id: string;
     name: string;
-    type: "folder" | "document" | "integration-link" | "integration-group";
+    type: "document" | "integration-link" | "integration-group";
     isLocked?: boolean;
     children?: Array<{
       id: string;
       name: string;
-      type: "folder" | "document" | "integration-link" | "integration-group";
+      type: "document" | "integration-link" | "integration-group";
       children?: any[];
       integrationLinkId?: string | null;
       integrationType?: string;
@@ -50,7 +47,7 @@ type Props = {
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<
-    QueryResultType<typeof queries.organizations.documentsAndFolders>
+    QueryResultType<typeof queries.organizations.documents>
   >["documents"];
 };
 
@@ -62,8 +59,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
 
   const isCurrentDocument =
     item.type === "document" && currentDocId === item.id;
-  const isActiveFolder = item.type === "folder" && tree === item.id;
-  const isCurrent = isCurrentDocument || isActiveFolder;
+  const isCurrent = isCurrentDocument;
 
   const isIntegrationLink = item.type === "integration-link";
   const isGroup = item.type === "integration-group";
@@ -79,8 +75,8 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
       return;
     }
 
-    // For folders and integration links, trigger expansion by clicking the chevron button
-    if (item.type === "folder" || isIntegrationLink) {
+    // For integration links, trigger expansion by clicking the chevron button
+    if (isIntegrationLink) {
       chevronRef.current?.click();
       return;
     }
@@ -106,9 +102,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
           className: `
             dragging:opacity-50 dragging:bg-gray-50 
             ${
-              item.type === "folder" ||
-              item.type === "document" ||
-              isIntegrationLink
+              item.type === "document" || isIntegrationLink
                 ? "drop-target:bg-gray-200"
                 : ""
             }
@@ -129,9 +123,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               <Button
                 slot="drag"
                 className="hidden"
-                aria-label={`Drag ${
-                  item.type === "folder" ? "folder" : "document"
-                } ${item.name}`}
+                aria-label={`Drag document ${item.name}`}
               >
                 <Move size={12} />
               </Button>
@@ -150,13 +142,6 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               {isIntegrationLink && (
                 <IntegrationLinkChevron
                   syncStatus={item.syncStatus}
-                  isExpanded={isExpanded}
-                  chevronRef={chevronRef}
-                />
-              )}
-
-              {item.type === "folder" && (
-                <FolderChevron
                   isExpanded={isExpanded}
                   chevronRef={chevronRef}
                 />
@@ -280,31 +265,6 @@ function IntegrationLinkChevron({
 }
 
 /**
- * Folder Chevron - Shows folder icon (open/closed)
- */
-function FolderChevron({
-  isExpanded,
-  chevronRef,
-}: {
-  isExpanded: boolean;
-  chevronRef: React.RefObject<HTMLButtonElement | null>;
-}) {
-  return (
-    <Button
-      ref={chevronRef}
-      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
-      slot="chevron"
-    >
-      {isExpanded ? (
-        <FolderOpen className="size-3.5" />
-      ) : (
-        <Folder className="size-3.5" />
-      )}
-    </Button>
-  );
-}
-
-/**
  * Document Chevron - Shows file icon with hover chevron
  */
 function DocumentChevron({
@@ -340,7 +300,7 @@ function ItemContextMenu({
   integrationLinkId,
   integrationType,
 }: {
-  type: "folder" | "document" | "integration-link" | "integration-group";
+  type: "document" | "integration-link" | "integration-group";
   itemId: string;
   itemName: string;
   integrationLinkId?: string | null;
@@ -376,20 +336,6 @@ function ItemContextMenu({
             Integration settings
           </MenuItem>
         </Menu>
-      </MenuTrigger>
-    );
-  }
-
-  if (type === "folder") {
-    return (
-      <MenuTrigger>
-        <Button
-          className="p-1 rounded hover:bg-gray-200"
-          aria-label="Folder options"
-        >
-          <MoreVertical size={12} />
-        </Button>
-        <FolderMenu folderId={itemId} folderName={itemName} />
       </MenuTrigger>
     );
   }

@@ -50,7 +50,7 @@ function saveToStorage(keys: string[]): void {
 const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
 type QueryResult = NonNullable<
-  QueryResultType<typeof queries.organizations.documentsAndFolders>
+  QueryResultType<typeof queries.organizations.documents>
 >;
 
 // Finds all parent document IDs for a given document by traversing up the parent hierarchy.
@@ -128,7 +128,7 @@ export function DocumentTree() {
   };
 
   const [orgData] = useQuery(
-    queries.organizations.documentsAndFolders({
+    queries.organizations.documents({
       organizationId: organization?.id || "",
     })
   );

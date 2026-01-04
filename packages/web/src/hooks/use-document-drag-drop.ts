@@ -51,7 +51,7 @@ export function useDocumentDragDrop({
       toast.error("Organization not found");
       return false;
     }
-    
+
     const doc = allDocuments.find((d) => d.id === documentId);
     const normalizedParentTarget = targetParentId ?? null;
 
@@ -61,7 +61,7 @@ export function useDocumentDragDrop({
     }
 
     z.mutate(
-      mutators.document.moveToFolder({
+      mutators.document.moveToParent({
         documentId,
         parentId: targetParentId === null ? undefined : targetParentId,
         organizationId: organization.id,
@@ -148,7 +148,7 @@ export function useDocumentDragDrop({
         if (e.target.dropPosition === "on") {
           // Dropping directly on a document - make items children of that document
           const targetDocument = allDocuments.find((d) => d.id === targetId);
-          
+
           if (targetDocument) {
             // Dropping on a document - make items children of that document
             for (const item of processedItems) {
@@ -193,7 +193,10 @@ export function useDocumentDragDrop({
       try {
         const targetId = e.target.key as string;
 
-        if (e.target.dropPosition === "before" || e.target.dropPosition === "after") {
+        if (
+          e.target.dropPosition === "before" ||
+          e.target.dropPosition === "after"
+        ) {
           // Move before/after target - move to same parent as target
           const targetDoc = allDocuments.find((d) => d.id === targetId);
           if (!targetDoc) return;
@@ -210,7 +213,7 @@ export function useDocumentDragDrop({
         } else if (e.target.dropPosition === "on") {
           // Move into target document - make items children of that document
           const targetDocument = allDocuments.find((d) => d.id === targetId);
-          
+
           if (targetDocument) {
             // Move all dragged items to be children of the target document
             for (const key of e.keys) {
@@ -239,7 +242,7 @@ export function useDocumentDragDrop({
       try {
         const targetId = e.target.key as string;
         const targetDocument = allDocuments.find((d) => d.id === targetId);
-        
+
         if (targetDocument) {
           // Dropping on a document - make items children of that document
           for (const key of e.keys) {
@@ -280,10 +283,11 @@ export function useDocumentDragDrop({
             .map(async (item) => JSON.parse(await item.getText("lydie-item")))
         );
 
-        // Use current folder context if provided, otherwise move to root
-        const targetFolder = currentFolderId ?? null;
+        // Move items to root (no parent)
         for (const item of processedItems) {
-          moveItemToFolder(item, targetFolder);
+          if (item.type === "document") {
+            moveDocument(item.id, null);
+          }
         }
       } catch (error) {
         console.error("Root drop failed:", error);

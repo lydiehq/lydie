@@ -45,5 +45,5 @@ export function ZeroInit({ children, session }: Props) {
 }
 
 function preload(zero: Zero, organizationId: string) {
-  zero.preload(queries.organizations.documentsAndFolders({ organizationId }));
+  zero.preload(queries.organizations.documents({ organizationId }));
 }
