@@ -10,7 +10,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { EditorToolbar } from "./editor/EditorToolbar";
 import { PanelResizer } from "./panels/PanelResizer";
 import { BottomBar } from "./editor/BottomBar";
-import { useTitleEditor } from "@/utils/editor";
+import { useTitleEditor } from "@/lib/editor/title-editor";
 import {
   SelectedContentProvider,
   useSelectedContent,
@@ -23,7 +23,7 @@ import { Surface } from "./layout/Surface";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
 import { CustomFieldsEditor } from "./editor/CustomFieldsEditor";
-import { useCollaborativeEditor } from "@/utils/collaborative-editor";
+import { useDocumentEditor } from "@/lib/editor/document-editor";
 import { ChildPages } from "./editor/ChildPages";
 
 type Props = {
@@ -94,7 +94,7 @@ function EditorContainer({ doc }: Props) {
     }
   };
 
-  const contentEditor = useCollaborativeEditor({
+  const contentEditor = useDocumentEditor({
     doc,
     onSave: handleManualSave,
     onTextSelect: selectText,

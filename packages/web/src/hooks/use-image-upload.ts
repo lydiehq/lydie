@@ -1,5 +1,5 @@
 import { useAuthenticatedApi } from "@/services/api";
-import { uploadImage } from "@/editor/extensions/image-upload";
+import { uploadImage } from "@/utils/image-upload";
 import { useCallback } from "react";
 
 export function useImageUpload() {
@@ -15,4 +15,3 @@ export function useImageUpload() {
 
   return { uploadImage: handleImageUpload };
 }
-

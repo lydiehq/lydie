@@ -11,7 +11,7 @@ import CollaborationCaret, {
 
 import * as E from "./extensions";
 
-export interface GetContentExtensionsOptions {
+export interface GetDocumentEditorExtensionsOptions {
   starterKit?: StarterKitOptions;
   textSelection?: Partial<E.TextSelectionOptions>;
   markdownPaste?: Partial<E.MarkdownPasteOptions>;
@@ -22,7 +22,9 @@ export interface GetContentExtensionsOptions {
   collaborationCaret?: Partial<CollaborationCaretOptions>;
 }
 
-export function getContentExtensions(options?: GetContentExtensionsOptions) {
+export function getDocumentEditorExtensions(
+  options?: GetDocumentEditorExtensionsOptions
+) {
   return [
     StarterKit.configure({
       heading: options?.starterKit?.heading,
@@ -51,3 +53,4 @@ export function getContentExtensions(options?: GetContentExtensionsOptions) {
       : []),
   ].filter((ext): ext is NonNullable<typeof ext> => ext !== undefined);
 }
+

@@ -42,7 +42,7 @@ export function ChatSection({
           startPercentage={25}
         />
         <div className="relative flex flex-col-reverse md:flex-row gap-y-8 w-full">
-          <div className="relative w-full md:-ml-[500px]">
+          <div className="relative w-full md:-ml-[400px]">
             <div className="w-full md:w-[980px] md:h-[800px] z-10 relative p-2 bg-white ring ring-black/4 rounded-2xl">
               <img
                 src={imageSrc}
@@ -57,7 +57,7 @@ export function ChatSection({
               />
             </div>
           </div>
-          <div className="flex flex-col w-full md:w-[46ch] gap-4 ml-0 md:ml-4 mt-8 md:mt-20 relative z-10 pl-0 md:pl-20 py-2 rounded-3xl">
+          <div className="flex flex-col w-full md:w-[46ch] gap-4 ml-0 md:ml-4 mt-8 md:mt-20 relative z-10 pl-0 md:pl-8 py-2 rounded-3xl">
             <Eyebrow>AI Companion</Eyebrow>
             <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-tight text-gray-800">
               Your AI writing <br /> companion, always ready.
@@ -86,4 +86,3 @@ export function ChatSection({
     </section>
   );
 }
-

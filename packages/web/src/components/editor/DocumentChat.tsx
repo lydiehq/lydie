@@ -5,7 +5,7 @@ import { CircleArrowUp, X, Square } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { queries } from "@lydie/zero/queries";
-import { type EditorHookResult } from "@/utils/editor";
+import { type DocumentEditorHookResult } from "@/lib/editor/document-editor";
 import { applyContentChanges } from "@/utils/document-changes";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import {
@@ -30,7 +30,7 @@ export type DocumentChatRef = {
 };
 
 type Props = {
-  contentEditor: EditorHookResult;
+  contentEditor: DocumentEditorHookResult;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
   conversation: NonNullable<
     QueryResultType<typeof queries.documents.byId>

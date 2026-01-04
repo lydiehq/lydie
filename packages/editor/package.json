@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    "./content": "./src/content.ts",
+    "./document-editor": "./src/document-editor.ts",
     "./title": "./src/title.ts",
     "./extensions": "./src/extensions/index.ts",
     "./*": [

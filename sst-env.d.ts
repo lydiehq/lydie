@@ -5,6 +5,10 @@
 
 declare module "sst" {
   export interface Resource {
+    "AssetsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
     "Backend": {
       "service": string
       "type": "sst.aws.Service"
@@ -51,10 +55,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Images": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
     "Landing": {
       "type": "sst.aws.StaticSite"
       "url": string
@@ -66,6 +66,10 @@ declare module "sst" {
     "OpenAiApiKey": {
       "type": "sst.sst.Secret"
       "value": string
+    }
+    "OrganizationAssets": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
     "PolarApiKey": {
       "type": "sst.sst.Secret"
@@ -86,11 +90,6 @@ declare module "sst" {
     "PostgresConnectionStringPooled": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "ReplicationManager": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
     }
     "ShopifyClientId": {
       "type": "sst.sst.Secret"

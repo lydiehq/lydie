@@ -3,7 +3,7 @@ import { secret } from "./secret";
 import { embeddingQueue } from "./embedding";
 import { cluster } from "./cluster";
 import { email } from "./email";
-import { imagesBucket } from "./web";
+import { organizationAssetsBucket, assetsRouter } from "./web";
 
 const commonSecrets = [
   secret.googleAiStudioApiKey,
@@ -50,7 +50,13 @@ export const backend = new sst.aws.Service("Backend", {
     FRONTEND_URL: $dev ? "http://localhost:3000" : "https://app.lydie.co",
     NODE_ENV: $dev ? "development" : "production",
   },
-  link: [...commonSecrets, embeddingQueue, email, imagesBucket],
+  link: [
+    ...commonSecrets,
+    embeddingQueue,
+    email,
+    organizationAssetsBucket,
+    assetsRouter,
+  ],
   transform: {
     target: {
       stickiness: {

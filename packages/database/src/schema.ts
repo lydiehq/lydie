@@ -572,3 +572,29 @@ export const waitlistTable = pgTable(
     index("waitlist_status_idx").on(table.status),
   ]
 );
+
+export const assetsTable = pgTable(
+  "assets",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    key: text("key").notNull().unique(), // S3 key: organizationId/userId/uniqueId.extension
+    filename: text("filename").notNull(), // Original filename
+    contentType: text("content_type").notNull(),
+    size: integer("size"), // File size in bytes
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("assets_organization_id_idx").on(table.organizationId),
+    index("assets_user_id_idx").on(table.userId),
+    index("assets_key_idx").on(table.key),
+  ]
+);

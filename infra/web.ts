@@ -2,10 +2,16 @@
 import { secret } from "./secret";
 import { zero } from "./zero";
 
-// Create S3 bucket for images with CloudFront access
-const imagesBucket = new sst.aws.Bucket("Images", {
-  access: "cloudfront",
+export const organizationAssetsBucket = new sst.aws.Bucket(
+  "OrganizationAssets",
+  { access: "cloudfront" }
+);
+
+export const assetsRouter = new sst.aws.Router("AssetsRouter", {
+  domain: "assets.lydie.co",
 });
+
+assetsRouter.routeBucket("*", organizationAssetsBucket);
 
 new sst.aws.StaticSite("Web", {
   path: "./packages/web",
@@ -19,11 +25,10 @@ new sst.aws.StaticSite("Web", {
     VITE_YJS_SERVER_URL: $dev
       ? "ws://localhost:3001/yjs"
       : "wss://api.lydie.co/yjs",
+    VITE_ASSETS_DOMAIN: assetsRouter.url,
   },
   ...($dev ? {} : { domain: "app.lydie.co" }),
 });
-
-export { imagesBucket };
 
 new sst.aws.StaticSite("Landing", {
   path: "./packages/landing",

@@ -4,7 +4,7 @@ import {
   yXmlFragmentToProseMirrorRootNode,
 } from "@tiptap/y-tiptap";
 import { getSchema } from "@tiptap/core";
-import { getContentExtensions } from "@lydie/editor/content";
+import { getDocumentEditorExtensions } from "@lydie/editor/document-editor";
 
 // Cache the schema to avoid recreating it every time
 let cachedSchema: ReturnType<typeof getSchema> | null = null;
@@ -15,7 +15,7 @@ function getEditorSchema() {
   }
 
   // Get all content extensions without collaboration (not needed for conversion)
-  const extensions = getContentExtensions({
+  const extensions = getDocumentEditorExtensions({
     collaboration: undefined,
   });
 
@@ -24,8 +24,6 @@ function getEditorSchema() {
   return cachedSchema;
 }
 
-// todo: use non-deprecated util - would require us to provide the entire tiptap
-// extensions array which currently exists in the web package.
 export function yDocToJson(ydoc: Y.Doc) {
   return yXmlFragmentToProseMirrorRootNode(
     ydoc.getXmlFragment("default"),

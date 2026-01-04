@@ -1,29 +1,4 @@
-import { Image } from "@tiptap/extension-image";
 import type { HonoClient } from "hono/client";
-
-export const ImageUpload = Image.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      alt: {
-        default: "",
-      },
-    };
-  },
-  addCommands() {
-    return {
-      ...this.parent?.(),
-      setImage: (options) => {
-        return ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        };
-      },
-    };
-  },
-});
 
 export async function uploadImage(
   file: File,
@@ -34,6 +9,7 @@ export async function uploadImage(
     json: {
       filename: file.name,
       contentType: file.type,
+      size: file.size,
     },
   });
 

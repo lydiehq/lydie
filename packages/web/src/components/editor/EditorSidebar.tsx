@@ -8,7 +8,7 @@ import {
   SquarePen,
 } from "lucide-react";
 import { SidebarIcon } from "../layout/SidebarIcon";
-import { type EditorHookResult } from "@/utils/editor";
+import { type DocumentEditorHookResult } from "@/lib/editor/document-editor";
 import { Menu, MenuItem } from "../generic/Menu";
 import { useState, useMemo, forwardRef } from "react";
 import clsx from "clsx";
@@ -20,7 +20,7 @@ import { isAdmin } from "@/utils/admin";
 import { useAuth } from "@/context/auth.context";
 
 type Props = {
-  contentEditor: EditorHookResult;
+  contentEditor: DocumentEditorHookResult;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
   isCollapsed: boolean;
   onToggle: () => void;
