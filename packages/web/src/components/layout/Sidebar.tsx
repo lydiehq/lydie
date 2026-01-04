@@ -13,14 +13,7 @@ import { useOrganization } from "@/context/organization.context";
 import { SidebarIcon } from "./SidebarIcon";
 import { useSetAtom } from "jotai";
 import { commandMenuStateAtom } from "@/stores/command-menu";
-import {
-  Search,
-  FilePlus,
-  FolderPlus,
-  Home,
-  MessageCircle,
-  Puzzle,
-} from "lucide-react";
+import { Search, Home, MessageCircle, Puzzle, SquarePen } from "lucide-react";
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
@@ -46,7 +39,7 @@ export const sidebarItemStyles = cva({
 });
 
 export function Sidebar({ isCollapsed, onToggle }: Props) {
-  const { createDocument, createFolder } = useDocumentActions();
+  const { createDocument } = useDocumentActions();
   const { organization } = useOrganization();
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
@@ -204,19 +197,9 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
                   onPress={() => createDocument(tree)}
                   aria-label="Create new document"
                 >
-                  <FilePlus size={16} />
+                  <SquarePen className="size-3.5" />
                 </RACButton>
                 <Tooltip>Add document</Tooltip>
-              </TooltipTrigger>
-              <TooltipTrigger delay={500}>
-                <RACButton
-                  className="p-1 rounded hover:bg-black/5 text-gray-600"
-                  onPress={createFolder}
-                  aria-label="Create new folder"
-                >
-                  <FolderPlus size={16} />
-                </RACButton>
-                <Tooltip>Add folder</Tooltip>
               </TooltipTrigger>
             </div>
           </div>

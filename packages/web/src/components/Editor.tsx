@@ -169,7 +169,7 @@ function EditorContainer({ doc }: Props) {
               ref={scrollContainerRef}
               className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"
             >
-              <div className="mx-auto w-full h-full max-w-[65ch]">
+              <div className="mx-auto w-full h-full max-w-[65ch] pb-8">
                 <div className="mb-6">
                   <EditorContent
                     editor={titleEditor.editor}
@@ -197,7 +197,7 @@ function EditorContainer({ doc }: Props) {
                 <EditorContent
                   aria-label="Document content"
                   editor={contentEditor.editor}
-                  className="min-h-full size-full pb-12 block"
+                  className="block"
                 />
                 <ChildPages
                   documentId={doc.id}

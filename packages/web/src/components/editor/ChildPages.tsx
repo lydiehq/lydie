@@ -1,10 +1,9 @@
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
-import { useNavigate } from "@tanstack/react-router";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { File, Plus } from "lucide-react";
 import { Button } from "@/components/generic/Button";
-import { useOrganization } from "@/context/organization.context";
+import { Link } from "../generic/Link";
 
 type Props = {
   documentId: string;
@@ -19,14 +18,12 @@ export function ChildPages({ documentId, organizationId }: Props) {
     })
   );
 
-  const navigate = useNavigate();
   const { createDocument } = useDocumentActions();
-  const { organization } = useOrganization();
 
   const children = doc?.children || [];
 
   const handleCreateChildPage = async () => {
-    await createDocument(undefined, documentId);
+    createDocument(documentId);
   };
 
   if (children.length === 0) {
@@ -36,7 +33,7 @@ export function ChildPages({ documentId, organizationId }: Props) {
           <h3 className="text-sm font-medium text-gray-900">Child pages</h3>
           <Button
             size="sm"
-            variant="ghost"
+            intent="ghost"
             onPress={handleCreateChildPage}
             className="text-gray-600 hover:text-gray-900"
           >
@@ -57,7 +54,7 @@ export function ChildPages({ documentId, organizationId }: Props) {
         <h3 className="text-sm font-medium text-gray-900">Child pages</h3>
         <Button
           size="sm"
-          variant="ghost"
+          intent="ghost"
           onPress={handleCreateChildPage}
           className="text-gray-600 hover:text-gray-900"
         >
@@ -67,29 +64,21 @@ export function ChildPages({ documentId, organizationId }: Props) {
       </div>
       <div className="space-y-1">
         {children.map((child) => (
-          <Button
+          <Link
             key={child.id}
-            variant="ghost"
-            className="w-full justify-start text-left text-gray-700 hover:bg-gray-50"
-            onPress={() => {
-              navigate({
-                to: "/w/$organizationSlug/$id",
-                params: {
-                  id: child.id,
-                  organizationSlug: organization?.slug || "",
-                },
-                from: "/w/$organizationSlug/$id",
-              });
-            }}
+            to={`/w/$organizationSlug/${child.id}`}
+            from="/w/$organizationSlug"
+            className="px-2 py-1.5 rounded-md hover:bg-black/5 transition-all duration-75 flex justify-between"
           >
-            <File className="size-4 mr-2 text-gray-400" />
-            <span className="truncate">
-              {child.title || "Untitled document"}
-            </span>
-          </Button>
+            <div className="flex gap-x-1.5 items-center">
+              <File className="size-3.5 text-gray-400" />
+              <span className="truncate text-sm font-medium text-gray-600">
+                {child.title || "Untitled document"}
+              </span>
+            </div>
+          </Link>
         ))}
       </div>
     </div>
   );
 }
-

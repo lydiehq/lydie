@@ -4,7 +4,6 @@ import { useZero } from "@/services/zero";
 import { useOrganization } from "@/context/organization.context";
 import { toast } from "sonner";
 import { useRouter } from "@tanstack/react-router";
-import { confirmDialog } from "@/stores/confirm-dialog";
 import { mutators } from "@lydie/zero/mutators";
 
 export function useDocumentActions() {
@@ -24,7 +23,6 @@ export function useDocumentActions() {
       mutators.document.create({
         id,
         organizationId: organization.id,
-        title: "",
         parentId,
       })
     );
@@ -34,7 +32,7 @@ export function useDocumentActions() {
       to: "/w/$organizationSlug/$id",
       params: { id, organizationSlug: organization.slug || "" },
     });
-    
+
     return id;
   };
 

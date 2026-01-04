@@ -25,7 +25,6 @@ import { checkDailyMessageLimit } from "../utils/usage-limits";
 import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
 import { readDocument } from "@lydie/core/ai/tools/read-document";
 import { listDocuments } from "@lydie/core/ai/tools/list-documents";
-import { createFolder } from "@lydie/core/ai/tools/create-folder";
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
 import type { PromptStyle } from "@lydie/core/prompts";
 
@@ -67,7 +66,7 @@ export const AssistantRoute = new Hono<{
             message: "You are not authorized to access this conversation",
           });
         }
-        
+
         // Verify conversation belongs to the user
         if (conversation.userId !== userId) {
           throw new HTTPException(403, {
@@ -151,7 +150,6 @@ export const AssistantRoute = new Hono<{
         searchDocuments: searchDocuments(userId, organizationId),
         readDocument: readDocument(userId, organizationId),
         listDocuments: listDocuments(userId, organizationId),
-        createFolder: createFolder(userId, organizationId),
         moveDocuments: moveDocuments(userId, organizationId),
         createDocument: tool({
           description:

@@ -49,7 +49,7 @@ const modalStyles = cva({
 });
 
 export function CommandMenu() {
-  const { createDocument, createFolder, deleteDocument, publishDocument } =
+  const { createDocument, deleteDocument, publishDocument } =
     useDocumentActions();
   const params = useParams({ strict: false });
   const navigate = useNavigate();
@@ -150,12 +150,6 @@ export function CommandMenu() {
         label: "Create new document…",
         icon: Plus,
         action: createDocument,
-      },
-      {
-        id: "create-folder",
-        label: "Create new folder…",
-        icon: Plus,
-        action: createFolder,
       },
     ];
 
@@ -327,7 +321,6 @@ export function CommandMenu() {
     ];
   }, [
     createDocument,
-    createFolder,
     currentDocument,
     currentDocumentId,
     deleteDocument,
