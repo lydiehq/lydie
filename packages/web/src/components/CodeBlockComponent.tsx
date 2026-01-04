@@ -3,6 +3,61 @@ import {
   NodeViewWrapper,
   type NodeViewProps,
 } from "@tiptap/react";
+import {
+  Button,
+  Popover,
+  Select,
+  SelectValue,
+  Autocomplete,
+  SearchField,
+  Label,
+  ListBox,
+  ListBoxSection,
+  useFilter,
+  ListBoxItem,
+  Collection,
+} from "react-aria-components";
+import { ChevronDown } from "lucide-react";
+import { useMemo, useState, useEffect, type Key } from "react";
+
+type LanguageItem = {
+  id: string;
+  name: string;
+};
+
+function LanguageSelect({
+  selectedKey,
+  onSelectionChange,
+  items,
+}: {
+  selectedKey: string | null;
+  onSelectionChange: (value: Key | null) => void;
+  items: LanguageItem[];
+}) {
+  let { contains } = useFilter({ sensitivity: "base" });
+
+  return (
+    <Select onChange={onSelectionChange} value={selectedKey}>
+      <Label>Category</Label>
+      <Button>
+        <SelectValue />
+        <ChevronDown size={18} />
+      </Button>
+      <Popover style={{ display: "flex", flexDirection: "column" }}>
+        <Autocomplete filter={contains}>
+          <SearchField
+            aria-label="Search tags"
+            autoFocus
+            style={{ margin: 4 }}
+          />
+          <ListBox items={items}>
+            {(item) => <ListBoxItem id={item.name}>{item.name}</ListBoxItem>}
+          </ListBox>
+        </Autocomplete>
+      </Popover>
+    </Select>
+  );
+}
 
 export function CodeBlockComponent({
   node,
@@ -11,40 +66,51 @@ export function CodeBlockComponent({
 }: NodeViewProps) {
   const defaultLanguage = node.attrs?.language || "null";
 
-  // Get the CodeBlock extension from the editor
   const codeBlockExtension = editor.extensionManager.extensions.find(
     (ext) => ext.name === "codeBlock"
   );
   const lowlight = codeBlockExtension?.options.lowlight;
 
+  // Prepare items for the ComboBox
+  const items = useMemo(() => {
+    const languages = lowlight?.listLanguages() || [];
+    return [
+      { id: "null", name: "auto" },
+      ...languages.map((lang: string) => ({ id: lang, name: lang })),
+    ];
+  }, [lowlight]);
+
+  const [selectedKey, setSelectedKey] = useState<string | null>(
+    defaultLanguage
+  );
+
+  // Sync selectedKey with node attributes when they change externally
+  useEffect(() => {
+    const currentLanguage = node.attrs?.language || "null";
+    if (currentLanguage !== selectedKey) {
+      setSelectedKey(currentLanguage);
+    }
+  }, [node.attrs?.language, selectedKey]);
+
+  const handleSelectionChange = (key: string | null) => {
+    setSelectedKey(key);
+    updateAttributes({ language: key === "null" ? null : key });
+  };
+
   return (
-    <NodeViewWrapper className="relative my-4 group">
-      <div className="flex items-center justify-between mb-1">
-        <select
-          contentEditable={false}
-          defaultValue={defaultLanguage}
-          onChange={(event) =>
-            updateAttributes({ language: event.target.value })
-          }
-          className="text-xs text-gray-500 dark:text-gray-400 bg-transparent border-0 rounded px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition-colors appearance-none pr-6 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3E%3C/svg%3E')] bg-no-repeat bg-right"
-          style={{
-            backgroundPosition: "right 0.25rem center",
-          }}
-        >
-          <option value="null">auto</option>
-          <option disabled>—</option>
-          {lowlight?.listLanguages().map((lang: string, index: number) => (
-            <option key={index} value={lang}>
-              {lang}
-            </option>
-          ))}
-        </select>
+    <NodeViewWrapper className="relative group">
+      <div className="flex">
+        <pre className="relative overflow-x-auto rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 my-0">
+          <code className="font-mono text-sm leading-relaxed text-gray-900 dark:text-gray-100">
+            <NodeViewContent />
+          </code>
+        </pre>
+        <LanguageSelect
+          selectedKey={selectedKey}
+          onSelectionChange={handleSelectionChange}
+          items={items}
+        />
       </div>
-      <pre className="relative overflow-x-auto rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 my-0">
-        <code className="font-mono text-sm leading-relaxed text-gray-900 dark:text-gray-100">
-          <NodeViewContent />
-        </code>
-      </pre>
     </NodeViewWrapper>
   );
 }

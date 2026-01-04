@@ -69,7 +69,7 @@ function RouteComponent() {
   );
 
   const isEnabled = integrationConnections.length > 0;
-  const authType = integrationDetails.authType || "oauth"; // Default to OAuth for backwards compatibility
+  const authType = integrationDetails.authType || "oauth";
   const isOAuth = authType === "oauth";
 
   const [isConnecting, setIsConnecting] = useState(false);
