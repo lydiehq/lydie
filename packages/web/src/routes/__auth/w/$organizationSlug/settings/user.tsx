@@ -20,6 +20,7 @@ import { authClient } from "@/utils/auth";
 import { Button } from "@/components/generic/Button";
 import { formatDistanceToNow } from "date-fns";
 import { Check, X, Building2, User as UserIcon, Clock } from "lucide-react";
+import { useAuth } from "@/context/auth.context";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/user"
@@ -30,10 +31,15 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const z = useZero();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [userSettings] = useQuery(queries.settings.user({}));
   const [fontSize, setFontSize] = useAtom(rootFontSizeAtom);
-  const [userInvitations] = useQuery(queries.invitations.byUser({}));
+  const [userInvitations] = useQuery(
+    queries.invitations.byUser({
+      email: user.email,
+    })
+  );
 
   const handleTogglePersistDocumentTreeExpansion = async (
     isSelected: boolean

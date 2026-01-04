@@ -34,9 +34,7 @@ export const queries = defineQueries({
           .one()
           .related("parent")
           .related("children", (q) =>
-            q
-              .where("deleted_at", "IS", null)
-              .orderBy("created_at", "asc")
+            q.where("deleted_at", "IS", null).orderBy("created_at", "asc")
           )
           .related("organization")
           .related("conversations", (q) =>
@@ -119,15 +117,18 @@ export const queries = defineQueries({
           .orderBy("created_at", "desc");
       }
     ),
-    byUser: defineQuery(z.object({}), ({ ctx }) => {
-      isAuthenticated(ctx);
-      console.log(ctx);
-      return zql.invitations
-        .where("status", "pending")
-        .related("organization")
-        .related("inviter")
-        .orderBy("created_at", "desc");
-    }),
+    byUser: defineQuery(
+      z.object({ email: z.string() }),
+      ({ args: { email }, ctx }) => {
+        isAuthenticated(ctx);
+        return zql.invitations
+          .where("status", "pending")
+          .where("email", email)
+          .related("organization")
+          .related("inviter")
+          .orderBy("created_at", "desc");
+      }
+    ),
   },
   organizations: {
     byUser: defineQuery(z.object({}), ({ ctx }) => {
