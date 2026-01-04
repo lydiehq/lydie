@@ -554,25 +554,6 @@ export const integrationActivityLogsTable = pgTable(
   ]
 );
 
-export const waitlistTable = pgTable(
-  "waitlist",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    email: text("email").notNull().unique(),
-    status: text("status").notNull().default("pending"), // 'pending', 'invited', 'joined'
-    invitedAt: timestamp("invited_at"),
-    joinedAt: timestamp("joined_at"),
-    ...timestamps,
-  },
-  (table) => [
-    index("waitlist_email_idx").on(table.email),
-    index("waitlist_status_idx").on(table.status),
-  ]
-);
-
 export const assetsTable = pgTable(
   "assets",
   {
