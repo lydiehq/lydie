@@ -7,6 +7,7 @@ ADD ./packages/backend/package.json ./packages/backend/package.json
 ADD ./packages/database/package.json ./packages/database/package.json
 ADD ./packages/integrations/package.json ./packages/integrations/package.json
 ADD ./packages/zero/package.json ./packages/zero/package.json
+ADD ./packages/editor/package.json ./packages/editor/package.json
 RUN bun install --ignore-scripts
 
 ADD ./packages/backend ./packages/backend
