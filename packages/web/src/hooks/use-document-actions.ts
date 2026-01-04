@@ -13,7 +13,7 @@ export function useDocumentActions() {
   const { navigate: routerNavigate } = useRouter();
   const { organization } = useOrganization();
 
-  const createDocument = async (folderId?: string) => {
+  const createDocument = async (parentId?: string) => {
     if (!organization) {
       toast.error("Something went wrong, please try again or contact support.");
       return;
@@ -25,32 +25,17 @@ export function useDocumentActions() {
         id,
         organizationId: organization.id,
         title: "",
-        folderId,
+        parentId,
       })
     );
-
-    console.log("createDocument", folderId);
 
     await navigate({
       from: "/w/$organizationSlug",
       to: "/w/$organizationSlug/$id",
       params: { id, organizationSlug: organization.slug || "" },
     });
-  };
-
-  const createFolder = async () => {
-    try {
-      const folderId = createId();
-      z.mutate(
-        mutators.folder.create({
-          id: folderId,
-          name: "New Folder",
-          organizationId: organization?.id || "",
-        })
-      );
-    } catch (error) {
-      toast.error("Failed to create folder");
-    }
+    
+    return id;
   };
 
   const deleteDocument = (documentId: string, redirectAfterDelete = false) => {
@@ -71,27 +56,6 @@ export function useDocumentActions() {
     } catch (error) {
       toast.error("Failed to delete document");
     }
-  };
-
-  const deleteFolder = (folderId: string) => {
-    if (!organization) {
-      toast.error("Organization not found");
-      return;
-    }
-    
-    confirmDialog({
-      title: "Delete Folder",
-      message:
-        "Are you sure you want to delete this folder? This action cannot be undone.",
-      onConfirm: () => {
-        try {
-          z.mutate(mutators.folder.delete({ folderId, organizationId: organization.id }));
-          toast.success("Folder deleted");
-        } catch (error) {
-          toast.error("Failed to delete folder");
-        }
-      },
-    });
   };
 
   const publishDocument = (documentId: string) => {
@@ -115,9 +79,7 @@ export function useDocumentActions() {
 
   return {
     createDocument,
-    createFolder,
     deleteDocument,
-    deleteFolder,
     publishDocument,
     updateDocument,
   };

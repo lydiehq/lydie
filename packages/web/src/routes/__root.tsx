@@ -8,7 +8,6 @@ import {
   type ToOptions,
 } from "@tanstack/react-router";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
-import { ErrorPage } from "@/components/layout/ErrorPage";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { FontSizeSync } from "@/components/layout/FontSizeSync";
 import { RouterProvider } from "react-aria-components";
@@ -36,9 +35,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     };
   },
   pendingComponent: LoadingScreen,
-  errorComponent: ({ error, reset }) => (
-    <ErrorPage error={error} reset={reset} />
-  ),
   beforeLoad: async ({ context: { queryClient } }) => {
     try {
       const result = await loadSession(queryClient);

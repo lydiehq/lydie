@@ -1,9 +1,9 @@
 import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList";
 import { createFileRoute } from "@tanstack/react-router";
-import { Route as IntegrationRoute } from "@/routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/route";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Heading } from "@/components/generic/Heading";
+import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/integrations/$integrationType/"
@@ -12,13 +12,13 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { organizationId } = Route.useParams();
-  const { integrationType } = IntegrationRoute.useParams();
+  const { integrationType } = Route.useParams();
+  const { organization } = useOrganization();
 
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byIntegrationType({
       integrationType: integrationType,
-      organizationId: organizationId,
+      organizationId: organization?.id || "",
     })
   );
 
@@ -33,7 +33,7 @@ function RouteComponent() {
       <IntegrationLinkList
         links={integrationLinks}
         integrationType={integrationType}
-        organizationId={organizationId}
+        organizationId={organization?.id || ""}
       />
     </div>
   );

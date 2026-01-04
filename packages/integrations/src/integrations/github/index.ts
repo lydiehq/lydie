@@ -150,13 +150,8 @@ async function fetchSupportedFiles(
  * Generate the file path for a document in the repository
  * Uses the document title which should include the file extension
  * Supports: .md, .mdx, .txt
- * Includes folder path if provided to maintain folder structure
  */
-function getFilePath(
-  title: string,
-  basePath?: string,
-  folderPath?: string | null
-): string {
+function getFilePath(title: string, basePath?: string): string {
   // Title should already include the extension (e.g., "file.md", "file.mdx", or "file.txt")
   // If it doesn't, default to .md
   let fileName = title.includes(".") ? title : `${title}.md`;
@@ -177,14 +172,6 @@ function getFilePath(
     const normalizedBasePath = basePath.replace(/^\/+|\/+$/g, "");
     if (normalizedBasePath) {
       pathParts.push(normalizedBasePath);
-    }
-  }
-
-  // Add folderPath if provided (document's folder structure)
-  if (folderPath) {
-    const normalizedFolderPath = folderPath.replace(/^\/+|\/+$/g, "");
-    if (normalizedFolderPath) {
-      pathParts.push(normalizedFolderPath);
     }
   }
 
@@ -385,6 +372,16 @@ export const githubIntegration: GitHubIntegrationExtended = {
     const config = connection.config as GitHubConfig;
 
     try {
+      // Don't push locked folder pages back to GitHub
+      if (document.isLocked && document.externalId?.startsWith("__folder__")) {
+        return {
+          success: true,
+          documentId: document.id,
+          externalId: document.externalId,
+          message: "Skipped pushing folder page (managed by integration)",
+        };
+      }
+
       if (!config.repo || !config.owner) {
         throw new Error("Repository not fully configured");
       }
@@ -395,19 +392,52 @@ export const githubIntegration: GitHubIntegrationExtended = {
       // Convert TipTap content to Markdown
       const markdown = serializeToMarkdown(document.content);
 
-      // Generate file path using title (which includes extension) and folder path
-      // Priority: 1) folderPath from document, 2) extract from externalId, 3) null (root)
-      let folderPath = document.folderPath;
+      // Determine file path from parent hierarchy (current location)
+      // This ensures files are pushed to the correct location even if they were moved
+      let filePath: string;
+      if (
+        document.parentPathSegments &&
+        document.parentPathSegments.length > 0
+      ) {
+        // Build path from parent hierarchy segments
+        const pathParts: string[] = [];
 
-      // If folderPath is not provided, try to extract it from externalId
-      // This handles cases where the document was synced from GitHub and we want to maintain the same path
-      if (!folderPath && document.id) {
-        // Note: externalId would need to be passed in the document, but it's not in SyncDocument
-        // For now, we'll rely on folderPath being passed from the backend
-        // The backend's pushToExtension should provide folderPath based on folderId
+        // Add basePath if provided
+        if (config.basePath) {
+          const normalizedBasePath = config.basePath.replace(/^\/+|\/+$/g, "");
+          if (normalizedBasePath) {
+            pathParts.push(normalizedBasePath);
+          }
+        }
+
+        // Add parent path segments
+        pathParts.push(...document.parentPathSegments);
+
+        // Add filename (title should include extension)
+        let fileName = document.title.includes(".")
+          ? document.title
+          : `${document.title}.md`;
+
+        // Validate extension
+        const extension = fileName.toLowerCase().match(/\.([^.]+)$/)?.[1];
+        if (extension && !["md", "mdx", "txt"].includes(extension)) {
+          const nameWithoutExt = fileName.replace(/\.[^.]+$/, "");
+          fileName = `${nameWithoutExt}.md`;
+        }
+
+        pathParts.push(fileName);
+        filePath = pathParts.join("/");
+      } else if (
+        document.externalId &&
+        !document.externalId.startsWith("__folder__")
+      ) {
+        // Fallback: use existing externalId if no parent path segments
+        // This handles documents that haven't been moved
+        filePath = document.externalId;
+      } else {
+        // Generate new path at root for documents created in Lydie
+        filePath = getFilePath(document.title, config.basePath);
       }
-
-      const filePath = getFilePath(document.title, config.basePath, folderPath);
 
       // Check if file exists to get current SHA (required for updates)
       let currentSha: string | undefined;
@@ -481,10 +511,11 @@ export const githubIntegration: GitHubIntegrationExtended = {
         content: { path: string };
       };
 
+      // Return the actual path used (which may differ from externalId if document was moved)
       return {
         success: true,
         documentId: document.id,
-        externalId: result.content.path,
+        externalId: result.content.path, // This is the path we actually pushed to
         message: `Pushed to ${config.owner}/${config.repo}/${result.content.path}`,
       };
     } catch (error) {
@@ -582,8 +613,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
     const config = connection.config as GitHubConfig;
     const results: SyncResult[] = [];
 
-    console.log(config);
-
     try {
       if (!config.repo) {
         throw new Error("Repository not configured");
@@ -601,6 +630,41 @@ export const githubIntegration: GitHubIntegrationExtended = {
         config.basePath || ""
       );
 
+      // Collect all directory paths from files
+      const folderPaths = new Set<string>();
+      for (const file of files) {
+        const pathParts = file.path.split("/");
+        pathParts.pop(); // Remove filename
+
+        // Build all parent folder paths
+        let currentPath = "";
+        for (const part of pathParts) {
+          currentPath = currentPath ? `${currentPath}/${part}` : part;
+          folderPaths.add(currentPath);
+        }
+      }
+
+      // Create empty locked pages for all folders
+      // These represent the directory structure and will be parent pages
+      for (const folderPath of Array.from(folderPaths).sort()) {
+        const pathParts = folderPath.split("/");
+        const folderName = pathParts[pathParts.length - 1];
+
+        results.push({
+          success: true,
+          documentId: "", // Will be created by backend
+          externalId: `__folder__${folderPath}`,
+          message: `Created folder page for ${folderPath}`,
+          metadata: {
+            title: folderName,
+            slug: folderPath.replace(/\//g, "-").toLowerCase(),
+            content: { type: "doc", content: [] }, // Empty content
+            isLocked: true, // Locked because it represents a folder
+          },
+        });
+      }
+
+      // Process all files (including README.md files)
       for (const file of files) {
         try {
           // Parse frontmatter first (for MD and MDX files)
@@ -635,20 +699,12 @@ export const githubIntegration: GitHubIntegrationExtended = {
               );
           }
 
-          // Extract folder path from file path
-          // e.g., "docs/guides/intro.md" -> folderPath: "docs/guides"
-          // e.g., "intro.md" -> folderPath: null (root)
+          // Extract filename from path
           const pathParts = file.path.split("/");
           const fileName = pathParts.pop() || file.name;
-          const folderPath =
-            pathParts.length > 0
-              ? pathParts.join("/").replace(/^\/+|\/+$/g, "") // Remove leading/trailing slashes
-              : null;
 
-          // Generate document ID and slug
-          // Slug should not include extension for URL purposes
+          // Generate slug from filename (without extension)
           const slug = fileName
-
             .replace(/\.(md|mdx|txt)$/i, "")
             .replace(/\//g, "-")
             .toLowerCase();
@@ -680,7 +736,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
               title,
               slug: frontmatter.slug || slug,
               content: tipTapContent,
-              folderPath, // Include folder path for folder creation
               customFields:
                 Object.keys(customFields).length > 0 ? customFields : undefined,
             },

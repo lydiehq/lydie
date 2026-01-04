@@ -1,16 +1,8 @@
 import { useEditor, Editor } from "@tiptap/react";
-import { StarterKit } from "@tiptap/starter-kit";
-import { TextSelectionExtension } from "@/editor/extensions/selection";
-import { MarkdownPasteExtension } from "@/editor/extensions/markdown-paste";
-import { CharacterCount } from "@tiptap/extension-character-count";
-import { DocumentComponent } from "../editor/extensions/document-components";
-import { KeyboardShortcutExtension } from "@/editor/extensions/keyboard-shortcuts";
-import { IndentHandlerExtension } from "@/editor/extensions/indent-handler";
-import { Collaboration } from "@tiptap/extension-collaboration";
-import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
-import { ImageUpload } from "@/editor/extensions/image-upload";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { getContentExtensions } from "@lydie/editor/content";
+import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
 import { useCallback, useMemo } from "react";
-import { TableKit } from "@tiptap/extension-table";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import type { QueryResultType } from "@rocicorp/zero";
@@ -65,6 +57,8 @@ export function useCollaborativeEditor({
   onAddLink,
 }: UseCollaborativeEditorProps): CollaborativeEditorHookResult {
   const { user } = useAuth();
+  const isLocked = doc.is_locked ?? false;
+
   const { ydoc, provider } = useMemo(() => {
     if (!doc.id) return { ydoc: null, provider: null };
 
@@ -94,56 +88,56 @@ export function useCollaborativeEditor({
     return { ydoc: yjsState, provider: hocuspocusProvider };
   }, [doc.id, doc.yjs_state, yjsServerUrl]);
 
-  const editor = useEditor(
-    {
-      autofocus: true,
-      extensions: [
-        StarterKit.configure({
-          heading: {},
-          undoRedo: false,
-          link: {
-            openOnClick: false,
-            protocols: ["internal"],
-          },
-        }),
-        TableKit,
-        CharacterCount,
-        TextSelectionExtension.configure({
-          onSelect: onTextSelect,
-        }),
-        MarkdownPasteExtension,
-        KeyboardShortcutExtension.configure({
-          onSave,
-          onAddLink,
-        }),
-        DocumentComponent,
-        IndentHandlerExtension,
-        ImageUpload,
-        Collaboration.configure({
-          document: ydoc,
-        }),
-        CollaborationCaret.configure({
-          provider,
-          user: user
-            ? {
-                name: user.name,
-                color: getUserColor(user.id),
-              }
-            : {
-                name: "Anonymous",
-                color: "#808080",
-              },
-        }),
-      ],
-      editorProps: {
-        attributes: {
-          class: "size-full outline-none editor-content",
+  const editor = useEditor({
+    autofocus: !isLocked,
+    editable: !isLocked,
+    extensions: getContentExtensions({
+      textSelection: {
+        enabled: true,
+        onSelect: onTextSelect,
+      },
+      keyboardShortcuts: {
+        enabled: true,
+        onSave,
+        onAddLink,
+      },
+      starterKit: {
+        heading: {},
+        undoRedo: false,
+        link: {
+          openOnClick: false,
+          protocols: ["internal"],
         },
       },
-      onUpdate,
+      documentComponent: {
+        enabled: true,
+        addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
+      },
+      collaboration: ydoc
+        ? {
+            document: ydoc,
+            provider: provider || undefined,
+            user: user
+              ? {
+                  name: user.name,
+                  color: getUserColor(user.id),
+                }
+              : {
+                  name: "Anonymous",
+                  color: "#808080",
+                },
+          }
+        : undefined,
+    }),
+    editorProps: {
+      attributes: {
+        class: `size-full outline-none editor-content ${
+          isLocked ? "cursor-default" : ""
+        }`,
+      },
     },
-    [ydoc, provider]
-  );
+    onUpdate: isLocked ? undefined : onUpdate,
+  });
 
   const setContent = useCallback(
     (content: string) => {

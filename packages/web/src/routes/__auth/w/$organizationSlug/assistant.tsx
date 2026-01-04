@@ -177,26 +177,13 @@ function AssistantChat({
           };
           const id = createId();
 
-          let jsonContent;
-
-          if (content) {
-            // Create a temporary editor to parse HTML to JSON.
-            // TODO: use our own utils for this
-            const tempEditor = new Editor({
-              content: content,
-              extensions: [StarterKit],
-            });
-            jsonContent = tempEditor.getJSON();
-            tempEditor.destroy();
-          }
-
+          // Content is handled by Yjs - documents are created empty and content is synced via Yjs
+          // If content is provided, it will be set through the collaborative editor
           z.mutate(
             mutators.document.create({
               id,
               organizationId: organizationId,
               title: title || "Untitled",
-              folderId: undefined,
-              jsonContent: jsonContent as any, // Cast to any as Zero schema expects specific JSON structure
             })
           );
 

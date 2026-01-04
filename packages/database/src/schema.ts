@@ -157,41 +157,6 @@ export const invitationsTable = pgTable(
   ]
 );
 
-export const foldersTable = pgTable(
-  "folders",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    name: text("name").notNull(),
-    userId: text("user_id").references(() => usersTable.id, {
-      onDelete: "set null",
-    }),
-    organizationId: text("organization_id")
-      .notNull()
-      .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    parentId: text("parent_id").references(
-      (): PgColumn<any> => foldersTable.id,
-      {
-        onDelete: "cascade",
-      }
-    ),
-    integrationLinkId: text("integration_link_id").references(
-      () => integrationLinksTable.id,
-      {
-        onDelete: "cascade",
-      }
-    ),
-    deletedAt: timestamp("deleted_at"),
-    ...timestamps,
-  },
-  (table) => [
-    index("folders_organization_id_idx").on(table.organizationId),
-    index("folders_integration_link_id_idx").on(table.integrationLinkId),
-  ]
-);
-
 export const documentsTable = pgTable(
   "documents",
   {
@@ -201,12 +166,14 @@ export const documentsTable = pgTable(
       .$default(() => createId()),
     title: text("title").notNull(),
     slug: text("slug").notNull(),
-    jsonContent: jsonb("json_content").notNull(),
     yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
-    folderId: text("folder_id").references(() => foldersTable.id, {
+    // Parent document ID for pages-in-pages structure (replaces old folder system)
+    // Allows documents to be nested within other documents (Notion-style)
+    // For integration-synced documents, this is automatically set based on directory structure
+    parentId: text("parent_id").references((): PgColumn<any> => documentsTable.id, {
       onDelete: "set null",
     }),
     organizationId: text("organization_id")
@@ -218,7 +185,12 @@ export const documentsTable = pgTable(
         onDelete: "set null",
       }
     ),
-    externalId: text("external_id"), // Path/ID in external system (e.g., "docs/guide.md" in GitHub)
+    // External ID tracks the document's identifier in the external system:
+    // - For regular files from GitHub: the file path (e.g., "docs/guide.md")
+    // - For folder pages from GitHub: special "__folder__<path>" format (e.g., "__folder__docs")
+    // - For other integrations: platform-specific identifier
+    // Used to match documents during sync and maintain consistent paths when pushing back
+    externalId: text("external_id"),
     customFields:
       jsonb("custom_fields").$type<Record<string, string | number>>(),
     indexStatus: text("index_status").notNull().default("outdated"),
@@ -226,6 +198,9 @@ export const documentsTable = pgTable(
     lastIndexedTitle: text("last_indexed_title"),
     lastIndexedContentHash: text("last_indexed_content_hash"),
     deletedAt: timestamp("deleted_at"),
+    // Locked documents cannot be edited manually (e.g., folder pages from integrations)
+    // Used to mark documents that represent external structure like directories
+    isLocked: boolean("is_locked").notNull().default(false),
     ...timestamps,
   },
   (table) => [
@@ -240,7 +215,7 @@ export const documentsTable = pgTable(
       .on(table.organizationId, table.integrationLinkId, table.slug)
       .where(sql`deleted_at IS NULL`),
     index("documents_organization_id_idx").on(table.organizationId),
-    index("documents_folder_id_idx").on(table.folderId),
+    index("documents_parent_id_idx").on(table.parentId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
   ]
 );

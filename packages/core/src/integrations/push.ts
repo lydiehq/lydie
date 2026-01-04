@@ -126,6 +126,39 @@ export async function pushDocumentToIntegration(
 
     const jsonContent = convertYjsToJson(document.yjsState);
 
+    // Compute path segments from parent hierarchy
+    // This ensures the path reflects the current document location, even if externalId is stale
+    const parentPathSegments: string[] = [];
+    if (document.parentId) {
+      let currentParentId: string | null = document.parentId;
+      const visited = new Set<string>(); // Prevent infinite loops
+
+      while (currentParentId && !visited.has(currentParentId)) {
+        visited.add(currentParentId);
+        const parent = await db.query.documentsTable.findFirst({
+          where: { id: currentParentId },
+        });
+
+        if (!parent) break;
+
+        // For folder pages (locked documents with folder externalId), extract folder name
+        if (
+          parent.isLocked &&
+          parent.externalId?.startsWith("__folder__")
+        ) {
+          const folderPath = parent.externalId.substring("__folder__".length);
+          const folderName = folderPath.split("/").pop() || folderPath;
+          parentPathSegments.unshift(folderName); // Add to beginning (we're going up the tree)
+        } else {
+          // For regular parent documents, use title
+          // This shouldn't happen in practice for synced documents, but handle it gracefully
+          parentPathSegments.unshift(parent.title);
+        }
+
+        currentParentId = parent.parentId;
+      }
+    }
+
     // Create sync document
     const syncDocument: SyncDocument = {
       id: document.id,
@@ -135,7 +168,10 @@ export async function pushDocumentToIntegration(
       published: document.published,
       updatedAt: document.updatedAt,
       organizationId: document.organizationId,
-      folderId: document.folderId,
+      externalId: document.externalId,
+      isLocked: document.isLocked ?? false,
+      parentId: document.parentId,
+      parentPathSegments: parentPathSegments.length > 0 ? parentPathSegments : undefined,
       customFields: document.customFields as
         | Record<string, string | number>
         | undefined,
@@ -155,7 +191,8 @@ export async function pushDocumentToIntegration(
     });
 
     if (result.success) {
-      // Update document with external ID if provided
+      // Update document with external ID from the push result
+      // This ensures externalId reflects the current location, even if the document was moved
       if (result.externalId) {
         await db
           .update(documentsTable)

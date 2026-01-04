@@ -17,11 +17,12 @@ import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 type TreeItem = {
   id: string;
   name: string;
-  type: "folder" | "document" | "integration-link" | "integration-group";
+  type: "document" | "integration-link" | "integration-group";
   children?: TreeItem[];
   integrationLinkId?: string | null;
   integrationType?: string;
   syncStatus?: string | null;
+  isLocked?: boolean;
 };
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
@@ -52,24 +53,23 @@ type QueryResult = NonNullable<
   QueryResultType<typeof queries.organizations.documentsAndFolders>
 >;
 
-// Finds all parent folder IDs for a given document by traversing up the folder hierarchy.
-function findParentFolderIds(
+// Finds all parent document IDs for a given document by traversing up the parent hierarchy.
+function findParentDocumentIds(
   documentId: string,
-  documents: QueryResult["documents"],
-  folders: QueryResult["folders"]
+  documents: QueryResult["documents"]
 ): string[] {
   const document = documents.find((doc) => doc.id === documentId);
-  if (!document || !document.folder_id) {
+  if (!document || !document.parent_id) {
     return [];
   }
 
   const parentIds: string[] = [];
-  let currentFolderId: string | null = document.folder_id;
+  let currentParentId: string | null = document.parent_id;
 
-  while (currentFolderId) {
-    parentIds.push(currentFolderId);
-    const folder = folders.find((f) => f.id === currentFolderId);
-    currentFolderId = folder?.parent_id ?? null;
+  while (currentParentId) {
+    parentIds.push(currentParentId);
+    const parentDoc = documents.find((d) => d.id === currentParentId);
+    currentParentId = parentDoc?.parent_id ?? null;
   }
 
   // Return in order from root to immediate parent
@@ -148,99 +148,90 @@ export function DocumentTree() {
   );
 
   const documents = orgData?.documents || [];
-  const folders = orgData?.folders || [];
 
-  // Expand all parent folders when a document is opened
+  // Expand all parent documents when a document is opened
   useEffect(() => {
-    if (
-      currentDocumentId &&
-      initialized &&
-      documents.length > 0 &&
-      folders.length > 0
-    ) {
-      const parentFolderIds = findParentFolderIds(
+    if (currentDocumentId && initialized && documents.length > 0) {
+      const parentDocumentIds = findParentDocumentIds(
         currentDocumentId,
-        documents,
-        folders
+        documents
       );
 
-      if (parentFolderIds.length > 0) {
+      if (parentDocumentIds.length > 0) {
         // Merge with existing expanded keys, avoiding duplicates
         setExpandedKeysArray((prev) => {
-          const newKeys = new Set([...prev, ...parentFolderIds]);
+          const newKeys = new Set([...prev, ...parentDocumentIds]);
           return Array.from(newKeys);
         });
       }
     }
-  }, [
-    currentDocumentId,
-    initialized,
-    documents,
-    folders,
-    setExpandedKeysArray,
-  ]);
+  }, [currentDocumentId, initialized, documents, setExpandedKeysArray]);
 
-  // Build tree items for regular folders/documents (excluding extension items)
-  const buildTreeItems = (folderId: string | null): TreeItem[] => {
+  // Build tree items for documents (pages-in-pages structure)
+  // parentId can be null (root level) or a document ID
+  const buildTreeItems = (parentId: string | null): TreeItem[] => {
     // Only include documents that don't belong to an extension link
-    const folderDocs = documents.filter(
-      (doc) => doc.folder_id === folderId && !doc.integration_link_id
-    );
-    // Only include folders that don't belong to an extension link
-    const subFolders = folders.filter(
-      (folder) => folder.parent_id === folderId && !folder.integration_link_id
+    // Filter by parent_id for pages-in-pages structure
+    const childDocs = documents.filter(
+      (doc) => doc.parent_id === parentId && !doc.integration_link_id
     );
 
-    return [
-      ...subFolders.map((folder) => ({
-        id: folder.id,
-        name: folder.name,
-        type: "folder" as const,
-        children: buildTreeItems(folder.id),
-        integrationLinkId: folder.integration_link_id,
-      })),
-      ...folderDocs.map((doc) => ({
+    // Sort documents alphabetically by title
+    const sortedDocs = [...childDocs].sort((a, b) =>
+      (a.title || "Untitled document").localeCompare(
+        b.title || "Untitled document",
+        undefined,
+        { sensitivity: "base" }
+      )
+    );
+
+    return sortedDocs.map((doc) => {
+      // Recursively get children for this document
+      const children = buildTreeItems(doc.id);
+      return {
         id: doc.id,
         name: doc.title || "Untitled document",
         type: "document" as const,
-      })),
-    ];
+        children: children.length > 0 ? children : undefined,
+        isLocked: doc.is_locked ?? false,
+      };
+    });
   };
 
   // Build tree items for an extension link (documents that belong to this link)
+  // Uses parent_id for page-hierarchy structure
   const buildLinkItems = (linkId: string): TreeItem[] => {
     const linkDocs = documents.filter(
       (doc) => doc.integration_link_id === linkId
     );
-    const linkFolders = folders.filter(
-      (folder) => folder.integration_link_id === linkId
-    );
 
-    // Build nested structure for link folders
-    const buildNestedFolders = (parentId: string | null): TreeItem[] => {
-      const subFolders = linkFolders.filter((f) => f.parent_id === parentId);
-      const folderDocs = linkDocs.filter(
-        (d) => d.folder_id === parentId || (!parentId && !d.folder_id)
+    // Build nested structure using parent_id (pages-in-pages)
+    const buildNestedDocs = (parentId: string | null): TreeItem[] => {
+      const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
+
+      // Sort documents alphabetically by title
+      const sortedDocs = [...childDocs].sort((a, b) =>
+        (a.title || "Untitled document").localeCompare(
+          b.title || "Untitled document",
+          undefined,
+          { sensitivity: "base" }
+        )
       );
 
-      return [
-        ...subFolders.map((folder) => ({
-          id: folder.id,
-          name: folder.name,
-          type: "folder" as const,
-          children: buildNestedFolders(folder.id),
-          integrationLinkId: folder.integration_link_id,
-        })),
-        ...folderDocs.map((doc) => ({
+      return sortedDocs.map((doc) => {
+        const children = buildNestedDocs(doc.id);
+        return {
           id: doc.id,
           name: doc.title || "Untitled document",
           type: "document" as const,
+          children: children.length > 0 ? children : undefined,
           integrationLinkId: doc.integration_link_id,
-        })),
-      ];
+          isLocked: doc.is_locked ?? false,
+        };
+      });
     };
 
-    return buildNestedFolders(null);
+    return buildNestedDocs(null);
   };
 
   // Build integration link entries grouped by type
@@ -248,10 +239,10 @@ export function DocumentTree() {
   const linkGroups = useMemo(() => {
     // Get all active connections grouped by integration type
     const connectionGroups = new Map<string, typeof connections>();
-    
+
     connections?.forEach((connection) => {
       if (connection.status !== "active") return;
-      
+
       const type = connection.integration_type;
       if (!type) return;
 
@@ -277,7 +268,7 @@ export function DocumentTree() {
     const items: TreeItem[] = [];
 
     // Create groups for all active connections
-    connectionGroups.forEach((conns, type) => {
+    connectionGroups.forEach((_conns, type) => {
       const metadata = getIntegrationMetadata(type);
       if (!metadata) return;
 
@@ -314,7 +305,7 @@ export function DocumentTree() {
     );
 
     return items;
-  }, [connections, extensionLinks, documents, folders]); // Re-compute when data changes
+  }, [connections, extensionLinks, documents]); // Re-compute when data changes
 
   // Combine integration groups (at top) with regular tree items
   const treeItems = [...linkGroups, ...buildTreeItems(null)];
@@ -328,7 +319,6 @@ export function DocumentTree() {
   );
 
   const { dragAndDropHooks } = useDocumentDragDrop({
-    allFolders: folders,
     allDocuments: documents,
   });
 
