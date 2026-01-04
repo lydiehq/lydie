@@ -170,12 +170,12 @@ export const documentsTable = pgTable(
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
-    // Parent document ID for pages-in-pages structure (replaces old folder system)
-    // Allows documents to be nested within other documents (Notion-style)
-    // For integration-synced documents, this is automatically set based on directory structure
-    parentId: text("parent_id").references((): PgColumn<any> => documentsTable.id, {
-      onDelete: "set null",
-    }),
+    parentId: text("parent_id").references(
+      (): PgColumn<any> => documentsTable.id,
+      {
+        onDelete: "set null",
+      }
+    ),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
@@ -185,11 +185,6 @@ export const documentsTable = pgTable(
         onDelete: "set null",
       }
     ),
-    // External ID tracks the document's identifier in the external system:
-    // - For regular files from GitHub: the file path (e.g., "docs/guide.md")
-    // - For folder pages from GitHub: special "__folder__<path>" format (e.g., "__folder__docs")
-    // - For other integrations: platform-specific identifier
-    // Used to match documents during sync and maintain consistent paths when pushing back
     externalId: text("external_id"),
     customFields:
       jsonb("custom_fields").$type<Record<string, string | number>>(),
@@ -198,19 +193,15 @@ export const documentsTable = pgTable(
     lastIndexedTitle: text("last_indexed_title"),
     lastIndexedContentHash: text("last_indexed_content_hash"),
     deletedAt: timestamp("deleted_at"),
-    // Locked documents cannot be edited manually (e.g., folder pages from integrations)
-    // Used to mark documents that represent external structure like directories
     isLocked: boolean("is_locked").notNull().default(false),
     ...timestamps,
   },
   (table) => [
-    // Unique slugs for user-created documents within organization
     uniqueIndex("documents_user_organization_id_slug_key")
       .on(table.organizationId, table.slug)
       .where(
         sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`
       ),
-    // Unique slugs for integration documents within organization and integration link
     uniqueIndex("documents_integration_organization_link_slug_key")
       .on(table.organizationId, table.integrationLinkId, table.slug)
       .where(sql`deleted_at IS NULL`),
@@ -411,8 +402,6 @@ export const llmUsageTable = pgTable(
       .notNull()
       .$default(() => createId()),
     conversationId: text("conversation_id").notNull(),
-    // messageId can point to either a document or assistant message, so we keep it
-    // as a plain text field instead of a strict FK.
     messageId: text("message_id"),
     organizationId: text("organization_id").references(
       () => organizationsTable.id,
@@ -442,8 +431,8 @@ export const userSettingsTable = pgTable("user_settings", {
   persistDocumentTreeExpansion: boolean("persist_document_tree_expansion")
     .notNull()
     .default(true),
-  aiPromptStyle: text("ai_prompt_style").default("default"), // 'default', 'journalistic', 'essay'
-  customPrompt: text("custom_prompt"), // For PRO feature
+  aiPromptStyle: text("ai_prompt_style").default("default"),
+  customPrompt: text("custom_prompt"),
   ...timestamps,
 });
 
@@ -482,8 +471,6 @@ export const integrationConnectionsTable = pgTable(
   ]
 );
 
-// Integration links - configurable "symlinks" to external sources
-// Each link represents a specific path/source in an external system (e.g., a folder in a GitHub repo)
 export const integrationLinksTable = pgTable(
   "integration_links",
   {
@@ -500,11 +487,7 @@ export const integrationLinksTable = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    integrationType: text("integration_type").notNull(), // Denormalized from connection for easier querying
-    // Integration-specific config for this link
-    // GitHub: { owner, repo, branch, path }
-    // WordPress: { postType }
-    // Shopify: { blogId }
+    integrationType: text("integration_type").notNull(),
     config: jsonb("config").notNull(),
     lastSyncedAt: timestamp("last_synced_at"),
     syncStatus: text("sync_status").default("idle"), // 'idle', 'pulling', 'pushing', 'error'

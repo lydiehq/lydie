@@ -3,7 +3,6 @@
   "scripts": {
     "db:delete-user": "sst shell bun run src/delete-user.ts",
     "db:embed-all-documents": "sst shell bun run src/embed-all-documents.ts",
-    "db:migrate-folders-to-pages": "sst shell bun run src/migrate-folders-to-pages.ts",
     "copy-integration-assets": "bun run src/copy-integration-assets.ts"
   },
   "dependencies": {

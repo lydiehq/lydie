@@ -374,11 +374,7 @@ function RouteComponent() {
 
       // Step 2: Import files with pre-created page IDs
       toast.info("Importing files...");
-      const results = await processFilesInBatches(
-        selectedFiles,
-        pageCache,
-        5
-      );
+      const results = await processFilesInBatches(selectedFiles, pageCache, 5);
       setUploadResults(results);
 
       // Show summary toast
@@ -441,7 +437,7 @@ function RouteComponent() {
           <Upload className="mx-auto h-12 w-12 text-gray-400" />
           <div>
             <h3 className="text-lg font-medium text-gray-900">
-              Select MDX Files or Folders
+              Select MDX Files
             </h3>
             <p className="text-gray-500">
               Choose .md or .mdx files, or drop a folder to preserve page

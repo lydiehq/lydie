@@ -63,9 +63,9 @@ export function Hero({
               }}
             >
               <AnimatedWord>Write</AnimatedWord>{" "}
-              <AnimatedWord>smarter</AnimatedWord> <br />
-              <AnimatedWord>with</AnimatedWord>{" "}
-              <AnimatedWord>Lydie.</AnimatedWord>
+              <AnimatedWord>once.</AnimatedWord>{" "}
+              <AnimatedWord>Use</AnimatedWord> <AnimatedWord>it</AnimatedWord>{" "}
+              <AnimatedWord>everywhere.</AnimatedWord>
             </motion.h1>
             <motion.span
               className="text-[15px]/relaxed text-gray-600 w-[220px] mx-auto md:w-full md:text-start md:mx-0 text-center md:text-balance"
@@ -84,8 +84,8 @@ export function Hero({
                 duration: 0.8,
               }}
             >
-              A writing environment that understands your documents and helps
-              you stay in control.
+              A document-first writing workspace that adapts to blogs, docs, and
+              products — not the other way around.
             </motion.span>
             <motion.div className="flex items-center gap-x-1.5 w-full md:w-auto">
               <motion.div
@@ -146,4 +146,3 @@ export function Hero({
     </section>
   );
 }
-

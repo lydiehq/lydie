@@ -89,9 +89,6 @@ async function pushToIntegration(
       return;
     }
 
-    // No need to compute folder path anymore - integrations use externalId and parentId
-    // to determine the correct path in the external system
-
     // Get integration from registry
     const integration = integrationRegistry.get(
       link.connection.integrationType

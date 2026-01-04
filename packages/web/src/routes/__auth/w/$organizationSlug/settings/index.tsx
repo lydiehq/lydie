@@ -678,7 +678,7 @@ function RouteComponent() {
               <p className="text-sm text-red-700">
                 Once you delete an organization, there is no going back. This
                 will permanently delete the organization and all associated
-                data, including documents, folders, API keys, and settings.
+                data, including documents, API keys, and settings.
               </p>
             </div>
             <div className="flex justify-end">

@@ -21,11 +21,11 @@ import { Button } from "@/components/generic/Button";
 import { formatDistanceToNow } from "date-fns";
 import { Check, X, Building2, User as UserIcon, Clock } from "lucide-react";
 
-export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user")(
-  {
-    component: RouteComponent,
-  }
-);
+export const Route = createFileRoute(
+  "/__auth/w/$organizationSlug/settings/user"
+)({
+  component: RouteComponent,
+});
 
 function RouteComponent() {
   const z = useZero();
@@ -55,7 +55,10 @@ function RouteComponent() {
     }
   };
 
-  const handleAcceptInvitation = async (invitationId: string, organizationSlug: string) => {
+  const handleAcceptInvitation = async (
+    invitationId: string,
+    organizationSlug: string
+  ) => {
     try {
       await authClient.organization.acceptInvitation({
         invitationId,
@@ -67,8 +70,7 @@ function RouteComponent() {
         params: { organizationSlug },
       });
     } catch (error: any) {
-      const errorMessage =
-        error?.message || "Failed to accept invitation";
+      const errorMessage = error?.message || "Failed to accept invitation";
       toast.error(errorMessage);
       console.error("Accept invitation error:", error);
     }
@@ -81,8 +83,7 @@ function RouteComponent() {
       });
       toast.success("Invitation rejected");
     } catch (error: any) {
-      const errorMessage =
-        error?.message || "Failed to reject invitation";
+      const errorMessage = error?.message || "Failed to reject invitation";
       toast.error(errorMessage);
       console.error("Reject invitation error:", error);
     }
@@ -126,9 +127,9 @@ function RouteComponent() {
                 Persist Document Tree Expansion
               </Label>
               <p className="text-xs text-gray-500">
-                Save the expanded state of folders in the document tree to local
-                storage. When enabled, your expanded folders will remain open
-                after refreshing the page.
+                Save the expanded state of documents in the document tree to
+                local storage. When enabled, your expanded folders will remain
+                open after refreshing the page.
               </p>
             </div>
             <Switch
@@ -197,26 +198,34 @@ function RouteComponent() {
                     <div className="flex items-center gap-2">
                       <Building2 className="size-4 text-gray-500" />
                       <span className="font-medium text-gray-900">
-                        {invitation.organization?.name || "Unknown Organization"}
+                        {invitation.organization?.name ||
+                          "Unknown Organization"}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <UserIcon className="size-3.5" />
                         <span>
-                          Role: <span className="capitalize font-medium">{invitation.role || "member"}</span>
+                          Role:{" "}
+                          <span className="capitalize font-medium">
+                            {invitation.role || "member"}
+                          </span>
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <UserIcon className="size-3.5" />
                         <span>
-                          Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
+                          Invited by:{" "}
+                          {invitation.inviter?.name ||
+                            invitation.inviter?.email ||
+                            "Unknown"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Clock className="size-3.5" />
                         <span>
-                          Expires {formatDistanceToNow(invitation.expires_at, {
+                          Expires{" "}
+                          {formatDistanceToNow(invitation.expires_at, {
                             addSuffix: true,
                           })}
                         </span>

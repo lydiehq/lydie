@@ -30,7 +30,7 @@ export interface PullFromLinkResult {
  * - Fetching the link and connection
  * - Refreshing tokens if needed
  * - Calling integration.pull()
- * - Creating documents and folders from results
+ * - Creating documents from results
  * - Updating link sync timestamp
  * - Updating connection status
  */
