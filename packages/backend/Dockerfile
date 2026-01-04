@@ -15,6 +15,7 @@ ADD ./packages/core ./packages/core
 ADD ./packages/database ./packages/database
 ADD ./packages/integrations ./packages/integrations
 ADD ./packages/zero ./packages/zero
+ADD ./packages/editor ./packages/editor
 
 WORKDIR ./packages/backend
 
