@@ -11,7 +11,7 @@
     "test:e2e": "bun sst shell playwright test -- --ui"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.5",
+    "@ai-sdk/react": "^3.0.6",
     "@floating-ui/dom": "^1.7.4",
     "@floating-ui/react": "^0.27.16",
     "@fontsource-variable/dm-sans": "^5.2.8",
@@ -20,6 +20,7 @@
     "@lydie/backend": "workspace:*",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
+    "@lydie/editor": "workspace:*",
     "@lydie/integrations": "workspace:*",
     "@lydie/zero": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
@@ -31,7 +32,6 @@
     "@tanstack/react-router-devtools": "^1.144.0",
     "@tanstack/react-router-with-query": "^1.130.17",
     "@tanstack/router-plugin": "^1.145.2",
-    "@lydie/editor": "workspace:*",
     "@tiptap/core": "^3.14.0",
     "@tiptap/extension-mention": "^3.14.0",
     "@tiptap/pm": "^3.14.0",
@@ -63,7 +63,7 @@
     "tippy.js": "^6.3.7",
     "use-stick-to-bottom": "^1.1.1",
     "usehooks-ts": "^3.1.1",
-    "yjs": "^13.6.28",
+    "yjs": "^13.6.29",
     "zod": "^4.3.4"
   },
   "devDependencies": {

@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "cva": "^1.0.0-beta.4",
     "html2canvas-pro": "^1.6.3",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "react": "^19.2.3",

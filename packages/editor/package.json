@@ -18,17 +18,17 @@
     "@tiptap/extension-collaboration-caret": "^3.14.0",
     "@tiptap/extension-document": "^3.14.0",
     "@tiptap/extension-heading": "^3.14.0",
-    "@tiptap/extension-link": "^3.14.0",
     "@tiptap/extension-image": "^3.14.0",
+    "@tiptap/extension-link": "^3.14.0",
     "@tiptap/extension-placeholder": "^3.14.0",
     "@tiptap/extension-table": "^3.14.0",
     "@tiptap/extension-text": "^3.14.0",
     "@tiptap/extensions": "^3.14.0",
+    "@tiptap/pm": "^3.14.0",
     "@tiptap/react": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",
     "@tiptap/y-tiptap": "^3.0.1",
-    "@tiptap/pm": "^3.14.0",
-    "yjs": "^13.6.28"
+    "yjs": "^13.6.29"
   },
   "devDependencies": {
     "@types/node": "^25.0.3",
