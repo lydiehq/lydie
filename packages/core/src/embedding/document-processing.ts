@@ -1,158 +1,253 @@
 import {
   documentsTable,
   documentEmbeddingsTable,
-  documentTitleEmbeddingsTable,
 } from "@lydie/database/schema-only";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { generateContentHash } from "../hash";
 import { serializeToPlainText } from "../serialization/text";
-import { generateHeadingAwareChunks, generateSimpleChunks } from "./chunking";
-import { generateTitleEmbedding, generateManyEmbeddings } from "./generation";
+import {
+  generateParagraphChunks,
+  generateSimpleChunks,
+  type ParagraphChunk,
+} from "./chunking";
+import { generateManyEmbeddings } from "./generation";
 import { convertYjsToJson } from "../yjs-to-json";
+import {
+  extractSections,
+  sectionsToHashMap,
+  findChangedSections,
+  sectionToJsonDoc,
+  type SectionHashes,
+} from "./section-hashing";
 
 type Database = PostgresJsDatabase<any>;
 
-export async function processDocumentEmbedding(
-  doc: typeof documentsTable.$inferSelect,
+async function processDocumentWithoutSections(
+  documentId: string,
+  jsonContent: any,
+  plaintextContent: string,
   db: Database
-): Promise<{ skipped: boolean; reason?: string }> {
-  const dbToUse = db;
-
-  // Convert Yjs state to JSON, then to plaintext for consistent hashing and embedding
-  if (!doc.yjsState) {
-    console.warn(
-      `Document ${doc.id} has no yjsState, skipping embedding processing`
-    );
-    return { skipped: true, reason: "no_content" };
-  }
-
-  const jsonContent = convertYjsToJson(doc.yjsState);
-  if (!jsonContent) {
-    console.warn(
-      `Document ${doc.id} failed to convert yjsState to JSON, skipping embedding processing`
-    );
-    return { skipped: true, reason: "conversion_failed" };
-  }
-
-  const plaintextContent = serializeToPlainText(jsonContent as any);
-  const currentContentHash = generateContentHash(plaintextContent);
-  const titleChanged = doc.lastIndexedTitle !== doc.title;
-  const contentChanged = doc.lastIndexedContentHash !== currentContentHash;
-
-  // If nothing changed, skip processing
-  if (!titleChanged && !contentChanged) {
-    console.log(`Document ${doc.id} has no changes, skipping processing`);
-    await dbToUse
-      .update(documentsTable)
-      .set({ indexStatus: "indexed" })
-      .where(eq(documentsTable.id, doc.id));
-    return { skipped: true, reason: "no_changes" };
-  }
-
-  console.log(
-    `Processing document ${doc.id} - Title changed: ${titleChanged}, Content changed: ${contentChanged}`
-  );
-
-  // Use transaction for better performance and consistency
-  await dbToUse
+): Promise<void> {
+  await db
     .transaction(
-      async (tx: Parameters<Parameters<typeof dbToUse.transaction>[0]>[0]) => {
-        // Set status to indexing
+      async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
         await tx
           .update(documentsTable)
           .set({ indexStatus: "indexing", updatedAt: new Date() })
-          .where(eq(documentsTable.id, doc.id));
+          .where(eq(documentsTable.id, documentId));
 
-        // Update title embedding only if title changed
-        if (titleChanged) {
-          console.log(`Updating title embedding for document ${doc.id}`);
+        await tx
+          .delete(documentEmbeddingsTable)
+          .where(eq(documentEmbeddingsTable.documentId, documentId));
 
-          // Delete existing title embeddings
-          await tx
-            .delete(documentTitleEmbeddingsTable)
-            .where(eq(documentTitleEmbeddingsTable.documentId, doc.id));
-
-          // Generate new title embedding (fast operation)
-          const titleEmbedding = await generateTitleEmbedding(doc.title);
-
-          // Insert title embedding
-          await tx.insert(documentTitleEmbeddingsTable).values({
-            documentId: doc.id,
-            title: doc.title,
-            embedding: titleEmbedding,
-          });
+        let chunks: ParagraphChunk[] | ReturnType<typeof generateSimpleChunks>;
+        try {
+          chunks = generateParagraphChunks(jsonContent);
+        } catch (error) {
+          console.warn(
+            `Failed to generate paragraph chunks for document ${documentId}, falling back to simple chunking`,
+            error
+          );
+          chunks = generateSimpleChunks(plaintextContent);
         }
 
-        // Update content embeddings only if content changed
-        if (contentChanged) {
-          console.log(`Updating content embeddings for document ${doc.id}`);
+        if (chunks.length > 0) {
+          const chunkTexts = chunks.map((c) => c.content);
+          const embeddings = await generateManyEmbeddings(chunkTexts);
 
-          // Delete existing content embeddings
-          await tx
-            .delete(documentEmbeddingsTable)
-            .where(eq(documentEmbeddingsTable.documentId, doc.id));
-
-          // Generate heading-aware chunks from JSON content (expensive operation)
-          let chunks;
-          try {
-            chunks = generateHeadingAwareChunks(jsonContent);
-            console.log(
-              `Generated ${chunks.length} heading-aware chunks for document ${doc.id}`
-            );
-          } catch (error) {
-            console.warn(
-              `Failed to generate heading-aware chunks for document ${doc.id}, falling back to simple chunking`,
-              error
-            );
-            // Fallback to simple text-based chunking
-            const fullText = `${doc.title}\n\n${plaintextContent}`;
-            chunks = generateSimpleChunks(fullText);
-          }
-
-          // Generate embeddings for all chunks
-          if (chunks.length > 0) {
-            const chunkTexts = chunks.map((c) => c.content);
-            const embeddings = await generateManyEmbeddings(chunkTexts);
-
-            // Insert content embeddings in batch with metadata
-            await tx.insert(documentEmbeddingsTable).values(
-              chunks.map((chunk, i) => ({
-                content: chunk.content,
-                embedding: embeddings[i]!,
-                documentId: doc.id,
-                chunkIndex: chunk.index,
-                heading: chunk.heading,
-                headingLevel: chunk.level,
-              }))
-            );
-          }
+          await tx.insert(documentEmbeddingsTable).values(
+            chunks.map((chunk, i) => ({
+              content: chunk.content,
+              embedding: embeddings[i]!,
+              documentId: documentId,
+              chunkIndex: chunk.index,
+              heading:
+                "headerPath" in chunk
+                  ? chunk.headerPath[chunk.headerPath.length - 1]
+                  : (chunk as any).heading,
+              headingLevel:
+                "headerLevels" in chunk
+                  ? chunk.headerLevels[chunk.headerLevels.length - 1]
+                  : (chunk as any).level,
+              headerBreadcrumb:
+                "headerBreadcrumb" in chunk ? chunk.headerBreadcrumb : null,
+            }))
+          );
         }
 
-        // Mark as indexed and update tracking fields
         await tx
           .update(documentsTable)
           .set({
             indexStatus: "indexed",
             updatedAt: new Date(),
-            lastIndexedTitle: doc.title,
-            lastIndexedContentHash: currentContentHash,
           })
-          .where(eq(documentsTable.id, doc.id));
-
-        console.log(
-          `Successfully processed document ${doc.id} - Updated: ${
-            titleChanged ? "title" : ""
-          } ${contentChanged ? "content" : ""}`
-        );
+          .where(eq(documentsTable.id, documentId));
       }
     )
     .catch(async (error: unknown) => {
       // If transaction fails, mark document as failed outside transaction
-      await dbToUse
+      await db
         .update(documentsTable)
         .set({ indexStatus: "failed", updatedAt: new Date() })
-        .where(eq(documentsTable.id, doc.id));
+        .where(eq(documentsTable.id, documentId));
+
+      throw error;
+    });
+}
+
+export async function processDocumentEmbedding(
+  params: {
+    documentId: string;
+    yjsState: string; // base64 encoded
+  },
+  db: Database
+): Promise<{ skipped: boolean; reason?: string }> {
+  const { documentId, yjsState } = params;
+
+  if (!yjsState) {
+    console.warn(
+      `Document ${documentId} has no yjsState, skipping embedding processing`
+    );
+    return { skipped: true, reason: "no_content" };
+  }
+
+  const jsonContent = convertYjsToJson(yjsState);
+  if (!jsonContent) {
+    console.warn(
+      `Document ${documentId} failed to convert yjsState to JSON, skipping embedding processing`
+    );
+    return { skipped: true, reason: "conversion_failed" };
+  }
+
+  const sections = extractSections(jsonContent);
+
+  if (sections.length === 0) {
+    console.warn(
+      `Document ${documentId}: No sections extracted, falling back to full document chunking`
+    );
+
+    const plaintextContent = serializeToPlainText(jsonContent as any);
+    const currentContentHash = generateContentHash(plaintextContent);
+
+    const existingDoc = await db
+      .select({
+        lastIndexedContentHash: documentsTable.lastIndexedContentHash,
+      })
+      .from(documentsTable)
+      .where(eq(documentsTable.id, documentId))
+      .limit(1);
+
+    const hasContentChanged =
+      !existingDoc[0]?.lastIndexedContentHash ||
+      existingDoc[0].lastIndexedContentHash !== currentContentHash;
+
+    if (!hasContentChanged) {
+      return { skipped: true, reason: "content_unchanged" };
+    }
+
+    await processDocumentWithoutSections(
+      documentId,
+      jsonContent,
+      plaintextContent,
+      db
+    );
+    return { skipped: false };
+  }
+
+  const newSectionHashes = sectionsToHashMap(sections);
+
+  const existingDoc = await db
+    .select({
+      sectionHashes: (documentsTable as any).sectionHashes,
+    })
+    .from(documentsTable)
+    .where(eq(documentsTable.id, documentId))
+    .limit(1);
+
+  const oldSectionHashes = existingDoc[0]
+    ?.sectionHashes as SectionHashes | null;
+
+  const { changedSections, unchangedSectionKeys, isFullReindex } =
+    findChangedSections(oldSectionHashes, sections);
+
+  if (changedSections.length === 0 && !isFullReindex) {
+    return { skipped: true, reason: "content_unchanged" };
+  }
+
+  await db
+    .transaction(
+      async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
+        await tx
+          .update(documentsTable)
+          .set({ indexStatus: "indexing", updatedAt: new Date() })
+          .where(eq(documentsTable.id, documentId));
+
+        if (isFullReindex) {
+          await tx
+            .delete(documentEmbeddingsTable)
+            .where(eq(documentEmbeddingsTable.documentId, documentId));
+        } else {
+          await tx
+            .delete(documentEmbeddingsTable)
+            .where(eq(documentEmbeddingsTable.documentId, documentId));
+        }
+
+        let allChunks:
+          | ParagraphChunk[]
+          | ReturnType<typeof generateSimpleChunks> = [];
+
+        try {
+          allChunks = generateParagraphChunks(jsonContent);
+        } catch (error) {
+          console.warn(
+            `Failed to generate paragraph chunks for document ${documentId}, falling back to simple chunking`,
+            error
+          );
+          const plaintextContent = serializeToPlainText(jsonContent);
+          allChunks = generateSimpleChunks(plaintextContent);
+        }
+
+        if (allChunks.length > 0) {
+          const chunkTexts = allChunks.map((c) => c.content);
+          const embeddings = await generateManyEmbeddings(chunkTexts);
+
+          await tx.insert(documentEmbeddingsTable).values(
+            allChunks.map((chunk, i) => ({
+              content: chunk.content,
+              embedding: embeddings[i]!,
+              documentId: documentId,
+              chunkIndex: chunk.index,
+              heading:
+                "headerPath" in chunk
+                  ? chunk.headerPath[chunk.headerPath.length - 1]
+                  : (chunk as any).heading,
+              headingLevel:
+                "headerLevels" in chunk
+                  ? chunk.headerLevels[chunk.headerLevels.length - 1]
+                  : (chunk as any).level,
+              headerBreadcrumb:
+                "headerBreadcrumb" in chunk ? chunk.headerBreadcrumb : null,
+            }))
+          );
+        }
+
+        await tx
+          .update(documentsTable)
+          .set({
+            indexStatus: "indexed",
+            sectionHashes: newSectionHashes,
+            updatedAt: new Date(),
+          } as any)
+          .where(eq(documentsTable.id, documentId));
+      }
+    )
+    .catch(async (error: unknown) => {
+      // If transaction fails, mark document as failed outside transaction
+      await db
+        .update(documentsTable)
+        .set({ indexStatus: "failed", updatedAt: new Date() })
+        .where(eq(documentsTable.id, documentId));
 
       throw error;
     });

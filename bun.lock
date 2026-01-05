@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "lydie",
+      "dependencies": {
+        "drizzle-orm": "^1.0.0-beta.8-734e789",
+      },
       "devDependencies": {
         "@tsconfig/node20": "^20.1.8",
         "@types/bun": "^1.3.5",

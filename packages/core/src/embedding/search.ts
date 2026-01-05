@@ -44,9 +44,8 @@ export async function searchDocumentsByTitle(
     const queryEmbedding = await generateEmbedding(query);
 
     // Calculate cosine similarity for titles
-    const similarity = sql<number>`1 - (${
-      documentTitleEmbeddingsTable.embedding
-    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${documentTitleEmbeddingsTable.embedding
+      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
@@ -170,14 +169,14 @@ export async function searchDocumentsInSpecificDocument(
   try {
     const queryEmbedding = await generateEmbedding(query);
 
-    const similarity = sql<number>`1 - (${
-      documentEmbeddingsTable.embedding
-    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${documentEmbeddingsTable.embedding
+      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
         content: documentEmbeddingsTable.content,
         similarity,
+        headerBreadcrumb: documentEmbeddingsTable.headerBreadcrumb,
       })
       .from(documentEmbeddingsTable)
       .where(
@@ -230,9 +229,8 @@ export async function findRelatedDocuments(
     const queryEmbedding = titleEmbedding[0].embedding;
 
     // Find similar documents by title, excluding the current document
-    const similarity = sql<number>`1 - (${
-      documentTitleEmbeddingsTable.embedding
-    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${documentTitleEmbeddingsTable.embedding
+      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
@@ -297,9 +295,8 @@ export async function findRelatedDocumentsByContent(
     const queryEmbedding = contentEmbedding[0].embedding;
 
     // Find documents with similar content, grouped by document
-    const similarity = sql<number>`1 - (${
-      documentEmbeddingsTable.embedding
-    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${documentEmbeddingsTable.embedding
+      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
@@ -356,9 +353,8 @@ export async function searchDocuments(
     const queryEmbedding = await generateEmbedding(query);
 
     // Calculate cosine similarity - using the vector <=> operator for cosine distance
-    const similarity = sql<number>`1 - (${
-      documentEmbeddingsTable.embedding
-    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${documentEmbeddingsTable.embedding
+      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     // Get more chunks than documents needed so we can group properly
     const chunkResults = await db
@@ -368,6 +364,7 @@ export async function searchDocuments(
         title: documentsTable.title,
         id: documentsTable.id,
         slug: documentsTable.slug,
+        headerBreadcrumb: documentEmbeddingsTable.headerBreadcrumb,
       })
       .from(documentEmbeddingsTable)
       .innerJoin(
@@ -407,6 +404,7 @@ export async function searchDocuments(
       documentMap.get(result.id)!.contentChunks.push({
         content: result.content,
         similarity: result.similarity,
+        headerBreadcrumb: result.headerBreadcrumb,
       });
     }
 

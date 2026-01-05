@@ -206,7 +206,7 @@ function AssistantEmptyState({
 
   return (
     <div className="flex-1 flex items-center justify-center p-6">
-      <div className="text-center max-w-xl w-full space-y-6">
+      <div className="text-center max-w-xl w-full space-y-6 px-4">
         <div className="flex justify-center">
           <div className="bg-gray-50 rounded-full p-6">
             <MessageCircle size={48} className="text-gray-400" />

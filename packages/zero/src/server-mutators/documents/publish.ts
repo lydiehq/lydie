@@ -3,16 +3,13 @@ import { z } from "zod";
 import { zql } from "../../schema";
 import { hasOrganizationAccess } from "../../auth";
 import { db } from "@lydie/database";
-import { sql } from "drizzle-orm";
 import { logIntegrationActivity } from "@lydie/core/integrations";
 import { mutators as sharedMutators } from "../../mutators";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
-
 import { integrationRegistry } from "@lydie/integrations";
+import { MutatorContext } from "../../server-mutators";
 
-export const publishDocumentMutation = (
-  asyncTasks: Array<() => Promise<void>>
-) =>
+export const publishDocumentMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
     z.object({
       documentId: z.string(),

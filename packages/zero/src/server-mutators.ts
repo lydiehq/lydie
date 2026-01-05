@@ -6,18 +6,24 @@ import { deleteDocumentMutation } from "./server-mutators/documents/delete";
 import { disconnectIntegrationMutation } from "./server-mutators/integrations/disconnect";
 import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link";
 
+export interface MutatorContext {
+  asyncTasks: Array<() => Promise<void>>;
+}
+
 export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
+  const context = { asyncTasks };
+
   return defineMutators(sharedMutators, {
     document: {
-      publish: publishDocumentMutation(asyncTasks),
-      update: updateDocumentMutation(asyncTasks),
-      delete: deleteDocumentMutation(asyncTasks),
+      publish: publishDocumentMutation(context),
+      update: updateDocumentMutation(context),
+      delete: deleteDocumentMutation(context),
     },
     integrationConnection: {
-      disconnect: disconnectIntegrationMutation(asyncTasks),
+      disconnect: disconnectIntegrationMutation(context),
     },
     integration: {
-      createLink: createIntegrationLinkMutation(asyncTasks),
+      createLink: createIntegrationLinkMutation(context),
     },
   });
 }

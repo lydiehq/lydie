@@ -13,9 +13,9 @@ import { eq } from "drizzle-orm";
 
 import { integrationRegistry } from "@lydie/integrations";
 
-export const createIntegrationLinkMutation = (
-  asyncTasks: Array<() => Promise<void>>
-) =>
+import { MutatorContext } from "../../server-mutators";
+
+export const createIntegrationLinkMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
     z.object({
       id: z.string(),
@@ -59,7 +59,7 @@ export const createIntegrationLinkMutation = (
         console.log(
           `[Integration Link] Auto-pulling from newly created link ${id}`
         );
-        
+
         try {
           const result = await pullFromIntegrationLink({
             linkId: id,
@@ -78,29 +78,31 @@ export const createIntegrationLinkMutation = (
               "success",
               connection.integration_type
             );
-            
+
             // Update sync status to idle
             await db
               .update(integrationLinksTable)
-              .set({ 
+              .set({
                 syncStatus: "idle",
                 lastSyncedAt: new Date(),
                 updatedAt: new Date(),
               })
               .where(eq(integrationLinksTable.id, id));
           } else {
-            console.error(`[Integration Link] Auto-pull failed: ${result.error}`);
+            console.error(
+              `[Integration Link] Auto-pull failed: ${result.error}`
+            );
             await logIntegrationActivity(
               connectionId,
               "pull",
               "error",
               connection.integration_type
             );
-            
+
             // Update sync status to error
             await db
               .update(integrationLinksTable)
-              .set({ 
+              .set({
                 syncStatus: "error",
                 updatedAt: new Date(),
               })
@@ -108,11 +110,11 @@ export const createIntegrationLinkMutation = (
           }
         } catch (error) {
           console.error(`[Integration Link] Auto-pull exception:`, error);
-          
+
           // Update sync status to error
           await db
             .update(integrationLinksTable)
-            .set({ 
+            .set({
               syncStatus: "error",
               updatedAt: new Date(),
             })

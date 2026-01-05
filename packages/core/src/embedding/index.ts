@@ -14,11 +14,16 @@ export {
 export {
   generateHeadingAwareChunks,
   generateSimpleChunks,
+  generateParagraphChunks,
   type Chunk,
+  type ParagraphChunk,
 } from "./chunking";
 
 // Document processing
 export { processDocumentEmbedding } from "./document-processing";
+
+// Title processing
+export { processDocumentTitleEmbedding } from "./title-processing";
 
 // Search utilities
 export {

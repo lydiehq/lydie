@@ -192,6 +192,7 @@ export const documentsTable = pgTable(
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
     lastIndexedContentHash: text("last_indexed_content_hash"),
+    sectionHashes: jsonb("section_hashes").$type<Record<string, string>>(), // Track which sections have changed for incremental updates
     deletedAt: timestamp("deleted_at"),
     isLocked: boolean("is_locked").notNull().default(false),
     ...timestamps,
@@ -240,6 +241,7 @@ export const documentEmbeddingsTable = pgTable(
     chunkIndex: integer("chunk_index"),
     heading: text("heading"),
     headingLevel: integer("heading_level"),
+    headerBreadcrumb: text("header_breadcrumb"), // Full header hierarchy: "## Section > ### Subsection"
     ...timestamps,
   },
   (table) => [

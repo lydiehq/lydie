@@ -303,19 +303,21 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         });
       }
 
-      // Generate embeddings for the imported document asynchronously (don't block)
-      processDocumentEmbedding(insertedDocument, db)
-        .then(() => {
-          console.log(
-            `Successfully generated embeddings for imported document ${documentId}`
-          );
-        })
-        .catch((error) => {
-          console.error(
-            `Failed to generate embeddings for imported document ${documentId}:`,
-            error
-          );
-        });
+      if (insertedDocument.yjsState) {
+        processDocumentEmbedding(
+          {
+            documentId: insertedDocument.id,
+            yjsState: insertedDocument.yjsState,
+            title: insertedDocument.title,
+          },
+          db
+        ).catch((error) => {
+            console.error(
+              `Failed to generate embeddings for imported document ${documentId}:`,
+              error
+            );
+          });
+      }
 
       // Create document components for any new custom components found
       const createdComponents: string[] = [];

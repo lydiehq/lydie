@@ -1,6 +1,5 @@
 /// <reference path="../.sst/platform/config.d.ts" />
 import { secret } from "./secret";
-import { embeddingQueue } from "./embedding";
 import { cluster } from "./cluster";
 import { email } from "./email";
 import { organizationAssetsBucket, assetsRouter } from "./web";
@@ -52,7 +51,6 @@ export const backend = new sst.aws.Service("Backend", {
   },
   link: [
     ...commonSecrets,
-    embeddingQueue,
     email,
     organizationAssetsBucket,
     assetsRouter,

@@ -4,6 +4,7 @@ import { db } from "@lydie/database";
 import { documentsTable, membersTable } from "@lydie/database/schema";
 import { eq, and } from "drizzle-orm";
 import { authClient } from "@lydie/core/auth";
+import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 
 // Verify user has access to document
 async function verifyDocumentAccess(
@@ -79,6 +80,19 @@ export const hocuspocus = new Hocuspocus({
               updatedAt: new Date(),
             })
             .where(eq(documentsTable.id, documentName));
+
+          processDocumentEmbedding(
+            {
+              documentId: documentName,
+              yjsState: base64State,
+            },
+            db
+          ).catch((error) => {
+            console.error(
+              `Failed to generate content embeddings for document ${documentName}:`,
+              error
+            );
+          });
         } catch (error) {
           // Silently fail - state will be retried on next update
         }

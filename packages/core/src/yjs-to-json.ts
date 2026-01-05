@@ -26,10 +26,13 @@ function getEditorSchema() {
 }
 
 export function yDocToJson(ydoc: Y.Doc) {
-  return yXmlFragmentToProseMirrorRootNode(
+  const pmNode = yXmlFragmentToProseMirrorRootNode(
     ydoc.getXmlFragment("default"),
     getEditorSchema()
   );
+  // Convert ProseMirror Node to plain JSON object
+  // ProseMirror nodes have special content structures that aren't plain arrays
+  return pmNode.toJSON();
 }
 
 export function convertYjsToJson(yjsStateBase64: string | null | undefined) {

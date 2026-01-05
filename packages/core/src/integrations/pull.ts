@@ -230,32 +230,23 @@ export async function pullFromIntegrationLink(
             externalIdToDocId.set(result.externalId, documentId);
           }
 
-          if (insertedDocument) {
-            // Generate embeddings for the imported/updated document asynchronously (don't block)
-            processDocumentEmbedding(insertedDocument, db)
-              .then(() => {
-                console.log(
-                  `[Integration Pull] Successfully generated embeddings for document ${insertedDocument.id} (${result.externalId})`
-                );
-              })
-              .catch((error) => {
+          if (insertedDocument && insertedDocument.yjsState) {
+            processDocumentEmbedding(
+              {
+                documentId: insertedDocument.id,
+                yjsState: insertedDocument.yjsState,
+                title: insertedDocument.title,
+              },
+              db
+            ).catch((error) => {
                 console.error(
                   `[Integration Pull] Failed to generate embeddings for document ${insertedDocument.id} (${result.externalId}):`,
                   error
                 );
               });
-          } else {
-            console.warn(
-              `[Integration Pull] Could not find document after upsert for ${result.externalId}`
-            );
           }
 
           imported++;
-          console.log(
-            `[Integration Pull] Imported/Updated: ${result.externalId}${
-              isLocked ? " (locked)" : ""
-            }`
-          );
         } catch (error) {
           failed++;
           console.error(
