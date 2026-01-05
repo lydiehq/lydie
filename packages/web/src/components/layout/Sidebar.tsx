@@ -8,12 +8,26 @@ import { Link, useSearch } from "@tanstack/react-router";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { cva } from "cva";
 import { UsageStats } from "./UsageStats";
-import { ZeroConnectionStatus } from "./ZeroConnectionStatus";
+import { useConnectionState } from "@rocicorp/zero/react";
+import { useZero } from "@/services/zero";
+import { useCallback } from "react";
+import clsx from "clsx";
 import { useOrganization } from "@/context/organization.context";
 import { SidebarIcon } from "./SidebarIcon";
 import { useSetAtom } from "jotai";
 import { commandMenuStateAtom } from "@/stores/command-menu";
-import { Search, Home, MessageCircle, Puzzle, SquarePen } from "lucide-react";
+import {
+  Search,
+  Home,
+  MessageCircle,
+  Puzzle,
+  SquarePen,
+  Wifi,
+  WifiOff,
+  AlertCircle,
+  Loader2,
+  ShieldAlert,
+} from "lucide-react";
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
@@ -208,9 +222,9 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           </div>
         </div>
         <div className="px-2">
-          {isFreePlan && <UsageStats />}
-          {userIsAdmin && <ZeroConnectionStatus />}
+          {isFreePlan && !userIsAdmin && <UsageStats />}
         </div>
+        <SidebarBottombar />
         {/* <div className="flex flex-col">
           <Separator />
           <nav className="py-2">
@@ -229,5 +243,92 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </div> */}
       </div>
     </div>
+  );
+}
+
+function SidebarBottombar() {
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
+
+  {
+    userIsAdmin && <ZeroConnectionStatus />;
+  }
+  return (
+    <div className="flex flex-col gap-y-4 px-2.5 pb-1">
+      {userIsAdmin && <ZeroConnectionStatus />}
+    </div>
+  );
+}
+
+function ZeroConnectionStatus() {
+  const state = useConnectionState();
+  const zero = useZero();
+
+  const handleRetry = useCallback(() => {
+    if (zero?.connection) {
+      zero.connection.connect();
+    }
+  }, [zero]);
+
+  const getStatusConfig = () => {
+    switch (state.name) {
+      case "connecting":
+        return {
+          icon: Loader2,
+          tooltip: state.reason || "Connecting to Zero cache",
+        };
+      case "connected":
+        return {
+          icon: Wifi,
+          tooltip: "Connected to Zero cache",
+        };
+      case "disconnected":
+        return {
+          icon: WifiOff,
+          tooltip: state.reason || "Disconnected from Zero cache",
+        };
+      case "error":
+        return {
+          icon: AlertCircle,
+          tooltip: state.reason || "Connection error",
+          clickable: true,
+        };
+      case "needs-auth":
+        return {
+          icon: ShieldAlert,
+          tooltip: "Authentication required",
+          clickable: true,
+        };
+      default:
+        return {
+          icon: WifiOff,
+          tooltip: "Unknown connection state",
+        };
+    }
+  };
+
+  const config = getStatusConfig();
+  const Icon = config.icon;
+  const isAnimating = state.name === "connecting";
+
+  return (
+    <TooltipTrigger>
+      <RACButton
+        className=""
+        onPress={config.clickable ? handleRetry : undefined}
+        aria-label={config.tooltip}
+      >
+        <Icon
+          className={clsx(
+            "size-4 shrink-0 text-gray-400",
+            isAnimating && "animate-spin"
+          )}
+        />
+      </RACButton>
+      <Tooltip placement="right">
+        {config.tooltip}
+        {config.clickable && " (Click to retry)"}
+      </Tooltip>
+    </TooltipTrigger>
   );
 }

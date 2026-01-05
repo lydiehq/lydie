@@ -11,6 +11,7 @@ import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
 import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
 import { setActiveOrganizationSlug } from "@/lib/active-organization";
+import { LayoutGroup } from "motion/react";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
@@ -29,6 +30,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   beforeLoad: async ({ params }) => {
     setActiveOrganizationSlug(params.organizationSlug);
   },
+  staleTime: Infinity,
+  gcTime: Infinity,
   ssr: false,
 });
 
@@ -69,7 +72,9 @@ function RouteComponent() {
         </Panel>
         <PanelResizer />
         <Panel>
-          <Outlet />
+          <LayoutGroup>
+            <Outlet />
+          </LayoutGroup>
         </Panel>
       </PanelGroup>
     </div>

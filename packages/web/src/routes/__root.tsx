@@ -11,6 +11,7 @@ import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { FontSizeSync } from "@/components/layout/FontSizeSync";
 import { RouterProvider } from "react-aria-components";
+import { ErrorPage } from "@/components/layout/ErrorPage";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -35,6 +36,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     };
   },
   pendingComponent: LoadingScreen,
+  errorComponent: ErrorPage,
   beforeLoad: async ({ context: { queryClient } }) => {
     try {
       const result = await loadSession(queryClient);

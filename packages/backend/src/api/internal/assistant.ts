@@ -110,9 +110,11 @@ export const AssistantRoute = new Hono<{
       });
 
       if (!limitCheck.allowed) {
-        throw new HTTPException(429, {
-          message: `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
-        });
+        throw new VisibleError(
+          "usage_limit_exceeded",
+          `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
+          429
+        );
       }
     }
 
@@ -147,11 +149,11 @@ export const AssistantRoute = new Hono<{
       // @ts-expect-error - experimental_transform is not typed
       experimental_transform: smoothStream({ chunking: "word" }),
       tools: {
-        searchDocuments: searchDocuments(userId, organizationId),
-        readDocument: readDocument(userId, organizationId),
-        listDocuments: listDocuments(userId, organizationId),
-        moveDocuments: moveDocuments(userId, organizationId),
-        createDocument: tool({
+        search_documents: searchDocuments(userId, organizationId),
+        read_document: readDocument(userId, organizationId),
+        list_documents: listDocuments(userId, organizationId),
+        move_documents: moveDocuments(userId, organizationId),
+        create_document: tool({
           description:
             "Create a new document. This tool creates the document in the system but DOES NOT redirect the user. The user will see a preview and a button to open it. Use this when the user asks to create a new document, note, or page. You can optionally provide content for the new document.",
           inputSchema: z.object({
@@ -222,17 +224,18 @@ export const AssistantRoute = new Hono<{
     });
   } catch (e) {
     console.error(e);
-    // Re-throw HTTPException as-is
-    if (e instanceof HTTPException) {
-      throw e;
-    }
-    // Re-throw VisibleError as-is for backward compatibility
+    // Re-throw VisibleError as-is (including usage limit errors)
     if (e instanceof VisibleError) {
       throw e;
     }
-    throw new HTTPException(500, {
-      message: "An error occurred while processing your request",
-    });
+    // Re-throw HTTPException as-is for backward compatibility
+    if (e instanceof HTTPException) {
+      throw e;
+    }
+    throw new VisibleError(
+      "chat_processing_error",
+      "An error occurred while processing your request"
+    );
   }
 });
 

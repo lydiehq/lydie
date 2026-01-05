@@ -100,6 +100,7 @@
         "@tiptap/extension-heading": "^3.14.0",
         "@tiptap/extension-image": "^3.14.0",
         "@tiptap/extension-link": "^3.14.0",
+        "@tiptap/extension-mention": "^3.14.0",
         "@tiptap/extension-placeholder": "^3.14.0",
         "@tiptap/extension-table": "^3.14.0",
         "@tiptap/extension-text": "^3.14.0",
