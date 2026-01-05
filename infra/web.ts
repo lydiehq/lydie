@@ -8,7 +8,7 @@ export const organizationAssetsBucket = new sst.aws.Bucket(
 );
 
 export const assetsRouter = new sst.aws.Router("AssetsRouter", {
-  ...($dev ? { domain: "assets.localhost:3001" } : {}),
+  ...($app.stage === "production" ? { domain: "assets.lydie.co" } : {}),
 });
 
 assetsRouter.routeBucket("*", organizationAssetsBucket);

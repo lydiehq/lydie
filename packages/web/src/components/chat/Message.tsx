@@ -182,14 +182,10 @@ function DocumentReferencePill({ documentId }: { documentId: string }) {
   const { organization } = useOrganization();
   const [document] = useQuery(
     queries.documents.byId({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
       documentId,
     })
   );
-
-  if (!organization?.id) {
-    return null;
-  }
 
   const title = document?.title || "Untitled";
   const href = `/w/${organization.id}/${documentId}`;

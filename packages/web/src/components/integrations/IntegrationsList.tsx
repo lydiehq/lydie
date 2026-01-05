@@ -14,7 +14,7 @@ export function IntegrationsList() {
   const { organization } = useOrganization();
   const [connections] = useQuery(
     queries.integrations.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 

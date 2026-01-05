@@ -110,7 +110,7 @@ function RouteComponent() {
     try {
       await authClient.checkout({
         slug: "pro",
-        referenceId: organization?.id,
+        referenceId: organization.id,
       });
     } catch (error: any) {
       console.error("Upgrade error:", error);

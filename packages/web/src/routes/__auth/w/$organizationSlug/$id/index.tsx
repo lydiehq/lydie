@@ -32,7 +32,7 @@ function RouteComponent() {
   const { organization } = useOrganization();
   const [doc, status] = useQuery(
     queries.documents.byId({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
       documentId: id,
     })
   );

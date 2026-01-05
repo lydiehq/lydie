@@ -64,7 +64,7 @@ function RouteComponent() {
   const [integrationConnections] = useQuery(
     queries.integrations.byIntegrationType({
       integrationType: integrationDetails.id,
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
@@ -110,7 +110,7 @@ function RouteComponent() {
         zero.mutate(
           mutators.integrationConnection.disconnect({
             connectionId: integrationConnections[0].id,
-            organizationId: organization?.id || "",
+            organizationId: organization.id,
           })
         );
       },
@@ -170,7 +170,7 @@ function RouteComponent() {
                     <div className="p-4">
                       {integrationDetails.id === "wordpress" && (
                         <WordPressConnectionForm
-                          organizationId={organization?.id || ""}
+                          organizationId={organization.id}
                           integrationType={integrationDetails.id}
                           onSuccess={handleConnectionSuccess}
                           onCancel={() => setIsConnectionDialogOpen(false)}

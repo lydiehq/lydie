@@ -37,9 +37,7 @@ function RouteComponent() {
         </div>
         <Separator />
         <Card className="p-8 text-center">
-          <div className="text-sm font-medium text-gray-700">
-            Access Denied
-          </div>
+          <div className="text-sm font-medium text-gray-700">Access Denied</div>
           <div className="text-xs mt-1 text-gray-500">
             You do not have permission to access this page.
           </div>
@@ -50,7 +48,7 @@ function RouteComponent() {
 
   // Query all documents for the organization
   const [documents] = useQuery(
-    queries.documents.byUpdated({ organizationId: organization?.id || "" })
+    queries.documents.byUpdated({ organizationId: organization.id })
   );
 
   const handleExportDocuments = async () => {
@@ -76,17 +74,18 @@ function RouteComponent() {
           // For the most up-to-date content, users should ensure documents are saved before exporting.
           // Convert the JSON content to markdown
           const markdown = serializeToMarkdown(doc.json_content as ContentNode);
-          
+
           // Create a safe filename from the title
-          const safeTitle = doc.title
-            .replace(/[^a-z0-9]/gi, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "")
-            .toLowerCase() || "untitled";
-          
+          const safeTitle =
+            doc.title
+              .replace(/[^a-z0-9]/gi, "-")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "")
+              .toLowerCase() || "untitled";
+
           // Use the document's slug as the filename for consistency
           const filename = `${doc.slug || safeTitle}.md`;
-          
+
           // Add metadata header to markdown
           const metadataHeader = `---
 title: ${doc.title}
@@ -96,9 +95,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
 ---
 
 `;
-          
+
           const fullContent = metadataHeader + markdown;
-          
+
           // Add the file to the zip
           zip.file(filename, fullContent);
         } catch (error) {
@@ -114,7 +113,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${organization.name}-documents-${new Date().toISOString().split("T")[0]}.zip`;
+      link.download = `${organization.name}-documents-${
+        new Date().toISOString().split("T")[0]
+      }.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -154,7 +155,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
                 </div>
                 <div className="text-xs text-gray-600">
                   {documents
-                    ? `${documents.length} document${documents.length !== 1 ? "s" : ""} available`
+                    ? `${documents.length} document${
+                        documents.length !== 1 ? "s" : ""
+                      } available`
                     : "Loading..."}
                 </div>
               </div>
@@ -175,7 +178,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
                 <li>All documents converted to Markdown format</li>
                 <li>Metadata header with title, slug, and timestamps</li>
                 <li>Files organized in a ZIP archive</li>
-                <li>Compatible with most Markdown editors and note-taking apps</li>
+                <li>
+                  Compatible with most Markdown editors and note-taking apps
+                </li>
               </ul>
             </div>
           </div>
@@ -196,4 +201,3 @@ updated: ${new Date(doc.updated_at).toISOString()}
     </div>
   );
 }
-

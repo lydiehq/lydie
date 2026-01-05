@@ -164,12 +164,12 @@ export const queries = defineQueries({
       }
     ),
     documents: defineQuery(
-      z.object({ organizationId: z.string() }),
-      ({ args: { organizationId }, ctx }) => {
-        hasOrganizationAccess(ctx, organizationId);
-        // Get all documents, exclude deleted items
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
+        console.log("Preloading documents for organization", organizationSlug);
         return zql.organizations
-          .where("id", organizationId)
+          .where("slug", organizationSlug)
           .one()
           .related("documents", (q) =>
             q.where("deleted_at", "IS", null).orderBy("created_at", "desc")
@@ -279,6 +279,10 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
+        console.log(
+          "Getting integration connections for organization",
+          organizationId
+        );
         return zql.integration_connections
           .where("organization_id", organizationId)
           .related("links", (links) => links)

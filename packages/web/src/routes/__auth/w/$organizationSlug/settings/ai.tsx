@@ -16,9 +16,11 @@ import { Link } from "@/components/generic/Link";
 import { mutators } from "@lydie/zero/mutators";
 import { Card } from "@/components/layout/Card";
 
-export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")({
-  component: RouteComponent,
-});
+export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")(
+  {
+    component: RouteComponent,
+  }
+);
 
 function RouteComponent() {
   const { organization } = useOrganization();
@@ -227,7 +229,7 @@ function RouteComponent() {
               </div>
               <Link
                 to="/w/$organizationSlug/settings/billing"
-                params={{ organizationId: organization?.id || "" }}
+                params={{ organizationId: organization.id }}
               >
                 <Button size="sm">Upgrade to Pro</Button>
               </Link>

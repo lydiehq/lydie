@@ -28,10 +28,6 @@ export function getDocumentEditorExtensions(
     StarterKit.configure({
       heading: options?.starterKit?.heading,
       undoRedo: false,
-      link: options?.starterKit?.link ?? {
-        openOnClick: false,
-        protocols: ["internal"],
-      },
       code: false,
       codeBlock: false,
     }),

@@ -41,7 +41,7 @@ export function useDocumentActions() {
       z.mutate(
         mutators.document.delete({
           documentId,
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
         })
       );
       toast.success("Document deleted");
@@ -60,7 +60,7 @@ export function useDocumentActions() {
     z.mutate(
       mutators.document.publish({
         documentId,
-        organizationId: organization?.id || "",
+        organizationId: organization.id,
       })
     );
   };
@@ -69,7 +69,7 @@ export function useDocumentActions() {
     z.mutate(
       mutators.document.update({
         documentId,
-        organizationId: organization?.id || "",
+        organizationId: organization.id,
         ...data,
       })
     );

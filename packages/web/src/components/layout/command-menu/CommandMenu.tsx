@@ -63,11 +63,11 @@ export function CommandMenu() {
   const [currentDocument] = useQuery(
     currentDocumentId
       ? queries.documents.byId({
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
           documentId: currentDocumentId,
         })
       : queries.documents.byId({
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
           documentId: "non-existent",
         })
   );
@@ -76,11 +76,11 @@ export function CommandMenu() {
   const [searchData] = useQuery(
     currentPage === "search"
       ? queries.organizations.searchDocuments({
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
           searchTerm: search,
         })
       : queries.organizations.searchDocuments({
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
           searchTerm: "",
         })
   );
@@ -90,7 +90,7 @@ export function CommandMenu() {
   // Load integration links to show appropriate icons
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
@@ -288,9 +288,6 @@ export function CommandMenu() {
         action: () => {
           navigate({
             to: getIntegrationRoute(integration.id),
-            params: {
-              organizationId: organization?.id as string,
-            },
           });
         },
       })),
@@ -324,7 +321,7 @@ export function CommandMenu() {
     currentDocumentId,
     deleteDocument,
     navigate,
-    organization?.id,
+    organization.id,
     pages,
     z,
   ]);
@@ -389,7 +386,7 @@ export function CommandMenu() {
                   <SearchResults
                     searchDocuments={[...searchDocuments]}
                     integrationLinks={integrationLinks}
-                    organizationId={organization?.id as string}
+                    organizationId={organization.id}
                     onNavigate={(options) =>
                       handleCommand(() => navigate(options))
                     }

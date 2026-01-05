@@ -39,7 +39,7 @@ export function useAssistantChat({
           conversationId: conversationId,
         },
         headers: {
-          "X-Organization-Id": organization?.id || "",
+          "X-Organization-Id": organization.id,
         },
       }),
       initialMessages,

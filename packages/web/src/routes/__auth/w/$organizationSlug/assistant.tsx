@@ -52,7 +52,7 @@ function AssistantPage() {
   const [conversationId, setConversationId] = useState(() => createId());
 
   const [conversations] = useQuery(
-    queries.assistant.conversations({ organizationId: organization?.id || "" })
+    queries.assistant.conversations({ organizationId: organization.id })
   );
 
   const selectedConversation = useMemo(
@@ -83,7 +83,7 @@ function AssistantPage() {
               key={conversationId}
               conversationId={conversationId}
               selectedConversation={selectedConversation}
-              organizationId={organization?.id || ""}
+              organizationId={organization.id}
             />
           </Panel>
           <PanelResizer className="w-1 bg-gray-100 hover:bg-gray-200 cursor-col-resize transition-colors" />

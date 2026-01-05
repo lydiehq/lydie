@@ -77,15 +77,56 @@ export const authClient = betterAuth({
       domain: Resource.App.stage === "production" ? ".lydie.co" : ".localhost",
     },
   },
+  databaseHooks: {
+    user: {
+      create: {
+        async after(user) {
+          await sendEmail({
+            to: "lars@salling.me",
+            subject: "New user signed up to Lydie",
+            html: `<p>New user signed up to Lydie: ${user.email}</p>`,
+          });
+
+          // Extract first name from user's full name
+          const fullName = user.name || user.email.split("@")[0] || "My";
+          const firstName = fullName.split(" ")[0];
+          const organizationName = `${firstName}'s Organization`;
+          const baseSlug = slugify(organizationName);
+          // Make slug unique by appending random characters
+          const slug = `${baseSlug}-${createId().slice(0, 6)}`;
+
+          // Create organization with all required setup (organization, member, settings)
+          await createOrganization({
+            name: organizationName,
+            slug: slug,
+            userId: user.id,
+          });
+
+          // Create default user settings if they don't exist
+          const existingSettings = await db
+            .select()
+            .from(schema.userSettingsTable)
+            .where(eq(schema.userSettingsTable.userId, user.id))
+            .limit(1);
+
+          if (existingSettings.length === 0) {
+            await db.insert(schema.userSettingsTable).values({
+              id: createId(),
+              userId: user.id,
+              persistDocumentTreeExpansion: true,
+            });
+          }
+        },
+      },
+    },
+  },
   plugins: [
     admin({
       defaultRole: "user",
       adminRoles: ["admin"],
-      adminUserIds: [], // Add specific user IDs here if needed
     }),
     organization({
       sendInvitationEmail: async (data) => {
-        // Use FRONTEND_URL from environment if available, otherwise fallback to defaults
         const frontendUrl =
           process.env.FRONTEND_URL ||
           (Resource.App.stage === "production"
@@ -106,84 +147,6 @@ export const authClient = betterAuth({
         });
       },
     }),
-    // Auto-create organization plugin - runs during user creation
-    {
-      id: "auto-create-organization",
-      init() {
-        return {
-          options: {
-            databaseHooks: {
-              user: {
-                create: {
-                  async after(user) {
-                    try {
-                      // Check if user already has an organization
-                      const existingMemberships = await db
-                        .select()
-                        .from(schema.membersTable)
-                        .where(eq(schema.membersTable.userId, user.id))
-                        .limit(1);
-
-                      // Only create a workspace if the user doesn't have one yet
-                      if (existingMemberships.length === 0) {
-                        await sendEmail({
-                          to: "lars@salling.me",
-                          subject: "New user signed up to Lydie",
-                          html: `<p>New user signed up to Lydie: ${user.email}</p>`,
-                        });
-
-                        // Extract first name from user's full name
-                        const fullName =
-                          user.name || user.email.split("@")[0] || "My";
-                        const firstName = fullName.split(" ")[0];
-                        const organizationName = `${firstName}'s Organization`;
-                        const baseSlug = slugify(organizationName);
-                        // Make slug unique by appending random characters
-                        const slug = `${baseSlug}-${createId().slice(0, 6)}`;
-
-                        // Create organization with all required setup (organization, member, settings)
-                        await createOrganization({
-                          name: organizationName,
-                          slug: slug,
-                          userId: user.id,
-                        });
-                      }
-                    } catch (error) {
-                      // Log error but don't break user creation
-                      console.error(
-                        "Failed to create organization for user:",
-                        error
-                      );
-                    }
-
-                    // Create default user settings if they don't exist
-                    try {
-                      const existingSettings = await db
-                        .select()
-                        .from(schema.userSettingsTable)
-                        .where(eq(schema.userSettingsTable.userId, user.id))
-                        .limit(1);
-
-                      if (existingSettings.length === 0) {
-                        await db.insert(schema.userSettingsTable).values({
-                          id: createId(),
-                          userId: user.id,
-                          persistDocumentTreeExpansion: true,
-                        });
-                      }
-                    } catch (error) {
-                      // Log error but don't break user creation
-                      // User settings can be created later if needed
-                      console.error("Failed to create user settings:", error);
-                    }
-                  },
-                },
-              },
-            },
-          },
-        };
-      },
-    },
     customSession(async ({ user, session }) => {
       // Fetch user's organizations with their memberships
       const members = await db

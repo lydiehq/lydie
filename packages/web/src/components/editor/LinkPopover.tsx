@@ -91,7 +91,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
 
   const [searchResults] = useQuery(
     queries.documents.search({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
       searchTerm: linkInputValue,
     })
   );
@@ -101,7 +101,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
     : null;
   const [internalDocument] = useQuery(
     queries.documents.byId({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
       documentId: documentId || "",
     })
   );

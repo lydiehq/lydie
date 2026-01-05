@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { Sidebar } from "@/components/layout/Sidebar";
 import {
   Panel,
@@ -14,15 +14,20 @@ import { setActiveOrganizationSlug } from "@/lib/active-organization";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
-  beforeLoad: async ({ context, params }) => {
-    // Set as active organization when navigating to it (handles direct navigation via URLs)
-    setActiveOrganizationSlug(params.organizationSlug);
-
-    context.zero.run(
-      queries.organizations.bySlug({
-        organizationSlug: params.organizationSlug,
-      })
+  loader: async ({ context, params }) => {
+    const { zero } = context;
+    const { organizationSlug } = params;
+    const org = await zero.run(
+      queries.organizations.bySlug({ organizationSlug }),
+      { type: "complete" }
     );
+    if (!org) {
+      throw notFound();
+    }
+    return { org };
+  },
+  beforeLoad: async ({ params }) => {
+    setActiveOrganizationSlug(params.organizationSlug);
   },
   ssr: false,
 });

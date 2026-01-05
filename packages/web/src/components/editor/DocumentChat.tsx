@@ -45,7 +45,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
 
   const [documents] = useQuery(
-    queries.documents.byUpdated({ organizationId: organization?.id || "" })
+    queries.documents.byUpdated({ organizationId: organization.id })
   );
 
   const availableDocuments = useMemo(
@@ -134,7 +134,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
               onClick: () => {
                 router.navigate({
                   to: "/w/$organizationSlug/settings/billing",
-                  params: { organizationId: organization?.id || "" },
+                  params: { organizationId: organization.id },
                 });
               },
             },
@@ -192,7 +192,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
         result = await applyContentChanges(
           contentEditor.editor,
           edits.changes,
-          organization?.id || "",
+          organization.id,
           onProgress
         );
 
@@ -221,7 +221,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
         onApplyContent={applyContent}
         status={status}
         editor={contentEditor.editor}
-        organizationId={organization?.id || ""}
+        organizationId={organization.id}
       />
       <div className="p-3 relative">
         <div className="top-0 absolute inset-x-0 h-6 bg-linear-to-t from-gray-50 via-gray-50" />

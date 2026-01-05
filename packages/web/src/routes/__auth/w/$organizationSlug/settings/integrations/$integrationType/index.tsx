@@ -18,7 +18,7 @@ function RouteComponent() {
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byIntegrationType({
       integrationType: integrationType,
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
@@ -33,7 +33,7 @@ function RouteComponent() {
       <IntegrationLinkList
         links={integrationLinks}
         integrationType={integrationType}
-        organizationId={organization?.id || ""}
+        organizationId={organization.id}
       />
     </div>
   );

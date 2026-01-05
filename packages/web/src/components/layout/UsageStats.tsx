@@ -14,7 +14,7 @@ export function UsageStats() {
   const { session } = useAuth();
 
   const [todayUsage] = useQuery(
-    queries.usage.today({ organizationId: organization?.id || "" })
+    queries.usage.today({ organizationId: organization.id })
   );
 
   const currentPlan = useMemo(() => {

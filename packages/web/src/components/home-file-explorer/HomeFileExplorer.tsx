@@ -33,7 +33,7 @@ export function HomeFileExplorer() {
   const { organization } = useOrganization();
   // todo: could probably be made non-strict
   const { tree } = useSearch({ strict: false });
-  const organizationId = organization?.id || "";
+  const organizationId = organization.id;
   const organizationSlug = organization?.slug || "";
   const { createDocument } = useDocumentActions();
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {

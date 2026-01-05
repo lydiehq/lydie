@@ -129,21 +129,19 @@ export function DocumentTree() {
 
   const [orgData] = useQuery(
     queries.organizations.documents({
-      organizationId: organization?.id || "",
+      organizationSlug: organization.slug,
     })
   );
 
-  // Query integration connections (to show all connected integrations)
   const [connections] = useQuery(
     queries.integrations.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
-  // Query extension links with their connections
   const [extensionLinks] = useQuery(
     queries.integrationLinks.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 

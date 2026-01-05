@@ -26,8 +26,8 @@ export function ZeroInit({ children, session }: Props) {
       });
 
       router.invalidate();
-      if (params.organizationId) {
-        preload(zero, params.organizationId);
+      if (params.organizationSlug) {
+        preload(zero, params.organizationSlug);
       }
     },
     [router]
@@ -44,6 +44,6 @@ export function ZeroInit({ children, session }: Props) {
   );
 }
 
-function preload(zero: Zero, organizationId: string) {
-  zero.preload(queries.organizations.documents({ organizationId }));
+function preload(zero: Zero, organizationSlug: string) {
+  zero.preload(queries.organizations.documents({ organizationSlug }));
 }

@@ -38,14 +38,10 @@ export function DocumentMenu({
   const { id: currentDocId } = useParams({ strict: false });
   const { organization } = useOrganization();
 
-  // Query document data (only used when info dialog is open)
   const [document] = useQuery(
-    organization?.id
-      ? queries.documents.byId({ organizationId: organization.id, documentId })
-      : queries.documents.byId({ organizationId: "", documentId }) // Fallback query that won't return results
+    queries.documents.byId({ organizationId: organization.id, documentId })
   );
 
-  // Sync renameValue when dialog opens or documentName changes
   useEffect(() => {
     if (isRenameDialogOpen) {
       setRenameValue(documentName);
@@ -55,11 +51,6 @@ export function DocumentMenu({
   const handleRename = () => {
     if (!renameValue.trim()) {
       toast.error("Document name cannot be empty");
-      return;
-    }
-
-    if (!organization?.id) {
-      toast.error("Organization not found");
       return;
     }
 

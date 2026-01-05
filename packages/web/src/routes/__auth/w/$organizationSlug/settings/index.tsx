@@ -226,16 +226,16 @@ function RouteComponent() {
   };
 
   const [keys] = useQuery(
-    queries.apiKeys.byOrganization({ organizationId: organization?.id || "" })
+    queries.apiKeys.byOrganization({ organizationId: organization.id })
   );
 
   const [members] = useQuery(
-    queries.members.byOrganization({ organizationId: organization?.id || "" })
+    queries.members.byOrganization({ organizationId: organization.id })
   );
 
   const [invitations] = useQuery(
     queries.invitations.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
