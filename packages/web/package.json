@@ -31,7 +31,7 @@
     "@tanstack/react-router": "^1.144.0",
     "@tanstack/react-router-devtools": "^1.144.0",
     "@tanstack/react-router-with-query": "^1.130.17",
-    "@tanstack/router-plugin": "^1.145.2",
+    "@tanstack/router-plugin": "^1.145.4",
     "@tiptap/core": "^3.14.0",
     "@tiptap/extension-mention": "^3.14.0",
     "@tiptap/pm": "^3.14.0",
