@@ -26,7 +26,7 @@ type Props = {
 };
 
 export const sidebarItemStyles = cva({
-  base: "group flex items-center py-1 rounded-md text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-150",
+  base: "group flex items-center py-1 rounded-md text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
   variants: {
     isCurrent: {
       true: "bg-black/5",

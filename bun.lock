@@ -90,6 +90,7 @@
       "name": "@lydie/editor",
       "version": "0.0.0",
       "dependencies": {
+        "@lydie/core": "workspace:*",
         "@tiptap/core": "^3.14.0",
         "@tiptap/extension-character-count": "^3.14.0",
         "@tiptap/extension-code-block-lowlight": "^3.14.0",

@@ -12,6 +12,7 @@ import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import type { EditorView } from "@tiptap/pm/view";
 import type { Slice } from "@tiptap/pm/model";
+import { base64ToUint8Array } from "@lydie/core/lib/base64";
 
 export type DocumentEditorHookResult = {
   editor: Editor | null;
@@ -72,9 +73,7 @@ export function useDocumentEditor({
     // Initialize document with existing state if available
     if (doc.yjs_state) {
       try {
-        const bytes = Uint8Array.from(atob(doc.yjs_state), (c) =>
-          c.charCodeAt(0)
-        );
+        const bytes = base64ToUint8Array(doc.yjs_state);
         Y.applyUpdate(yjsState, bytes);
       } catch (error) {
         console.error(
@@ -240,4 +239,3 @@ function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
     return false; // Not handled, use default behaviour
   };
 }
-

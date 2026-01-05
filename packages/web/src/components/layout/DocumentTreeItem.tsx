@@ -4,7 +4,7 @@ import {
   Button,
   MenuTrigger,
 } from "react-aria-components";
-import { useParams, useNavigate, useSearch } from "@tanstack/react-router";
+import { useParams, useNavigate } from "@tanstack/react-router";
 import { Collection } from "react-aria-components";
 import { type ReactElement, useRef } from "react";
 import {
@@ -54,7 +54,6 @@ type Props = {
 export function DocumentTreeItem({ item, renderItem }: Props) {
   const { id: currentDocId } = useParams({ strict: false });
   const navigate = useNavigate();
-  const { tree } = useSearch({ strict: false });
   const chevronRef = useRef<HTMLButtonElement>(null);
 
   const isCurrentDocument =
@@ -151,6 +150,9 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                 <DocumentChevron
                   isExpanded={isExpanded}
                   chevronRef={chevronRef}
+                  hasChildren={
+                    item.children !== undefined && item.children.length > 0
+                  }
                 />
               )}
 
@@ -270,17 +272,21 @@ function IntegrationLinkChevron({
 function DocumentChevron({
   isExpanded,
   chevronRef,
+  hasChildren,
 }: {
   isExpanded: boolean;
   chevronRef: React.RefObject<HTMLButtonElement | null>;
+  hasChildren: boolean;
 }) {
+  const IconComponent = hasChildren ? FileText : File;
+
   return (
     <Button
       ref={chevronRef}
       className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
       slot="chevron"
     >
-      <FileText className="size-3.5 text-gray-500 shrink-0 group-hover/chevron:hidden" />
+      <IconComponent className="size-3.5 text-gray-500 shrink-0 group-hover/chevron:hidden" />
       <ChevronRight
         className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
           isExpanded ? "rotate-90" : ""

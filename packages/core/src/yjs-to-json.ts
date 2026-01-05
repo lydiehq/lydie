@@ -5,6 +5,7 @@ import {
 } from "@tiptap/y-tiptap";
 import { getSchema } from "@tiptap/core";
 import { getDocumentEditorExtensions } from "@lydie/editor/document-editor";
+import { base64ToUint8Array, uint8ArrayToBase64 } from "./lib/base64";
 
 // Cache the schema to avoid recreating it every time
 let cachedSchema: ReturnType<typeof getSchema> | null = null;
@@ -37,14 +38,8 @@ export function convertYjsToJson(yjsStateBase64: string | null | undefined) {
   }
 
   try {
-    // Convert base64 string to Uint8Array
-    const buffer = Buffer.from(yjsStateBase64, "base64");
-    const yjsState = new Uint8Array(buffer);
-
-    // Create a new Y.Doc and apply the state
     const ydoc = new Y.Doc();
-    Y.applyUpdate(ydoc, yjsState);
-
+    Y.applyUpdate(ydoc, base64ToUint8Array(yjsStateBase64));
     return yDocToJson(ydoc);
   } catch (error) {
     console.error("Error converting Yjs to JSON:", error);
@@ -59,16 +54,8 @@ export function convertJsonToYjs(jsonContent: any): string | null {
 
   try {
     const schema = getEditorSchema();
-
-    // Convert TipTap JSON to Yjs document using "default" fragment name
-    // This matches what the Collaboration extension expects
     const ydoc = prosemirrorJSONToYDoc(schema, jsonContent, "default");
-
-    // Get the Yjs state as Uint8Array
-    const yjsState = Y.encodeStateAsUpdate(ydoc);
-
-    // Convert to base64 string for storage
-    const base64State = Buffer.from(yjsState).toString("base64");
+    const base64State = uint8ArrayToBase64(Y.encodeStateAsUpdate(ydoc));
 
     return base64State;
   } catch (error) {
