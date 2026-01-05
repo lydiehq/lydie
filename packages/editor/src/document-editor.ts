@@ -14,7 +14,6 @@ import * as E from "./extensions";
 export interface GetDocumentEditorExtensionsOptions {
   starterKit?: StarterKitOptions;
   textSelection?: Partial<E.TextSelectionOptions>;
-  markdownPaste?: Partial<E.MarkdownPasteOptions>;
   keyboardShortcuts?: Partial<E.KeyboardShortcutOptions>;
   documentComponent?: Partial<E.DocumentComponentOptions>;
   codeBlock?: Partial<E.CodeBlockOptions>;
@@ -39,7 +38,6 @@ export function getDocumentEditorExtensions(
     TableKit,
     CharacterCount,
     E.TextSelectionExtension.configure(options?.textSelection),
-    E.MarkdownPasteExtension.configure(options?.markdownPaste),
     E.KeyboardShortcutExtension.configure(options?.keyboardShortcuts),
     E.DocumentComponent.configure(options?.documentComponent),
     E.CodeBlock.configure(options?.codeBlock),
