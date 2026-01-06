@@ -10,7 +10,11 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/_assistant")({
 function AssistantLayout() {
   const { organization } = useOrganization();
   const router = useRouter();
-  const { organizationSlug } = Route.useParams();
+  const params = Route.useParams();
+  const { organizationSlug } = params;
+
+  // Extract conversationId from params if present (only available on conversation-specific routes)
+  const conversationId = 'conversationId' in params ? (params as any).conversationId : undefined;
 
   // For now, we default to a new conversation. Later we can add conversation management.
   const selectedConversation = undefined;
@@ -25,6 +29,7 @@ function AssistantLayout() {
   return (
     <AssistantProvider
       organizationId={organization.id}
+      conversationId={conversationId}
       selectedConversation={selectedConversation}
       onUpgradeClick={handleUpgradeClick}
     >

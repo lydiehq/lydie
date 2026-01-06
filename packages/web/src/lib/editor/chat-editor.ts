@@ -34,7 +34,7 @@ export function useChatEditor({
     content: "",
     editorProps: {
       attributes: {
-        class: "editor-content focus:outline-none text-sm text-gray-700",
+        class: "focus:outline-none text-sm text-gray-700",
       },
     },
   });
@@ -64,4 +64,3 @@ export function useChatEditor({
 
   return { editor, getTextContent, getHTMLContent, clearContent, setContent };
 }
-

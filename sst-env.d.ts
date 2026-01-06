@@ -23,10 +23,6 @@ declare module "sst" {
       "sender": string
       "type": "sst.aws.Email"
     }
-    "EmbeddingQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
     "GitHubAppSlug": {
       "type": "sst.sst.Secret"
       "value": string

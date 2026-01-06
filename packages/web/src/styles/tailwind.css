@@ -67,11 +67,6 @@ body {
   font-size: var(--font-size-sm);
 }
 
-/* .text-selection-mark {
-  background-color: #000;
-  color: #fff;
-} */
-
 .react-aria-DropIndicator {
   &[data-drop-target] {
     outline: 1px solid var(--color-blue-500);

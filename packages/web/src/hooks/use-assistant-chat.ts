@@ -28,22 +28,21 @@ export function useAssistantChat({
 
   const { organization } = useOrganization();
 
-  const { messages, sendMessage, status, isLoading } =
-    useChat<MessageWithMetadata>({
-      transport: new DefaultChatTransport({
-        api:
-          import.meta.env.VITE_API_URL.replace(/\/+$/, "") +
-          "/internal/assistant",
-        credentials: "include",
-        body: {
-          conversationId: conversationId,
-        },
-        headers: {
-          "X-Organization-Id": organization.id,
-        },
-      }),
-      initialMessages,
-    });
+  const { messages, sendMessage, status } = useChat<MessageWithMetadata>({
+    transport: new DefaultChatTransport({
+      api:
+        import.meta.env.VITE_API_URL.replace(/\/+$/, "") +
+        "/internal/assistant",
+      credentials: "include",
+      body: {
+        conversationId: conversationId,
+      },
+      headers: {
+        "X-Organization-Id": organization.id,
+      },
+    }),
+    messages: initialMessages,
+  });
 
   const sendAssistantMessage = (content: string) => {
     sendMessage({
@@ -58,7 +57,6 @@ export function useAssistantChat({
     messages,
     sendMessage: sendAssistantMessage,
     status,
-    isLoading,
     conversationId,
   };
 }

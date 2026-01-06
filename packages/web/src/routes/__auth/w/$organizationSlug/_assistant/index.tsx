@@ -24,7 +24,7 @@ const suggestions = [
 function RouteComponent() {
   const navigate = useNavigate();
   const { organizationSlug } = Route.useParams();
-  const { sendMessage } = useAssistant();
+  const { sendMessage, conversationId } = useAssistant();
 
   const handleSubmit = (text: string) => {
     // Send the message through context
@@ -35,10 +35,10 @@ function RouteComponent() {
       },
     });
 
-    // Navigate to assistant page while message is streaming
+    // Navigate to conversation-specific page
     navigate({
-      to: "/w/$organizationSlug/assistant",
-      params: { organizationSlug },
+      to: "/w/$organizationSlug/assistant/$conversationId",
+      params: { organizationSlug, conversationId },
     });
   };
 

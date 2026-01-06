@@ -33,6 +33,7 @@ export function useAssistant() {
 interface AssistantProviderProps {
   children: React.ReactNode;
   organizationId: string;
+  conversationId?: string;
   selectedConversation?: any;
   onUpgradeClick?: () => void;
 }
@@ -40,10 +41,11 @@ interface AssistantProviderProps {
 export function AssistantProvider({
   children,
   organizationId,
+  conversationId: initialConversationId,
   selectedConversation,
   onUpgradeClick,
 }: AssistantProviderProps) {
-  const [conversationId, setConversationId] = useState(() => createId());
+  const [conversationId, setConversationId] = useState(() => initialConversationId || createId());
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
   const z = useZero();
 
@@ -109,9 +111,9 @@ export function AssistantProvider({
             message,
             action: onUpgradeClick
               ? {
-                  label: "Upgrade to Pro →",
-                  onClick: onUpgradeClick,
-                }
+                label: "Upgrade to Pro →",
+                onClick: onUpgradeClick,
+              }
               : undefined,
           });
         } else {

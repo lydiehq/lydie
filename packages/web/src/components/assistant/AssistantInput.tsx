@@ -65,28 +65,18 @@ export function AssistantInput({
 
   return (
     <div className={`flex flex-col gap-y-2 ${className}`}>
-      {showSuggestions && suggestions.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {suggestions.map((suggestion, index) => (
-            <Button
-              key={index}
-              className="rounded-full text-xs text-gray-700 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 transition-colors"
-              onPress={() => handleSuggestionClick(suggestion)}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
-      )}
       <motion.div
         layoutId={layoutId}
-        className="rounded-lg bg-white ring-1 ring-black/10 p-2 flex flex-col gap-y-2 relative"
+        className="rounded-full bg-white text-sm ring-1 ring-black/10 px-4 py-2 flex flex-col gap-y-2 relative"
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         animate={{}}
         initial={false}
       >
         <Form className="relative flex flex-col" onSubmit={handleSubmit}>
-          <EditorContent editor={chatEditor.editor} />
+          <EditorContent
+            editor={chatEditor.editor}
+            className="text-sm text-start"
+          />
           <Button
             type={canStop ? "button" : "submit"}
             onPress={canStop ? onStop : undefined}
@@ -101,7 +91,19 @@ export function AssistantInput({
           </Button>
         </Form>
       </motion.div>
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="flex gap-2">
+          {suggestions.map((suggestion, index) => (
+            <Button
+              key={index}
+              className="rounded-full text-xs text-gray-700 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 transition-colors"
+              onPress={() => handleSuggestionClick(suggestion)}
+            >
+              {suggestion}
+            </Button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-

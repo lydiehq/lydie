@@ -255,11 +255,10 @@ class MentionList {
 
     this.items.forEach((item, index) => {
       const itemElement = document.createElement("div");
-      itemElement.className = `px-3 py-2 cursor-pointer rounded text-sm ${
-        index === this.selectedIndex
+      itemElement.className = `px-3 py-2 cursor-pointer rounded text-sm ${index === this.selectedIndex
           ? "bg-blue-100 text-blue-800"
           : "text-gray-700 hover:bg-gray-100"
-      }`;
+        }`;
       itemElement.textContent = item.label;
       itemElement.addEventListener("click", () => {
         this.command(item);

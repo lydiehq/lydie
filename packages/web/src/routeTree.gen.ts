@@ -30,6 +30,7 @@ import { Route as _authWOrganizationSlugSettingsAiRouteImport } from './routes/_
 import { Route as _authWOrganizationSlugSettingsAdminRouteImport } from './routes/__auth/w/$organizationSlug/settings/admin'
 import { Route as _authWOrganizationSlugAssistantAssistantRouteImport } from './routes/__auth/w/$organizationSlug/_assistant/assistant'
 import { Route as _authWOrganizationSlugSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/index'
+import { Route as _authWOrganizationSlugAssistantAssistantConversationIdRouteImport } from './routes/__auth/w/$organizationSlug/_assistant/assistant.$conversationId'
 import { Route as _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/route'
 import { Route as _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/index'
 import { Route as _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity'
@@ -151,6 +152,12 @@ const _authWOrganizationSlugSettingsIntegrationsIndexRoute =
     path: '/integrations/',
     getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
+const _authWOrganizationSlugAssistantAssistantConversationIdRoute =
+  _authWOrganizationSlugAssistantAssistantConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => _authWOrganizationSlugAssistantAssistantRoute,
+  } as any)
 const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute =
   _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteImport.update(
     {
@@ -185,7 +192,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
   '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
-  '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantAssistantRoute
+  '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantAssistantRouteWithChildren
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/w/$organizationSlug/': typeof _authWOrganizationSlugAssistantIndexRoute
   '/w/$organizationSlug/settings/': typeof _authWOrganizationSlugSettingsIndexRoute
   '/w/$organizationSlug/settings/integrations/$integrationType': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
+  '/w/$organizationSlug/assistant/$conversationId': typeof _authWOrganizationSlugAssistantAssistantConversationIdRoute
   '/w/$organizationSlug/settings/integrations': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
   '/w/$organizationSlug/settings/integrations/$integrationType/activity': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
   '/w/$organizationSlug/settings/integrations/$integrationType/': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
@@ -207,7 +215,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof _authOnboardingIndexRoute
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
-  '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantAssistantRoute
+  '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantAssistantRouteWithChildren
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
   '/w/$organizationSlug/$id': typeof _authWOrganizationSlugIdIndexRoute
   '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsIndexRoute
+  '/w/$organizationSlug/assistant/$conversationId': typeof _authWOrganizationSlugAssistantAssistantConversationIdRoute
   '/w/$organizationSlug/settings/integrations': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
   '/w/$organizationSlug/settings/integrations/$integrationType/activity': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
   '/w/$organizationSlug/settings/integrations/$integrationType': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
@@ -232,7 +241,7 @@ export interface FileRoutesById {
   '/_landing/blog/': typeof LandingBlogIndexRoute
   '/__auth/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
   '/__auth/w/$organizationSlug/_assistant': typeof _authWOrganizationSlugAssistantRouteWithChildren
-  '/__auth/w/$organizationSlug/_assistant/assistant': typeof _authWOrganizationSlugAssistantAssistantRoute
+  '/__auth/w/$organizationSlug/_assistant/assistant': typeof _authWOrganizationSlugAssistantAssistantRouteWithChildren
   '/__auth/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/__auth/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/__auth/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -244,6 +253,7 @@ export interface FileRoutesById {
   '/__auth/w/$organizationSlug/_assistant/': typeof _authWOrganizationSlugAssistantIndexRoute
   '/__auth/w/$organizationSlug/settings/': typeof _authWOrganizationSlugSettingsIndexRoute
   '/__auth/w/$organizationSlug/settings/integrations/$integrationType': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
+  '/__auth/w/$organizationSlug/_assistant/assistant/$conversationId': typeof _authWOrganizationSlugAssistantAssistantConversationIdRoute
   '/__auth/w/$organizationSlug/settings/integrations/': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
   '/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
   '/__auth/w/$organizationSlug/settings/integrations/$integrationType/': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/'
     | '/w/$organizationSlug/settings/'
     | '/w/$organizationSlug/settings/integrations/$integrationType'
+    | '/w/$organizationSlug/assistant/$conversationId'
     | '/w/$organizationSlug/settings/integrations'
     | '/w/$organizationSlug/settings/integrations/$integrationType/activity'
     | '/w/$organizationSlug/settings/integrations/$integrationType/'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/settings/user'
     | '/w/$organizationSlug/$id'
     | '/w/$organizationSlug/settings'
+    | '/w/$organizationSlug/assistant/$conversationId'
     | '/w/$organizationSlug/settings/integrations'
     | '/w/$organizationSlug/settings/integrations/$integrationType/activity'
     | '/w/$organizationSlug/settings/integrations/$integrationType'
@@ -315,6 +327,7 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationSlug/_assistant/'
     | '/__auth/w/$organizationSlug/settings/'
     | '/__auth/w/$organizationSlug/settings/integrations/$integrationType'
+    | '/__auth/w/$organizationSlug/_assistant/assistant/$conversationId'
     | '/__auth/w/$organizationSlug/settings/integrations/'
     | '/__auth/w/$organizationSlug/settings/integrations/$integrationType/activity'
     | '/__auth/w/$organizationSlug/settings/integrations/$integrationType/'
@@ -474,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationSlugSettingsIntegrationsIndexRouteImport
       parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
+    '/__auth/w/$organizationSlug/_assistant/assistant/$conversationId': {
+      id: '/__auth/w/$organizationSlug/_assistant/assistant/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/w/$organizationSlug/assistant/$conversationId'
+      preLoaderRoute: typeof _authWOrganizationSlugAssistantAssistantConversationIdRouteImport
+      parentRoute: typeof _authWOrganizationSlugAssistantAssistantRoute
+    }
     '/__auth/w/$organizationSlug/settings/integrations/$integrationType': {
       id: '/__auth/w/$organizationSlug/settings/integrations/$integrationType'
       path: '/integrations/$integrationType'
@@ -558,15 +578,30 @@ const _authWOrganizationSlugSettingsRouteRouteWithChildren =
     _authWOrganizationSlugSettingsRouteRouteChildren,
   )
 
+interface _authWOrganizationSlugAssistantAssistantRouteChildren {
+  _authWOrganizationSlugAssistantAssistantConversationIdRoute: typeof _authWOrganizationSlugAssistantAssistantConversationIdRoute
+}
+
+const _authWOrganizationSlugAssistantAssistantRouteChildren: _authWOrganizationSlugAssistantAssistantRouteChildren =
+  {
+    _authWOrganizationSlugAssistantAssistantConversationIdRoute:
+      _authWOrganizationSlugAssistantAssistantConversationIdRoute,
+  }
+
+const _authWOrganizationSlugAssistantAssistantRouteWithChildren =
+  _authWOrganizationSlugAssistantAssistantRoute._addFileChildren(
+    _authWOrganizationSlugAssistantAssistantRouteChildren,
+  )
+
 interface _authWOrganizationSlugAssistantRouteChildren {
-  _authWOrganizationSlugAssistantAssistantRoute: typeof _authWOrganizationSlugAssistantAssistantRoute
+  _authWOrganizationSlugAssistantAssistantRoute: typeof _authWOrganizationSlugAssistantAssistantRouteWithChildren
   _authWOrganizationSlugAssistantIndexRoute: typeof _authWOrganizationSlugAssistantIndexRoute
 }
 
 const _authWOrganizationSlugAssistantRouteChildren: _authWOrganizationSlugAssistantRouteChildren =
   {
     _authWOrganizationSlugAssistantAssistantRoute:
-      _authWOrganizationSlugAssistantAssistantRoute,
+      _authWOrganizationSlugAssistantAssistantRouteWithChildren,
     _authWOrganizationSlugAssistantIndexRoute:
       _authWOrganizationSlugAssistantIndexRoute,
   }

@@ -25,13 +25,9 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
     if (!org) {
       throw notFound();
     }
+    setActiveOrganizationSlug(params.organizationSlug);
     return { org };
   },
-  beforeLoad: async ({ params }) => {
-    setActiveOrganizationSlug(params.organizationSlug);
-  },
-  staleTime: Infinity,
-  gcTime: Infinity,
   ssr: false,
 });
 
