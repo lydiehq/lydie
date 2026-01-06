@@ -26,6 +26,7 @@ import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
 import { readDocument } from "@lydie/core/ai/tools/read-document";
 import { listDocuments } from "@lydie/core/ai/tools/list-documents";
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
+import { createDocument } from "@lydie/core/ai/tools/create-document";
 import type { PromptStyle } from "@lydie/core/prompts";
 
 export const messageMetadataSchema = z.object({
@@ -153,19 +154,7 @@ export const AssistantRoute = new Hono<{
         read_document: readDocument(userId, organizationId),
         list_documents: listDocuments(userId, organizationId),
         move_documents: moveDocuments(userId, organizationId),
-        create_document: tool({
-          description:
-            "Create a new document. This tool creates the document in the system but DOES NOT redirect the user. The user will see a preview and a button to open it. Use this when the user asks to create a new document, note, or page. You can optionally provide content for the new document.",
-          inputSchema: z.object({
-            title: z.string().optional().describe("The title of the document"),
-            content: z
-              .string()
-              .optional()
-              .describe(
-                "The initial content of the document in HTML format. Use HTML tags like <p>, <h2>, <ul>, etc."
-              ),
-          }),
-        }),
+        create_document: createDocument(userId, organizationId),
       },
     });
 
