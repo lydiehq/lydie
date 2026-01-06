@@ -11,6 +11,12 @@ import type { Key } from "react-aria-components";
 import { atom } from "jotai";
 import { useParams } from "@tanstack/react-router";
 import type { QueryResultType } from "@rocicorp/zero";
+import { useAuth } from "@/context/auth.context";
+import {
+  getUserStorage,
+  setUserStorage,
+  removeUserStorage,
+} from "@/lib/user-storage";
 
 import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 
@@ -27,9 +33,9 @@ type TreeItem = {
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
 
-function loadFromStorage(): string[] {
+function loadFromStorage(userId: string | null | undefined): string[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = getUserStorage(userId, STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
@@ -39,9 +45,12 @@ function loadFromStorage(): string[] {
   return [];
 }
 
-function saveToStorage(keys: string[]): void {
+function saveToStorage(
+  userId: string | null | undefined,
+  keys: string[]
+): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+    setUserStorage(userId, STORAGE_KEY, JSON.stringify(keys));
   } catch (e) {
     // Ignore errors
   }
@@ -79,6 +88,8 @@ function findParentDocumentIds(
 export function DocumentTree() {
   const { organization } = useOrganization();
   const { id: currentDocumentId } = useParams({ strict: false });
+  const { session } = useAuth();
+  const userId = session?.userId;
 
   // Get user settings to determine if we should persist to local storage
   const [userSettings] = useQuery(queries.settings.user({}));
@@ -94,27 +105,23 @@ export function DocumentTree() {
   // Load initial state from localStorage if persistence is enabled
   useEffect(() => {
     if (!initialized && persistExpansion) {
-      const stored = loadFromStorage();
+      const stored = loadFromStorage(userId);
       setExpandedKeysArray(stored);
       setInitialized(true);
     } else if (!initialized) {
       setInitialized(true);
     }
-  }, [initialized, persistExpansion, setExpandedKeysArray]);
+  }, [initialized, persistExpansion, userId, setExpandedKeysArray]);
 
   // Save to localStorage when state changes (only if persistence is enabled)
   useEffect(() => {
     if (initialized && persistExpansion) {
-      saveToStorage(expandedKeysArray);
+      saveToStorage(userId, expandedKeysArray);
     } else if (initialized && !persistExpansion) {
       // Clear localStorage when persistence is disabled
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (e) {
-        // Ignore errors
-      }
+      removeUserStorage(userId, STORAGE_KEY);
     }
-  }, [initialized, persistExpansion, expandedKeysArray]);
+  }, [initialized, persistExpansion, userId, expandedKeysArray]);
 
   // Convert array to Set for React Aria Tree component
   const expandedKeys = useMemo(

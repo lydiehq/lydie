@@ -18,6 +18,7 @@ import { useOrganization } from "@/context/organization.context";
 import { useSearch } from "@tanstack/react-router";
 import { useAuth } from "@/context/auth.context";
 import { Separator } from "../generic/Separator";
+import { getUserStorage, setUserStorage } from "@/lib/user-storage";
 
 interface ItemType {
   id: string;
@@ -29,17 +30,19 @@ interface ItemType {
 const VIEW_MODE_STORAGE_KEY = "lydie:view:mode";
 
 export function HomeFileExplorer() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+  const userId = session?.userId;
   const { organization } = useOrganization();
   // todo: could probably be made non-strict
   const { tree } = useSearch({ strict: false });
   const organizationId = organization.id;
   const organizationSlug = organization?.slug || "";
   const { createDocument } = useDocumentActions();
+
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     // Initialize from localStorage, defaulting to "grid"
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+      const stored = getUserStorage(userId, VIEW_MODE_STORAGE_KEY);
       if (stored === "grid" || stored === "list") {
         return stored;
       }
@@ -50,9 +53,9 @@ export function HomeFileExplorer() {
   // Persist view mode changes to localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+      setUserStorage(userId, VIEW_MODE_STORAGE_KEY, viewMode);
     }
-  }, [viewMode]);
+  }, [viewMode, userId]);
 
   // Search logic
   const { search, setSearch, searchFieldRef, onSearchChange, allDocuments } =

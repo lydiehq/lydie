@@ -18,13 +18,13 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   loader: async ({ context, params }) => {
     try {
       console.log("Loading organization", params.organizationSlug);
-      const { zero } = context;
+      const { zero, auth } = context;
       const { organizationSlug } = params;
       const org = await zero.run(
         queries.organizations.bySlug({ organizationSlug }),
         { type: "complete" }
       );
-      setActiveOrganizationSlug(params.organizationSlug);
+      setActiveOrganizationSlug(params.organizationSlug, auth?.session?.userId);
       return { org };
     } catch (error) {
       console.error(error);

@@ -1,46 +1,48 @@
+import {
+  getUserStorage,
+  setUserStorage,
+  removeUserStorage,
+} from "./user-storage";
+
 const ACTIVE_ORG_KEY = "lydie:active-organization";
 
-/**
- * Get the currently active organization slug from localStorage
- */
-export function getActiveOrganizationSlug(): string | null {
+export function getActiveOrganizationSlug(
+  userId?: string | null
+): string | null {
   if (typeof window === "undefined") {
     return null;
   }
 
   try {
-    return localStorage.getItem(ACTIVE_ORG_KEY);
+    return getUserStorage(userId, ACTIVE_ORG_KEY);
   } catch {
     return null;
   }
 }
 
-/**
- * Set the active organization slug in localStorage
- */
-export function setActiveOrganizationSlug(organizationSlug: string): void {
+export function setActiveOrganizationSlug(
+  organizationSlug: string,
+  userId?: string | null
+): void {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    localStorage.setItem(ACTIVE_ORG_KEY, organizationSlug);
+    setUserStorage(userId, ACTIVE_ORG_KEY, organizationSlug);
   } catch {
-    // Silently fail - localStorage might be disabled
+    // Ignore errors
   }
 }
 
-/**
- * Clear the active organization slug from localStorage
- */
-export function clearActiveOrganizationSlug(): void {
+export function clearActiveOrganizationSlug(userId?: string | null): void {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    localStorage.removeItem(ACTIVE_ORG_KEY);
+    removeUserStorage(userId, ACTIVE_ORG_KEY);
   } catch {
-    // Silently fail
+    // Ignore errors
   }
 }

@@ -8,6 +8,7 @@ import { Separator } from "../generic/Separator";
 import { authClient } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
 import { setActiveOrganizationSlug } from "@/lib/active-organization";
+import { useAuth } from "@/context/auth.context";
 
 type Props = {
   isOpen: boolean;
@@ -16,6 +17,8 @@ type Props = {
 
 export function CreateOrganizationDialog({ isOpen, onOpenChange }: Props) {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const userId = session?.userId;
 
   const form = useAppForm({
     defaultValues: {
@@ -30,6 +33,9 @@ export function CreateOrganizationDialog({ isOpen, onOpenChange }: Props) {
         });
 
         const organizationSlug = values.value.slug;
+
+        // Set the active organization for this user
+        setActiveOrganizationSlug(organizationSlug, userId);
 
         onOpenChange(false);
 

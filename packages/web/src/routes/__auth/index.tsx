@@ -4,8 +4,9 @@ import { getActiveOrganizationSlug } from "@/lib/active-organization";
 
 export const Route = createFileRoute("/__auth/")({
   component: RouteComponent,
-  beforeLoad: async ({ context: { queryClient } }) => {
-    const activeOrganizationSlug = getActiveOrganizationSlug();
+  beforeLoad: async ({ context: { queryClient, auth } }) => {
+    const userId = auth?.session?.userId;
+    const activeOrganizationSlug = getActiveOrganizationSlug(userId);
 
     if (activeOrganizationSlug) {
       throw redirect({

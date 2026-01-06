@@ -42,7 +42,6 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
   const queryClient = useQueryClient();
 
   const signOut = async () => {
-    clearActiveOrganizationSlug();
     await authClient.signOut();
     queryClient.removeQueries({
       queryKey: ["auth", "getSession"],
