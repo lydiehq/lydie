@@ -16,18 +16,22 @@ import { LayoutGroup } from "motion/react";
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
   loader: async ({ context, params }) => {
-    const { zero } = context;
-    const { organizationSlug } = params;
-    const org = await zero.run(
-      queries.organizations.bySlug({ organizationSlug }),
-      { type: "complete" }
-    );
-    if (!org) {
+    try {
+      console.log("Loading organization", params.organizationSlug);
+      const { zero } = context;
+      const { organizationSlug } = params;
+      const org = await zero.run(
+        queries.organizations.bySlug({ organizationSlug }),
+        { type: "complete" }
+      );
+      setActiveOrganizationSlug(params.organizationSlug);
+      return { org };
+    } catch (error) {
+      console.error(error);
       throw notFound();
     }
-    setActiveOrganizationSlug(params.organizationSlug);
-    return { org };
   },
+  notFoundComponent: () => <div>Organization not found</div>,
   ssr: false,
 });
 
