@@ -68,6 +68,19 @@ export const mutators = defineMutators({
           }
         }
 
+        // Get the highest sort_order at this level to append new document at the end
+        const siblings = await tx.run(
+          zql.documents
+            .where("organization_id", organizationId)
+            .where("parent_id", parentId ? "=" : "IS", parentId || null)
+            .where("deleted_at", "IS", null)
+        );
+
+        const maxSortOrder = siblings.reduce(
+          (max, doc) => Math.max(max, doc.sort_order ?? 0),
+          0
+        );
+
         // Create empty Yjs state for new document
         const emptyContent = { type: "doc", content: [] };
         const yjsState = convertJsonToYjs(emptyContent);
@@ -83,6 +96,7 @@ export const mutators = defineMutators({
           is_locked: false,
           published: false,
           parent_id: parentId || null,
+          sort_order: maxSortOrder + 1,
           created_at: Date.now(),
           updated_at: Date.now(),
         });
@@ -247,6 +261,46 @@ export const mutators = defineMutators({
           parent_id: parentId || null,
           updated_at: Date.now(),
         });
+      }
+    ),
+    reorder: defineMutator(
+      z.object({
+        documentIds: z.array(z.string()),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { documentIds, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        // Verify all documents belong to the organization
+        const documents = await Promise.all(
+          documentIds.map((id) =>
+            tx.run(
+              zql.documents
+                .where("id", id)
+                .where("organization_id", organizationId)
+                .where("deleted_at", "IS", null)
+                .one()
+            )
+          )
+        );
+
+        // Check if any documents are missing
+        for (let i = 0; i < documentIds.length; i++) {
+          if (!documents[i]) {
+            throw new Error(`Document not found: ${documentIds[i]}`);
+          }
+        }
+
+        // Update sort_order for each document based on array position
+        await Promise.all(
+          documentIds.map((id, index) =>
+            tx.mutate.documents.update({
+              id,
+              sort_order: index,
+              updated_at: Date.now(),
+            })
+          )
+        );
       }
     ),
     delete: defineMutator(

@@ -78,6 +78,7 @@ const documents = table("documents")
     published: boolean(),
     deleted_at: number().optional(),
     is_locked: boolean(),
+    sort_order: number(),
     ...timestamps,
   })
   .primaryKey("id");

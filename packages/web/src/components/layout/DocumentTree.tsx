@@ -174,14 +174,10 @@ export function DocumentTree() {
       (doc) => doc.parent_id === parentId && !doc.integration_link_id
     );
 
-    // Sort documents alphabetically by title
-    const sortedDocs = [...childDocs].sort((a, b) =>
-      (a.title || "Untitled document").localeCompare(
-        b.title || "Untitled document",
-        undefined,
-        { sensitivity: "base" }
-      )
-    );
+    // Sort documents by sort_order only
+    const sortedDocs = [...childDocs].sort((a, b) => {
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
 
     return sortedDocs.map((doc) => {
       // Recursively get children for this document
@@ -207,14 +203,10 @@ export function DocumentTree() {
     const buildNestedDocs = (parentId: string | null): TreeItem[] => {
       const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
 
-      // Sort documents alphabetically by title
-      const sortedDocs = [...childDocs].sort((a, b) =>
-        (a.title || "Untitled document").localeCompare(
-          b.title || "Untitled document",
-          undefined,
-          { sensitivity: "base" }
-        )
-      );
+      // Sort documents by sort_order only
+      const sortedDocs = [...childDocs].sort((a, b) => {
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      });
 
       return sortedDocs.map((doc) => {
         const children = buildNestedDocs(doc.id);

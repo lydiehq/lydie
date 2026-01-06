@@ -34,7 +34,10 @@ export const queries = defineQueries({
           .one()
           .related("parent")
           .related("children", (q) =>
-            q.where("deleted_at", "IS", null).orderBy("created_at", "asc")
+            q
+              .where("deleted_at", "IS", null)
+              .orderBy("sort_order", "asc")
+              .orderBy("created_at", "asc")
           )
           .related("organization")
           .related("conversations", (q) =>
@@ -173,7 +176,10 @@ export const queries = defineQueries({
           .where("slug", organizationSlug)
           .one()
           .related("documents", (q) =>
-            q.where("deleted_at", "IS", null).orderBy("created_at", "desc")
+            q
+              .where("deleted_at", "IS", null)
+              .orderBy("sort_order", "asc")
+              .orderBy("created_at", "desc")
           );
       }
     ),

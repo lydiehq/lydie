@@ -14,7 +14,11 @@ interface ItemType {
 }
 
 interface UseDocumentDragDropOptions {
-  allDocuments: ReadonlyArray<{ id: string; parent_id: string | null }>;
+  allDocuments: ReadonlyArray<{
+    id: string;
+    parent_id: string | null;
+    sort_order?: number;
+  }>;
 }
 
 function isDocumentDescendant(
@@ -31,6 +35,54 @@ function isDocumentDescendant(
   }
 
   return false;
+}
+
+function getSiblingsAtLevel(
+  parentId: string | null,
+  documents: ReadonlyArray<{
+    id: string;
+    parent_id: string | null;
+    sort_order?: number;
+  }>
+) {
+  return documents
+    .filter((d) => (d.parent_id ?? null) === parentId)
+    .sort((a, b) => {
+      const sortOrderDiff = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      if (sortOrderDiff !== 0) return sortOrderDiff;
+      return 0;
+    });
+}
+
+function reorderSiblings(
+  movedIds: string[],
+  targetId: string,
+  dropPosition: "before" | "after",
+  parentId: string | null,
+  documents: ReadonlyArray<{
+    id: string;
+    parent_id: string | null;
+    sort_order?: number;
+  }>
+): string[] {
+  // Get all siblings at this level
+  const siblings = getSiblingsAtLevel(parentId, documents);
+
+  // Remove moved items from siblings
+  const siblingsWithoutMoved = siblings.filter(
+    (s) => !movedIds.includes(s.id)
+  );
+
+  // Find target index
+  const targetIndex = siblingsWithoutMoved.findIndex((s) => s.id === targetId);
+  if (targetIndex === -1) return siblings.map((s) => s.id);
+
+  // Insert moved items at target position
+  const insertIndex = dropPosition === "before" ? targetIndex : targetIndex + 1;
+  const reordered = [...siblingsWithoutMoved];
+  reordered.splice(insertIndex, 0, ...movedIds.map((id) => ({ id })));
+
+  return reordered.map((item) => item.id);
 }
 
 /**
@@ -68,6 +120,20 @@ export function useDocumentDragDrop({
       })
     );
     return true;
+  };
+
+  const reorderDocuments = (documentIds: string[]) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+
+    z.mutate(
+      mutators.document.reorder({
+        documentIds,
+        organizationId: organization.id,
+      })
+    );
   };
 
   // Create item from ID (for tree where we only have keys)
@@ -166,13 +232,26 @@ export function useDocumentDragDrop({
           if (!targetDoc) return;
 
           const targetParent = targetDoc.parent_id ?? null;
+          const documentIdsToMove = processedItems
+            .filter((item) => item.type === "document")
+            .map((item) => item.id);
 
-          // Move all items to target's parent
+          // Move all items to target's parent first
           for (const item of processedItems) {
             if (item.type === "document") {
               moveDocument(item.id, targetParent);
             }
           }
+
+          // Then reorder them at the target position
+          const newOrder = reorderSiblings(
+            documentIdsToMove,
+            targetId,
+            e.target.dropPosition,
+            targetParent,
+            allDocuments
+          );
+          reorderDocuments(newOrder);
         }
       } catch (error) {
         console.error("Insert failed:", error);
@@ -202,14 +281,26 @@ export function useDocumentDragDrop({
           if (!targetDoc) return;
 
           const targetParent = targetDoc.parent_id ?? null;
+          const draggedDocIds: string[] = [];
 
           // Move all dragged items to target's parent
           for (const key of e.keys) {
             const item = createItemFromId(key as string);
             if (item && item.type === "document") {
+              draggedDocIds.push(item.id);
               moveDocument(item.id, targetParent);
             }
           }
+
+          // Reorder siblings at the new parent level
+          const newOrder = reorderSiblings(
+            draggedDocIds,
+            targetId,
+            e.target.dropPosition,
+            targetParent,
+            allDocuments
+          );
+          reorderDocuments(newOrder);
         } else if (e.target.dropPosition === "on") {
           // Move into target document - make items children of that document
           const targetDocument = allDocuments.find((d) => d.id === targetId);
@@ -235,7 +326,7 @@ export function useDocumentDragDrop({
       if (enableLogging) {
         console.log("[DragDrop] onItemDrop", {
           target: e.target.key,
-          keys: [...e.keys],
+          keys: e.keys,
         });
       }
 
@@ -243,13 +334,21 @@ export function useDocumentDragDrop({
         const targetId = e.target.key as string;
         const targetDocument = allDocuments.find((d) => d.id === targetId);
 
-        if (targetDocument) {
-          // Dropping on a document - make items children of that document
-          for (const key of e.keys) {
-            const item = createItemFromId(key as string);
-            if (item && item.type === "document") {
-              moveDocument(item.id, targetId);
+        if (!targetDocument) return;
+
+        // Handle keys if they exist and are iterable
+        if (e.keys) {
+          try {
+            const keys = e.keys instanceof Set ? e.keys : Array.isArray(e.keys) ? new Set(e.keys) : new Set([e.keys]);
+            for (const key of keys) {
+              const item = createItemFromId(key as string);
+              if (item && item.type === "document") {
+                moveDocument(item.id, targetId);
+              }
             }
+          } catch (keysError) {
+            // If keys is not iterable, try to get the dragged item from the event
+            console.warn("Could not iterate over keys in onItemDrop:", keysError);
           }
         }
       } catch (error) {
@@ -258,7 +357,7 @@ export function useDocumentDragDrop({
       }
     },
 
-    // Handle reordering within GridList
+    // Handle reordering within the same level
     onReorder(e) {
       if (enableLogging) {
         console.log("[DragDrop] onReorder", {
@@ -266,8 +365,29 @@ export function useDocumentDragDrop({
           keys: [...e.keys],
         });
       }
-      // Reordering within same level - no backend changes needed for now
-      // This is handled by the list state automatically
+
+      try {
+        const targetId = e.target.key as string;
+        const targetDoc = allDocuments.find((d) => d.id === targetId);
+        if (!targetDoc) return;
+
+        const draggedDocIds = [...e.keys].map((key) => key as string);
+        const parentId = targetDoc.parent_id ?? null;
+
+        // Calculate new order
+        const newOrder = reorderSiblings(
+          draggedDocIds,
+          targetId,
+          e.target.dropPosition,
+          parentId,
+          allDocuments
+        );
+
+        reorderDocuments(newOrder);
+      } catch (error) {
+        console.error("Reorder failed:", error);
+        toast.error("Failed to reorder items");
+      }
     },
 
     // Handle drops on root (empty area)
