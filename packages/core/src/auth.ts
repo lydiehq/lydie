@@ -90,6 +90,19 @@ export const authClient = betterAuth({
           // Extract first name from user's full name
           const fullName = user.name || user.email.split("@")[0] || "My";
           const firstName = fullName.split(" ")[0];
+
+          // Send welcome email to the new user
+          await sendEmail({
+            to: user.email,
+            subject: "Welcome to Lydie!",
+            html: `
+              <p>Hi ${firstName},</p>
+              <p>Welcome to Lydie! I'm excited to have you on board.</p>
+              <p>Lydie is still an early project, but I'm working hard to make it better every day.</p>
+              <p>To make this easier for me, I welcome any feedback or suggestions you have. You can join our <a href="https://discord.gg/gHzKhW9vzg">Discord server</a> to connect!</p>
+              <p>Best,<br>Lars</p>
+            `,
+          });
           const organizationName = `${firstName}'s Organization`;
           const baseSlug = slugify(organizationName);
           // Make slug unique by appending random characters
