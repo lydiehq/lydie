@@ -110,7 +110,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         })
       )}
       style={{
-        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.75rem + 0.5rem)`,
+        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.5rem)`,
         paddingRight: "0.5rem",
       }}
     >
