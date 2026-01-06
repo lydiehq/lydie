@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Container } from "./Container";
 import { Logo } from "./Logo";
-import { Button } from "./generic/Button";
 import clsx from "clsx";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -54,12 +53,10 @@ export function Header() {
       )}
     >
       <Container className="flex items-center justify-between">
-        <div className="flex items-center gap-x-1.5 z-50 relative">
+        <a href="/" className="flex items-center gap-x-1.5 z-50 relative">
           <Logo className="text-gray-950 size-5" />
-          <a href="/" className="text-lg/0 font-semibold text-gray-800">
-            Lydie
-          </a>
-        </div>
+          <span className="text-lg/0 font-semibold text-gray-800">Lydie</span>
+        </a>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:block">
