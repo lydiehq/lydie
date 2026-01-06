@@ -15,7 +15,7 @@ import {
   Move,
   Blocks,
   Loader,
-  FileText,
+  Files,
 } from "lucide-react";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles } from "./Sidebar";
@@ -147,7 +147,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               )}
 
               {item.type === "document" && (
-                <DocumentChevron
+                <DocumentIcon
                   isExpanded={isExpanded}
                   chevronRef={chevronRef}
                   hasChildren={
@@ -267,9 +267,9 @@ function IntegrationLinkChevron({
 }
 
 /**
- * Document Chevron - Shows file icon with hover chevron
+ * Document Icon - Shows file icon, with interactive chevron only if page has children
  */
-function DocumentChevron({
+function DocumentIcon({
   isExpanded,
   chevronRef,
   hasChildren,
@@ -278,17 +278,27 @@ function DocumentChevron({
   chevronRef: React.RefObject<HTMLButtonElement | null>;
   hasChildren: boolean;
 }) {
-  const IconComponent = hasChildren ? FileText : File;
+  const IconComponent = hasChildren ? Files : File;
 
+  // If no children, just show the icon (not interactive)
+  if (!hasChildren) {
+    return (
+      <div className="text-gray-500 p-1 -ml-1">
+        <IconComponent className="size-3.5 text-gray-500 shrink-0" />
+      </div>
+    );
+  }
+
+  // If has children, show button with chevron on hover
   return (
     <Button
       ref={chevronRef}
-      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
       slot="chevron"
     >
-      <IconComponent className="size-3.5 text-gray-500 shrink-0 group-hover/chevron:hidden" />
+      <IconComponent className="size-3.5 text-gray-500 shrink-0 group-hover:hidden" />
       <ChevronRight
-        className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+        className={`size-3.5 text-gray-500 shrink-0 hidden group-hover:block transition-transform duration-200 ease-in-out ${
           isExpanded ? "rotate-90" : ""
         }`}
       />
