@@ -22,7 +22,7 @@ import {
   Upload,
   Plug,
 } from "lucide-react";
-import { DialogTrigger, ModalOverlay, Modal } from "react-aria-components";
+import { ModalOverlay, Modal } from "react-aria-components";
 import { overlayStyles } from "../../generic/Modal";
 import { Dialog } from "../../generic/Dialog";
 import { cva } from "cva";
@@ -327,77 +327,80 @@ export function CommandMenu() {
   ]);
 
   return (
-    <DialogTrigger isOpen={isOpen} onOpenChange={setOpen}>
-      <ModalOverlay isDismissable className={overlayStyles}>
-        <Modal className={modalStyles}>
-          <Dialog className="flex flex-col bg-gray-50">
-            <Command
-              onKeyDown={(e) => {
-                // Escape goes to previous page
-                // Backspace goes to previous page when search is empty
-                if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
-                  e.preventDefault();
-                  setPages((pages) => pages.slice(0, -1));
+    <ModalOverlay
+      isOpen={isOpen}
+      onOpenChange={setOpen}
+      isDismissable
+      className={overlayStyles}
+    >
+      <Modal className={modalStyles}>
+        <Dialog className="flex flex-col bg-gray-50">
+          <Command
+            onKeyDown={(e) => {
+              // Escape goes to previous page
+              // Backspace goes to previous page when search is empty
+              if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
+                e.preventDefault();
+                setPages((pages) => pages.slice(0, -1));
+              }
+            }}
+          >
+            <div className="flex items-center border-b border-gray-100 px-3">
+              <Search className="size-4 text-gray-400 mr-2" />
+              <Command.Input
+                value={search}
+                onValueChange={setSearch}
+                autoFocus
+                placeholder={
+                  currentPage === "search"
+                    ? "Search documents..."
+                    : "Type a command or search..."
                 }
-              }}
-            >
-              <div className="flex items-center border-b border-gray-100 px-3">
-                <Search className="size-4 text-gray-400 mr-2" />
-                <Command.Input
-                  value={search}
-                  onValueChange={setSearch}
-                  autoFocus
-                  placeholder={
-                    currentPage === "search"
-                      ? "Search documents..."
-                      : "Type a command or search..."
+                className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <Command.List className="max-h-72 overflow-y-auto overflow-x-hidden p-2">
+              <Command.Empty className="py-6 text-center text-sm text-gray-500">
+                No results found.
+              </Command.Empty>
+
+              {/* Main page */}
+              {!currentPage && (
+                <>
+                  {/* Menu sections */}
+                  {menuSections.map((section) => (
+                    <CommandMenuSection
+                      key={section.id}
+                      section={section}
+                      onSelect={(item) => {
+                        // Don't close dialog for "search" - it navigates to a sub-page
+                        if (item.id === "search") {
+                          item.action();
+                        } else {
+                          handleCommand(item.action);
+                        }
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Search page */}
+              {currentPage === "search" && (
+                <SearchResults
+                  searchDocuments={[...searchDocuments]}
+                  integrationLinks={integrationLinks}
+                  organizationId={organization.id}
+                  onNavigate={(options) =>
+                    handleCommand(() => navigate(options))
                   }
-                  className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-              </div>
-              <Command.List className="max-h-72 overflow-y-auto overflow-x-hidden p-2">
-                <Command.Empty className="py-6 text-center text-sm text-gray-500">
-                  No results found.
-                </Command.Empty>
-
-                {/* Main page */}
-                {!currentPage && (
-                  <>
-                    {/* Menu sections */}
-                    {menuSections.map((section) => (
-                      <CommandMenuSection
-                        key={section.id}
-                        section={section}
-                        onSelect={(item) => {
-                          // Don't close dialog for "search" - it navigates to a sub-page
-                          if (item.id === "search") {
-                            item.action();
-                          } else {
-                            handleCommand(item.action);
-                          }
-                        }}
-                      />
-                    ))}
-                  </>
-                )}
-
-                {/* Search page */}
-                {currentPage === "search" && (
-                  <SearchResults
-                    searchDocuments={[...searchDocuments]}
-                    integrationLinks={integrationLinks}
-                    organizationId={organization.id}
-                    onNavigate={(options) =>
-                      handleCommand(() => navigate(options))
-                    }
-                  />
-                )}
-              </Command.List>
-            </Command>
-            <CommandMenuKeyboardHelp showBack={pages.length > 0} />
-          </Dialog>
-        </Modal>
-      </ModalOverlay>
-    </DialogTrigger>
+              )}
+            </Command.List>
+          </Command>
+          <CommandMenuKeyboardHelp showBack={pages.length > 0} />
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
   );
 }

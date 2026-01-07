@@ -115,14 +115,19 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
       }}
     >
       <TreeItemContent>
-        {({ isExpanded }) => (
+        {({ isExpanded, allowsDragging }) => (
           <>
-            {/* Only show drag button for non-integration-link/group items */}
-            {!isIntegrationLink && !isGroup && (
+            {/* Always render drag button when dragging is allowed, but visually hide it */}
+            {/* Screen readers and keyboard users can still access it */}
+            {allowsDragging && (
               <Button
                 slot="drag"
-                className="hidden"
-                aria-label={`Drag document ${item.name}`}
+                className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0"
+                style={{
+                  clip: "rect(0, 0, 0, 0)",
+                  clipPath: "inset(50%)",
+                }}
+                aria-label={`Drag ${item.name}`}
               >
                 <Move size={12} />
               </Button>

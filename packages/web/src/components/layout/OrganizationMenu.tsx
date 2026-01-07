@@ -17,6 +17,8 @@ import { Popover } from "../generic/Popover";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 import { ChevronsUpDown } from "lucide-react";
 import { useAuth } from "@/context/auth.context";
+import { clearSession } from "@/lib/auth/session";
+import { clearZeroInstance } from "@/lib/zero/instance";
 
 type Props = {
   isCollapsed: boolean;
@@ -35,9 +37,8 @@ export function OrganizationMenu({ isCollapsed }: Props) {
   const signOut = async () => {
     clearActiveOrganizationSlug(userId);
     await authClient.signOut();
-    queryClient.removeQueries({
-      queryKey: ["auth", "getSession"],
-    });
+    await clearSession(queryClient);
+    clearZeroInstance();
     await router.invalidate();
     navigate({ to: "/auth" });
   };
