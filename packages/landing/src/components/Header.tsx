@@ -4,6 +4,7 @@ import { Logo } from "./Logo";
 import clsx from "clsx";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { Button } from "./generic/Button";
 
 const links = [
   {
@@ -71,9 +72,9 @@ export function Header() {
                 </a>
               </li>
             ))}
-            {/* <li className="ml-2">
+            <li className="ml-2">
               <Button href="https://app.lydie.co/auth">Sign in</Button>
-            </li> */}
+            </li>
           </ul>
         </nav>
 

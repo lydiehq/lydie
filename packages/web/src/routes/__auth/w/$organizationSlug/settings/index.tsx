@@ -63,15 +63,10 @@ function RouteComponent() {
   // Workspace name form
   const workspaceForm = useAppForm({
     defaultValues: {
-      name: organization?.name || "",
-      slug: organization?.slug || "",
+      name: organization.name,
+      slug: organization.slug,
     },
     onSubmit: async (values) => {
-      if (!organization) {
-        toast.error("Organization not found");
-        return;
-      }
-
       if (!values.value.name.trim()) {
         toast.error("Workspace name cannot be empty");
         return;
@@ -130,11 +125,6 @@ function RouteComponent() {
       }
 
       const client = await createClient();
-      if (!organization) {
-        toast.error("Organization not found");
-        return;
-      }
-
       try {
         const res = await client.internal.organization["api-key"]
           .$post({
@@ -154,20 +144,11 @@ function RouteComponent() {
 
   // Sync workspace name and slug when organization changes
   useEffect(() => {
-    if (organization?.name) {
-      workspaceForm.setFieldValue("name", organization.name);
-    }
-    if (organization?.slug) {
-      workspaceForm.setFieldValue("slug", organization.slug);
-    }
-  }, [organization?.name, organization?.slug]);
+    workspaceForm.setFieldValue("name", organization.name);
+    workspaceForm.setFieldValue("slug", organization.slug);
+  }, [organization.name, organization.slug]);
 
   const handleRevokeApiKey = async (keyId: string, keyName: string) => {
-    if (!organization) {
-      toast.error("Organization not found");
-      return;
-    }
-
     confirmDialog({
       title: `Revoke API Key "${keyName}"`,
       message:
@@ -207,11 +188,6 @@ function RouteComponent() {
   };
 
   const handleDeleteOrganization = () => {
-    if (!organization) {
-      toast.error("Organization not found");
-      return;
-    }
-
     try {
       z.mutate(
         mutators.organization.delete({ organizationId: organization.id })
@@ -246,11 +222,6 @@ function RouteComponent() {
       role: "member" as "member" | "admin",
     },
     onSubmit: async (values) => {
-      if (!organization) {
-        toast.error("Organization not found");
-        return;
-      }
-
       if (!values.value.email.trim()) {
         toast.error("Please enter an email address");
         return;

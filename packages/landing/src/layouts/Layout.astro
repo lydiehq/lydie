@@ -102,7 +102,10 @@ const linkGroups = [
         <footer class="border-t border-black/5 bg-white backdrop-blur-sm">
           <Container className="flex justify-between py-12">
             <Logo className="text-gray-200 size-6" />
-            <nav class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <nav
+              class="grid grid-cols-1 md:grid-cols-3 gap-8"
+              aria-label="Footer links"
+            >
               {
                 linkGroups.map((group) => (
                   <div class="flex flex-col gap-y-6">
