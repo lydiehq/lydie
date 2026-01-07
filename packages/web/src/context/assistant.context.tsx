@@ -4,6 +4,7 @@ import {
   useState,
   useMemo,
   useCallback,
+  useEffect,
 } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -52,7 +53,9 @@ export function AssistantProvider({
   conversation: _conversation,
   organizationId,
 }: AssistantProviderProps) {
-  const [conversationId, setConversationId] = useState(() => createId());
+  const [conversationId, setConversationId] = useState(
+    () => _conversation?.id ?? createId()
+  );
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
   const [conversation, setConversation] = useState<any>(_conversation);
 
@@ -99,6 +102,22 @@ export function AssistantProvider({
         }
       },
     });
+
+  // Handle conversation prop changes (when navigating to a different conversation)
+  useEffect(() => {
+    if (_conversation && _conversation.id !== conversationId) {
+      setConversationId(_conversation.id);
+      setConversation(_conversation);
+      const formattedMessages =
+        _conversation.messages?.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role as "user" | "system" | "assistant",
+          parts: msg.parts,
+          metadata: msg.metadata,
+        })) || [];
+      setMessages(formattedMessages);
+    }
+  }, [_conversation, conversationId, setMessages]);
 
   const resetConversation = useCallback(() => {
     const newId = createId();

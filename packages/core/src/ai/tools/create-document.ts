@@ -6,6 +6,8 @@ import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "../../yjs-to-json";
 import { deserializeFromHTML } from "../../serialization/html";
 import { eq, and } from "drizzle-orm";
+import { processDocumentEmbedding } from "../../embedding/document-processing";
+import { processDocumentTitleEmbedding } from "../../embedding/title-processing";
 
 export const createDocument = (userId: string, organizationId: string) =>
   tool({
@@ -79,6 +81,20 @@ Examples: "Create a new document about X", "Write a summary of these documents i
           published: false,
         });
 
+        // Generate embeddings for the document title and content
+        processDocumentTitleEmbedding(
+          {
+            documentId: id,
+            title,
+          },
+          db
+        ).catch((error) => {
+          console.error(
+            `Failed to generate title embedding for document ${id}:`,
+            error
+          );
+        });
+
         yield {
           state: "created",
           message: content
@@ -88,7 +104,7 @@ Examples: "Create a new document about X", "Write a summary of these documents i
             id,
             title,
             slug,
-            parentId,
+            parentId: parentId || undefined,
           },
         };
 
@@ -101,7 +117,7 @@ Examples: "Create a new document about X", "Write a summary of these documents i
                 id,
                 title,
                 slug,
-                parentId,
+                parentId: parentId || undefined,
               },
             };
 
@@ -117,6 +133,20 @@ Examples: "Create a new document about X", "Write a summary of these documents i
               })
               .where(eq(documentsTable.id, id));
 
+            // Generate embeddings for the document with content
+            processDocumentEmbedding(
+              {
+                documentId: id,
+                yjsState,
+              },
+              db
+            ).catch((error) => {
+              console.error(
+                `Failed to generate embeddings for document ${id}:`,
+                error
+              );
+            });
+
             yield {
               state: "success",
               message: `Document "${title}" created with content successfully.`,
@@ -124,7 +154,7 @@ Examples: "Create a new document about X", "Write a summary of these documents i
                 id,
                 title,
                 slug,
-                parentId,
+                parentId: parentId || undefined,
               },
               contentApplied: true,
             };
@@ -138,7 +168,7 @@ Examples: "Create a new document about X", "Write a summary of these documents i
                 id,
                 title,
                 slug,
-                parentId,
+                parentId: parentId || undefined,
               },
               contentApplied: false,
             };
@@ -152,7 +182,7 @@ Examples: "Create a new document about X", "Write a summary of these documents i
               id,
               title,
               slug,
-              parentId,
+              parentId: parentId || undefined,
             },
             contentApplied: false,
           };

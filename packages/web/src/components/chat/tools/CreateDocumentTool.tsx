@@ -1,11 +1,12 @@
 import { FileText, ExternalLink, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 import { countWords } from "@/utils/text";
 import { useOrganization } from "@/context/organization.context";
+import { StickToBottom } from "use-stick-to-bottom";
 
-interface CreateDocumentToolProps {
+type Props = {
   tool: {
     toolCallId: string;
     state?:
@@ -37,14 +38,12 @@ interface CreateDocumentToolProps {
       error?: string;
     };
   };
-  organizationId: string; // Still passed for context compatibility
-}
+};
 
-export function CreateDocumentTool({ tool }: CreateDocumentToolProps) {
+export function CreateDocumentTool({ tool }: Props) {
   const { organization } = useOrganization();
   const { output, input } = tool;
   const [showContentPreview, setShowContentPreview] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   const title = output?.document?.title || input?.title || "Untitled Document";
   const documentId = output?.document?.id;
@@ -186,18 +185,21 @@ export function CreateDocumentTool({ tool }: CreateDocumentToolProps) {
                         {showContentPreview ? "Hide" : "Show"}
                       </button>
                     </div>
-                    <div
-                      ref={contentRef}
-                      className="text-xs text-gray-600 max-h-32 overflow-y-auto"
+                    <StickToBottom
+                      className="text-xs text-gray-600 max-h-56 overflow-y-auto"
+                      resize="smooth"
+                      initial="instant"
                       style={{
                         display: showContentPreview ? "block" : "none",
                       }}
                     >
-                      <div
-                        className="editor-content-sm"
-                        dangerouslySetInnerHTML={{ __html: content }}
-                      />
-                    </div>
+                      <StickToBottom.Content>
+                        <div
+                          className="editor-content-sm"
+                          dangerouslySetInnerHTML={{ __html: content }}
+                        />
+                      </StickToBottom.Content>
+                    </StickToBottom>
                     {!showContentPreview && (
                       <div className="text-xs text-gray-500 mt-1">
                         {plainContent}

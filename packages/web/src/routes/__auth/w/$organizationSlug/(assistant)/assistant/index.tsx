@@ -1,12 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { Surface } from "@/components/layout/Surface";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useOrganization } from "@/context/organization.context";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatAlert } from "@/components/editor/ChatAlert";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { useAssistant } from "@/context/assistant.context";
+import {
+  Panel,
+  PanelGroup,
+  type ImperativePanelHandle,
+} from "react-resizable-panels";
+import { PanelResizer } from "@/components/panels/PanelResizer";
+import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/(assistant)/assistant/"
@@ -15,11 +22,41 @@ export const Route = createFileRoute(
   ssr: false,
 });
 
+const COLLAPSED_SIZE = 3.5;
+
 function PageComponent() {
+  const [sidebarSize, setSidebarSize] = useState(25);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+
+  const toggleSidebar = () => {
+    const panel = sidebarPanelRef.current;
+    if (!panel) return;
+    panel.isCollapsed() ? panel.expand() : panel.collapse();
+  };
+
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden size-full">
-        <AssistantChat />
+        <PanelGroup autoSaveId="assistant-panel-group" direction="horizontal">
+          <Panel minSize={20} defaultSize={75} className="flex flex-col grow">
+            <AssistantChat />
+          </Panel>
+          <PanelResizer />
+          <Panel
+            ref={sidebarPanelRef}
+            id="assistant-sidebar"
+            collapsible={true}
+            collapsedSize={COLLAPSED_SIZE}
+            minSize={12}
+            defaultSize={25}
+            onResize={setSidebarSize}
+          >
+            <AssistantSidebar
+              isCollapsed={sidebarSize === COLLAPSED_SIZE}
+              onToggle={toggleSidebar}
+            />
+          </Panel>
+        </PanelGroup>
       </Surface>
     </div>
   );

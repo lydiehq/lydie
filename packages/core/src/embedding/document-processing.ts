@@ -99,7 +99,7 @@ async function processDocumentWithoutSections(
 export async function processDocumentEmbedding(
   params: {
     documentId: string;
-    yjsState: string; // base64 encoded
+    yjsState: string | null; // base64 encoded
   },
   db: Database
 ): Promise<{ skipped: boolean; reason?: string }> {

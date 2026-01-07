@@ -39,14 +39,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   pendingComponent: LoadingScreen,
   errorComponent: ErrorPage,
   beforeLoad: async ({ context: { queryClient } }) => {
-    try {
-      const { auth, organizations } = await loadSession(queryClient);
-      const zeroInstance = getZeroInstance(auth);
+    const { auth, organizations } = await loadSession(queryClient);
+    const zeroInstance = getZeroInstance(auth);
 
-      return { auth, organizations, zero: zeroInstance };
-    } catch (error) {
-      throw new Error("Failed to load session");
-    }
+    return { auth, organizations, zero: zeroInstance };
   },
   component: () => {
     const router = useRouter();

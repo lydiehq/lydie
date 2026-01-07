@@ -118,6 +118,7 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
 
       // Yield final result (this is what will be in tool.output)
       yield {
+        state: "success",
         message: `Found ${documents.length} document${
           documents.length === 1 ? "" : "s"
         }${filterMessage} in your workspace, ${sortMessage}:`,

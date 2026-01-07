@@ -234,6 +234,16 @@ export const queries = defineQueries({
           .orderBy("created_at", "desc");
       }
     ),
+    conversationsByUser: defineQuery(
+      z.object({}),
+      ({ ctx }) => {
+        isAuthenticated(ctx);
+        return zql.assistant_conversations
+          .where("user_id", ctx.userId)
+          .related("messages", (q) => q.orderBy("created_at", "asc").limit(1))
+          .orderBy("updated_at", "desc");
+      }
+    ),
     byId: defineQuery(
       z.object({ organizationId: z.string(), conversationId: z.string() }),
       ({ args: { organizationId, conversationId }, ctx }) => {
