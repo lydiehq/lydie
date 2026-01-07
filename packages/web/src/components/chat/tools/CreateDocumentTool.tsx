@@ -56,7 +56,7 @@ export function CreateDocumentTool({
 
       <motion.div
         layout="size"
-        className="bg-white rounded-lg ring ring-black/2 shadow-surface p-0.5 overflow-hidden"
+        className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden"
       >
         <AnimatePresence mode="wait">
           {isCreating ? (

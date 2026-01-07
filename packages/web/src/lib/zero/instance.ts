@@ -1,0 +1,44 @@
+import { Zero } from "@rocicorp/zero";
+import { mutators } from "@lydie/zero/mutators";
+import { schema } from "@lydie/zero/schema";
+
+const ZERO_INSTANCE_KEY = Symbol.for("__lydie_zero_instance__");
+
+interface GlobalWithZero {
+  [ZERO_INSTANCE_KEY]?: Zero;
+}
+
+export function getZeroInstance(auth: any): Zero {
+  const globalWithZero = globalThis as GlobalWithZero;
+
+  if (globalWithZero[ZERO_INSTANCE_KEY]) {
+    const existingInstance = globalWithZero[ZERO_INSTANCE_KEY];
+
+    if (
+      existingInstance &&
+      (existingInstance as any).userID === auth.session.userId
+    ) {
+      return existingInstance;
+    }
+  }
+
+  const newInstance = new Zero({
+    userID: auth.session.userId,
+    schema,
+    context: auth.session,
+    cacheURL: import.meta.env.VITE_ZERO_URL,
+    mutators,
+  });
+
+  globalWithZero[ZERO_INSTANCE_KEY] = newInstance;
+
+  return newInstance;
+}
+
+export function clearZeroInstance(): void {
+  const globalWithZero = globalThis as GlobalWithZero;
+  if (globalWithZero[ZERO_INSTANCE_KEY]) {
+    console.log("Clearing Zero instance");
+    delete globalWithZero[ZERO_INSTANCE_KEY];
+  }
+}

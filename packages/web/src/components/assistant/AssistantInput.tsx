@@ -210,7 +210,7 @@ export function AssistantInput({
   return (
     <motion.div
       layoutId="assistant-input"
-      className="rounded-full bg-white text-sm ring-1 ring-black/10 flex flex-col gap-y-2 relative"
+      className="rounded-full bg-white text-sm shadow-surface flex flex-col gap-y-2 relative w-full"
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       initial={false}
     >
@@ -226,9 +226,9 @@ export function AssistantInput({
           isDisabled={false}
         >
           {canStop ? (
-            <Square className="size-4 text-white fill-white" />
+            <Square className="size-3 text-white fill-white" />
           ) : (
-            <ChevronUp className="size-4.5 text-white" />
+            <ChevronUp className="size-4 text-white" />
           )}
         </Button>
       </Form>

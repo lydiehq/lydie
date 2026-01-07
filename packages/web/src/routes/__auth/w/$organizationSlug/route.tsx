@@ -8,39 +8,26 @@ import {
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { useRef, useState } from "react";
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
-import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
 import { setActiveOrganizationSlug } from "@/lib/active-organization";
 import { LayoutGroup } from "motion/react";
-import type { QueryResultType } from "@rocicorp/zero";
-
-function formatOrganization(
-  org: NonNullable<QueryResultType<typeof queries.organizations.bySlug>>
-) {
-  return {
-    ...org,
-    subscriptionStatus: org.subscription_status,
-    subscriptionPlan: org.subscription_plan,
-    polarSubscriptionId: org.polar_subscription_id,
-    createdAt: org.created_at,
-    updatedAt: org.updated_at,
-  };
-}
+import { loadOrganization } from "@/lib/organization/loadOrganization";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
   beforeLoad: async ({ context, params }) => {
     try {
-      console.log("Loading organization", params.organizationSlug);
-      const { zero, auth } = context;
+      const { zero, auth, queryClient } = context;
       const { organizationSlug } = params;
-      const org = await zero.run(
-        queries.organizations.bySlug({ organizationSlug, source: "root" }),
-        { type: "complete", ttl: "10m" }
+
+      const organization = await loadOrganization(
+        queryClient,
+        zero,
+        organizationSlug
       );
-      if (!org) throw notFound();
+
       setActiveOrganizationSlug(params.organizationSlug, auth?.session?.userId);
-      return { organization: formatOrganization(org) };
+      return { organization };
     } catch (error) {
       console.error(error);
       throw notFound();

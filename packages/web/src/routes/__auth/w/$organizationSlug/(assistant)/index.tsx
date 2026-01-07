@@ -38,11 +38,16 @@ function PageComponent() {
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden size-full">
-        <AssistantInput
-          onSubmit={handleSubmit}
-          onStop={stop}
-          placeholder="Ask anything. Use @ to refer to documents"
-        />
+        <div className="max-w-xl mx-auto flex flex-col gap-y-4 items-center mt-[34svh]">
+          <h1 className="text-2xl font-medium text-gray-900">
+            Ask anything about your documents
+          </h1>
+          <AssistantInput
+            onSubmit={handleSubmit}
+            onStop={stop}
+            placeholder="Ask anything. Use @ to refer to documents"
+          />
+        </div>
       </Surface>
     </div>
   );

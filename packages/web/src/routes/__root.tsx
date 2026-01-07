@@ -12,30 +12,14 @@ import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { FontSizeSync } from "@/components/layout/FontSizeSync";
 import { RouterProvider } from "react-aria-components";
 import { ErrorPage } from "@/components/layout/ErrorPage";
-import { mutators } from "@lydie/zero/mutators";
-import { schema } from "@lydie/zero/schema";
-import { Zero } from "@rocicorp/zero";
 import { ZeroProvider } from "@rocicorp/zero/react";
+import { getZeroInstance } from "@/lib/zero/instance";
 
 declare module "react-aria-components" {
   interface RouterConfig {
     href: ToOptions["to"];
     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
   }
-}
-
-let _zeroInstance: Zero | undefined;
-
-function getZeroInstance(auth: any) {
-  return _zeroInstance
-    ? _zeroInstance
-    : new Zero({
-        userID: auth.session.userId,
-        schema,
-        context: auth.session,
-        cacheURL: import.meta.env.VITE_ZERO_URL,
-        mutators,
-      });
 }
 export const Route = createRootRouteWithContext<RouterContext>()({
   ssr: false,

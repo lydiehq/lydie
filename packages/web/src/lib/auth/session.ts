@@ -65,3 +65,15 @@ export async function revalidateSession(queryClient: QueryClient) {
     staleTime: 0,
   });
 }
+
+/**
+ * Clear session data (useful for logout)
+ */
+export async function clearSession(queryClient: QueryClient) {
+  await queryClient.invalidateQueries({
+    queryKey: SESSION_QUERY_KEY,
+  });
+  queryClient.removeQueries({
+    queryKey: SESSION_QUERY_KEY,
+  });
+}
