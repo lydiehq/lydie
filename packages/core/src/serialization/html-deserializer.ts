@@ -131,6 +131,47 @@ export function deserializeFromHTML(
         case "hr": {
           return [{ type: "horizontalRule" }];
         }
+        case "pre": {
+          const codeChild = node.childNodes.find(
+            (n) =>
+              n instanceof HTMLElement && n.tagName.toLowerCase() === "code"
+          );
+
+          let text = "";
+          let language: string | undefined;
+
+          if (codeChild) {
+            // Extract text from the code element.
+            text = codeChild.childNodes
+              .filter((n) => n instanceof TextNode)
+              .map((n) => n.text)
+              .join("");
+
+            if (!text && codeChild.text) {
+              text = codeChild.text;
+            }
+
+            const className = (codeChild as HTMLElement).getAttribute("class");
+            if (className && className.startsWith("language-")) {
+              language = className.replace("language-", "");
+            }
+          } else {
+            text = node.text;
+          }
+
+          return [
+            {
+              type: "codeBlock",
+              attrs: language ? { language } : undefined,
+              content: [
+                {
+                  type: "text",
+                  text,
+                },
+              ],
+            },
+          ];
+        }
         case "br": {
           return [{ type: "hardBreak" }];
         }

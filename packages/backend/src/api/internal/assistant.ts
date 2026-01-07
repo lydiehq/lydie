@@ -212,13 +212,7 @@ export const AssistantRoute = new Hono<{
       },
     });
   } catch (e) {
-    console.error(e);
-    // Re-throw VisibleError as-is (including usage limit errors)
     if (e instanceof VisibleError) {
-      throw e;
-    }
-    // Re-throw HTTPException as-is for backward compatibility
-    if (e instanceof HTTPException) {
       throw e;
     }
     throw new VisibleError(
