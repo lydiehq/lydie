@@ -53,7 +53,7 @@ export const sidebarItemStyles = cva({
 });
 
 export const sidebarItemIconStyles = cva({
-  base: "text-black/28 group-hover:text-black/28",
+  base: "text-black/34 group-hover:text-black/44",
 });
 
 export function Sidebar({ isCollapsed, onToggle }: Props) {

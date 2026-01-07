@@ -26,10 +26,8 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { organization } = useOrganization();
   const { user } = useAuth();
-  const z = useZero();
   const [isExporting, setIsExporting] = useState(false);
 
-  // Check if user is admin
   if (!isAdmin(user)) {
     return (
       <div className="flex flex-col gap-y-6">
