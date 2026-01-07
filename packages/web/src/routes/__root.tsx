@@ -15,6 +15,7 @@ import { ErrorPage } from "@/components/layout/ErrorPage";
 import { mutators } from "@lydie/zero/mutators";
 import { schema } from "@lydie/zero/schema";
 import { Zero } from "@rocicorp/zero";
+import { ZeroProvider } from "@rocicorp/zero/react";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -62,13 +63,16 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   },
   component: () => {
     const router = useRouter();
+    const { zero } = Route.useRouteContext();
     return (
       <RouterProvider
         navigate={(to, options) => router.navigate({ to, ...options })}
       >
-        <FontSizeSync />
-        <ConfirmDialog />
-        <Outlet />
+        <ZeroProvider zero={zero}>
+          <FontSizeSync />
+          <ConfirmDialog />
+          <Outlet />
+        </ZeroProvider>
       </RouterProvider>
     );
   },

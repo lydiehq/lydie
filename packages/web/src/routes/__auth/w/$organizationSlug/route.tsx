@@ -21,7 +21,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
       const { zero, auth } = context;
       const { organizationSlug } = params;
       const org = await zero.run(
-        queries.organizations.bySlug({ organizationSlug }),
+        queries.organizations.bySlug({ organizationSlug, source: "root" }),
         { type: "complete" }
       );
       setActiveOrganizationSlug(params.organizationSlug, auth?.session?.userId);
@@ -32,6 +32,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
     }
   },
   notFoundComponent: () => <div>Organization not found</div>,
+  gcTime: Infinity,
+  staleTime: Infinity,
   ssr: false,
 });
 

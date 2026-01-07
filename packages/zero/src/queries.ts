@@ -171,7 +171,6 @@ export const queries = defineQueries({
       z.object({ organizationSlug: z.string() }),
       ({ args: { organizationSlug }, ctx }) => {
         hasOrganizationAccessBySlug(ctx, organizationSlug);
-        console.log("Preloading documents for organization", organizationSlug);
         return zql.organizations
           .where("slug", organizationSlug)
           .one()
@@ -300,10 +299,6 @@ export const queries = defineQueries({
       z.object({ organizationId: z.string() }),
       ({ args: { organizationId }, ctx }) => {
         hasOrganizationAccess(ctx, organizationId);
-        console.log(
-          "Getting integration connections for organization",
-          organizationId
-        );
         return zql.integration_connections
           .where("organization_id", organizationId)
           .related("links", (links) => links)

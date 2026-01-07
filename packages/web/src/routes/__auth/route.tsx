@@ -1,5 +1,4 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { ZeroProvider } from "@rocicorp/zero/react";
 
 export const Route = createFileRoute("/__auth")({
   component: RouteComponent,
@@ -14,11 +13,5 @@ export const Route = createFileRoute("/__auth")({
 });
 
 function RouteComponent() {
-  const { zero } = Route.useRouteContext();
-
-  return (
-    <ZeroProvider zero={zero}>
-      <Outlet />
-    </ZeroProvider>
-  );
+  return <Outlet />;
 }
