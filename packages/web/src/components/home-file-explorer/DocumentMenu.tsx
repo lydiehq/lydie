@@ -34,7 +34,7 @@ export function DocumentMenu({
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(documentName);
   const z = useZero();
-  const { deleteDocument } = useDocumentActions();
+  const { deleteDocument, createDocument } = useDocumentActions();
   const { id: currentDocId } = useParams({ strict: false });
   const { organization } = useOrganization();
 
@@ -88,6 +88,9 @@ export function DocumentMenu({
       <Menu placement={placement}>
         <MenuItem onAction={() => setIsInfoDialogOpen(true)}>Info</MenuItem>
         <MenuItem onAction={() => setIsRenameDialogOpen(true)}>Rename</MenuItem>
+        <MenuItem onAction={() => createDocument(documentId)}>
+          Add sub document
+        </MenuItem>
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
       </Menu>
 
