@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { Surface } from "@/components/layout/Surface";
 import { useCallback } from "react";
@@ -27,8 +27,17 @@ function PageComponent() {
 
 function AssistantChat() {
   const { organization } = useOrganization();
-  const { messages, sendMessage, stop, status, alert, setAlert } =
-    useAssistant();
+  const {
+    messages,
+    sendMessage,
+    stop,
+    status,
+    alert,
+    setAlert,
+    conversationId,
+  } = useAssistant();
+  const navigate = useNavigate();
+  const { organizationSlug } = Route.useParams();
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -38,8 +47,17 @@ function AssistantChat() {
           createdAt: new Date().toISOString(),
         },
       });
+
+      navigate({
+        to: "/w/$organizationSlug/assistant",
+        from: "/w/$organizationSlug/assistant",
+        search: {
+          conversationId,
+        },
+        replace: true,
+      });
     },
-    [sendMessage]
+    [sendMessage, navigate, conversationId, organizationSlug]
   );
 
   const canStop = status === "submitted" || status === "streaming";

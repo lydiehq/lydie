@@ -12,7 +12,7 @@ export const Route = createFileRoute(
 });
 
 function PageComponent() {
-  const { sendMessage, stop } = useAssistant();
+  const { sendMessage, stop, conversationId } = useAssistant();
   const navigate = useNavigate();
 
   const handleSubmit = useCallback(
@@ -25,13 +25,14 @@ function PageComponent() {
       });
 
       navigate({
-        to: "/__auth/w/$organizationSlug/(assistant)/assistant",
+        to: "/w/$organizationSlug/assistant",
+        from: "/w/$organizationSlug",
         search: {
-          conversationId: conversation?.id,
+          conversationId,
         },
       });
     },
-    [sendMessage, navigate]
+    [sendMessage, navigate, conversationId]
   );
 
   return (

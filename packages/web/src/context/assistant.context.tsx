@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useState,
-  useRef,
   useMemo,
   useCallback,
 } from "react";
@@ -10,8 +9,6 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 import { createId } from "@lydie/core/id";
-import { useZero } from "@/services/zero";
-import { mutators } from "@lydie/zero/mutators";
 import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler";
 import type { ChatAlertState } from "@/components/editor/ChatAlert";
 import type { QueryResultType } from "@rocicorp/zero";
@@ -58,7 +55,6 @@ export function AssistantProvider({
   const [conversationId, setConversationId] = useState(() => createId());
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
   const [conversation, setConversation] = useState<any>(_conversation);
-  const z = useZero();
 
   const { messages, sendMessage, stop, status, addToolOutput, setMessages } =
     useChat<DocumentChatAgentUIMessage>({
@@ -82,35 +78,6 @@ export function AssistantProvider({
           "X-Organization-Id": organizationId,
         },
       }),
-      async onToolCall({ toolCall }) {
-        if (toolCall.toolName === "createDocument") {
-          const args = (toolCall as any).args ?? (toolCall as any).input;
-          const { title, content } = args as {
-            title?: string;
-            content?: string;
-          };
-          const id = createId();
-
-          z.mutate(
-            mutators.document.create({
-              id,
-              organizationId: organizationId,
-              title: title || "Untitled",
-            })
-          );
-
-          addToolOutput({
-            toolCallId: toolCall.toolCallId,
-            tool: "createDocument",
-            output: JSON.stringify({
-              id,
-              title: title || "Untitled",
-              snippet: content,
-              message: "Document created.",
-            }),
-          });
-        }
-      },
       onError: (error) => {
         console.error("Assistant chat error:", error);
         const { message } = parseChatError(error);

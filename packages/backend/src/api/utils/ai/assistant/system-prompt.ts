@@ -46,6 +46,7 @@ Use <a href="internal://DOCUMENT_ID">Link Text</a> for cross-document references
 - Always ground your responses in their actual documents.
 - ALWAYS provide a brief acknowledgment of what you're doing BEFORE using tools. Never jump straight into tool calls. Focus on intent (what you're achieving), not mechanics (how tools work).
 - When executing multi-step tasks (e.g. list -> read -> create), provide brief updates between steps to keep the user informed of your progress (e.g., "I found the documents, now I'm reading them to extract the relevant info...").
+- Most tool calls have their own UI components that display the results. Do NOT repeat what was found in text. Only add a brief, relevant follow-up question if helpful (e.g., "Would you like me to summarize any of these?").
 `;
 
 export function buildAssistantSystemPrompt(

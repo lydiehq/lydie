@@ -10,7 +10,7 @@ import {
 import { ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ToolContainer } from "./ToolContainer";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 export interface ListDocumentsToolProps {
   tool: {
@@ -51,37 +51,14 @@ export function ListDocumentsTool({
 }: ListDocumentsToolProps) {
   const isLoading =
     tool.state === "input-streaming" || tool.state === "call-streaming";
-  const hasOutput = tool.state === "output-available";
   const documents = tool.output?.documents || [];
   const filters = tool.output?.filters;
-  const preliminaryState = tool.output?.state;
-
-  if (isLoading) {
-    let message = "Listing documents";
-    const titleFilter = tool.args?.titleFilter;
-
-    if (preliminaryState === "loading") {
-      message = titleFilter
-        ? `Searching for documents matching "${titleFilter}"`
-        : "Loading documents";
-    } else if (titleFilter) {
-      message = `Listing documents matching "${titleFilter}"`;
-    }
-
-    return (
-      <div className={`flex items-center gap-x-2 text-gray-500 ${className}`}>
-        <Loader className="size-3 animate-spin" />
-        <span className="text-[13px]">{message}...</span>
-      </div>
-    );
-  }
-
-  if (!hasOutput) {
-    return null;
-  }
+  const message = isLoading
+    ? "Loading documents..."
+    : `Found ${documents.length} document${documents.length !== 1 ? "s" : ""}`;
 
   return (
-    <div className="p-1 bg-gray-100 rounded-lg my-2">
+    <motion.div className="p-1 bg-gray-100 rounded-[10px] my-2">
       <div className="p-1">
         <motion.div
           key={documents.length > 0 ? "found" : "loading"}
@@ -94,56 +71,70 @@ export function ListDocumentsTool({
           }}
           className="text-[11px] text-gray-700"
         >
-          {documents.length > 0
-            ? `Found ${documents.length} document${
-                documents.length !== 1 ? "s" : ""
-              }`
-            : "Loading documents..."}
+          {message}
         </motion.div>
       </div>
+
       <motion.div
-        className="bg-white rounded-lg ring ring-black/2 shadow-surface p-0.5"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          visible: {
-            transition: {
-              staggerChildren: 0.05,
-            },
-          },
-        }}
+        layout="size"
+        className="bg-white rounded-lg ring ring-black/2 shadow-surface p-0.5 overflow-hidden"
       >
-        {documents.map((doc) => (
-          <motion.div
-            key={doc.id}
-            variants={{
-              hidden: { opacity: 0, y: -10 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: {
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 25,
-                },
-              },
-            }}
-          >
-            <Link
-              to="/w/$organizationSlug/$id"
-              from="/w/$organizationSlug"
-              params={{ id: doc.id }}
-              className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
+        <AnimatePresence mode="wait">
+          {documents.length === 0 ? (
+            <motion.div
+              key="spinner"
+              className="flex items-center justify-center py-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <File className="text-gray-500 shrink-0 size-3.5" />
-              <span className="truncate flex-1">
-                {doc.title || "Untitled document"}
-              </span>
-            </Link>
-          </motion.div>
-        ))}
+              <Loader className="size-4 animate-spin text-gray-400" />
+            </motion.div>
+          ) : (
+            <motion.ul
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.5, delay: 0.5 }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.3,
+                  },
+                },
+              }}
+            >
+              {documents.map((doc) => (
+                <motion.div
+                  key={doc.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                    },
+                  }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <Link
+                    to="/w/$organizationSlug/$id"
+                    from="/w/$organizationSlug"
+                    params={{ id: doc.id }}
+                    className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
+                  >
+                    <File className="text-gray-500 shrink-0 size-3.5" />
+                    <span className="truncate flex-1">
+                      {doc.title || "Untitled document"}
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </motion.div>
-    </div>
+    </motion.div>
   );
 
   return (
