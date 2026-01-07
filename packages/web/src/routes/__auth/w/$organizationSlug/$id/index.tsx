@@ -9,6 +9,31 @@ import { Button } from "@/components/generic/Button";
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   component: RouteComponent,
   ssr: false,
+  loader: async ({ context, params }) => {
+    const { zero, organization } = context;
+    const { id } = params;
+
+    const doc = await zero.run(
+      queries.documents.byId({
+        organizationId: organization.id,
+        documentId: id,
+      }),
+      { type: "complete" }
+    );
+
+    return { doc };
+  },
+  head: ({ loaderData }) => {
+    const doc = loaderData?.doc;
+    if (!doc) {
+      return {
+        meta: [{ title: "Lydie" }],
+      };
+    }
+    return {
+      meta: [{ title: `${doc.title} | Lydie` }],
+    };
+  },
 });
 
 function RouteComponent() {

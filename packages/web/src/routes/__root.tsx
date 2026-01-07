@@ -6,6 +6,7 @@ import {
   useRouter,
   type NavigateOptions,
   type ToOptions,
+  HeadContent,
 } from "@tanstack/react-router";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
@@ -26,6 +27,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => {
     const zeroCacheURL = import.meta.env.VITE_ZERO_URL;
     return {
+      meta: [{ title: "Lydie" }],
       links: zeroCacheURL
         ? [
             {
@@ -48,15 +50,18 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const router = useRouter();
     const { zero } = Route.useRouteContext();
     return (
-      <RouterProvider
-        navigate={(to, options) => router.navigate({ to, ...options })}
-      >
-        <ZeroProvider zero={zero}>
-          <FontSizeSync />
-          <ConfirmDialog />
-          <Outlet />
-        </ZeroProvider>
-      </RouterProvider>
+      <>
+        <HeadContent />
+        <RouterProvider
+          navigate={(to, options) => router.navigate({ to, ...options })}
+        >
+          <ZeroProvider zero={zero}>
+            <FontSizeSync />
+            <ConfirmDialog />
+            <Outlet />
+          </ZeroProvider>
+        </RouterProvider>
+      </>
     );
   },
 });
