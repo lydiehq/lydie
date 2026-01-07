@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { useZero } from "@/services/zero";
@@ -115,13 +116,11 @@ function RouteComponent() {
 
       {/* AI Writing Style Section */}
       <div className="flex flex-col gap-y-6">
-        <div className="flex flex-col gap-y-0.5">
-          <h2 className="text-md/none font-medium">Writing Style</h2>
-          <p className="text-sm/relaxed text-gray-700">
-            Choose the writing style that the AI will use when helping you with
-            your documents.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Writing Style"
+          description="Choose the writing style that the AI will use when helping you with your documents."
+          descriptionClassName="text-sm/relaxed text-gray-700"
+        />
 
         <Card className="p-6 space-y-4">
           <RadioGroup
@@ -153,13 +152,11 @@ function RouteComponent() {
         {/* Custom Prompt Section (PRO only) */}
         {isPro && (
           <div className="flex flex-col gap-y-6">
-            <div className="flex flex-col gap-y-0.5">
-              <h2 className="text-md/none font-medium">Custom Prompt</h2>
-              <p className="text-sm/relaxed text-gray-700">
-                Create your own custom AI personality. This will override the
-                selected writing style above.
-              </p>
-            </div>
+            <SectionHeader
+              heading="Custom Prompt"
+              description="Create your own custom AI personality. This will override the selected writing style above."
+              descriptionClassName="text-sm/relaxed text-gray-700"
+            />
 
             <Card className="p-6 space-y-4">
               {hasCustomPrompt && (

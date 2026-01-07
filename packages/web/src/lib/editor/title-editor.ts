@@ -57,7 +57,7 @@ export function useTitleEditor({
     },
     editorProps: {
       attributes: {
-        class: "editor-content focus:outline-none",
+        class: "focus:outline-none editor-content",
       },
     },
   });
@@ -81,4 +81,3 @@ export function useTitleEditor({
 
   return { editor, setContent };
 }
-

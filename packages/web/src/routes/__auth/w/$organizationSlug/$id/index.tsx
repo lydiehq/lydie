@@ -11,7 +11,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   loader: async ({ context, params }) => {
     const { zero } = context;
     const { organizationSlug } = params;
-    // Get organization by slug first to get the ID
+    // TODO: remove redundant queries
     const org = await zero.run(
       queries.organizations.bySlug({ organizationSlug })
     );

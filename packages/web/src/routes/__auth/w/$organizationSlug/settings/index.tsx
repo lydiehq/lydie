@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useOrganization } from "@/context/organization.context";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useQuery } from "@rocicorp/zero/react";
 import { useState, useEffect } from "react";
 import {
@@ -306,18 +307,13 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-y-6">
-      <div>
-        <Heading level={1}>Settings</Heading>
-      </div>
+      <Heading level={1}>Settings</Heading>
       <Separator />
-
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>General</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            Update your workspace settings.
-          </p>
-        </div>
+        <SectionHeader
+          heading="General"
+          description="Update your workspace settings."
+        />
         <Form
           className="flex flex-col gap-y-4"
           onSubmit={(e) => {
@@ -367,12 +363,10 @@ function RouteComponent() {
       {/* Members & Invitations Section */}
       <div className="flex flex-col gap-y-4">
         <div className="flex justify-between items-start">
-          <div className="flex flex-col gap-y-0.5">
-            <Heading level={2}>Members & Invitations</Heading>
-            <p className="text-sm/relaxed text-gray-600">
-              Manage who has access to this workspace.
-            </p>
-          </div>
+          <SectionHeader
+            heading="Members & Invitations"
+            description="Manage who has access to this workspace."
+          />
           <Button
             onPress={() => setIsInviteDialogOpen(true)}
             size="sm"
@@ -539,12 +533,11 @@ function RouteComponent() {
       {/* API Keys Section */}
       <div className="flex flex-col gap-y-2">
         <div className="flex justify-between">
-          <div className="flex flex-col gap-y-0.5">
-            <h2 className="text-md/none font-medium">API Key Management</h2>
-            <p className="text-sm/relaxed text-gray-700">
-              Create an API key to access the API.
-            </p>
-          </div>
+          <SectionHeader
+            heading="API Key Management"
+            description="Create an API key to access the API."
+            descriptionClassName="text-sm/relaxed text-gray-700"
+          />
           <Button
             onPress={() => {
               setIsApiKeyDialogOpen(true);
@@ -634,12 +627,10 @@ function RouteComponent() {
 
       {/* Danger Zone Section */}
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Danger Zone</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            Irreversible and destructive actions.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Danger Zone"
+          description="Irreversible and destructive actions."
+        />
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">
           <div className="flex flex-col gap-y-2">
             <div className="flex flex-col gap-y-0.5">

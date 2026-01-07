@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute(
@@ -24,12 +25,11 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-y-2">
-      <div className="flex flex-col gap-y-0.5">
-        <Heading level={2}>Synced Links</Heading>
-        <p className="text-sm/relaxed text-gray-700">
-          Manage specific resources being synced from this integration.
-        </p>
-      </div>
+      <SectionHeader
+        heading="Synced Links"
+        description="Manage specific resources being synced from this integration."
+        descriptionClassName="text-sm/relaxed text-gray-700"
+      />
       <IntegrationLinkList
         links={integrationLinks}
         integrationType={integrationType}

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useOrganization } from "@/context/organization.context";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useQuery } from "@rocicorp/zero/react";
 import { useState } from "react";
 import { Download } from "lucide-react";
@@ -139,13 +140,10 @@ updated: ${new Date(doc.updated_at).toISOString()}
 
       {/* Export Documents Section */}
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Export Documents</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            Export all documents in your workspace as Markdown files in a
-            downloadable ZIP archive.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Export Documents"
+          description="Export all documents in your workspace as Markdown files in a downloadable ZIP archive."
+        />
         <Card className="p-6">
           <div className="flex flex-col gap-y-4">
             <div className="flex items-center justify-between">
@@ -191,12 +189,10 @@ updated: ${new Date(doc.updated_at).toISOString()}
 
       {/* Future Admin Features Placeholder */}
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Additional Admin Features</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            More administrative features will be added here in the future.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Additional Admin Features"
+          description="More administrative features will be added here in the future."
+        />
       </div>
     </div>
   );

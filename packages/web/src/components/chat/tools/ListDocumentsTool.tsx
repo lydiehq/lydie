@@ -1,8 +1,16 @@
 import { Disclosure, DisclosurePanel, Button } from "react-aria-components";
-import { Loader, List, ExternalLink, Calendar, Clock } from "lucide-react";
+import {
+  Loader,
+  List,
+  ExternalLink,
+  Calendar,
+  Clock,
+  File,
+} from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ToolContainer } from "./ToolContainer";
+import { motion } from "motion/react";
 
 export interface ListDocumentsToolProps {
   tool: {
@@ -71,6 +79,72 @@ export function ListDocumentsTool({
   if (!hasOutput) {
     return null;
   }
+
+  return (
+    <div className="p-1 bg-gray-100 rounded-lg my-2">
+      <div className="p-1">
+        <motion.div
+          key={documents.length > 0 ? "found" : "loading"}
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 25,
+          }}
+          className="text-[11px] text-gray-700"
+        >
+          {documents.length > 0
+            ? `Found ${documents.length} document${
+                documents.length !== 1 ? "s" : ""
+              }`
+            : "Loading documents..."}
+        </motion.div>
+      </div>
+      <motion.div
+        className="bg-white rounded-lg ring ring-black/2 shadow-surface p-0.5"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: {
+            transition: {
+              staggerChildren: 0.05,
+            },
+          },
+        }}
+      >
+        {documents.map((doc) => (
+          <motion.div
+            key={doc.id}
+            variants={{
+              hidden: { opacity: 0, y: -10 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: {
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25,
+                },
+              },
+            }}
+          >
+            <Link
+              to="/w/$organizationSlug/$id"
+              from="/w/$organizationSlug"
+              params={{ id: doc.id }}
+              className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
+            >
+              <File className="text-gray-500 shrink-0 size-3.5" />
+              <span className="truncate flex-1">
+                {doc.title || "Untitled document"}
+              </span>
+            </Link>
+          </motion.div>
+        ))}
+      </motion.div>
+    </div>
+  );
 
   return (
     <Disclosure className={`group w-full flex flex-col ${className}`}>

@@ -54,7 +54,7 @@ export function UserMessage({
       exit={{ opacity: 0, y: -10 }}
     >
       <div className="flex flex-col items-end max-w-[80%]">
-        <div className="bg-black/8 text-gray-800 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
+        <div className="bg-black/8 text-gray-700 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
           {message.parts?.map((part: any, index: number) => {
             if (part.type === "text") {
               return (

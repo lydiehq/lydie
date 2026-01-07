@@ -34,7 +34,7 @@ export function useChatEditor({
     content: "",
     editorProps: {
       attributes: {
-        class: "focus:outline-none text-sm text-gray-700",
+        class: "focus:outline-none text-sm text-gray-700 px-5 py-3.5",
       },
     },
   });

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { google } from "@lydie/core/ai/llm";
+import { google, openAi } from "@lydie/core/ai/llm";
 import {
   validateUIMessages,
   createAgentUIStreamResponse,
@@ -143,7 +143,7 @@ export const AssistantRoute = new Hono<{
     const startTime = Date.now();
 
     const agent = new ToolLoopAgent({
-      model: google("gemini-3-flash-preview"),
+      model: openAi("gpt-5-mini"),
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),

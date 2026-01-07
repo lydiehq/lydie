@@ -236,6 +236,20 @@ export const queries = defineQueries({
           .orderBy("created_at", "desc");
       }
     ),
+    byId: defineQuery(
+      z.object({ organizationId: z.string(), conversationId: z.string() }),
+      ({ args: { organizationId, conversationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return (
+          zql.assistant_conversations
+            .where("id", conversationId)
+            // .where("organization_id", organizationId)
+            .where("user_id", ctx.userId)
+            .one()
+            .related("messages", (q) => q.orderBy("created_at", "asc"))
+        );
+      }
+    ),
   },
   usage: {
     today: defineQuery(

@@ -7,31 +7,18 @@ import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatAlert } from "@/components/editor/ChatAlert";
-import { useAssistant } from "@/context/assistant.context";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
+import { useAssistant } from "@/context/assistant.context";
 import tippy from "tippy.js";
 
 export const Route = createFileRoute(
-  "/__auth/w/$organizationSlug/_assistant/assistant"
+  "/__auth/w/$organizationSlug/(assistant)/assistant/"
 )({
-  component: AssistantPage,
-  loader: async ({ context, params }) => {
-    const { zero } = context;
-    const { organizationSlug } = params;
-    // Get organization by slug first to get the ID
-    const org = await zero.run(
-      queries.organizations.bySlug({ organizationSlug })
-    );
-    if (org) {
-      // Preload assistant conversations and documents for mentions
-      zero.run(queries.assistant.conversations({ organizationId: org.id }));
-      zero.run(queries.documents.byUpdated({ organizationId: org.id }));
-    }
-  },
+  component: PageComponent,
   ssr: false,
 });
 
-function AssistantPage() {
+function PageComponent() {
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden size-full">
@@ -179,8 +166,6 @@ function AssistantChat() {
                   placeholder="Ask anything. Use @ to refer to documents"
                   mentionSuggestion={mentionSuggestion}
                   canStop={canStop}
-                  layoutId="assistant-input"
-                  className="mt-2"
                 />
               </div>
             </div>
@@ -198,12 +183,6 @@ function AssistantEmptyState({
   mentionSuggestion: any;
   onSubmit: (text: string) => void;
 }) {
-  const suggestions = [
-    "Show me all documents that mention coffee",
-    "What are my recent meeting notes about?",
-    "Find documents related to project planning",
-  ];
-
   return (
     <div className="flex-1 flex items-center justify-center p-6">
       <div className="text-center max-w-xl w-full space-y-6 px-4">
@@ -212,21 +191,13 @@ function AssistantEmptyState({
             <MessageCircle size={48} className="text-gray-400" />
           </div>
         </div>
-        <h2 className="text-xl font-medium text-gray-900">
-          Welcome to your Assistant
-        </h2>
-        <p className="text-gray-600">
-          I can help you search through your documents, answer questions about
-          your content, and assist with various tasks across your workspace.
-        </p>
+        <h1 className="text-xl font-medium text-gray-900">
+          Ask anything about your documents...
+        </h1>
         <AssistantInput
           onSubmit={onSubmit}
           placeholder="Ask anything about your documents..."
           mentionSuggestion={mentionSuggestion}
-          showSuggestions={true}
-          suggestions={suggestions}
-          layoutId="assistant-input"
-          className="w-full"
         />
       </div>
     </div>
@@ -255,10 +226,11 @@ class MentionList {
 
     this.items.forEach((item, index) => {
       const itemElement = document.createElement("div");
-      itemElement.className = `px-3 py-2 cursor-pointer rounded text-sm ${index === this.selectedIndex
+      itemElement.className = `px-3 py-2 cursor-pointer rounded text-sm ${
+        index === this.selectedIndex
           ? "bg-blue-100 text-blue-800"
           : "text-gray-700 hover:bg-gray-100"
-        }`;
+      }`;
       itemElement.textContent = item.label;
       itemElement.addEventListener("click", () => {
         this.command(item);

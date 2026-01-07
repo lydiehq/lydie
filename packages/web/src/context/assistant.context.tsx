@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useRef, useMemo, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
@@ -16,8 +23,13 @@ interface AssistantContextValue {
   status: string;
   alert: ChatAlertState | null;
   setAlert: (alert: ChatAlertState | null) => void;
-  addToolOutput: (options: { toolCallId: string; tool: string; output: string }) => void;
+  addToolOutput: (options: {
+    toolCallId: string;
+    tool: string;
+    output: string;
+  }) => void;
   resetConversation: () => void;
+  setConversation: (conversation: any) => void;
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
@@ -35,7 +47,6 @@ interface AssistantProviderProps {
   organizationId: string;
   conversationId?: string;
   selectedConversation?: any;
-  onUpgradeClick?: () => void;
 }
 
 export function AssistantProvider({
@@ -43,21 +54,24 @@ export function AssistantProvider({
   organizationId,
   conversationId: initialConversationId,
   selectedConversation,
-  onUpgradeClick,
 }: AssistantProviderProps) {
-  const [conversationId, setConversationId] = useState(() => initialConversationId || createId());
+  const [conversationId, setConversationId] = useState(
+    () => initialConversationId || createId()
+  );
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
+  const [conversation, setConversation] = useState<any>(selectedConversation);
   const z = useZero();
 
-  const { messages, sendMessage, stop, status, addToolOutput } =
+  const { messages, sendMessage, stop, status, addToolOutput, setMessages } =
     useChat<DocumentChatAgentUIMessage>({
       id: conversationId,
-      messages: selectedConversation?.messages.map((msg: any) => ({
-        id: msg.id,
-        role: msg.role as "user" | "system" | "assistant",
-        parts: msg.parts,
-        metadata: msg.metadata,
-      })),
+      messages:
+        conversation?.messages?.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role as "user" | "system" | "assistant",
+          parts: msg.parts,
+          metadata: msg.metadata,
+        })) || [],
       transport: new DefaultChatTransport({
         api:
           import.meta.env.VITE_API_URL.replace(/\/+$/, "") +
@@ -109,12 +123,6 @@ export function AssistantProvider({
             type: "error",
             title: "Daily Limit Reached",
             message,
-            action: onUpgradeClick
-              ? {
-                label: "Upgrade to Pro →",
-                onClick: onUpgradeClick,
-              }
-              : undefined,
           });
         } else {
           setAlert({
@@ -128,8 +136,30 @@ export function AssistantProvider({
     });
 
   const resetConversation = useCallback(() => {
-    setConversationId(createId());
-  }, []);
+    const newId = createId();
+    setConversationId(newId);
+    setConversation(null);
+    setMessages([]);
+  }, [setMessages]);
+
+  const handleSetConversation = useCallback(
+    (conv: any) => {
+      setConversation(conv);
+      if (conv?.id) {
+        setConversationId(conv.id);
+      }
+      if (conv?.messages) {
+        const formattedMessages = conv.messages.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role as "user" | "system" | "assistant",
+          parts: msg.parts,
+          metadata: msg.metadata,
+        }));
+        setMessages(formattedMessages);
+      }
+    },
+    [setMessages]
+  );
 
   const value = useMemo(
     () => ({
@@ -142,8 +172,19 @@ export function AssistantProvider({
       setAlert,
       addToolOutput,
       resetConversation,
+      setConversation: handleSetConversation,
     }),
-    [conversationId, messages, sendMessage, stop, status, alert, addToolOutput, resetConversation]
+    [
+      conversationId,
+      messages,
+      sendMessage,
+      stop,
+      status,
+      alert,
+      addToolOutput,
+      resetConversation,
+      handleSetConversation,
+    ]
   );
 
   return (
@@ -152,4 +193,3 @@ export function AssistantProvider({
     </AssistantContext.Provider>
   );
 }
-

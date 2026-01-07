@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { useZero } from "@/services/zero";
@@ -116,12 +117,11 @@ function RouteComponent() {
 
       {/* Preferences Section */}
       <div className="flex flex-col gap-y-6">
-        <div className="flex flex-col gap-y-0.5">
-          <h2 className="text-md/none font-medium">Preferences</h2>
-          <p className="text-sm/relaxed text-gray-700">
-            Customize your personal preferences and settings.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Preferences"
+          description="Customize your personal preferences and settings."
+          descriptionClassName="text-sm/relaxed text-gray-700"
+        />
 
         <Card className="p-4 flex flex-col gap-y-4">
           <div className="flex items-center justify-between">
@@ -188,12 +188,10 @@ function RouteComponent() {
 
       {/* Pending Invitations Section */}
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Pending Invitations</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            You have been invited to join these organizations.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Pending Invitations"
+          description="You have been invited to join these organizations."
+        />
 
         {userInvitations && userInvitations.length > 0 ? (
           <div className="flex flex-col gap-y-3">

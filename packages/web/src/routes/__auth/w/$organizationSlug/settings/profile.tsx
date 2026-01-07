@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { toast } from "sonner";
 import { Form } from "react-aria-components";
 import { Button } from "@/components/generic/Button";
@@ -135,12 +136,10 @@ function RouteComponent() {
       <Separator />
 
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Profile Information</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            Update your profile information and profile picture.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Profile Information"
+          description="Update your profile information and profile picture."
+        />
 
         <Form
           className="flex flex-col gap-y-4"
