@@ -10,13 +10,18 @@ export function deserializeFromHTML(
   const content: any[] = [];
 
   // Helper to parse individual nodes
-  const parseNode = (node: Node): any[] => {
+  // isInlineContext indicates whether we're inside inline formatting (e.g., within <p>, <li>)
+  const parseNode = (node: Node, isInlineContext = false): any[] => {
     if (node instanceof TextNode) {
-      const text = node.text; // node-html-parser decodes entities automatically in recent versions, but check this
-      // Actually, node-html-parser .text might decode some, but let's assume it's raw text content.
-      // It's usually safer to trim newlines if they are just formatting,
-      // but for inline text we want to keep spaces.
+      const text = node.text;
       if (!text) return [];
+
+      // If we're at block level (not inside a paragraph/heading/etc),
+      // skip whitespace-only text nodes (they're just formatting between block elements)
+      if (!isInlineContext && text.trim() === "") {
+        return [];
+      }
+
       // Basic text node
       return [{ type: "text", text }];
     }
@@ -28,7 +33,7 @@ export function deserializeFromHTML(
       switch (tagName) {
         case "p":
         case "div": {
-          const children = node.childNodes.flatMap(parseNode);
+          const children = node.childNodes.flatMap((n) => parseNode(n, true));
           if (children.length === 0) {
             return [];
           }
@@ -48,7 +53,7 @@ export function deserializeFromHTML(
         case "h5":
         case "h6": {
           const level = parseInt(tagName.substring(1), 10);
-          const children = node.childNodes.flatMap(parseNode);
+          const children = node.childNodes.flatMap((n) => parseNode(n, true));
           return [
             {
               type: "heading",
@@ -58,7 +63,7 @@ export function deserializeFromHTML(
           ];
         }
         case "ul": {
-          const children = node.childNodes.flatMap(parseNode); // expects listItems
+          const children = node.childNodes.flatMap((n) => parseNode(n, false)); // expects listItems
           // Filter to only listItems (logic handled in li case or filtered here)
           // node-html-parser might include whitespace text nodes between LIs
           const listItems = children.filter((c) => c.type === "listItem");
@@ -74,7 +79,7 @@ export function deserializeFromHTML(
           const startAttr = node.getAttribute("start");
           const start = startAttr ? parseInt(startAttr, 10) : undefined;
 
-          const children = node.childNodes.flatMap(parseNode);
+          const children = node.childNodes.flatMap((n) => parseNode(n, false));
           const listItems = children.filter((c) => c.type === "listItem");
 
           return [
@@ -86,7 +91,7 @@ export function deserializeFromHTML(
           ];
         }
         case "li": {
-          const children = node.childNodes.flatMap(parseNode);
+          const children = node.childNodes.flatMap((n) => parseNode(n, false));
           // List items usually contain paragraphs in TipTap strict schema,
           // or inline content is wrapped in paragraph automatically by TipTap?
           // Lydie schema seems to expect content: [ { type: 'paragraph', ... } ] usually.
@@ -159,7 +164,7 @@ export function deserializeFromHTML(
         case "code":
         case "a": {
           // These are inline wrappers. We parse children, then apply the current mark to all text nodes returned.
-          const children = node.childNodes.flatMap(parseNode);
+          const children = node.childNodes.flatMap((n) => parseNode(n, true));
 
           // Define the mark to apply
           let mark: any;
@@ -196,18 +201,18 @@ export function deserializeFromHTML(
           // Unknown block or inline tag.
           // Treat as transparent container? Or ignore?
           // Let's treat as transparent container (unwrap)
-          return node.childNodes.flatMap(parseNode);
+          return node.childNodes.flatMap((n) => parseNode(n, isInlineContext));
       }
     }
 
     return [];
   };
 
-  // Process root nodes
+  // Process root nodes (at block level)
   root.childNodes.forEach((node) => {
     // Check for top-level text nodes (should be wrapped in paragraph?)
     // or valid top-level blocks.
-    const parsed = parseNode(node);
+    const parsed = parseNode(node, false);
 
     // If parsed nodes are inline (text), they need to be wrapped in a block (paragraph) if at top level
     // Exception: if we are building a fragment. But type: "doc" expects blocks.

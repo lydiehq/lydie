@@ -12,7 +12,13 @@ export const createDocument = (userId: string, organizationId: string) =>
         description: `Create a new document (page) in the knowledge base.
 Use this tool when the user wants to create a new page, note, or document.
 You can create a hierarchy of pages by specifying a parentId.
-You can also optionally provide initial content in HTML format.`,
+You can also optionally provide initial content in HTML format.
+
+**IMPORTANT**: 
+- The document is created FIRST (appearing immediately in the UI), then content is applied. This prevents data loss if content generation fails or is interrupted.
+- If a user asks to "change", "improve", or "edit" a document, DO NOT create a new one automatically. Instead, inform them that this would create an entirely new document. Suggest that for edits, they should open the document and use the in-document chat. Only create a new document if they confirm they want a new separate file.
+
+Examples: "Create a new document about X", "Write a summary of these documents in a new file"`,
         inputSchema: z.object({
             title: z.string().describe("The title of the new document"),
             content: z
@@ -29,31 +35,7 @@ You can also optionally provide initial content in HTML format.`,
                 ),
         }),
         execute: async function* ({ title, content, parentId }) {
-            yield {
-                state: "pending",
-                message: `Creating document "${title}"...`,
-            };
-
             try {
-                const id = createId();
-                const slug = slugify(title);
-
-                let yjsState: string | null = null;
-                if (content) {
-                    try {
-                        const jsonContent = deserializeFromHTML(content);
-                        yjsState = convertJsonToYjs(jsonContent);
-                    } catch (e) {
-                        console.error("Failed to deserialize HTML content:", e);
-                        // Fallback to empty doc if content parsing fails
-                        const emptyContent = { type: "doc", content: [] };
-                        yjsState = convertJsonToYjs(emptyContent);
-                    }
-                } else {
-                    const emptyContent = { type: "doc", content: [] };
-                    yjsState = convertJsonToYjs(emptyContent);
-                }
-
                 // Verify parent existence if provided
                 if (parentId) {
                     const [parent] = await db
@@ -74,21 +56,37 @@ You can also optionally provide initial content in HTML format.`,
                     }
                 }
 
+                const id = createId();
+                const slug = slugify(title);
+
+                // PHASE 1: Create empty document immediately
+                yield {
+                    state: "creating",
+                    message: `Creating document "${title}"...`,
+                };
+
+                const emptyContent = { type: "doc", content: [] };
+                const emptyYjsState = convertJsonToYjs(emptyContent);
+
+                // Insert document into database immediately (empty)
                 await db.insert(documentsTable).values({
                     id,
                     title,
                     slug,
                     userId,
                     organizationId,
-                    yjsState,
+                    yjsState: emptyYjsState,
                     parentId: parentId || null,
                     indexStatus: "pending",
                     published: false,
                 });
 
+                // Yield document created state
                 yield {
-                    state: "success",
-                    message: `Successfully created document "${title}".`,
+                    state: "created",
+                    message: content 
+                        ? `Document "${title}" created. Adding content...`
+                        : `Document "${title}" created successfully.`,
                     document: {
                         id,
                         title,
@@ -96,6 +94,73 @@ You can also optionally provide initial content in HTML format.`,
                         parentId,
                     },
                 };
+
+                // PHASE 2: Apply content if provided
+                if (content) {
+                    try {
+                        yield {
+                            state: "applying-content",
+                            message: "Adding content to document...",
+                            document: {
+                                id,
+                                title,
+                                slug,
+                                parentId,
+                            },
+                        };
+
+                        const jsonContent = deserializeFromHTML(content);
+                        const yjsState = convertJsonToYjs(jsonContent);
+
+                        // Update document with content
+                        await db
+                            .update(documentsTable)
+                            .set({ 
+                                yjsState,
+                                updatedAt: new Date()
+                            })
+                            .where(eq(documentsTable.id, id));
+
+                        yield {
+                            state: "success",
+                            message: `Document "${title}" created with content successfully.`,
+                            document: {
+                                id,
+                                title,
+                                slug,
+                                parentId,
+                            },
+                            contentApplied: true,
+                        };
+                    } catch (contentError: any) {
+                        console.error("Failed to apply content:", contentError);
+                        // Document still exists, just without content
+                        yield {
+                            state: "partial-success",
+                            message: `Document "${title}" created, but failed to add content: ${contentError.message}`,
+                            document: {
+                                id,
+                                title,
+                                slug,
+                                parentId,
+                            },
+                            contentApplied: false,
+                        };
+                    }
+                } else {
+                    // No content to apply, already successful
+                    yield {
+                        state: "success",
+                        message: `Document "${title}" created successfully.`,
+                        document: {
+                            id,
+                            title,
+                            slug,
+                            parentId,
+                        },
+                        contentApplied: false,
+                    };
+                }
             } catch (error: any) {
                 console.error("Failed to create document:", error);
                 yield {

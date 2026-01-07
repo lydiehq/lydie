@@ -34,7 +34,7 @@ function formatOrganization(org: OrganizationQueryResult): Organization {
 
 async function fetchOrganization(zero: Zero, organizationSlug: string) {
   const org = await zero.run(
-    queries.organizations.bySlug({ organizationSlug, source: "cached" }),
+    queries.organizations.bySlug({ organizationSlug }),
     { type: "complete", ttl: "10m" }
   );
 

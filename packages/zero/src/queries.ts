@@ -149,10 +149,9 @@ export const queries = defineQueries({
       }
     ),
     bySlug: defineQuery(
-      z.object({ organizationSlug: z.string(), source: z.string().optional() }),
-      ({ args: { organizationSlug, source }, ctx }) => {
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
         hasOrganizationAccessBySlug(ctx, organizationSlug);
-        console.log("Getting organization by slug", source);
         return zql.organizations.where("slug", organizationSlug).one();
       }
     ),
