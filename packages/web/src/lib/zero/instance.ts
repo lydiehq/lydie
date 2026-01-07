@@ -11,22 +11,22 @@ interface GlobalWithZero {
 export function getZeroInstance(auth: any): Zero {
   const globalWithZero = globalThis as GlobalWithZero;
 
+  const userID = auth?.session?.userId ?? "anon";
+  const cacheURL = auth?.session ? import.meta.env.VITE_ZERO_URL : undefined;
+
   if (globalWithZero[ZERO_INSTANCE_KEY]) {
     const existingInstance = globalWithZero[ZERO_INSTANCE_KEY];
 
-    if (
-      existingInstance &&
-      (existingInstance as any).userID === auth.session.userId
-    ) {
+    if (existingInstance && (existingInstance as any).userID === userID) {
       return existingInstance;
     }
   }
 
   const newInstance = new Zero({
-    userID: auth.session.userId,
+    userID,
     schema,
-    context: auth.session,
-    cacheURL: import.meta.env.VITE_ZERO_URL,
+    context: auth?.session,
+    cacheURL,
     mutators,
   });
 
