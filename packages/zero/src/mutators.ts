@@ -321,21 +321,61 @@ export const mutators = defineMutators({
           throw new Error(`Document not found: ${documentId}`);
         }
 
+        // Recursively find all child documents (including nested children)
+        const findAllChildIds = async (
+          parentId: string,
+          childIds: string[] = []
+        ): Promise<string[]> => {
+          const children = await tx.run(
+            zql.documents
+              .where("parent_id", parentId)
+              .where("organization_id", organizationId)
+              .where("deleted_at", "IS", null)
+          );
+
+          for (const child of children) {
+            childIds.push(child.id);
+            // Recursively get children of this child
+            await findAllChildIds(child.id, childIds);
+          }
+
+          return childIds;
+        };
+
+        const childIds = await findAllChildIds(documentId);
+
         // Soft-delete by setting deleted_at
         const isIntegrationDocument = Boolean(
           document.integration_link_id && document.external_id
         );
 
+        const now = Date.now();
+
         // If document is part of an integration, delete it completely from Lydie on delete
         if (isIntegrationDocument) {
+          // For integration documents, hard delete all children first
+          for (const childId of childIds) {
+            await tx.mutate.documents.delete({
+              id: childId,
+            });
+          }
           await tx.mutate.documents.delete({
             id: documentId,
           });
         } else {
+          // For regular documents, soft-delete all children first
+          for (const childId of childIds) {
+            await tx.mutate.documents.update({
+              id: childId,
+              deleted_at: now,
+              updated_at: now,
+            });
+          }
+          // Then soft-delete the parent
           await tx.mutate.documents.update({
             id: documentId,
-            deleted_at: Date.now(),
-            updated_at: Date.now(),
+            deleted_at: now,
+            updated_at: now,
           });
         }
       }
