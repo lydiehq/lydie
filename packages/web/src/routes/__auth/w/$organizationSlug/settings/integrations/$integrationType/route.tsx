@@ -27,25 +27,16 @@ export const Route = createFileRoute(
     integrationType: z.string().optional(),
   }),
   loader: async ({ context, params }) => {
-    const { zero } = context;
-    const { integrationType, organizationSlug } = params;
+    const { zero, organization } = context;
 
-    // Get organization by slug first to get the ID
-    const org = await zero.run(
-      queries.organizations.bySlug({ organizationSlug })
+    zero.run(
+      queries.integrations.byIntegrationType({
+        integrationType,
+        organizationId: organization.id,
+      })
     );
 
-    if (org) {
-      // Preload integration connections
-      zero.run(
-        queries.integrations.byIntegrationType({
-          integrationType,
-          organizationId: org.id,
-        })
-      );
-    }
-
-    const integration = getIntegrationMetadata(integrationType);
+    const integration = getIntegrationMetadata(params.integrationType);
     if (!integration) throw notFound();
     // TODO: default image
     const iconUrl = getIntegrationIconUrl(integration.id) ?? "";

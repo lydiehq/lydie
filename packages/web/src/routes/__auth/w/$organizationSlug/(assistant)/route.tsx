@@ -14,25 +14,16 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)")(
     validateSearch: assistantSearchSchema,
     loaderDeps: ({ search }) => ({ conversationId: search.conversationId }),
     loader: async ({ context, params, deps }) => {
-      const { zero } = context;
-      const { organizationSlug } = params;
+      const { zero, organization } = context;
       const { conversationId } = deps;
 
       if (!conversationId) {
         return { conversation: undefined };
       }
 
-      const org = await zero.run(
-        queries.organizations.bySlug({ organizationSlug }),
-        { type: "complete" }
-      );
-      if (!org) {
-        return { conversation: undefined };
-      }
-
       const conversation = await zero.run(
         queries.assistant.byId({
-          organizationId: org?.id,
+          organizationId: organization.id,
           conversationId,
         }),
         { type: "complete" }

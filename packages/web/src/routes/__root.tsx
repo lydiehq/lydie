@@ -26,6 +26,17 @@ declare module "react-aria-components" {
 
 let _zeroInstance: Zero | undefined;
 
+function getZeroInstance(auth: any) {
+  return _zeroInstance
+    ? _zeroInstance
+    : new Zero({
+        userID: auth.session.userId,
+        schema,
+        context: auth.session,
+        cacheURL: import.meta.env.VITE_ZERO_URL,
+        mutators,
+      });
+}
 export const Route = createRootRouteWithContext<RouterContext>()({
   ssr: false,
   head: () => {
@@ -46,15 +57,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context: { queryClient } }) => {
     try {
       const { auth, organizations } = await loadSession(queryClient);
-      const zeroInstance = _zeroInstance
-        ? _zeroInstance
-        : new Zero({
-            userID: auth.session.userId,
-            schema,
-            cacheURL: import.meta.env.VITE_ZERO_URL,
-            mutators,
-            context: auth.session,
-          });
+      const zeroInstance = getZeroInstance(auth);
 
       return { auth, organizations, zero: zeroInstance };
     } catch (error) {

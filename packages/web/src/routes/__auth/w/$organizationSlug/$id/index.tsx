@@ -8,22 +8,6 @@ import { Button } from "@/components/generic/Button";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   component: RouteComponent,
-  loader: async ({ context, params }) => {
-    const { zero } = context;
-    const { organizationSlug } = params;
-    // TODO: remove redundant queries
-    const org = await zero.run(
-      queries.organizations.bySlug({ organizationSlug })
-    );
-    if (org) {
-      zero.run(
-        queries.documents.byId({
-          organizationId: org.id,
-          documentId: params.id,
-        })
-      );
-    }
-  },
   ssr: false,
 });
 
