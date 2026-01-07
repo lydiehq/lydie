@@ -1,4 +1,4 @@
-import { ArrowUp } from "lucide-react";
+import { ArrowUpIcon } from "@/icons";
 import {
   Cell as AriaCell,
   Column as AriaColumn,
@@ -69,7 +69,7 @@ export function Column(props: ColumnProps) {
                   }`}
                 >
                   {sortDirection && (
-                    <ArrowUp
+                    <ArrowUpIcon
                       aria-hidden
                       className="w-4 h-4 text-gray-500 dark:text-zinc-400 forced-colors:text-[ButtonText]"
                     />

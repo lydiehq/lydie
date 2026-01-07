@@ -4,7 +4,7 @@ import { Button as RACButton } from "react-aria-components";
 import { Button } from "../generic/Button";
 import { OrganizationMenu } from "./OrganizationMenu";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { Link, useSearch } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { cva } from "cva";
 import { UsageStats } from "./UsageStats";
@@ -17,23 +17,22 @@ import { SidebarIcon } from "./SidebarIcon";
 import { useSetAtom } from "jotai";
 import { commandMenuStateAtom } from "@/stores/command-menu";
 import {
-  Search,
-  Home,
-  MessageCircle,
-  Puzzle,
-  SquarePen,
-  Wifi,
-  WifiOff,
-  AlertCircle,
-  Loader2,
-  ShieldAlert,
-} from "lucide-react";
+  SearchIcon,
+  HomeIcon,
+  MessageCircleIcon,
+  PuzzleIcon,
+  CreateIcon,
+  WifiIcon,
+  WifiOffIcon,
+  AlertCircleIcon,
+  Loader2Icon,
+  ShieldAlertIcon,
+} from "@/icons";
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
-import Folder from "~icons/ion/folder";
 
 type Props = {
   isCollapsed: boolean;
@@ -41,7 +40,7 @@ type Props = {
 };
 
 export const sidebarItemStyles = cva({
-  base: "group flex items-center py-1 rounded-md text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
+  base: "group flex items-center h-[30px] rounded-md text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
   variants: {
     isCurrent: {
       true: "bg-black/5",
@@ -53,15 +52,16 @@ export const sidebarItemStyles = cva({
   },
 });
 
+export const sidebarItemIconStyles = cva({
+  base: "text-black/28 group-hover:text-black/28",
+});
+
 export function Sidebar({ isCollapsed, onToggle }: Props) {
   const { createDocument } = useDocumentActions();
   const { organization } = useOrganization();
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
   const setCommandMenuState = useSetAtom(commandMenuStateAtom);
-  const { tree } = useSearch({
-    strict: false,
-  });
 
   const isFreePlan = useMemo(() => {
     if (!organization) {
@@ -96,7 +96,6 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           !isCollapsed ? "-ml-1" : ""
         }`}
       >
-        <ReactLogo className="size-4 text-gray-400" />
         <OrganizationMenu isCollapsed={isCollapsed} />
         <TooltipTrigger delay={500}>
           <RACButton
@@ -164,7 +163,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             onPress={handleSearchClick}
             aria-label="Search"
           >
-            <Search size={14} className="text-gray-600" />
+            <SearchIcon className="size-[14px] text-gray-600" />
           </Button>
         </div>
         <div className="flex flex-col px-2">
@@ -175,7 +174,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles()}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <Home className="text-gray-700 shrink-0 size-4" />
+              <HomeIcon className={sidebarItemIconStyles()} />
               <span className="truncate flex-1">Home</span>
             </div>
           </Link>
@@ -186,7 +185,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles()}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <MessageCircle className="text-gray-700 shrink-0 size-4" />
+              <MessageCircleIcon className={sidebarItemIconStyles()} />
               <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
@@ -197,7 +196,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles()}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <Puzzle className="text-gray-700 shrink-0 size-4" />
+              <PuzzleIcon className={sidebarItemIconStyles()} />
               <span className="truncate flex-1">Integrations</span>
             </div>
           </Link>
@@ -210,10 +209,10 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               <TooltipTrigger delay={500}>
                 <RACButton
                   className="p-1 rounded hover:bg-black/5 text-gray-600 "
-                  onPress={() => createDocument(tree)}
+                  onPress={() => createDocument()}
                   aria-label="Create new document"
                 >
-                  <SquarePen className="size-3.5" />
+                  <CreateIcon className="size-4 text-gray-400" />
                 </RACButton>
                 <Tooltip>Add document</Tooltip>
               </TooltipTrigger>
@@ -226,7 +225,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         <div className="px-2">
           {isFreePlan && !userIsAdmin && <UsageStats />}
         </div>
-        <SidebarBottombar />
+        <BottomBar />
         {/* <div className="flex flex-col">
           <Separator />
           <nav className="py-2">
@@ -248,13 +247,10 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
   );
 }
 
-function SidebarBottombar() {
+function BottomBar() {
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
 
-  {
-    userIsAdmin && <ZeroConnectionStatus />;
-  }
   return (
     <div className="flex flex-col gap-y-4 px-2.5 pb-1">
       {userIsAdmin && <ZeroConnectionStatus />}
@@ -276,34 +272,34 @@ function ZeroConnectionStatus() {
     switch (state.name) {
       case "connecting":
         return {
-          icon: Loader2,
+          icon: Loader2Icon,
           tooltip: state.reason || "Connecting to Zero cache",
         };
       case "connected":
         return {
-          icon: Wifi,
+          icon: WifiIcon,
           tooltip: "Connected to Zero cache",
         };
       case "disconnected":
         return {
-          icon: WifiOff,
+          icon: WifiOffIcon,
           tooltip: state.reason || "Disconnected from Zero cache",
         };
       case "error":
         return {
-          icon: AlertCircle,
+          icon: AlertCircleIcon,
           tooltip: state.reason || "Connection error",
           clickable: true,
         };
       case "needs-auth":
         return {
-          icon: ShieldAlert,
+          icon: ShieldAlertIcon,
           tooltip: "Authentication required",
           clickable: true,
         };
       default:
         return {
-          icon: WifiOff,
+          icon: WifiOffIcon,
           tooltip: "Unknown connection state",
         };
     }

@@ -12,7 +12,7 @@ import {
   DisclosureStateContext,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/icons";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 import { DisclosureGroupStateContext } from "react-aria-components";
 
@@ -81,7 +81,7 @@ export function DisclosureHeader({ children }: DisclosureHeaderProps) {
       >
         {({isDisabled}) => (
           <>
-            <ChevronRight aria-hidden className={chevron({ isExpanded, isDisabled })} />
+            <ChevronRightIcon aria-hidden className={chevron({ isExpanded, isDisabled })} />
             {children}
           </>
         )}

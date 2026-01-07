@@ -1,4 +1,4 @@
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon } from '@/icons';
 import React from 'react';
 import {
   DatePicker as AriaDatePicker,

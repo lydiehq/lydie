@@ -1,4 +1,4 @@
-import { AlertCircle, RefreshCw, Home } from "lucide-react";
+import { AlertCircleIcon, RefreshCwIcon, HomeIcon } from "@/icons";
 import { Button } from "@/components/generic/Button";
 import { Logo } from "@/components/layout/Logo";
 import { useNavigate, useRouter } from "@tanstack/react-router";
@@ -55,7 +55,7 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
       <div className="flex flex-col gap-y-4 items-center max-w-md text-center">
         <div className="flex items-center gap-3">
           <Logo className="size-8 text-gray-400" />
-          <AlertCircle className="size-8 text-red-500" />
+          <AlertCircleIcon className="size-8 text-red-500" />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -82,7 +82,7 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
 
         <div className="flex gap-3 mt-4">
           <Button intent="primary" onPress={handleReload}>
-            <RefreshCw className="size-4 mr-2" />
+            <RefreshCwIcon className="size-4 mr-2" />
             Reload Page
           </Button>
           <Button intent="secondary" onPress={signOut}>

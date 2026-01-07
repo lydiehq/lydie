@@ -1,4 +1,4 @@
-import { AlertCircleIcon, InfoIcon } from "lucide-react";
+import { AlertCircleIcon, InfoIcon } from "@/icons";
 import { chain } from "react-aria";
 import { type DialogProps, Heading } from "react-aria-components";
 import { Button } from "./Button";

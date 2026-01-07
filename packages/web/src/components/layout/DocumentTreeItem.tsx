@@ -6,95 +6,23 @@ import {
 } from "react-aria-components";
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Collection } from "react-aria-components";
-import { type ReactElement, type SVGProps, useRef } from "react";
+import { type ReactElement, useRef } from "react";
 import {
-  // ChevronRight,
-  // File,
-  FolderSync,
-  MoreVertical,
-  Move,
-  Blocks,
-  Loader,
-  // Files,
-} from "lucide-react";
+  FolderSyncIcon,
+  MoreVerticalIcon,
+  MoveIcon,
+  BlocksIcon,
+  LoaderIcon,
+  ChevronForwardIcon,
+} from "@/icons";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { sidebarItemStyles } from "./Sidebar";
+import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar";
 import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
 import { Menu, MenuItem } from "../generic/Menu";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
-
-// https://icones.js.org/collection/ion?s=chevron&icon=ion:chevron-forward
-export function ChevronRight(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 512 512"
-      {...props}
-    >
-      {/* Icon from IonIcons by Ben Sperry - https://github.com/ionic-team/ionicons/blob/main/LICENSE */}
-      <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="48"
-        d="m184 112l144 144l-144 144"
-      />
-    </svg>
-  );
-}
-
-export function File(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 512 512"
-      {...props}
-    >
-      {/* Icon from IonIcons by Ben Sperry - https://github.com/ionic-team/ionicons/blob/main/LICENSE */}
-      <path
-        fill="currentColor"
-        d="M428 224H288a48 48 0 0 1-48-48V36a4 4 0 0 0-4-4h-92a64 64 0 0 0-64 64v320a64 64 0 0 0 64 64h224a64 64 0 0 0 64-64V228a4 4 0 0 0-4-4"
-      />
-      <path
-        fill="currentColor"
-        d="M419.22 188.59L275.41 44.78a2 2 0 0 0-3.41 1.41V176a16 16 0 0 0 16 16h129.81a2 2 0 0 0 1.41-3.41"
-      />
-    </svg>
-  );
-}
-
-export function Files(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 512 512"
-      {...props}
-    >
-      {/* Icon from IonIcons by Ben Sperry - https://github.com/ionic-team/ionicons/blob/main/LICENSE */}
-      <path
-        fill="currentColor"
-        d="M298.39 248a4 4 0 0 0 2.86-6.8l-78.4-79.72a4 4 0 0 0-6.85 2.81V236a12 12 0 0 0 12 12Z"
-      />
-      <path
-        fill="currentColor"
-        d="M197 267a43.67 43.67 0 0 1-13-31v-92h-72a64.19 64.19 0 0 0-64 64v224a64 64 0 0 0 64 64h144a64 64 0 0 0 64-64V280h-92a43.6 43.6 0 0 1-31-13m175-147h70.39a4 4 0 0 0 2.86-6.8l-78.4-79.72a4 4 0 0 0-6.85 2.81V108a12 12 0 0 0 12 12"
-      />
-      <path
-        fill="currentColor"
-        d="M372 152a44.34 44.34 0 0 1-44-44V16H220a60.07 60.07 0 0 0-60 60v36h42.12A40.8 40.8 0 0 1 231 124.14l109.16 111a41.1 41.1 0 0 1 11.83 29V400h53.05c32.51 0 58.95-26.92 58.95-60V152Z"
-      />
-    </svg>
-  );
-}
+import { DocumentIcon, DocumentsIcon } from "@/icons";
 
 type Props = {
   item: {
@@ -170,6 +98,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         sidebarItemStyles({
           isCurrent,
           className: `
+            group
             dragging:opacity-50 dragging:bg-gray-50 
             ${
               item.type === "document" || isIntegrationLink
@@ -193,14 +122,14 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
             {allowsDragging && (
               <Button
                 slot="drag"
-                className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0"
+                className="absolute w-px h-px -m-px overflow-hidden whitespace-nowrap border-0"
                 style={{
                   clip: "rect(0, 0, 0, 0)",
                   clipPath: "inset(50%)",
                 }}
                 aria-label={`Drag ${item.name}`}
               >
-                <Move size={12} />
+                <MoveIcon className="size-3" />
               </Button>
             )}
 
@@ -223,7 +152,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               )}
 
               {item.type === "document" && (
-                <DocumentIcon
+                <DocumentTreeItemIcon
                   isExpanded={isExpanded}
                   chevronRef={chevronRef}
                   hasChildren={
@@ -278,7 +207,10 @@ function IntegrationGroupChevron({
 
   return (
     <Button
-      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+      className={sidebarItemIconStyles({
+        className:
+          "p-1 rounded hover:bg-gray-200 -ml-1 group/chevron hover:text-black/60",
+      })}
       slot="chevron"
     >
       {iconUrl ? (
@@ -288,17 +220,23 @@ function IntegrationGroupChevron({
             alt={`${name} icon`}
             className="size-3.5 rounded-[2px] group-hover/chevron:hidden"
           />
-          <ChevronRight
-            className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
-              isExpanded ? "rotate-90" : ""
-            }`}
+          <ChevronForwardIcon
+            className={sidebarItemIconStyles({
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+                isExpanded ? "rotate-90" : ""
+              }`,
+            })}
           />
         </>
       ) : (
         <>
-          <Blocks className="size-3.5 text-gray-500 group-hover/chevron:hidden" />
-          <ChevronRight
-            className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+          <BlocksIcon
+            className={sidebarItemIconStyles({
+              className: "size-3.5 group-hover/chevron:hidden",
+            })}
+          />
+          <ChevronForwardIcon
+            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
               isExpanded ? "rotate-90" : ""
             }`}
           />
@@ -327,14 +265,24 @@ function IntegrationLinkChevron({
       slot="chevron"
     >
       {syncStatus === "pulling" ? (
-        <Loader className="size-3.5 text-gray-500 animate-spin" />
+        <LoaderIcon
+          className={sidebarItemIconStyles({
+            className: "size-3.5 animate-spin",
+          })}
+        />
       ) : (
         <>
-          <FolderSync className="size-3.5 text-gray-500 group-hover/chevron:hidden" />
-          <ChevronRight
-            className={`size-3.5 text-gray-500 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
-              isExpanded ? "rotate-90" : ""
-            }`}
+          <FolderSyncIcon
+            className={sidebarItemIconStyles({
+              className: "size-3.5 group-hover/chevron:hidden",
+            })}
+          />
+          <ChevronForwardIcon
+            className={sidebarItemIconStyles({
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+                isExpanded ? "rotate-90" : ""
+              }`,
+            })}
           />
         </>
       )}
@@ -342,10 +290,7 @@ function IntegrationLinkChevron({
   );
 }
 
-/**
- * Document Icon - Shows file icon, with interactive chevron only if page has children
- */
-function DocumentIcon({
+function DocumentTreeItemIcon({
   isExpanded,
   chevronRef,
   hasChildren,
@@ -354,13 +299,17 @@ function DocumentIcon({
   chevronRef: React.RefObject<HTMLButtonElement | null>;
   hasChildren: boolean;
 }) {
-  const IconComponent = hasChildren ? Files : File;
+  const IconComponent = hasChildren ? DocumentsIcon : DocumentIcon;
 
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
     return (
       <div className="text-gray-500 p-1 -ml-1">
-        <IconComponent className="size-4 text-gray-400 shrink-0" />
+        <IconComponent
+          className={sidebarItemIconStyles({
+            className: "size-4 shrink-0",
+          })}
+        />
       </div>
     );
   }
@@ -369,14 +318,40 @@ function DocumentIcon({
   return (
     <Button
       ref={chevronRef}
-      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
+      className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative"
       slot="chevron"
     >
-      <IconComponent className="size-4 text-gray-400 shrink-0 group-hover:hidden" />
-      <ChevronRight
-        className={`size-4 text-gray-400 shrink-0 hidden group-hover:block transition-transform duration-200 ease-in-out ${
-          isExpanded ? "rotate-90" : ""
-        }`}
+      <IconComponent
+        className={sidebarItemIconStyles({
+          className:
+            "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+        })}
+      />
+      <ChevronForwardIcon
+        className={sidebarItemIconStyles({
+          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/60 transition-[opacity_100ms,transform_200ms] ${
+            isExpanded ? "rotate-90" : ""
+          }`,
+        })}
+      />
+    </Button>
+  );
+}
+
+function VerticalMenuButton({
+  "aria-label": ariaLabel,
+}: {
+  "aria-label": string;
+}) {
+  return (
+    <Button
+      className="p-1 text-black hover:text-black/60 group/options"
+      aria-label={ariaLabel}
+    >
+      <MoreVerticalIcon
+        className={sidebarItemIconStyles({
+          className: "size-3 group-hover/options:text-black/60 hover:",
+        })}
       />
     </Button>
   );
@@ -407,12 +382,7 @@ function ItemContextMenu({
   if (type === "integration-link") {
     return (
       <MenuTrigger>
-        <Button
-          className="p-1 rounded hover:bg-gray-200"
-          aria-label="Integration link options"
-        >
-          <MoreVertical size={12} />
-        </Button>
+        <VerticalMenuButton aria-label="Integration link options" />
         <Menu>
           <MenuItem
             onAction={() => {
@@ -432,15 +402,9 @@ function ItemContextMenu({
     );
   }
 
-  // Document
   return (
     <MenuTrigger>
-      <Button
-        className="p-1 rounded hover:bg-gray-200"
-        aria-label="Document options"
-      >
-        <MoreVertical size={12} />
-      </Button>
+      <VerticalMenuButton aria-label="Document options" />
       <DocumentMenu documentId={itemId} documentName={itemName} />
     </MenuTrigger>
   );

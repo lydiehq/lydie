@@ -5,7 +5,7 @@ import {
   Link,
   type ButtonProps as ReactAriaButtonProps,
 } from "react-aria-components";
-import { Loader } from "lucide-react";
+import { LoaderIcon } from "@/icons";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "motion/react";
 import { composeTailwindRenderProps, focusRing } from "./utils";
@@ -165,7 +165,9 @@ function ButtonChildren({
               className="shrink-0"
               style={{ width: spinnerSize, height: spinnerSize }}
             >
-              <Loader className={clsx(loaderSize.className, "text-gray-500")} />
+              <LoaderIcon
+                className={clsx(loaderSize.className, "text-gray-500")}
+              />
             </motion.div>
             <div style={{ width: gapSize }} className="shrink-0" />
           </motion.div>
