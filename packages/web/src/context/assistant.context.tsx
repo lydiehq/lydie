@@ -14,6 +14,8 @@ import { useZero } from "@/services/zero";
 import { mutators } from "@lydie/zero/mutators";
 import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler";
 import type { ChatAlertState } from "@/components/editor/ChatAlert";
+import type { QueryResultType } from "@rocicorp/zero";
+import type { queries } from "@lydie/zero/queries";
 
 interface AssistantContextValue {
   conversationId: string;
@@ -45,21 +47,17 @@ export function useAssistant() {
 interface AssistantProviderProps {
   children: React.ReactNode;
   organizationId: string;
-  conversationId?: string;
-  selectedConversation?: any;
+  conversation?: NonNullable<QueryResultType<typeof queries.assistant.byId>>;
 }
 
 export function AssistantProvider({
   children,
+  conversation: _conversation,
   organizationId,
-  conversationId: initialConversationId,
-  selectedConversation,
 }: AssistantProviderProps) {
-  const [conversationId, setConversationId] = useState(
-    () => initialConversationId || createId()
-  );
+  const [conversationId, setConversationId] = useState(() => createId());
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
-  const [conversation, setConversation] = useState<any>(selectedConversation);
+  const [conversation, setConversation] = useState<any>(_conversation);
   const z = useZero();
 
   const { messages, sendMessage, stop, status, addToolOutput, setMessages } =

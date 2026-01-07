@@ -46,15 +46,11 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)")(
 function AssistantLayout() {
   const { organization } = useOrganization();
   const { conversation } = Route.useLoaderData();
-  const { conversationId } = Route.useSearch();
-
-  console.log("conversation", conversation);
 
   return (
     <AssistantProvider
       organizationId={organization.id}
-      conversationId={conversationId}
-      selectedConversation={conversation}
+      conversation={conversation}
     >
       <Outlet />
     </AssistantProvider>
