@@ -7,13 +7,13 @@ import {
   CreditCard,
   Box,
   Upload,
-  Puzzle,
   Book,
   ExternalLink,
   ShieldCheck,
   UserCircle,
   type LucideIcon,
 } from "lucide-react";
+import IconExtensionPuzzle from "~icons/ion/puzzle?raw";
 import { sidebarItemStyles } from "@/components/layout/Sidebar";
 import { Eyebrow } from "@/components/generic/Eyebrow";
 import { useAuth } from "@/context/auth.context";
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings")({
 type SettingsRoute = {
   path: string;
   label: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<{ className?: string }>;
   external?: boolean;
   adminOnly?: boolean;
 };
@@ -85,7 +85,7 @@ const settingsRoutes: SettingsSection[] = [
       {
         path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
-        icon: Puzzle,
+        icon: IconExtensionPuzzle,
       },
       {
         path: "/w/$organizationSlug/settings/import",

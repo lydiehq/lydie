@@ -33,6 +33,7 @@ import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
+import Folder from "~icons/ion/folder";
 
 type Props = {
   isCollapsed: boolean;
@@ -95,6 +96,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           !isCollapsed ? "-ml-1" : ""
         }`}
       >
+        <ReactLogo className="size-4 text-gray-400" />
         <OrganizationMenu isCollapsed={isCollapsed} />
         <TooltipTrigger delay={500}>
           <RACButton
