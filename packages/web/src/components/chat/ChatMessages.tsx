@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { StickToBottom } from "use-stick-to-bottom";
 import { format } from "date-fns";
 import { Button, DialogTrigger } from "react-aria-components";
-import { MoreVertical } from "lucide-react";
+import { MoreVerticalIcon } from "@/icons";
 import { Popover } from "../generic/Popover";
 import { ReplaceInDocumentTool } from "./tools/ReplaceInDocumentTool";
 import { SearchDocumentsTool } from "./tools/SearchDocumentsTool";
@@ -240,7 +240,7 @@ function AssistantMessageWithTools({
           <div className="flex gap-x-1">
             <DialogTrigger>
               <Button className="p-0.5 hover:bg-gray-100 rounded">
-                <MoreVertical className="size-3" />
+                <MoreVerticalIcon className="size-3" />
               </Button>
               <Popover>
                 <div className="flex flex-col gap-y-1 text-[11px] text-gray-500 divide-y divide-gray-200">

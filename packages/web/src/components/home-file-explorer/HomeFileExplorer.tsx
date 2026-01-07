@@ -9,7 +9,7 @@ import { useDocumentSearch } from "@/hooks/use-document-search";
 import { usePageNavigation } from "@/hooks/use-page-navigation";
 import { useBulkDelete } from "@/hooks/use-bulk-delete";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@/icons";
 import { GridList } from "react-aria-components";
 import { useState, useMemo, useEffect } from "react";
 import { Heading } from "@/components/generic/Heading";
@@ -216,7 +216,7 @@ export function HomeFileExplorer() {
         <div className="flex items-center gap-2">
           <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           <Button onPress={() => createDocument(tree)} size="sm">
-            <Plus className="size-4" />
+            <PlusIcon className="size-4" />
             New Document
           </Button>
         </div>

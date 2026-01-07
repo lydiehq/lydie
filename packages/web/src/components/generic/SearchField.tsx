@@ -1,4 +1,4 @@
-import { SearchIcon, XIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "@/icons";
 import {
   SearchField as AriaSearchField,
   Button,

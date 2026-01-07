@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/icons";
 import {
   Breadcrumb as AriaBreadcrumb,
   Breadcrumbs as AriaBreadcrumbs,
@@ -32,7 +32,7 @@ export function Breadcrumb(
     >
       <Link variant="secondary" {...props} />
       {props.href && (
-        <ChevronRight className="w-3 h-3 text-gray-600 dark:text-zinc-400" />
+        <ChevronRightIcon className="w-3 h-3 text-gray-600 dark:text-zinc-400" />
       )}
     </AriaBreadcrumb>
   );

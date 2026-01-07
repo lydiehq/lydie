@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { CheckIcon } from "@/icons";
 import {
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
@@ -96,7 +96,7 @@ export function DropdownItem(props: ListBoxItemProps) {
             {children}
           </span>
           <span className="flex items-center w-5">
-            {isSelected && <Check className="w-4 h-4" />}
+            {isSelected && <CheckIcon className="w-4 h-4" />}
           </span>
         </>
       ))}

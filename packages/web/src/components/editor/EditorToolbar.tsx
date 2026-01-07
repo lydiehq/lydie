@@ -24,7 +24,6 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  MoreVertical,
   Link,
   Image as ImageIcon,
 } from "lucide-react";
@@ -36,6 +35,7 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
+import { MoreVerticalIcon } from "@/icons";
 
 type Props = {
   editor: Editor;
@@ -410,7 +410,7 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
         </div> */}
         <MenuTrigger>
           <RACButton aria-label="Document Options">
-            <MoreVertical className="size-4" />
+            <MoreVerticalIcon className="size-4" />
           </RACButton>
           <Menu>
             <MenuItem onAction={saveDocument}>Save</MenuItem>

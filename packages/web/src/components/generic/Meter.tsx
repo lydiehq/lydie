@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangleIcon } from '@/icons';
 import React from 'react';
 import {
   Meter as AriaMeter,
@@ -19,7 +19,7 @@ export function Meter({ label, ...props }: MeterProps) {
           <div className="flex justify-between gap-2">
             <Label>{label}</Label>
             <span className={`text-sm ${percentage >= 80 ? 'text-red-600 dark:text-red-500' : 'text-gray-600 dark:text-zinc-400'}`}>
-              {percentage >= 80 && <AlertTriangle aria-label="Alert" className="inline-block w-4 h-4 align-text-bottom" />}
+              {percentage >= 80 && <AlertTriangleIcon aria-label="Alert" className="inline-block w-4 h-4 align-text-bottom" />}
               {' ' + valueText}
             </span>
           </div>

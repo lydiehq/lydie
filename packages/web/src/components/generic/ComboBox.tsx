@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon } from "@/icons";
 import React from "react";
 import {
   ComboBox as AriaComboBox,
@@ -44,7 +44,7 @@ export function ComboBox<T extends object>({
           variant="icon"
           className="w-6 mr-1 rounded-xs outline-offset-0 "
         >
-          <ChevronDown aria-hidden className="w-4 h-4" />
+          <ChevronDownIcon aria-hidden className="w-4 h-4" />
         </Button>
       </FieldGroup>
       {description && <Description>{description}</Description>}
