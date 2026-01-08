@@ -170,18 +170,18 @@ function EditorContainer({ doc }: Props) {
               className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"
             >
               <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
-                <EditorContent
+                {/* <EditorContent
                   editor={titleEditor.editor}
                   aria-label="Document title"
                   className="mb-6"
-                />
-                <CustomFieldsEditor
+                /> */}
+                {/* <CustomFieldsEditor
                   documentId={doc.id}
                   organizationId={doc.organization_id}
                   initialFields={
                     (doc.custom_fields as Record<string, string | number>) || {}
                   }
-                />
+                /> */}
                 <LinkPopover
                   editor={contentEditor.editor}
                   onOpenLinkDialog={registerLinkDialogCallback}

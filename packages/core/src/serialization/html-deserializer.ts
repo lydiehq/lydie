@@ -92,39 +92,58 @@ export function deserializeFromHTML(
         }
         case "li": {
           const children = node.childNodes.flatMap((n) => parseNode(n, false));
-          // List items usually contain paragraphs in TipTap strict schema,
-          // or inline content is wrapped in paragraph automatically by TipTap?
-          // Lydie schema seems to expect content: [ { type: 'paragraph', ... } ] usually.
-          // Let's wrap inline content in a paragraph if it's mixed.
+          // List items in TipTap schema must only contain block-level nodes
+          // (paragraph, heading, bulletList, orderedList, etc.)
+          // Any inline content (text nodes, marks) must be wrapped in paragraphs
 
-          // Simple heuristic: if children are just text/marks, wrap in paragraph.
-          // If children contain block elements (p, div, ul, ol), keep as is?
-          // TipTap schema for listItem is typically content: "paragraph block*"
+          const isInlineNode = (node: any) =>
+            node.type === "text" || node.type === "hardBreak";
+          const isBlockNode = (node: any) =>
+            [
+              "paragraph",
+              "heading",
+              "bulletList",
+              "orderedList",
+              "codeBlock",
+              "horizontalRule",
+            ].includes(node.type);
 
-          let hasBlock = children.some((c) =>
-            ["paragraph", "heading", "bulletList", "orderedList"].includes(
-              c.type
-            )
-          );
+          // Group consecutive inline nodes and wrap them in paragraphs
+          const processedContent: any[] = [];
+          let inlineBuffer: any[] = [];
 
-          if (!hasBlock) {
-            return [
-              {
-                type: "listItem",
-                content: [
-                  {
-                    type: "paragraph",
-                    content: children.length > 0 ? children : undefined,
-                  },
-                ],
-              },
-            ];
+          const flushInlineBuffer = () => {
+            if (inlineBuffer.length > 0) {
+              processedContent.push({
+                type: "paragraph",
+                content: inlineBuffer,
+              });
+              inlineBuffer = [];
+            }
+          };
+
+          for (const child of children) {
+            if (isInlineNode(child)) {
+              inlineBuffer.push(child);
+            } else if (isBlockNode(child)) {
+              flushInlineBuffer();
+              processedContent.push(child);
+            }
+          }
+          flushInlineBuffer();
+
+          // Ensure we have at least one paragraph if content is empty
+          if (processedContent.length === 0) {
+            processedContent.push({
+              type: "paragraph",
+              content: undefined,
+            });
           }
 
           return [
             {
               type: "listItem",
-              content: children,
+              content: processedContent,
             },
           ];
         }
