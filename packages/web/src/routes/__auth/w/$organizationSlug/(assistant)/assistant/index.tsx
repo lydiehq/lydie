@@ -100,10 +100,19 @@ function AssistantChat() {
   const canStop = status === "submitted" || status === "streaming";
 
   return (
-    <div className="flex flex-col h-full max-w-xl mx-auto">
+    <div className="flex flex-col h-full mx-auto w-full max-w-xl">
       <div className="flex flex-col flex-1 min-h-0">
         {messages.length === 0 ? (
-          <AssistantEmptyState onSubmit={handleSubmit} />
+          <div className="mt-[34svh] flex flex-col gap-y-4 items-center">
+            <h1 className="text-2xl font-medium text-gray-900">
+              Ask anything about your documents
+            </h1>
+            <AssistantInput
+              onSubmit={handleSubmit}
+              onStop={stop}
+              placeholder="Ask anything. Use @ to refer to documents"
+            />
+          </div>
         ) : (
           <>
             <ChatMessages
@@ -131,31 +140,6 @@ function AssistantChat() {
             </div>
           </>
         )}
-      </div>
-    </div>
-  );
-}
-
-function AssistantEmptyState({
-  onSubmit,
-}: {
-  onSubmit: (text: string) => void;
-}) {
-  return (
-    <div className="flex-1 flex items-center justify-center p-6">
-      <div className="text-center max-w-xl w-full space-y-6 px-4">
-        <div className="flex justify-center">
-          <div className="bg-gray-50 rounded-full p-6">
-            <MessageCircle size={48} className="text-gray-400" />
-          </div>
-        </div>
-        <h1 className="text-xl font-medium text-gray-900">
-          Ask anything about your documents...
-        </h1>
-        <AssistantInput
-          onSubmit={onSubmit}
-          placeholder="Ask anything about your documents..."
-        />
       </div>
     </div>
   );

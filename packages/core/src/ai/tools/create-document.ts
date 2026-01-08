@@ -32,7 +32,7 @@ Examples: "Create a new document about X", "Write a summary of these documents i
           "The ID of the parent document to create this document under (for nesting)."
         ),
     }),
-    execute: async function* ({ title, content, parentId }) {
+    execute: async ({ title, content, parentId }) => {
       try {
         // Verify parent existence if provided
         if (parentId) {
@@ -48,57 +48,79 @@ Examples: "Create a new document about X", "Write a summary of these documents i
             .limit(1);
 
           if (!parent) {
-            yield {
+            return {
               state: "error",
               error: `The parent document you're trying to create this under doesn't exist or you don't have access to it.`,
             };
-            return;
           }
         }
 
         const id = createId();
         const slug = `${slugify(title)}-${createId().slice(0, 6)}`;
 
-        // PHASE 1: Create empty document immediately
-        yield {
-          state: "creating",
-          message: `Creating document "${title}"...`,
-        };
+        // Prepare content
+        let yjsState;
+        if (content) {
+          try {
+            const jsonContent = deserializeFromHTML(content);
+            yjsState = convertJsonToYjs(jsonContent);
+          } catch (contentError: any) {
+            console.error("Failed to parse content:", contentError);
+            // Create document with empty content if parsing fails
+            const emptyContent = { type: "doc", content: [] };
+            yjsState = convertJsonToYjs(emptyContent);
+          }
+        } else {
+          const emptyContent = { type: "doc", content: [] };
+          yjsState = convertJsonToYjs(emptyContent);
+        }
 
-        const emptyContent = { type: "doc", content: [] };
-        const emptyYjsState = convertJsonToYjs(emptyContent);
-
-        // Insert document into database immediately (empty)
+        // Insert document into database
         await db.insert(documentsTable).values({
           id,
           title,
           slug,
           userId,
           organizationId,
-          yjsState: emptyYjsState,
+          yjsState,
           parentId: parentId || null,
           indexStatus: "pending",
           published: false,
         });
 
-        // Generate embeddings for the document title and content
-        processDocumentTitleEmbedding(
-          {
-            documentId: id,
-            title,
-          },
-          db
-        ).catch((error) => {
-          console.error(
-            `Failed to generate title embedding for document ${id}:`,
-            error
-          );
-        });
+        // Generate embeddings
+        if (content) {
+          processDocumentEmbedding(
+            {
+              documentId: id,
+              yjsState,
+            },
+            db
+          ).catch((error) => {
+            console.error(
+              `Failed to generate embeddings for document ${id}:`,
+              error
+            );
+          });
+        } else {
+          processDocumentTitleEmbedding(
+            {
+              documentId: id,
+              title,
+            },
+            db
+          ).catch((error) => {
+            console.error(
+              `Failed to generate title embedding for document ${id}:`,
+              error
+            );
+          });
+        }
 
-        yield {
-          state: "created",
+        return {
+          state: "success",
           message: content
-            ? `Document "${title}" created. Adding content...`
+            ? `Document "${title}" created with content successfully.`
             : `Document "${title}" created successfully.`,
           document: {
             id,
@@ -106,90 +128,11 @@ Examples: "Create a new document about X", "Write a summary of these documents i
             slug,
             parentId: parentId || undefined,
           },
+          contentApplied: !!content,
         };
-
-        if (content) {
-          try {
-            yield {
-              state: "applying-content",
-              message: "Adding content to document...",
-              document: {
-                id,
-                title,
-                slug,
-                parentId: parentId || undefined,
-              },
-            };
-
-            const jsonContent = deserializeFromHTML(content);
-            const yjsState = convertJsonToYjs(jsonContent);
-
-            // Update document with content
-            await db
-              .update(documentsTable)
-              .set({
-                yjsState,
-                updatedAt: new Date(),
-              })
-              .where(eq(documentsTable.id, id));
-
-            // Generate embeddings for the document with content
-            processDocumentEmbedding(
-              {
-                documentId: id,
-                yjsState,
-              },
-              db
-            ).catch((error) => {
-              console.error(
-                `Failed to generate embeddings for document ${id}:`,
-                error
-              );
-            });
-
-            yield {
-              state: "success",
-              message: `Document "${title}" created with content successfully.`,
-              document: {
-                id,
-                title,
-                slug,
-                parentId: parentId || undefined,
-              },
-              contentApplied: true,
-            };
-          } catch (contentError: any) {
-            console.error("Failed to apply content:", contentError);
-            // Document still exists, just without content
-            yield {
-              state: "partial-success",
-              message: `Document "${title}" was created, but I couldn't add the content. You can add content manually by opening the document.`,
-              document: {
-                id,
-                title,
-                slug,
-                parentId: parentId || undefined,
-              },
-              contentApplied: false,
-            };
-          }
-        } else {
-          // No content to apply, already successful
-          yield {
-            state: "success",
-            message: `Document "${title}" created successfully.`,
-            document: {
-              id,
-              title,
-              slug,
-              parentId: parentId || undefined,
-            },
-            contentApplied: false,
-          };
-        }
       } catch (error: any) {
         console.error("Failed to create document:", error);
-        yield {
+        return {
           state: "error",
           error: `Something went wrong while creating the document. Please try again.`,
         };
