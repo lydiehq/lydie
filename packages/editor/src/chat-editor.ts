@@ -30,30 +30,25 @@ export function getChatEditorExtensions(
   options?: GetChatEditorExtensionsOptions
 ) {
   const extensions = [
-    StarterKit,
+    StarterKit.configure({
+      link: false,
+    }),
     Placeholder.configure({
       placeholder:
         options?.placeholder ?? "Ask anything. Use @ to refer to documents",
       emptyEditorClass: "is-editor-empty",
     }),
     createEnterExtension(options?.onEnter),
+    Mention.configure({
+      HTMLAttributes: {
+        class: "mention bg-blue-100 text-blue-800 px-1 rounded",
+      },
+      renderText({ node }) {
+        return `[reference_document:id:${node.attrs.id}]`;
+      },
+      suggestion: options?.mentionSuggestion,
+    }),
   ];
-
-  // Only add Mention extension if mentionSuggestion is provided
-  if (options?.mentionSuggestion) {
-    extensions.push(
-      Mention.configure({
-        HTMLAttributes: {
-          class: "mention bg-blue-100 text-blue-800 px-1 rounded",
-        },
-        renderText({ node }) {
-          return `[reference_document:id:${node.attrs.id}]`;
-        },
-        suggestion: options.mentionSuggestion,
-      })
-    );
-  }
 
   return extensions;
 }
-

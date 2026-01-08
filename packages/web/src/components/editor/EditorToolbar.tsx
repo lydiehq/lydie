@@ -79,10 +79,10 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
             />
           </Group> */}
 
-          <Separator
+          {/* <Separator
             orientation="vertical"
             className="mx-1 h-6 w-px bg-gray-200"
-          />
+          /> */}
 
           <Group aria-label="Text style" className="flex gap-1">
             <ToolbarButton

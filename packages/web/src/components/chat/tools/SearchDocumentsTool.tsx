@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { Disclosure, DisclosurePanel, Button } from "react-aria-components";
-import { Loader, FileText, ChevronRight } from "lucide-react";
+import { Loader, File } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -26,37 +24,33 @@ export interface SearchDocumentsToolProps {
   className?: string;
 }
 
-export function SearchDocumentsTool({
-  tool,
-  className = "",
-}: SearchDocumentsToolProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
+export function SearchDocumentsTool({ tool }: SearchDocumentsToolProps) {
+  const outputState = tool.output?.state;
   const isToolLoading =
-    tool.state === "call-streaming" || tool.output?.state === "searching";
-
-  const query = tool.output?.searchQuery || tool.args?.query;
+    tool.state === "call-streaming" ||
+    (outputState && outputState !== "success");
   const results = tool.output?.results || [];
-  const hasResults = results.length > 0;
 
-  // Only proceed if we have output available or are loading
-  if (tool.state !== "output-available" && !isToolLoading) {
-    return null;
+  let loadingMessage = "Searching documents...";
+  if (outputState === "searching") {
+    loadingMessage = tool.output?.message || "Searching documents...";
   }
 
   const message = isToolLoading
-    ? tool.output?.message || "Searching documents..."
-    : hasResults
-    ? `Found ${results.length} relevant document${
-        results.length === 1 ? "" : "s"
-      }`
-    : `No relevant documents found for "${query}"`;
+    ? loadingMessage
+    : `Found ${results.length} document${results.length !== 1 ? "s" : ""}`;
 
   return (
-    <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-2 ${className}`}>
+    <motion.div className="p-1 bg-gray-100 rounded-[10px] my-2">
       <div className="p-1">
         <motion.div
-          key={isToolLoading ? "loading" : hasResults ? "found" : "none"}
+          key={
+            isToolLoading
+              ? "loading"
+              : outputState === "success"
+              ? "success"
+              : "found"
+          }
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -85,81 +79,60 @@ export function SearchDocumentsTool({
             >
               <Loader className="size-4 animate-spin text-gray-400" />
             </motion.div>
-          ) : !hasResults ? (
-            <motion.div
-              key="no-results"
-              className="py-2 px-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+          ) : results.length > 0 ? (
+            <motion.ul
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.5, delay: 0.5 }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: Math.max(
+                      0.02,
+                      Math.min(0.12, 0.12 - (results.length - 1) * 0.01)
+                    ),
+                  },
+                },
+              }}
             >
-              <div className="text-gray-500 text-[13px]">
-                No documents found matching "{query}"
-              </div>
-            </motion.div>
+              {results.map((result) => (
+                <motion.div
+                  key={result.documentId}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                    },
+                  }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <Link
+                    to="/w/$organizationSlug/$id"
+                    from="/w/$organizationSlug"
+                    params={{ id: result.documentId }}
+                    className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
+                  >
+                    <File className="text-gray-500 shrink-0 size-3.5" />
+                    <span className="truncate flex-1">
+                      {result.documentTitle || "Untitled document"}
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.ul>
           ) : (
             <motion.div
-              key="results"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              key="empty"
+              className="flex items-center justify-center py-3 text-gray-500"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              <Disclosure
-                isExpanded={isExpanded}
-                onExpandedChange={setIsExpanded}
-                className="group w-full flex flex-col"
-              >
-                <Button
-                  className="group flex items-center gap-x-2 truncate relative text-gray-500 hover:text-gray-700 px-2 py-1"
-                  slot="trigger"
-                >
-                  <FileText className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
-                  <ChevronRight className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
-                  <span className="text-[13px]">
-                    {isExpanded ? "Hide" : "Show"} documents
-                  </span>
-                </Button>
-                <DisclosurePanel className="overflow-hidden pl-5">
-                  <motion.ul
-                    initial="hidden"
-                    animate="visible"
-                    transition={{ duration: 0.5 }}
-                    variants={{
-                      hidden: { opacity: 0 },
-                      visible: {
-                        opacity: 1,
-                        transition: {
-                          staggerChildren: 0.1,
-                        },
-                      },
-                    }}
-                    className="overflow-hidden flex flex-col gap-y-1 pt-2"
-                  >
-                    {results.map((result) => (
-                      <motion.li
-                        key={result.documentId}
-                        variants={{
-                          hidden: { opacity: 0, y: 10 },
-                          visible: {
-                            opacity: 1,
-                            y: 0,
-                          },
-                        }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                        className="text-gray-500 text-[13px] hover:underline hover:text-gray-900 truncate"
-                      >
-                        <Link
-                          to="/w/$organizationSlug/$id"
-                          from="/w/$organizationSlug"
-                          params={{ id: result.documentId }}
-                        >
-                          {result.documentTitle}
-                        </Link>
-                      </motion.li>
-                    ))}
-                  </motion.ul>
-                </DisclosurePanel>
-              </Disclosure>
+              <span className="text-[13px]">No documents found</span>
             </motion.div>
           )}
         </AnimatePresence>

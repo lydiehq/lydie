@@ -14,6 +14,8 @@ import {
   BlocksIcon,
   LoaderIcon,
   ChevronForwardIcon,
+  DocumentIcon,
+  DocumentsIcon,
 } from "@/icons";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar";
@@ -22,7 +24,6 @@ import { Menu, MenuItem } from "../generic/Menu";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
-import { DocumentIcon, DocumentsIcon } from "@/icons";
 
 type Props = {
   item: {

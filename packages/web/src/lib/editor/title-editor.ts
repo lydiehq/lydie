@@ -1,6 +1,6 @@
 import { useEditor, Editor } from "@tiptap/react";
 import { getTitleExtensions } from "@lydie/editor/title";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 export type TitleEditorHookResult = {
   editor: Editor | null;
@@ -22,10 +22,10 @@ export function useTitleEditor({
   editable = true,
   placeholder,
 }: UseTitleEditorOptions): TitleEditorHookResult {
-  const extensions = getTitleExtensions({
-    onEnter,
-    placeholder,
-  });
+  const extensions = useMemo(
+    () => getTitleExtensions({ onEnter, placeholder }),
+    [onEnter, placeholder]
+  );
 
   const editor = useEditor({
     autofocus: editable,

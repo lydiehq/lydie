@@ -24,12 +24,17 @@ export interface GetDocumentEditorExtensionsOptions {
 export function getDocumentEditorExtensions(
   options?: GetDocumentEditorExtensionsOptions
 ) {
-  return [
+  console.log("getting document editor extensions", options);
+  const extensions = [
     StarterKit.configure({
       heading: options?.starterKit?.heading,
       undoRedo: false,
       code: false,
       codeBlock: false,
+      link: {
+        openOnClick: false,
+        protocols: ["internal"],
+      },
     }),
     TableKit,
     CharacterCount,
@@ -39,11 +44,15 @@ export function getDocumentEditorExtensions(
     E.CodeBlock.configure(options?.codeBlock),
     E.IndentHandlerExtension,
     E.ImageUpload,
-    options?.collaboration
-      ? Collaboration.configure(options.collaboration)
-      : undefined,
-    ...(options?.collaborationCaret
-      ? [CollaborationCaret.configure(options.collaborationCaret)]
-      : []),
-  ].filter((ext): ext is NonNullable<typeof ext> => ext !== undefined);
+  ];
+
+  // Add collaboration extensions if configured
+  if (options?.collaboration) {
+    extensions.push(Collaboration.configure(options.collaboration));
+  }
+  if (options?.collaborationCaret) {
+    extensions.push(CollaborationCaret.configure(options.collaborationCaret));
+  }
+
+  return extensions;
 }

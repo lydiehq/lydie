@@ -1,6 +1,6 @@
 import { useEditor, Editor } from "@tiptap/react";
 import { getChatEditorExtensions } from "@lydie/editor/chat-editor";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 export type ChatEditorHookResult = {
   editor: Editor | null;
@@ -21,11 +21,15 @@ export function useChatEditor({
   placeholder,
   mentionSuggestion,
 }: UseChatEditorOptions): ChatEditorHookResult {
-  const extensions = getChatEditorExtensions({
-    onEnter,
-    placeholder,
-    mentionSuggestion,
-  });
+  const extensions = useMemo(
+    () =>
+      getChatEditorExtensions({
+        onEnter,
+        placeholder,
+        mentionSuggestion,
+      }),
+    [onEnter, placeholder, mentionSuggestion]
+  );
 
   const editor = useEditor({
     autofocus: false,

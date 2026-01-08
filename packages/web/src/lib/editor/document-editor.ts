@@ -90,12 +90,22 @@ export function useDocumentEditor({
     });
 
     return { ydoc: yjsState, provider: hocuspocusProvider };
-  }, [doc.id, doc.yjs_state, yjsServerUrl]);
+  }, [doc.id, doc.yjs_state]);
 
-  const editor = useEditor({
-    autofocus: !isLocked,
-    editable: !isLocked,
-    extensions: getDocumentEditorExtensions({
+  const userInfo = useMemo(() => {
+    return user
+      ? {
+          name: user.name,
+          color: getUserColor(user.id),
+        }
+      : {
+          name: "Anonymous",
+          color: "#808080",
+        };
+  }, [user?.id, user?.name]);
+
+  const extensions = useMemo(() => {
+    return getDocumentEditorExtensions({
       textSelection: {
         onSelect: onTextSelect,
       },
@@ -114,17 +124,15 @@ export function useDocumentEditor({
       },
       collaborationCaret: {
         provider,
-        user: user
-          ? {
-              name: user.name,
-              color: getUserColor(user.id),
-            }
-          : {
-              name: "Anonymous",
-              color: "#808080",
-            },
+        user: userInfo,
       },
-    }),
+    });
+  }, [ydoc, provider, userInfo, onTextSelect, onSave, onAddLink]);
+
+  const editor = useEditor({
+    autofocus: !isLocked,
+    editable: !isLocked,
+    extensions,
     editorProps: {
       attributes: {
         class: "size-full outline-none editor-content",

@@ -64,9 +64,6 @@ export function CreateDocumentTool({ tool }: Props) {
           layout
           className="text-[11px] text-gray-700 flex items-center gap-1.5"
         >
-          {/* {isInputStreaming && (
-            <Loader2 className="size-3 animate-spin text-blue-500" />
-          )} */}
           <motion.span
             key={getStatusText()}
             initial={{ opacity: 0 }}
