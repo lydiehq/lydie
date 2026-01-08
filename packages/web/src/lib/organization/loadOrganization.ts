@@ -12,7 +12,7 @@ type OrganizationQueryResult = NonNullable<
 export type Organization = {
   id: string;
   name: string;
-  slug: string | null;
+  slug: string;
   subscriptionStatus: string | null;
   subscriptionPlan: string | null;
   polarSubscriptionId: string | null;

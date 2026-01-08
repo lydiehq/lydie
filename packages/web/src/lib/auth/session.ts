@@ -12,7 +12,7 @@ type ExtendedSessionData = SessionData & {
     organizations?: Array<{
       id: string;
       name: string;
-      slug: string | null;
+      slug: string;
       [key: string]: any;
     }>;
   };
@@ -23,7 +23,7 @@ export type LoadSessionResult = {
   organizations: Array<{
     id: string;
     name: string;
-    slug: string | null;
+    slug: string;
     [key: string]: any;
   }>;
 };

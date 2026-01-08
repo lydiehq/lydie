@@ -4,7 +4,7 @@ export type Context = Session & {
   organizations?: Array<{
     id: string;
     name: string;
-    slug: string | null;
+    slug: string;
     [key: string]: any;
   }>;
 };

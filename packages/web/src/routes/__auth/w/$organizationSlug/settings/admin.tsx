@@ -45,7 +45,6 @@ function RouteComponent() {
     );
   }
 
-  // Query all documents for the organization
   const [documents] = useQuery(
     queries.documents.byUpdated({ organizationId: organization.id })
   );

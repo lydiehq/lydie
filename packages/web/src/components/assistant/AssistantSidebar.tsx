@@ -1,7 +1,7 @@
 import { Button } from "react-aria-components";
 import { SquarePen, MessageCircle } from "lucide-react";
 import { SidebarIcon } from "../layout/SidebarIcon";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import clsx from "clsx";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 import { formatDistanceToNow } from "date-fns";
