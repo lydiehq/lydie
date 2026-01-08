@@ -17,10 +17,14 @@ type Props = {
 };
 
 export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
-  const [conversations] = useQuery(queries.assistant.conversationsByUser({}));
   const { conversationId, resetConversation } = useAssistant();
   const navigate = useNavigate();
   const { organization } = useOrganization();
+  const [conversations] = useQuery(
+    queries.assistant.conversationsByUser({
+      organizationSlug: organization.slug,
+    })
+  );
 
   const handleNewConversation = useCallback(() => {
     resetConversation();

@@ -235,11 +235,21 @@ export const queries = defineQueries({
       }
     ),
     conversationsByUser: defineQuery(
-      z.object({}),
-      ({ ctx }) => {
-        isAuthenticated(ctx);
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
+        
+        // Get organization ID from context
+        const organization = ctx.organizations?.find(
+          (org) => org.slug === organizationSlug
+        );
+        if (!organization) {
+          throw new Error("Organization not found");
+        }
+
         return zql.assistant_conversations
           .where("user_id", ctx.userId)
+          .where("organization_id", organization.id)
           .related("messages", (q) => q.orderBy("created_at", "asc").limit(1))
           .orderBy("updated_at", "desc");
       }
