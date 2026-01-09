@@ -11,6 +11,7 @@ import { slugify } from "@lydie/core/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { revalidateSession } from "@/lib/auth/session";
 import { mutators } from "@lydie/zero/mutators";
+import { clearZeroInstance } from "@/lib/zero/instance";
 
 export const Route = createFileRoute("/__auth/onboarding/")({
   component: RouteComponent,
@@ -44,6 +45,7 @@ function RouteComponent() {
         await write.server;
 
         await revalidateSession(queryClient);
+        clearZeroInstance();
         await router.invalidate();
 
         navigate({

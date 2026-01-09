@@ -10,7 +10,6 @@ import { useRef, useState } from "react";
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
 import { useOrganization } from "@/context/organization.context";
 import { setActiveOrganizationSlug } from "@/lib/active-organization";
-import { LayoutGroup } from "motion/react";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
