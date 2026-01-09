@@ -34,7 +34,7 @@ export function DocumentMenu({
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(documentName);
   const z = useZero();
-  const { deleteDocument, createDocument } = useDocumentActions();
+  const { deleteDocument, createDocument, publishDocument } = useDocumentActions();
   const { id: currentDocId } = useParams({ strict: false });
   const { organization } = useOrganization();
 
@@ -70,12 +70,22 @@ export function DocumentMenu({
   };
 
   const handleDelete = () => {
+    // If document is part of an integration, let deleteDocument handle the confirmation
+    // with strict warning ensuring user knows about external side effects.
+    if (document?.integration_link_id) {
+      deleteDocument(
+        documentId,
+        currentDocId === documentId,
+        document.integration_link_id
+      );
+      return;
+    }
+
     const itemName = documentName;
 
     confirmDialog({
-      title: `Delete "${
-        itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName
-      }"`,
+      title: `Delete "${itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName
+        }"`,
       message: `This action cannot be undone. This document will be permanently deleted.`,
       onConfirm: () => {
         deleteDocument(documentId, currentDocId === documentId);
@@ -91,6 +101,11 @@ export function DocumentMenu({
         <MenuItem onAction={() => createDocument(documentId)}>
           Add sub document
         </MenuItem>
+        {document?.integration_link_id && !document?.published && (
+          <MenuItem onAction={() => publishDocument(documentId)}>
+            Publish
+          </MenuItem>
+        )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
       </Menu>
 
@@ -180,11 +195,10 @@ export function DocumentMenu({
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${
-                        document.published
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${document.published
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-700"
+                        }`}
                     >
                       {document.published ? "Published" : "Draft"}
                     </span>
@@ -199,11 +213,10 @@ export function DocumentMenu({
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${
-                        document.index_status === "indexed"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${document.index_status === "indexed"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-yellow-100 text-yellow-700"
+                        }`}
                     >
                       {document.index_status === "indexed"
                         ? "Indexed"

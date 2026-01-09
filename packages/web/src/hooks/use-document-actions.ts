@@ -12,7 +12,7 @@ export function useDocumentActions() {
   const { navigate: routerNavigate } = useRouter();
   const { organization } = useOrganization();
 
-  const createDocument = async (parentId?: string) => {
+  const createDocument = async (parentId?: string, integrationLinkId?: string) => {
     if (!organization) {
       toast.error("Something went wrong, please try again or contact support.");
       return;
@@ -24,6 +24,7 @@ export function useDocumentActions() {
         id,
         organizationId: organization.id,
         parentId,
+        integrationLinkId,
       })
     );
 
@@ -36,23 +37,43 @@ export function useDocumentActions() {
     return id;
   };
 
-  const deleteDocument = (documentId: string, redirectAfterDelete = false) => {
-    try {
-      z.mutate(
-        mutators.document.delete({
-          documentId,
-          organizationId: organization.id,
-        })
-      );
-      toast.success("Document deleted");
+  const deleteDocument = (
+    documentId: string,
+    redirectAfterDelete = false,
+    integrationLinkId?: string | null
+  ) => {
+    const performDelete = () => {
+      try {
+        z.mutate(
+          mutators.document.delete({
+            documentId,
+            organizationId: organization.id,
+          })
+        );
+        toast.success("Document deleted");
 
-      if (redirectAfterDelete) {
-        routerNavigate({
-          to: "..",
-        });
+        if (redirectAfterDelete) {
+          routerNavigate({
+            to: "..",
+          });
+        }
+      } catch (error) {
+        toast.error("Failed to delete document");
       }
-    } catch (error) {
-      toast.error("Failed to delete document");
+    };
+
+    if (integrationLinkId) {
+      const { confirmDialog } = require("@/stores/confirm-dialog");
+      confirmDialog({
+        title: "Delete from Integration?",
+        message:
+          "This document is part of an integration. Deleting it will also delete the corresponding file in the external provider (e.g. GitHub). This action cannot be undone.",
+        confirmLabel: "Delete & Remove",
+        destuctive: true,
+        onConfirm: performDelete,
+      });
+    } else {
+      performDelete();
     }
   };
 

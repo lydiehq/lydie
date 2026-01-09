@@ -46,13 +46,16 @@ export const mutators = defineMutators({
         organizationId: z.string(),
         title: z.string().optional(),
         parentId: z.string().optional(),
+        integrationLinkId: z.string().optional(),
       }),
       async ({
         tx,
         ctx,
-        args: { id, organizationId, title = "", parentId },
+        args: { id, organizationId, title = "", parentId, integrationLinkId },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
+
+        let finalIntegrationLinkId = integrationLinkId;
 
         // If creating as a child page, verify parent document belongs to same organization
         if (parentId) {
@@ -66,6 +69,11 @@ export const mutators = defineMutators({
 
           if (!parent) {
             throw new Error(`Parent document not found: ${parentId}`);
+          }
+
+          // Inherit integration link from parent
+          if (parent.integration_link_id) {
+            finalIntegrationLinkId = parent.integration_link_id;
           }
         }
 
@@ -94,6 +102,7 @@ export const mutators = defineMutators({
           user_id: ctx.userId,
           organization_id: organizationId,
           index_status: "pending",
+          integration_link_id: finalIntegrationLinkId || null,
           is_locked: false,
           published: false,
           parent_id: parentId || null,
@@ -302,6 +311,55 @@ export const mutators = defineMutators({
             })
           )
         );
+      }
+    ),
+    move: defineMutator(
+      z.object({
+        documentId: z.string(),
+        targetParentId: z.string().optional().nullable(),
+        targetIntegrationLinkId: z.string().optional().nullable(),
+        organizationId: z.string(),
+      }),
+      async ({
+        tx,
+        ctx,
+        args: { documentId, targetParentId, targetIntegrationLinkId, organizationId },
+      }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        const updates: any = {
+          id: documentId,
+          updated_at: Date.now(),
+        };
+
+        let parentIdQuery = targetParentId || null;
+        let integrationLinkIdQuery = targetIntegrationLinkId || null;
+
+        const siblings = await tx.run(
+          zql.documents
+            .where("organization_id", organizationId)
+            .where("parent_id", parentIdQuery ? "=" : "IS", parentIdQuery)
+            .where("integration_link_id", integrationLinkIdQuery ? "=" : "IS", integrationLinkIdQuery)
+            .where("deleted_at", "IS", null)
+        );
+
+        const maxSortOrder = siblings.reduce(
+          (max, doc) => Math.max(max, doc.sort_order ?? 0),
+          0
+        );
+        updates.sort_order = maxSortOrder + 1;
+
+        if (targetParentId !== undefined) updates.parent_id = targetParentId;
+        if (targetIntegrationLinkId !== undefined) updates.integration_link_id = targetIntegrationLinkId;
+
+        // Ensure we clear integration link if we are moving out (targetParentId set but targetIntegrationLinkId not)
+        // This logic is a bit implicit in client mutator, but server mutator handles it strictly.
+        // For client optimistic update: if targetParentId is set and targetIntegrationLinkId is NOT set, 
+        // we might want to assume it's moving out? 
+        // Or we rely on the caller passing null for targetIntegrationLinkId explicitly if clearing.
+        // My use-document-drag-drop implementation will need to be explicit.
+
+        await tx.mutate.documents.update(updates);
       }
     ),
     delete: defineMutator(
