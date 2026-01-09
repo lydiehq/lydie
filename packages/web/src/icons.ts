@@ -27,7 +27,7 @@ export { default as Trash2Icon } from "~icons/ion/trash";
 export { default as DownloadIcon } from "~icons/ion/download";
 export { default as UploadIcon } from "~icons/ion/cloud-upload";
 export { default as MoveIcon } from "~icons/ion/move";
-export { default as CreateIcon } from "~icons/ion/create";
+export { default as CreateIcon } from "~icons/ion/create-outline";
 export { default as CreateOutlineIcon } from "~icons/ion/create-outline";
 export { default as EditIcon } from "~icons/ion/create";
 
@@ -100,3 +100,6 @@ export { default as RowsIcon } from "~icons/ion/grid"; // Closest match
 
 // Arrows
 export { default as ChevronForwardIcon } from "~icons/ion/chevron-forward";
+
+export { default as ArrowDownBIcon } from "~icons/ion/arrow-down-b";
+export { default as ArrowRightBIcon } from "~icons/ion/arrow-right-b";

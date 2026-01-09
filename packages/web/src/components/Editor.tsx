@@ -61,19 +61,6 @@ function EditorContainer({ doc }: Props) {
     setTitle(finalTitle);
   };
 
-  const handleManualSave = () => {
-    // Manual save now only updates the title and marks index as outdated
-    // Content is auto-synced by Yjs
-    z.mutate(
-      mutators.document.update({
-        documentId: doc.id,
-        title: title || "",
-        indexStatus: "outdated",
-        organizationId: doc.organization_id,
-      })
-    );
-  };
-
   const handleOpenLinkDialog = useCallback(() => {
     if (openLinkDialogRef.current) {
       openLinkDialogRef.current();
@@ -93,7 +80,6 @@ function EditorContainer({ doc }: Props) {
 
   const contentEditor = useDocumentEditor({
     doc,
-    onSave: handleManualSave,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
   });
@@ -153,7 +139,6 @@ function EditorContainer({ doc }: Props) {
           >
             <EditorToolbar
               editor={contentEditor.editor}
-              saveDocument={handleManualSave}
               doc={doc}
               onAddLink={handleOpenLinkDialog}
             />
@@ -172,16 +157,12 @@ function EditorContainer({ doc }: Props) {
                   aria-label="Document title"
                   className="mb-6"
                 />
-                <div className="flex flex-col gap-y-4 mb-6">
-                  <DocumentMetadataTabs
-                    documentId={doc.id}
-                    organizationId={doc.organization_id}
-                    initialFields={
-                      (doc.custom_fields as Record<string, string | number>) ||
-                      {}
-                    }
-                  />
-                </div>
+                <DocumentMetadataTabs
+                  doc={doc}
+                  initialFields={
+                    (doc.custom_fields as Record<string, string | number>) || {}
+                  }
+                />
                 <LinkPopover
                   editor={contentEditor.editor}
                   onOpenLinkDialog={registerLinkDialogCallback}

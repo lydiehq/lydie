@@ -57,7 +57,6 @@ const yjsServerUrl =
 export function useDocumentEditor({
   doc,
   onUpdate,
-  onSave,
   onTextSelect,
   onAddLink,
 }: UseDocumentEditorProps): DocumentEditorHookResult {
@@ -94,14 +93,8 @@ export function useDocumentEditor({
 
   const userInfo = useMemo(() => {
     return user
-      ? {
-          name: user.name,
-          color: getUserColor(user.id),
-        }
-      : {
-          name: "Anonymous",
-          color: "#808080",
-        };
+      ? { name: user.name, color: getUserColor(user.id) }
+      : { name: "Anonymous", color: "#808080" };
   }, [user?.id, user?.name]);
 
   const extensions = useMemo(() => {
@@ -109,25 +102,17 @@ export function useDocumentEditor({
       textSelection: {
         onSelect: onTextSelect,
       },
-      keyboardShortcuts: {
-        onSave,
-        onAddLink,
-      },
+      keyboardShortcuts: { onAddLink },
       documentComponent: {
         addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
       },
       codeBlock: {
         addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
       },
-      collaboration: {
-        document: ydoc,
-      },
-      collaborationCaret: {
-        provider,
-        user: userInfo,
-      },
+      collaboration: { document: ydoc },
+      collaborationCaret: { provider, user: userInfo },
     });
-  }, [ydoc, provider, userInfo, onTextSelect, onSave, onAddLink]);
+  }, [ydoc, provider, userInfo, onTextSelect, onAddLink]);
 
   const editor = useEditor({
     autofocus: !isLocked,

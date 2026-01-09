@@ -13,7 +13,7 @@ import {
   MoveIcon,
   BlocksIcon,
   LoaderIcon,
-  ChevronForwardIcon,
+  ArrowRightBIcon,
   DocumentIcon,
   DocumentsIcon,
 } from "@/icons";
@@ -221,7 +221,7 @@ function IntegrationGroupChevron({
             alt={`${name} icon`}
             className="size-3.5 rounded-[2px] group-hover/chevron:hidden"
           />
-          <ChevronForwardIcon
+          <ArrowRightBIcon
             className={sidebarItemIconStyles({
               className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
                 isExpanded ? "rotate-90" : ""
@@ -236,7 +236,7 @@ function IntegrationGroupChevron({
               className: "size-3.5 group-hover/chevron:hidden",
             })}
           />
-          <ChevronForwardIcon
+          <ArrowRightBIcon
             className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
               isExpanded ? "rotate-90" : ""
             }`}
@@ -278,7 +278,7 @@ function IntegrationLinkChevron({
               className: "size-3.5 group-hover/chevron:hidden",
             })}
           />
-          <ChevronForwardIcon
+          <ArrowRightBIcon
             className={sidebarItemIconStyles({
               className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
                 isExpanded ? "rotate-90" : ""
@@ -328,9 +328,9 @@ function DocumentTreeItemIcon({
             "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
         })}
       />
-      <ChevronForwardIcon
+      <ArrowRightBIcon
         className={sidebarItemIconStyles({
-          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/60 transition-[opacity_100ms,transform_200ms] ${
+          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
             isExpanded ? "rotate-90" : ""
           }`,
         })}

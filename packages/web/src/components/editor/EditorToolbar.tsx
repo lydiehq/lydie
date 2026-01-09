@@ -36,17 +36,18 @@ import { ToolbarButton } from "./toolbar/ToolbarButton";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { MoreVerticalIcon } from "@/icons";
+import { Button } from "../generic/Button";
 
 type Props = {
   editor: Editor;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
-  saveDocument: () => void;
   onAddLink?: () => void;
 };
 
-export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
+export function EditorToolbar({ editor, doc, onAddLink }: Props) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { deleteDocument } = useDocumentActions();
+  const { deleteDocument, publishDocument, updateDocument } =
+    useDocumentActions();
   const { uploadImage } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,6 +56,14 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
     typeof navigator !== "undefined" &&
     navigator.platform.toUpperCase().indexOf("MAC") >= 0;
   const mod = isMac ? "⌘" : "Ctrl";
+
+  const handlePublish = async () => {
+    publishDocument(doc.id);
+  };
+
+  const handleUnpublish = async () => {
+    updateDocument(doc.id, { published: false });
+  };
 
   return (
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
@@ -395,25 +404,14 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
       </Toolbar>
 
       <div className="flex gap-x-1 items-center">
-        {/* <div className="flex items-center gap-2 text-sm text-gray-600 mr-2">
-          {doc.published ? (
-            <div className="flex items-center gap-1">
-              <Eye className="size-4 text-green-600" />
-              <span>Published</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1">
-              <EyeOff className="size-4 text-gray-400" />
-              <span>Draft</span>
-            </div>
-          )}
-        </div> */}
         <MenuTrigger>
-          <RACButton aria-label="Document Options">
-            <MoreVerticalIcon className="size-4" />
+          <RACButton
+            aria-label="Document Options"
+            className="p-1.5 rounded hover:bg-gray-100"
+          >
+            <MoreVerticalIcon className="size-3.5 text-gray-600" />
           </RACButton>
           <Menu>
-            <MenuItem onAction={saveDocument}>Save</MenuItem>
             <MenuItem onAction={() => setIsSettingsOpen(true)}>
               Settings
             </MenuItem>
@@ -422,6 +420,14 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
             </MenuItem>
           </Menu>
         </MenuTrigger>
+        <Button
+          onPress={doc.published ? handleUnpublish : handlePublish}
+          intent="secondary"
+          size="sm"
+        >
+          {doc.published ? "Unpublish" : "Publish"}
+        </Button>
+
         <DocumentSettingsDialog
           isOpen={isSettingsOpen}
           onOpenChange={setIsSettingsOpen}

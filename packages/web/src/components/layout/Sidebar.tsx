@@ -230,7 +230,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
                   onPress={() => createDocument()}
                   aria-label="Create new document"
                 >
-                  <CreateIcon className="size-4 text-gray-400" />
+                  <CreateIcon className="size-4 text-gray-400 stroke-2" />
                 </RACButton>
                 <Tooltip>Add document</Tooltip>
               </TooltipTrigger>
