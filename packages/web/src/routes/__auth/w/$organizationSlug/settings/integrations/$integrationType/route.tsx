@@ -31,7 +31,7 @@ export const Route = createFileRoute(
 
     zero.run(
       queries.integrations.byIntegrationType({
-        integrationType,
+        integrationType: params.integrationType,
         organizationId: organization.id,
       })
     );

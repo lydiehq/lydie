@@ -225,7 +225,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
       />
       <div className="p-3 relative">
         <div className="top-0 absolute inset-x-0 h-6 bg-linear-to-t from-gray-50 via-gray-50" />
-        <div className="rounded-lg bg-white ring-1 ring-black/10 p-2 flex flex-col gap-y-2 z-10 relative">
+        <div className="rounded-lg bg-white p-2 flex flex-col gap-y-2 z-10 relative shadow-surface">
           <AnimatePresence mode="sync">
             {alert && (
               <motion.div

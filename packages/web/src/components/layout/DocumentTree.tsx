@@ -155,22 +155,22 @@ export function DocumentTree() {
   const documents = orgData?.documents || [];
 
   // Expand all parent documents when a document is opened
-  useEffect(() => {
-    if (currentDocumentId && initialized && documents.length > 0) {
-      const parentDocumentIds = findParentDocumentIds(
-        currentDocumentId,
-        documents
-      );
+  // useEffect(() => {
+  //   if (currentDocumentId && initialized && documents.length > 0) {
+  //     const parentDocumentIds = findParentDocumentIds(
+  //       currentDocumentId,
+  //       documents
+  //     );
 
-      if (parentDocumentIds.length > 0) {
-        // Merge with existing expanded keys, avoiding duplicates
-        setExpandedKeysArray((prev) => {
-          const newKeys = new Set([...prev, ...parentDocumentIds]);
-          return Array.from(newKeys);
-        });
-      }
-    }
-  }, [currentDocumentId, initialized, documents, setExpandedKeysArray]);
+  //     if (parentDocumentIds.length > 0) {
+  //       // Merge with existing expanded keys, avoiding duplicates
+  //       setExpandedKeysArray((prev) => {
+  //         const newKeys = new Set([...prev, ...parentDocumentIds]);
+  //         return Array.from(newKeys);
+  //       });
+  //     }
+  //   }
+  // }, [currentDocumentId, initialized, documents, setExpandedKeysArray]);
 
   // Build tree items for documents (pages-in-pages structure)
   // parentId can be null (root level) or a document ID

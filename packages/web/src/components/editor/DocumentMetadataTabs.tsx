@@ -6,8 +6,7 @@ import {
   TabPanel,
   Button,
 } from "react-aria-components";
-import { useState, useRef } from "react";
-import { motion } from "motion/react";
+import { useState } from "react";
 import { CustomFieldsEditor } from "./CustomFieldsEditor";
 import { ArrowDownBIcon } from "@/icons";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -16,9 +15,6 @@ import { Button as GenericButton } from "@/components/generic/Button";
 import { Link } from "../generic/Link";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
-
-const MotionTabPanels = motion.create(TabPanels);
-const MotionTabPanel = motion.create(TabPanel);
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
@@ -121,29 +117,31 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
           </Tab>
         </TabList>
         <Button onPress={() => setIsCollapsed(!isCollapsed)}>
-          <motion.div
-            animate={{ rotate: isCollapsed ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
+          <div
+            style={{
+              transform: isCollapsed ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s",
+            }}
           >
             <ArrowDownBIcon className="size-3.5 text-black/34 hover:text-black/44" />
-          </motion.div>
+          </div>
         </Button>
       </div>
 
-      <motion.div>
-        <MotionTabPanels>
-          <MotionTabPanel id="fields" className="p-0 pt-2 outline-none">
+      <div>
+        <TabPanels>
+          <TabPanel id="fields" className="p-0 pt-2 outline-none">
             <CustomFieldsEditor
               documentId={doc.id}
               organizationId={doc.organization_id}
               initialFields={initialFields}
             />
-          </MotionTabPanel>
-          <MotionTabPanel id="subdocuments" className="p-0 pt-2 outline-none">
+          </TabPanel>
+          <TabPanel id="subdocuments" className="p-0 pt-2 outline-none">
             <SubDocuments doc={doc} />
-          </MotionTabPanel>
-        </MotionTabPanels>
-      </motion.div>
+          </TabPanel>
+        </TabPanels>
+      </div>
     </Tabs>
   );
 }

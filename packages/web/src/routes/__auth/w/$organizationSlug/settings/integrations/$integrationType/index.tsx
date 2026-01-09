@@ -2,7 +2,6 @@ import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkLi
 import { createFileRoute } from "@tanstack/react-router";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { Heading } from "@/components/generic/Heading";
 import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useOrganization } from "@/context/organization.context";
 
