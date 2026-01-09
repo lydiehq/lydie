@@ -12,12 +12,10 @@ export function useDocumentActions() {
   const { navigate: routerNavigate } = useRouter();
   const { organization } = useOrganization();
 
-  const createDocument = async (parentId?: string, integrationLinkId?: string) => {
-    if (!organization) {
-      toast.error("Something went wrong, please try again or contact support.");
-      return;
-    }
-
+  const createDocument = async (
+    parentId?: string,
+    integrationLinkId?: string
+  ) => {
     const id = createId();
     z.mutate(
       mutators.document.create({
@@ -28,13 +26,11 @@ export function useDocumentActions() {
       })
     );
 
-    await navigate({
+    navigate({
       from: "/w/$organizationSlug",
       to: "/w/$organizationSlug/$id",
       params: { id, organizationSlug: organization.slug || "" },
     });
-
-    return id;
   };
 
   const deleteDocument = (

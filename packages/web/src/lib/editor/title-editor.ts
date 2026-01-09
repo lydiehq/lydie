@@ -57,7 +57,7 @@ export function useTitleEditor({
     },
     editorProps: {
       attributes: {
-        class: "focus:outline-none editor-content",
+        class: "focus:outline-none text-3xl font-medium text-gray-950",
       },
     },
   });

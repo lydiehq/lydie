@@ -13,27 +13,25 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
     const { zero, organization } = context;
     const { id } = params;
 
-    const doc = await zero.run(
+    const doc = zero.run(
       queries.documents.byId({
         organizationId: organization.id,
         documentId: id,
-      }),
-      { type: "complete" }
+      })
     );
 
     return { doc };
   },
-  head: ({ loaderData }) => {
-    const doc = loaderData?.doc;
-    if (!doc) {
-      return {
-        meta: [{ title: "Lydie" }],
-      };
-    }
-    return {
-      meta: [{ title: `${doc.title} | Lydie` }],
-    };
-  },
+  // head: async ({ loaderData }) => {
+  //   const doc = await loaderData?.doc;
+  //   return {
+  //     meta: [
+  //       {
+  //         title: doc ? `${doc.title} | Lydie` : "Lydie",
+  //       },
+  //     ],
+  //   };
+  // },
 });
 
 function RouteComponent() {

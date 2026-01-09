@@ -74,15 +74,6 @@
   }
 
   h1 {
-    font-size: var(--text-3xl);
-    line-height: 1;
-    font-weight: var(--font-weight-medium);
-    margin-top: calc(var(--spacing) * 4);
-    font-family: var(--font-heading);
-    color: #0d0d0d;
-  }
-
-  h2 {
     font-size: var(--text-2xl);
     line-height: 1;
     font-weight: var(--font-weight-medium);
@@ -91,8 +82,17 @@
     color: #0d0d0d;
   }
 
-  h3 {
+  h2 {
     font-size: var(--text-xl);
+    line-height: 1;
+    font-weight: var(--font-weight-medium);
+    margin-top: calc(var(--spacing) * 4);
+    font-family: var(--font-heading);
+    color: #0d0d0d;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
     line-height: 1;
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
@@ -101,7 +101,7 @@
   }
 
   h4 {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     line-height: 1;
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
@@ -412,15 +412,6 @@
   }
 
   h1 {
-    font-size: var(--text-xl);
-    line-height: 1;
-    font-weight: var(--font-weight-medium);
-    margin-top: calc(var(--spacing) * 3);
-    font-family: var(--font-heading);
-    color: #0d0d0d;
-  }
-
-  h2 {
     font-size: var(--text-lg);
     line-height: 1;
     font-weight: var(--font-weight-medium);
@@ -429,8 +420,17 @@
     color: #0d0d0d;
   }
 
-  h3 {
+  h2 {
     font-size: var(--text-base);
+    line-height: 1;
+    font-weight: var(--font-weight-medium);
+    margin-top: calc(var(--spacing) * 3);
+    font-family: var(--font-heading);
+    color: #0d0d0d;
+  }
+
+  h3 {
+    font-size: var(--text-sm);
     line-height: 1;
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
@@ -439,7 +439,7 @@
   }
 
   h4 {
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     line-height: 1;
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
