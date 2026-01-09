@@ -5,8 +5,6 @@ import { toast } from "sonner";
 import { mutators } from "@lydie/zero/mutators";
 import { confirmDialog } from "@/stores/confirm-dialog";
 
-const enableLogging = false;
-
 interface ItemType {
   id: string;
   name: string;
@@ -134,7 +132,6 @@ export function useDocumentDragDrop({
         title: "Move and Push to Integration?",
         message:
           "Moving this published document to an integration will immediately push it to the external provider (e.g. GitHub). This action cannot be undone.",
-        confirmLabel: "Move & Push",
         onConfirm: performMove,
       });
       return true;
@@ -159,7 +156,6 @@ export function useDocumentDragDrop({
         title: "Remove from Integration?",
         message:
           "Removing this document from the integration will delete it from the external provider (e.g. GitHub). It will remain in your Lydie workspace.",
-        confirmLabel: "Remove & Delete",
         onConfirm: performMove,
       });
       return true;

@@ -26,8 +26,38 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   ssr: false,
   head: () => {
     const zeroCacheURL = import.meta.env.VITE_ZERO_URL;
+    const siteURL = typeof window !== "undefined" ? window.location.origin : "";
     return {
-      meta: [{ title: "Lydie" }],
+      meta: [
+        { title: "Lydie" },
+        {
+          name: "description",
+          content:
+            "A minimal, powerful writing environment supercharged with AI.",
+        },
+        { property: "og:type", content: "website" },
+        { property: "og:title", content: "Lydie" },
+        {
+          property: "og:description",
+          content:
+            "A minimal, powerful writing environment supercharged with AI.",
+        },
+        {
+          property: "og:image",
+          content: siteURL ? `${siteURL}/og-image.png` : "/og-image.png",
+        },
+        { property: "twitter:card", content: "summary_large_image" },
+        { property: "twitter:title", content: "Lydie" },
+        {
+          property: "twitter:description",
+          content:
+            "A minimal, powerful writing environment supercharged with AI.",
+        },
+        {
+          property: "twitter:image",
+          content: siteURL ? `${siteURL}/og-image.png` : "/og-image.png",
+        },
+      ],
       links: zeroCacheURL
         ? [
             {
