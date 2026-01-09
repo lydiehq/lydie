@@ -24,7 +24,6 @@ export interface GetDocumentEditorExtensionsOptions {
 export function getDocumentEditorExtensions(
   options?: GetDocumentEditorExtensionsOptions
 ) {
-  console.log("getting document editor extensions", options);
   const extensions = [
     StarterKit.configure({
       heading: options?.starterKit?.heading,

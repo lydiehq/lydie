@@ -44,8 +44,9 @@ export async function searchDocumentsByTitle(
     const queryEmbedding = await generateEmbedding(query);
 
     // Calculate cosine similarity for titles
-    const similarity = sql<number>`1 - (${documentTitleEmbeddingsTable.embedding
-      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${
+      documentTitleEmbeddingsTable.embedding
+    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
@@ -64,6 +65,7 @@ export async function searchDocumentsByTitle(
       .where(
         and(
           eq(documentsTable.organizationId, organizationId),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // More lenient similarity threshold for titles
           sql`(${documentTitleEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding
@@ -169,8 +171,9 @@ export async function searchDocumentsInSpecificDocument(
   try {
     const queryEmbedding = await generateEmbedding(query);
 
-    const similarity = sql<number>`1 - (${documentEmbeddingsTable.embedding
-      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${
+      documentEmbeddingsTable.embedding
+    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
@@ -229,8 +232,9 @@ export async function findRelatedDocuments(
     const queryEmbedding = titleEmbedding[0].embedding;
 
     // Find similar documents by title, excluding the current document
-    const similarity = sql<number>`1 - (${documentTitleEmbeddingsTable.embedding
-      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${
+      documentTitleEmbeddingsTable.embedding
+    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
@@ -250,6 +254,7 @@ export async function findRelatedDocuments(
         and(
           eq(documentsTable.organizationId, organizationId),
           eq(documentsTable.published, true),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // Exclude the current document
           sql`${documentsTable.id} != ${documentId}`,
           // Reasonable similarity threshold
@@ -295,8 +300,9 @@ export async function findRelatedDocumentsByContent(
     const queryEmbedding = contentEmbedding[0].embedding;
 
     // Find documents with similar content, grouped by document
-    const similarity = sql<number>`1 - (${documentEmbeddingsTable.embedding
-      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${
+      documentEmbeddingsTable.embedding
+    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     const results = await db
       .select({
@@ -316,6 +322,7 @@ export async function findRelatedDocumentsByContent(
         and(
           eq(documentsTable.organizationId, organizationId),
           eq(documentsTable.published, true),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // Exclude the current document
           sql`${documentsTable.id} != ${documentId}`,
           // Reasonable similarity threshold
@@ -353,8 +360,9 @@ export async function searchDocuments(
     const queryEmbedding = await generateEmbedding(query);
 
     // Calculate cosine similarity - using the vector <=> operator for cosine distance
-    const similarity = sql<number>`1 - (${documentEmbeddingsTable.embedding
-      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+    const similarity = sql<number>`1 - (${
+      documentEmbeddingsTable.embedding
+    } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
     // Get more chunks than documents needed so we can group properly
     const chunkResults = await db
@@ -374,6 +382,7 @@ export async function searchDocuments(
       .where(
         and(
           eq(documentsTable.organizationId, organizationId),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // Only return results with reasonable similarity
           sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding

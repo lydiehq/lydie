@@ -10,12 +10,11 @@ export const replaceInDocument = () =>
 
 **CRITICAL: Changes require user approval. When you use this tool, the changes are NOT immediately applied to the document. They are presented to the user for review, and the user must manually accept them before they appear in the document. Never claim the content has been "added" or "placed" in the document—it's only prepared for review.**
 
-**IMPORTANT: Use readCurrentDocument tool FIRST before making replacements (unless using overwrite mode).**
-
 **CRITICAL: The \`replace\` parameter must be HTML, not Markdown. Use HTML tags like <p>, <h2>, etc.**
 
-**Overwrite Mode:**
-- Use \`overwrite: true\` to replace entire document (more efficient). \`search\` ignored. Use when user wants overwrite or document empty.
+**Mode Selection (choose autonomously):**
+- **Overwrite mode** (\`overwrite: true\`): Replace entire document. Use for empty documents (wordCount = 0) or when task requires rewriting entire document. Most efficient.
+- **Targeted replace** (\`overwrite: false\`): Find specific content and replace it. Use for modifications to existing content.
 
 **Search Text Rules (when overwrite is false):**
 - Empty document (wordCount = 0): search ""
@@ -30,11 +29,6 @@ export const replaceInDocument = () =>
 - Replace it with itself + new content
 - ✓ Efficient: search "last sentence.</p>", replace "last sentence.</p><p>New content.</p>"
 - ✗ Inefficient: search "entire 100+ word paragraph...</p>"
-
-**Sequential Additions Example (only for empty documents):**
-1. search "", replace "<h2>Intro</h2><p>First para.</p>"
-2. search "First para.</p>", replace "First para.</p><p>Second para.</p>"
-3. search "Second para.</p>", replace "Second para.</p><h2>End</h2>"
 
 **Internal Links:**
 Format: <a href="internal://DOCUMENT_ID">Link Text</a>
@@ -59,7 +53,7 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
       overwrite: z
         .boolean()
         .describe(
-          "If true, replace the entire document content with the replace text. The search parameter is ignored. Use this when user wants to overwrite the document or when document is empty."
+          "If true, replace the entire document content with the replace text. The search parameter is ignored. Use for empty documents or when rewriting entire document. Decide autonomously based on task."
         )
         .optional()
         .default(false),

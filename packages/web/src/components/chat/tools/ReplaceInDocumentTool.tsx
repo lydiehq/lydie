@@ -162,10 +162,7 @@ export function ReplaceInDocumentTool({
       className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}
     >
       <div className="p-1">
-        <motion.div
-          layout
-          className="text-[11px] text-gray-700 flex items-center gap-1.5"
-        >
+        <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
           {isStreaming && (
             <Loader2 className="size-3 animate-spin text-blue-500" />
           )}

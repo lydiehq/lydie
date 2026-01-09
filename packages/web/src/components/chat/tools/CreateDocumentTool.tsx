@@ -60,10 +60,7 @@ export function CreateDocumentTool({ tool }: Props) {
   return (
     <motion.div className="p-1 bg-gray-100 rounded-[10px] my-4 relative">
       <div className="p-1">
-        <motion.div
-          layout
-          className="text-[11px] text-gray-700 flex items-center gap-1.5"
-        >
+        <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
           <motion.span
             key={getStatusText()}
             initial={{ opacity: 0 }}

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { documentChatModel, google, openAi } from "@lydie/core/ai/llm";
+import { chatModel } from "@lydie/core/ai/llm";
 import {
   validateUIMessages,
   createAgentUIStreamResponse,
@@ -216,8 +216,12 @@ export const DocumentChatRoute = new Hono<{
     const systemPrompt = buildSystemPrompt(promptStyle, customPrompt);
 
     const agent = new ToolLoopAgent({
-      // model: google("gemini-3-flash-preview"),
-      model: openAi("gpt-5-mini"),
+      model: chatModel,
+      providerOptions: {
+        openai: {
+          reasoningEffort: "medium",
+        },
+      },
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
@@ -289,7 +293,7 @@ export const DocumentChatRoute = new Hono<{
             messageId: savedMessage.id,
             organizationId: currentDocument.organizationId,
             source: "document",
-            model: documentChatModel.modelId || "gemini-2.5-flash",
+            model: chatModel.modelId,
             promptTokens,
             completionTokens,
             totalTokens,

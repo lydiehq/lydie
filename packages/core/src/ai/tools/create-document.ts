@@ -14,17 +14,17 @@ export const createDocument = (userId: string, organizationId: string) =>
     description: `Create a new document in the knowledge base.
 Use this tool when the user wants to create a new document.
 You can create a hierarchy of documents by specifying a parentId.
-You can also optionally provide initial content in HTML format.
 
-Examples: "Create a new document about X", "Write a summary of these documents in a new file"`,
+IMPORTANT:
+- If the user asks for content (like an outline, summary, or article), you MUST provide it in the content parameter when creating the document. You cannot add content to a document after creation with this tool.
+- Don't relay or explain what you've suggested, the tool call already shows the changes
+`,
     inputSchema: z.object({
       title: z.string().describe("The title of the new document"),
       content: z
         .string()
         .optional()
-        .describe(
-          "The initial content of the document in HTML format. Use HTML tags like <p>, <h2>, <ul>, etc."
-        ),
+        .describe("The initial content of the document in HTML format."),
       parentId: z
         .string()
         .optional()

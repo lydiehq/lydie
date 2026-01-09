@@ -76,20 +76,7 @@ function RouteComponent() {
         </Panel>
         <PanelResizer />
         <Panel>
-          <div className="flex flex-col">
-            {/* <div className="flex">
-              {["Tab 1", "Tab 2", "Tab 3"].map((tab) => (
-                <div
-                  key={tab}
-                  className="flex items-center justify-between p-2"
-                >
-                  <span className="font-medium text-gray-900">{tab}</span>
-                </div>
-              ))}
-            </div> */}
-
-            <Outlet />
-          </div>
+          <Outlet />
         </Panel>
       </PanelGroup>
     </div>

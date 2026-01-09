@@ -1,12 +1,11 @@
 import { Hono } from "hono";
-import { google, openAi } from "@lydie/core/ai/llm";
+import { chatModel } from "@lydie/core/ai/llm";
 import {
   validateUIMessages,
   createAgentUIStreamResponse,
   ToolLoopAgent,
   smoothStream,
   stepCountIs,
-  tool,
 } from "ai";
 import {
   db,
@@ -143,7 +142,10 @@ export const AssistantRoute = new Hono<{
     const startTime = Date.now();
 
     const agent = new ToolLoopAgent({
-      model: openAi("gpt-5-mini"),
+      providerOptions: {
+        openai: { reasoningEffort: "low" },
+      },
+      model: chatModel,
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
@@ -215,6 +217,7 @@ export const AssistantRoute = new Hono<{
     if (e instanceof VisibleError) {
       throw e;
     }
+
     throw new VisibleError(
       "chat_processing_error",
       "An error occurred while processing your request"

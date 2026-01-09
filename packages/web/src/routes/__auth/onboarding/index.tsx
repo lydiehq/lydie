@@ -24,17 +24,18 @@ function RouteComponent() {
 
   const form = useAppForm({
     defaultValues: {
-      workspaceName: "",
+      name: "",
     },
     onSubmit: async (values) => {
       try {
         const id = createId();
-        const slug = slugify(values.value.workspaceName);
+        const baseSlug = slugify(values.value.name);
+        const slug = `${baseSlug}-${createId().slice(0, 6)}`;
 
         const write = z.mutate(
           mutators.organization.create({
             id,
-            name: values.value.workspaceName,
+            name: values.value.name,
             slug,
           })
         );
@@ -75,13 +76,13 @@ function RouteComponent() {
 
           <div className="gap-y-4 flex flex-col">
             <form.AppField
-              name="workspaceName"
+              name="name"
               children={(field) => (
                 <field.TextField
                   autoFocus
                   label="Workspace Name"
                   placeholder="My Workspace"
-                  description="This will be the name of your organization"
+                  description="This will be the name of your workspace"
                 />
               )}
             />
@@ -92,8 +93,8 @@ function RouteComponent() {
               className="w-full"
             >
               {form.state.isSubmitting
-                ? "Creating workspace..."
-                : "Create Workspace"}
+                ? "Creating organization..."
+                : "Create Organization"}
             </Button>
           </div>
         </Form>
