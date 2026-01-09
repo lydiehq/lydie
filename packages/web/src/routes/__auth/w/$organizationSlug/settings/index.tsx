@@ -40,6 +40,8 @@ import { mutators } from "@lydie/zero/mutators";
 import { Card } from "@/components/layout/Card";
 import { slugify } from "@lydie/core/utils";
 import { authClient } from "@/utils/auth";
+import { useAuth } from "@/context/auth.context";
+import { clearActiveOrganizationSlug } from "@/lib/active-organization";
 
 type ApiKeyDialogStep = "create" | "success";
 
@@ -52,6 +54,8 @@ function RouteComponent() {
   const { organization } = useOrganization();
   const z = useZero();
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const userId = session?.userId;
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
   const [apiKeyDialogStep, setApiKeyDialogStep] =
     useState<ApiKeyDialogStep>("create");
@@ -143,12 +147,6 @@ function RouteComponent() {
     },
   });
 
-  // Sync workspace name and slug when organization changes
-  useEffect(() => {
-    workspaceForm.setFieldValue("name", organization.name);
-    workspaceForm.setFieldValue("slug", organization.slug);
-  }, [organization.name, organization.slug]);
-
   const handleRevokeApiKey = async (keyId: string, keyName: string) => {
     confirmDialog({
       title: `Revoke API Key "${keyName}"`,
@@ -193,6 +191,7 @@ function RouteComponent() {
       z.mutate(
         mutators.organization.delete({ organizationId: organization.id })
       );
+      clearActiveOrganizationSlug(userId);
       toast.success("Organization deleted successfully");
       // Navigate to home - the route will redirect appropriately
       navigate({ to: "/" });
@@ -625,7 +624,6 @@ function RouteComponent() {
 
       <Separator />
 
-      {/* Danger Zone Section */}
       <div className="flex flex-col gap-y-4">
         <SectionHeader
           heading="Danger Zone"
@@ -635,7 +633,7 @@ function RouteComponent() {
           <div className="flex flex-col gap-y-2">
             <div className="flex flex-col gap-y-0.5">
               <h3 className="text-sm font-medium text-red-900">
-                Delete Organization
+                Delete workspace
               </h3>
               <p className="text-sm text-red-700">
                 Once you delete an organization, there is no going back. This

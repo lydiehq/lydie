@@ -3,8 +3,9 @@ import { Surface } from "@/components/layout/Surface";
 import { useCallback } from "react";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { useAssistant } from "@/context/assistant.context";
-import { Button } from "@/components/generic/Button";
 import { useDocumentActions } from "@/hooks/use-document-actions";
+import { Separator } from "@/components/generic/Separator";
+import { Button } from "react-aria-components";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/(assistant)/"
@@ -53,14 +54,30 @@ function PageComponent() {
               placeholder="Ask anything. Use @ to refer to documents"
             />
           </div>
-          <span className="">Or</span>
           <div className="">
-            <Button onPress={() => createDocument()}>
-              Create a new document
-            </Button>
+            <div className="flex flex-col gap-y-0.5">
+              <OnboardingButton />
+              <OnboardingButton />
+              <OnboardingButton />
+            </div>
           </div>
         </div>
       </Surface>
+    </div>
+  );
+}
+function OnboardingButton() {
+  return (
+    <div className="">
+      <Button
+        onPress={() => null}
+        className="px-2 py-1.5 hover:bg-black/5 rounded-lg flex items-center gap-x-2"
+      >
+        <div className="rounded-full size-3 ring ring-black/20"></div>
+        <span className="text-sm font-medium text-gray-700">
+          Create a new document
+        </span>
+      </Button>
     </div>
   );
 }
