@@ -3,7 +3,7 @@ import { createTestUser, createTestOrganization } from "./utils/db";
 import { db, organizationsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
-test.describe("organization management", () => {
+test.describe("workspace management", () => {
   test("should be able to create a new workspace through organization menu", async ({
     page,
     organization,
@@ -12,13 +12,13 @@ test.describe("organization management", () => {
 
     await page.getByRole("button", { name: organization.name }).first().click();
 
-    await page.getByRole("menuitem", { name: "Switch organization" }).click();
+    await page.getByRole("menuitem", { name: "Switch workspace" }).click();
 
     await expect(
-      page.getByRole("heading", { name: "My organizations" })
+      page.getByRole("heading", { name: "My workspaces" })
     ).toBeVisible();
 
-    await page.getByRole("link", { name: "Create organization" }).click();
+    await page.getByRole("link", { name: "Create workspace" }).click();
     await page.waitForURL("/onboarding");
 
     await expect(
@@ -37,16 +37,16 @@ test.describe("organization management", () => {
     ).toBeVisible();
   });
 
-  test("should be able to switch between organizations", async ({
+  test("should be able to switch between workspaces", async ({
     page,
     organization,
     user,
   }) => {
-    const secondOrgName = `Second Test Org ${Date.now()}`;
-    const secondOrg = await createTestOrganization(user.id, {
-      prefix: "second-org",
-      name: secondOrgName,
-      slug: `second-org-${user.id}-${Date.now()}`,
+    const secondWorkspaceName = `Second Test Workspace ${Date.now()}`;
+    const secondWorkspace = await createTestOrganization(user.id, {
+      prefix: "second-workspace",
+      name: secondWorkspaceName,
+      slug: `second-workspace-${user.id}-${Date.now()}`,
     });
 
     try {
@@ -58,32 +58,35 @@ test.describe("organization management", () => {
         .first()
         .click();
 
-      await page.getByRole("menuitem", { name: "Switch organization" }).click();
+      await page.getByRole("menuitem", { name: "Switch workspace" }).click();
 
       await expect(
-        page.getByRole("heading", { name: "My organizations" })
+        page.getByRole("heading", { name: "My workspaces" })
       ).toBeVisible();
 
       await expect(page.getByText(organization.name)).toBeVisible();
-      await expect(page.getByText(secondOrgName)).toBeVisible();
+      await expect(page.getByText(secondWorkspaceName)).toBeVisible();
 
-      await page.getByRole("button").filter({ hasText: secondOrgName }).click();
+      await page
+        .getByRole("button")
+        .filter({ hasText: secondWorkspaceName })
+        .click();
 
-      await page.waitForURL(`/w/${secondOrg.slug}`);
+      await page.waitForURL(`/w/${secondWorkspace.slug}`);
 
       await expect(
-        page.getByRole("button", { name: secondOrgName }).first()
+        page.getByRole("button", { name: secondWorkspaceName }).first()
       ).toBeVisible();
     } finally {
       await db
         .delete(organizationsTable)
-        .where(eq(organizationsTable.id, secondOrg.id));
+        .where(eq(organizationsTable.id, secondWorkspace.id));
     }
   });
 });
 
-test.describe("organization access isolation", () => {
-  test("should not allow access to workspace route of another organization", async ({
+test.describe("workspace access isolation", () => {
+  test("should not allow access to workspace route of another workspace", async ({
     page,
   }) => {
     const { organization, cleanup } = await createTestUser({
@@ -95,7 +98,7 @@ test.describe("organization access isolation", () => {
       await expect(
         page
           .getByText(
-            "Access denied: You do not have permission to access this organization"
+            "Access denied: You do not have permission to access this workspace"
           )
           .first()
       ).toBeVisible();
