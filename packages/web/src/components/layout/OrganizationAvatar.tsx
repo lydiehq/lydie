@@ -3,12 +3,12 @@ import { useOrganization } from "@/context/organization.context";
 
 const avatarStyles = cva({
   base: [
-    "rounded-full bg-linear-to-br from-lime-400 to-lime-500 text-white flex items-center justify-center font-bold uppercase border border-black/4",
+    "bg-linear-to-br from-lime-400 to-lime-500 text-white flex items-center justify-center font-bold uppercase",
   ].join(" "),
   variants: {
     size: {
-      small: "size-6 text-[12px]",
-      md: "size-7 text-[14px]",
+      small: "size-5 text-[12px] rounded-md",
+      md: "size-7 text-[14px] rounded-lg",
       lg: "size-8 text-sm",
     },
   },

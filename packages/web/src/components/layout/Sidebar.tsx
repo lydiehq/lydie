@@ -97,7 +97,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         }`}
       >
         <OrganizationMenu isCollapsed={isCollapsed} />
-        <TooltipTrigger delay={500}>
+        {/* <TooltipTrigger delay={500}>
           <RACButton
             className={composeTailwindRenderProps(
               focusRing,
@@ -109,6 +109,24 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             aria-label="Collapse sidebar"
           >
             <SidebarIcon direction="left" collapsed={false} />
+          </RACButton>
+          <Tooltip>Collapse sidebar</Tooltip>
+        </TooltipTrigger> */}
+
+        <TooltipTrigger delay={500}>
+          <RACButton
+            className={composeTailwindRenderProps(
+              focusRing,
+              `group p-1 -m-1 ${isCollapsed ? "hidden" : ""}`
+            )}
+            onPress={onToggle}
+            aria-label="Collapse sidebar"
+          >
+            <div className="size-[15px] border border-black/10 group-hover:bg-black/30 transition-color duration-150 bg-black/24 shadow-inner rounded-[3px] relative">
+              <div
+                className={`absolute group-hover:w-[4px] w-[7px] bg-surface rounded-[2px] inset-y-px transition-all duration-150 ease-in-out left-px shadow-xs`}
+              />
+            </div>
           </RACButton>
           <Tooltip>Collapse sidebar</Tooltip>
         </TooltipTrigger>
