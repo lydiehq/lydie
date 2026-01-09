@@ -119,7 +119,7 @@ export const mutators = defineMutators({
         published: z.boolean().optional(),
         slug: z.string().optional(),
         indexStatus: z.string().optional(),
-        customFields: z.record(z.string(), z.string()).optional(),
+        customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
         organizationId: z.string(),
       }),
       async ({

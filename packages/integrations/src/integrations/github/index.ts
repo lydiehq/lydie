@@ -346,7 +346,20 @@ export const githubIntegration: GitHubIntegrationExtended = {
       }
 
       const accessToken = await getAccessToken(connection);
-      const markdown = serializeToMarkdown(document.content);
+      let markdown = serializeToMarkdown(document.content);
+
+      // Add frontmatter if custom fields exist
+      if (
+        document.customFields &&
+        Object.keys(document.customFields).length > 0
+      ) {
+        const frontmatterLines = ["---"];
+        for (const [key, value] of Object.entries(document.customFields)) {
+          frontmatterLines.push(`${key}: ${JSON.stringify(value)}`);
+        }
+        frontmatterLines.push("---", "");
+        markdown = frontmatterLines.join("\n") + markdown;
+      }
 
       // Determine file path from parent hierarchy (ensures files are pushed to correct location even if moved)
       let filePath: string;
