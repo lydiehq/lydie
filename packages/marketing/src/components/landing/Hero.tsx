@@ -1,6 +1,5 @@
 import { motion } from "motion/react";
 import { AnimatedWord } from "../AnimatedWord";
-import { AsciiBackground } from "./AsciiBackground";
 import { Button } from "../generic/Button";
 import { Container } from "../Container";
 import { ChevronRight, Github } from "lucide-react";
@@ -41,12 +40,7 @@ export function Hero({
             delay: 0.2,
             duration: 2,
           }}
-        >
-          <AsciiBackground
-            className="w-[65ch] -left-10 inset-y-10 rounded-3xl"
-            startPercentage={30}
-          />
-        </motion.div>
+        ></motion.div>
         <div className="relative flex flex-col gap-y-4 md:flex-row overflow-visible w-full">
           <div className="flex flex-col mr-0 gap-4 mt-0 md:mt-44 relative self-start z-10 to-20% to-white pr-0 py-2 rounded-3xl w-full md:w-[40ch] shrink-0 md:mr-8">
             <motion.h1

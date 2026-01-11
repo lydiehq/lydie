@@ -1,5 +1,4 @@
 import { Eyebrow } from "./Eyebrow";
-import { AsciiBackground } from "./AsciiBackground";
 import { Container } from "../Container";
 
 const points = [
@@ -37,10 +36,6 @@ export function ChatSection({
       <div className="absolute inset-y-0 left-0 z-20 w-40 bg-linear-to-r from-white hidden md:block" />
       <div className="absolute -inset-x-4 -bottom-px z-20 hidden h-80 bg-linear-to-t from-white via-white md:block" />
       <Container className="relative flex flex-col items-center md:items-end py-4 md:flex-row md:py-0">
-        <AsciiBackground
-          className="hidden md:block left-[200px] inset-y-6"
-          startPercentage={25}
-        />
         <div className="relative flex flex-col-reverse md:flex-row gap-y-8 w-full">
           <div className="relative w-full md:-ml-[400px]">
             <div className="w-full md:w-[980px] md:h-[800px] z-10 relative p-2 bg-white ring ring-black/4 rounded-2xl">
@@ -67,7 +62,7 @@ export function ChatSection({
               suggestions, make edits, and improve your writing, all while
               staying in complete control.
             </span>
-            <hr className="border-gray-100 w-full my-4" />
+            {/* <hr className="border-gray-100 w-full my-4" />
             <div className="grid grid-cols-1 gap-6">
               {points.map((point, i) => (
                 <div className="flex flex-col gap-y-2 shrink-0" key={i}>
@@ -79,7 +74,7 @@ export function ChatSection({
                   </p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </Container>

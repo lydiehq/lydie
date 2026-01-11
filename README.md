@@ -2,6 +2,8 @@
 
 Lydie is an AI-powered document editor designed for modern workflows. It integrates advanced AI capabilities with a seamless, real-time editing experience.
 
+![Screenshot](./screenshot.png)
+
 ## Tech Stack
 
 - **Monorepo Manager:** [Bun](https://bun.sh) workspaces
