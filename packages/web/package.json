@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "bun --filter=@trawle/scripts copy-integration-assets",
+    "predev": "bun --filter=@lydie/scripts copy-integration-assets",
     "dev": "vite --port 3000",
-    "prebuild": "bun --filter=@trawle/scripts copy-integration-assets",
+    "prebuild": "bun --filter=@lydie/scripts copy-integration-assets",
     "build": "vite build",
     "serve": "vite preview",
     "test:e2e": "bun sst shell playwright test -- --ui"

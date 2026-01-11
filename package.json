@@ -12,7 +12,7 @@
     "sso": "aws sso login --sso-session=lydie --use-device-code",
     "sdk:publish": "bun --filter=@lydie-app/sdk sdk:publish",
     "test:e2e": "bun --filter=@lydie/web test:e2e",
-    "copy-integration-assets": "bun --filter=@trawle/scripts copy-integration-assets"
+    "copy-integration-assets": "bun --filter=@lydie/scripts copy-integration-assets"
   },
   "engines": {
     "node": ">=20.0.0"

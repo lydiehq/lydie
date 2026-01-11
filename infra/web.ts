@@ -30,8 +30,8 @@ new sst.aws.StaticSite("Web", {
   ...($dev ? {} : { domain: "app.lydie.co" }),
 });
 
-new sst.aws.StaticSite("Landing", {
-  path: "./packages/landing",
+new sst.aws.StaticSite("Marketing", {
+  path: "./packages/marketing",
   build: {
     command: "bun run build",
     output: "dist",

@@ -1,5 +1,5 @@
 {
-  "name": "@trawle/scripts",
+  "name": "@lydie/scripts",
   "scripts": {
     "db:delete-user": "sst shell bun run src/delete-user.ts",
     "db:embed-all-documents": "sst shell bun run src/embed-all-documents.ts",
