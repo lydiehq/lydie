@@ -59,6 +59,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Marketing": {
+      "type": "sst.aws.StaticSite"
+      "url": string
+    }
     "OpenAiApiKey": {
       "type": "sst.sst.Secret"
       "value": string
