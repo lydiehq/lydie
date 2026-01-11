@@ -1,4 +1,9 @@
-import { db, usersTable, organizationsTable, membersTable } from "@lydie/database";
+import {
+  db,
+  usersTable,
+  organizationsTable,
+  membersTable,
+} from "@lydie/database";
 import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
@@ -35,7 +40,9 @@ async function upgradeUser() {
 
   // Find all organizations the user is a member of
   const memberships = await db.query.membersTable.findMany({
-    where: eq(membersTable.userId, user.id),
+    where: {
+      userId: user.id,
+    },
     with: {
       organization: true,
     },
@@ -61,6 +68,7 @@ async function upgradeUser() {
   // Upgrade all organizations
   for (const membership of memberships) {
     const org = membership.organization;
+    if (!org) continue;
     await db
       .update(organizationsTable)
       .set({

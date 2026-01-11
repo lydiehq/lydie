@@ -51,10 +51,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Landing": {
-      "type": "sst.aws.StaticSite"
-      "url": string
-    }
     "LydieApiKey": {
       "type": "sst.sst.Secret"
       "value": string
