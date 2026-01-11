@@ -10,9 +10,10 @@ import { Github } from "lucide-react";
 export interface Props {
   title: string;
   description: string;
+  canonicalURL?: URL | string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, canonicalURL } = Astro.props;
 
 const linkGroups = [
   {
@@ -85,7 +86,7 @@ const linkGroups = [
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} />
+    <BaseHead title={title} description={description} canonicalURL={canonicalURL} />
     <script
       defer
       src="https://cloud.umami.is/script.js"

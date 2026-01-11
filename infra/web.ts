@@ -43,4 +43,26 @@ new sst.aws.StaticSite("Landing", {
     LYDIE_API_KEY: secret.lydieApiKey.value,
   },
   ...($dev ? {} : { domain: "lydie.co" }),
+  ...($dev
+    ? {}
+    : {
+        edge: {
+          viewerRequest: {
+            injection: `var uri = event.request.uri;
+var cookies = event.request.cookies;
+var isRoot = uri === '/' || uri === '/index.html';
+var hasToken = cookies && (
+  (cookies['better-auth.session_token'] && cookies['better-auth.session_token'].value) ||
+  (cookies['__Secure-better-auth.session_token'] && cookies['__Secure-better-auth.session_token'].value)
+);
+if (isRoot && hasToken) {
+  return {
+    statusCode: 302,
+    statusDescription: 'Found',
+    headers: { 'location': { value: 'https://app.lydie.co' } }
+  };
+}`,
+          },
+        },
+      }),
 });
