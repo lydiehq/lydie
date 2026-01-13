@@ -25,6 +25,10 @@
   --color-gray-950: oklch(14.5% 0 0);
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -216,4 +220,44 @@ body {
   color: #9ca3af;
   pointer-events: none;
   height: 0;
+}
+
+/* Grainy Gradient Background */
+.grainy-gradient {
+  position: relative;
+  overflow: hidden;
+}
+
+.grainy-gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, #1f1f1f 0%, transparent 48%),
+    radial-gradient(circle at 80% 70%, #141414 0%, transparent 48%),
+    radial-gradient(circle at 50% 50%, #000000 0%, transparent 58%),
+    radial-gradient(circle at 10% 80%, #030303 0%, transparent 38%),
+    radial-gradient(circle at 90% 20%, #050505 0%, transparent 43%),
+    linear-gradient(135deg, #000000 0%, #141414 50%, #000000 100%);
+  opacity: 0.95;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.grainy-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grainyNoiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grainyNoiseFilter)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  filter: contrast(270%) brightness(1000%);
+  opacity: 1;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.grainy-gradient > * {
+  position: relative;
+  z-index: 10;
 }

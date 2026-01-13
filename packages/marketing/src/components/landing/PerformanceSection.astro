@@ -1,0 +1,534 @@
+---
+import { Container } from "../Container";
+import { Eyebrow } from "./Eyebrow";
+---
+
+<section class="py-16 md:py-24 relative overflow-hidden">
+  <Container className="flex flex-col gap-y-12">
+    <div class="flex flex-col gap-y-4 text-center max-w-2xl mx-auto">
+      <Eyebrow>Performance</Eyebrow>
+      <h2
+        class="text-3xl md:text-4xl font-heading font-medium tracking-tight text-gray-900"
+      >
+        Lightning-fast document loading
+      </h2>
+      <p class="text-[15px]/relaxed text-gray-600 text-balance">
+        Experience the difference. Lydie loads documents instantly, while others
+        keep you waiting.
+      </p>
+    </div>
+
+    <div class="relative w-full max-w-5xl mx-auto">
+      <div class="performance-comparison-container">
+        <!-- Lydie Side -->
+        <div class="comparison-card comparison-card-lydie">
+          <div class="card-header">
+            <div class="card-logo lydie-logo">
+              <div class="lydie-icon">L</div>
+            </div>
+            <div class="card-title">Lydie</div>
+            <div class="card-badge badge-fast">Instant</div>
+          </div>
+          <div class="document-preview">
+            <div class="document-header">
+              <div class="document-dots">
+                <div class="document-dot"></div>
+                <div class="document-dot"></div>
+                <div class="document-dot"></div>
+              </div>
+              <div class="document-title">Project Plan.md</div>
+            </div>
+            <div class="document-content">
+              <div class="document-line">
+                <span class="document-text"># Project Plan</span>
+              </div>
+              <div class="document-line">
+                <span class="document-text">## Overview</span>
+              </div>
+              <div class="document-line">
+                <span class="document-text">This project aims to improve</span>
+              </div>
+              <div class="document-line">
+                <span class="document-text">collaboration across teams.</span>
+              </div>
+              <div class="document-line">
+                <span class="document-text">## Key Features</span>
+              </div>
+              <div class="document-line">
+                <span class="document-text">- Real-time editing</span>
+              </div>
+              <div class="document-line">
+                <span class="document-text">- Live cursors</span>
+              </div>
+            </div>
+            <div class="loading-indicator lydie-loading">
+              <div class="loading-bar loading-bar-lydie"></div>
+              <div class="loading-time">~0ms</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VS Divider -->
+        <div class="vs-divider">
+          <div class="vs-line"></div>
+          <div class="vs-text">VS</div>
+          <div class="vs-line"></div>
+        </div>
+
+        <!-- Notion Side -->
+        <div class="comparison-card comparison-card-notion">
+          <div class="card-header">
+            <div class="card-logo notion-logo">
+              <div class="notion-icon">N</div>
+            </div>
+            <div class="card-title">Notion</div>
+            <div class="card-badge badge-slow">~2s</div>
+          </div>
+          <div class="document-preview">
+            <div class="document-header">
+              <div class="document-dots">
+                <div class="document-dot"></div>
+                <div class="document-dot"></div>
+                <div class="document-dot"></div>
+              </div>
+              <div class="document-title">Project Plan</div>
+            </div>
+            <div class="document-content notion-content">
+              <div class="loading-skeleton">
+                <div class="skeleton-line skeleton-line-1"></div>
+                <div class="skeleton-line skeleton-line-2"></div>
+                <div class="skeleton-line skeleton-line-3 short"></div>
+                <div class="skeleton-line skeleton-line-4"></div>
+                <div class="skeleton-line skeleton-line-5 short"></div>
+              </div>
+              <div class="document-content-loaded notion-loaded">
+                <div class="document-line">
+                  <span class="document-text"># Project Plan</span>
+                </div>
+                <div class="document-line">
+                  <span class="document-text">## Overview</span>
+                </div>
+                <div class="document-line">
+                  <span class="document-text">This project aims to improve</span>
+                </div>
+                <div class="document-line">
+                  <span class="document-text">collaboration across teams.</span>
+                </div>
+                <div class="document-line">
+                  <span class="document-text">## Key Features</span>
+                </div>
+                <div class="document-line">
+                  <span class="document-text">- Real-time editing</span>
+                </div>
+                <div class="document-line">
+                  <span class="document-text">- Live cursors</span>
+                </div>
+              </div>
+            </div>
+            <div class="loading-indicator notion-loading">
+              <div class="loading-bar loading-bar-notion"></div>
+              <div class="loading-time">~2000ms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .performance-comparison-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2rem;
+    align-items: start;
+    padding: 2rem 0;
+  }
+
+  .comparison-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .comparison-card-lydie {
+    border-top: 3px solid #3b82f6;
+  }
+
+  .comparison-card-notion {
+    border-top: 3px solid #000000;
+  }
+
+  .comparison-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      0 2px 4px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-header {
+    padding: 1rem 1.25rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .card-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .lydie-logo {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+
+  .notion-logo {
+    background: #000000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .lydie-icon,
+  .notion-icon {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #212529;
+    flex: 1;
+  }
+
+  .card-badge {
+    padding: 0.25rem 0.625rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .badge-fast {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .badge-slow {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .document-preview {
+    position: relative;
+  }
+
+  .document-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .document-dots {
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  .document-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dee2e6;
+  }
+
+  .document-dot:nth-child(1) {
+    background: #ff5f57;
+  }
+
+  .document-dot:nth-child(2) {
+    background: #ffbd2e;
+  }
+
+  .document-dot:nth-child(3) {
+    background: #28ca42;
+  }
+
+  .document-title {
+    font-size: 0.8125rem;
+    color: #495057;
+    font-weight: 500;
+  }
+
+  .document-content {
+    padding: 1.5rem;
+    min-height: 280px;
+    background: white;
+    font-family:
+      ui-monospace,
+      "Cascadia Code",
+      "Source Code Pro",
+      Menlo,
+      Consolas,
+      "DejaVu Sans Mono",
+      monospace;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    color: #212529;
+    position: relative;
+  }
+
+  .document-line {
+    position: relative;
+    min-height: 1.75em;
+  }
+
+  .document-text {
+    color: #212529;
+  }
+
+  .notion-content {
+    position: relative;
+  }
+
+  .loading-skeleton {
+    position: absolute;
+    inset: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: skeleton-fade-out 2s ease-in-out forwards;
+  }
+
+  .skeleton-line {
+    height: 1.25rem;
+    background: linear-gradient(
+      90deg,
+      #e5e7eb 0%,
+      #f3f4f6 50%,
+      #e5e7eb 100%
+    );
+    border-radius: 4px;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-line.short {
+    width: 60%;
+  }
+
+  .skeleton-line-1 {
+    animation-delay: 0s;
+  }
+
+  .skeleton-line-2 {
+    animation-delay: 0.2s;
+  }
+
+  .skeleton-line-3 {
+    animation-delay: 0.4s;
+  }
+
+  .skeleton-line-4 {
+    animation-delay: 0.6s;
+  }
+
+  .skeleton-line-5 {
+    animation-delay: 0.8s;
+  }
+
+  @keyframes skeleton-shimmer {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes skeleton-fade-out {
+    0% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  .notion-loaded {
+    opacity: 0;
+    animation: content-fade-in 0.3s ease-in-out 2s forwards;
+  }
+
+  @keyframes content-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .loading-indicator {
+    padding: 1rem 1.25rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .loading-bar {
+    flex: 1;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .loading-bar-lydie {
+    background: #d1fae5;
+  }
+
+  .loading-bar-lydie::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: #10b981;
+    border-radius: 3px;
+    animation: loading-complete 0.3s ease-out forwards;
+  }
+
+  .loading-bar-notion {
+    background: #fee2e2;
+  }
+
+  .loading-bar-notion::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: #ef4444;
+    border-radius: 3px;
+    animation: loading-progress 2s ease-in-out forwards;
+  }
+
+  @keyframes loading-complete {
+    from {
+      width: 0%;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  @keyframes loading-progress {
+    0% {
+      width: 0%;
+    }
+    50% {
+      width: 50%;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+
+  .loading-time {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    font-family: ui-monospace, monospace;
+    min-width: 4rem;
+    text-align: right;
+  }
+
+  .vs-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 0;
+  }
+
+  .vs-line {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      #d1d5db,
+      transparent
+    );
+  }
+
+  .vs-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.5rem 0.75rem;
+    background: #f3f4f6;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .performance-comparison-container {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .vs-divider {
+      flex-direction: row;
+      padding: 0;
+    }
+
+    .vs-line {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        #d1d5db,
+        transparent
+      );
+    }
+
+    .document-content {
+      min-height: 240px;
+      font-size: 0.75rem;
+    }
+  }
+</style>

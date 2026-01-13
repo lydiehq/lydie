@@ -102,16 +102,17 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
           className: `
             group
             dragging:opacity-50 dragging:bg-gray-50 
-            ${item.type === "document" || isIntegrationLink
-              ? "drop-target:bg-gray-200"
-              : ""
+            ${
+              item.type === "document" || isIntegrationLink
+                ? "drop-target:bg-gray-200"
+                : ""
             }
             ${isGroup ? "cursor-default" : ""}
           `,
         })
       )}
       style={{
-        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.5rem)`,
+        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
         paddingRight: "0.5rem",
       }}
     >
@@ -223,8 +224,9 @@ function IntegrationGroupChevron({
           />
           <ArrowRightBIcon
             className={sidebarItemIconStyles({
-              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${isExpanded ? "rotate-90" : ""
-                }`,
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+                isExpanded ? "rotate-90" : ""
+              }`,
             })}
           />
         </>
@@ -236,8 +238,9 @@ function IntegrationGroupChevron({
             })}
           />
           <ArrowRightBIcon
-            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${isExpanded ? "rotate-90" : ""
-              }`}
+            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+              isExpanded ? "rotate-90" : ""
+            }`}
           />
         </>
       )}
@@ -278,8 +281,9 @@ function IntegrationLinkChevron({
           />
           <ArrowRightBIcon
             className={sidebarItemIconStyles({
-              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : ""
-                }`,
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+                isExpanded ? "rotate-90" : ""
+              }`,
             })}
           />
         </>
@@ -327,8 +331,9 @@ function DocumentTreeItemIcon({
       />
       <ArrowRightBIcon
         className={sidebarItemIconStyles({
-          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${isExpanded ? "rotate-90" : ""
-            }`,
+          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+            isExpanded ? "rotate-90" : ""
+          }`,
         })}
       />
     </Button>

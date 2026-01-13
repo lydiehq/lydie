@@ -49,7 +49,7 @@ export function Header() {
   return (
     <header
       className={clsx(
-        " py-4 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b transition-colors duration-1000",
+        " py-4 sticky top-0 z-40 bg-white border-b transition-colors duration-1000",
         isScrolled ? "border-black/8" : "border-transparent"
       )}
     >

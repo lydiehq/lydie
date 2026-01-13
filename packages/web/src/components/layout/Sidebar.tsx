@@ -40,7 +40,7 @@ type Props = {
 };
 
 export const sidebarItemStyles = cva({
-  base: "group flex items-center h-[30px] rounded-md text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
+  base: "group flex items-center h-[28px] rounded-md text-sm font-medium mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
   variants: {
     isCurrent: {
       true: "bg-black/5",
