@@ -97,19 +97,60 @@ const imageAlt =
       </div>
     </Container>
     <div
-      class="relative z-10 bg-white/20 hidden rounded-[14px] -mb-40 p-2 md:flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay overflow-hidden max-w-6xl mx-auto hero-image"
+      class="relative z-10 bg-white/20 hidden rounded-[14px] -mb-40 p-2 md:flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay max-w-6xl mx-auto hero-image"
       style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
     >
       <div class="shimmer-container absolute inset-0 pointer-events-none"></div>
       <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
         {
-          [...Array(3)].map(() => (
+          [...Array(2)].map(() => (
             <div
               class="rounded-full size-[13px] bg-white/20"
               style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
             />
           ))
         }
+        <div class="relative group demo-button-container">
+          <div class="demo-glow"></div>
+          <div class="demo-particles">
+            <div class="demo-rotate">
+              {
+                [...Array(3)].map((_, i) => (
+                  <div class="demo-angle">
+                    <div class="demo-size">
+                      <div class="demo-position">
+                        <div class="demo-particle" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+          <div
+            class="rounded-full size-[13px] bg-green-300 cursor-pointer relative z-10 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              class="size-[11px] text-green-800 -rotate-45"
+            >
+              <path fill="currentColor" d="m18 9l-6-6l-6 6zm0 6l-6 6l-6-6z"
+              ></path></svg
+            >
+          </div>
+          <div
+            class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md shadow-lg whitespace-nowrap pointer-events-none z-50"
+          >
+            Click to demo!
+            <div
+              class="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"
+            >
+            </div>
+          </div>
+        </div>
       </div>
 
       <div
@@ -276,5 +317,211 @@ const imageAlt =
       transform: translateX(0);
       opacity: 0.4;
     }
+  }
+  /* Demo button shimmer and particles */
+  .demo-button-container {
+    overflow: visible;
+  }
+
+  .demo-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    pointer-events: none;
+    kground: rgba(34, 197, 94, 0.2);
+    animation: demo-glow 3s linear 0s infinite alternate;
+  }
+
+  .demo-particles {
+    position: absolute;
+    top: calc(50% - 25px);
+    left: calc(50% - 25px);
+    width: 50px;
+    height: 50px;
+    pointer-events: none;
+  }
+
+  .demo-rotate {
+    position: absolute;
+    top: calc(50% - 5px);
+    left: calc(50% - 5px);
+    width: 10px;
+    height: 10px;
+    animation: demo-rotate 20s linear 0s infinite;
+  }
+
+  .demo-angle {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .demo-size {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .demo-position {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .demo-particle {
+    position: absolute;
+    top: calc(50% - 2.5px);
+    left: calc(50% - 2.5px);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.8);
+    animation: demo-particle-glow 6s linear infinite alternate;
+  }
+
+  @keyframes demo-glow {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+      box-shadow:
+        0 0 30px 10px rgba(34, 197, 94, 0.5),
+        15px 10px 30px 5px rgba(74, 222, 128, 0.4),
+        -5px -15px 20px 3px rgba(134, 239, 172, 0.3);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(5deg);
+      box-shadow:
+        0 0 50px 15px rgba(34, 197, 94, 0.7),
+        25px 15px 40px 8px rgba(74, 222, 128, 0.5),
+        -20px -20px 30px 5px rgba(134, 239, 172, 0.4);
+    }
+  }
+
+  @keyframes demo-rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes demo-angle {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes demo-size {
+    0% {
+      transform: scale(0.2);
+    }
+    100% {
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes demo-position {
+    0% {
+      transform: translate3d(0, 0, 0);
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate3d(0, -60px, 0);
+      opacity: 0;
+    }
+  }
+
+  @keyframes demo-particle-glow {
+    0% {
+      box-shadow:
+        inset 0 0 10px 10px rgba(34, 197, 94, 0.7),
+        0 0 30px 5px rgba(34, 197, 94, 0.5),
+        inset 0 0 40px 40px rgba(74, 222, 128, 0.6);
+      background: rgba(34, 197, 94, 0.8);
+    }
+    33.33% {
+      box-shadow:
+        inset 0 0 10px 10px rgba(34, 197, 94, 0.7),
+        0 0 80px 5px rgba(34, 197, 94, 0.6),
+        inset 0 0 30px 30px rgba(74, 222, 128, 0.7);
+      background: rgba(34, 197, 94, 0.8);
+    }
+    33.34% {
+      box-shadow:
+        inset 0 0 10px 10px rgba(74, 222, 128, 0.7),
+        0 0 30px 5px rgba(74, 222, 128, 0.5),
+        inset 0 0 40px 40px rgba(134, 239, 172, 0.6);
+      background: rgba(74, 222, 128, 0.8);
+    }
+    66.66% {
+      box-shadow:
+        inset 0 0 10px 10px rgba(74, 222, 128, 0.7),
+        0 0 80px 5px rgba(74, 222, 128, 0.6),
+        inset 0 0 30px 30px rgba(134, 239, 172, 0.7);
+      background: rgba(74, 222, 128, 0.8);
+    }
+    66.67% {
+      box-shadow:
+        inset 0 0 10px 10px rgba(134, 239, 172, 0.7),
+        0 0 30px 5px rgba(134, 239, 172, 0.5),
+        inset 0 0 40px 40px rgba(187, 247, 208, 0.6);
+      background: rgba(134, 239, 172, 0.8);
+    }
+    100% {
+      box-shadow:
+        inset 0 0 10px 10px rgba(134, 239, 172, 0.7),
+        0 0 80px 5px rgba(134, 239, 172, 0.6),
+        inset 0 0 30px 30px rgba(187, 247, 208, 0.7);
+      background: rgba(134, 239, 172, 0.8);
+    }
+  }
+
+  .demo-rotate .demo-angle:nth-child(1) {
+    animation: demo-angle 10s steps(5) 0s infinite;
+  }
+  .demo-rotate .demo-angle:nth-child(1) .demo-size {
+    animation: demo-size 10s steps(5) 0s infinite;
+  }
+  .demo-rotate .demo-angle:nth-child(1) .demo-particle {
+    animation: demo-particle-glow 6s linear infinite alternate;
+  }
+  .demo-rotate .demo-angle:nth-child(1) .demo-position {
+    animation: demo-position 2s linear 0s infinite;
+  }
+
+  .demo-rotate .demo-angle:nth-child(2) {
+    animation: demo-angle 4.95s steps(3) -1.65s infinite;
+  }
+  .demo-rotate .demo-angle:nth-child(2) .demo-size {
+    animation: demo-size 4.95s steps(3) -1.65s infinite alternate;
+  }
+  .demo-rotate .demo-angle:nth-child(2) .demo-particle {
+    animation: demo-particle-glow 4.95s linear -3.3s infinite alternate;
+  }
+  .demo-rotate .demo-angle:nth-child(2) .demo-position {
+    animation: demo-position 1.65s linear 0s infinite;
+  }
+
+  .demo-rotate .demo-angle:nth-child(3) {
+    animation: demo-angle 13.76s steps(8) -6.88s infinite;
+  }
+  .demo-rotate .demo-angle:nth-child(3) .demo-size {
+    animation: demo-size 6.88s steps(4) -5.16s infinite alternate;
+  }
+  .demo-rotate .demo-angle:nth-child(3) .demo-particle {
+    animation: demo-particle-glow 5.16s linear -1.72s infinite alternate;
+  }
+  .demo-rotate .demo-angle:nth-child(3) .demo-position {
+    animation: demo-position 1.72s linear 0s infinite;
   }
 </style>
