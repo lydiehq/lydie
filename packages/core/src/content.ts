@@ -30,6 +30,7 @@ export interface Document {
   published: boolean;
   lastIndexedTitle: string | null;
   lastIndexedContentHash: string | null;
+  customFields: Record<string, string | number> | null;
   createdAt: string;
   updatedAt: string;
   path: string;
@@ -55,6 +56,7 @@ export interface DocumentListItem {
   path: string;
   fullPath: string;
   published: boolean;
+  customFields: Record<string, string | number> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -101,13 +103,6 @@ export interface Mark {
   };
 }
 
-// ============================================================================
-// Node Builder Interface
-// ============================================================================
-
-/**
- * Generic builder interface for different output formats (HTML, React, Vue, etc.)
- */
 export interface NodeBuilder<T> {
   // Text and marks
   text(content: string): T;

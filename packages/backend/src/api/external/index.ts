@@ -36,6 +36,7 @@ export const ExternalApi = new Hono()
       ...doc,
       path: "/",
       fullPath: `/${doc.slug}`,
+      customFields: doc.customFields || null,
     }));
 
     return c.json({
