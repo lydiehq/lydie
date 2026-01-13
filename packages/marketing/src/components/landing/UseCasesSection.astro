@@ -1,0 +1,620 @@
+---
+import { Container } from "../Container";
+import { BookOpen, Newspaper, FileText } from "lucide-react";
+---
+
+<section class="py-12 md:py-16">
+  <Container className="flex flex-col gap-y-8">
+    <div class="flex flex-col gap-y-3 text-center max-w-2xl mx-auto">
+      <h2
+        class="text-3xl md:text-4xl font-heading font-medium tracking-tight text-gray-900"
+      >
+        One workspace, endless possibilities
+      </h2>
+      <p class="text-[15px]/relaxed text-gray-600">
+        Lydie adapts to your needs. Whether you're building a wiki, writing a
+        blog, or documenting your product, Lydie is the foundation.
+      </p>
+    </div>
+
+    <div class="use-cases-container">
+      <!-- Tab buttons -->
+      <div class="tabs-container">
+        <button class="tab-button active" data-tab="wiki">
+          <BookOpen className="size-4" />
+          <span>Public Wiki</span>
+        </button>
+        <button class="tab-button" data-tab="blog">
+          <Newspaper className="size-4" />
+          <span>Personal Blog</span>
+        </button>
+        <button class="tab-button" data-tab="docs">
+          <FileText className="size-4" />
+          <span>Product Docs</span>
+        </button>
+      </div>
+
+      <!-- Content panels -->
+      <div class="panels-container">
+        <!-- Wiki panel -->
+        <div class="panel active" data-panel="wiki">
+          <div class="illustration-container">
+            <div class="lydie-core">
+              <div class="core-icon">
+                <svg
+                  viewBox="0 0 256 256"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-12 h-12"
+                >
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M41.27 222.049c-.67-.618-.218-1.727.695-1.712 37.82.621 81.574-4.599 123.467-20.608 31.858-12.175 62.564-30.604 88.556-57.154.664-.679 1.812-.141 1.699.802C248.073 206.82 193.944 256 128.302 256c-33.588 0-64.162-12.876-87.032-33.951ZM8.475 172.36a.985.985 0 0 1-.797-.643C2.71 158.076 0 143.354 0 128 0 57.308 57.443 0 128.302 0c53.062 0 98.601 32.136 118.129 77.965a.999.999 0 0 1-.072.916c-24.815 39.85-59.9 64.094-97.239 78.364-49.113 18.769-102.352 20.214-140.645 15.115Z"
+                    clip-rule="evenodd"></path>
+                </svg>
+                <span class="core-label">Lydie</span>
+              </div>
+            </div>
+
+            <!-- Wiki outputs -->
+            <div class="output-node wiki-output-1">
+              <div class="node-icon">🌐</div>
+              <div class="node-label">Knowledge Base</div>
+            </div>
+            <div class="output-node wiki-output-2">
+              <div class="node-icon">👥</div>
+              <div class="node-label">Team Wiki</div>
+            </div>
+            <div class="output-node wiki-output-3">
+              <div class="node-icon">📚</div>
+              <div class="node-label">Documentation</div>
+            </div>
+
+            <!-- Connection lines -->
+            <svg class="connection-lines" viewBox="0 0 400 300">
+              <path
+                class="connection-line line-1"
+                d="M 200 150 Q 250 100, 300 80"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+              <path
+                class="connection-line line-2"
+                d="M 200 150 Q 280 150, 330 150"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+              <path
+                class="connection-line line-3"
+                d="M 200 150 Q 250 200, 300 220"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+            </svg>
+          </div>
+
+          <div class="panel-description">
+            <h3 class="panel-title">Public Wiki</h3>
+            <p class="panel-text">
+              Create a centralized knowledge base accessible to your team or
+              the public. Organize information with nested pages, real-time
+              collaboration, and powerful search.
+            </p>
+            <ul class="feature-list">
+              <li>Nested page hierarchy</li>
+              <li>Public or private access</li>
+              <li>Full-text search</li>
+              <li>Version history</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Blog panel -->
+        <div class="panel" data-panel="blog">
+          <div class="illustration-container">
+            <div class="lydie-core">
+              <div class="core-icon">
+                <svg
+                  viewBox="0 0 256 256"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-12 h-12"
+                >
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M41.27 222.049c-.67-.618-.218-1.727.695-1.712 37.82.621 81.574-4.599 123.467-20.608 31.858-12.175 62.564-30.604 88.556-57.154.664-.679 1.812-.141 1.699.802C248.073 206.82 193.944 256 128.302 256c-33.588 0-64.162-12.876-87.032-33.951ZM8.475 172.36a.985.985 0 0 1-.797-.643C2.71 158.076 0 143.354 0 128 0 57.308 57.443 0 128.302 0c53.062 0 98.601 32.136 118.129 77.965a.999.999 0 0 1-.072.916c-24.815 39.85-59.9 64.094-97.239 78.364-49.113 18.769-102.352 20.214-140.645 15.115Z"
+                    clip-rule="evenodd"></path>
+                </svg>
+                <span class="core-label">Lydie</span>
+              </div>
+            </div>
+
+            <!-- Blog outputs -->
+            <div class="output-node blog-output-1">
+              <div class="node-icon">✍️</div>
+              <div class="node-label">Blog Posts</div>
+            </div>
+            <div class="output-node blog-output-2">
+              <div class="node-icon">📰</div>
+              <div class="node-label">Newsletter</div>
+            </div>
+            <div class="output-node blog-output-3">
+              <div class="node-icon">💬</div>
+              <div class="node-label">Comments</div>
+            </div>
+
+            <!-- Connection lines -->
+            <svg class="connection-lines" viewBox="0 0 400 300">
+              <path
+                class="connection-line line-1"
+                d="M 200 150 Q 250 100, 300 80"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+              <path
+                class="connection-line line-2"
+                d="M 200 150 Q 280 150, 330 150"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+              <path
+                class="connection-line line-3"
+                d="M 200 150 Q 250 200, 300 220"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+            </svg>
+          </div>
+
+          <div class="panel-description">
+            <h3 class="panel-title">Personal Blog</h3>
+            <p class="panel-text">
+              Write and publish beautiful blog posts with ease. Focus on your
+              content while Lydie handles the rest with AI-powered writing
+              assistance and seamless publishing.
+            </p>
+            <ul class="feature-list">
+              <li>AI writing assistance</li>
+              <li>Rich media embedding</li>
+              <li>SEO optimization</li>
+              <li>Draft management</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Docs panel -->
+        <div class="panel" data-panel="docs">
+          <div class="illustration-container">
+            <div class="lydie-core">
+              <div class="core-icon">
+                <svg
+                  viewBox="0 0 256 256"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-12 h-12"
+                >
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M41.27 222.049c-.67-.618-.218-1.727.695-1.712 37.82.621 81.574-4.599 123.467-20.608 31.858-12.175 62.564-30.604 88.556-57.154.664-.679 1.812-.141 1.699.802C248.073 206.82 193.944 256 128.302 256c-33.588 0-64.162-12.876-87.032-33.951ZM8.475 172.36a.985.985 0 0 1-.797-.643C2.71 158.076 0 143.354 0 128 0 57.308 57.443 0 128.302 0c53.062 0 98.601 32.136 118.129 77.965a.999.999 0 0 1-.072.916c-24.815 39.85-59.9 64.094-97.239 78.364-49.113 18.769-102.352 20.214-140.645 15.115Z"
+                    clip-rule="evenodd"></path>
+                </svg>
+                <span class="core-label">Lydie</span>
+              </div>
+            </div>
+
+            <!-- Docs outputs -->
+            <div class="output-node docs-output-1">
+              <div class="node-icon">🔧</div>
+              <div class="node-label">API Reference</div>
+            </div>
+            <div class="output-node docs-output-2">
+              <div class="node-icon">📖</div>
+              <div class="node-label">User Guides</div>
+            </div>
+            <div class="output-node docs-output-3">
+              <div class="node-icon">🎯</div>
+              <div class="node-label">Tutorials</div>
+            </div>
+
+            <!-- Connection lines -->
+            <svg class="connection-lines" viewBox="0 0 400 300">
+              <path
+                class="connection-line line-1"
+                d="M 200 150 Q 250 100, 300 80"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+              <path
+                class="connection-line line-2"
+                d="M 200 150 Q 280 150, 330 150"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+              <path
+                class="connection-line line-3"
+                d="M 200 150 Q 250 200, 300 220"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-dasharray="4 4"></path>
+            </svg>
+          </div>
+
+          <div class="panel-description">
+            <h3 class="panel-title">Product Documentation</h3>
+            <p class="panel-text">
+              Build comprehensive product documentation that grows with your
+              product. Keep your team aligned and your users informed with
+              always up-to-date docs.
+            </p>
+            <ul class="feature-list">
+              <li>API documentation</li>
+              <li>Code snippets with syntax highlighting</li>
+              <li>Versioning support</li>
+              <li>Interactive examples</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .use-cases-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* Tabs */
+  .tabs-container {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .tab-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tab-button:hover {
+    background: #f9fafb;
+    color: #374151;
+    border-color: #d1d5db;
+  }
+
+  .tab-button.active {
+    background: #111827;
+    color: white;
+    border-color: #111827;
+  }
+
+  /* Panels */
+  .panels-container {
+    position: relative;
+    min-height: 500px;
+  }
+
+  .panel {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .panel.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Illustration */
+  .illustration-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lydie-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+  }
+
+  .core-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    border-radius: 1rem;
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    color: white;
+    animation: pulse-core 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-core {
+    0%,
+    100% {
+      box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+        0 0 0 0 rgba(17, 24, 39, 0.4);
+    }
+    50% {
+      box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+        0 0 0 20px rgba(17, 24, 39, 0);
+    }
+  }
+
+  .core-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  /* Output nodes */
+  .output-node {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  .node-icon {
+    font-size: 1.5rem;
+  }
+
+  .node-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+  }
+
+  /* Position output nodes */
+  .wiki-output-1,
+  .blog-output-1,
+  .docs-output-1 {
+    top: 10%;
+    right: 10%;
+  }
+
+  .wiki-output-2,
+  .blog-output-2,
+  .docs-output-2 {
+    top: 50%;
+    right: 5%;
+    transform: translateY(-50%) scale(0.8);
+  }
+
+  .wiki-output-3,
+  .blog-output-3,
+  .docs-output-3 {
+    bottom: 10%;
+    right: 10%;
+  }
+
+  /* Animate nodes when panel is active */
+  .panel.active .output-node {
+    animation: node-appear 0.6s ease-out forwards;
+  }
+
+  .panel.active .wiki-output-1,
+  .panel.active .blog-output-1,
+  .panel.active .docs-output-1 {
+    animation-delay: 0.2s;
+  }
+
+  .panel.active .wiki-output-2,
+  .panel.active .blog-output-2,
+  .panel.active .docs-output-2 {
+    animation-delay: 0.4s;
+  }
+
+  .panel.active .wiki-output-3,
+  .panel.active .blog-output-3,
+  .panel.active .docs-output-3 {
+    animation-delay: 0.6s;
+  }
+
+  @keyframes node-appear {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Connection lines */
+  .connection-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    color: #d1d5db;
+  }
+
+  .connection-line {
+    stroke-dasharray: 4 4;
+    opacity: 0;
+  }
+
+  .panel.active .connection-line {
+    animation: line-draw 1s ease-out forwards;
+  }
+
+  .panel.active .line-1 {
+    animation-delay: 0.3s;
+  }
+
+  .panel.active .line-2 {
+    animation-delay: 0.5s;
+  }
+
+  .panel.active .line-3 {
+    animation-delay: 0.7s;
+  }
+
+  @keyframes line-draw {
+    to {
+      opacity: 0.6;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Panel description */
+  .panel-description {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .panel-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    font-family: var(--font-heading);
+  }
+
+  .panel-text {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #6b7280;
+  }
+
+  .feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #374151;
+  }
+
+  .feature-list li::before {
+    content: "✓";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .panel {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      position: relative;
+      min-height: auto;
+    }
+
+    .panels-container {
+      min-height: auto;
+    }
+
+    .illustration-container {
+      height: 300px;
+    }
+
+    .tab-button {
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    .output-node {
+      padding: 0.75rem 1rem;
+    }
+
+    .node-label {
+      font-size: 0.75rem;
+    }
+
+    .wiki-output-2,
+    .blog-output-2,
+    .docs-output-2 {
+      transform: translateY(-50%) scale(0.8);
+    }
+  }
+</style>
+
+<script>
+  const tabButtons = document.querySelectorAll(".tab-button");
+  const panels = document.querySelectorAll(".panel");
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const tabName = button.getAttribute("data-tab");
+
+      // Update active states
+      tabButtons.forEach((btn) => btn.classList.remove("active"));
+      button.classList.add("active");
+
+      panels.forEach((panel) => {
+        if (panel.getAttribute("data-panel") === tabName) {
+          panel.classList.add("active");
+        } else {
+          panel.classList.remove("active");
+        }
+      });
+    });
+  });
+</script>

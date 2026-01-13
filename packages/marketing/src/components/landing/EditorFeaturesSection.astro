@@ -1,0 +1,112 @@
+---
+import customFieldsImage from "../../assets/images/hehe.png";
+import { Image } from "astro:assets";
+import "../../styles/grainy-gradient.css";
+---
+
+<section class="grid grid-cols-5">
+  <div class="col-span-2 flex flex-col justify-center">
+    <div class="max-w-xs flex flex-col gap-y-4">
+      <h2
+        class="text-3xl font-heading font-medium tracking-tight text-gray-900"
+      >
+        First in class editor features
+      </h2>
+      <p class="text-[15px]/relaxed text-gray-600">
+        Lydie's editor is built with the latest technology to provide you with
+        the best editing experience.
+      </p>
+    </div>
+  </div>
+  <div
+    class="col-span-3 grainy-gradient-container rounded-xl h-[400px] relative flex items-center justify-center p-4"
+  >
+    <svg class="grainy-gradient-svg">
+      <filter id="noiseFilter">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.65"
+          numOctaves="3"
+          stitchTiles="stitch"></feTurbulence>
+      </filter>
+    </svg>
+    <div
+      class="absolute z-10 top-8 left-8 bg-white/20 rounded-[14px] p-2 flex flex-col before:pointer-events-none before:absolute before:top-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay overflow-hidden"
+      style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+    >
+      <div class="shimmer-container absolute inset-0 pointer-events-none"></div>
+      <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
+        {
+          [...Array(3)].map(() => (
+            <div class="rounded-full size-[13px] bg-white/25" />
+          ))
+        }
+      </div>
+
+      <div
+        class="p-px ring ring-white/20 rounded-[9px] bg-white/10 relative overflow-hidden"
+      >
+        <div
+          class="rounded-lg overflow-hidden shadow-surface ring ring-black/8 relative z-10"
+        >
+          <Image
+            src={customFieldsImage}
+            alt="Custom fields"
+            quality={100}
+            loading="eager"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Shimmer effect for screenshot container */
+  .shimmer-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .shimmer-container::before {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 14px;
+  }
+
+  .shimmer-container::before {
+    top: -10%;
+    left: 0;
+    width: 40%;
+    height: 30%;
+    background: radial-gradient(
+      ellipse,
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    filter: blur(20px);
+    animation: shimmer-sweep 8s ease-in-out infinite;
+  }
+
+  @keyframes shimmer-sweep {
+    0% {
+      transform: translateX(0);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateX(calc(100% - 40%));
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 0.4;
+    }
+  }
+</style>

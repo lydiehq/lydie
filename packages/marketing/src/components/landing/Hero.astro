@@ -3,7 +3,7 @@ import { Container } from "../Container";
 import { Button } from "../generic/Button";
 import screenshotNew from "../../../public/screenshot_new.png";
 import { Image } from "astro:assets";
-import { Logo } from "../Logo";
+import "../../styles/grainy-gradient.css";
 
 const imageSrc = screenshotNew;
 const imageAlt =
@@ -39,7 +39,7 @@ const imageAlt =
         clip-rule="evenodd"></path>
     </svg>
     <Container
-      className="flex flex-col relative z-10 pb-20 md:pb-16 md:pt-28 pt-20"
+      className="flex flex-col relative z-20 pb-20 md:pb-16 md:pt-28 pt-20"
     >
       <div class="flex flex-col gap-y-3 max-w-2xl text-center mx-auto">
         <div
@@ -97,14 +97,17 @@ const imageAlt =
       </div>
     </Container>
     <div
-      class="relative bg-white/20 hidden rounded-[14px] -mb-40 p-2 md:flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay overflow-hidden max-w-6xl mx-auto hero-image"
+      class="relative z-10 bg-white/20 hidden rounded-[14px] -mb-40 p-2 md:flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay overflow-hidden max-w-6xl mx-auto hero-image"
       style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
     >
       <div class="shimmer-container absolute inset-0 pointer-events-none"></div>
       <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
         {
           [...Array(3)].map(() => (
-            <div class="rounded-full size-[13px] bg-white/25" />
+            <div
+              class="rounded-full size-[13px] bg-white/20"
+              style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+            />
           ))
         }
       </div>
@@ -123,52 +126,6 @@ const imageAlt =
 </div>
 
 <style>
-  .grainy-gradient-svg {
-    position: absolute;
-    width: 0;
-    height: 0;
-  }
-
-  .grainy-gradient-container {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .grainy-gradient-container::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image:
-      radial-gradient(circle at 20% 30%, #1f1f1f 0%, transparent 48%),
-      radial-gradient(circle at 80% 70%, #141414 0%, transparent 48%),
-      radial-gradient(circle at 50% 50%, #000000 0%, transparent 58%),
-      radial-gradient(circle at 10% 80%, #030303 0%, transparent 38%),
-      radial-gradient(circle at 90% 20%, #050505 0%, transparent 43%),
-      linear-gradient(135deg, #000000 0%, #141414 50%, #000000 100%);
-    opacity: 0.95;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .grainy-gradient-container::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    background-size: 200px 200px;
-    filter: contrast(270%) brightness(1000%);
-    opacity: 1;
-    z-index: 1;
-    pointer-events: none;
-    mix-blend-mode: overlay;
-  }
-
-  .grainy-gradient-container
-    > :not(.grainy-gradient-svg):not(.gradient-overlay):not(.embossed-logo) {
-    position: relative;
-    z-index: 10;
-  }
-
   .embossed-logo {
     position: absolute;
     top: 20%;
