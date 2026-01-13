@@ -25,6 +25,10 @@
   --color-gray-950: oklch(14.5% 0 0);
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

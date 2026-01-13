@@ -84,7 +84,7 @@ const glowOpacity120 = 0.1 * glowProminence;
   /> -->
   <div class="md:px-4 mb-32">
     <div
-      class="md:rounded-xl shadow-inner grainy-gradient-container md:border md:border-black/8 relative"
+      class="md:rounded-xl shadow-inner grainy-gradient-container md:border md:border-black/8 relative md:px-4"
     >
       <div
         class="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20 gradient-overlay"
@@ -100,9 +100,9 @@ const glowOpacity120 = 0.1 * glowProminence;
         </filter>
       </svg>
       <Container className="flex flex-col relative z-10 pb-16 pt-28">
-        <div class="flex flex-col gap-y-3 max-w-2xl text-left">
+        <div class="flex flex-col gap-y-3 max-w-2xl text-center md:text-left">
           <div
-            class="rounded-full shadow-surface bg-white self-start px-2 py-0.5 flex items-center gap-x-1.5"
+            class="rounded-full shadow-surface bg-white self-center md:self-start px-2 py-0.5 flex items-center gap-x-1.5"
           >
             <div class="rounded-full bg-orange-300 size-1.5"></div>
             <span class="text-[12px] font-medium text-gray-700"
@@ -118,7 +118,9 @@ const glowOpacity120 = 0.1 * glowProminence;
             Lydie is a writing workspace that adapts to your needs.<br />An
             open-source alternative to Google Docs, Notion and others.
           </p>
-          <div class="flex items-center justify-start gap-x-1.5 mt-4">
+          <div
+            class="flex items-center justify-center md:justify-start gap-x-1.5 mt-4"
+          >
             <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
               <span>Try Lydie free</span>
             </Button>
@@ -137,7 +139,7 @@ const glowOpacity120 = 0.1 * glowProminence;
         </div>
       </Container>
       <div
-        class="relative bg-white/20 rounded-[14px] -mb-60 p-2 flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay mx-28 overflow-hidden"
+        class="relative bg-white/20 hidden rounded-[14px] -mb-[15%] p-2 md:flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay overflow-hidden max-w-7xl mx-auto"
         style={`box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,${glowOpacity40}), 0 0 80px rgba(255,255,255,${glowOpacity80}), 0 0 120px rgba(255,255,255,${glowOpacity120});`}
       >
         <div class="shimmer-container absolute inset-0 pointer-events-none">
