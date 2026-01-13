@@ -82,9 +82,9 @@ const glowOpacity120 = 0.1 * glowProminence;
     imageWidth={heroDefaultImage.options.width}
     imageHeight={heroDefaultImage.options.height}
   /> -->
-  <div class="px-4 mb-32">
+  <div class="md:px-4 mb-32">
     <div
-      class="rounded-xl shadow-inner grainy-gradient-container border border-black/8 relative"
+      class="md:rounded-xl shadow-inner grainy-gradient-container md:border md:border-black/8 relative"
     >
       <div
         class="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20 gradient-overlay"
@@ -115,7 +115,7 @@ const glowOpacity120 = 0.1 * glowProminence;
             Centralize your writing
           </h1>
           <p class="text-[17px]/relaxed text-white/90 text-balance">
-            Lydie is a writing workspace that adapts to your needs. An
+            Lydie is a writing workspace that adapts to your needs.<br />An
             open-source alternative to Google Docs, Notion and others.
           </p>
           <div class="flex items-center justify-start gap-x-1.5 mt-4">
@@ -137,10 +137,12 @@ const glowOpacity120 = 0.1 * glowProminence;
         </div>
       </Container>
       <div
-        class="relative bg-white/20 rounded-[14px] -mb-60 p-2 flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay mx-28"
+        class="relative bg-white/20 rounded-[14px] -mb-60 p-2 flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay mx-28 overflow-hidden"
         style={`box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,${glowOpacity40}), 0 0 80px rgba(255,255,255,${glowOpacity80}), 0 0 120px rgba(255,255,255,${glowOpacity120});`}
       >
-        <div class="flex items-center gap-x-1.5 mb-2">
+        <div class="shimmer-container absolute inset-0 pointer-events-none">
+        </div>
+        <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
           {
             [...Array(3)].map(() => (
               <div class="rounded-full size-[13px] bg-white/25" />
@@ -189,9 +191,11 @@ const glowOpacity120 = 0.1 * glowProminence;
           </div> -->
         </div>
 
-        <div class="p-px ring ring-white/20 rounded-[9px] bg-white/10">
+        <div
+          class="p-px ring ring-white/20 rounded-[9px] bg-white/10 relative overflow-hidden"
+        >
           <div
-            class="rounded-lg overflow-hidden shadow-surface ring ring-black/8"
+            class="rounded-lg overflow-hidden shadow-surface ring ring-black/8 relative z-10"
           >
             <Image
               src={screenshotNew}
@@ -290,8 +294,8 @@ const glowOpacity120 = 0.1 * glowProminence;
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     background-size: 200px 200px;
-    filter: contrast(170%) brightness(1000%);
-    opacity: 0.9;
+    filter: contrast(270%) brightness(1000%);
+    opacity: 1;
     z-index: 1;
     pointer-events: none;
     mix-blend-mode: overlay;
@@ -514,5 +518,53 @@ const glowOpacity120 = 0.1 * glowProminence;
   }
   .demo-rotate .demo-angle:nth-child(3) .demo-position {
     animation: demo-position 1.72s linear 0s infinite;
+  }
+
+  /* Shimmer effect for screenshot container */
+  .shimmer-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .shimmer-container::before {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 14px;
+  }
+
+  .shimmer-container::before {
+    top: -10%;
+    left: 0;
+    width: 40%;
+    height: 30%;
+    background: radial-gradient(
+      ellipse,
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    filter: blur(20px);
+    animation: shimmer-sweep 8s ease-in-out infinite;
+  }
+
+  @keyframes shimmer-sweep {
+    0% {
+      transform: translateX(0);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateX(calc(100% - 40%));
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 0.4;
+    }
   }
 </style>
