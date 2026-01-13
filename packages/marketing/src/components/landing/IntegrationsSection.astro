@@ -1,0 +1,504 @@
+---
+import { Container } from "../Container";
+import { Eyebrow } from "./Eyebrow";
+import githubLogo from "../../../public/integrations/github/assets/logo.png";
+import shopifyLogo from "../../../public/integrations/shopify/assets/logo.png";
+---
+
+<section class="py-16 md:py-24 relative overflow-hidden">
+  <Container className="flex flex-col gap-y-12">
+    <div class="flex flex-col gap-y-4 text-center max-w-2xl mx-auto">
+      <Eyebrow>Integrations</Eyebrow>
+      <h2
+        class="text-3xl md:text-4xl font-heading font-medium tracking-tight text-gray-900"
+      >
+        Sync with your favorite platforms
+      </h2>
+      <p class="text-[15px]/relaxed text-gray-600 text-balance">
+        Draft and publish in Lydie, then push to GitHub repositories or Shopify
+        blogs. Your content stays in sync across all your platforms.
+      </p>
+    </div>
+
+    <div class="relative w-full max-w-5xl mx-auto">
+      <!-- Integration Flow Illustration -->
+      <div class="integration-flow-container">
+        <!-- GitHub Integration -->
+        <div class="integration-box integration-box-left">
+          <div class="integration-logo-container">
+            <img src={githubLogo.src} alt="GitHub" class="integration-logo" />
+          </div>
+          <div class="integration-label">GitHub</div>
+          <div class="integration-content-box">
+            <div class="content-line"></div>
+            <div class="content-line"></div>
+            <div class="content-line short"></div>
+          </div>
+        </div>
+
+        <!-- Lydie Center -->
+        <div class="integration-box integration-box-center">
+          <div class="lydie-logo">
+            <div class="lydie-icon">L</div>
+          </div>
+          <div class="integration-label">Lydie</div>
+          <div class="integration-content-box center-box">
+            <div class="content-line"></div>
+            <div class="content-line"></div>
+            <div class="content-line"></div>
+            <div class="content-line short"></div>
+          </div>
+        </div>
+
+        <!-- Shopify Integration -->
+        <div class="integration-box integration-box-right">
+          <div class="integration-logo-container">
+            <img src={shopifyLogo.src} alt="Shopify" class="integration-logo" />
+          </div>
+          <div class="integration-label">Shopify</div>
+          <div class="integration-content-box">
+            <div class="content-line"></div>
+            <div class="content-line"></div>
+            <div class="content-line short"></div>
+          </div>
+        </div>
+
+        <!-- Animated Data Flow Lines -->
+        <svg
+          class="flow-lines"
+          viewBox="0 0 1000 300"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0"></stop>
+              <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.7"></stop>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"></stop>
+            </linearGradient>
+            <linearGradient
+              id="flowGradientReverse"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0"></stop>
+              <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.7"></stop>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+
+          <!-- Flow from GitHub to Lydie -->
+          <path
+            d="M 150 150 Q 250 100, 350 150"
+            stroke="url(#flowGradient)"
+            stroke-width="2.5"
+            fill="none"
+            class="flow-path flow-path-1"></path>
+          <!-- Flow from Lydie to GitHub -->
+          <path
+            d="M 350 150 Q 250 200, 150 150"
+            stroke="url(#flowGradientReverse)"
+            stroke-width="2.5"
+            fill="none"
+            class="flow-path flow-path-2"></path>
+
+          <!-- Flow from Lydie to Shopify -->
+          <path
+            d="M 650 150 Q 750 100, 850 150"
+            stroke="url(#flowGradient)"
+            stroke-width="2.5"
+            fill="none"
+            class="flow-path flow-path-3"></path>
+          <!-- Flow from Shopify to Lydie -->
+          <path
+            d="M 850 150 Q 750 200, 650 150"
+            stroke="url(#flowGradientReverse)"
+            stroke-width="2.5"
+            fill="none"
+            class="flow-path flow-path-4"></path>
+        </svg>
+
+        <!-- Animated Data Particles -->
+        <div class="data-particle particle-1"></div>
+        <div class="data-particle particle-2"></div>
+        <div class="data-particle particle-3"></div>
+        <div class="data-particle particle-4"></div>
+      </div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .integration-flow-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4rem;
+    padding: 2rem;
+  }
+
+  .integration-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    z-index: 10;
+  }
+
+  .integration-box-left {
+    order: 1;
+  }
+
+  .integration-box-center {
+    order: 2;
+  }
+
+  .integration-box-right {
+    order: 3;
+  }
+
+  .integration-logo-container {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 12px;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .integration-box-left:hover .integration-logo-container,
+  .integration-box-right:hover .integration-logo-container {
+    box-shadow:
+      0 0 20px rgba(59, 130, 246, 0.2),
+      0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .integration-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .lydie-logo {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    animation: lydie-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes lydie-pulse {
+    0%,
+    100% {
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+    }
+  }
+
+  .lydie-icon {
+    color: white;
+    font-size: 2rem;
+    font-weight: 600;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  .integration-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    text-align: center;
+  }
+
+  .integration-content-box {
+    width: 200px;
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .integration-content-box.center-box {
+    width: 240px;
+  }
+
+  .content-line {
+    height: 8px;
+    background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 50%, #e5e7eb 100%);
+    border-radius: 4px;
+    animation: content-pulse 3s ease-in-out infinite;
+  }
+
+  .content-line.short {
+    width: 60%;
+  }
+
+  .content-line:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .content-line:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+
+  .content-line:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+
+  .content-line:nth-child(4) {
+    animation-delay: 0.9s;
+  }
+
+  @keyframes content-pulse {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .flow-lines {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 300px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+  }
+
+  .flow-path {
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+    animation: flow-animation 10s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+  }
+
+  .flow-path-1 {
+    animation-delay: 0s;
+  }
+
+  .flow-path-2 {
+    animation-delay: 4s;
+  }
+
+  .flow-path-3 {
+    animation-delay: 2s;
+  }
+
+  .flow-path-4 {
+    animation-delay: 6s;
+  }
+
+  @keyframes flow-animation {
+    0% {
+      stroke-dashoffset: 300;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: -300;
+      opacity: 0;
+    }
+  }
+
+  .data-particle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #3b82f6;
+    border-radius: 50%;
+    box-shadow:
+      0 0 12px rgba(59, 130, 246, 0.8),
+      0 0 6px rgba(59, 130, 246, 0.6);
+    z-index: 5;
+    opacity: 0;
+  }
+
+  .particle-1 {
+    top: calc(50% - 7px);
+    left: 15%;
+    animation: particle-flow-1 10s ease-in-out infinite;
+  }
+
+  .particle-2 {
+    top: calc(50% - 7px);
+    left: 15%;
+    animation: particle-flow-2 10s ease-in-out infinite;
+    animation-delay: 5s;
+  }
+
+  .particle-3 {
+    top: calc(50% - 7px);
+    left: 70%;
+    animation: particle-flow-3 10s ease-in-out infinite;
+    animation-delay: 2.5s;
+  }
+
+  .particle-4 {
+    top: calc(50% - 7px);
+    left: 70%;
+    animation: particle-flow-4 10s ease-in-out infinite;
+    animation-delay: 7.5s;
+  }
+
+  @keyframes particle-flow-1 {
+    0% {
+      transform: translate(0, 0) scale(0.6);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+      transform: translate(0, 0) scale(0.8);
+    }
+    50% {
+      transform: translate(20%, -33%) scale(1.2);
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+      transform: translate(20%, -33%) scale(0.8);
+    }
+    100% {
+      transform: translate(20%, -33%) scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  @keyframes particle-flow-2 {
+    0% {
+      transform: translate(20%, -33%) scale(0.6);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+      transform: translate(20%, -33%) scale(0.8);
+    }
+    50% {
+      transform: translate(0, 0) scale(1.2);
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+      transform: translate(0, 0) scale(0.8);
+    }
+    100% {
+      transform: translate(0, 0) scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  @keyframes particle-flow-3 {
+    0% {
+      transform: translate(0, 0) scale(0.6);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+      transform: translate(0, 0) scale(0.8);
+    }
+    50% {
+      transform: translate(-20%, -33%) scale(1.2);
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+      transform: translate(-20%, -33%) scale(0.8);
+    }
+    100% {
+      transform: translate(-20%, -33%) scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  @keyframes particle-flow-4 {
+    0% {
+      transform: translate(-20%, -33%) scale(0.6);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+      transform: translate(-20%, -33%) scale(0.8);
+    }
+    50% {
+      transform: translate(0, 0) scale(1.2);
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+      transform: translate(0, 0) scale(0.8);
+    }
+    100% {
+      transform: translate(0, 0) scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .integration-flow-container {
+      flex-direction: column;
+      height: auto;
+      gap: 3rem;
+      padding: 1rem;
+    }
+
+    .integration-box {
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .integration-content-box {
+      width: 100%;
+    }
+
+    .integration-content-box.center-box {
+      width: 100%;
+    }
+
+    .flow-lines {
+      display: none;
+    }
+
+    .data-particle {
+      display: none;
+    }
+  }
+</style>
