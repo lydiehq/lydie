@@ -29,7 +29,11 @@ const remainingPosts = sortedPosts.slice(1);
   title="Lydie Blog"
   description="A minimal, powerful writing environment supercharged with AI."
 >
+<<<<<<< Updated upstream
   <div class="py-8">
+=======
+  <div class="">
+>>>>>>> Stashed changes
     <Container>
       <header class="flex flex-col gap-y-2 mb-12">
         <h1 class="text-2xl font-medium text-gray-900">Blog</h1>
@@ -39,6 +43,7 @@ const remainingPosts = sortedPosts.slice(1);
         >
       </header>
 
+<<<<<<< Updated upstream
       {
         featuredPost && (
           <section class="overflow-visible -mx-2 px-2">
@@ -70,6 +75,30 @@ const remainingPosts = sortedPosts.slice(1);
       }
       <hr class="border-gray-100 w-full my-12" />
 
+=======
+      {featuredPost && (
+        <section>
+          <a
+            href={`/blog/${featuredPost.slug}`}
+            class="rounded-lg bg-black/2 flex flex-col justify-end col-span-2 hover:bg-black/5 transition-colors duration-75 bg-center bg-cover bg-no-repeat aspect-1024/640 ring ring-black/5 overflow-hidden"
+            style="background-image: url(/blog.png)"
+          >
+            <div class="flex flex-col gap-y-2 p-6">
+              <h2 class="text-xl font-medium text-gray-900">
+                {featuredPost.title}
+              </h2>
+              {/* <p class="text-gray-600 text-sm">
+                {featuredPost.description}
+              </p> */}
+              <p class="text-gray-500 text-sm">
+                <FormattedDate date={new Date(featuredPost.createdAt)} />
+              </p>
+            </div>
+          </a>
+        </section>
+      )}
+      <!-- More Posts List -->
+>>>>>>> Stashed changes
       {
         remainingPosts.length > 0 && (
           <section>

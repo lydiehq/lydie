@@ -3,6 +3,7 @@ import { Container } from "../Container";
 import { Button } from "../generic/Button";
 import screenshotNew from "../../../public/screenshot_new.png";
 import { Image } from "astro:assets";
+import { Logo } from "../Logo";
 
 const imageSrc = screenshotNew;
 const imageAlt =
@@ -37,14 +38,15 @@ const imageAlt =
         d="M41.27 222.049c-.67-.618-.218-1.727.695-1.712 37.82.621 81.574-4.599 123.467-20.608 31.858-12.175 62.564-30.604 88.556-57.154.664-.679 1.812-.141 1.699.802C248.073 206.82 193.944 256 128.302 256c-33.588 0-64.162-12.876-87.032-33.951ZM8.475 172.36a.985.985 0 0 1-.797-.643C2.71 158.076 0 143.354 0 128 0 57.308 57.443 0 128.302 0c53.062 0 98.601 32.136 118.129 77.965a.999.999 0 0 1-.072.916c-24.815 39.85-59.9 64.094-97.239 78.364-49.113 18.769-102.352 20.214-140.645 15.115Z"
         clip-rule="evenodd"></path>
     </svg>
-    <Container className="flex flex-col relative z-10 pb-16 pt-28">
+    <Container
+      className="flex flex-col relative z-10 pb-20 md:pb-16 md:pt-28 pt-20"
+    >
       <div class="flex flex-col gap-y-3 max-w-2xl text-center mx-auto">
         <div
-          class="mb-4 rounded-full bg-white/80 self-center px-2 py-0.5 flex items-center gap-x-1.5 hero-badge"
-          style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+          class="mb-4 rounded-full bg-white/15 self-center px-2.5 py-[3px] flex items-center gap-x-1.5 hero-badge"
+          style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
         >
-          <div class="rounded-full bg-orange-300 size-1.5"></div>
-          <span class="text-[12px] font-medium text-gray-700"
+          <span class="text-[12px] font-medium text-white"
             >Now in open beta!</span
           >
         </div>
@@ -172,10 +174,16 @@ const imageAlt =
     top: 20%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 140%;
+    width: 240%;
     pointer-events: none;
     z-index: 2;
     color: rgba(0, 0, 0, 0.2);
+  }
+
+  @media (min-width: 768px) {
+    .embossed-logo {
+      width: 140%;
+    }
   }
 
   .drop-shadow-text {
