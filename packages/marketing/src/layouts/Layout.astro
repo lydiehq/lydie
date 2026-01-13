@@ -20,10 +20,6 @@ const linkGroups = [
     title: "General",
     links: [
       {
-        href: "/",
-        label: "Home",
-      },
-      {
         href: "/blog",
         label: "Blog",
       },
@@ -86,7 +82,11 @@ const linkGroups = [
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} canonicalURL={canonicalURL} />
+    <BaseHead
+      title={title}
+      description={description}
+      canonicalURL={canonicalURL}
+    />
     <script
       defer
       src="https://cloud.umami.is/script.js"

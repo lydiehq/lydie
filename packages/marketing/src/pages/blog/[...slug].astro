@@ -50,6 +50,11 @@ const blogPostProps = {
     >
     <header class="flex flex-col gap-y-4 mb-4">
       <Heading>{document.title}</Heading>
+      {(document as any).customFields?.excerpt && (
+        <p class="text-lg text-gray-600">
+          {(document as any).customFields.excerpt}
+        </p>
+      )}
       <span class="text-gray-500 text-sm">
         <FormattedDate date={new Date(document.createdAt)} />
       </span>

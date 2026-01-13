@@ -18,6 +18,7 @@ export const ExternalApi = new Hono()
         title: documentsTable.title,
         slug: documentsTable.slug,
         published: documentsTable.published,
+        customFields: documentsTable.customFields,
         createdAt: documentsTable.createdAt,
         updatedAt: documentsTable.updatedAt,
       })
@@ -122,6 +123,7 @@ export const ExternalApi = new Hono()
     const response = {
       ...documentWithoutYjs,
       jsonContent: transformedContent,
+      customFields: document.customFields || null,
       ...(includeRelated && { related }),
       ...(includeToc && { toc }),
     };

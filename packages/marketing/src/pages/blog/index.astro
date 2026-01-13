@@ -48,9 +48,11 @@ const remainingPosts = sortedPosts.slice(3);
                 <h2 class="text-xl font-medium text-gray-900">
                   {featuredPosts[0].title}
                 </h2>
-                {/* <p class="text-gray-600 text-sm">
-                  {featuredPosts[0].description}
-                </p> */}
+                {featuredPosts[0].customFields?.excerpt && (
+                  <p class="text-gray-600 text-sm">
+                    {featuredPosts[0].customFields.excerpt}
+                  </p>
+                )}
                 <p class="text-gray-500 text-sm">
                   <FormattedDate date={new Date(featuredPosts[0].createdAt)} />
                 </p>
@@ -65,7 +67,11 @@ const remainingPosts = sortedPosts.slice(3);
                   <h2 class="text-xl font-medium text-gray-900">
                     {post.title}
                   </h2>
-                  <p class="text-gray-600 text-sm">{post.description}</p>
+                  {post.customFields?.excerpt && (
+                    <p class="text-gray-600 text-sm">
+                      {post.customFields.excerpt}
+                    </p>
+                  )}
                   <p class="text-gray-500 text-sm">
                     <FormattedDate date={new Date(post.createdAt)} />
                   </p>
@@ -88,9 +94,16 @@ const remainingPosts = sortedPosts.slice(3);
                     href={`/blog/${post.slug}`}
                     class="flex items-start justify-between gap-4 py-3 border-b border-gray-200 hover:border-gray-300 transition-colors group"
                   >
-                    <h3 class="font-semibold text-gray-900 group-hover:text-gray-600 transition-colors flex-1">
-                      {post.title}
-                    </h3>
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-gray-900 group-hover:text-gray-600 transition-colors">
+                        {post.title}
+                      </h3>
+                      {post.customFields?.excerpt && (
+                        <p class="text-sm text-gray-600 mt-1">
+                          {post.customFields.excerpt}
+                        </p>
+                      )}
+                    </div>
                     {post.createdAt && (
                       <span class="text-sm text-gray-500 whitespace-nowrap">
                         <FormattedDate date={new Date(post.createdAt)} />
