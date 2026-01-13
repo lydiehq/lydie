@@ -12,12 +12,13 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
       title: z.string().optional(),
       slug: z.string().optional(),
       indexStatus: z.string().optional(),
+      customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
       organizationId: z.string(),
     }),
     async ({
       tx,
       ctx,
-      args: { documentId, title, slug, indexStatus, organizationId },
+      args: { documentId, title, slug, indexStatus, customFields, organizationId },
     }) => {
       await sharedMutators.document.update.fn({
         tx,
@@ -28,6 +29,7 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
           title,
           slug,
           indexStatus,
+          customFields,
         },
       });
 
