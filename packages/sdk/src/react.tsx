@@ -234,9 +234,42 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
     return <hr key={Math.random()} />;
   }
 
-  codeBlock(children: React.ReactNode[], language?: string | null): React.ReactNode {
+  codeBlock(
+    children: React.ReactNode[],
+    language?: string | null
+  ): React.ReactNode {
+    // Check if a custom CodeBlock component is provided
+    if (this.customComponents && this.customComponents["CodeBlock"]) {
+      try {
+        const CodeBlockComponent = this.customComponents["CodeBlock"];
+        // Extract code text from children - handle strings, numbers, and React elements
+        const extractText = (node: React.ReactNode): string => {
+          if (typeof node === "string" || typeof node === "number") {
+            return String(node);
+          }
+          if (React.isValidElement(node) && node.props?.children) {
+            return extractText(node.props.children);
+          }
+          return "";
+        };
+        const code = children.map(extractText).join("");
+        return (
+          <CodeBlockComponent
+            key={Math.random()}
+            properties={{ language: language || null, code }}
+          />
+        );
+      } catch (error) {
+        console.warn(
+          "[Lydie] Error rendering custom CodeBlock component:",
+          error
+        );
+      }
+    }
+
+    // Default fallback rendering
     const langClass = language ? `language-${language}` : "";
-    
+
     return (
       <pre key={Math.random()} className={langClass || undefined}>
         <code className={langClass || undefined}>

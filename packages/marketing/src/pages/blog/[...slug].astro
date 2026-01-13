@@ -1,10 +1,10 @@
 ---
 import { type Document } from "@lydie-app/sdk";
 import BlogPost from "../../layouts/BlogPost.astro";
-import { LydieContent } from "../../components/LydieContent";
 import { lydieClient } from "../../utils/lydie-client";
 import FormattedDate from "../../components/FormattedDate.astro";
 import { Heading } from "../../components/generic/Heading";
+import LydieContent from "../../components/LydieContent.astro";
 
 export async function getStaticPaths() {
   try {
@@ -62,7 +62,6 @@ const blogPostProps = {
     <div class="prose">
       <LydieContent
         content={document.jsonContent}
-        customComponents={{}}
         linkResolver={(ref) => {
           // Resolve internal links to /blog/[slug]
           // The slug is now embedded in the internal-link mark attrs
@@ -75,7 +74,6 @@ const blogPostProps = {
           }
           return ref.href || "#";
         }}
-        client:load
       />
     </div>
     <hr class="my-8 border-gray-200" />
