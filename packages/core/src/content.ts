@@ -129,6 +129,7 @@ export interface NodeBuilder<T> {
   orderedList(children: T[], start?: number): T;
   listItem(children: T[]): T;
   horizontalRule(): T;
+  codeBlock(children: T[], language?: string | null): T;
 
   // Custom blocks
   customBlock(name: string, properties: Record<string, any>): T;
@@ -244,6 +245,11 @@ export function renderWithBuilder<T>(
 
         case "horizontalRule":
           return builder.horizontalRule();
+
+        case "codeBlock": {
+          const language = node.attrs?.language;
+          return builder.codeBlock(renderChildren(node), language);
+        }
 
         case "customBlock":
           const componentName = node.attrs?.name;

@@ -91,6 +91,12 @@ export class HTMLSerializer implements NodeBuilder<string> {
     return "<hr>";
   }
 
+  codeBlock(children: string[], language?: string | null): string {
+    const code = children.join("");
+    const langAttr = language ? ` class="language-${this.escape(language)}"` : "";
+    return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`;
+  }
+
   customBlock(name: string, properties: Record<string, any>): string {
     return `<div class="custom-block" data-component="${this.escape(
       name

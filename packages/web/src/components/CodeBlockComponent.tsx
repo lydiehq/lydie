@@ -11,12 +11,11 @@ import {
   Autocomplete,
   SearchField,
   Label,
-  ListBox,
   useFilter,
-  ListBoxItem,
 } from "react-aria-components";
 import { ChevronDown } from "lucide-react";
 import { useMemo, useState, useEffect, type Key } from "react";
+import { ListBox, ListBoxItem } from "./generic/ListBox";
 
 type LanguageItem = {
   id: string;
@@ -35,11 +34,15 @@ function LanguageSelect({
   let { contains } = useFilter({ sensitivity: "base" });
 
   return (
-    <Select onChange={onSelectionChange} value={selectedKey}>
-      <Label>Category</Label>
-      <Button>
-        <SelectValue />
-        <ChevronDown size={18} />
+    <Select
+      onChange={onSelectionChange}
+      value={selectedKey}
+      className="absolute top-3 right-3"
+    >
+      <Label className="sr-only">Category</Label>
+      <Button className="group-hover:opacity-100 opacity-100 transition-opacity duration-200 flex items-center gap-x-1.5">
+        <SelectValue className="font-medium text-gray-700 text-sm" />
+        <ChevronDown className="size-4 text-gray-500" />
       </Button>
       <Popover style={{ display: "flex", flexDirection: "column" }}>
         <Autocomplete filter={contains}>
@@ -97,9 +100,9 @@ export function CodeBlockComponent({
 
   return (
     <NodeViewWrapper className="relative group">
-      <div className="flex">
-        <pre className="relative overflow-x-auto rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 my-0">
-          <code className="font-mono text-sm leading-relaxed text-gray-900 dark:text-gray-100">
+      <div className="flex relative overflow-x-auto rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3 my-0">
+        <pre className="">
+          <code className="">
             <NodeViewContent />
           </code>
         </pre>

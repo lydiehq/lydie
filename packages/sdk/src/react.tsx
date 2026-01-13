@@ -234,6 +234,18 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
     return <hr key={Math.random()} />;
   }
 
+  codeBlock(children: React.ReactNode[], language?: string | null): React.ReactNode {
+    const langClass = language ? `language-${language}` : "";
+    
+    return (
+      <pre key={Math.random()} className={langClass || undefined}>
+        <code className={langClass || undefined}>
+          {this.fragment(children)}
+        </code>
+      </pre>
+    );
+  }
+
   customBlock(name: string, properties: Record<string, any>): React.ReactNode {
     if (this.customComponents && this.customComponents[name]) {
       try {

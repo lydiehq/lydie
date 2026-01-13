@@ -4,7 +4,6 @@ import { hocuspocus } from "./hocuspocus-server";
 
 const port = 3001;
 
-// Start server
 const server = serve(
   {
     fetch: app.fetch,
@@ -19,5 +18,4 @@ const server = serve(
   }
 );
 
-// Setup WebSocket support (Node.js specific)
 injectWebSocket(server);

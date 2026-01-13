@@ -135,9 +135,6 @@
     text-underline-offset: 0.2em;
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    & code {
-      font-weight: var(--font-weight-medium);
-    }
   }
 
   a:hover {
@@ -183,7 +180,7 @@
   pre code {
     font-variant-ligatures: none;
     font-family: var(--font-mono);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     line-height: 2;
   }
 
@@ -518,12 +515,12 @@
     content: none;
   }
 
-  pre code {
+  /* pre code {
     font-variant-ligatures: none;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     line-height: 1.8;
-  }
+  } */
 
   table {
     width: 100%;
