@@ -45,8 +45,6 @@ export { default as WifiIcon } from "~icons/ion/wifi";
 export { default as WifiOffIcon } from "~icons/ion/wifi"; // Note: Using wifi icon, may need styling
 export { default as ShieldAlertIcon } from "~icons/ion/shield";
 
-// Media
-export { default as CameraIcon } from "~icons/ion/camera";
 export { default as ImageIcon } from "~icons/ion/image";
 
 // UI Elements

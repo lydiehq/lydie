@@ -14,6 +14,7 @@ import {
 } from "react-resizable-panels";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
+import { useTrackOnMount } from "@/hooks/use-posthog-tracking";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/(assistant)/assistant/"
@@ -75,6 +76,11 @@ function AssistantChat() {
   } = useAssistant();
   const navigate = useNavigate();
   const { organizationSlug } = Route.useParams();
+
+  // Track assistant opened
+  useTrackOnMount("assistant_opened", {
+    organizationId: organization.id,
+  });
 
   const handleSubmit = useCallback(
     (text: string) => {

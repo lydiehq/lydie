@@ -12,6 +12,7 @@ import { useImageUpload } from "@/hooks/use-image-upload";
 import { useState, useRef } from "react";
 import { Camera, X } from "lucide-react";
 import { Card } from "@/components/layout/Card";
+import { trackEvent } from "@/lib/posthog";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/profile"
@@ -20,7 +21,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const { uploadImage } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -44,8 +45,7 @@ function RouteComponent() {
         return;
       }
 
-      const hasChanges =
-        values.value.name.trim() !== user.name;
+      const hasChanges = values.value.name.trim() !== user.name;
 
       if (!hasChanges && previewImage === user.image) {
         return;
@@ -64,11 +64,17 @@ function RouteComponent() {
         }
 
         await authClient.updateUser(updateData);
+
+        // Track profile update
+        trackEvent("profile_updated", {
+          hasImageUpdate: previewImage !== user.image,
+          hasNameUpdate: values.value.name.trim() !== user.name,
+        });
+
         toast.success("Profile updated successfully");
         // The session will be automatically updated by better-auth
       } catch (error: any) {
-        const errorMessage =
-          error?.message || "Failed to update profile";
+        const errorMessage = error?.message || "Failed to update profile";
         toast.error(errorMessage);
         console.error("Profile update error:", error);
       }
@@ -171,7 +177,8 @@ function RouteComponent() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 text-2xl font-medium">
-                        {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                        {user.name?.[0]?.toUpperCase() ||
+                          user.email[0].toUpperCase()}
                       </div>
                     )}
                   </div>
@@ -275,4 +282,3 @@ function RouteComponent() {
     </div>
   );
 }
-

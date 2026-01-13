@@ -50,6 +50,7 @@
     "lucide-react": "^0.562.0",
     "marked": "^17.0.1",
     "motion": "^12.25.0",
+    "posthog-js": "^1.319.0",
     "react": "^19.2.3",
     "react-aria": "^3.45.0",
     "react-aria-components": "^1.14.0",

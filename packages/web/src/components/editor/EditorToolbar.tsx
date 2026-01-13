@@ -5,6 +5,7 @@ import {
   Group,
   Separator,
   MenuTrigger,
+  TooltipTrigger,
 } from "react-aria-components";
 import {
   List,
@@ -37,6 +38,9 @@ import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { MoreVerticalIcon } from "@/icons";
 import { Button } from "../generic/Button";
+import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { SidebarIcon } from "../layout/SidebarIcon";
+import { Tooltip } from "../generic/Tooltip";
 
 type Props = {
   editor: Editor;
@@ -427,6 +431,24 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
         >
           {doc.published ? "Unpublish" : "Publish"}
         </Button>
+        <Separator
+          orientation="vertical"
+          className="mx-1 h-6 w-px bg-gray-200"
+        />
+
+        <TooltipTrigger delay={500}>
+          <RACButton
+            className={composeTailwindRenderProps(
+              focusRing,
+              "p-1 rounded hover:bg-black/5 text-gray-700 group"
+            )}
+            // onPress={onToggle}
+            aria-label="Expand sidebar"
+          >
+            <SidebarIcon direction="right" collapsed={false} />
+          </RACButton>
+          <Tooltip>Expand sidebar</Tooltip>
+        </TooltipTrigger>
 
         <DocumentSettingsDialog
           isOpen={isSettingsOpen}

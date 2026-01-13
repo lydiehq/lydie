@@ -18,6 +18,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { format } from "date-fns";
 import { mutators } from "@lydie/zero/mutators";
+import { trackEvent } from "@/lib/posthog";
 
 type DocumentMenuProps = {
   documentId: string;
@@ -62,6 +63,13 @@ export function DocumentMenu({
           title: renameValue.trim(),
         })
       );
+      
+      // Track document rename
+      trackEvent("document_renamed", {
+        documentId,
+        organizationId: organization.id,
+      });
+      
       toast.success("Document renamed");
       setIsRenameDialogOpen(false);
     } catch (error) {

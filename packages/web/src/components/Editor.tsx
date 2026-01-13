@@ -182,12 +182,8 @@ function EditorContainer({ doc }: Props) {
               editor={contentEditor.editor}
               lastSaved={new Date(doc.updated_at)}
             />
-            <div
-              className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-full flex flex-col shadow-legit h-16 w-8 ring ring-black/8 bg-white shadow-legit
-`}
-            ></div>
           </Panel>
-          {/* <PanelResizer />
+          <PanelResizer />
           <Panel
             ref={sidebarPanelRef}
             id="editor-sidebar"
@@ -204,7 +200,7 @@ function EditorContainer({ doc }: Props) {
               isCollapsed={sidebarSize === COLLAPSED_SIZE}
               onToggle={toggleSidebar}
             />
-          </Panel> */}
+          </Panel>
         </PanelGroup>
       </Surface>
     </div>

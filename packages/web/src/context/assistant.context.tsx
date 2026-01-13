@@ -5,6 +5,7 @@ import {
   useMemo,
   useCallback,
   useEffect,
+  useRef,
 } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -14,6 +15,7 @@ import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler";
 import type { ChatAlertState } from "@/components/editor/ChatAlert";
 import type { QueryResultType } from "@rocicorp/zero";
 import type { queries } from "@lydie/zero/queries";
+import { trackEvent } from "@/lib/posthog";
 
 interface AssistantContextValue {
   conversationId: string;
@@ -58,8 +60,9 @@ export function AssistantProvider({
   );
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
   const [conversation, setConversation] = useState<any>(_conversation);
+  const messageStartTimeRef = useRef<number>(0);
 
-  const { messages, sendMessage, stop, status, addToolOutput, setMessages } =
+  const { messages, sendMessage: originalSendMessage, stop, status, addToolOutput, setMessages } =
     useChat<DocumentChatAgentUIMessage>({
       id: conversationId,
       messages:
@@ -101,7 +104,36 @@ export function AssistantProvider({
           });
         }
       },
+      onFinish: () => {
+        // Track when AI response is received
+        const responseTime = messageStartTimeRef.current 
+          ? Date.now() - messageStartTimeRef.current 
+          : undefined;
+        
+        trackEvent("assistant_response_received", {
+          conversationId,
+          organizationId,
+          responseTimeMs: responseTime,
+        });
+      },
     });
+
+  // Wrapped sendMessage to track message sent events
+  const sendMessage = useCallback(
+    (options: { text: string; metadata?: any }) => {
+      messageStartTimeRef.current = Date.now();
+      
+      // Track message sent
+      trackEvent("assistant_message_sent", {
+        conversationId,
+        organizationId,
+        messageLength: options.text.length,
+      });
+      
+      return originalSendMessage(options);
+    },
+    [originalSendMessage, conversationId, organizationId]
+  );
 
   // Handle conversation prop changes (when navigating to a different conversation)
   useEffect(() => {

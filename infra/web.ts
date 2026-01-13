@@ -26,6 +26,8 @@ new sst.aws.StaticSite("Web", {
       ? "ws://localhost:3001/yjs"
       : "wss://api.lydie.co/yjs",
     VITE_ASSETS_DOMAIN: assetsRouter.url,
+    VITE_PUBLIC_POSTHOG_KEY: "phc_XczR2cR4b5RKg1SHiagP2w4uFoRYZU80b5M4bcVyudC",
+    VITE_PUBLIC_POSTHOG_HOST: "https://us.i.posthog.com",
   },
   ...($dev ? {} : { domain: "app.lydie.co" }),
 });

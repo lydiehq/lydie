@@ -12,6 +12,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { revalidateSession } from "@/lib/auth/session";
 import { mutators } from "@lydie/zero/mutators";
 import { clearZeroInstance } from "@/lib/zero/instance";
+import { useTrackOnMount } from "@/hooks/use-posthog-tracking";
+import { trackEvent } from "@/lib/posthog";
 
 export const Route = createFileRoute("/__auth/onboarding/")({
   component: RouteComponent,
@@ -22,6 +24,9 @@ function RouteComponent() {
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  // Track onboarding started
+  useTrackOnMount("onboarding_started");
 
   const form = useAppForm({
     defaultValues: {
@@ -47,6 +52,14 @@ function RouteComponent() {
         await revalidateSession(queryClient);
         clearZeroInstance();
         await router.invalidate();
+
+        // Track organization created and onboarding completed
+        trackEvent("organization_created", {
+          organizationId: id,
+          organizationSlug: slug,
+          organizationName: values.value.name,
+        });
+        trackEvent("onboarding_completed");
 
         navigate({
           to: "/w/$organizationSlug",
