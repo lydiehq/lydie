@@ -1,0 +1,337 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { Button } from "../../components/generic/Button";
+import { ChevronRight, Users, Eye, MessageCircle, History } from "lucide-react";
+import { Logo } from "../../components/Logo";
+import CollaborationIllustration from "../../components/illustrations/CollaborationIllustration.astro";
+
+const title = "Real-Time Collaborative Editing - Lydie";
+const description =
+  "Work together seamlessly with your team. See changes as they happen, with live cursors, instant updates, and built-in communication tools.";
+---
+
+<Layout title={title} description={description}>
+  <Container className="flex flex-col gap-y-16 pb-16">
+    <!-- Hero Section -->
+    <div class="max-w-4xl mx-auto flex flex-col gap-y-8 pt-8">
+      <div class="flex flex-col gap-y-6 items-center text-center">
+        <Logo className="size-6 text-gray-200" />
+
+        <div class="flex flex-col gap-y-4">
+          <h1
+            class="text-5xl font-heading font-medium tracking-tight text-gray-950 max-w-3xl"
+          >
+            Real-time collaborative editing
+          </h1>
+          <p class="text-lg text-gray-600 max-w-2xl">
+            Work together seamlessly with your team. See changes as they happen,
+            with live cursors, instant updates, and no more version conflicts.
+          </p>
+        </div>
+
+        <div class="flex gap-x-4 items-center">
+          <Button href="https://app.lydie.co/auth" size="lg">
+            <div class="flex items-center gap-x-1">
+              <span>Get started for free</span>
+              <ChevronRight
+                className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+              />
+            </div>
+          </Button>
+        </div>
+      </div>
+
+      <!-- Illustration -->
+      <div class="w-full max-w-3xl mx-auto">
+        <div class="rounded-xl overflow-hidden ring-1 ring-black/5">
+          <CollaborationIllustration />
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="flex flex-col gap-y-8">
+        <div class="text-center">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            Everything you need for team collaboration
+          </h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Live Cursors -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"
+            >
+              <Eye className="size-5 text-blue-600" />
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">
+              Live cursors and presence
+            </h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              See exactly where your teammates are working in real-time. Live
+              cursors show who's editing what, preventing conflicts before they
+              happen.
+            </p>
+          </div>
+
+          <!-- Instant Sync -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center"
+            >
+              <svg
+                class="size-5 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">
+              Instant synchronization
+            </h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              Changes appear instantly for all collaborators. No refresh needed,
+              no manual saving - just seamless, real-time updates as you type.
+            </p>
+          </div>
+
+          <!-- Conflict-Free -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center"
+            >
+              <svg
+                class="size-5 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">
+              Conflict-free editing
+            </h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              Advanced CRDT technology ensures multiple people can edit the same
+              document simultaneously without conflicts or lost changes.
+            </p>
+          </div>
+
+          <!-- Comments & Discussion -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center"
+            >
+              <MessageCircle className="size-5 text-purple-600" />
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">
+              Built-in communication
+            </h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              Discuss changes and provide feedback without leaving the document.
+              Comment threads keep conversations organized and contextual.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Use Cases -->
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="flex flex-col gap-y-8">
+        <div class="text-center">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            Perfect for teams of all sizes
+          </h2>
+        </div>
+
+        <div class="flex flex-col gap-y-4">
+          <div
+            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
+          >
+            <div
+              class="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mt-1"
+            >
+              <Users className="size-4 text-blue-600" />
+            </div>
+            <div class="flex flex-col gap-y-1">
+              <h3 class="font-semibold text-gray-900">Content teams</h3>
+              <p class="text-gray-600 text-[15px]/relaxed">
+                Writers, editors, and reviewers can collaborate on articles,
+                blog posts, and documentation in real-time without emailing
+                drafts back and forth.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
+          >
+            <div
+              class="shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mt-1"
+            >
+              <svg
+                class="size-4 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                ></path>
+              </svg>
+            </div>
+            <div class="flex flex-col gap-y-1">
+              <h3 class="font-semibold text-gray-900">Engineering teams</h3>
+              <p class="text-gray-600 text-[15px]/relaxed">
+                Maintain technical documentation, runbooks, and project specs
+                collaboratively. Keep everyone on the same page as systems
+                evolve.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
+          >
+            <div
+              class="shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mt-1"
+            >
+              <svg
+                class="size-4 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                ></path>
+              </svg>
+            </div>
+            <div class="flex flex-col gap-y-1">
+              <h3 class="font-semibold text-gray-900">Remote teams</h3>
+              <p class="text-gray-600 text-[15px]/relaxed">
+                Bridge time zones and locations with asynchronous collaboration.
+                See what changed while you were away and jump right in.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="flex flex-col gap-y-8">
+        <div class="text-center">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            How it works
+          </h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="flex flex-col gap-y-3 text-center">
+            <div
+              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
+            >
+              1
+            </div>
+            <h3 class="font-semibold text-gray-900">Share your document</h3>
+            <p class="text-gray-600 text-sm">
+              Invite team members by email or share a link. Set permissions to
+              control who can view or edit.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-y-3 text-center">
+            <div
+              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
+            >
+              2
+            </div>
+            <h3 class="font-semibold text-gray-900">Edit together</h3>
+            <p class="text-gray-600 text-sm">
+              See live cursors showing where teammates are working. Changes sync
+              instantly across all devices.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-y-3 text-center">
+            <div
+              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
+            >
+              3
+            </div>
+            <h3 class="font-semibold text-gray-900">Stay in sync</h3>
+            <p class="text-gray-600 text-sm">
+              All changes are automatically saved and synced. Version history
+              lets you review or restore previous edits.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="max-w-3xl mx-auto w-full">
+      <div
+        class="flex flex-col gap-y-6 items-center text-center p-12 rounded-2xl bg-linear-to-br from-gray-50 to-gray-100 border border-gray-200"
+      >
+        <div class="flex flex-col gap-y-3">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            Ready to collaborate better?
+          </h2>
+          <p class="text-gray-600 max-w-lg">
+            Start working together in real-time. No credit card required, no
+            setup hassle.
+          </p>
+        </div>
+
+        <Button href="https://app.lydie.co/auth" size="lg">
+          <div class="flex items-center gap-x-1">
+            <span>Get started for free</span>
+            <ChevronRight
+              className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+            />
+          </div>
+        </Button>
+      </div>
+    </div>
+  </Container>
+</Layout>

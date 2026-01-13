@@ -12,10 +12,8 @@ import {
   SearchField,
   Label,
   ListBox,
-  ListBoxSection,
   useFilter,
   ListBoxItem,
-  Collection,
 } from "react-aria-components";
 import { ChevronDown } from "lucide-react";
 import { useMemo, useState, useEffect, type Key } from "react";

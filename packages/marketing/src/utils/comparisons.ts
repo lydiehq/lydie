@@ -1,3 +1,5 @@
+import type { SectionOverride } from "./comparison-sections";
+
 export interface ComparisonFeature {
   name: string;
   description?: string;
@@ -11,6 +13,7 @@ export interface Comparison {
   description: string;
   icon?: string;
   features: ComparisonFeature[];
+  sections?: (string | SectionOverride)[]; // Section IDs or objects with overrides
 }
 
 export const comparisons: Comparison[] = [
@@ -19,6 +22,20 @@ export const comparisons: Comparison[] = [
     name: "Google Docs",
     description:
       "Looking for an open-source alternative to Google Docs? Lydie provides powerful document editing with real-time collaboration, built-in AI assistance, and the freedom to self-host. Perfect for teams who want full control over their documents and data.",
+    sections: [
+      {
+        id: "opensource",
+        description:
+          "Unlike Google Docs, which locks your data in Google's cloud, Lydie is fully open-source and self-hostable. Take back control of your documents and data, or use our cloud version if you prefer. The choice is yours.",
+      },
+      "ai",
+      {
+        id: "collaboration",
+        title: "Real-time collaboration like Google Docs",
+        description:
+          "Get the same real-time collaboration you love from Google Docs, but with more control. See live cursors, instant updates, and seamless teamwork - all without being locked into Google's ecosystem.",
+      },
+    ],
     features: [
       {
         name: "Real-time collaboration",
@@ -58,6 +75,32 @@ export const comparisons: Comparison[] = [
     name: "Notion",
     description:
       "Switch from Notion to Lydie for a more flexible, open-source workspace. With native AI capabilities, unlimited customization through self-hosting, and powerful collaboration tools, Lydie gives you complete ownership of your knowledge base and workflows.",
+    sections: [
+      {
+        id: "opensource",
+        title: "Open-source alternative to Notion",
+        description:
+          "Notion locks you into their platform with no way to self-host or customize. Lydie is fully open-source, giving you complete control over your data and the ability to customize it to your needs. No vendor lock-in, no data silos - just the freedom to run your workspace your way.",
+      },
+      {
+        id: "ai",
+        title: "AI built-in, not a paid add-on",
+        description:
+          "Notion charges extra for AI features on paid plans. With Lydie, AI assistance is built directly into the editor and available to everyone. Get writing help, generate content, and chat with your documents without paying premium prices for AI capabilities.",
+      },
+      {
+        id: "performance",
+        title: "Fast and responsive, not slow like Notion",
+        description:
+          "Notion's performance can be sluggish, especially with large databases and complex pages. Lydie is built for speed with modern web technologies, delivering instant loading and smooth editing even with large documents. No more waiting for pages to load or edits to sync.",
+      },
+      {
+        id: "integrations",
+        title: "Better integrations than Notion's limited API",
+        description:
+          "Notion's API access is limited and requires workarounds for many use cases. Lydie offers powerful integrations right out of the box - sync to GitHub repositories, publish to Shopify blogs, or connect to your existing workflow. Our extensible API makes it easy to fit Lydie into your tech stack.",
+      },
+    ],
     features: [
       {
         name: "Real-time collaboration",
@@ -110,6 +153,7 @@ export const comparisons: Comparison[] = [
     name: "Coda",
     description:
       "Looking for an open-source alternative to Coda? Lydie offers powerful document collaboration with AI assistance and self-hosting capabilities. While Coda excels at building apps with formulas and tables, Lydie focuses on flexible document management with real-time collaboration and native AI features.",
+    sections: ["opensource", "ai", "collaboration"],
     features: [
       {
         name: "Real-time collaboration",
@@ -161,6 +205,32 @@ export const comparisons: Comparison[] = [
     name: "Confluence",
     description:
       "Switch from Confluence to Lydie for a modern, lightweight alternative. Built for teams who want simple yet powerful documentation without the complexity of enterprise tools. With native AI, real-time collaboration, and the freedom to self-host, Lydie makes team knowledge management effortless.",
+    sections: [
+      {
+        id: "knowledgebase",
+        title: "Better knowledge base organization",
+        description:
+          "Unlike Confluence's complex space hierarchy, Lydie offers a simpler, more intuitive way to organize your team's knowledge. Create nested pages, link related documents, and build a knowledge base that actually makes sense. No more getting lost in Confluence's maze of spaces and permissions.",
+      },
+      {
+        id: "opensource",
+        title: "Open-source alternative to Confluence",
+        description:
+          "Tired of Confluence's enterprise pricing and vendor lock-in? Lydie is fully open-source and self-hostable, giving you complete control over your documentation platform. No more paying per-user fees or being locked into Atlassian's ecosystem.",
+      },
+      {
+        id: "ai",
+        title: "AI built-in, not an add-on",
+        description:
+          "While Confluence requires Atlassian Intelligence (at additional cost), Lydie includes powerful AI features right out of the box. Get writing assistance, generate content, and chat with your documents without paying extra for AI capabilities.",
+      },
+      {
+        id: "collaboration",
+        title: "Real-time collaboration without the complexity",
+        description:
+          "Lydie's real-time collaboration is as powerful as Confluence's, but without the enterprise complexity. See changes as they happen, work together seamlessly, and keep your team in sync - all in a modern, lightweight interface.",
+      },
+    ],
     features: [
       {
         name: "Real-time collaboration",
@@ -212,6 +282,7 @@ export const comparisons: Comparison[] = [
     name: "Evernote",
     description:
       "Move from Evernote to Lydie for a modern, collaborative note-taking experience. While Evernote focuses on personal note-taking, Lydie brings powerful team collaboration, integrated AI, and the flexibility to self-host. Perfect for teams who have outgrown Evernote's limited collaboration features.",
+    sections: ["opensource", "ai", "collaboration"],
     features: [
       {
         name: "Real-time collaboration",
