@@ -1,7 +1,6 @@
 ---
 import BaseHead from "../components/BaseHead.astro";
 import "../styles/tailwind.css";
-import { Toaster } from "sonner";
 import { Header } from "../components/Header";
 import { Container } from "../components/Container";
 import { Logo } from "../components/Logo";
@@ -93,7 +92,6 @@ const linkGroups = [
       data-website-id="9402133f-bce6-4b35-a3ec-2a534f3fee3c"></script>
   </head>
   <body>
-    <Toaster client:load />
     <Header client:load />
     <div class="flex flex-col bg-white min-h-screen">
       <main class="flex-1">

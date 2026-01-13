@@ -41,9 +41,36 @@ try {
 const blogPostProps = {
   title: document.title,
 };
+
+// Generate structured data for SEO
+const articleUrl = new URL(`/blog/${document.slug}`, Astro.site);
+const imageUrl = new URL("/blog.png", Astro.site);
+const excerpt = (document as any).customFields?.excerpt || "";
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: document.title,
+  description: excerpt,
+  image: imageUrl.toString(),
+  datePublished: document.createdAt,
+  dateModified: document.updatedAt || document.createdAt,
+  url: articleUrl.toString(),
+  author: {
+    "@type": "Organization",
+    name: "Lydie",
+    url: Astro.site.toString(),
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "Lydie",
+    url: Astro.site.toString(),
+  },
+};
 ---
 
 <BlogPost {...blogPostProps}>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   <article class="max-w-2xl mx-auto flex flex-col gap-y-4">
     <a href="/blog" class="text-sm text-gray-500 hover:text-gray-900"
       >Back to blog</a

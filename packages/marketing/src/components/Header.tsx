@@ -49,12 +49,15 @@ export function Header() {
   return (
     <header
       className={clsx(
-        "py-4 sticky top-0 z-40 bg-white/80 backdrop-blur-md mb-4 border-b transition-colors duration-1000",
+        " py-4 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b transition-colors duration-1000",
         isScrolled ? "border-black/8" : "border-transparent"
       )}
     >
       <Container className="flex items-center justify-between">
-        <a href="/" className="flex items-center gap-x-1.5 z-50 relative">
+        <a
+          href="/"
+          className="flex items-center gap-x-1.5 z-50 relative focus:outline-none"
+        >
           <Logo className="text-gray-950 size-5" />
           <span className="text-lg/0 font-semibold text-gray-800">Lydie</span>
         </a>

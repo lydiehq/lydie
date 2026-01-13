@@ -2,16 +2,13 @@
 import { getImage } from "astro:assets";
 import { Hero } from "./Hero";
 import { ChatSection } from "./ChatSection";
-import {
-  Search,
-  Globe,
-  ChevronRight,
-  Share2,
-} from "lucide-react";
+import { Search, Globe, ChevronRight, Share2, Github } from "lucide-react";
 import { Container } from "../Container";
 import screenshotSidebar from "../../../public/screenshot_sidebar.png";
+import screenshotNew from "../../../public/screenshot_new.png";
 import screenshotChat from "../../../public/screenshot_document_chat.png";
 import { Button } from "../generic/Button";
+import Image from "astro/components/Image.astro";
 
 // Generate optimized images for Hero
 const heroWidths = [400, 640, 980, 1280, 1920];
@@ -65,10 +62,18 @@ const keyBenefits = [
     icon: Globe,
   },
 ];
+
+// Control the prominence of the white glow effect (0.0 to 1.0)
+const glowProminence = 0.3;
+
+// Calculate glow opacity values based on prominence
+const glowOpacity40 = 0.3 * glowProminence;
+const glowOpacity80 = 0.2 * glowProminence;
+const glowOpacity120 = 0.1 * glowProminence;
 ---
 
 <div class="flex flex-col gap-y-16 overflow-hidden">
-  <Hero
+  <!-- <Hero
     client:load
     imageSrc={heroDefaultImage.src}
     imageSrcSet={heroSrcset}
@@ -76,58 +81,217 @@ const keyBenefits = [
     imageAlt="Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
     imageWidth={heroDefaultImage.options.width}
     imageHeight={heroDefaultImage.options.height}
-  />
-
-  <!-- Key Benefits -->
-  <Container className="flex flex-col gap-y-12 relative">
-    <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
-      {
-        keyBenefits.map((benefit) => (
-          <div class="flex flex-col gap-y-2">
-            <div class="flex items-center gap-x-2">
-              <benefit.icon className="size-4 text-gray-700" />
-              <span class="font-medium text-[15px]/0 text-gray-900">
-                {benefit.title}
-              </span>
-            </div>
-            <p class="text-sm text-gray-600 leading-relaxed">
-              {benefit.description}
-            </p>
-          </div>
-        ))
-      }
-    </div>
-    <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
-  </Container>
-  <ChatSection
-    client:load
-    imageSrc={chatDefaultImage.src}
-    imageSrcSet={chatSrcset}
-    imageSizes="(max-width: 768px) 100vw, 980px"
-    imageAlt="Screenshot showing AI chat interface with document editing suggestions"
-    imageWidth={chatDefaultImage.options.width}
-    imageHeight={chatDefaultImage.options.height}
-  />
-  <Container className="flex flex-col gap-y-6 relative pb-16">
-    <div class="flex flex-col gap-y-4 text-center max-w-2xl mx-auto">
-      <h2
-        class="text-3xl font-heading font-medium tracking-tight text-gray-900"
+  /> -->
+  <div class="px-4">
+    <div
+      class="rounded-xl shadow-inner grainy-gradient-container border border-black/8 relative"
+    >
+      <div
+        class="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20 gradient-overlay"
       >
-        Start writing smarter today
-      </h2>
-      <p class="text-[15px] text-gray-600">
-        Start writing better, faster with AI that understands your work.
-      </p>
-      <div class="flex justify-center mt-4">
-        <Button href="https://app.lydie.co/auth" size="lg">
-          <div class="flex items-center gap-x-1">
-            <span>Try Lydie free</span>
-            <ChevronRight
-              className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+      </div>
+      <svg class="grainy-gradient-svg">
+        <filter id="noiseFilter">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.65"
+            numOctaves="3"
+            stitchTiles="stitch"></feTurbulence>
+        </filter>
+      </svg>
+      <Container className="flex flex-col relative z-10 pb-16 pt-28">
+        <div class="flex flex-col gap-y-3 max-w-2xl text-left">
+          <div
+            class="rounded-full shadow-surface bg-white self-start px-2 py-0.5 flex items-center gap-x-1.5"
+          >
+            <div class="rounded-full bg-orange-300 size-1.5"></div>
+            <span class="text-[12px] font-medium text-gray-700"
+              >Now in open beta!</span
+            >
+          </div>
+          <h1
+            class="text-5xl font-heading font-medium tracking-tight text-white drop-shadow-text"
+          >
+            Centralize your writing
+          </h1>
+          <p class="text-[17px]/relaxed text-white/90 text-balance">
+            Lydie is a writing workspace that adapts to your needs. An
+            open-source alternative to Google Docs, Notion and others.
+          </p>
+          <div class="flex items-center justify-start gap-x-1.5 mt-4">
+            <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
+              <span>Try Lydie free</span>
+            </Button>
+            <Button
+              href="https://github.com/lsalling/lydie"
+              size="lg"
+              target="_blank"
+              intent="ghost"
+              className="text-white hover:bg-white/10"
+            >
+              <div class="flex items-center gap-x-1.5">
+                <span>Star on GitHub</span>
+              </div>
+            </Button>
+          </div>
+        </div>
+      </Container>
+      <div
+        class="relative bg-white/20 rounded-[14px] -mb-60 p-2 flex flex-col before:pointer-events-none before:absolute before:bottom-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay mx-28"
+        style={`box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,${glowOpacity40}), 0 0 80px rgba(255,255,255,${glowOpacity80}), 0 0 120px rgba(255,255,255,${glowOpacity120});`}
+      >
+        <div class="flex items-center gap-x-1.5 mb-2">
+          {
+            [...Array(2)].map(() => (
+              <div class="rounded-full size-3 bg-white/25" />
+            ))
+          }
+          <div class="relative group">
+            <div
+              class="rounded-full size-3 bg-white/25 hover:bg-green-500 cursor-pointer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                class="size-3 text-black/80 group-hover:opacity-100 transition-opacity duration-200 opacity-0"
+              >
+                <path
+                  fill="currentColor"
+                  d="M15.346 8.654v2.285a1.25 1.25 0 0 0 2.5 0V8.18c0-.117 0-.27-.01-.405a1.8 1.8 0 0 0-.18-.665a1.75 1.75 0 0 0-.765-.764a1.8 1.8 0 0 0-.665-.18a5 5 0 0 0-.405-.011h-2.76a1.25 1.25 0 1 0 0 2.5zM7.404 11.81c.69 0 1.25.56 1.25 1.25v2.285h2.285a1.25 1.25 0 0 1 0 2.5H8.18c-.117 0-.27 0-.405-.01a1.8 1.8 0 0 1-.665-.18a1.75 1.75 0 0 1-.764-.765a1.8 1.8 0 0 1-.18-.665c-.011-.136-.011-.288-.011-.405v-2.76c0-.69.56-1.25 1.25-1.25"
+                ></path></svg
+              >
+            </div>
+            <div
+              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md shadow-lg whitespace-nowrap pointer-events-none z-50"
+            >
+              Click to demo!
+              <div
+                class="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"
+              >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-px ring ring-white/20 rounded-[9px] bg-white/10">
+          <div
+            class="rounded-lg overflow-hidden shadow-surface ring ring-black/8"
+          >
+            <Image
+              src={screenshotNew}
+              alt="Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
+              quality={100}
+              loading="eager"
             />
           </div>
-        </Button>
+        </div>
       </div>
     </div>
-  </Container>
+  </div>
 </div>
+<Container className="flex flex-col gap-y-12 relative">
+  <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
+    {
+      keyBenefits.map((benefit) => (
+        <div class="flex flex-col gap-y-2">
+          <div class="flex items-center gap-x-2">
+            <benefit.icon className="size-4 text-gray-700" />
+            <span class="font-medium text-[15px]/0 text-gray-900">
+              {benefit.title}
+            </span>
+          </div>
+          <p class="text-sm text-gray-600 leading-relaxed">
+            {benefit.description}
+          </p>
+        </div>
+      ))
+    }
+  </div>
+  <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
+</Container>
+<ChatSection
+  client:load
+  imageSrc={chatDefaultImage.src}
+  imageSrcSet={chatSrcset}
+  imageSizes="(max-width: 768px) 100vw, 980px"
+  imageAlt="Screenshot showing AI chat interface with document editing suggestions"
+  imageWidth={chatDefaultImage.options.width}
+  imageHeight={chatDefaultImage.options.height}
+/>
+<Container className="flex flex-col gap-y-6 relative pb-16">
+  <div class="flex flex-col gap-y-4 text-center max-w-2xl mx-auto">
+    <h2 class="text-3xl font-heading font-medium tracking-tight text-gray-900">
+      Start writing smarter today
+    </h2>
+    <p class="text-[15px] text-gray-600">
+      Start writing better, faster with AI that understands your work.
+    </p>
+    <div class="flex justify-center mt-4">
+      <Button href="https://app.lydie.co/auth" size="lg">
+        <div class="flex items-center gap-x-1">
+          <span>Try Lydie free</span>
+          <ChevronRight
+            className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+          />
+        </div>
+      </Button>
+    </div>
+  </div>
+</Container>
+
+<style>
+  .grainy-gradient-svg {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .grainy-gradient-container {
+    position: relative;
+    overflow: hidden;
+    background: #e5e7eb;
+  }
+
+  .grainy-gradient-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, #1f1f1f 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, #141414 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, #000000 0%, transparent 60%),
+      radial-gradient(circle at 10% 80%, #030303 0%, transparent 40%),
+      radial-gradient(circle at 90% 20%, #050505 0%, transparent 45%),
+      linear-gradient(135deg, #000000 0%, #141414 50%, #000000 100%);
+    opacity: 0.9;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .grainy-gradient-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    filter: contrast(170%) brightness(1000%);
+    opacity: 0.9;
+    z-index: 1;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  .grainy-gradient-container
+    > :not(.grainy-gradient-svg):not(.gradient-overlay) {
+    position: relative;
+    z-index: 10;
+  }
+
+  .drop-shadow-text {
+    text-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+</style>
