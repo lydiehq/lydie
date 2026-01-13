@@ -29,7 +29,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^25.0.7",
+    "@types/node": "^25.0.8",
     "sst": "catalog:"
   }
 }
