@@ -6,7 +6,7 @@ import IntegrationsSection from "./IntegrationsSection.astro";
 import PerformanceSection from "./PerformanceSection.astro";
 import UseCasesSection from "./UseCasesSection.astro";
 import EditorFeaturesSection from "./EditorFeaturesSection.astro";
-import Hero from "./Hero.astro";
+import { Hero } from "./Hero";
 import { Search, Globe, ChevronRight, Share2 } from "lucide-react";
 import { Container } from "../Container";
 import screenshotChat from "../../../public/screenshot_document_chat.png";
@@ -49,7 +49,7 @@ const keyBenefits = [
 ---
 
 <div class="flex flex-col gap-y-16 overflow-hidden">
-  <Hero />
+  <Hero client:load />
 </div>
 <Container className="flex flex-col gap-y-12 relative">
   <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
