@@ -68,6 +68,12 @@ export const comparisons: Comparison[] = [
         lydie: true,
         competitor: "Limited API access",
       },
+      {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
+        lydie: true,
+        competitor: "Limited API access",
+      },
     ],
   },
   {
@@ -134,6 +140,12 @@ export const comparisons: Comparison[] = [
         competitor: "Limited to Notion's API and integrations",
       },
       {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
+        lydie: true,
+        competitor: "Limited API with restrictions",
+      },
+      {
         name: "Databases",
         description:
           "Create and manage structured databases with various views",
@@ -183,6 +195,12 @@ export const comparisons: Comparison[] = [
         name: "External platform sync",
         description:
           "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
         lydie: true,
         competitor: true,
       },
@@ -264,6 +282,12 @@ export const comparisons: Comparison[] = [
         competitor: "Via Atlassian Marketplace",
       },
       {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
+        lydie: true,
+        competitor: "Confluence REST API available",
+      },
+      {
         name: "Modern interface",
         description: "Clean, intuitive UI built with modern standards",
         lydie: true,
@@ -312,6 +336,12 @@ export const comparisons: Comparison[] = [
         name: "External platform sync",
         description:
           "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        lydie: true,
+        competitor: "Limited API access",
+      },
+      {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
         lydie: true,
         competitor: "Limited API access",
       },
@@ -393,6 +423,12 @@ export const comparisons: Comparison[] = [
         competitor: "Limited to Microsoft ecosystem",
       },
       {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
+        lydie: true,
+        competitor: "Microsoft Graph API (requires subscription)",
+      },
+      {
         name: "Offline editing",
         description: "Edit documents without internet connection",
         lydie: "Planned",
@@ -468,6 +504,12 @@ export const comparisons: Comparison[] = [
           "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Via plugins",
+      },
+      {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
+        lydie: true,
+        competitor: "No official API (plugins may provide access)",
       },
       {
         name: "Graph view",
