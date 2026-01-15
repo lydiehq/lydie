@@ -27,12 +27,12 @@ import {
   TooltipTrigger,
 } from "react-aria-components";
 import {
-  Edit,
-  ExternalLink,
-  FileText,
-  Unlink,
-  type LucideIcon,
-} from "lucide-react";
+  EditIcon,
+  ExternalLinkIcon,
+  DocumentIcon,
+  UnlinkIcon,
+} from "@/icons";
+import type { ComponentType, SVGProps } from "react";
 import { useQuery } from "@rocicorp/zero/react";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
@@ -458,7 +458,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
                       className="flex items-center gap-2 w-full p-1.5 text-left text-sm rounded hover:bg-gray-100 cursor-pointer data-[focused]:bg-gray-100"
                       onAction={() => handleDocumentSelect(doc.id)}
                     >
-                      <FileText className="size-3.5 text-gray-500 shrink-0" />
+                      <DocumentIcon className="size-3.5 text-gray-500 shrink-0" />
                       <span className="truncate">
                         {doc.title || "Untitled document"}
                       </span>
@@ -471,7 +471,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
             <div className="flex gap-x-1 items-center max-w-[300px]">
               <div className="flex gap-x-2 overflow-hidden text-ellipsis whitespace-nowrap px-1 items-center">
                 {isInternal ? (
-                  <FileText className="size-3.5 text-gray-500 shrink-0" />
+                  <DocumentIcon className="size-3.5 text-gray-500 shrink-0" />
                 ) : domain ? (
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
@@ -493,21 +493,21 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
               <div className="flex gap-x-0.5">
                 <LinkPopoverButton
                   title={isInternal ? "Open document" : "Open link in new tab"}
-                  icon={isInternal ? FileText : ExternalLink}
+                  icon={isInternal ? DocumentIcon : ExternalLinkIcon}
                   onPress={handleOpenLink}
                 >
                   {isInternal ? "Open document" : "Open in new tab"}
                 </LinkPopoverButton>
                 <LinkPopoverButton
                   title="Edit link"
-                  icon={Edit}
+                  icon={EditIcon}
                   onPress={() => setIsEditing(true)}
                 >
                   Edit link
                 </LinkPopoverButton>
                 <LinkPopoverButton
                   title="Remove link"
-                  icon={Unlink}
+                  icon={UnlinkIcon}
                   onPress={() => editor.chain().focus().unsetLink().run()}
                 >
                   Remove link
@@ -523,7 +523,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
 
 type LinkPopoverButtonProps = ButtonProps & {
   title: string;
-  icon: LucideIcon;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
 function LinkPopoverButton(props: LinkPopoverButtonProps) {

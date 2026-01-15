@@ -7,7 +7,7 @@ import { Heading } from "@/components/generic/Heading";
 import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useQuery } from "@rocicorp/zero/react";
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { DownloadIcon } from "@/icons";
 import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
 import JSZip from "jszip";
@@ -163,7 +163,7 @@ updated: ${new Date(doc.updated_at).toISOString()}
                 isPending={isExporting}
                 isDisabled={!documents || documents.length === 0 || isExporting}
               >
-                <Download className="size-3.5 mr-1" />
+                <DownloadIcon className="size-3.5 mr-1" />
                 {isExporting ? "Exporting..." : "Export as Markdown"}
               </Button>
             </div>

@@ -1,14 +1,13 @@
 import { Disclosure, DisclosurePanel, Button } from "react-aria-components";
 import {
-  Loader,
-  List,
-  ExternalLink,
-  Calendar,
-  Clock,
-  File,
-  FileText,
-} from "lucide-react";
-import { ChevronRight } from "lucide-react";
+  LoaderIcon,
+  ListIcon,
+  ExternalLinkIcon,
+  CalendarIcon,
+  ClockIcon,
+  DocumentIcon,
+  ChevronRightIcon,
+} from "@/icons";
 import { Link } from "@tanstack/react-router";
 import { ToolContainer } from "./ToolContainer";
 import { motion, AnimatePresence } from "motion/react";
@@ -112,7 +111,7 @@ export function ListDocumentsTool({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Loader className="size-4 animate-spin text-gray-400" />
+              <LoaderIcon className="size-4 animate-spin text-gray-400" />
             </motion.div>
           ) : outputState === "success" && documents.length > 0 ? (
             <motion.ul
@@ -150,7 +149,7 @@ export function ListDocumentsTool({
                     params={{ id: doc.id }}
                     className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
-                    <File className="text-gray-500 shrink-0 size-3.5" />
+                    <DocumentIcon className="text-gray-500 shrink-0 size-3.5" />
                     <span className="truncate flex-1">
                       {doc.title || "Untitled document"}
                     </span>
@@ -181,8 +180,8 @@ export function ListDocumentsTool({
         className="group flex items-center gap-x-2 truncate relative text-gray-500 hover:text-gray-700"
         slot="trigger"
       >
-        <List className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
-        <ChevronRight className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
+        <ListIcon className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
+        <ChevronRightIcon className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">
           Listed {documents.length} document{documents.length !== 1 ? "s" : ""}
           {filters && filters.titleFilter
@@ -239,7 +238,7 @@ export function ListDocumentsTool({
                           className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 text-sm"
                         >
                           <span className="truncate">{doc.title}</span>
-                          <ExternalLink className="size-3 shrink-0" />
+                          <ExternalLinkIcon className="size-3 shrink-0" />
                         </Link>
                         <div className="text-xs text-gray-500 mt-1">
                           /{doc.slug}
@@ -248,7 +247,7 @@ export function ListDocumentsTool({
 
                       <div className="text-xs text-gray-400 shrink-0">
                         <div className="flex items-center gap-1">
-                          <Clock className="size-3" />
+                          <ClockIcon className="size-3" />
                           {new Date(doc.updatedAt).toLocaleDateString()}
                         </div>
                       </div>
@@ -276,12 +275,12 @@ export function ListDocumentsTool({
                     {/* Metadata */}
                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
                       <div className="flex items-center gap-1">
-                        <Calendar className="size-3" />
+                        <CalendarIcon className="size-3" />
                         Created: {new Date(doc.createdAt).toLocaleDateString()}
                       </div>
                       {doc.wordCount !== undefined && (
                         <div className="flex items-center gap-1">
-                          <FileText className="size-3" />
+                          <DocumentIcon className="size-3" />
                           {doc.wordCount} words
                         </div>
                       )}

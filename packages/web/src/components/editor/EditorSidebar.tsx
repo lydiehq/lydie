@@ -2,11 +2,11 @@ import { DocumentChat, type DocumentChatRef } from "./DocumentChat";
 import { queries } from "@lydie/zero/queries";
 import { Button, MenuTrigger } from "react-aria-components";
 import {
-  ClockFading,
-  AlertCircle,
-  type LucideIcon,
-  SquarePen,
-} from "lucide-react";
+  ClockFadingIcon,
+  AlertCircleIcon,
+  CreateIcon,
+} from "@/icons";
+import type { ComponentType, SVGProps } from "react";
 import { SidebarIcon } from "../layout/SidebarIcon";
 import { type DocumentEditorHookResult } from "@/lib/editor/document-editor";
 import { Menu, MenuItem } from "../generic/Menu";
@@ -82,7 +82,7 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
           >
             {isAdmin(user) && (
               <SidebarButton
-                icon={AlertCircle}
+                icon={AlertCircleIcon}
                 tooltip="Log current conversation"
                 onPress={() => {
                   console.dir(currentConversation);
@@ -91,7 +91,7 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
               />
             )}
             <SidebarButton
-              icon={SquarePen}
+              icon={CreateIcon}
               tooltip="New Conversation"
               onPress={createNewConversation}
               isCollapsed={isCollapsed}
@@ -152,7 +152,7 @@ function ConversationHistoryDropdown({
   return (
     <MenuTrigger>
       <SidebarButton
-        icon={ClockFading}
+        icon={ClockFadingIcon}
         tooltip="Conversation History"
         onPress={() => {}}
         isCollapsed={isCollapsed}
@@ -178,7 +178,7 @@ function ConversationHistoryDropdown({
 }
 
 type SidebarButtonProps = {
-  icon: LucideIcon;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   tooltip: string;
   onPress: () => void;
   isCollapsed: boolean;

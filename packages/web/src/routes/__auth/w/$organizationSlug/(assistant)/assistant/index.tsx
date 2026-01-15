@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { MessageCircle } from "lucide-react";
+import { MessageCircleIcon } from "@/icons";
 import { Surface } from "@/components/layout/Surface";
 import { useCallback, useRef, useState } from "react";
 import { useOrganization } from "@/context/organization.context";

@@ -1,7 +1,7 @@
 import { Editor, EditorContent, useEditorState } from "@tiptap/react";
 import { AnimatePresence, motion } from "motion/react";
 import { Button as RACButton, Form } from "react-aria-components";
-import { CircleArrowUp, X, Square } from "lucide-react";
+import { CircleArrowUpIcon, XIcon, SquareIcon } from "@/icons";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { queries } from "@lydie/zero/queries";
@@ -267,9 +267,9 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
                 isDisabled={false}
               >
                 {canStop ? (
-                  <Square className="size-4 text-gray-900 fill-gray-900" />
+                  <SquareIcon className="size-4 text-gray-900 fill-gray-900" />
                 ) : (
-                  <CircleArrowUp className="size-4.5 text-gray-500" />
+                  <CircleArrowUpIcon className="size-4.5 text-gray-500" />
                 )}
               </RACButton>
             </Form>
@@ -302,7 +302,7 @@ function Selection({ editor }: { editor: Editor | null }) {
         onPress={handleClearSelection}
         className="text-gray-500 hover:text-gray-700 p-1 rounded rounded-l-md"
       >
-        <X className="size-3.5" />
+        <XIcon className="size-3.5" />
       </RACButton>
       <RACButton
         className="p-1 rounded relative flex-1 text-sm leading-relaxed text-gray-700 truncate italic transition-colors hover:bg-gray-100 rounded-r-md text-start"

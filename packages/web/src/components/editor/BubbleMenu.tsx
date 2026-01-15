@@ -3,13 +3,13 @@ import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
 import { Separator } from "../generic/Separator";
 import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  Sparkles,
-  Link,
-} from "lucide-react";
+  BoldIcon,
+  ItalicIcon,
+  StrikethroughIcon,
+  CodeIcon,
+  SparklesIcon,
+  LinkIcon,
+} from "@/icons";
 
 type Props = {
   editor: Editor;
@@ -29,25 +29,25 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleBold().run()}
         title="Bold"
-        icon={Bold}
+        icon={BoldIcon}
         editor={editor}
       />
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleItalic().run()}
         title="Italic"
-        icon={Italic}
+        icon={ItalicIcon}
         editor={editor}
       />
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleStrike().run()}
         title="Strike"
-        icon={Strikethrough}
+        icon={StrikethroughIcon}
         editor={editor}
       />
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleCode().run()}
         title="Code"
-        icon={Code}
+        icon={CodeIcon}
         editor={editor}
       />
 
@@ -61,7 +61,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
           }
         }}
         title="Add Link"
-        icon={Link}
+        icon={LinkIcon}
         editor={editor}
         isDisabled={editor.state.selection.empty}
       />
@@ -74,7 +74,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
           editor.commands.captureAndMarkSelection();
         }}
         title="Add to context"
-        icon={Sparkles}
+        icon={SparklesIcon}
         editor={editor}
         className="p-1.5 rounded hover:bg-gray-100"
       />

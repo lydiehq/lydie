@@ -6,14 +6,14 @@ import { Heading } from "@/components/generic/Heading";
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { useMemo, useState } from "react";
 import {
-  TrendingUp,
-  Calendar,
-  Zap,
-  AlertCircle,
-  Check,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
+  TrendingUpIcon,
+  CalendarIcon,
+  ZapIcon,
+  AlertCircleIcon,
+  CheckIcon,
+  ArrowRightIcon,
+  SparklesIcon,
+} from "@/icons";
 import { DialogTrigger } from "react-aria-components";
 import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
@@ -156,7 +156,7 @@ function RouteComponent() {
       {/* Free Plan Upgrade Section */}
       {currentPlan === PLAN_TYPES.FREE && (
         <Card className="p-8 text-center">
-          <AlertCircle className="size-12 mx-auto text-gray-400 mb-4" />
+          <AlertCircleIcon className="size-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Free Plan
           </h3>
@@ -166,7 +166,7 @@ function RouteComponent() {
           </p>
           <DialogTrigger>
             <Button>
-              <Sparkles className="size-4 mr-2" />
+              <SparklesIcon className="size-4 mr-2" />
               Upgrade to Pro
             </Button>
             <Modal isDismissable>
@@ -198,19 +198,19 @@ function RouteComponent() {
 
                       <ul className="space-y-2 mb-4">
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <Check className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Unlimited tokens</span>
                         </li>
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <Check className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Unlimited requests</span>
                         </li>
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <Check className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Background processing</span>
                         </li>
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <Check className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Priority support</span>
                         </li>
                       </ul>
@@ -228,7 +228,7 @@ function RouteComponent() {
                         ) : (
                           <>
                             Upgrade to Pro
-                            <ArrowRight className="size-4 ml-2" />
+                            <ArrowRightIcon className="size-4 ml-2" />
                           </>
                         )}
                       </Button>
@@ -309,7 +309,7 @@ function RouteComponent() {
               </Button>
               <DialogTrigger>
                 <Button intent="secondary" size="sm">
-                  <Sparkles className="size-4 mr-2" />
+                  <SparklesIcon className="size-4 mr-2" />
                   Change Plan
                 </Button>
                 <Modal isDismissable>
@@ -345,14 +345,14 @@ function RouteComponent() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Calendar className="size-5 text-gray-500" />
+              <CalendarIcon className="size-5 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Plan Status</p>
                 <p className="text-sm font-medium text-gray-900">Active</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Zap className="size-5 text-gray-500" />
+              <ZapIcon className="size-5 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Total Requests</p>
                 <p className="text-sm font-medium text-gray-900">
@@ -365,7 +365,7 @@ function RouteComponent() {
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <TrendingUp className="size-5 text-gray-500" />
+              <TrendingUpIcon className="size-5 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Total Tokens</p>
                 <p className="text-sm font-medium text-gray-900">
@@ -477,10 +477,9 @@ function RouteComponent() {
         )}
       </Card>
 
-      {/* Early Alpha Disclaimer */}
       <Card className="p-6">
         <div className="flex items-start gap-3">
-          <AlertCircle className="size-5 text-amber-600 mt-0.5 shrink-0" />
+          <AlertCircleIcon className="size-5 text-amber-600 mt-0.5 shrink-0" />
           <div>
             <h3 className="text-sm font-semibold text-amber-800 mb-1">
               Early Alpha Disclaimer

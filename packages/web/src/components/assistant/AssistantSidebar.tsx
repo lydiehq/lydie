@@ -1,5 +1,5 @@
 import { Button } from "react-aria-components";
-import { SquarePen, MessageCircle } from "lucide-react";
+import { CreateIcon, MessageCircleIcon } from "@/icons";
 import { SidebarIcon } from "../layout/SidebarIcon";
 import { useCallback } from "react";
 import clsx from "clsx";
@@ -75,7 +75,7 @@ export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
               )}
               onPress={handleNewConversation}
             >
-              <SquarePen className="size-3.5" />
+              <CreateIcon className="size-3.5" />
             </Button>
             <Tooltip placement={isCollapsed ? "left" : undefined}>
               New Conversation
@@ -122,7 +122,7 @@ export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
                     )}
                   >
                     <div className="flex items-start gap-2">
-                      <MessageCircle className="size-4 text-gray-400 shrink-0 mt-0.5" />
+                      <MessageCircleIcon className="size-4 text-gray-400 shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900 line-clamp-2 break-words">
                           {preview}
@@ -143,7 +143,7 @@ export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-              <MessageCircle className="size-8 text-gray-300 mb-2" />
+              <MessageCircleIcon className="size-8 text-gray-300 mb-2" />
               <p className="text-sm text-gray-500">No conversations yet</p>
             </div>
           )}

@@ -5,7 +5,7 @@ import { Heading, Button as RACButton } from "react-aria-components";
 import { Separator } from "../generic/Separator";
 import { Button } from "../generic/Button";
 import { useNavigate, useRouteContext } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/icons";
 import { useOrganization } from "@/context/organization.context";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 
@@ -61,9 +61,8 @@ export function OrganizationsDialog({
                       <span className="text-gray-500 ml-1">current</span>
                     )}
                   </div>
-                  <ChevronRight
-                    size={14}
-                    className="absolute right-2 text-gray-200 top-1/2 -translate-y-1/2 group-hover:text-gray-400"
+                  <ChevronRightIcon
+                    className="size-[14px] absolute right-2 text-gray-200 top-1/2 -translate-y-1/2 group-hover:text-gray-400"
                   />
                 </RACButton>
               </li>

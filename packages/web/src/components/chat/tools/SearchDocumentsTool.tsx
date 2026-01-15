@@ -1,4 +1,4 @@
-import { Loader, File } from "lucide-react";
+import { LoaderIcon, DocumentIcon } from "@/icons";
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -77,7 +77,7 @@ export function SearchDocumentsTool({ tool }: SearchDocumentsToolProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Loader className="size-4 animate-spin text-gray-400" />
+              <LoaderIcon className="size-4 animate-spin text-gray-400" />
             </motion.div>
           ) : results.length > 0 ? (
             <motion.ul
@@ -115,7 +115,7 @@ export function SearchDocumentsTool({ tool }: SearchDocumentsToolProps) {
                     params={{ id: result.documentId }}
                     className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
-                    <File className="text-gray-500 shrink-0 size-3.5" />
+                    <DocumentIcon className="text-gray-500 shrink-0 size-3.5" />
                     <span className="truncate flex-1">
                       {result.documentTitle || "Untitled document"}
                     </span>

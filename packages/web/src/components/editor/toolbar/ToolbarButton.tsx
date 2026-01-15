@@ -5,12 +5,12 @@ import {
   TooltipTrigger,
 } from "react-aria-components";
 import { Tooltip } from "../../generic/Tooltip";
-import { type LucideIcon } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 
 type Props = ButtonProps & {
   title: string;
   editor: Editor;
-  icon: LucideIcon;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   className?: string | ((props: { isSelected?: boolean }) => string);
   isDisabled?: boolean;
   hotkeys?: string[];

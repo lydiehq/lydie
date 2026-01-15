@@ -7,7 +7,7 @@ import {
   CreditCardIcon,
   BlocksIcon,
   UploadIcon,
-  FileTextIcon,
+  DocumentIcon,
   ExternalLinkIcon,
   ShieldAlertIcon,
   PuzzleIcon,
@@ -103,7 +103,7 @@ const settingsRoutes: SettingsSection[] = [
         path: "https://lydie.co/documentation",
         external: true,
         label: "Docs",
-        icon: FileTextIcon,
+        icon: DocumentIcon,
       },
     ],
   },
@@ -133,7 +133,9 @@ function RouteComponent() {
                               to={route.path}
                               from="/w/$organizationSlug/settings"
                               {...(route.external ? { target: "_blank" } : {})}
-                              className={sidebarItemStyles()}
+                              className={sidebarItemStyles({
+                                className: "px-1.5",
+                              })}
                               activeOptions={{
                                 exact: true,
                                 includeSearch: false,
@@ -150,6 +152,11 @@ function RouteComponent() {
                                 <span className="truncate flex-1">
                                   {route.label}
                                 </span>
+                                {route.adminOnly && (
+                                  <span className="text-[10px] font-medium text-muted-foreground/80 bg-muted/50 dark:bg-muted/30 px-1.5 py-0.5 rounded shrink-0">
+                                    Admin
+                                  </span>
+                                )}
                                 {route.external && (
                                   <ExternalLinkIcon
                                     className={sidebarItemIconStyles({

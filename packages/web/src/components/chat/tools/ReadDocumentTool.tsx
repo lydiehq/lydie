@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Loader } from "lucide-react";
+import { CheckIcon, LoaderIcon } from "@/icons";
 import { motion, AnimatePresence } from "motion/react";
 
 export interface ReadDocumentToolProps {
@@ -106,7 +106,7 @@ export function ReadDocumentTool({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Loader className="size-4 animate-spin text-gray-400" />
+              <LoaderIcon className="size-4 animate-spin text-gray-400" />
             </motion.div>
           ) : outputState === "error" || tool.output?.error ? (
             <motion.div
@@ -131,7 +131,7 @@ export function ReadDocumentTool({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              <Check className="size-3" />
+              <CheckIcon className="size-3" />
               <span className="text-[13px]">
                 Successfully read "{tool.output.document.title}"
               </span>

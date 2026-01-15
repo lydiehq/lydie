@@ -4,12 +4,12 @@ import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 import { useCallback } from "react";
 import clsx from "clsx";
 import {
-  Wifi,
-  WifiOff,
-  AlertCircle,
-  Loader2,
-  ShieldAlert,
-} from "lucide-react";
+  WifiIcon,
+  WifiOffIcon,
+  AlertCircleIcon,
+  Loader2Icon,
+  ShieldAlertIcon,
+} from "@/icons";
 
 export function ZeroConnectionStatus() {
   const state = useConnectionState();
@@ -25,7 +25,7 @@ export function ZeroConnectionStatus() {
     switch (state.name) {
       case "connecting":
         return {
-          icon: Loader2,
+          icon: Loader2Icon,
           label: "Connecting...",
           color: "text-amber-600",
           bgColor: "bg-amber-50",
@@ -34,7 +34,7 @@ export function ZeroConnectionStatus() {
         };
       case "connected":
         return {
-          icon: Wifi,
+          icon: WifiIcon,
           label: "Connected",
           color: "text-green-600",
           bgColor: "bg-green-50",
@@ -43,7 +43,7 @@ export function ZeroConnectionStatus() {
         };
       case "disconnected":
         return {
-          icon: WifiOff,
+          icon: WifiOffIcon,
           label: "Offline",
           color: "text-gray-600",
           bgColor: "bg-gray-50",
@@ -52,7 +52,7 @@ export function ZeroConnectionStatus() {
         };
       case "error":
         return {
-          icon: AlertCircle,
+          icon: AlertCircleIcon,
           label: "Error",
           color: "text-red-600",
           bgColor: "bg-red-50",
@@ -62,7 +62,7 @@ export function ZeroConnectionStatus() {
         };
       case "needs-auth":
         return {
-          icon: ShieldAlert,
+          icon: ShieldAlertIcon,
           label: "Auth Required",
           color: "text-orange-600",
           bgColor: "bg-orange-50",
@@ -72,7 +72,7 @@ export function ZeroConnectionStatus() {
         };
       default:
         return {
-          icon: WifiOff,
+          icon: WifiOffIcon,
           label: "Unknown",
           color: "text-gray-600",
           bgColor: "bg-gray-50",
