@@ -1,5 +1,6 @@
 export { TextSelectionExtension } from "./selection";
 export type { TextSelectionOptions } from "./selection";
+export * from "./link";
 
 export { KeyboardShortcutExtension } from "./keyboard-shortcuts";
 export type { KeyboardShortcutOptions } from "./keyboard-shortcuts";

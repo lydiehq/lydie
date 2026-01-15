@@ -30,10 +30,11 @@ export function getDocumentEditorExtensions(
       undoRedo: false,
       code: false,
       codeBlock: false,
-      link: {
-        openOnClick: false,
-        protocols: ["internal"],
-      },
+      link: false,
+    }),
+    E.Link.configure({
+      openOnClick: false,
+      protocols: ["internal"],
     }),
     TableKit,
     CharacterCount,
