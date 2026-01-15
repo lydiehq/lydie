@@ -87,6 +87,9 @@ export function deserializeFromMDX(
   let currentParagraph: any = null;
   let currentList: any = null;
   let currentListType: "bullet" | "ordered" | null = null;
+  let inCodeBlock = false;
+  let codeBlockLanguage: string | null = null;
+  let codeBlockLines: string[] = [];
 
   const closeList = () => {
     if (currentList) {
@@ -221,6 +224,50 @@ export function deserializeFromMDX(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+
+    // Handle code blocks (```language or ```)
+    const codeBlockStartMatch = line.match(/^```([\w-]+)?$/);
+    if (codeBlockStartMatch) {
+      if (inCodeBlock) {
+        // End of code block
+        closeParagraph();
+        closeList();
+
+        const codeText = codeBlockLines.join("\n");
+        content.push({
+          type: "codeBlock",
+          attrs: codeBlockLanguage
+            ? { language: codeBlockLanguage }
+            : undefined,
+          content: codeText
+            ? [
+                {
+                  type: "text",
+                  text: codeText,
+                },
+              ]
+            : [],
+        });
+
+        inCodeBlock = false;
+        codeBlockLanguage = null;
+        codeBlockLines = [];
+      } else {
+        // Start of code block
+        closeParagraph();
+        closeList();
+        inCodeBlock = true;
+        codeBlockLanguage = codeBlockStartMatch[1] || null;
+        codeBlockLines = [];
+      }
+      continue;
+    }
+
+    // If we're inside a code block, collect lines
+    if (inCodeBlock) {
+      codeBlockLines.push(line);
+      continue;
+    }
 
     // Handle headings (# ## ###)
     if (line.trim().startsWith("#")) {
@@ -359,6 +406,23 @@ export function deserializeFromMDX(
   // Close any remaining open elements
   closeParagraph();
   closeList();
+
+  // Close any remaining code block
+  if (inCodeBlock) {
+    const codeText = codeBlockLines.join("\n");
+    content.push({
+      type: "codeBlock",
+      attrs: codeBlockLanguage ? { language: codeBlockLanguage } : undefined,
+      content: codeText
+        ? [
+            {
+              type: "text",
+              text: codeText,
+            },
+          ]
+        : [],
+    });
+  }
 
   // Ensure we always have at least one content node
   if (content.length === 0) {
