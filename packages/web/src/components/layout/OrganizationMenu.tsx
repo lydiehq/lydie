@@ -25,7 +25,6 @@ type Props = {
 };
 
 export function OrganizationMenu({ isCollapsed }: Props) {
-  const navigate = useNavigate();
   const { organization } = useOrganization();
   const { session } = useAuth();
   const userId = session?.userId;
@@ -40,7 +39,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
     await clearSession(queryClient);
     clearZeroInstance();
     await router.invalidate();
-    navigate({ to: "/auth" });
+    window.location.href = "https://lydie.co";
   };
 
   return (
