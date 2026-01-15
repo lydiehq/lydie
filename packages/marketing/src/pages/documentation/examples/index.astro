@@ -8,7 +8,7 @@ const examples = [
     description:
       "A simple blog built with Next.js that fetches and displays documents from the Lydie REST API.",
     framework: "Next.js",
-    href: "https://github.com/lsalling/lydie/tree/main/examples/nextjs-blog",
+    href: "https://github.com/lydiqhq/lydie/tree/main/examples/nextjs-blog",
     features: [
       "Server-side rendering",
       "Dynamic routes",
@@ -41,15 +41,11 @@ const examples = [
       <div class="grid gap-6">
         {
           examples.map((example) => (
-            <div
-              class="flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all"
-            >
+            <div class="flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all">
               <div class="flex items-start justify-between gap-x-4">
                 <div class="flex flex-col gap-y-2 flex-1">
                   <div class="flex items-center gap-x-3">
-                    <h2
-                      class="text-xl font-heading font-medium tracking-tight text-gray-900"
-                    >
+                    <h2 class="text-xl font-heading font-medium tracking-tight text-gray-900">
                       {example.title}
                     </h2>
                     <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -70,13 +66,11 @@ const examples = [
                 </a>
               </div>
               <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                {
-                  example.features.map((feature) => (
-                    <span class="text-xs text-gray-600 bg-gray-50 px-2.5 py-1 rounded-md">
-                      {feature}
-                    </span>
-                  ))
-                }
+                {example.features.map((feature) => (
+                  <span class="text-xs text-gray-600 bg-gray-50 px-2.5 py-1 rounded-md">
+                    {feature}
+                  </span>
+                ))}
               </div>
             </div>
           ))
@@ -123,13 +117,16 @@ const examples = [
         </ul>
         <div class="mt-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
           <p class="text-xs text-gray-600">
-            <strong class="text-gray-900">API Endpoint:</strong> All examples
-            use the REST API at{" "}
-            <code class="text-gray-800 font-mono bg-white px-1.5 py-0.5 rounded">
+            <strong class="text-gray-900">API Endpoint:</strong> All examples use
+            the REST API at{" "}
+            <code
+              class="text-gray-800 font-mono bg-white px-1.5 py-0.5 rounded"
+            >
               /v1/:idOrSlug
             </code>
-            . You can use either your organization ID or slug. Make sure to configure your API key and organization identifier in the
-            example's environment variables.
+            . You can use either your organization ID or slug. Make sure to configure
+            your API key and organization identifier in the example's environment
+            variables.
           </p>
         </div>
       </div>
@@ -144,7 +141,7 @@ const examples = [
           Have an example you'd like to share? We welcome contributions! Check
           out our{" "}
           <a
-            href="https://github.com/lsalling/lydie"
+            href="https://github.com/lydiqhq/lydie"
             target="_blank"
             rel="noopener noreferrer"
             class="text-gray-700 underline hover:text-gray-900"
@@ -157,4 +154,3 @@ const examples = [
     </div>
   </div>
 </DocumentationLayout>
-
