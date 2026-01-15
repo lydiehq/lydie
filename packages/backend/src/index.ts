@@ -4,18 +4,9 @@ import { hocuspocus } from "./hocuspocus-server";
 
 const port = 3001;
 
-const server = serve(
-  {
-    fetch: app.fetch,
-    port,
-  },
-  (info) => {
-    hocuspocus.hooks("onListen", {
-      instance: hocuspocus,
-      configuration: hocuspocus.configuration,
-      port: info.port,
-    });
-  }
-);
+const server = serve({
+  fetch: app.fetch,
+  port,
+});
 
 injectWebSocket(server);
