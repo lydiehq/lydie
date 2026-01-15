@@ -12,6 +12,7 @@ import { ReadCurrentDocumentTool } from "./tools/ReadCurrentDocumentTool";
 import { ListDocumentsTool } from "./tools/ListDocumentsTool";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
 import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";
+import { WebSearchTool } from "./tools/WebSearchTool";
 import { UserMessage } from "./Message";
 import { Streamdown } from "streamdown";
 import type { Editor } from "@tiptap/react";
@@ -342,6 +343,10 @@ function MessagePart({
 
   if (part.type === "tool-move_documents") {
     return <MoveDocumentsTool tool={part} />;
+  }
+
+  if (part.type === "tool-web_search") {
+    return <WebSearchTool tool={part} />;
   }
 
   if (part.type?.startsWith("tool-") && import.meta.env.DEV) {

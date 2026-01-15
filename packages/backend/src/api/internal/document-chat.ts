@@ -225,9 +225,11 @@ export const DocumentChatRoute = new Hono<{
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
-      // @ts-expect-error - experimental_transform is not typed
       experimental_transform: smoothStream({ chunking: "word" }),
       tools: {
+        web_search: openai.tools.webSearch({
+          searchContextSize: "low",
+        }),
         // google_search: google.tools.googleSearch({}),
         search_in_document: searchInDocument(
           documentId,

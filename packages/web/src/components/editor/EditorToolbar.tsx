@@ -436,7 +436,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
           className="mx-1 h-6 w-px bg-gray-200"
         />
 
-        <TooltipTrigger delay={500}>
+        {/* <TooltipTrigger delay={500}>
           <RACButton
             className={composeTailwindRenderProps(
               focusRing,
@@ -448,7 +448,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
             <SidebarIcon direction="right" collapsed={false} />
           </RACButton>
           <Tooltip>Expand sidebar</Tooltip>
-        </TooltipTrigger>
+        </TooltipTrigger> */}
 
         <DocumentSettingsDialog
           isOpen={isSettingsOpen}
