@@ -183,7 +183,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             to="/w/$organizationSlug"
             from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
-            className={sidebarItemStyles()}
+            className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <HomeIcon className={sidebarItemIconStyles()} />
@@ -194,7 +194,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             to="/w/$organizationSlug/assistant"
             from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
-            className={sidebarItemStyles()}
+            className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <MessageCircleIcon className={sidebarItemIconStyles()} />
@@ -205,7 +205,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             to="/w/$organizationSlug/settings/integrations"
             from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
-            className={sidebarItemStyles()}
+            className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <PuzzleIcon className={sidebarItemIconStyles()} />
