@@ -12,7 +12,8 @@ export { default as MessageCircleIcon } from "~icons/ion/chatbubble";
 export { default as UsersIcon } from "~icons/ion/people";
 
 // Documents & Files
-export { default as DocumentIcon } from "~icons/ion/document";
+export { default as DocumentIconOld } from "~icons/ion/document";
+export { default as DocumentIcon } from "~icons/ion/document-text";
 export { default as DocumentsIcon } from "~icons/ion/documents";
 export { default as FileTextIcon } from "~icons/ion/document-text";
 export { default as FolderIcon } from "~icons/ion/folder";
