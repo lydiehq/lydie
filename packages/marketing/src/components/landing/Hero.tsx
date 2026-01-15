@@ -1,16 +1,16 @@
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
 import screenshotNew from "../../../public/screenshot_new.png";
-import "../../styles/grainy-gradient.css";
 import styles from "./Hero.module.css";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
+import { HeroBackground } from "./HeroBackground";
 
 const imageSrc = screenshotNew.src;
 const imageAlt =
   "Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'.";
 
-export function Hero() {
+function DemoButton() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDemoClick = async () => {
@@ -23,31 +23,77 @@ export function Hero() {
   };
 
   return (
-    <div className="md:px-4 mb-32">
-      <div className="md:rounded-xl custom-inner-shadow grainy-gradient-container md:ring md:ring-black/20 relative md:px-4">
-        <div className="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20 gradient-overlay"></div>
-        <svg className="grainy-gradient-svg">
-          <filter id="noiseFilter">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.65"
-              numOctaves="3"
-              stitchTiles="stitch"
-            ></feTurbulence>
-          </filter>
-        </svg>
-        <svg
-          viewBox="0 0 256 256"
-          xmlns="http://www.w3.org/2000/svg"
-          className={styles.embossedLogo}
-        >
-          <path
-            fill="currentColor"
-            fillRule="evenodd"
-            d="M41.27 222.049c-.67-.618-.218-1.727.695-1.712 37.82.621 81.574-4.599 123.467-20.608 31.858-12.175 62.564-30.604 88.556-57.154.664-.679 1.812-.141 1.699.802C248.073 206.82 193.944 256 128.302 256c-33.588 0-64.162-12.876-87.032-33.951ZM8.475 172.36a.985.985 0 0 1-.797-.643C2.71 158.076 0 143.354 0 128 0 57.308 57.443 0 128.302 0c53.062 0 98.601 32.136 118.129 77.965a.999.999 0 0 1-.072.916c-24.815 39.85-59.9 64.094-97.239 78.364-49.113 18.769-102.352 20.214-140.645 15.115Z"
-            clipRule="evenodd"
-          ></path>
-        </svg>
+    <div className={`relative group ${styles.demoButtonContainer}`}>
+      <div className={styles.demoGlow}></div>
+      <div className={styles.demoParticles}>
+        <div className={styles.demoRotate}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className={styles.demoAngle}>
+              <div className={styles.demoSize}>
+                <div className={styles.demoPosition}>
+                  <div className={styles.demoParticle} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <button
+        onClick={handleDemoClick}
+        disabled={isLoading}
+        className="rounded-full size-[13px] bg-green-300 hover:bg-green-200 transition-colors duration-100 cursor-pointer relative z-10 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loader"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 360 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 },
+                rotate: {
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: "linear",
+                },
+              }}
+              className="size-[8px] border-2 border-green-800 border-t-transparent rounded-full"
+            />
+          ) : (
+            <motion.svg
+              key="icon"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.2 }}
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              className="size-[11px] text-green-800 -rotate-45"
+            >
+              <path
+                fill="currentColor"
+                d="m18 9l-6-6l-6 6zm0 6l-6 6l-6-6z"
+              ></path>
+            </motion.svg>
+          )}
+        </AnimatePresence>
+      </button>
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md shadow-lg whitespace-nowrap pointer-events-none z-50">
+        {isLoading ? "Loading..." : "Click to demo!"}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
+      </div>
+    </div>
+  );
+}
+
+export function Hero() {
+  return (
+    <div className="md:px-4">
+      <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4">
         <Container className="flex flex-col relative z-20 pb-20 md:pb-16 md:pt-28 pt-20">
           <div className="flex flex-col gap-y-3 max-w-2xl text-center mx-auto">
             <div
@@ -61,7 +107,7 @@ export function Hero() {
                 Now in open beta!
               </span>
             </div>
-            <h1 className="text-5xl font-heading font-medium tracking-tight text-white drop-shadow-text">
+            <h1 className="text-5xl font-medium tracking-tight text-white drop-shadow-text">
               <span className={styles.heroWord1}>Centralize</span>{" "}
               <span className={styles.heroWord2}>your</span>{" "}
               <span className={styles.heroWord3}>writing</span>
@@ -114,7 +160,7 @@ export function Hero() {
             className={`${styles.shimmerContainer} absolute inset-0 pointer-events-none`}
           ></div>
           <div className="flex items-center gap-x-1.5 mb-2 relative z-10">
-            {[...Array(2)].map((_, i) => (
+            {[...Array(3)].map((_, i) => (
               <div
                 key={i}
                 className="rounded-full size-[13px] bg-white/20"
@@ -124,70 +170,7 @@ export function Hero() {
                 }}
               />
             ))}
-            <div className={`relative group ${styles.demoButtonContainer}`}>
-              <div className={styles.demoGlow}></div>
-              <div className={styles.demoParticles}>
-                <div className={styles.demoRotate}>
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className={styles.demoAngle}>
-                      <div className={styles.demoSize}>
-                        <div className={styles.demoPosition}>
-                          <div className={styles.demoParticle} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <button
-                onClick={handleDemoClick}
-                disabled={isLoading}
-                className="rounded-full size-[13px] bg-green-300 hover:bg-green-200 transition-colors duration-100 cursor-pointer relative z-10 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <AnimatePresence mode="wait">
-                  {isLoading ? (
-                    <motion.div
-                      key="loader"
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1, rotate: 360 }}
-                      exit={{ opacity: 0, scale: 0.5 }}
-                      transition={{
-                        opacity: { duration: 0.2 },
-                        scale: { duration: 0.2 },
-                        rotate: {
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: "linear",
-                        },
-                      }}
-                      className="size-[8px] border-2 border-green-800 border-t-transparent rounded-full"
-                    />
-                  ) : (
-                    <motion.svg
-                      key="icon"
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.5 }}
-                      transition={{ duration: 0.2 }}
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                      className="size-[11px] text-green-800 -rotate-45"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="m18 9l-6-6l-6 6zm0 6l-6 6l-6-6z"
-                      ></path>
-                    </motion.svg>
-                  )}
-                </AnimatePresence>
-              </button>
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md shadow-lg whitespace-nowrap pointer-events-none z-50">
-                {isLoading ? "Loading..." : "Click to demo!"}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
-              </div>
-            </div>
+            {/* <DemoButton /> */}
           </div>
 
           <div className="p-px ring ring-white/20 rounded-[9px] bg-white/10 relative overflow-hidden">
@@ -196,7 +179,7 @@ export function Hero() {
             </div>
           </div>
         </div>
-      </div>
+      </HeroBackground>
     </div>
   );
 }

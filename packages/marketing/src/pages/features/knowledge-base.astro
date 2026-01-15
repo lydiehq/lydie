@@ -1,0 +1,294 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { Button } from "../../components/generic/Button";
+import { ChevronRight, FolderTree, Link2, Search, Layers } from "lucide-react";
+import { Logo } from "../../components/Logo";
+import KnowledgeBaseIllustration from "../../components/illustrations/KnowledgeBaseIllustration.astro";
+
+const title = "Organized Knowledge Base - Lydie";
+const description =
+  "Build a centralized knowledge base that grows with your team. Create nested pages, link related documents, and organize information in a way that makes sense for your workflow.";
+---
+
+<Layout title={title} description={description}>
+  <Container className="flex flex-col gap-y-16 pb-16">
+    <!-- Hero Section -->
+    <div class="max-w-4xl mx-auto flex flex-col gap-y-8 pt-8">
+      <div class="flex flex-col gap-y-6 items-center text-center">
+        <Logo className="size-6 text-gray-200" />
+
+        <div class="flex flex-col gap-y-4">
+          <h1
+            class="text-5xl font-heading font-medium tracking-tight text-gray-950 max-w-3xl"
+          >
+            Organized knowledge base
+          </h1>
+          <p class="text-lg text-gray-600 max-w-2xl">
+            Build a centralized knowledge base that grows with your team. Create
+            nested pages, link related documents, and organize information in a
+            way that makes sense for your workflow.
+          </p>
+        </div>
+
+        <div class="flex gap-x-4 items-center">
+          <Button href="https://app.lydie.co/auth" size="lg">
+            <div class="flex items-center gap-x-1">
+              <span>Get started for free</span>
+              <ChevronRight
+                className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+              />
+            </div>
+          </Button>
+        </div>
+      </div>
+
+      <!-- Illustration -->
+      <div class="w-full max-w-3xl mx-auto">
+        <div class="rounded-xl overflow-hidden ring-1 ring-black/5">
+          <KnowledgeBaseIllustration />
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="flex flex-col gap-y-8">
+        <div class="text-center">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            Everything you need to organize knowledge
+          </h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Nested Pages -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"
+            >
+              <FolderTree className="size-5 text-blue-600" />
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">Nested pages</h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              Organize your knowledge hierarchically with nested pages. Create
+              parent pages, sub-pages, and sub-sub-pages to match your team's
+              structure and workflow.
+            </p>
+          </div>
+
+          <!-- Internal Linking -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center"
+            >
+              <Link2 className="size-5 text-indigo-600" />
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">
+              Internal linking
+            </h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              Connect related documents with smart internal links. Create a
+              knowledge graph of your content that helps you discover related
+              information and navigate your knowledge base.
+            </p>
+          </div>
+
+          <!-- Powerful Search -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center"
+            >
+              <Search className="size-5 text-green-600" />
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">Powerful search</h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              Find information quickly with full-text search across all your
+              documents. Search by content, title, or tags to locate exactly
+              what you need.
+            </p>
+          </div>
+
+          <!-- Flexible Organization -->
+          <div
+            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
+          >
+            <div
+              class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center"
+            >
+              <Layers className="size-5 text-purple-600" />
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900">
+              Flexible organization
+            </h3>
+            <p class="text-gray-600 text-[15px]/relaxed">
+              Organize information in a way that makes sense for your team. Use
+              pages, links, and tags to create a knowledge base that grows and
+              evolves with your needs.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Use Cases -->
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="flex flex-col gap-y-8">
+        <div class="text-center">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            Perfect for every team
+          </h2>
+        </div>
+
+        <div class="flex flex-col gap-y-4">
+          <div
+            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
+          >
+            <div
+              class="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mt-1"
+            >
+              <FolderTree className="size-4 text-blue-600" />
+            </div>
+            <div class="flex flex-col gap-y-1">
+              <h3 class="font-semibold text-gray-900">Documentation teams</h3>
+              <p class="text-gray-600 text-[15px]/relaxed">
+                Create comprehensive documentation wikis with nested pages and
+                internal links. Keep technical docs, API references, and guides
+                organized and easy to navigate.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
+          >
+            <div
+              class="shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mt-1"
+            >
+              <Link2 className="size-4 text-indigo-600" />
+            </div>
+            <div class="flex flex-col gap-y-1">
+              <h3 class="font-semibold text-gray-900">Engineering teams</h3>
+              <p class="text-gray-600 text-[15px]/relaxed">
+                Maintain runbooks, architecture docs, and project specs in a
+                centralized knowledge base. Link related documents to create a
+                living documentation system.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
+          >
+            <div
+              class="shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mt-1"
+            >
+              <Search className="size-4 text-green-600" />
+            </div>
+            <div class="flex flex-col gap-y-1">
+              <h3 class="font-semibold text-gray-900">Product teams</h3>
+              <p class="text-gray-600 text-[15px]/relaxed">
+                Build a product wiki with specs, research, and meeting notes.
+                Organize by feature, product area, or team to keep everyone
+                aligned and informed.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="flex flex-col gap-y-8">
+        <div class="text-center">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            How it works
+          </h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="flex flex-col gap-y-3 text-center">
+            <div
+              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
+            >
+              1
+            </div>
+            <h3 class="font-semibold text-gray-900">Create pages</h3>
+            <p class="text-gray-600 text-sm">
+              Start creating pages and organize them hierarchically. Create
+              parent pages and nest child pages to match your team's structure.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-y-3 text-center">
+            <div
+              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
+            >
+              2
+            </div>
+            <h3 class="font-semibold text-gray-900">Link documents</h3>
+            <p class="text-gray-600 text-sm">
+              Connect related documents with internal links. Create a knowledge
+              graph that helps you discover related information and navigate
+              your knowledge base.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-y-3 text-center">
+            <div
+              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
+            >
+              3
+            </div>
+            <h3 class="font-semibold text-gray-900">Grow and evolve</h3>
+            <p class="text-gray-600 text-sm">
+              Your knowledge base grows with your team. Add new pages, create
+              new links, and reorganize as needed. Everything stays accessible
+              and searchable.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="max-w-3xl mx-auto w-full">
+      <div
+        class="flex flex-col gap-y-6 items-center text-center p-12 rounded-2xl bg-linear-to-br from-gray-50 to-gray-100 border border-gray-200"
+      >
+        <div class="flex flex-col gap-y-3">
+          <h2
+            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            Ready to organize your knowledge?
+          </h2>
+          <p class="text-gray-600 max-w-lg">
+            Start building your knowledge base today. No credit card required,
+            no setup hassle.
+          </p>
+        </div>
+
+        <Button href="https://app.lydie.co/auth" size="lg">
+          <div class="flex items-center gap-x-1">
+            <span>Get started for free</span>
+            <ChevronRight
+              className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+            />
+          </div>
+        </Button>
+      </div>
+    </div>
+  </Container>
+</Layout>

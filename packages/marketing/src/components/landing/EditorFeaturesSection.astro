@@ -1,112 +1,479 @@
 ---
-import customFieldsImage from "../../assets/images/hehe.png";
-import { Image } from "astro:assets";
+import { InteractiveMockEditor } from "./InteractiveMockEditor";
+import { Eyebrow } from "./Eyebrow";
+import { Container } from "../Container";
+import { HeroBackground } from "./HeroBackground";
 import "../../styles/grainy-gradient.css";
 ---
 
-<section class="grid grid-cols-5">
-  <div class="col-span-2 flex flex-col justify-center">
-    <div class="max-w-xs flex flex-col gap-y-4">
-      <h2
-        class="text-3xl font-heading font-medium tracking-tight text-gray-900"
-      >
-        First in class editor features
-      </h2>
-      <p class="text-[15px]/relaxed text-gray-600">
-        Lydie's editor is built with the latest technology to provide you with
-        the best editing experience.
-      </p>
-    </div>
-  </div>
-  <div
-    class="col-span-3 grainy-gradient-container rounded-xl h-[400px] relative flex items-center justify-center p-4"
-  >
-    <svg class="grainy-gradient-svg">
-      <filter id="noiseFilter">
-        <feTurbulence
-          type="fractalNoise"
-          baseFrequency="0.65"
-          numOctaves="3"
-          stitchTiles="stitch"></feTurbulence>
-      </filter>
-    </svg>
-    <div
-      class="absolute z-10 top-8 left-8 bg-white/20 rounded-[14px] p-2 flex flex-col before:pointer-events-none before:absolute before:top-0 before:left-0 before:right-0 before:h-60 before:bg-linear-to-t before:from-black/40 before:via-black/20 before:to-transparent before:rounded-b-xl before:-z-10 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay overflow-hidden"
-      style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
-    >
-      <div class="shimmer-container absolute inset-0 pointer-events-none"></div>
-      <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
-        {
-          [...Array(3)].map(() => (
-            <div class="rounded-full size-[13px] bg-white/25" />
-          ))
-        }
-      </div>
+<style>
+  @keyframes cursor-bounce {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(-4px, -4px);
+    }
+  }
 
+  .cursor-animate-1 {
+    animation: cursor-bounce 3s ease-in-out infinite;
+    animation-delay: 0s;
+  }
+
+  .cursor-animate-2 {
+    animation: cursor-bounce 3s ease-in-out infinite;
+    animation-delay: 0.5s;
+  }
+
+  /* Collaborative cursors */
+  .collab-cursor {
+    position: relative;
+    display: inline-block;
+    vertical-align: baseline;
+    pointer-events: none;
+  }
+
+  .collab-cursor-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 1.75em;
+    background: currentColor;
+    box-shadow: 0 0 4px currentColor;
+  }
+
+  .collab-cursor-label {
+    position: absolute;
+    top: -1.75rem;
+    left: -2px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 4px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .collab-cursor-1 .collab-cursor-label {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .collab-cursor-2 .collab-cursor-label {
+    background: #10b981;
+    color: white;
+  }
+
+  .collab-cursor-1 .collab-cursor-label::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0.5rem;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #3b82f6;
+  }
+
+  .collab-cursor-2 .collab-cursor-label::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0.5rem;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #10b981;
+  }
+
+  .collab-cursor-1 {
+    color: #3b82f6;
+  }
+
+  .collab-cursor-2 {
+    color: #10b981;
+  }
+
+  /* Text selection highlight */
+  .collab-selection {
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+
+  .collab-selection.collab-cursor-1 {
+    background: rgba(59, 130, 246, 0.2);
+  }
+
+  .collab-selection.collab-cursor-2 {
+    background: rgba(16, 185, 129, 0.2);
+  }
+</style>
+
+<section class="flex flex-col gap-y-4 my-32">
+  <div class="flex flex-col items-center gap-y-2">
+    <h2 class="text-2xl text-center font-medium text-gray-900">
+      Best in class editor
+    </h2>
+    <p
+      class="text-[15px]/relaxed text-gray-600 max-w-sm text-center text-balance"
+    >
+      Lydie's editor is built with the latest technology to provide you with the
+      best editing experience.
+    </p>
+  </div>
+  <div class="grid grid-cols-1 gap-4 w-full">
+    <div class="overflow-hidden rounded-xl ring ring-black/10">
+      <HeroBackground className="flex">
+        <div
+          class="relative z-10 flex flex-col gap-y-1 justify-center shrink-0 p-6 grow"
+        >
+          <div class="inline-flex items-center gap-2 mb-1">
+            <div class="flex -space-x-2">
+              <div
+                class="size-7 rounded-full bg-blue-500/25 flex items-center justify-center text-white text-xs font-medium"
+                style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
+              >
+                S
+              </div>
+              <div
+                class="size-7 rounded-full bg-green-500/25 flex items-center justify-center text-white text-xs font-medium"
+                style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
+              >
+                A
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col max-w-md gap-y-4">
+            <h3 class="text-3xl font-semibold text-white drop-shadow-text">
+              Collaborative editing
+            </h3>
+            <p class="text-sm text-white/80">
+              Work together in real-time with live cursors, presence indicators,
+              and seamless synchronization.
+            </p>
+            <div class="mt-2">
+              <a
+                href="/features/collaborative-editing"
+                class="inline-flex items-center justify-center h-7 px-2 text-[0.8125rem] font-medium rounded-md bg-transparent text-white hover:bg-white/10 transition-colors duration-150 no-underline"
+              >
+                Learn more &raquo;
+              </a>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-white/10 z-20 pl-2 pt-2 h-full border-l border-t rounded-tl-xl border-white/20 relative transform transition-transform duration-300 mt-12"
+        >
+          <div
+            class="bg-white w-[600px] size-full rounded-tl-lg flex items-center justify-center px-10 py-12"
+          >
+            <div class="flex-1 max-w-2xl mx-auto relative">
+              <h1
+                class="text-2xl font-semibold text-gray-900 mb-6 leading-tight"
+              >
+                Product Roadmap Q1 2026
+              </h1>
+              <div class="space-y-4 text-gray-700 leading-7 relative">
+                <p class="text-sm/relaxed relative">
+                  This quarter we're focusing on enhancing our core
+                  <span class="collab-cursor collab-cursor-1">
+                    <span class="collab-cursor-line"></span>
+                    <span class="collab-cursor-label">Sarah</span>
+                  </span>
+                  platform capabilities and expanding integrations with key tools
+                  your team already uses.
+                </p>
+                <p class="text-sm/relaxed relative">
+                  Our primary objectives include improving performance, adding
+                  new
+                  <span class="collab-selection collab-cursor-2"
+                    >collaboration</span
+                  >
+                  <span class="collab-cursor collab-cursor-2">
+                    <span class="collab-cursor-line"></span>
+                    <span class="collab-cursor-label">Alex</span>
+                  </span>
+                  features, and building out our API ecosystem to support more custom
+                  workflows.
+                </p>
+                <p class="text-[15px] relative">
+                  We're also investing heavily in AI-powered features that will
+                  help teams work more efficiently and make better decisions
+                  faster.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </HeroBackground>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 w-full">
+      <!-- Custom Fields Feature -->
       <div
-        class="p-px ring ring-white/20 rounded-[9px] bg-white/10 relative overflow-hidden"
+        class="grainy-gradient-container custom-inner-shadow flex flex-col gap-y-4 rounded-xl p-6 h-80 transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
       >
         <div
-          class="rounded-lg overflow-hidden shadow-surface ring ring-black/8 relative z-10"
+          class="relative z-10 flex-1 flex items-center justify-center rounded-lg p-5 min-h-0"
         >
-          <Image
-            src={customFieldsImage}
-            alt="Custom fields"
-            quality={100}
-            loading="eager"
-          />
+          <div class="w-full max-w-sm space-y-3">
+            <div class="flex flex-col gap-2 group">
+              <label
+                class="text-xs font-semibold text-white/80 flex items-center gap-1.5"
+              >
+                <div class="size-1.5 rounded-full bg-blue-400"></div>
+                Status
+              </label>
+              <div
+                class="bg-white/30 backdrop-blur-sm text-sm font-medium text-white px-4 py-2.5 rounded-lg shadow-md transform scale-[1.02] transition-transform cursor-pointer border border-white/20"
+              >
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                  In Progress
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2 group">
+              <label
+                class="text-xs font-semibold text-white/80 flex items-center gap-1.5"
+              >
+                <div class="size-1.5 rounded-full bg-orange-400"></div>
+                Priority
+              </label>
+              <div
+                class="bg-white/30 backdrop-blur-sm text-sm font-medium text-white px-4 py-2.5 rounded-lg shadow-md transform transition-transform cursor-pointer border border-white/20"
+              >
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                  </svg>
+                  High
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2 group">
+              <label
+                class="text-xs font-semibold text-white/80 flex items-center gap-1.5"
+              >
+                <div class="size-1.5 rounded-full bg-purple-400"></div>
+                Owner
+              </label>
+              <div
+                class="bg-white/30 backdrop-blur-sm text-sm font-medium text-white px-4 py-2.5 rounded-lg shadow-md transform hover:scale-[1.02] transition-transform cursor-pointer border border-white/20"
+              >
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                    ></path>
+                  </svg>
+                  Engineering Team
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2 group">
+              <label
+                class="text-xs font-semibold text-white/80 flex items-center gap-1.5"
+              >
+                <div class="size-1.5 rounded-full bg-green-400"></div>
+                Target Date
+              </label>
+              <div
+                class="bg-white/30 backdrop-blur-sm text-sm font-medium text-white px-4 py-2.5 rounded-lg shadow-md transform hover:scale-[1.02] transition-transform cursor-pointer border border-white/20"
+              >
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    ></path>
+                  </svg>
+                  March 31, 2026
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="relative z-10 flex flex-col gap-y-1">
+          <h3 class="text-lg font-semibold text-white drop-shadow-text">
+            Custom Fields
+          </h3>
+          <p class="text-sm text-white/80">
+            Add structured metadata to your documents with custom fields for
+            status, priority, owners, and more.
+          </p>
+        </div>
+      </div>
+      <!-- Internal Linking Feature -->
+      <div
+        class="grainy-gradient-container custom-inner-shadow flex flex-col gap-y-4 rounded-xl p-6 h-80 transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
+      >
+        <div
+          class="relative z-10 flex-1 flex items-center justify-center rounded-lg p-5 min-h-0"
+        >
+          <div class="w-full max-w-sm">
+            <div
+              class="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 relative transform hover:scale-[1.02] transition-transform"
+            >
+              <div class="flex items-start gap-2">
+                <div class="w-1 h-12 bg-white/40 rounded-full"></div>
+                <div class="flex-1">
+                  <div class="text-sm text-white mb-2">
+                    <span
+                      class="text-white font-semibold underline decoration-white/60 decoration-2 underline-offset-2 cursor-pointer hover:decoration-white transition-colors"
+                      >Key Features</span
+                    >
+                  </div>
+                  <div class="text-xs text-white/70 leading-relaxed">
+                    Explore our comprehensive feature set and integration
+                    capabilities for your team...
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Link Popover with enhanced styling -->
+            <div
+              class="absolute top-20 left-10 bg-white/15 backdrop-blur-xl rounded-xl border border-white/30 p-3 flex flex-col w-[280px]"
+            >
+              <div class="flex gap-x-2 items-center">
+                <div
+                  class="flex gap-x-2 overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1.5 items-center bg-white/20 rounded-lg flex-1"
+                >
+                  <div
+                    class="size-6 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center shrink-0"
+                  >
+                    <svg
+                      class="size-3.5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2.5"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div class="text-xs font-semibold text-white truncate">
+                    API Documentation
+                  </div>
+                </div>
+              </div>
+              <div class="h-px bg-white/20 my-2"></div>
+              <div class="flex gap-x-1.5 justify-center">
+                <button
+                  class="flex-1 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors group"
+                >
+                  <svg
+                    class="size-4 text-white/70 group-hover:text-white mx-auto transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  class="flex-1 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors group"
+                >
+                  <svg
+                    class="size-4 text-white/70 group-hover:text-white mx-auto transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  class="flex-1 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors group"
+                >
+                  <svg
+                    class="size-4 text-white/70 group-hover:text-white mx-auto transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="relative z-10 flex flex-col gap-y-1">
+          <h3 class="text-lg font-semibold text-white drop-shadow-text">
+            Internal Linking
+          </h3>
+          <p class="text-sm text-white/80">
+            Connect your documents with smart internal links that create a
+            knowledge graph of your content.
+          </p>
         </div>
       </div>
     </div>
   </div>
 </section>
-
-<style>
-  /* Shimmer effect for screenshot container */
-  .shimmer-container {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    border-radius: 14px;
-    overflow: hidden;
-  }
-
-  .shimmer-container::before {
-    content: "";
-    position: absolute;
-    pointer-events: none;
-    z-index: 0;
-    border-radius: 14px;
-  }
-
-  .shimmer-container::before {
-    top: -10%;
-    left: 0;
-    width: 40%;
-    height: 30%;
-    background: radial-gradient(
-      ellipse,
-      rgba(255, 255, 255, 0.3) 0%,
-      rgba(255, 255, 255, 0.15) 50%,
-      transparent 100%
-    );
-    filter: blur(20px);
-    animation: shimmer-sweep 8s ease-in-out infinite;
-  }
-
-  @keyframes shimmer-sweep {
-    0% {
-      transform: translateX(0);
-      opacity: 0.4;
-    }
-    50% {
-      transform: translateX(calc(100% - 40%));
-      opacity: 0.5;
-    }
-    100% {
-      transform: translateX(0);
-      opacity: 0.4;
-    }
-  }
-</style>

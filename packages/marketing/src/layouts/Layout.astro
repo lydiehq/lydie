@@ -97,8 +97,8 @@ const linkGroups = [
       <main class="flex-1">
         <slot />
       </main>
-      <div class="relative overflow-hidden">
-        <footer class="border-t border-black/5 bg-white backdrop-blur-sm">
+      <div class="relative">
+        <footer class="border-t border-black/5 bg-white backdrop-blur-sm pt-32 md:pt-40">
           <Container className="flex justify-between py-12">
             <Logo className="text-gray-200 size-6" />
             <nav
@@ -112,27 +112,18 @@ const linkGroups = [
                       {group.title}
                     </h3>
                     <ul class="flex flex-col gap-y-1.5">
-                      {group.links.map((link) => (
-                        <li>
-                          {link.comingSoon ? (
-                            <div class="flex items-center gap-x-2 py-1.5">
-                              <span class="text-[0.8125rem]/0 text-gray-500">
-                                {link.label}
-                              </span>
-                              <div class="rounded-full text-[10px] font-medium text-gray-400">
-                                Coming soon
-                              </div>
-                            </div>
-                          ) : (
+                      {group.links
+                        .filter((link) => !link.comingSoon)
+                        .map((link) => (
+                          <li>
                             <a
                               href={link.href}
                               class="text-[0.8125rem]/0 text-gray-700 hover:text-gray-800 py-1.5"
                             >
                               {link.label}
                             </a>
-                          )}
-                        </li>
-                      ))}
+                          </li>
+                        ))}
                     </ul>
                   </div>
                 ))

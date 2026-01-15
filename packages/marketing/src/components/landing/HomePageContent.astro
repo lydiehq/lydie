@@ -7,10 +7,12 @@ import PerformanceSection from "./PerformanceSection.astro";
 import UseCasesSection from "./UseCasesSection.astro";
 import EditorFeaturesSection from "./EditorFeaturesSection.astro";
 import { Hero } from "./Hero";
+import { CTASection } from "./CTASection";
 import { Search, Globe, ChevronRight, Share2 } from "lucide-react";
 import { Container } from "../Container";
 import screenshotChat from "../../../public/screenshot_document_chat.png";
 import { Button } from "../generic/Button";
+import { Logo } from "../Logo";
 
 const chatWidths = [400, 640, 980, 1280, 1920];
 const chatOptimizedImages = await Promise.all(
@@ -48,10 +50,8 @@ const keyBenefits = [
 ];
 ---
 
-<div class="flex flex-col gap-y-16 overflow-hidden">
-  <Hero client:load />
-</div>
-<Container className="flex flex-col gap-y-12 relative">
+<Hero client:load />
+<!-- <Container className="flex flex-col gap-y-12 relative">
   <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
     {
       keyBenefits.map((benefit) => (
@@ -70,12 +70,21 @@ const keyBenefits = [
     }
   </div>
   <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
-</Container>
+</Container> -->
+
+<div class="relative">
+  <hr class="border-gray-100 w-full max-w-5xl mx-auto my-24" />
+  <div
+    class="rounded-full bg-white px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+  >
+    <Logo className="text-gray-200 size-3.5" />
+  </div>
+</div>
 <Container>
   <EditorFeaturesSection />
-  <CollaborationSection />
+  <!-- <CollaborationSection /> -->
 </Container>
-<ChatSection
+<!-- <ChatSection
   client:load
   imageSrc={chatDefaultImage.src}
   imageSrcSet={chatSrcset}
@@ -83,27 +92,8 @@ const keyBenefits = [
   imageAlt="Screenshot showing AI chat interface with document editing suggestions"
   imageWidth={chatDefaultImage.options.width}
   imageHeight={chatDefaultImage.options.height}
-/>
-<UseCasesSection />
+/> -->
+<!-- <UseCasesSection />
 <PerformanceSection />
-<IntegrationsSection />
-<Container className="flex flex-col gap-y-6 relative pb-16">
-  <div class="flex flex-col gap-y-4 text-center max-w-2xl mx-auto">
-    <h2 class="text-3xl font-heading font-medium tracking-tight text-gray-900">
-      Start writing smarter today
-    </h2>
-    <p class="text-[15px] text-gray-600">
-      Start writing better, faster with AI that understands your work.
-    </p>
-    <div class="flex justify-center mt-4">
-      <Button href="https://app.lydie.co/auth" size="lg">
-        <div class="flex items-center gap-x-1">
-          <span>Try Lydie free</span>
-          <ChevronRight
-            className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-          />
-        </div>
-      </Button>
-    </div>
-  </div>
-</Container>
+<IntegrationsSection /> -->
+<CTASection client:load />

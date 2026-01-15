@@ -58,25 +58,31 @@ const currentPath = Astro.url.pathname;
       currentPath={currentPath}
     />
     {
-      docPages.map((section) => (
-        <div class="flex flex-col gap-y-2">
-          <div class="flex items-center gap-x-2 px-3 mb-1">
-            <h3 class="text-xs font-medium text-gray-500">{section.title}</h3>
+      docPages
+        .map((section) => ({
+          ...section,
+          pages: section.pages.filter((page) => !page.comingSoon),
+        }))
+        .filter((section) => section.pages.length > 0)
+        .map((section) => (
+          <div class="flex flex-col gap-y-2">
+            <div class="flex items-center gap-x-2 px-3 mb-1">
+              <h3 class="text-xs font-medium text-gray-500">{section.title}</h3>
+            </div>
+            <ul class="flex flex-col gap-y-1">
+              {section.pages.map((page) => (
+                <li>
+                  <DocumentationSidebarItem
+                    title={page.title}
+                    href={page.href}
+                    comingSoon={page.comingSoon ?? false}
+                    currentPath={currentPath}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul class="flex flex-col gap-y-1">
-            {section.pages.map((page) => (
-              <li>
-                <DocumentationSidebarItem
-                  title={page.title}
-                  href={page.href}
-                  comingSoon={page.comingSoon ?? false}
-                  currentPath={currentPath}
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))
+        ))
     }
   </nav>
 </aside>
