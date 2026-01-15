@@ -17,15 +17,16 @@ import { Resource } from "sst";
 import {
   serializeToMarkdown,
   deserializeFromMarkdown,
+  parseFrontmatter,
 } from "@lydie/core/serialization/markdown";
 import { deserializeFromMDX } from "@lydie/core/serialization/mdx";
 import { deserializeFromText } from "@lydie/core/serialization/text";
 import jwt from "jsonwebtoken";
 
-// config saved in the database on the connection
+// Config saved in the database on the connection
 type GitHubConfig = {
   // GitHub App fields
-  installationId: number; // GitHub App installation ID
+  installationId: number;
   installationAccessToken: string; // Short-lived installation token
   installationTokenExpiresAt: number; // Token expiration timestamp
 
@@ -38,13 +39,10 @@ type GitHubConfig = {
   // Integration metadata (available to frontend via Zero)
   metadata?: {
     managementUrl?: string; // URL to manage installation in GitHub
-    [key: string]: any; // Allow integrations to add custom metadata
+    [key: string]: any;
   };
 };
 
-/**
- * GitHub App installation info
- */
 export interface GitHubInstallation {
   id: number;
   account: {
@@ -57,10 +55,8 @@ export interface GitHubInstallation {
     full_name: string;
   }>;
 }
-/**
- * Fetch supported files (md, mdx, txt) from GitHub repository
- * Uses the Contents API to get files from a specific folder instead of loading the entire repository
- */
+// Fetch supported files (md, mdx, txt) from GitHub repository
+// Uses the Contents API to get files from a specific folder
 async function fetchSupportedFiles(
   accessToken: string,
   owner: string,
@@ -70,8 +66,6 @@ async function fetchSupportedFiles(
 ): Promise<Array<{ path: string; name: string; content: string }>> {
   const files: Array<{ path: string; name: string; content: string }> = [];
 
-  // Use Contents API to get directory contents
-  // If basePath is empty, we'll get the root directory
   const path = basePath || "";
   const contentsUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
 
@@ -94,10 +88,8 @@ async function fetchSupportedFiles(
     name: string;
   }>;
 
-  // Recursively process directory contents
   for (const item of contents) {
     if (item.type === "file") {
-      // Check if it's a supported file type (md, mdx, txt)
       if (/\.(md|mdx|txt)$/i.test(item.name)) {
         try {
           const contentResponse = await fetch(
@@ -130,7 +122,6 @@ async function fetchSupportedFiles(
         }
       }
     } else if (item.type === "dir") {
-      // Recursively fetch supported files from subdirectories
       const subdirectoryFiles = await fetchSupportedFiles(
         accessToken,
         owner,
@@ -145,33 +136,19 @@ async function fetchSupportedFiles(
   return files;
 }
 
-/**
- * Generate the file path for a document in the repository
- * Uses the document title which should include the file extension
- * Supports: .md, .mdx, .txt
- * Includes folder path if provided to maintain folder structure
- */
-function getFilePath(
-  title: string,
-  basePath?: string,
-  folderPath?: string | null
-): string {
-  // Title should already include the extension (e.g., "file.md", "file.mdx", or "file.txt")
-  // If it doesn't, default to .md
+// Generate file path for a document in the repository
+// Title should include the extension (.md, .mdx, .txt)
+function getFilePath(title: string, basePath?: string): string {
   let fileName = title.includes(".") ? title : `${title}.md`;
 
-  // Validate that the extension is supported
   const extension = fileName.toLowerCase().match(/\.([^.]+)$/)?.[1];
   if (extension && !["md", "mdx", "txt"].includes(extension)) {
-    // If extension is not supported, default to .md
     const nameWithoutExt = fileName.replace(/\.[^.]+$/, "");
     fileName = `${nameWithoutExt}.md`;
   }
 
-  // Build path components
   const pathParts: string[] = [];
 
-  // Add basePath if provided (repository-level base path)
   if (basePath) {
     const normalizedBasePath = basePath.replace(/^\/+|\/+$/g, "");
     if (normalizedBasePath) {
@@ -179,24 +156,12 @@ function getFilePath(
     }
   }
 
-  // Add folderPath if provided (document's folder structure)
-  if (folderPath) {
-    const normalizedFolderPath = folderPath.replace(/^\/+|\/+$/g, "");
-    if (normalizedFolderPath) {
-      pathParts.push(normalizedFolderPath);
-    }
-  }
-
-  // Add filename
   pathParts.push(fileName);
 
-  // Join all parts with slashes
   return pathParts.join("/");
 }
 
-/**
- * Get GitHub App-specific credentials
- */
+// Get GitHub App credentials
 async function getGitHubAppCredentials(): Promise<{
   clientId?: string;
   privateKey?: string;
@@ -209,11 +174,8 @@ async function getGitHubAppCredentials(): Promise<{
   };
 }
 
-/**
- * Generate a JWT for authenticating as the GitHub App
- * This JWT is used to generate installation access tokens
- * Uses Client ID for the iss claim (recommended by GitHub)
- */
+// Generate JWT for authenticating as the GitHub App
+// Used to generate installation access tokens
 async function generateAppJWT(credentials: {
   clientId?: string;
   privateKey?: string;
@@ -224,18 +186,16 @@ async function generateAppJWT(credentials: {
 
   const now = Math.floor(Date.now() / 1000);
   const payload = {
-    iat: now - 60, // Issue time (60 seconds in the past to allow for clock drift)
-    exp: now + 10 * 60, // Expiration time (10 minutes maximum)
-    iss: credentials.clientId, // GitHub App's Client ID (recommended over App ID)
+    iat: now - 60, // 60 seconds in the past to allow for clock drift
+    exp: now + 10 * 60, // 10 minutes max
+    iss: credentials.clientId, // Client ID (recommended over App ID)
   };
 
   return jwt.sign(payload, credentials.privateKey, { algorithm: "RS256" });
 }
 
-/**
- * Generate an installation access token using a JWT
- * This is used for refreshing tokens when they expire
- */
+// Generate installation access token using JWT
+// Used for refreshing tokens when they expire
 async function generateInstallationTokenWithJWT(
   installationId: number,
   jwtToken: string
@@ -269,10 +229,8 @@ async function generateInstallationTokenWithJWT(
   return (await response.json()) as { token: string; expires_at: string };
 }
 
-/**
- * Get a fresh access token for the integration
- * Implements automatic token refresh for GitHub Apps
- */
+// Get fresh access token for the integration
+// Handles automatic token refresh for GitHub Apps
 async function getAccessToken(
   connection: IntegrationConnection
 ): Promise<string> {
@@ -293,17 +251,13 @@ async function getAccessToken(
       `[GitHub] Refreshing installation token for installation ${config.installationId}`
     );
 
-    // Get credentials to generate a new token
     const credentials = await getGitHubAppCredentials();
-
-    // Generate JWT and use it to get a new installation token
     const jwtToken = await generateAppJWT(credentials);
     const newToken = await generateInstallationTokenWithJWT(
       config.installationId,
       jwtToken
     );
 
-    // Update the config with new token (caller should save to DB)
     config.installationAccessToken = newToken.token;
     config.installationTokenExpiresAt = new Date(newToken.expires_at).getTime();
 
@@ -315,10 +269,8 @@ async function getAccessToken(
   return config.installationAccessToken;
 }
 
-/**
- * Get GitHub App information including slug
- * Uses JWT to authenticate as the app
- */
+// Get GitHub App info including slug
+// Uses JWT to authenticate as the app
 async function getAppInfo(): Promise<{ slug: string; name: string }> {
   const credentials = await getGitHubAppCredentials();
   if (!credentials.clientId || !credentials.privateKey) {
@@ -348,10 +300,7 @@ interface GitHubIntegrationExtended extends Integration, OAuthIntegration {
   getAccessToken(connection: IntegrationConnection): Promise<string>;
 }
 
-/**
- * GitHub sync integration
- * Syncs documents as Markdown files to a GitHub repository
- */
+// GitHub sync integration - syncs documents as Markdown files to a GitHub repository
 export const githubIntegration: GitHubIntegrationExtended = {
   async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
@@ -359,7 +308,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
   }> {
     const config = connection.config as GitHubConfig;
 
-    // Basic validation - check for GitHub App installation
     if (!config.installationId || !config.installationAccessToken) {
       return {
         valid: false,
@@ -375,7 +323,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
     }
 
     // TODO: Validate by making a test API call to GitHub
-    // For now, just return valid if all fields are present
     return { valid: true };
   },
 
@@ -384,29 +331,75 @@ export const githubIntegration: GitHubIntegrationExtended = {
     const config = connection.config as GitHubConfig;
 
     try {
+      // Don't push locked folder pages back to GitHub
+      if (document.isLocked && document.externalId?.startsWith("__folder__")) {
+        return {
+          success: true,
+          documentId: document.id,
+          externalId: document.externalId,
+          message: "Skipped pushing folder page (managed by integration)",
+        };
+      }
+
       if (!config.repo || !config.owner) {
         throw new Error("Repository not fully configured");
       }
 
-      // Get fresh access token (handles automatic refresh)
       const accessToken = await getAccessToken(connection);
+      let markdown = serializeToMarkdown(document.content);
 
-      // Convert TipTap content to Markdown
-      const markdown = serializeToMarkdown(document.content);
-
-      // Generate file path using title (which includes extension) and folder path
-      // Priority: 1) folderPath from document, 2) extract from externalId, 3) null (root)
-      let folderPath = document.folderPath;
-
-      // If folderPath is not provided, try to extract it from externalId
-      // This handles cases where the document was synced from GitHub and we want to maintain the same path
-      if (!folderPath && document.id) {
-        // Note: externalId would need to be passed in the document, but it's not in SyncDocument
-        // For now, we'll rely on folderPath being passed from the backend
-        // The backend's pushToExtension should provide folderPath based on folderId
+      // Add frontmatter if custom fields exist
+      if (
+        document.customFields &&
+        Object.keys(document.customFields).length > 0
+      ) {
+        const frontmatterLines = ["---"];
+        for (const [key, value] of Object.entries(document.customFields)) {
+          frontmatterLines.push(`${key}: ${JSON.stringify(value)}`);
+        }
+        frontmatterLines.push("---", "");
+        markdown = frontmatterLines.join("\n") + markdown;
       }
 
-      const filePath = getFilePath(document.title, config.basePath, folderPath);
+      // Determine file path from parent hierarchy (ensures files are pushed to correct location even if moved)
+      let filePath: string;
+      if (
+        document.parentPathSegments &&
+        document.parentPathSegments.length > 0
+      ) {
+        const pathParts: string[] = [];
+
+        if (config.basePath) {
+          const normalizedBasePath = config.basePath.replace(/^\/+|\/+$/g, "");
+          if (normalizedBasePath) {
+            pathParts.push(normalizedBasePath);
+          }
+        }
+
+        pathParts.push(...document.parentPathSegments);
+
+        let fileName = document.title.includes(".")
+          ? document.title
+          : `${document.title}.md`;
+
+        const extension = fileName.toLowerCase().match(/\.([^.]+)$/)?.[1];
+        if (extension && !["md", "mdx", "txt"].includes(extension)) {
+          const nameWithoutExt = fileName.replace(/\.[^.]+$/, "");
+          fileName = `${nameWithoutExt}.md`;
+        }
+
+        pathParts.push(fileName);
+        filePath = pathParts.join("/");
+      } else if (
+        document.externalId &&
+        !document.externalId.startsWith("__folder__")
+      ) {
+        // Use existing externalId if no parent path segments
+        filePath = document.externalId;
+      } else {
+        // Generate new path at root for documents created in Lydie
+        filePath = getFilePath(document.title, config.basePath);
+      }
 
       // Check if file exists to get current SHA (required for updates)
       let currentSha: string | undefined;
@@ -424,22 +417,18 @@ export const githubIntegration: GitHubIntegrationExtended = {
           const fileData = (await getResponse.json()) as { sha: string };
           currentSha = fileData.sha;
         } else if (getResponse.status !== 404) {
-          // 404 is expected for new files, but other errors should be thrown
           throw new Error(
             `Failed to check file existence: ${getResponse.statusText}`
           );
         }
       } catch (error) {
-        // If it's not a 404, rethrow
         if (error instanceof Error && !error.message.includes("404")) {
           throw error;
         }
       }
 
-      // Encode content as base64 (GitHub API requirement)
       const contentBase64 = Buffer.from(markdown, "utf-8").toString("base64");
 
-      // Create or update file
       const putUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${filePath}`;
       const putBody: {
         message: string;
@@ -452,7 +441,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
         branch: config.branch || "main",
       };
 
-      // Include SHA for updates (required by GitHub API)
       if (currentSha) {
         putBody.sha = currentSha;
       }
@@ -503,10 +491,9 @@ export const githubIntegration: GitHubIntegrationExtended = {
         throw new Error("Repository not fully configured");
       }
 
-      // Get fresh access token (handles automatic refresh)
       const accessToken = await getAccessToken(connection);
 
-      // Get the file's current SHA (required for deletion by GitHub API)
+      // Get the file's current SHA (required for deletion)
       const getUrl = `https://api.github.com/repos/${config.owner}/${
         config.repo
       }/contents/${externalId}?ref=${config.branch || "main"}`;
@@ -519,7 +506,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
 
       if (!getResponse.ok) {
         if (getResponse.status === 404) {
-          // File doesn't exist, consider deletion successful
           return {
             success: true,
             documentId,
@@ -535,7 +521,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
       const fileData = (await getResponse.json()) as { sha: string };
       const currentSha = fileData.sha;
 
-      // Delete the file
       const deleteUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${externalId}`;
       const deleteBody = {
         message: commitMessage || `Delete ${externalId} from Lydie`,
@@ -581,14 +566,11 @@ export const githubIntegration: GitHubIntegrationExtended = {
     const config = connection.config as GitHubConfig;
     const results: SyncResult[] = [];
 
-    console.log(config);
-
     try {
       if (!config.repo) {
         throw new Error("Repository not configured");
       }
 
-      // Get fresh access token (handles automatic refresh)
       const accessToken = await getAccessToken(connection);
 
       // Fetch all supported files (md, mdx, txt) from repository
@@ -600,57 +582,106 @@ export const githubIntegration: GitHubIntegrationExtended = {
         config.basePath || ""
       );
 
+      // Collect all directory paths from files
+      const folderPaths = new Set<string>();
+      for (const file of files) {
+        const pathParts = file.path.split("/");
+        pathParts.pop();
+
+        let currentPath = "";
+        for (const part of pathParts) {
+          currentPath = currentPath ? `${currentPath}/${part}` : part;
+          folderPaths.add(currentPath);
+        }
+      }
+
+      // Create empty locked pages for all folders (represent directory structure)
+      for (const folderPath of Array.from(folderPaths).sort()) {
+        const pathParts = folderPath.split("/");
+        const folderName = pathParts[pathParts.length - 1];
+
+        results.push({
+          success: true,
+          documentId: "",
+          externalId: `__folder__${folderPath}`,
+          message: `Created folder page for ${folderPath}`,
+          metadata: {
+            title: folderName,
+            slug: folderPath.replace(/\//g, "-").toLowerCase(),
+            content: { type: "doc", content: [] },
+            isLocked: true,
+          },
+        });
+      }
+
+      // Process all files
       for (const file of files) {
         try {
-          // Determine deserializer based on file extension
           const extension =
             file.name.toLowerCase().match(/\.([^.]+)$/)?.[1] || "";
+          const isMarkdownFile = extension === "md" || extension === "mdx";
+
+          let frontmatter: Record<string, any> = {};
+          let contentWithoutFrontmatter = file.content;
+
+          if (isMarkdownFile) {
+            const frontmatterResult = parseFrontmatter(file.content);
+            frontmatter = frontmatterResult.frontmatter;
+            contentWithoutFrontmatter =
+              frontmatterResult.contentWithoutFrontmatter;
+          }
+
           let tipTapContent: any;
 
           switch (extension) {
             case "mdx":
-              tipTapContent = deserializeFromMDX(file.content);
+              tipTapContent = deserializeFromMDX(contentWithoutFrontmatter);
               break;
             case "txt":
-              tipTapContent = deserializeFromText(file.content);
+              tipTapContent = deserializeFromText(contentWithoutFrontmatter);
               break;
             case "md":
             default:
-              tipTapContent = deserializeFromMarkdown(file.content);
+              tipTapContent = deserializeFromMarkdown(
+                contentWithoutFrontmatter
+              );
           }
 
-          // Extract folder path from file path
-          // e.g., "docs/guides/intro.md" -> folderPath: "docs/guides"
-          // e.g., "intro.md" -> folderPath: null (root)
           const pathParts = file.path.split("/");
           const fileName = pathParts.pop() || file.name;
-          const folderPath =
-            pathParts.length > 0
-              ? pathParts.join("/").replace(/^\/+|\/+$/g, "") // Remove leading/trailing slashes
-              : null;
 
-          // Generate document ID and slug
-          // Slug should not include extension for URL purposes
           const slug = fileName
-
             .replace(/\.(md|mdx|txt)$/i, "")
             .replace(/\//g, "-")
             .toLowerCase();
 
-          // Preserve the full
-          // This is crucial for GitHub integration to know what extension to use when pushing
-          const title = fileName;
+          // Title priority: frontmatter.title > filename
+          // Preserve full filename so we know what extension to use when pushing
+          const title = frontmatter.title || fileName;
+
+          // Convert frontmatter to customFields (only string and number values)
+          const customFields: Record<string, string | number> = {};
+          for (const [key, value] of Object.entries(frontmatter)) {
+            if (key !== "title" && key !== "slug") {
+              if (typeof value === "string" || typeof value === "number") {
+                customFields[key] = value;
+              } else if (typeof value === "boolean") {
+                customFields[key] = String(value);
+              }
+            }
+          }
 
           results.push({
             success: true,
-            documentId: "", // Will be created by backend
+            documentId: "",
             externalId: file.path,
             message: `Pulled ${file.path}`,
             metadata: {
               title,
-              slug,
+              slug: frontmatter.slug || slug,
               content: tipTapContent,
-              folderPath, // Include folder path for folder creation
+              customFields:
+                Object.keys(customFields).length > 0 ? customFields : undefined,
             },
           });
         } catch (error) {
@@ -675,11 +706,8 @@ export const githubIntegration: GitHubIntegrationExtended = {
     }
   },
 
-  /**
-   * Fetch available resources (repositories)
-   * For GitHub Apps, we use the installation token to access repositories
-   * We fetch repositories from the installation's account (owner)
-   */
+  // Fetch available resources (repositories)
+  // For GitHub Apps, we use the installation token to access repositories
   async fetchResources(
     connection: IntegrationConnection
   ): Promise<ExternalResource[]> {
@@ -689,10 +717,8 @@ export const githubIntegration: GitHubIntegrationExtended = {
       throw new Error("GitHub App installation ID not found");
     }
 
-    // Get fresh installation access token
     const accessToken = await getAccessToken(connection);
 
-    // Get GitHub App credentials to generate JWT for fetching installation details
     const appCredentials = await getGitHubAppCredentials();
     const jwtToken = await generateAppJWT(appCredentials);
 
@@ -723,8 +749,7 @@ export const githubIntegration: GitHubIntegrationExtended = {
     const accountLogin = installation.account.login;
     const accountType = installation.account.type; // "User" or "Organization"
 
-    // Use the appropriate endpoint based on account type
-    // Installation tokens can access repositories that the installation has access to
+    // Use appropriate endpoint based on account type
     const endpoint =
       accountType === "Organization"
         ? `https://api.github.com/orgs/${accountLogin}/repos`
@@ -776,9 +801,8 @@ export const githubIntegration: GitHubIntegrationExtended = {
     return {
       authUrl: "https://github.com/login/oauth/authorize",
       tokenUrl: "https://github.com/login/oauth/access_token",
-      scopes: ["repo"], // Full repository access
+      scopes: ["repo"],
       authParams: {
-        // Request user info as well
         allow_signup: "false",
       },
     };
@@ -809,9 +833,7 @@ export const githubIntegration: GitHubIntegrationExtended = {
     return `https://github.com/apps/${appSlug}/installations/new?${urlParams.toString()}`;
   },
 
-  /**
-   * Handle OAuth callback for GitHub App installation flow
-   */
+  // Handle OAuth callback for GitHub App installation flow
   async handleOAuthCallback(
     queryParams: Record<string, string>
   ): Promise<GitHubConfig> {
@@ -829,13 +851,8 @@ export const githubIntegration: GitHubIntegrationExtended = {
 
     const installationId = Number(installation_id);
 
-    // Get GitHub App credentials
     const appCredentials = await getGitHubAppCredentials();
-
-    // Generate JWT for GitHub App authentication
     const jwtToken = await generateAppJWT(appCredentials);
-
-    // Generate installation access token
     const installationToken = await generateInstallationTokenWithJWT(
       installationId,
       jwtToken
@@ -868,16 +885,13 @@ export const githubIntegration: GitHubIntegrationExtended = {
       ).getTime(),
       owner: installation.account.login,
       branch: "main",
-      // User will need to select repo in a second step
       metadata: {
         managementUrl: `https://github.com/settings/installations/${installationId}`,
       },
     };
   },
 
-  /**
-   * Get the installation URL for the GitHub App
-   */
+  // Get the installation URL for the GitHub App
   async getInstallationUrl(state?: string): Promise<string> {
     const appInfo = await getAppInfo();
     const baseUrl = `https://github.com/apps/${appInfo.slug}/installations/new`;
@@ -887,25 +901,15 @@ export const githubIntegration: GitHubIntegrationExtended = {
     return baseUrl;
   },
 
-  /**
-   * Get GitHub App information including slug
-   * Uses JWT to authenticate as the app
-   */
   async getAppInfo(): Promise<{ slug: string; name: string }> {
     return getAppInfo();
   },
 
-  /**
-   * Get a fresh access token for the integration
-   * Implements automatic token refresh for GitHub Apps
-   */
   async getAccessToken(connection: IntegrationConnection): Promise<string> {
     return getAccessToken(connection);
   },
 
-  /**
-   * Remove the GitHub App installation when connection is disconnected
-   */
+  // Remove the GitHub App installation when connection is disconnected
   async onDisconnect(connection: IntegrationConnection): Promise<void> {
     const config = connection.config as GitHubConfig;
 
@@ -917,7 +921,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
     }
 
     try {
-      // Get GitHub App credentials to generate JWT
       const appCredentials = await getGitHubAppCredentials();
       if (!appCredentials.clientId || !appCredentials.privateKey) {
         console.error(
@@ -926,10 +929,8 @@ export const githubIntegration: GitHubIntegrationExtended = {
         return;
       }
 
-      // Generate JWT for GitHub App authentication
       const jwtToken = await generateAppJWT(appCredentials);
 
-      // Delete the installation using GitHub API
       const deleteResponse = await fetch(
         `https://api.github.com/app/installations/${config.installationId}`,
         {
@@ -942,7 +943,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
       );
 
       if (!deleteResponse.ok) {
-        // 404 means installation already deleted, which is fine
         if (deleteResponse.status === 404) {
           console.log(
             `[GitHub] Installation ${config.installationId} already removed`
@@ -962,8 +962,7 @@ export const githubIntegration: GitHubIntegrationExtended = {
         `[GitHub] Successfully removed installation ${config.installationId}`
       );
     } catch (error) {
-      // Log error but don't throw - we don't want to block disconnection
-      // if the installation removal fails (e.g., already deleted, network issue)
+      // Log error but don't throw - don't block disconnection if removal fails
       console.error(
         `[GitHub] Error removing installation ${config.installationId}:`,
         error instanceof Error ? error.message : String(error)

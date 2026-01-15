@@ -5,18 +5,16 @@ import { AssistantRoute } from "./assistant";
 import { MDXImportRoute } from "./mdx-import";
 import { LLMReplaceRoute } from "./llm-replace";
 import { IntegrationsRoute } from "./integrations";
-import { WaitlistRoute } from "./waitlist";
+import { ImagesRoute } from "./images";
 import { VisibleError } from "@lydie/core/error";
 import { authClient } from "@lydie/core/auth";
 import { authenticatedWithOrganization } from "./middleware";
 import { HTTPException } from "hono/http-exception";
 import { ZeroRoute } from "./zero";
 
-const publicRouter = new Hono()
-  .on(["GET", "POST"], "/auth/*", async (c) => {
-    return authClient.handler(c.req.raw);
-  })
-  .route("/waitlist", WaitlistRoute);
+const publicRouter = new Hono().on(["GET", "POST"], "/auth/*", async (c) => {
+  return authClient.handler(c.req.raw);
+});
 
 const organizationScopedRouter = new Hono<{
   Variables: {
@@ -30,7 +28,8 @@ const organizationScopedRouter = new Hono<{
   .route("/document-chat", DocumentChatRoute)
   .route("/assistant", AssistantRoute)
   .route("/mdx-import", MDXImportRoute)
-  .route("/llm-replace", LLMReplaceRoute);
+  .route("/llm-replace", LLMReplaceRoute)
+  .route("/images", ImagesRoute);
 
 export const InternalApi = new Hono()
   .route("/public", publicRouter)

@@ -8,7 +8,7 @@ import {
   TreeItemContentProps as AriaTreeItemContentProps,
   TreeProps,
 } from "react-aria-components";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/icons";
 import { tv } from "tailwind-variants";
 import { Checkbox } from "./Checkbox";
 import { composeTailwindRenderProps, focusRing } from "./utils";
@@ -88,7 +88,7 @@ export function TreeItemContent({ children, ...props }: TreeItemContentProps) {
           <div className="shrink-0 w-[calc(calc(var(--tree-item-level)_-_1)_*_calc(var(--spacing)_*_3))]" />
           {hasChildItems ? (
             <Button slot="chevron" className={expandButton({ isDisabled })}>
-              <ChevronRight
+              <ChevronRightIcon
                 aria-hidden
                 className={chevron({ isExpanded, isDisabled })}
               />

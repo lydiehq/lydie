@@ -2,34 +2,10 @@ import * as schema from "./schema";
 import { defineRelations } from "drizzle-orm";
 
 export const relations = defineRelations(schema, (r) => ({
-  foldersTable: {
-    user: r.one.usersTable({
-      from: r.foldersTable.userId,
-      to: r.usersTable.id,
-    }),
-    parent: r.one.foldersTable({
-      from: r.foldersTable.parentId,
-      to: r.foldersTable.id,
-    }),
-    organization: r.one.organizationsTable({
-      from: r.foldersTable.organizationId,
-      to: r.organizationsTable.id,
-    }),
-    integrationLink: r.one.integrationLinksTable({
-      from: r.foldersTable.integrationLinkId,
-      to: r.integrationLinksTable.id,
-    }),
-    children: r.many.foldersTable(),
-    documents: r.many.documentsTable(),
-  },
   documentsTable: {
     user: r.one.usersTable({
       from: r.documentsTable.userId,
       to: r.usersTable.id,
-    }),
-    folder: r.one.foldersTable({
-      from: r.documentsTable.folderId,
-      to: r.foldersTable.id,
     }),
     organization: r.one.organizationsTable({
       from: r.documentsTable.organizationId,
@@ -115,7 +91,6 @@ export const relations = defineRelations(schema, (r) => ({
     members: r.many.membersTable(),
     invitations: r.many.invitationsTable(),
     documents: r.many.documentsTable(),
-    folders: r.many.foldersTable(),
     assistantConversations: r.many.assistantConversationsTable(),
     apiKeys: r.many.apiKeysTable(),
     documentComponents: r.many.documentComponentsTable(),
@@ -197,7 +172,6 @@ export const relations = defineRelations(schema, (r) => ({
   },
 
   usersTable: {
-    folders: r.many.foldersTable(),
     documents: r.many.documentsTable(),
     documentConversations: r.many.documentConversationsTable(),
     assistantConversations: r.many.assistantConversationsTable(),
@@ -245,7 +219,6 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.organizationsTable.id,
     }),
     documents: r.many.documentsTable(),
-    folders: r.many.foldersTable(),
   },
 
   syncMetadataTable: {

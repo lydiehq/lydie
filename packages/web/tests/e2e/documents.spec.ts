@@ -4,15 +4,15 @@ import { expect, test } from "./fixtures/auth.fixture";
 
 test.describe("documents", () => {
   test("can create a new document", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
-    await createDocument(page, organization.id, {
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+    await createDocument(page, organization.slug, {
       title: "Test Document",
       content: "",
     });
   });
 
   test("can create new document in folder", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Create new folder" }).click();
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
     await sidebarTree
@@ -23,13 +23,17 @@ test.describe("documents", () => {
       .getByRole("menuitem", { name: "Create document in folder" })
       .click();
     // TODO: better way of figuring out if a document has actually been created?
-    await expect(
-      page.getByRole("textbox", { name: "Document title" })
-    ).toHaveValue("Untitled document");
+    const titleEditor = page
+      .getByLabel("Document title")
+      .locator('[contenteditable="true"]')
+      .first();
+    // Verify the editor exists and is empty (new documents start with empty title)
+    await expect(titleEditor).toBeVisible();
+    await expect(titleEditor).toHaveText("");
 
-    const titleInput = page.getByRole("textbox", { name: "Document title" });
-    await titleInput.fill("Document in Folder");
-    await titleInput.blur();
+    await titleEditor.click();
+    await titleEditor.fill("Document in Folder");
+    await titleEditor.blur();
 
     const documentSidebarItem = page.getByRole("row", {
       name: "Document in Folder",
@@ -40,9 +44,9 @@ test.describe("documents", () => {
   });
 
   test("can update document content", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
     const content = "Hello, World!";
-    await createDocument(page, organization.id, {
+    await createDocument(page, organization.slug, {
       title: "Test Document",
       content,
     });
@@ -60,9 +64,9 @@ test.describe("documents", () => {
   });
 
   test("can delete a document from sidebar", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
     // Set up a document with title and content (setup, not what we're testing)
-    await createDocument(page, organization.id, {
+    await createDocument(page, organization.slug, {
       title: "Document to Delete",
       content: "Some content",
     });
@@ -79,22 +83,26 @@ test.describe("documents", () => {
       .getByRole("button", { name: "Confirm" })
       .click();
     // Assert that we are redirected to the home page
-    await page.waitForURL(`/w/${organization.id}`);
+    await page.waitForURL(`/w/${organization.slug}`);
     await expect(documentSidebarItem).not.toBeVisible();
   });
 
   test("can update document title", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
     // Set up a document with initial title (setup)
-    await createDocument(page, organization.id, {
+    await createDocument(page, organization.slug, {
       title: "Initial Title",
       content: "Some content",
     });
 
     // Now test updating the title (this is what we're testing)
-    const titleInput = page.getByRole("textbox", { name: "Document title" });
-    await titleInput.fill("My new document title");
-    await titleInput.blur();
+    const titleEditor = page
+      .getByLabel("Document title")
+      .locator('[contenteditable="true"]')
+      .first();
+    await titleEditor.click();
+    await titleEditor.fill("My new document title");
+    await titleEditor.blur();
 
     // Expect document to have new title in sidebar
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
@@ -104,9 +112,9 @@ test.describe("documents", () => {
   });
 
   test("can publish document", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.id}`, { waitUntil: "networkidle" });
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
     // Set up a document with title and content (setup, not what we're testing)
-    await createDocument(page, organization.id, {
+    await createDocument(page, organization.slug, {
       title: "Test Document",
       content: "This is test content",
     });
@@ -139,14 +147,18 @@ test.describe("documents", () => {
 
 async function createDocument(
   page: Page,
-  _organizationId: string,
+  _organizationSlug: string,
   options: { title: string; content: string }
 ) {
   await page.getByRole("button", { name: "Create new document" }).click();
 
-  const titleInput = page.getByRole("textbox", { name: "Document title" });
-  await titleInput.fill(options.title);
-  await titleInput.blur();
+  const titleEditor = page
+    .getByLabel("Document title")
+    .locator('[contenteditable="true"]')
+    .first();
+  await titleEditor.click();
+  await titleEditor.fill(options.title);
+  await titleEditor.blur();
 
   const contentEditor = page
     .getByLabel("Document content")

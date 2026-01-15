@@ -1,0 +1,43 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { Container } from "../components/Container";
+import { Button } from "../components/generic/Button";
+import { Home, ChevronRight } from "lucide-react";
+---
+
+<Layout
+  title="404 - Page Not Found | Lydie"
+  description="The page you're looking for doesn't exist. Return to the Lydie homepage."
+>
+  <Container
+    className="flex flex-col items-center justify-center min-h-[60vh] gap-y-6 py-16"
+  >
+    <div class="flex flex-col items-center gap-y-4 text-center max-w-md">
+      <h1
+        class="text-6xl font-heading font-medium tracking-tight text-gray-900"
+      >
+        404
+      </h1>
+      <h2
+        class="text-2xl font-heading font-medium tracking-tight text-gray-900"
+      >
+        Page not found
+      </h2>
+      <p class="text-[15px] text-gray-600 leading-relaxed">
+        The page you're looking for doesn't exist or has been moved. Let's get
+        you back on track.
+      </p>
+      <div class="flex justify-center mt-4">
+        <Button href="/" size="lg">
+          <div class="flex items-center gap-x-1">
+            <Home className="size-4" />
+            <span>Go to homepage</span>
+            <ChevronRight
+              className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+            />
+          </div>
+        </Button>
+      </div>
+    </div>
+  </Container>
+</Layout>

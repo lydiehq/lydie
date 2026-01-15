@@ -10,6 +10,8 @@ export type {
   TextNode,
   Mark,
   NodeBuilder,
+  LinkReference,
+  LinkResolver,
 } from "@lydie/core/content";
 
 export {
@@ -23,7 +25,4 @@ export {
   serializeToMarkdown,
   MarkdownBuilder,
 } from "@lydie/core/serialization/markdown";
-export {
-  serializeToPlainText,
-  PlainTextBuilder,
-} from "@lydie/core/serialization/text";
+export { serializeToPlainText } from "@lydie/core/serialization/text";

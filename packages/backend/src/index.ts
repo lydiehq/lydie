@@ -1,6 +1,12 @@
-import { app } from "./api";
+import { app, injectWebSocket } from "./api";
+import { serve } from "@hono/node-server";
+import { hocuspocus } from "./hocuspocus-server";
 
-export default {
-  port: 3001,
+const port = 3001;
+
+const server = serve({
   fetch: app.fetch,
-};
+  port,
+});
+
+injectWebSocket(server);

@@ -6,6 +6,7 @@ import type {
   DeleteOptions,
   SyncResult,
   ExternalResource,
+  CustomFieldSchema,
 } from "@lydie/core/integrations";
 import { createErrorResult } from "@lydie/core/integrations";
 import type {
@@ -34,10 +35,7 @@ interface ShopifyTokenResponse {
   scope: string;
 }
 
-/**
- * Shopify sync integration
- * Syncs documents to Shopify via REST Admin API
- */
+// Shopify sync integration - syncs documents to Shopify via REST Admin API
 export const shopifyIntegration: Integration & OAuthIntegration = {
   async validateConnection(connection: IntegrationConnection): Promise<{
     valid: boolean;
@@ -51,7 +49,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       };
     }
 
-    // Validate by making a lightweight API call
     try {
       const response = await fetch(
         `https://${config.shop}/admin/api/2024-01/shop.json`,
@@ -64,7 +61,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       );
 
       if (!response.ok) {
-        // Check for 401 Unauthorized specifically
         if (response.status === 401) {
           return {
             valid: false,
@@ -100,7 +96,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
     };
 
     try {
-      // 1. Always include the "Pages" container
       const resources: ExternalResource[] = [
         {
           id: "pages-container",
@@ -110,7 +105,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
         },
       ];
 
-      // 2. Fetch Blogs
+      // Fetch Blogs
       const blogsRes = await fetch(
         `https://${config.shop}/admin/api/2024-01/blogs.json`,
         { headers }
@@ -156,8 +151,8 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
     const title = document.title || "Untitled";
     const slug = document.slug;
 
-    const resourceType = config.resourceType || "pages"; // "pages" or "blog" (from metadata.type)
-    const resourceId = config.resourceId; // "pages-container" or blog ID
+    const resourceType = config.resourceType || "pages";
+    const resourceId = config.resourceId;
 
     const headers = {
       "X-Shopify-Access-Token": config.accessToken,
@@ -171,7 +166,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       let existingId: number | null = null;
 
       if (resourceType === "pages") {
-        // 1. Check if page exists by handle
+        // Check if page exists by handle
         const searchRes = await fetch(
           `https://${config.shop}/admin/api/2024-01/pages.json?handle=${slug}`,
           { headers }
@@ -180,7 +175,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
           const searchData = (await searchRes.json()) as {
             pages: Array<{ id: number; handle: string }>;
           };
-          // Exact match check
           const existing = searchData.pages.find((p) => p.handle === slug);
           if (existing) {
             existingId = existing.id;
@@ -204,7 +198,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
           payload = { page: { title, body_html: htmlContent, handle: slug } };
         }
       } else if (resourceType === "blog") {
-        // Blog Article
         const blogId = resourceId;
         if (!blogId) {
           return createErrorResult(
@@ -213,7 +206,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
           );
         }
 
-        // Verify blog exists first (optional but good for robustness)
+        // Verify blog exists first
         const blogCheck = await fetch(
           `https://${config.shop}/admin/api/2024-01/blogs/${blogId}.json`,
           { headers }
@@ -225,7 +218,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
           );
         }
 
-        // 1. Check if article exists in this blog by handle
+        // Check if article exists in this blog by handle
         const searchRes = await fetch(
           `https://${config.shop}/admin/api/2024-01/blogs/${blogId}/articles.json?handle=${slug}`,
           { headers }
@@ -279,7 +272,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       }
 
       const data = await response.json();
-      // Extract ID
       let finalId = "";
       if (resourceType === "pages" && data.page) finalId = String(data.page.id);
       if (resourceType === "blog" && data.article)
@@ -345,7 +337,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
 
       if (!response.ok) {
         if (response.status === 404) {
-          // Resource doesn't exist, consider deletion successful
           return {
             success: true,
             documentId,
@@ -373,6 +364,29 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
     }
   },
 
+  getCustomFieldSchema(): CustomFieldSchema {
+    return {
+      fields: [
+        {
+          key: 'teaser',
+          label: 'Blog Post Teaser',
+          type: 'string',
+          required: false,
+          description: 'Short summary for blog listing pages',
+          placeholder: 'Enter a brief teaser...'
+        },
+        {
+          key: 'metaDescription',
+          label: 'SEO Meta Description',
+          type: 'string',
+          required: false,
+          description: 'Meta description for search engines',
+          placeholder: 'SEO description for search engines'
+        }
+      ]
+    };
+  },
+
   async pull(options: PullOptions): Promise<SyncResult[]> {
     const { connection } = options;
     const config = connection.config as ShopifyConfig;
@@ -389,7 +403,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
     };
 
     try {
-      // 1. Fetch Pages
+      // Fetch Pages
       const pagesRes = await fetch(
         `https://${config.shop}/admin/api/2024-01/pages.json?limit=250`,
         { headers }
@@ -406,18 +420,11 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
 
         for (const page of pagesData.pages) {
           try {
-            // Lossy conversion: HTML -> Text -> TipTap
-            // Ideally we would want HTML -> TipTap, but that deserializer is not available yet.
-            // We will use deserializeFromText but pass the HTML.
-            // The user will see HTML code in the editor, which is better than nothing,
-            // or we can try to strip tags if we had a utility.
-            // For now, importing as text (raw HTML) is the safest bet to preserve data,
-            // allowing the user to copy-paste or the system to be upgraded later.
             const content = deserializeFromHTML(page.body_html || "");
 
             results.push({
               success: true,
-              documentId: "", // Backend handles this
+              documentId: "",
               externalId: String(page.id),
               message: `Pulled page: ${page.title}`,
               metadata: {
@@ -438,8 +445,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
         }
       }
 
-      // 2. Fetch Blog Posts
-      // First get all blogs
+      // Fetch Blog Posts
       const blogsRes = await fetch(
         `https://${config.shop}/admin/api/2024-01/blogs.json`,
         { headers }
@@ -497,7 +503,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       return results;
     } catch (error: any) {
       console.error("Shopify Pull Error:", error);
-      // Return whatever we managed to collect + error
       results.push({
         success: false,
         documentId: "",
@@ -513,7 +518,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
     return {
       authUrl: "", // Dynamic based on shop
       tokenUrl: "", // Dynamic based on shop
-      scopes: ["write_content", "read_content", "write_themes", "read_themes"], // Updated scopes
+      scopes: ["write_content", "read_content", "write_themes", "read_themes"],
     };
   },
 
@@ -535,7 +540,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       throw new Error("Shop URL is required for Shopify OAuth");
     }
 
-    // Basic validation/cleaning of shop URL
     const cleanShop = shop
       .replace(/^https?:\/\//, "")
       .replace(/\/$/, "")
@@ -557,12 +561,11 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
       throw new Error("Missing shop or code parameter");
     }
 
-    // 1. Verify hostname
     if (!/^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop)) {
       throw new Error("Invalid shop parameter");
     }
 
-    // 2. Exchange access code for access token
+    // Exchange access code for access token
     const tokenUrl = `https://${shop}/admin/oauth/access_token`;
     const response = await fetch(tokenUrl, {
       method: "POST",

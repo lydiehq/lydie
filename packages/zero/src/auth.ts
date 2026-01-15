@@ -4,7 +4,7 @@ export type Context = Session & {
   organizations?: Array<{
     id: string;
     name: string;
-    slug: string | null;
+    slug: string;
     [key: string]: any;
   }>;
 };
@@ -44,7 +44,33 @@ export function hasOrganizationAccess(
 
   if (!hasAccess) {
     throw new Error(
-      `Access denied: You do not have permission to access this organization`
+      `Access denied: You do not have permission to access this workspace`
+    );
+  }
+}
+
+/**
+ * Validates that a user has access to a specific organization by slug
+ * Uses the organizations array from the session (populated by customSession plugin)
+ * to avoid additional database lookups for performance
+ */
+export function hasOrganizationAccessBySlug(
+  session: Context | undefined,
+  organizationSlug: string
+): asserts session is Context & { userId: string } {
+  isAuthenticated(session);
+
+  if (!session.organizations || session.organizations.length === 0) {
+    throw new Error("No workspace access");
+  }
+
+  const hasAccess = session.organizations.some(
+    (org) => org.slug === organizationSlug
+  );
+
+  if (!hasAccess) {
+    throw new Error(
+      `Access denied: You do not have permission to access this workspace`
     );
   }
 }

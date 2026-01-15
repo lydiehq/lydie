@@ -7,6 +7,26 @@ export class HTMLSerializer implements NodeBuilder<string> {
     this.linkPrefix = options?.linkPrefix;
   }
 
+  internalLink(
+    content: string,
+    documentId?: string,
+    documentSlug?: string,
+    documentTitle?: string
+  ): string {
+    // Use slug if available, otherwise fall back to document ID
+    let href = documentSlug || documentId || "#";
+    if (!href.startsWith("/") && !href.startsWith("http")) {
+      href = `/${href}`;
+    }
+    
+    if (this.linkPrefix) {
+      href = `${this.linkPrefix}${href}`;
+    }
+
+    const titleAttr = documentTitle ? ` title="${this.escape(documentTitle)}"` : "";
+    return `<a href="${this.escape(href)}"${titleAttr}>${content}</a>`;
+  }
+
   text(content: string): string {
     return this.escape(content);
   }
@@ -69,6 +89,12 @@ export class HTMLSerializer implements NodeBuilder<string> {
 
   horizontalRule(): string {
     return "<hr>";
+  }
+
+  codeBlock(children: string[], language?: string | null): string {
+    const code = children.join("");
+    const langAttr = language ? ` class="language-${this.escape(language)}"` : "";
+    return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`;
   }
 
   customBlock(name: string, properties: Record<string, any>): string {

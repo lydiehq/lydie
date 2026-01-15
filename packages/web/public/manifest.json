@@ -1,15 +1,20 @@
 {
-  "short_name": "TanStack App",
-  "name": "Create TanStack App Sample",
+  "short_name": "Lydie",
+  "name": "Lydie - AI-Powered Document Editor",
+  "description": "An AI-powered document editor designed for modern workflows. Integrates advanced AI capabilities with a seamless, real-time editing experience.",
   "icons": [
     {
       "src": "favicon.svg",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/svg+xml"
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#1f2937",
+  "background_color": "#fcfcfc",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["productivity", "business", "utilities"]
 }

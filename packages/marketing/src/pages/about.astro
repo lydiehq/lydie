@@ -1,0 +1,52 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { Container } from "../components/Container";
+import { Eyebrow } from "../components/landing/Eyebrow";
+---
+
+<Layout
+  title="About - Lydie"
+  description="Learn more about Lydie and the team behind it."
+>
+  <div class="flex flex-col gap-y-10 py-8 md:py-12">
+    <Container className="flex flex-col gap-y-4">
+      <Eyebrow>What is Lydie?</Eyebrow>
+      <h1
+        class="text-4xl md:text-5xl font-heading font-medium tracking-tight text-gray-800"
+      >
+        About
+      </h1>
+      <p class="text-[15px]/relaxed text-gray-600 max-w-2xl">
+        Lydie was created with the philosophy of making writing less scattered
+        around the web in small neglected WYSIWYG editors.
+        <br />
+        <br />
+        I myself used to run a Shopify store and was frustrated with the in-platform
+        content editor used for blogging, so I had a vision of creating a platform
+        which would offer a delightful writing experience, and which would connect
+        effortlessly to other platforms - such as my Shopify store!
+        <br />
+        <br />
+        I&apos;ve spent many years writing content for different things, and thus
+        used many different platforms and tools for writing, but I&apos;ve never found
+        a tool that truly resonated with me in terms of UX and features - Lydie is
+        my attempt to create a tool that checks the boxes on these things, and I see
+        a lot of potential for the platform.
+        <br />
+        <br />
+        I&apos;m currently just a single developer, designer and marketer on the project,
+        which is in its early stages, but I am incredibly excited to wake up every
+        day, being able to work on something I am passionate about. I am eager to
+        hear support and ideas, so feel free to reach out on Twitter or Email! On
+        top of that, I am maintaining a roadmap of upcoming features, which you can
+        check out <a
+          href="/roadmap"
+          class="text-blue-600 hover:text-blue-700 underline">here</a
+        >.
+        <br />
+        <br />
+        - Lars
+      </p>
+    </Container>
+  </div>
+</Layout>

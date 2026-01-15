@@ -50,6 +50,10 @@ export class PlainTextSerializer implements NodeBuilder<string> {
     return "---";
   }
 
+  codeBlock(children: string[], _language?: string | null): string {
+    return children.join("");
+  }
+
   customBlock(_name: string, _properties: Record<string, any>): string {
     // Custom blocks are omitted in plain text
     return "";

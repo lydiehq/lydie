@@ -4,10 +4,8 @@ import { Dialog } from "../generic/Dialog";
 import { Heading, Button as RACButton } from "react-aria-components";
 import { Separator } from "../generic/Separator";
 import { Button } from "../generic/Button";
-import { authClient } from "@/utils/auth";
 import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { CreateOrganizationDialog } from "./CreateOrganizationDialog";
 import { useOrganization } from "@/context/organization.context";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 
@@ -20,18 +18,17 @@ export function OrganizationsDialog({
 }) {
   const { organization } = useOrganization();
   const { organizations } = useRouteContext({ from: "/__auth" });
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const navigate = useNavigate();
 
-  const goToOrganization = async (organizationId: string) => {
-    if (organization?.id === organizationId) {
+  const goToOrganization = async (organizationSlug: string) => {
+    if (organization?.slug === organizationSlug) {
       return;
     }
 
     navigate({
-      to: "/w/$organizationId",
-      params: { organizationId },
+      to: "/w/$organizationSlug",
+      params: { organizationSlug },
     });
     onOpenChange(false);
   };
@@ -42,7 +39,7 @@ export function OrganizationsDialog({
         <Dialog>
           <div className="p-3">
             <Heading slot="title" className="text-sm font-medium text-gray-700">
-              My organizations
+              My workspaces
             </Heading>
           </div>
           <Separator />
@@ -53,14 +50,14 @@ export function OrganizationsDialog({
                 className="flex flex-col relative after:absolute after:content-[''] after:left-12 after:right-0 after:bottom-0 after:border-b after:border-black/5 last:after:border-b-0 hover:after:border-transparent"
               >
                 <RACButton
-                  onPress={() => goToOrganization(o.id)}
-                  isDisabled={organization?.id === o.id}
+                  onPress={() => goToOrganization(o.slug || o.id)}
+                  isDisabled={organization?.slug === o.slug}
                   className="flex items-center gap-x-2 relative p-1.5 hover:bg-black/5 rounded-md group"
                 >
                   <OrganizationAvatar organization={o} size="lg" />
                   <div className="font-medium text-black text-sm">
                     {o.name}
-                    {organization?.id === o.id && (
+                    {organization?.slug === o.slug && (
                       <span className="text-gray-500 ml-1">current</span>
                     )}
                   </div>
@@ -75,16 +72,11 @@ export function OrganizationsDialog({
           <Separator />
           <div className="flex justify-end p-3">
             <Button size="sm" href="/onboarding">
-              Create organization
+              Create workspace
             </Button>
           </div>
         </Dialog>
       </Modal>
-
-      <CreateOrganizationDialog
-        isOpen={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
     </>
   );
 }

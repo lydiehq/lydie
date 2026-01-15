@@ -1,8 +1,12 @@
 import { defineQueries, defineQuery } from "@rocicorp/zero";
 import { z } from "zod";
-import { isAuthenticated, hasOrganizationAccess, type Context } from "./auth";
+import {
+  isAuthenticated,
+  hasOrganizationAccess,
+  hasOrganizationAccessBySlug,
+  type Context,
+} from "./auth";
 import { zql } from "./schema";
-import { ZodLazy } from "better-auth";
 
 export type QueryContext = Context;
 
@@ -28,7 +32,13 @@ export const queries = defineQueries({
           .where("organization_id", organizationId)
           .where("deleted_at", "IS", null)
           .one()
-          .related("folder")
+          .related("parent")
+          .related("children", (q) =>
+            q
+              .where("deleted_at", "IS", null)
+              .orderBy("sort_order", "asc")
+              .orderBy("created_at", "asc")
+          )
           .related("organization")
           .related("conversations", (q) =>
             q
@@ -98,6 +108,31 @@ export const queries = defineQueries({
       }
     ),
   },
+  invitations: {
+    byOrganization: defineQuery(
+      z.object({ organizationId: z.string() }),
+      ({ args: { organizationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return zql.invitations
+          .where("organization_id", organizationId)
+          .where("status", "pending")
+          .related("inviter")
+          .orderBy("created_at", "desc");
+      }
+    ),
+    byUser: defineQuery(
+      z.object({ email: z.string() }),
+      ({ args: { email }, ctx }) => {
+        isAuthenticated(ctx);
+        return zql.invitations
+          .where("status", "pending")
+          .where("email", email)
+          .related("organization")
+          .related("inviter")
+          .orderBy("created_at", "desc");
+      }
+    ),
+  },
   organizations: {
     byUser: defineQuery(z.object({}), ({ ctx }) => {
       isAuthenticated(ctx);
@@ -113,35 +148,40 @@ export const queries = defineQueries({
         return zql.organizations.where("id", organizationId).one();
       }
     ),
+    bySlug: defineQuery(
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
+        return zql.organizations.where("slug", organizationSlug).one();
+      }
+    ),
     billing: defineQuery(
-      z.object({ organizationId: z.string() }),
-      ({ args: { organizationId }, ctx }) => {
-        hasOrganizationAccess(ctx, organizationId);
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
 
         return zql.organizations
-          .where("id", organizationId)
+          .where("slug", organizationSlug)
           .one()
           .related("llmUsage", (q) => q.orderBy("created_at", "desc"));
       }
     ),
-    documentsAndFolders: defineQuery(
-      z.object({ organizationId: z.string() }),
-      ({ args: { organizationId }, ctx }) => {
-        hasOrganizationAccess(ctx, organizationId);
-        // Get all documents and folders, we'll filter by folder on the client
-        // Exclude deleted items
+    documents: defineQuery(
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
         return zql.organizations
-          .where("id", organizationId)
+          .where("slug", organizationSlug)
           .one()
           .related("documents", (q) =>
-            q.where("deleted_at", "IS", null).orderBy("created_at", "desc")
-          )
-          .related("folders", (q) =>
-            q.where("deleted_at", "IS", null).orderBy("created_at", "desc")
+            q
+              .where("deleted_at", "IS", null)
+              .orderBy("sort_order", "asc")
+              .orderBy("created_at", "desc")
           );
       }
     ),
-    searchDocumentsAndFolders: defineQuery(
+    searchDocuments: defineQuery(
       z.object({
         organizationId: z.string(),
         searchTerm: z.string(),
@@ -164,16 +204,10 @@ export const queries = defineQueries({
                 .where("deleted_at", "IS", null)
                 .orderBy("created_at", "desc")
                 .limit(20)
-            )
-            .related("folders", (q) =>
-              q
-                .where("deleted_at", "IS", null)
-                .orderBy("created_at", "desc")
-                .limit(20)
             );
         }
 
-        // Search documents by title and folders by name
+        // Search documents by title
         // Exclude deleted items
         return zql.organizations
           .where("id", organizationId)
@@ -182,13 +216,6 @@ export const queries = defineQueries({
             q
               .where("deleted_at", "IS", null)
               .where("title", "ILIKE", searchPattern)
-              .orderBy("updated_at", "desc")
-              .limit(20)
-          )
-          .related("folders", (q) =>
-            q
-              .where("deleted_at", "IS", null)
-              .where("name", "ILIKE", searchPattern)
               .orderBy("updated_at", "desc")
               .limit(20)
           );
@@ -205,6 +232,40 @@ export const queries = defineQueries({
           .where("user_id", ctx.userId)
           .related("messages", (q) => q.orderBy("created_at", "asc"))
           .orderBy("created_at", "desc");
+      }
+    ),
+    conversationsByUser: defineQuery(
+      z.object({ organizationSlug: z.string() }),
+      ({ args: { organizationSlug }, ctx }) => {
+        hasOrganizationAccessBySlug(ctx, organizationSlug);
+        
+        // Get organization ID from context
+        const organization = ctx.organizations?.find(
+          (org) => org.slug === organizationSlug
+        );
+        if (!organization) {
+          throw new Error("Organization not found");
+        }
+
+        return zql.assistant_conversations
+          .where("user_id", ctx.userId)
+          .where("organization_id", organization.id)
+          .related("messages", (q) => q.orderBy("created_at", "asc").limit(1))
+          .orderBy("updated_at", "desc");
+      }
+    ),
+    byId: defineQuery(
+      z.object({ organizationId: z.string(), conversationId: z.string() }),
+      ({ args: { organizationId, conversationId }, ctx }) => {
+        hasOrganizationAccess(ctx, organizationId);
+        return (
+          zql.assistant_conversations
+            .where("id", conversationId)
+            // .where("organization_id", organizationId)
+            .where("user_id", ctx.userId)
+            .one()
+            .related("messages", (q) => q.orderBy("created_at", "asc"))
+        );
       }
     ),
   },

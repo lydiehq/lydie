@@ -1,0 +1,131 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import FormattedDate from "../../components/FormattedDate.astro";
+import { lydieClient } from "../../utils/lydie-client";
+
+let posts: any[] = [];
+
+try {
+  console.log("Fetching blog posts...", import.meta.env.LYDIE_API_KEY);
+  const { documents } = await lydieClient.getDocuments();
+  posts = documents;
+} catch (error) {
+  console.error("Failed to fetch blog posts:", error);
+  posts = [];
+}
+
+const sortedPosts = posts.sort((a, b) => {
+  const dateA = new Date(a.createdAt || a.updatedAt || 0);
+  const dateB = new Date(b.createdAt || b.updatedAt || 0);
+  return dateB.getTime() - dateA.getTime();
+});
+
+const featuredPost = sortedPosts[0];
+const remainingPosts = sortedPosts.slice(1);
+---
+
+<Layout
+  title="Lydie Blog"
+  description="A minimal, powerful writing environment supercharged with AI."
+>
+  <div class="py-8">
+    <Container>
+      <header class="flex flex-col gap-y-2 mb-12">
+        <h1 class="text-2xl font-medium text-gray-900">Blog</h1>
+        <span class="text-base text-gray-700"
+          >Resources on writing, working in teams, and technical insights into
+          Lydie.</span
+        >
+      </header>
+
+      {
+        featuredPost && (
+          <section class="overflow-visible -mx-2 px-2">
+            <a href={`/blog/${featuredPost.slug}`} class="block group">
+              <div class="rounded-xl bg-transparent group-hover:bg-gray-50 transition-colors duration-150 -m-2 p-2">
+                <div class="flex gap-x-4 items-center">
+                  <div
+                    class="rounded-lg shadow-surface h-60 aspect-video bg-center bg-cover bg-no-repeat"
+                    style="background-image: url(/blog.png)"
+                  />
+                  <div class="flex flex-col gap-y-2 p-6">
+                    <h2 class="text-xl font-medium text-gray-900">
+                      {featuredPost.title}
+                    </h2>
+                    {featuredPost.customFields?.excerpt && (
+                      <p class="text-gray-600 text-base">
+                        {featuredPost.customFields.excerpt}
+                      </p>
+                    )}
+                    <p class="text-gray-500 text-xs">
+                      <FormattedDate date={new Date(featuredPost.createdAt)} />
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </section>
+        )
+      }
+      <hr class="border-gray-100 w-full my-12" />
+
+      {
+        remainingPosts.length > 0 && (
+          <section>
+            <ul class="gap-y-8 flex flex-col">
+              {remainingPosts.map((post) => (
+                <li>
+                  <a
+                    href={`/blog/${post.slug}`}
+                    class="flex flex-col gap-y-3 group"
+                  >
+                    <div class="flex gap-x-4 items-center">
+                      <div class="p-2 rounded-lg ring ring-black/8 text-gray-300">
+                        <svg
+                          class="size-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="32"
+                          height="32"
+                          viewBox="0 0 512 512"
+                        >
+                          <path
+                            fill="currentColor"
+                            d="M428 224H288a48 48 0 0 1-48-48V36a4 4 0 0 0-4-4h-92a64 64 0 0 0-64 64v320a64 64 0 0 0 64 64h224a64 64 0 0 0 64-64V228a4 4 0 0 0-4-4m-92 160H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32m0-80H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32"
+                          />
+                          <path
+                            fill="currentColor"
+                            d="M419.22 188.59L275.41 44.78a2 2 0 0 0-3.41 1.41V176a16 16 0 0 0 16 16h129.81a2 2 0 0 0 1.41-3.41"
+                          />
+                        </svg>
+                      </div>
+                      <div class="flex flex-col">
+                        <h3 class="text-bsae font-medium text-gray-900">
+                          {post.title}
+                        </h3>
+                        <div class="flex gap-x-2">
+                          {post.createdAt && (
+                            <span class="text-xs text-gray-500 whitespace-nowrap">
+                              <FormattedDate date={new Date(post.createdAt)} />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex-1 flex flex-col gap-y-1">
+                      {post.customFields?.excerpt && (
+                        <p class="text-sm/relaxed text-gray-600 line-clamp-2 max-w-lg">
+                          {post.customFields.excerpt}
+                        </p>
+                      )}
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+    </Container>
+  </div>
+</Layout>

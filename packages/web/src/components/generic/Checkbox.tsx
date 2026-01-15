@@ -1,4 +1,4 @@
-import { Check, Minus } from "lucide-react";
+import { CheckIcon, MinusIcon } from "@/icons";
 import { type ReactNode } from "react";
 import {
   Checkbox as AriaCheckbox,
@@ -77,9 +77,9 @@ export function Checkbox(props: CheckboxProps) {
             })}
           >
             {isIndeterminate ? (
-              <Minus aria-hidden className={iconStyles} />
+              <MinusIcon aria-hidden className={iconStyles} />
             ) : isSelected ? (
-              <Check aria-hidden className={iconStyles} />
+              <CheckIcon aria-hidden className={iconStyles} />
             ) : null}
           </div>
           {props.children}

@@ -10,12 +10,15 @@ import { useState } from "react";
 import { OrganizationsDialog } from "./OrganizationsDialog";
 import clsx from "clsx";
 import { authClient } from "@/utils/auth";
-import { clearActiveOrganizationId } from "@/lib/active-organization";
+import { clearActiveOrganizationSlug } from "@/lib/active-organization";
 import { useQueryClient } from "@tanstack/react-query";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { Popover } from "../generic/Popover";
 import { OrganizationAvatar } from "./OrganizationAvatar";
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDownIcon } from "@/icons";
+import { useAuth } from "@/context/auth.context";
+import { clearSession } from "@/lib/auth/session";
+import { clearZeroInstance } from "@/lib/zero/instance";
 
 type Props = {
   isCollapsed: boolean;
@@ -24,17 +27,18 @@ type Props = {
 export function OrganizationMenu({ isCollapsed }: Props) {
   const navigate = useNavigate();
   const { organization } = useOrganization();
+  const { session } = useAuth();
+  const userId = session?.userId;
   const queryClient = useQueryClient();
   const router = useRouter();
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] =
     useState(false);
 
   const signOut = async () => {
-    clearActiveOrganizationId();
+    clearActiveOrganizationSlug(userId);
     await authClient.signOut();
-    queryClient.removeQueries({
-      queryKey: ["auth", "getSession"],
-    });
+    await clearSession(queryClient);
+    clearZeroInstance();
     await router.invalidate();
     navigate({ to: "/auth" });
   };
@@ -57,7 +61,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">
                 {organization?.name}
               </div>
-              <ChevronsUpDown className="size-3.5 text-gray-500" />
+              <ChevronsUpDownIcon className="size-3.5 text-gray-500" />
             </>
           )}
         </RACButton>
@@ -78,14 +82,14 @@ export function OrganizationMenu({ isCollapsed }: Props) {
           <Menu className="outline-none max-h-[inherit] overflow-auto p-1 w-full">
             <MenuSeparator />
             <MenuItemLink
-              to="/w/$organizationId/settings/user"
-              from="/w/$organizationId"
+              to="/w/$organizationSlug/settings/user"
+              from="/w/$organizationSlug"
             >
               Settings
             </MenuItemLink>
             <MenuSeparator />
             <MenuItem onAction={() => setIsOrganizationDialogOpen(true)}>
-              Switch organization
+              Switch workspace
             </MenuItem>
             <MenuItem onAction={signOut}>Sign Out</MenuItem>
           </Menu>

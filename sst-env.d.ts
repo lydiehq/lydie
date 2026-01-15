@@ -5,6 +5,10 @@
 
 declare module "sst" {
   export interface Resource {
+    "AssetsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
     "Backend": {
       "service": string
       "type": "sst.aws.Service"
@@ -18,14 +22,6 @@ declare module "sst" {
       "configSet": string
       "sender": string
       "type": "sst.aws.Email"
-    }
-    "EmbeddingQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "Frontend": {
-      "type": "sst.aws.Router"
-      "url": string
     }
     "GitHubAppSlug": {
       "type": "sst.sst.Secret"
@@ -55,17 +51,21 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Landing": {
-      "type": "sst.aws.StaticSite"
-      "url": string
-    }
     "LydieApiKey": {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Marketing": {
+      "type": "sst.aws.StaticSite"
+      "url": string
+    }
     "OpenAiApiKey": {
       "type": "sst.sst.Secret"
       "value": string
+    }
+    "OrganizationAssets": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
     "PolarApiKey": {
       "type": "sst.sst.Secret"
@@ -86,11 +86,6 @@ declare module "sst" {
     "PostgresConnectionStringPooled": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "ReplicationManager": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
     }
     "ShopifyClientId": {
       "type": "sst.sst.Secret"

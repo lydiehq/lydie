@@ -20,6 +20,8 @@ or needs to reference information from their workspace.
 
 **IMPORTANT: Do NOT use this tool for finding "recent", "latest", or "newest" documents. Use the listDocuments tool for those queries as it allows sorting by creation/update time.**
 
+Examples: "Show me documents about coffee", "Find my meeting notes", "What documents mention project deadlines?"
+
 **Search Strategies:**
 - 'title_first': Best for "find my document about X" or "reference my X document" 
 - 'content_first': Best for finding specific information or concepts within documents

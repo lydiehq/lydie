@@ -11,8 +11,8 @@ test.describe("integrations", () => {
     page,
     organization,
   }) => {
-    await page.goto(`/w/${organization.id}/settings/integrations`);
-    await page.waitForURL(`/w/${organization.id}/settings/integrations`);
+    await page.goto(`/w/${organization.slug}/settings/integrations`);
+    await page.waitForURL(`/w/${organization.slug}/settings/integrations`);
 
     await expect(page.getByRole("heading", { name: "GitHub" })).toBeVisible();
   });
@@ -22,11 +22,11 @@ test.describe("integrations", () => {
     organization,
   }) => {
     for (const integration of defaultIntegrations) {
-      await page.goto(`/w/${organization.id}/settings/integrations`);
-      await page.waitForURL(`/w/${organization.id}/settings/integrations`);
+      await page.goto(`/w/${organization.slug}/settings/integrations`);
+      await page.waitForURL(`/w/${organization.slug}/settings/integrations`);
       await page.getByRole("link", { name: integration }).click();
       await page.waitForURL(
-        `/w/${organization.id}/settings/integrations/${integration}`
+        `/w/${organization.slug}/settings/integrations/${integration}`
       );
     }
   });

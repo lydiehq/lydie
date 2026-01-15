@@ -1,6 +1,4 @@
 export interface MarkdownDeserializeOptions {
-  // Whether to preserve empty paragraphs
-  preserveEmptyParagraphs?: boolean;
 }
 
 /**
@@ -26,11 +24,8 @@ export function deserializeFromMarkdown(
 
   const closeParagraph = () => {
     if (currentParagraph) {
-      // Only add non-empty paragraphs unless preserveEmptyParagraphs is true
-      if (
-        currentParagraph.content.length > 0 ||
-        options.preserveEmptyParagraphs
-      ) {
+      // Only add non-empty paragraphs
+      if (currentParagraph.content.length > 0) {
         content.push(currentParagraph);
       }
       currentParagraph = null;

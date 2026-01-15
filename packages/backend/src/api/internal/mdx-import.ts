@@ -1,18 +1,15 @@
 import { Hono } from "hono";
-import {
-  db,
-  documentsTable,
-  documentComponentsTable,
-  foldersTable,
-} from "@lydie/database";
+import { db, documentsTable, documentComponentsTable } from "@lydie/database";
 import { HTTPException } from "hono/http-exception";
 import { createId } from "@lydie/core/id";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 import { slugify } from "@lydie/core/utils";
+import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import {
   deserializeFromMDX,
   extractMDXComponents,
+  parseFrontmatter,
   type MDXComponent,
 } from "@lydie/core/serialization/mdx";
 
@@ -34,52 +31,13 @@ interface MDXFrontmatter {
   [key: string]: any;
 }
 
-// extractMDXComponents is now imported from @lydie/core/serialization
-
-function parseFrontmatter(mdxContent: string): {
-  frontmatter: MDXFrontmatter;
-  contentWithoutFrontmatter: string;
-} {
-  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
-  const match = mdxContent.match(frontmatterRegex);
-
-  if (!match) {
-    return {
-      frontmatter: {},
-      contentWithoutFrontmatter: mdxContent,
-    };
-  }
-
-  const frontmatterYaml = match[1];
-  const contentWithoutFrontmatter = match[2];
-  const frontmatter: MDXFrontmatter = {};
-
-  // Simple YAML parsing for title and slug
-  const lines = frontmatterYaml.split("\n");
-  for (const line of lines) {
-    const colonIndex = line.indexOf(":");
-    if (colonIndex > 0) {
-      const key = line.substring(0, colonIndex).trim();
-      const value = line
-        .substring(colonIndex + 1)
-        .trim()
-        .replace(/^["']|["']$/g, "");
-      if (key === "title" || key === "slug") {
-        frontmatter[key] = value;
-      }
-    }
-  }
-
-  return { frontmatter, contentWithoutFrontmatter };
-}
-
 // mdxToTipTapJSON is now replaced by deserializeFromMDX from @lydie/core/serialization
 
 function parseMDXContent(
   mdxContent: string,
   filename: string | undefined,
   componentSchemas: Record<string, any> = {}
-): ParsedMDXContent {
+): ParsedMDXContent & { customFields?: Record<string, string | number> } {
   // Parse frontmatter first
   const { frontmatter, contentWithoutFrontmatter } =
     parseFrontmatter(mdxContent);
@@ -136,34 +94,43 @@ function parseMDXContent(
     componentSchemas,
   });
 
+  // Convert frontmatter to customFields format (only string and number values)
+  // Exclude title and slug as they're handled separately
+  const customFields: Record<string, string | number> = {};
+  for (const [key, value] of Object.entries(frontmatter)) {
+    if (key !== "title" && key !== "slug") {
+      if (typeof value === "string" || typeof value === "number") {
+        customFields[key] = value;
+      } else if (typeof value === "boolean") {
+        // Convert boolean to string
+        customFields[key] = String(value);
+      }
+    }
+  }
+
   const result = {
     title,
     slug,
     content: tipTapContent,
     components,
+    customFields:
+      Object.keys(customFields).length > 0 ? customFields : undefined,
   };
 
   return result;
 }
 
-/**
- * Gets or creates a folder by path, creating parent folders as needed
- * @param folderPath - Path like "folder1/subfolder2" or null/empty for root
- * @param userId - User ID
- * @param organizationId - Organization ID
- * @returns Promise<string | undefined> - Folder ID or undefined for root
- */
-async function getOrCreateFolderByPath(
-  folderPath: string | null | undefined,
+async function getOrCreatePageByPath(
+  pagePath: string | null | undefined,
   userId: string,
   organizationId: string
 ): Promise<string | undefined> {
-  if (!folderPath || folderPath.trim() === "" || folderPath === "/") {
+  if (!pagePath || pagePath.trim() === "" || pagePath === "/") {
     return undefined; // Root level
   }
 
   // Normalize path: remove leading/trailing slashes and split
-  const parts = folderPath
+  const parts = pagePath
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .filter((part) => part.length > 0);
@@ -174,39 +141,47 @@ async function getOrCreateFolderByPath(
 
   let currentParentId: string | undefined = undefined;
 
-  // Traverse the path, creating folders as needed
-  for (const folderName of parts) {
-    // Check if folder already exists with this name, parent, and organization
-    // @ts-ignore
-    const [existingFolder] = await db
+  // Traverse the path, creating pages as needed
+  for (const pageName of parts) {
+    // Check if page already exists with this title, parent, and organization
+    const whereConditions = [
+      eq(documentsTable.title, pageName),
+      eq(documentsTable.organizationId, organizationId),
+      isNull(documentsTable.deletedAt),
+    ];
+
+    if (currentParentId) {
+      whereConditions.push(eq(documentsTable.parentId, currentParentId));
+    } else {
+      whereConditions.push(isNull(documentsTable.parentId));
+    }
+
+    const [existingPage] = await db
       .select()
-      .from(foldersTable)
-      .where(
-        and(
-          eq(foldersTable.name, folderName),
-          eq(foldersTable.organizationId, organizationId),
-          isNull(foldersTable.deletedAt),
-          currentParentId
-            ? eq(foldersTable.parentId, currentParentId)
-            : isNull(foldersTable.parentId)
-        )
-      )
+      .from(documentsTable)
+      .where(and(...whereConditions))
       .limit(1);
 
-    if (existingFolder) {
-      // Reuse existing folder
-      currentParentId = existingFolder.id;
+    if (existingPage) {
+      // Reuse existing page
+      currentParentId = existingPage.id;
     } else {
-      // Create new folder
-      const newFolderId = createId();
-      await db.insert(foldersTable).values({
-        id: newFolderId,
-        name: folderName,
+      // Create new page
+      const newPageId = createId();
+      const emptyContent = { type: "doc", content: [] };
+      const yjsState = convertJsonToYjs(emptyContent);
+      await db.insert(documentsTable).values({
+        id: newPageId,
+        title: pageName,
+        slug: newPageId,
+        yjsState: yjsState,
         userId,
         organizationId,
         parentId: currentParentId || null,
+        indexStatus: "pending",
+        published: false,
       });
-      currentParentId = newFolderId;
+      currentParentId = newPageId;
     }
   }
 
@@ -214,32 +189,32 @@ async function getOrCreateFolderByPath(
 }
 
 export const MDXImportRoute = new Hono<{ Variables: Variables }>()
-  .post("/create-folder", async (c) => {
+  .post("/create-page", async (c) => {
     try {
-      const { folderPath } = await c.req.json();
+      const { pagePath } = await c.req.json();
       const userId = c.get("user").id;
       const organizationId = c.get("organizationId");
 
-      const folderId = await getOrCreateFolderByPath(
-        folderPath,
+      const pageId = await getOrCreatePageByPath(
+        pagePath,
         userId,
         organizationId
       );
 
-      return c.json({ folderId });
+      return c.json({ pageId });
     } catch (error) {
-      console.error("❌ Folder creation error:", error);
+      console.error("❌ Page creation error:", error);
       if (error instanceof HTTPException) {
         throw error;
       }
       throw new HTTPException(500, {
-        message: "Failed to create folder",
+        message: "Failed to create page",
       });
     }
   })
   .post("/", async (c) => {
     try {
-      const { mdxContent, filename, folderPath, folderId } = await c.req.json();
+      const { mdxContent, filename, pagePath, parentId } = await c.req.json();
       const userId = c.get("user").id;
       const organizationId = c.get("organizationId");
 
@@ -283,11 +258,11 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         }
       }
 
-      // Use provided folderId, or get/create folder by path if not provided
-      let finalFolderId: string | undefined = folderId;
-      if (!finalFolderId && folderPath) {
-        finalFolderId = await getOrCreateFolderByPath(
-          folderPath,
+      // Use provided parentId, or get/create page by path if not provided
+      let finalParentId: string | undefined = parentId;
+      if (!finalParentId && pagePath) {
+        finalParentId = await getOrCreatePageByPath(
+          pagePath,
           userId,
           organizationId
         );
@@ -297,14 +272,18 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
       const documentId = createId();
       const finalSlug = parsed.slug || documentId;
 
+      // Convert TipTap JSON to Yjs format
+      const yjsState = convertJsonToYjs(parsed.content);
+
       const insertData = {
         id: documentId,
         title: parsed.title,
         slug: finalSlug,
-        jsonContent: parsed.content,
+        yjsState: yjsState,
         userId,
         organizationId,
-        folderId: finalFolderId || null,
+        parentId: finalParentId || null,
+        customFields: parsed.customFields || null,
         indexStatus: "outdated" as const,
         published: false,
       };
@@ -324,19 +303,21 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         });
       }
 
-      // Generate embeddings for the imported document asynchronously (don't block)
-      processDocumentEmbedding(insertedDocument, db)
-        .then(() => {
-          console.log(
-            `Successfully generated embeddings for imported document ${documentId}`
-          );
-        })
-        .catch((error) => {
-          console.error(
-            `Failed to generate embeddings for imported document ${documentId}:`,
-            error
-          );
-        });
+      if (insertedDocument.yjsState) {
+        processDocumentEmbedding(
+          {
+            documentId: insertedDocument.id,
+            yjsState: insertedDocument.yjsState,
+            title: insertedDocument.title,
+          },
+          db
+        ).catch((error) => {
+            console.error(
+              `Failed to generate embeddings for imported document ${documentId}:`,
+              error
+            );
+          });
+      }
 
       // Create document components for any new custom components found
       const createdComponents: string[] = [];
@@ -405,7 +386,7 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         documentId,
         title: parsed.title,
         slug: finalSlug,
-        folderId: finalFolderId,
+        parentId: finalParentId,
         componentsFound: parsed.components.length,
         newComponentsCreated: createdComponents,
       };

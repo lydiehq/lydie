@@ -4,6 +4,7 @@ import {
   createRouter as createTanStackRouter,
   type NavigateOptions,
   type ToOptions,
+  CatchBoundary,
 } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import "./styles/tailwind.css";
@@ -16,6 +17,7 @@ import {
 } from "@tanstack/react-query";
 import type { authClient } from "./utils/auth.ts";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
+import { ErrorPage } from "./components/layout/ErrorPage.tsx";
 
 export interface RouterContext {
   queryClient: QueryClientType;
@@ -62,7 +64,9 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <RouterProvider router={createRouter()} />
+      <CatchBoundary errorComponent={ErrorPage} getResetKey={() => "error"}>
+        <RouterProvider router={createRouter()} />
+      </CatchBoundary>
     </StrictMode>
   );
 }

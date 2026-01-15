@@ -19,6 +19,7 @@ const users = table("users")
     id: string(),
     name: string(),
     email: string(),
+    image: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -48,20 +49,36 @@ const members = table("members")
   })
   .primaryKey("id");
 
+const invitations = table("invitations")
+  .columns({
+    id: string(),
+    organization_id: string(),
+    email: string(),
+    role: string().optional(),
+    status: string(),
+    expires_at: number(),
+    inviter_id: string(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
 const documents = table("documents")
   .columns({
     id: string(),
     title: string(),
     slug: string(),
-    json_content: json().optional(),
     user_id: string(),
     organization_id: string(),
     index_status: string(),
-    folder_id: string().optional(),
+    parent_id: string().optional(),
+    yjs_state: string().optional(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
+    custom_fields: json().optional(),
     published: boolean(),
     deleted_at: number().optional(),
+    is_locked: boolean(),
+    sort_order: number(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -90,19 +107,6 @@ const documentPublicationsRelations = relationships(
     }),
   })
 );
-
-const folders = table("folders")
-  .columns({
-    id: string(),
-    name: string(),
-    parent_id: string().optional(),
-    user_id: string(),
-    organization_id: string(),
-    integration_link_id: string().optional(),
-    deleted_at: number().optional(),
-    ...timestamps,
-  })
-  .primaryKey("id");
 
 const documentConversations = table("document_conversations")
   .columns({
@@ -247,10 +251,15 @@ const syncMetadata = table("sync_metadata")
   .primaryKey("id");
 
 const documentsRelations = relationships(documents, ({ one, many }) => ({
-  folder: one({
-    sourceField: ["folder_id"],
+  parent: one({
+    sourceField: ["parent_id"],
     destField: ["id"],
-    destSchema: folders,
+    destSchema: documents,
+  }),
+  children: many({
+    sourceField: ["id"],
+    destField: ["parent_id"],
+    destSchema: documents,
   }),
   organization: one({
     sourceField: ["organization_id"],
@@ -274,39 +283,6 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
   }),
 }));
 
-const foldersRelations = relationships(folders, ({ one, many }) => ({
-  user: one({
-    sourceField: ["user_id"],
-    destField: ["id"],
-    destSchema: users,
-  }),
-  parent: one({
-    sourceField: ["parent_id"],
-    destField: ["id"],
-    destSchema: folders,
-  }),
-  children: many({
-    sourceField: ["id"],
-    destField: ["parent_id"],
-    destSchema: folders,
-  }),
-  documents: many({
-    sourceField: ["id"],
-    destField: ["folder_id"],
-    destSchema: documents,
-  }),
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-  integrationLink: one({
-    sourceField: ["integration_link_id"],
-    destField: ["id"],
-    destSchema: integrationLinks,
-  }),
-}));
-
 const organizationsRelations = relationships(
   organizations,
   ({ one, many }) => ({
@@ -315,15 +291,15 @@ const organizationsRelations = relationships(
       destField: ["organization_id"],
       destSchema: documents,
     }),
-    folders: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: folders,
-    }),
     members: many({
       sourceField: ["id"],
       destField: ["organization_id"],
       destSchema: members,
+    }),
+    invitations: many({
+      sourceField: ["id"],
+      destField: ["organization_id"],
+      destSchema: invitations,
     }),
     documentComponents: many({
       sourceField: ["id"],
@@ -371,16 +347,24 @@ const membersRelations = relationships(members, ({ one }) => ({
   }),
 }));
 
+const invitationsRelations = relationships(invitations, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  inviter: one({
+    sourceField: ["inviter_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
 const usersRelations = relationships(users, ({ many, one }) => ({
   members: many({
     sourceField: ["id"],
     destField: ["user_id"],
     destSchema: members,
-  }),
-  folders: many({
-    sourceField: ["id"],
-    destField: ["user_id"],
-    destSchema: folders,
   }),
   documents: many({
     sourceField: ["id"],
@@ -558,11 +542,6 @@ const integrationLinksRelations = relationships(
       destField: ["integration_link_id"],
       destSchema: documents,
     }),
-    folders: many({
-      sourceField: ["id"],
-      destField: ["integration_link_id"],
-      destSchema: folders,
-    }),
   })
 );
 
@@ -605,9 +584,9 @@ export const schema = createSchema({
   tables: [
     users,
     documents,
-    folders,
     organizations,
     members,
+    invitations,
     documentComponents,
     documentConversations,
     documentMessages,
@@ -625,9 +604,9 @@ export const schema = createSchema({
   ],
   relationships: [
     documentsRelations,
-    foldersRelations,
     organizationsRelations,
     membersRelations,
+    invitationsRelations,
     usersRelations,
     documentComponentsRelations,
     documentConversationsRelations,

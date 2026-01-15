@@ -6,9 +6,9 @@ import { mutators as sharedMutators } from "../../mutators";
 
 import { integrationRegistry } from "@lydie/integrations";
 
-export const disconnectIntegrationMutation = (
-  asyncTasks: Array<() => Promise<void>>
-) =>
+import { MutatorContext } from "../../server-mutators";
+
+export const disconnectIntegrationMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
     z.object({
       connectionId: z.string(),

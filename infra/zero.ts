@@ -23,9 +23,12 @@ const commonEnv = {
   ZERO_CVR_DB: conn.value,
   ZERO_CHANGE_DB: conn.value,
   ZERO_IMAGE_URL: image,
-  ZERP_APP_ID: $app.stage + "elelel",
+  ZERP_APP_ID: $app.stage,
   ZERO_MUTATE_FORWARD_COOKIES: "true",
   ZERO_QUERY_FORWARD_COOKIES: "true",
+  // ZERO_UPSTREAM_MAX_CONNS: "7", // Reduced from default 20
+  // ZERO_CHANGE_MAX_CONNS: "2", // Reduced from default 5
+  // ZERO_CVR_MAX_CONNS: "7", // Reduced from default 30
   ...($dev ? {} : { ZERO_APP_PUBLICATIONS: "zero_data" }),
   ZERO_MUTATE_URL: $dev
     ? "http://localhost:3001/internal/zero/mutate"
@@ -54,7 +57,6 @@ const commonEnv = {
       environment: {
         ...commonEnv,
         ZERO_LITESTREAM_BACKUP_URL: $interpolate`s3://${replicationBucket.name}/backup`,
-        // ZERO_NUM_SYNC_WORKERS: "0",
       },
       loadBalancer: {
         public: false,
@@ -103,6 +105,7 @@ export const zero = new sst.aws.Service("Zero", {
   },
   environment: {
     ...commonEnv,
+    ZERO_NUM_SYNC_WORKERS: "4", // Must be <= (ZERO_UPSTREAM_MAX_CONNS - 1) for replication stream
     ...($dev ? {} : { ZERO_CHANGE_STREAMER_MODE: "discover" }),
   },
   logging: {

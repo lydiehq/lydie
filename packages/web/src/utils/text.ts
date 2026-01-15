@@ -1,13 +1,3 @@
-/**
- * Text utility functions for word counting, character counting, and text processing
- */
-
-/**
- * Counts words in plain text or HTML content
- * @param text - The text content to count words in
- * @param options - Configuration options
- * @returns Number of words
- */
 export function countWords(
   text: string,
   options: {
@@ -38,12 +28,6 @@ export function countWords(
   return words.length;
 }
 
-/**
- * Counts characters in text (excluding HTML tags by default)
- * @param text - The text content to count characters in
- * @param options - Configuration options
- * @returns Number of characters
- */
 export function countCharacters(
   text: string,
   options: {
@@ -69,22 +53,11 @@ export function countCharacters(
   return processedText.length;
 }
 
-/**
- * Strips HTML tags from text content
- * @param html - HTML content to strip tags from
- * @returns Plain text content
- */
 export function stripHtmlTags(html: string): string {
   if (!html) return "";
   return html.replace(/<[^>]*>/g, "");
 }
 
-/**
- * Gets basic text statistics for content
- * @param text - The text to analyze
- * @param options - Configuration options
- * @returns Object with word count, character count, etc.
- */
 export function getTextStats(
   text: string,
   options: {

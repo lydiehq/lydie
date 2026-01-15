@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { documentChatModel, google } from "@lydie/core/ai/llm";
+import { chatModel } from "@lydie/core/ai/llm";
 import {
   validateUIMessages,
   createAgentUIStreamResponse,
@@ -28,6 +28,7 @@ import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
 import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
 import { readDocument } from "@lydie/core/ai/tools/read-document";
 import { listDocuments } from "@lydie/core/ai/tools/list-documents";
+import { openai } from "@ai-sdk/openai";
 
 export const messageMetadataSchema = z.object({
   usage: z.number().optional(),
@@ -112,7 +113,7 @@ export const DocumentChatRoute = new Hono<{
     }
 
     const organizationId = c.get("organizationId");
-    
+
     const [currentDocument] = await db
       .select()
       .from(documentsTable)
@@ -151,30 +152,34 @@ export const DocumentChatRoute = new Hono<{
     }
 
     const latestMessage = messages[messages.length - 1];
+    const user = c.get("user");
 
-    // Save the user message first to prevent race conditions
+    // Check daily message limit BEFORE saving to prevent exceeding the limit
+    // Skip limit check for admin users
+    const isAdmin = (user as any)?.role === "admin";
+    if (!isAdmin) {
+      const limitCheck = await checkDailyMessageLimit({
+        id: organization.id,
+        subscriptionPlan: organization.subscriptionPlan,
+        subscriptionStatus: organization.subscriptionStatus,
+      });
+
+      if (!limitCheck.allowed) {
+        throw new VisibleError(
+          "usage_limit_exceeded",
+          `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
+          429
+        );
+      }
+    }
+
+    // Save the user message after limit check passes
     await saveMessage({
       conversationId,
       parts: latestMessage.parts,
       role: "user",
       metadata: latestMessage.metadata,
     });
-
-    // Check daily message limit AFTER saving to prevent race conditions
-    // This ensures the message we just saved is counted
-    const limitCheck = await checkDailyMessageLimit({
-      id: organization.id,
-      subscriptionPlan: organization.subscriptionPlan,
-      subscriptionStatus: organization.subscriptionStatus,
-    });
-
-    if (!limitCheck.allowed) {
-      throw new VisibleError(
-        "usage_limit_exceeded",
-        `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
-        429
-      );
-    }
 
     const focusedContent = latestMessage.metadata?.focusedContent;
 
@@ -211,13 +216,20 @@ export const DocumentChatRoute = new Hono<{
     const systemPrompt = buildSystemPrompt(promptStyle, customPrompt);
 
     const agent = new ToolLoopAgent({
-      model: google("gemini-3-flash-preview"),
+      model: chatModel,
+      providerOptions: {
+        openai: {
+          reasoningEffort: "medium",
+        },
+      },
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
-      // @ts-expect-error - experimental_transform is not typed
       experimental_transform: smoothStream({ chunking: "word" }),
       tools: {
+        web_search: openai.tools.webSearch({
+          searchContextSize: "low",
+        }),
         // google_search: google.tools.googleSearch({}),
         search_in_document: searchInDocument(
           documentId,
@@ -283,7 +295,7 @@ export const DocumentChatRoute = new Hono<{
             messageId: savedMessage.id,
             organizationId: currentDocument.organizationId,
             source: "document",
-            model: documentChatModel.modelId || "gemini-2.5-flash",
+            model: chatModel.modelId,
             promptTokens,
             completionTokens,
             totalTokens,

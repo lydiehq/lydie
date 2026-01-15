@@ -3,11 +3,10 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@rocicorp/zero/react";
 import { useDebounceCallback } from "usehooks-ts";
 import { queries } from "@lydie/zero/queries";
-import type { Session } from "better-auth";
 
 export function useDocumentSearch(
   organizationId: string,
-  session: Session,
+  organizationSlug: string,
   routePath: string
 ) {
   const { q, focusSearch } = useSearch({
@@ -33,8 +32,9 @@ export function useDocumentSearch(
       }, 100);
       // Clear the focusSearch param from URL after focusing
       navigate({
-        to: "/w/$organizationId",
-        from: "/w/$organizationId",
+        to: "/w/$organizationSlug",
+        from: "/w/$organizationSlug",
+        params: { organizationSlug },
         search: (prev) => ({
           tree: (prev as { tree?: string })?.tree,
           q: (prev as { q?: string })?.q,
@@ -48,8 +48,9 @@ export function useDocumentSearch(
   const updateSearchParam = useCallback(
     (text: string) => {
       navigate({
-        to: "/w/$organizationId",
-        from: "/w/$organizationId",
+        to: "/w/$organizationSlug",
+        from: "/w/$organizationSlug",
+        params: { organizationSlug },
         search: (prev) => ({
           tree: (prev as { tree?: string })?.tree,
           q: text || undefined,
@@ -58,7 +59,7 @@ export function useDocumentSearch(
         replace: true,
       });
     },
-    [navigate, organizationId]
+    [navigate, organizationSlug]
   );
 
   // Debounce the URL navigation - this waits for user to stop typing
@@ -69,14 +70,13 @@ export function useDocumentSearch(
 
   // Use local search state in query, not searchParam
   const [searchData] = useQuery(
-    queries.organizations.searchDocumentsAndFolders({
+    queries.organizations.searchDocuments({
       organizationId,
       searchTerm: search,
     })
   );
 
   const allDocuments = searchData?.documents || [];
-  const allFolders = searchData?.folders || [];
 
   const onSearchChange = (value: string) => {
     setSearch(value);
@@ -89,6 +89,5 @@ export function useDocumentSearch(
     searchFieldRef,
     onSearchChange,
     allDocuments,
-    allFolders,
   };
 }

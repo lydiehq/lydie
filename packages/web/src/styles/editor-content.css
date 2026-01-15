@@ -11,7 +11,11 @@
   );
   --editor-content-th-borders: var(--color-gray-300);
   --editor-content-td-borders: var(--color-gray-200);
-  --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
+  --editor-content-hr-color: color-mix(
+    in oklab,
+    var(--color-gray-950) 5%,
+    transparent
+  );
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
   &:where(.dark, .dark *) {
@@ -27,7 +31,11 @@
     );
     --editor-content-th-borders: var(--color-gray-600);
     --editor-content-td-borders: var(--color-gray-700);
-    --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    --editor-content-hr-color: color-mix(
+      in oklab,
+      var(--color-white) 10%,
+      transparent
+    );
     --editor-content-blockquote-border-color: var(--color-gray-600);
   }
   @media (prefers-color-scheme: dark) {
@@ -66,37 +74,37 @@
   }
 
   h1 {
-    font-size: var(--text-3xl);
+    font-size: var(--text-2xl);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
-    color: var(--editor-content-heading-color);
+    color: #0d0d0d;
   }
 
   h2 {
-    font-size: var(--text-2xl);
+    font-size: var(--text-xl);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
-    color: var(--editor-content-heading-color);
+    color: #0d0d0d;
   }
 
   h3 {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     line-height: 1;
-    color: var(--editor-content-heading-color);
-    font-weight: var(--font-weight-semibold);
+    color: #0d0d0d;
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
   }
 
   h4 {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     line-height: 1;
-    color: var(--editor-content-heading-color);
-    font-weight: var(--font-weight-semibold);
+    color: #0d0d0d;
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
   }
@@ -127,9 +135,6 @@
     text-underline-offset: 0.2em;
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    & code {
-      font-weight: var(--font-weight-semibold);
-    }
   }
 
   a:hover {
@@ -138,7 +143,7 @@
 
   strong {
     color: var(--editor-content-strong-color);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code {
@@ -149,7 +154,7 @@
   }
 
   :where(h2, h3, h4) code {
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code::before,
@@ -175,7 +180,7 @@
   pre code {
     font-variant-ligatures: none;
     font-family: var(--font-mono);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     line-height: 2;
   }
 
@@ -194,7 +199,7 @@
   }
 
   thead th {
-    color: var(--editor-content-heading-color);
+    color: #0d0d0d;
     font-weight: 600;
     vertical-align: bottom;
     padding-inline-end: 0.6em;
@@ -289,6 +294,48 @@
   }
 }
 
+/* Collaboration caret styles - applies to all editor content */
+.editor-content .collaboration-carets__caret,
+.editor-content-sm .collaboration-carets__caret {
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+/* Render the username above the caret */
+.editor-content .collaboration-carets__label,
+.editor-content-sm .collaboration-carets__label {
+  border-radius: 3px 3px 3px 0;
+  color: #0d0d0d;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  left: -1px;
+  line-height: normal;
+  padding: 0.1rem 0.3rem;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Dark mode support for collaboration caret labels */
+.editor-content:where(.dark, .dark *) .collaboration-carets__label,
+.editor-content-sm:where(.dark, .dark *) .collaboration-carets__label {
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .editor-content:where(.system, .system *) .collaboration-carets__label,
+  .editor-content-sm:where(.system, .system *) .collaboration-carets__label {
+    color: #ffffff;
+  }
+}
+
 .editor-content-sm {
   --editor-content-color: var(--color-gray-700);
   --editor-content-heading-color: var(--color-gray-950);
@@ -302,7 +349,11 @@
   );
   --editor-content-th-borders: var(--color-gray-300);
   --editor-content-td-borders: var(--color-gray-200);
-  --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
+  --editor-content-hr-color: color-mix(
+    in oklab,
+    var(--color-gray-950) 5%,
+    transparent
+  );
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
   &:where(.dark, .dark *) {
@@ -318,7 +369,11 @@
     );
     --editor-content-th-borders: var(--color-gray-600);
     --editor-content-td-borders: var(--color-gray-700);
-    --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    --editor-content-hr-color: color-mix(
+      in oklab,
+      var(--color-white) 10%,
+      transparent
+    );
     --editor-content-blockquote-border-color: var(--color-gray-600);
   }
 
@@ -354,37 +409,37 @@
   }
 
   h1 {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
-    color: var(--editor-content-heading-color);
+    color: #0d0d0d;
   }
 
   h2 {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
-    color: var(--editor-content-heading-color);
+    color: #0d0d0d;
   }
 
   h3 {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     line-height: 1;
-    color: var(--editor-content-heading-color);
-    font-weight: var(--font-weight-semibold);
+    color: #0d0d0d;
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
   }
 
   h4 {
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     line-height: 1;
-    color: var(--editor-content-heading-color);
-    font-weight: var(--font-weight-semibold);
+    color: #0d0d0d;
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
   }
@@ -416,7 +471,7 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     & code {
-      font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-medium);
     }
   }
 
@@ -426,7 +481,7 @@
 
   strong {
     color: var(--editor-content-strong-color);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code {
@@ -437,7 +492,7 @@
   }
 
   :where(h2, h3, h4) code {
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code::before,
@@ -460,12 +515,12 @@
     content: none;
   }
 
-  pre code {
+  /* pre code {
     font-variant-ligatures: none;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     line-height: 1.8;
-  }
+  } */
 
   table {
     width: 100%;
@@ -482,7 +537,7 @@
   }
 
   thead th {
-    color: var(--editor-content-heading-color);
+    color: #0d0d0d;
     font-weight: 600;
     vertical-align: bottom;
     padding-inline-end: 0.5em;
@@ -574,5 +629,47 @@
 
   :last-child {
     margin-bottom: 0;
+  }
+}
+
+/* Collaboration caret styles - applies to all editor content */
+.editor-content .collaboration-carets__caret,
+.editor-content-sm .collaboration-carets__caret {
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+/* Render the username above the caret */
+.editor-content .collaboration-carets__label,
+.editor-content-sm .collaboration-carets__label {
+  border-radius: 3px 3px 3px 0;
+  color: #0d0d0d;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  left: -1px;
+  line-height: normal;
+  padding: 0.1rem 0.3rem;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Dark mode support for collaboration caret labels */
+.editor-content:where(.dark, .dark *) .collaboration-carets__label,
+.editor-content-sm:where(.dark, .dark *) .collaboration-carets__label {
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .editor-content:where(.system, .system *) .collaboration-carets__label,
+  .editor-content-sm:where(.system, .system *) .collaboration-carets__label {
+    color: #ffffff;
   }
 }

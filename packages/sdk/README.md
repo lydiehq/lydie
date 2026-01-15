@@ -29,9 +29,9 @@ const client = new LydieClient({
 const document = await client.getDocument("getting-started");
 
 // Convert to various formats
-const html = document.toHTML();         // Uses serializeToHTML under the hood
+const html = document.toHTML(); // Uses serializeToHTML under the hood
 const markdown = document.toMarkdown(); // Uses serializeToMarkdown under the hood
-const text = document.toPlainText();    // Uses serializeToPlainText under the hood
+const text = document.toPlainText(); // Uses serializeToPlainText under the hood
 ```
 
 ### React (Client-Side)
@@ -116,9 +116,8 @@ const { documents } = await client.getDocuments();
 const doc = await client.getDocument("getting-started", {
   related: true, // Include related documents
   toc: true, // Include table of contents
-  transformLinks: true, // Transform internal:// links to relative URLs (default: true)
-  useIds: false, // Use document IDs instead of slugs in links (default: false)
 });
+// Internal links are automatically transformed to internal-link marks with metadata
 ```
 
 **`getDocumentByPath(path, options?)`**
@@ -127,9 +126,8 @@ const doc = await client.getDocument("getting-started", {
 const doc = await client.getDocumentByPath("/docs/api/authentication", {
   related: true,
   toc: true,
-  transformLinks: true, // Transform internal:// links to relative URLs
-  useIds: false, // Use document IDs instead of slugs in links
 });
+// Internal links are automatically transformed to internal-link marks with metadata
 ```
 
 **`getFolders()`**
@@ -164,10 +162,6 @@ const {
   apiKey: "your-key",
   organizationId: "your-org",
   include: { related: true, toc: true },
-  links: {
-    transform: true, // Transform internal:// links (default: true)
-    useIds: false, // Use document IDs instead of slugs (default: false)
-  },
 });
 ```
 
@@ -202,31 +196,51 @@ const text = extractText(doc.jsonContent);
 
 ## Internal Link Transformation
 
-Lydie documents use `internal://` protocol for linking between documents. The SDK automatically transforms these to relative URLs for easy rendering.
+Lydie documents use internal links to reference other documents. The API automatically transforms these to `internal-link` marks (similar to Sanity/PayloadCMS) with embedded metadata for easy frontend rendering.
 
-### Server-Side Transformation
+### Internal Link Format
 
-By default, internal links are transformed to SEO-friendly slugs:
+Internal links are presented as marks with embedded metadata:
 
-```typescript
-// internal://abc123def → /getting-started
-const doc = await client.getDocument("my-doc", {
-  transformLinks: true, // Default: true
-  useIds: false, // Default: false (use slugs)
-});
+```json
+{
+  "text": "what knowledge bases are",
+  "type": "text",
+  "marks": [
+    {
+      "type": "internal-link",
+      "attrs": {
+        "document-id": "abc123def",
+        "document-slug": "getting-started",
+        "document-title": "Getting Started"
+      }
+    }
+  ]
+}
 ```
 
-For faster performance, you can use document IDs instead:
+### Client-Side Link Resolution
 
-```typescript
-// internal://abc123def → /abc123def
-const doc = await client.getDocument("my-doc", {
-  transformLinks: true,
-  useIds: true, // Use IDs instead of slugs
-});
+Use the `linkResolver` prop to customize how internal links are rendered:
+
+```tsx
+<LydieContent
+  content={doc.jsonContent}
+  linkResolver={(ref) => {
+    // ref.type === "internal"
+    // ref.id === "abc123def"
+    // ref.slug === "getting-started"
+    // ref.title === "Getting Started"
+
+    if (ref.type === "internal" && ref.slug) {
+      return `/blog/${ref.slug}`;
+    }
+    return ref.href || "#";
+  }}
+/>
 ```
 
-### Client-Side Link Prefixing
+### Link Prefixing
 
 Add environment-specific prefixes to all relative links:
 
@@ -244,16 +258,6 @@ Add environment-specific prefixes to all relative links:
     ? "https://docs.mycompany.com"
     : "/dev-docs"}
 />
-```
-
-### Combining Both Approaches
-
-```typescript
-// Server: Transform internal://abc123 → /getting-started
-const doc = await client.getDocument("my-doc", { transformLinks: true });
-
-// Client: Add environment prefix /getting-started → https://myblog.com/getting-started
-<LydieContent content={doc.jsonContent} linkPrefix="https://myblog.com" />;
 ```
 
 ## Custom Blocks

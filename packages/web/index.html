@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lydie</title>
     <link
       rel="icon"
       href="/favicon.svg"
@@ -22,12 +23,10 @@
     />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Lydie</title>
   </head>
-  <body style="background-color: #fafafa">
+  <body style="background-color: rgb(248 248 248)">
     <div id="app"></div>
     <script>
-      // Load root font size from localStorage on boot to avoid FOUC
       (function () {
         try {
           const stored = localStorage.getItem("lydie-root-font-size");

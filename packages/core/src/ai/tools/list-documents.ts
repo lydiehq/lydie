@@ -11,7 +11,9 @@ export const listDocuments = (
   tool({
     description: `List documents in the user's workspace with filtering and sorting options.
 Use this tool when the user wants to see what documents they have available, 
-find documents by title patterns, get their latest/recent/newest documents (by sorting), or get an overview of their workspace.`,
+find documents by title patterns, get their latest/recent/newest documents (by sorting), or get an overview of their workspace.
+
+Examples: "What documents do I have?", "Show me my recent files", "List the latest 3 documents"`,
     inputSchema: z.object({
       limit: z
         .number()
@@ -116,6 +118,7 @@ find documents by title patterns, get their latest/recent/newest documents (by s
 
       // Yield final result (this is what will be in tool.output)
       yield {
+        state: "success",
         message: `Found ${documents.length} document${
           documents.length === 1 ? "" : "s"
         }${filterMessage} in your workspace, ${sortMessage}:`,

@@ -25,7 +25,7 @@ export function DocumentSearch({
   const { session } = useAuth();
 
   const [documents] = useQuery(
-    queries.documents.byUpdated({ organizationId: organization?.id || "" })
+    queries.documents.byUpdated({ organizationId: organization.id })
   );
 
   // Filter documents based on search query

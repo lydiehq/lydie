@@ -1,0 +1,160 @@
+---
+import DocumentationLayout from "../../../layouts/DocumentationLayout.astro";
+import { Code, ExternalLink, Github } from "lucide-react";
+
+const examples = [
+  {
+    title: "Next.js Blog",
+    description:
+      "A simple blog built with Next.js that fetches and displays documents from the Lydie REST API.",
+    framework: "Next.js",
+    href: "https://github.com/lsalling/lydie/tree/main/examples/nextjs-blog",
+    features: [
+      "Server-side rendering",
+      "Dynamic routes",
+      "API integration",
+      "TypeScript support",
+    ],
+  },
+];
+---
+
+<DocumentationLayout
+  title="Examples - Lydie"
+  description="Example implementations using the Lydie REST API. Learn how to integrate Lydie into your projects with real-world examples."
+>
+  <div class="flex flex-col gap-y-12">
+    <div class="flex flex-col gap-y-4">
+      <h1
+        class="text-4xl md:text-5xl font-heading font-medium tracking-tight text-gray-800"
+      >
+        Examples
+      </h1>
+      <p class="text-[15px]/relaxed text-gray-600 max-w-2xl text-balance">
+        Explore real-world examples of integrating Lydie into your projects.
+        Each example demonstrates best practices for using the REST API with
+        different frameworks and use cases.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-y-8">
+      <div class="grid gap-6">
+        {
+          examples.map((example) => (
+            <div
+              class="flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all"
+            >
+              <div class="flex items-start justify-between gap-x-4">
+                <div class="flex flex-col gap-y-2 flex-1">
+                  <div class="flex items-center gap-x-3">
+                    <h2
+                      class="text-xl font-heading font-medium tracking-tight text-gray-900"
+                    >
+                      {example.title}
+                    </h2>
+                    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {example.framework}
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-600">{example.description}</p>
+                </div>
+                <a
+                  href={example.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-x-2 text-sm text-gray-700 hover:text-gray-900 transition-colors shrink-0"
+                >
+                  <Github className="size-4" />
+                  <span>View on GitHub</span>
+                  <ExternalLink className="size-3.5" />
+                </a>
+              </div>
+              <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                {
+                  example.features.map((feature) => (
+                    <span class="text-xs text-gray-600 bg-gray-50 px-2.5 py-1 rounded-md">
+                      {feature}
+                    </span>
+                  ))
+                }
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="flex flex-col gap-y-4 pt-8 border-t border-gray-200">
+        <div class="flex items-center gap-x-2">
+          <Code className="size-5 text-gray-700" />
+          <h2
+            class="text-2xl font-heading font-medium tracking-tight text-gray-800"
+          >
+            Getting Started with Examples
+          </h2>
+        </div>
+        <p class="text-sm text-gray-600">
+          To use any of these examples, you'll need:
+        </p>
+        <ul class="flex flex-col gap-y-2">
+          <li class="flex items-start gap-x-3">
+            <span class="text-gray-400 mt-1">•</span>
+            <div class="flex flex-col gap-y-1">
+              <p class="text-sm text-gray-900">
+                A Lydie account and organization ID
+              </p>
+            </div>
+          </li>
+          <li class="flex items-start gap-x-3">
+            <span class="text-gray-400 mt-1">•</span>
+            <div class="flex flex-col gap-y-1">
+              <p class="text-sm text-gray-900">
+                An API key from your organization settings
+              </p>
+            </div>
+          </li>
+          <li class="flex items-start gap-x-3">
+            <span class="text-gray-400 mt-1">•</span>
+            <div class="flex flex-col gap-y-1">
+              <p class="text-sm text-gray-900">
+                Documents created in your Lydie workspace
+              </p>
+            </div>
+          </li>
+        </ul>
+        <div class="mt-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
+          <p class="text-xs text-gray-600">
+            <strong class="text-gray-900">API Endpoint:</strong> All examples
+            use the REST API at{" "}
+            <code class="text-gray-800 font-mono bg-white px-1.5 py-0.5 rounded">
+              /v1/:idOrSlug
+            </code>
+            . You can use either your organization ID or slug. Make sure to configure your API key and organization identifier in the
+            example's environment variables.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-y-4 pt-8 border-t border-gray-200">
+        <h2
+          class="text-2xl font-heading font-medium tracking-tight text-gray-800"
+        >
+          Contributing Examples
+        </h2>
+        <p class="text-sm text-gray-600">
+          Have an example you'd like to share? We welcome contributions! Check
+          out our{" "}
+          <a
+            href="https://github.com/lsalling/lydie"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-gray-700 underline hover:text-gray-900"
+          >
+            GitHub repository
+          </a>{" "}
+          to submit your example.
+        </p>
+      </div>
+    </div>
+  </div>
+</DocumentationLayout>
+

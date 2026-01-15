@@ -14,7 +14,7 @@ export function IntegrationsList() {
   const { organization } = useOrganization();
   const [connections] = useQuery(
     queries.integrations.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
@@ -77,7 +77,7 @@ export function IntegrationsListItem({
   isEnabled,
 }: IntegrationsListItemProps) {
   const iconUrl = getIntegrationIconUrl(integration.id);
-  const integrationRoute = `/w/$organizationId/settings/integrations/${integration.id}`;
+  const integrationRoute = `/w/$organizationSlug/settings/integrations/${integration.id}`;
 
   return (
     <li
@@ -85,7 +85,7 @@ export function IntegrationsListItem({
         className: "hover:bg-black/1 transition-colors duration-75",
       })}
     >
-      <Link to={integrationRoute} from="/w/$organizationId/settings/">
+      <Link to={integrationRoute} from="/w/$organizationSlug/settings/">
         <div className="flex flex-col gap-y-2 p-2.5">
           <div className="flex items-center gap-x-2">
             <div className="rounded-md ring ring-black/6 p-[2px]">

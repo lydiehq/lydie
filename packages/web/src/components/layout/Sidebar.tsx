@@ -4,25 +4,35 @@ import { Button as RACButton } from "react-aria-components";
 import { Button } from "../generic/Button";
 import { OrganizationMenu } from "./OrganizationMenu";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { Link, useSearch } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { cva } from "cva";
 import { UsageStats } from "./UsageStats";
+import { useConnectionState } from "@rocicorp/zero/react";
+import { useZero } from "@/services/zero";
+import { useCallback } from "react";
+import clsx from "clsx";
 import { useOrganization } from "@/context/organization.context";
 import { SidebarIcon } from "./SidebarIcon";
 import { useSetAtom } from "jotai";
 import { commandMenuStateAtom } from "@/stores/command-menu";
 import {
-  Search,
-  FilePlus,
-  FolderPlus,
-  Home,
-  MessageCircle,
-  Puzzle,
-} from "lucide-react";
+  SearchIcon,
+  HomeIcon,
+  MessageCircleIcon,
+  PuzzleIcon,
+  CreateIcon,
+  WifiIcon,
+  WifiOffIcon,
+  AlertCircleIcon,
+  Loader2Icon,
+  ShieldAlertIcon,
+} from "@/icons";
 import { Separator } from "../generic/Separator";
 import { Eyebrow } from "../generic/Eyebrow";
 import { useMemo } from "react";
+import { useAuth } from "@/context/auth.context";
+import { isAdmin } from "@/utils/admin";
 
 type Props = {
   isCollapsed: boolean;
@@ -30,7 +40,7 @@ type Props = {
 };
 
 export const sidebarItemStyles = cva({
-  base: "group flex items-center py-1 rounded-md text-sm font-medium px-2 mb-0.5 [&.active]:bg-black/5 transition-colors duration-150",
+  base: "group flex items-center h-[28px] rounded-md text-sm font-medium mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
   variants: {
     isCurrent: {
       true: "bg-black/5",
@@ -42,13 +52,16 @@ export const sidebarItemStyles = cva({
   },
 });
 
+export const sidebarItemIconStyles = cva({
+  base: "text-black/34 group-hover:text-black/44",
+});
+
 export function Sidebar({ isCollapsed, onToggle }: Props) {
-  const { createDocument, createFolder } = useDocumentActions();
+  const { createDocument } = useDocumentActions();
   const { organization } = useOrganization();
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
   const setCommandMenuState = useSetAtom(commandMenuStateAtom);
-  const { tree } = useSearch({
-    strict: false,
-  });
 
   const isFreePlan = useMemo(() => {
     if (!organization) {
@@ -84,7 +97,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         }`}
       >
         <OrganizationMenu isCollapsed={isCollapsed} />
-        <TooltipTrigger delay={500}>
+        {/* <TooltipTrigger delay={500}>
           <RACButton
             className={composeTailwindRenderProps(
               focusRing,
@@ -98,10 +111,22 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <SidebarIcon direction="left" collapsed={false} />
           </RACButton>
           <Tooltip>Collapse sidebar</Tooltip>
+        </TooltipTrigger> */}
+
+        <TooltipTrigger delay={500}>
+          <RACButton
+            className={composeTailwindRenderProps(
+              focusRing,
+              `group p-1 -m-1 ${isCollapsed ? "hidden" : ""}`
+            )}
+            onPress={onToggle}
+            aria-label="Collapse sidebar"
+          >
+            <SidebarIcon direction="left" collapsed={false} />
+          </RACButton>
+          <Tooltip>Collapse sidebar</Tooltip>
         </TooltipTrigger>
       </div>
-
-      {/* Collapsed state content */}
       <div
         className={`h-full justify-between items-center flex flex-col p-3 ${
           !isCollapsed ? "hidden" : ""
@@ -123,11 +148,11 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div
-        className={`flex flex-col gap-y-4 px-2 pb-2 ${
+        className={`flex flex-col gap-y-4 pb-2 ${
           isCollapsed ? "hidden" : ""
         } grow min-h-0`}
       >
-        <div className="flex gap-x-1 max-w-[300px]">
+        <div className="flex gap-x-1 max-w-[300px] px-2">
           <Button
             intent="secondary"
             size="sm"
@@ -150,84 +175,77 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             onPress={handleSearchClick}
             aria-label="Search"
           >
-            <Search size={14} className="text-gray-600" />
+            <SearchIcon className="size-[14px] text-gray-600" />
           </Button>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col px-2">
           <Link
-            to="/w/$organizationId"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <Home className="text-gray-700 shrink-0 size-4" />
+              <HomeIcon className={sidebarItemIconStyles()} />
               <span className="truncate flex-1">Home</span>
             </div>
           </Link>
           <Link
-            to="/w/$organizationId/assistant"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug/assistant"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <MessageCircle className="text-gray-700 shrink-0 size-4" />
+              <MessageCircleIcon className={sidebarItemIconStyles()} />
               <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
           <Link
-            to="/w/$organizationId/settings/integrations"
-            from="/w/$organizationId"
+            to="/w/$organizationSlug/settings/integrations"
+            from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles()}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <Puzzle className="text-gray-700 shrink-0 size-4" />
+              <PuzzleIcon className={sidebarItemIconStyles()} />
               <span className="truncate flex-1">Integrations</span>
             </div>
           </Link>
         </div>
-        <Separator />
-        <div className="flex flex-col gap-y-2 grow min-h-0">
-          <div className="flex items-center justify-between px-2 shrink-0">
+        <Separator className="mx-2" />
+        <div className="flex flex-col grow min-h-0">
+          <div className="flex items-center justify-between shrink-0 px-4">
             <Eyebrow>Documents</Eyebrow>
             <div className="flex gap-x-1">
               <TooltipTrigger delay={500}>
                 <RACButton
                   className="p-1 rounded hover:bg-black/5 text-gray-600 "
-                  onPress={() => createDocument(tree)}
+                  onPress={() => createDocument()}
                   aria-label="Create new document"
                 >
-                  <FilePlus size={16} />
+                  <CreateIcon className="size-4 text-gray-400 stroke-2" />
                 </RACButton>
                 <Tooltip>Add document</Tooltip>
               </TooltipTrigger>
-              <TooltipTrigger delay={500}>
-                <RACButton
-                  className="p-1 rounded hover:bg-black/5 text-gray-600"
-                  onPress={createFolder}
-                  aria-label="Create new folder"
-                >
-                  <FolderPlus size={16} />
-                </RACButton>
-                <Tooltip>Add folder</Tooltip>
-              </TooltipTrigger>
             </div>
           </div>
-          <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white pr-2 -mr-2">
+          <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
             <DocumentTree />
           </div>
         </div>
-        {isFreePlan && <UsageStats />}
+        <div className="px-2">
+          {isFreePlan && !userIsAdmin && <UsageStats />}
+        </div>
+        <BottomBar />
         {/* <div className="flex flex-col">
           <Separator />
           <nav className="py-2">
             <ul className="flex flex-col gap-y-2">
               <li>
                 <Link
-                  to="/w/$organizationId/settings"
-                  from="/w/$organizationId"
+                  to="/w/$organizationSlug/settings"
+                  from="/w/$organizationSlug"
                   className="text-xs font-medium text-gray-700"
                 >
                   Send feedback
@@ -238,5 +256,89 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </div> */}
       </div>
     </div>
+  );
+}
+
+function BottomBar() {
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
+
+  return (
+    <div className="flex flex-col gap-y-4 px-2.5 pb-1">
+      {userIsAdmin && <ZeroConnectionStatus />}
+    </div>
+  );
+}
+
+function ZeroConnectionStatus() {
+  const state = useConnectionState();
+  const zero = useZero();
+
+  const handleRetry = useCallback(() => {
+    if (zero?.connection) {
+      zero.connection.connect();
+    }
+  }, [zero]);
+
+  const getStatusConfig = () => {
+    switch (state.name) {
+      case "connecting":
+        return {
+          icon: Loader2Icon,
+          tooltip: state.reason || "Connecting to Zero cache",
+        };
+      case "connected":
+        return {
+          icon: WifiIcon,
+          tooltip: "Connected to Zero cache",
+        };
+      case "disconnected":
+        return {
+          icon: WifiOffIcon,
+          tooltip: state.reason || "Disconnected from Zero cache",
+        };
+      case "error":
+        return {
+          icon: AlertCircleIcon,
+          tooltip: state.reason || "Connection error",
+          clickable: true,
+        };
+      case "needs-auth":
+        return {
+          icon: ShieldAlertIcon,
+          tooltip: "Authentication required",
+          clickable: true,
+        };
+      default:
+        return {
+          icon: WifiOffIcon,
+          tooltip: "Unknown connection state",
+        };
+    }
+  };
+
+  const config = getStatusConfig();
+  const Icon = config.icon;
+  const isAnimating = state.name === "connecting";
+
+  return (
+    <TooltipTrigger>
+      <RACButton
+        className=""
+        onPress={config.clickable ? handleRetry : undefined}
+        aria-label={config.tooltip}
+      >
+        <Icon
+          className={clsx(
+            "size-4 shrink-0 text-gray-400",
+            isAnimating && "animate-spin"
+          )}
+        />
+      </RACButton>
+      <Tooltip placement="right">
+        {config.tooltip}
+        {config.clickable && " (Click to retry)"}
+      </Tooltip>
+    </TooltipTrigger>
   );
 }

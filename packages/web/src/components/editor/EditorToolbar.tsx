@@ -5,15 +5,13 @@ import {
   Group,
   Separator,
   MenuTrigger,
+  TooltipTrigger,
 } from "react-aria-components";
 import {
   List,
   ListOrdered,
-  Settings,
   Undo,
   Redo,
-  Eye,
-  EyeOff,
   Table,
   Plus,
   Minus,
@@ -27,27 +25,35 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  MoreVertical,
   Link,
+  Image as ImageIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useImageUpload } from "@/hooks/use-image-upload";
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
 import { Menu, MenuItem } from "../generic/Menu";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
+import { MoreVerticalIcon } from "@/icons";
+import { Button } from "../generic/Button";
+import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { SidebarIcon } from "../layout/SidebarIcon";
+import { Tooltip } from "../generic/Tooltip";
 
 type Props = {
   editor: Editor;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
-  saveDocument: () => void;
   onAddLink?: () => void;
 };
 
-export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
+export function EditorToolbar({ editor, doc, onAddLink }: Props) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { deleteDocument } = useDocumentActions();
+  const { deleteDocument, publishDocument, updateDocument } =
+    useDocumentActions();
+  const { uploadImage } = useImageUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Detect platform for keyboard shortcuts
   const isMac =
@@ -55,11 +61,19 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
     navigator.platform.toUpperCase().indexOf("MAC") >= 0;
   const mod = isMac ? "⌘" : "Ctrl";
 
+  const handlePublish = async () => {
+    publishDocument(doc.id);
+  };
+
+  const handleUnpublish = async () => {
+    updateDocument(doc.id, { published: false });
+  };
+
   return (
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
       <Toolbar aria-label="Editor formatting" className="flex items-center">
         <div className="flex">
-          <Group aria-label="History" className="flex gap-1">
+          {/* <Group aria-label="History" className="flex gap-1">
             <ToolbarButton
               onPress={() => editor.chain().focus().undo().run()}
               title="Undo"
@@ -76,12 +90,12 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
               isDisabled={!editor.can().redo()}
               hotkeys={[mod, "Shift", "Z"]}
             />
-          </Group>
+          </Group> */}
 
-          <Separator
+          {/* <Separator
             orientation="vertical"
             className="mx-1 h-6 w-px bg-gray-200"
-          />
+          /> */}
 
           <Group aria-label="Text style" className="flex gap-1">
             <ToolbarButton
@@ -190,6 +204,47 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
             className="mx-1 h-6 w-px bg-gray-200"
           />
 
+          <Group aria-label="Image" className="flex gap-1">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                try {
+                  const url = await uploadImage(file);
+                  const alt =
+                    prompt("Enter alt text for the image (optional):") || "";
+                  editor.chain().focus().setImage({ src: url, alt }).run();
+                } catch (error) {
+                  console.error("Failed to upload image:", error);
+                  alert("Failed to upload image. Please try again.");
+                } finally {
+                  // Reset input so the same file can be selected again
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                }
+              }}
+            />
+            <ToolbarButton
+              onPress={() => {
+                fileInputRef.current?.click();
+              }}
+              title="Insert Image"
+              icon={ImageIcon}
+              editor={editor}
+            />
+          </Group>
+
+          <Separator
+            orientation="vertical"
+            className="mx-1 h-6 w-px bg-gray-200"
+          />
+
           <Group aria-label="Table" className="flex gap-1">
             <ToolbarButton
               onPress={() =>
@@ -213,7 +268,10 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
                 />
 
                 <MenuTrigger>
-                  <RACButton className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100">
+                  <RACButton
+                    className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100"
+                    aria-label="Table Columns"
+                  >
                     <Columns className="size-4" />
                   </RACButton>
                   <Menu>
@@ -249,7 +307,10 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
                 </MenuTrigger>
 
                 <MenuTrigger>
-                  <RACButton className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100">
+                  <RACButton
+                    className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100"
+                    aria-label="Table Rows"
+                  >
                     <Rows className="size-4" />
                   </RACButton>
                   <Menu>
@@ -347,25 +408,14 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
       </Toolbar>
 
       <div className="flex gap-x-1 items-center">
-        {/* <div className="flex items-center gap-2 text-sm text-gray-600 mr-2">
-          {doc.published ? (
-            <div className="flex items-center gap-1">
-              <Eye className="size-4 text-green-600" />
-              <span>Published</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1">
-              <EyeOff className="size-4 text-gray-400" />
-              <span>Draft</span>
-            </div>
-          )}
-        </div> */}
         <MenuTrigger>
-          <RACButton>
-            <MoreVertical className="size-4" />
+          <RACButton
+            aria-label="Document Options"
+            className="p-1.5 rounded hover:bg-gray-100"
+          >
+            <MoreVerticalIcon className="size-3.5 text-gray-600" />
           </RACButton>
           <Menu>
-            <MenuItem onAction={saveDocument}>Save</MenuItem>
             <MenuItem onAction={() => setIsSettingsOpen(true)}>
               Settings
             </MenuItem>
@@ -374,6 +424,32 @@ export function EditorToolbar({ editor, doc, saveDocument, onAddLink }: Props) {
             </MenuItem>
           </Menu>
         </MenuTrigger>
+        <Button
+          onPress={doc.published ? handleUnpublish : handlePublish}
+          intent="secondary"
+          size="sm"
+        >
+          {doc.published ? "Unpublish" : "Publish"}
+        </Button>
+        <Separator
+          orientation="vertical"
+          className="mx-1 h-6 w-px bg-gray-200"
+        />
+
+        {/* <TooltipTrigger delay={500}>
+          <RACButton
+            className={composeTailwindRenderProps(
+              focusRing,
+              "p-1 rounded hover:bg-black/5 text-gray-700 group"
+            )}
+            // onPress={onToggle}
+            aria-label="Expand sidebar"
+          >
+            <SidebarIcon direction="right" collapsed={false} />
+          </RACButton>
+          <Tooltip>Expand sidebar</Tooltip>
+        </TooltipTrigger> */}
+
         <DocumentSettingsDialog
           isOpen={isSettingsOpen}
           onOpenChange={setIsSettingsOpen}

@@ -4,44 +4,43 @@ import {
   Button,
   MenuTrigger,
 } from "react-aria-components";
-import { useParams, useNavigate, useSearch } from "@tanstack/react-router";
+import { useParams, useNavigate } from "@tanstack/react-router";
 import { Collection } from "react-aria-components";
 import { type ReactElement, useRef } from "react";
 import {
-  ChevronRight,
-  File,
-  Folder,
-  FolderOpen,
-  FolderSync,
-  MoreVertical,
-  Move,
-  Blocks,
-  Loader,
-} from "lucide-react";
+  FolderSyncIcon,
+  MoreVerticalIcon,
+  MoveIcon,
+  BlocksIcon,
+  LoaderIcon,
+  ArrowRightBIcon,
+  DocumentIcon,
+  DocumentsIcon,
+} from "@/icons";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { sidebarItemStyles } from "./Sidebar";
-import { FolderMenu } from "../home-file-explorer/FolderMenu";
+import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar";
 import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
 import { Menu, MenuItem } from "../generic/Menu";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
-import { isAdmin } from "@/utils/admin";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
+import { useDocumentActions } from "@/hooks/use-document-actions";
 
-export type DocumentTreeItemProps = {
+type Props = {
   item: {
     id: string;
     name: string;
-    type: "folder" | "document" | "integration-link" | "integration-group";
+    type: "document" | "integration-link" | "integration-group";
+    isLocked?: boolean;
     children?: Array<{
       id: string;
       name: string;
-      type: "folder" | "document" | "integration-link" | "integration-group";
+      type: "document" | "integration-link" | "integration-group";
       children?: any[];
       integrationLinkId?: string | null;
       integrationType?: string;
       syncStatus?: string | null;
+      isLocked?: boolean;
     }>;
     integrationLinkId?: string | null;
     integrationType?: string;
@@ -49,57 +48,44 @@ export type DocumentTreeItemProps = {
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<
-    QueryResultType<typeof queries.organizations.documentsAndFolders>
+    QueryResultType<typeof queries.organizations.documents>
   >["documents"];
 };
 
-type DocumentIndexStatusIndicatorProps = {
-  indexStatus: string;
-};
-
-export function DocumentTreeItem({
-  item,
-  renderItem,
-  documents,
-}: DocumentTreeItemProps) {
+export function DocumentTreeItem({ item, renderItem }: Props) {
   const { id: currentDocId } = useParams({ strict: false });
   const navigate = useNavigate();
-  const { tree } = useSearch({ strict: false });
-  const { user } = useAuth();
-  const folderChevronRef = useRef<HTMLButtonElement>(null);
-  const integrationLinkChevronRef = useRef<HTMLButtonElement>(null);
+  const chevronRef = useRef<HTMLButtonElement>(null);
 
   const isCurrentDocument =
     item.type === "document" && currentDocId === item.id;
-  const isActiveFolder = item.type === "folder" && tree === item.id;
-  const isCurrent = isCurrentDocument || isActiveFolder;
+  const isCurrent = isCurrentDocument;
 
   const isIntegrationLink = item.type === "integration-link";
-
   const isGroup = item.type === "integration-group";
+  const isLocked = item.isLocked ?? false;
 
   const handleAction = () => {
-    if (isGroup)
+    if (isGroup && item.integrationType) {
       navigate({
-        to: "/w/$organizationId/settings/integrations/$integrationId",
-        params: { integrationId: item.integrationType },
-        from: "/w/$organizationId",
+        to: "/w/$organizationSlug/settings/integrations/$integrationType",
+        params: { integrationType: item.integrationType },
+        from: "/w/$organizationSlug",
       });
+      return;
+    }
 
-    // For folders and integration links, trigger expansion by clicking the chevron button
-    if (item.type === "folder") {
-      folderChevronRef.current?.click();
-      return;
-    }
+    // For integration links, trigger expansion by clicking the chevron button
     if (isIntegrationLink) {
-      integrationLinkChevronRef.current?.click();
+      chevronRef.current?.click();
       return;
     }
+
     if (item.type === "document") {
       navigate({
-        to: "/w/$organizationId/$id",
+        to: "/w/$organizationSlug/$id",
         params: { id: item.id },
-        from: "/w/$organizationId",
+        from: "/w/$organizationSlug",
       });
     }
   };
@@ -114,9 +100,10 @@ export function DocumentTreeItem({
         sidebarItemStyles({
           isCurrent,
           className: `
+            group
             dragging:opacity-50 dragging:bg-gray-50 
             ${
-              item.type === "folder" || isIntegrationLink
+              item.type === "document" || isIntegrationLink
                 ? "drop-target:bg-gray-200"
                 : ""
             }
@@ -125,150 +112,73 @@ export function DocumentTreeItem({
         })
       )}
       style={{
-        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.75rem + 0.5rem)`,
+        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
         paddingRight: "0.5rem",
       }}
     >
       <TreeItemContent>
-        {({ isExpanded }) => (
+        {({ isExpanded, allowsDragging }) => (
           <>
-            {/* Only show drag button for non-integration-link/group items */}
-            {!isIntegrationLink && !isGroup && (
+            {/* Always render drag button when dragging is allowed, but visually hide it */}
+            {/* Screen readers and keyboard users can still access it */}
+            {allowsDragging && (
               <Button
                 slot="drag"
-                className="hidden"
-                aria-label={`Drag ${
-                  item.type === "folder" ? "folder" : "document"
-                } ${item.name}`}
+                className="absolute w-px h-px -m-px overflow-hidden whitespace-nowrap border-0"
+                style={{
+                  clip: "rect(0, 0, 0, 0)",
+                  clipPath: "inset(50%)",
+                }}
+                aria-label={`Drag ${item.name}`}
               >
-                <Move size={12} />
+                <MoveIcon className="size-3" />
               </Button>
             )}
+
             <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
-              {/* Integration Group item - shows as a folder with blocks icon */}
+              {/* Render appropriate chevron based on item type */}
               {isGroup && (
-                <>
-                  <Button
-                    className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group"
-                    slot="chevron"
-                  >
-                    <ChevronRight className="size-3 group-expanded:rotate-90 transition-transform duration-200 ease-in-out" />
-                  </Button>
-                  <div className="flex items-center gap-0.5">
-                    {(() => {
-                      const iconUrl = item.integrationType
-                        ? getIntegrationIconUrl(item.integrationType)
-                        : null;
-
-                      if (iconUrl) {
-                        return (
-                          <img
-                            src={iconUrl}
-                            alt={`${item.name} icon`}
-                            className="size-3.5 rounded-[2px]"
-                          />
-                        );
-                      }
-
-                      return <Blocks className="size-3.5 text-gray-500" />;
-                    })()}
-                  </div>
-                </>
+                <IntegrationGroupChevron
+                  integrationType={item.integrationType}
+                  name={item.name}
+                  isExpanded={isExpanded}
+                />
               )}
 
-              {/* Integration link item - use sync icon as chevron to toggle expansion */}
               {isIntegrationLink && (
-                <Button
-                  ref={integrationLinkChevronRef}
-                  className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
-                  slot="chevron"
-                >
-                  {item.syncStatus === "pulling" ? (
-                    <Loader className="size-3.5 text-gray-500 animate-spin" />
-                  ) : (
-                    <FolderSync className="size-3.5 text-gray-500" />
-                  )}
-                </Button>
+                <IntegrationLinkChevron
+                  syncStatus={item.syncStatus}
+                  isExpanded={isExpanded}
+                  chevronRef={chevronRef}
+                />
               )}
-              {/* Folder item - use folder icon as chevron to toggle expansion */}
-              {item.type === "folder" && (
-                <Button
-                  ref={folderChevronRef}
-                  className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1"
-                  slot="chevron"
-                >
-                  {isExpanded ? (
-                    <FolderOpen className="size-3.5" />
-                  ) : (
-                    <Folder className="size-3.5" />
-                  )}
-                </Button>
+
+              {item.type === "document" && (
+                <DocumentTreeItemIcon
+                  isExpanded={isExpanded}
+                  chevronRef={chevronRef}
+                  hasChildren={
+                    item.children !== undefined && item.children.length > 0
+                  }
+                />
               )}
-              {item.type === "document" &&
-                (() => {
-                  const document = documents.find((doc) => doc.id === item.id);
-                  const indexStatus = document?.index_status || "outdated";
-                  return (
-                    <div className="relative flex items-center gap-0.5">
-                      {isAdmin(user) && (
-                        <DocumentIndexStatusIndicator
-                          indexStatus={indexStatus}
-                        />
-                      )}
-                      <File className="size-3.5 text-gray-500 shrink-0" />
-                    </div>
-                  );
-                })()}
-              <span className="truncate">{item.name}</span>
+
+              <span
+                className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}
+              >
+                {getDisplayName(item.name)}
+              </span>
             </div>
 
             {/* Context menu */}
             <div className="items-center gap-1 relative -mr-1">
-              {isGroup ? null : isIntegrationLink ? (
-                <MenuTrigger>
-                  <Button
-                    className="p-1 rounded hover:bg-gray-200"
-                    aria-label="Integration link options"
-                  >
-                    <MoreVertical size={12} />
-                  </Button>
-                  <Menu>
-                    <MenuItem
-                      onAction={() => {
-                        if (item.integrationLinkId) {
-                          navigate({
-                            to: "/w/$organizationId/settings/integrations/$integrationId",
-                            params: { integrationId: item.integrationType },
-                            from: "/w/$organizationId",
-                          });
-                        }
-                      }}
-                    >
-                      Integration settings
-                    </MenuItem>
-                  </Menu>
-                </MenuTrigger>
-              ) : item.type === "folder" ? (
-                <MenuTrigger>
-                  <Button
-                    className="p-1 rounded hover:bg-gray-200"
-                    aria-label="Folder options"
-                  >
-                    <MoreVertical size={12} />
-                  </Button>
-                  <FolderMenu folderId={item.id} folderName={item.name} />
-                </MenuTrigger>
-              ) : (
-                <MenuTrigger>
-                  <Button
-                    className="p-1 rounded hover:bg-gray-200"
-                    aria-label="Document options"
-                  >
-                    <MoreVertical size={12} />
-                  </Button>
-                  <DocumentMenu documentId={item.id} documentName={item.name} />
-                </MenuTrigger>
-              )}
+              <ItemContextMenu
+                type={item.type}
+                itemId={item.id}
+                itemName={item.name}
+                integrationLinkId={item.integrationLinkId}
+                integrationType={item.integrationType}
+              />
             </div>
           </>
         )}
@@ -280,30 +190,234 @@ export function DocumentTreeItem({
   );
 }
 
-function DocumentIndexStatusIndicator({
-  indexStatus,
-}: DocumentIndexStatusIndicatorProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "indexed":
-        return "bg-green-500";
-      case "indexing":
-        return "bg-yellow-500";
-      case "pending":
-        return "bg-yellow-400";
-      case "failed":
-        return "bg-red-500";
-      case "outdated":
-      default:
-        return "bg-gray-400";
-    }
-  };
+function getDisplayName(name: string): string {
+  return name.trim() || "Untitled document";
+}
+
+function IntegrationGroupChevron({
+  integrationType,
+  name,
+  isExpanded,
+}: {
+  integrationType?: string;
+  name: string;
+  isExpanded: boolean;
+}) {
+  const iconUrl = integrationType
+    ? getIntegrationIconUrl(integrationType)
+    : null;
 
   return (
-    <div
-      className={`rounded absolute top-0 left-0 transition-all duration-200 ease-in-out ring-1 ring-surface ${getStatusColor(
-        indexStatus
-      )} size-1`}
-    />
+    <Button
+      className={sidebarItemIconStyles({
+        className:
+          "p-1 rounded hover:bg-gray-200 -ml-1 group/chevron hover:text-black/60",
+      })}
+      slot="chevron"
+    >
+      {iconUrl ? (
+        <>
+          <img
+            src={iconUrl}
+            alt={`${name} icon`}
+            className="size-3.5 rounded-[2px] group-hover/chevron:hidden"
+          />
+          <ArrowRightBIcon
+            className={sidebarItemIconStyles({
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+                isExpanded ? "rotate-90" : ""
+              }`,
+            })}
+          />
+        </>
+      ) : (
+        <>
+          <BlocksIcon
+            className={sidebarItemIconStyles({
+              className: "size-3.5 group-hover/chevron:hidden",
+            })}
+          />
+          <ArrowRightBIcon
+            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+              isExpanded ? "rotate-90" : ""
+            }`}
+          />
+        </>
+      )}
+    </Button>
+  );
+}
+
+/**
+ * Integration Link Chevron - Shows sync icon with loading state
+ */
+function IntegrationLinkChevron({
+  syncStatus,
+  isExpanded,
+  chevronRef,
+}: {
+  syncStatus?: string | null;
+  isExpanded: boolean;
+  chevronRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  return (
+    <Button
+      ref={chevronRef}
+      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+      slot="chevron"
+    >
+      {syncStatus === "pulling" ? (
+        <LoaderIcon
+          className={sidebarItemIconStyles({
+            className: "size-3.5 animate-spin",
+          })}
+        />
+      ) : (
+        <>
+          <FolderSyncIcon
+            className={sidebarItemIconStyles({
+              className: "size-3.5 group-hover/chevron:hidden",
+            })}
+          />
+          <ArrowRightBIcon
+            className={sidebarItemIconStyles({
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+                isExpanded ? "rotate-90" : ""
+              }`,
+            })}
+          />
+        </>
+      )}
+    </Button>
+  );
+}
+
+function DocumentTreeItemIcon({
+  isExpanded,
+  chevronRef,
+  hasChildren,
+}: {
+  isExpanded: boolean;
+  chevronRef: React.RefObject<HTMLButtonElement | null>;
+  hasChildren: boolean;
+}) {
+  const IconComponent = hasChildren ? DocumentsIcon : DocumentIcon;
+
+  // If no children, just show the icon (not interactive)
+  if (!hasChildren) {
+    return (
+      <div className="text-gray-500 p-1 -ml-1">
+        <IconComponent
+          className={sidebarItemIconStyles({
+            className: "size-4 shrink-0",
+          })}
+        />
+      </div>
+    );
+  }
+
+  // If has children, show button with chevron on hover
+  return (
+    <Button
+      ref={chevronRef}
+      className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative"
+      slot="chevron"
+    >
+      <IconComponent
+        className={sidebarItemIconStyles({
+          className:
+            "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+        })}
+      />
+      <ArrowRightBIcon
+        className={sidebarItemIconStyles({
+          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+            isExpanded ? "rotate-90" : ""
+          }`,
+        })}
+      />
+    </Button>
+  );
+}
+
+function VerticalMenuButton({
+  "aria-label": ariaLabel,
+}: {
+  "aria-label": string;
+}) {
+  return (
+    <Button
+      className="p-1 text-black hover:text-black/60 group/options"
+      aria-label={ariaLabel}
+    >
+      <MoreVerticalIcon
+        className={sidebarItemIconStyles({
+          className: "size-3 group-hover/options:text-black/60 hover:",
+        })}
+      />
+    </Button>
+  );
+}
+
+/**
+ * Context Menu for different item types
+ */
+function ItemContextMenu({
+  type,
+  itemId,
+  itemName,
+  integrationLinkId,
+  integrationType,
+}: {
+  type: "document" | "integration-link" | "integration-group";
+  itemId: string;
+  itemName: string;
+  integrationLinkId?: string | null;
+  integrationType?: string;
+}) {
+  const navigate = useNavigate();
+  const { createDocument } = useDocumentActions();
+
+  if (type === "integration-group") {
+    return null;
+  }
+
+  if (type === "integration-link") {
+    return (
+      <MenuTrigger>
+        <VerticalMenuButton aria-label="Integration link options" />
+        <Menu>
+          <MenuItem
+            onAction={() => {
+              if (integrationLinkId && integrationType) {
+                navigate({
+                  to: "/w/$organizationSlug/settings/integrations/$integrationType",
+                  params: { integrationType },
+                  from: "/w/$organizationSlug",
+                });
+              }
+            }}
+          >
+            Integration settings
+          </MenuItem>
+          <MenuItem
+            onAction={() => {
+              if (integrationLinkId) {
+                createDocument(undefined, integrationLinkId);
+              }
+            }}
+          >
+            New document
+          </MenuItem>
+        </Menu>
+      </MenuTrigger>
+    );
+  }
+
+  return (
+    <MenuTrigger>
+      <VerticalMenuButton aria-label="Document options" />
+      <DocumentMenu documentId={itemId} documentName={itemName} />
+    </MenuTrigger>
   );
 }

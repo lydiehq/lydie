@@ -1,0 +1,105 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { Button } from "../../components/generic/Button";
+import { ChevronRight } from "lucide-react";
+import { HeroBackground } from "../../components/landing/HeroBackground";
+import { CTASection } from "../../components/landing/CTASection";
+import CollaborationEditorIllustration from "../../components/illustrations/CollaborationEditorIllustration.astro";
+import "../../styles/grainy-gradient.css";
+
+const title = "Real-Time Collaborative Editing - Lydie";
+const description =
+  "Work together seamlessly with your team. See changes as they happen, with live cursors, instant updates, and built-in communication tools.";
+---
+
+<Layout title={title} description={description}>
+  <!-- Hero Section -->
+  <div class="md:px-4">
+    <HeroBackground
+      client:load
+      className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4"
+    >
+      <Container className="relative z-20 pb-20 md:pb-16 md:pt-28 pt-20">
+        <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <!-- Text Content (Left) -->
+          <div class="flex flex-col gap-y-6">
+            <div
+              class="mb-2 rounded-full bg-white/15 self-start px-2.5 py-[3px] flex items-center gap-x-1.5"
+              style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
+            >
+              <span class="text-[12px] font-medium text-white">
+                Real-time collaboration
+              </span>
+            </div>
+
+            <h1
+              class="text-4xl md:text-5xl lg:text-6xl font-heading font-medium tracking-tight text-white drop-shadow-text"
+            >
+              Work together seamlessly
+            </h1>
+            <p
+              class="text-[17px] md:text-lg text-white/90 text-balance leading-relaxed"
+            >
+              See changes as they happen, with live cursors, instant updates,
+              and built-in communication tools. No more version conflicts or
+              lost edits.
+            </p>
+
+            <div class="flex items-center gap-x-4 mt-2">
+              <Button
+                href="https://app.lydie.co/auth"
+                size="lg"
+                intent="primary"
+              >
+                <div class="flex items-center gap-x-1">
+                  <span>Get started for free</span>
+                  <ChevronRight
+                    className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+                  />
+                </div>
+              </Button>
+            </div>
+          </div>
+
+          <!-- Collaborative Editing Illustration (Right) -->
+          <CollaborationEditorIllustration variant="hero" />
+        </div>
+      </Container>
+    </HeroBackground>
+  </div>
+
+  <Container className="flex flex-col gap-y-16 pb-24 pt-24">
+    <!-- Description Section -->
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="prose max-w-2xl mx-auto">
+        <p class="">
+          Lydie's real-time collaborative editing feature enables multiple team
+          members to work together on the same document simultaneously. Built on
+          advanced CRDT (Conflict-free Replicated Data Type) technology, our
+          collaborative editing software ensures that all changes sync instantly
+          across all devices without conflicts or lost edits.
+        </p>
+        <p class="">
+          With live cursors showing where teammates are working, presence
+          indicators displaying who's currently active, and seamless
+          synchronization, Lydie provides a modern alternative to traditional
+          collaborative editing tools like Google Docs. Whether you're working
+          on documentation, articles, or project plans, our real-time
+          collaborative editing makes team collaboration effortless and
+          efficient.
+        </p>
+        <p class="">
+          <a
+            href="https://lydie.co/blog/real-time-collaboration-implementation-in-lydie"
+          >
+            Learn more about how we implemented real-time collaboration
+          </a>
+          in Lydie, including the technical details and architecture decisions behind
+          our collaborative editing system.
+        </p>
+      </div>
+    </div>
+  </Container>
+  <CTASection client:load />
+</Layout>

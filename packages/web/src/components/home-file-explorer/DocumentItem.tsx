@@ -3,12 +3,12 @@ import {
   MenuTrigger,
   Button as RACButton,
 } from "react-aria-components";
-import { File, MoreVertical } from "lucide-react";
 import { Checkbox } from "@/components/generic/Checkbox";
 import { useNavigate } from "@tanstack/react-router";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { formatDistanceToNow } from "date-fns";
 import { DocumentMenu } from "./DocumentMenu";
+import { DocumentIcon, MoreVerticalIcon } from "@/icons";
 
 type DocumentItemProps = {
   id: string;
@@ -18,14 +18,19 @@ type DocumentItemProps = {
   isSelected?: boolean;
 };
 
-export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemProps) {
+export function DocumentItem({
+  id,
+  name,
+  updated_at,
+  viewMode,
+}: DocumentItemProps) {
   const navigate = useNavigate();
 
   const handleNavigate = () => {
     navigate({
-      to: "/w/$organizationId/$id",
+      to: "/w/$organizationSlug/$id",
       params: { id },
-      from: "/w/$organizationId",
+      from: "/w/$organizationSlug",
     });
   };
 
@@ -40,8 +45,8 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
           "flex items-center gap-3 p-3 hover:bg-gray-50"
         )}
       >
-        {/* <Checkbox slot="selection" /> */}
-        <File className="size-3.5 text-gray-400" />
+        {/* <ChecIconkbox slot="selection" /> */}
+        <DocumentIcon className="size-3.5 text-gray-400" />
         <span className="text-sm font-medium text-gray-900 flex-1 text-left">
           {name}
         </span>
@@ -57,7 +62,7 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
             className="p-1 rounded hover:bg-gray-200"
             aria-label="Document options"
           >
-            <MoreVertical className="size-4" />
+            <MoreVerticalIcon className="size-4" />
           </RACButton>
           <DocumentMenu documentId={id} documentName={name} />
         </MenuTrigger>
@@ -106,4 +111,3 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
     </GridListItem>
   );
 }
-

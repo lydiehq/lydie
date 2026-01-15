@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon } from "@/icons";
 import React from "react";
 import {
   Select as AriaSelect,
@@ -58,7 +58,7 @@ export function Select<T extends object>({
       {label && <Label>{label}</Label>}
       <Button className={compose(styles, focusRing)}>
         <SelectValue className="flex-1 text-sm placeholder-shown:italic" />
-        <ChevronDown
+        <ChevronDownIcon
           aria-hidden
           className="w-4 h-4 text-gray-600 dark:text-zinc-400 forced-colors:text-[ButtonText] group-disabled:text-gray-200 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
         />

@@ -38,23 +38,29 @@ export function useChatComposer({
     }));
   }, [documents]);
 
-  const EnterExtension = Extension.create({
-    addKeyboardShortcuts() {
-      return {
-        Enter: () => {
-          onEnter?.();
-          return true;
-        },
-        "Shift-Enter": () => {
-          return this.editor.commands.setHardBreak();
-        },
-      };
-    },
-  });
+  const enterExtension = useMemo(() => {
+    return Extension.create({
+      addKeyboardShortcuts() {
+        return {
+          Enter: () => {
+            onEnter?.();
+            return true;
+          },
+          "Shift-Enter": () => {
+            return this.editor.commands.setHardBreak();
+          },
+        };
+      },
+    });
+  }, [onEnter]);
 
-  const editor = useEditor({
-    autofocus: true,
-    extensions: [
+  const mentionSuggestion = useMemo(
+    () => createMentionSuggestion(mentionItems),
+    [mentionItems]
+  );
+
+  const extensions = useMemo(() => {
+    return [
       StarterKit,
       Placeholder.configure({
         placeholder,
@@ -66,10 +72,14 @@ export function useChatComposer({
         renderText({ node }) {
           return `[reference_document:id:${node.attrs.id}]`;
         },
-        suggestion: createMentionSuggestion(mentionItems),
+        suggestion: mentionSuggestion,
       }),
-      EnterExtension,
-    ],
+      enterExtension,
+    ];
+  }, [placeholder, mentionSuggestion, enterExtension]);
+
+  const editor = useEditor({
+    extensions,
     content: "",
     editorProps: {
       attributes: {

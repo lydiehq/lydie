@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db, documentsTable } from "@lydie/database";
 import { eq, and, ilike } from "drizzle-orm";
 import { serializeToHTML } from "../../serialization/html";
+import { convertYjsToJson } from "../../yjs-to-json";
 
 export const readDocument = (userId: string, organizationId: string) =>
   tool({
@@ -52,7 +53,7 @@ Use this tool when you need to access the complete content of a document to refe
         .select({
           id: documentsTable.id,
           title: documentsTable.title,
-          jsonContent: documentsTable.jsonContent,
+          yjsState: documentsTable.yjsState,
           slug: documentsTable.slug,
           createdAt: documentsTable.createdAt,
           updatedAt: documentsTable.updatedAt,
@@ -65,7 +66,7 @@ Use this tool when you need to access the complete content of a document to refe
       if (documentId) {
         conditions.push(eq(documentsTable.id, documentId));
       } else if (documentTitle) {
-        conditions.push(ilike(documentsTable.title, `% ${documentTitle}% `));
+        conditions.push(ilike(documentsTable.title, `%${documentTitle}%`));
       }
 
       // Apply all conditions at once
@@ -89,11 +90,10 @@ Use this tool when you need to access the complete content of a document to refe
       if (!document) {
         yield {
           state: "error",
-          error: `No document found with ${
-            documentId
-              ? `ID "${documentId}"`
-              : `title containing "${documentTitle}"`
-          }`,
+          error: `No document found with ${documentId
+            ? `ID "${documentId}"`
+            : `title containing "${documentTitle}"`
+            }`,
         };
         return;
       }
@@ -105,20 +105,28 @@ Use this tool when you need to access the complete content of a document to refe
         documentTitle: document.title,
       };
 
-      // Add fake delay to see loading state (remove in production)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Use Yjs as source of truth
+      if (!document.yjsState) {
+        yield {
+          state: "error",
+          error: "Document has no content (yjsState is missing)",
+        };
+        return;
+      }
+
+      const jsonContent = convertYjsToJson(document.yjsState);
 
       // Convert jsonContent to HTML using our custom renderer
       let htmlContent: string;
       try {
-        htmlContent = serializeToHTML(document.jsonContent as any);
+        htmlContent = serializeToHTML(jsonContent as any);
       } catch (error) {
         console.error(
           "[ReadDocument] Error converting jsonContent to HTML:",
           error
         );
         // Fallback to raw JSON string if conversion fails
-        htmlContent = JSON.stringify(document.jsonContent, null, 2);
+        htmlContent = JSON.stringify(jsonContent, null, 2);
       }
 
       const result: any = {

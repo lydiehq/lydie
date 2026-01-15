@@ -9,6 +9,7 @@ import { Separator } from "../generic/Separator";
 import type { QueryResultType } from "@rocicorp/zero";
 import { queries } from "@lydie/zero/queries";
 import { mutators } from "@lydie/zero/mutators";
+import { useOrganization } from "@/context/organization.context";
 
 type Props = {
   isOpen: boolean;
@@ -18,6 +19,7 @@ type Props = {
 
 export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
   const z = useZero();
+  const { organization } = useOrganization();
 
   const form = useAppForm({
     defaultValues: {
@@ -27,6 +29,7 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
       z.mutate(
         mutators.document.update({
           documentId: doc.id,
+          organizationId: organization.id,
           slug: value.slug,
         })
       );
@@ -39,6 +42,7 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
+        organizationId: organization.id,
         published: true,
       })
     );
@@ -48,6 +52,7 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
+        organizationId: organization.id,
         published: false,
       })
     );

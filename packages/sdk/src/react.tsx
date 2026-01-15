@@ -18,10 +18,6 @@ export interface UseLydieDocumentConfig {
     related?: boolean;
     toc?: boolean;
   };
-  links?: {
-    transform?: boolean;
-    useIds?: boolean;
-  };
 }
 
 export interface UseLydieDocumentReturn {
@@ -50,12 +46,6 @@ export function useLydieDocument(
       }
       if (config.include?.toc) {
         params.set("include_toc", "true");
-      }
-      if (config.links?.transform === false) {
-        params.set("transform_links", "false");
-      }
-      if (config.links?.useIds) {
-        params.set("use_ids", "true");
       }
 
       const url = `${config.apiUrl || "https://api.lydie.co/v1"}/${
@@ -101,15 +91,30 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
     React.ComponentType<CustomBlockProps>
   >;
   private linkPrefix?: string;
+  private linkResolver?: (ref: {
+    href: string;
+    id?: string;
+    slug?: string;
+    title?: string;
+    type?: "internal" | "external";
+  }) => string;
 
   constructor(
     customComponents?: Record<string, React.ComponentType<CustomBlockProps>>,
     options?: {
       linkPrefix?: string;
+      linkResolver?: (ref: {
+        href: string;
+        id?: string;
+        slug?: string;
+        title?: string;
+        type?: "internal" | "external";
+      }) => string;
     }
   ) {
     this.customComponents = customComponents;
     this.linkPrefix = options?.linkPrefix;
+    this.linkResolver = options?.linkResolver;
   }
 
   text(content: string): React.ReactNode {
@@ -130,8 +135,9 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
     rel?: string,
     target?: string
   ): React.ReactNode {
-    // Apply link prefix if provided and href is a relative path
     let finalHref = href;
+
+    // Apply link prefix if provided and href is a relative path
     if (
       this.linkPrefix &&
       href &&
@@ -147,6 +153,46 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
 
     return (
       <a key={Math.random()} href={finalHref} rel={rel} target={target}>
+        {content}
+      </a>
+    );
+  }
+
+  internalLink(
+    content: React.ReactNode,
+    documentId?: string,
+    documentSlug?: string,
+    documentTitle?: string
+  ): React.ReactNode {
+    let finalHref: string | undefined;
+
+    // If linkResolver is provided, use it to resolve internal links
+    if (this.linkResolver) {
+      finalHref = this.linkResolver({
+        href: `internal://${documentId || ""}`,
+        id: documentId,
+        slug: documentSlug,
+        title: documentTitle,
+        type: "internal",
+      });
+    } else if (documentSlug) {
+      // Use slug if available
+      finalHref = documentSlug.startsWith("/")
+        ? documentSlug
+        : `/${documentSlug}`;
+      if (this.linkPrefix) {
+        finalHref = `${this.linkPrefix}${finalHref}`;
+      }
+    } else if (documentId) {
+      // Fallback to document ID
+      finalHref = `/${documentId}`;
+      if (this.linkPrefix) {
+        finalHref = `${this.linkPrefix}${finalHref}`;
+      }
+    }
+
+    return (
+      <a key={Math.random()} href={finalHref}>
         {content}
       </a>
     );
@@ -186,6 +232,51 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
 
   horizontalRule(): React.ReactNode {
     return <hr key={Math.random()} />;
+  }
+
+  codeBlock(
+    children: React.ReactNode[],
+    language?: string | null
+  ): React.ReactNode {
+    // Check if a custom CodeBlock component is provided
+    if (this.customComponents && this.customComponents["CodeBlock"]) {
+      try {
+        const CodeBlockComponent = this.customComponents["CodeBlock"];
+        // Extract code text from children - handle strings, numbers, and React elements
+        const extractText = (node: React.ReactNode): string => {
+          if (typeof node === "string" || typeof node === "number") {
+            return String(node);
+          }
+          if (React.isValidElement(node) && node.props?.children) {
+            return extractText(node.props.children);
+          }
+          return "";
+        };
+        const code = children.map(extractText).join("");
+        return (
+          <CodeBlockComponent
+            key={Math.random()}
+            properties={{ language: language || null, code }}
+          />
+        );
+      } catch (error) {
+        console.warn(
+          "[Lydie] Error rendering custom CodeBlock component:",
+          error
+        );
+      }
+    }
+
+    // Default fallback rendering
+    const langClass = language ? `language-${language}` : "";
+
+    return (
+      <pre key={Math.random()} className={langClass || undefined}>
+        <code className={langClass || undefined}>
+          {this.fragment(children)}
+        </code>
+      </pre>
+    );
   }
 
   customBlock(name: string, properties: Record<string, any>): React.ReactNode {
@@ -232,6 +323,13 @@ export function renderContentToReact(
   customComponents?: Record<string, React.ComponentType<CustomBlockProps>>,
   options?: {
     linkPrefix?: string;
+    linkResolver?: (ref: {
+      href: string;
+      id?: string;
+      slug?: string;
+      title?: string;
+      type?: "internal" | "external";
+    }) => string;
   }
 ): React.ReactNode {
   const builder = new ReactBuilder(customComponents, options);
@@ -243,14 +341,26 @@ export interface LydieContentProps {
   content: ContentNode;
   components?: Record<string, React.ComponentType<CustomBlockProps>>;
   linkPrefix?: string;
+  linkResolver?: (ref: {
+    href: string;
+    id?: string;
+    slug?: string;
+    title?: string;
+    type?: "internal" | "external";
+  }) => string;
 }
 
 export function LydieContent({
   content,
   components,
   linkPrefix,
+  linkResolver,
 }: LydieContentProps) {
-  return <>{renderContentToReact(content, components, { linkPrefix })}</>;
+  return (
+    <>
+      {renderContentToReact(content, components, { linkPrefix, linkResolver })}
+    </>
+  );
 }
 
 // Re-export utility functions

@@ -14,7 +14,7 @@ export function UsageStats() {
   const { session } = useAuth();
 
   const [todayUsage] = useQuery(
-    queries.usage.today({ organizationId: organization?.id || "" })
+    queries.usage.today({ organizationId: organization.id })
   );
 
   const currentPlan = useMemo(() => {
@@ -76,8 +76,8 @@ export function UsageStats() {
   return (
     <TooltipTrigger>
       <Link
-        to="/w/$organizationId/settings/billing"
-        from="/w/$organizationId"
+        to="/w/$organizationSlug/settings/billing"
+        from="/w/$organizationSlug"
         className={clsx(
           "flex flex-col gap-2 px-3 py-2 rounded-lg border transition-colors",
           isAtLimit

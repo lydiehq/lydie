@@ -26,34 +26,11 @@ interface LinkMetadata {
 }
 
 /**
- * Transforms a single internal:// link href to a relative path
- */
-function transformInternalLink(
-  href: string,
-  metadata?: LinkMetadata,
-  options?: LinkTransformOptions
-): string {
-  // Check if it's an internal link
-  if (!href.startsWith("internal://")) {
-    return href;
-  }
-
-  const documentId = href.replace("internal://", "");
-  const basePath = options?.basePath || "";
-
-  // If using IDs or no metadata available, use the ID
-  if (options?.useIds || !metadata?.slug) {
-    return `${basePath}/${documentId}`;
-  }
-
-  // Otherwise, use the slug for better SEO
-  return `${basePath}/${metadata.slug}`;
-}
-
-/**
  * Extracts all internal:// links from document content
  */
-function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
+export function extractInternalLinks(
+  content: ContentNode | TextNode
+): Set<string> {
   const internalLinks = new Set<string>();
 
   function traverse(node: ContentNode | TextNode) {
@@ -85,7 +62,7 @@ function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
 /**
  * Fetches metadata for multiple document IDs
  */
-async function fetchDocumentMetadata(
+export async function fetchDocumentMetadata(
   documentIds: string[],
   organizationId: string
 ): Promise<Map<string, LinkMetadata>> {
@@ -133,7 +110,7 @@ async function fetchDocumentMetadata(
 }
 
 /**
- * Transforms all internal:// links in document content
+ * Transforms all internal:// links in document content to internal-link marks
  */
 function transformContentLinks(
   content: ContentNode | TextNode,
@@ -146,29 +123,37 @@ function transformContentLinks(
   function transform(node: ContentNode | TextNode) {
     // Transform links in text node marks
     if (node.type === "text" && "marks" in node && node.marks) {
-      node.marks = node.marks.map((mark) => {
-        if (
-          mark.type === "link" &&
-          mark.attrs?.href?.startsWith("internal://")
-        ) {
-          const documentId = mark.attrs.href.replace("internal://", "");
-          const metadata = metadataMap.get(documentId);
+      // Check if there's an internal link mark
+      const internalLinkMark = node.marks.find(
+        (mark) =>
+          mark.type === "link" && mark.attrs?.href?.startsWith("internal://")
+      );
 
-          return {
-            ...mark,
-            attrs: {
-              ...mark.attrs,
-              href: transformInternalLink(mark.attrs.href, metadata, options),
-              // Optionally add data attributes for additional metadata
-              ...(metadata && {
-                "data-document-id": documentId,
-                "data-document-exists": metadata.exists ? "true" : "false",
-              }),
-            },
-          };
-        }
-        return mark;
-      });
+      if (internalLinkMark) {
+        const documentId = internalLinkMark.attrs!.href!.replace(
+          "internal://",
+          ""
+        );
+        const metadata = metadataMap.get(documentId);
+
+        // Replace the link mark with internal-link mark, preserve other marks
+        node.marks = node.marks.map((mark) => {
+          if (
+            mark.type === "link" &&
+            mark.attrs?.href?.startsWith("internal://")
+          ) {
+            return {
+              type: "internal-link",
+              attrs: {
+                "document-id": documentId,
+                ...(metadata?.slug && { "document-slug": metadata.slug }),
+                ...(metadata?.title && { "document-title": metadata.title }),
+              },
+            };
+          }
+          return mark;
+        });
+      }
     }
 
     // Recursively transform child nodes
@@ -182,24 +167,10 @@ function transformContentLinks(
   return transform(clone);
 }
 
-/**
- * Main function to transform internal links in a document's content
- *
- * @param jsonContent - The document's JSON content (TipTap format)
- * @param options - Transformation options
- * @returns Transformed content with resolved internal links
- *
- * @example
- * ```typescript
- * const transformed = await transformDocumentLinks(document.jsonContent, {
- *   organizationId: "org_123",
- *   useIds: false, // Use slugs for SEO-friendly URLs
- * });
- * ```
- */
-export async function transformDocumentLinks(
+// Transforms internal:// links to internal-link marks (always fetches metadata)
+export async function transformDocumentLinksToInternalLinkMarks(
   jsonContent: ContentNode,
-  options: LinkTransformOptions
+  organizationId: string
 ): Promise<ContentNode> {
   // Extract all internal links
   const internalLinkIds = extractInternalLinks(jsonContent);
@@ -209,58 +180,14 @@ export async function transformDocumentLinks(
     return jsonContent;
   }
 
-  // Fetch metadata for all linked documents
+  // Always fetch metadata for all linked documents
   const metadataMap = await fetchDocumentMetadata(
     Array.from(internalLinkIds),
-    options.organizationId
+    organizationId
   );
 
-  // Transform all links in the content
-  return transformContentLinks(
-    jsonContent,
-    metadataMap,
-    options
-  ) as ContentNode;
-}
-
-/**
- * Lightweight version that doesn't fetch metadata - just converts internal:// to /[ID]
- * Useful when you don't need slugs or when performance is critical
- */
-export function transformDocumentLinksSync(
-  jsonContent: ContentNode,
-  options?: Omit<LinkTransformOptions, "organizationId">
-): ContentNode {
-  const clone = JSON.parse(JSON.stringify(jsonContent)) as ContentNode;
-
-  function transform(node: ContentNode | TextNode) {
-    if (node.type === "text" && "marks" in node && node.marks) {
-      node.marks = node.marks.map((mark) => {
-        if (
-          mark.type === "link" &&
-          mark.attrs?.href?.startsWith("internal://")
-        ) {
-          const documentId = mark.attrs.href.replace("internal://", "");
-          const basePath = options?.basePath || "";
-
-          return {
-            ...mark,
-            attrs: {
-              ...mark.attrs,
-              href: `${basePath}/${documentId}`,
-            },
-          };
-        }
-        return mark;
-      });
-    }
-
-    if ("content" in node && Array.isArray(node.content)) {
-      node.content = node.content.map((child) => transform(child));
-    }
-
-    return node;
-  }
-
-  return transform(clone) as ContentNode;
+  // Transform all links in the content to internal-link marks
+  return transformContentLinks(jsonContent, metadataMap, {
+    organizationId,
+  }) as ContentNode;
 }

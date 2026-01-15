@@ -10,7 +10,7 @@ export function Surface({
   return (
     <div
       className={twMerge(
-        "bg-surface ring ring-black/2 rounded-lg ml-px size-full grow shadow-surface",
+        "bg-surface rounded-lg ml-px size-full grow shadow-surface",
         className
       )}
     >

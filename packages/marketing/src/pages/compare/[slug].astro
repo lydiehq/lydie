@@ -1,0 +1,194 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { getComparison } from "../../utils/comparisons";
+import { getSections } from "../../utils/comparison-sections";
+import { ChevronLeft, Check, X, ChevronRight } from "lucide-react";
+import { Button } from "../../components/generic/Button";
+import { Logo } from "../../components/Logo";
+import FeatureSection from "../../components/comparison/FeatureSection.astro";
+
+export async function getStaticPaths() {
+  const { comparisons } = await import("../../utils/comparisons");
+  return comparisons.map((comparison) => ({
+    params: { slug: comparison.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const comparison = getComparison(slug!);
+
+if (!comparison) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Comparison not found",
+  });
+}
+
+const title = `Open-Source ${comparison.name} Alterantive - Lydie`;
+const sections = comparison.sections ? getSections(comparison.sections) : [];
+---
+
+<Layout title={title} description={comparison.description}>
+  <Container className="flex flex-col gap-y-8">
+    <div class="flex flex-col gap-y-4">
+      <div class="flex flex-col gap-y-4">
+        <div class="flex gap-y-4 flex-col items-center">
+          <Logo className="size-6 text-gray-200" />
+          <div class="flex flex-col gap-y-6 max-w-xl items-center">
+            <h1
+              class="text-4xl font-heading font-medium tracking-tight text-gray-950 text-center"
+            >
+              Looking for a open-source alternative to {comparison.name}?
+            </h1>
+            <p
+              class="text-[15px]/relaxed text-gray-600 max-w-[65ch] text-center"
+            >
+              {comparison.description}
+            </p>
+            <Button href="https://app.lydie.co/auth" size="lg">
+              <div class="flex items-center gap-x-1">
+                <span>Get started</span>
+                <ChevronRight
+                  className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+                />
+              </div>
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-y-4 mt-8 max-w-2xl mx-auto">
+        <h2
+          class="text-xl font-heading font-medium tracking-tight text-gray-950"
+        >
+          Lydie vs {comparison.name}
+        </h2>
+
+        <div class="overflow-x-auto rounded-lg ring-1 ring-black/5">
+          <table class="w-full border-collapse bg-white overflow-hidden">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-200">
+                <th
+                  class="text-left py-2 px-6 text-sm font-semibold text-gray-900 min-w-[200px]"
+                >
+                  Feature
+                </th>
+                <th
+                  class="text-center py-2 px-6 text-sm font-semibold text-gray-900 w-[180px]"
+                >
+                  Lydie
+                </th>
+                <th
+                  class="text-center py-2 px-6 text-sm font-semibold text-gray-900 w-[180px]"
+                >
+                  {comparison.name}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                comparison.features.map((feature, index) => (
+                  <tr class={index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
+                    <td class="py-4 px-6 border-b border-gray-100">
+                      <div class="flex flex-col gap-y-1">
+                        <span class="text-sm font-medium text-gray-900">
+                          {feature.name}
+                        </span>
+                        {feature.description && (
+                          <span class="text-xs text-gray-500">
+                            {feature.description}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td class="py-4 px-6 border-b border-gray-100 text-center">
+                      {typeof feature.lydie === "boolean" ? (
+                        feature.lydie ? (
+                          <div class="flex justify-center">
+                            <div class="rounded-full bg-green-100 p-1">
+                              <Check className="size-4 text-green-600" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div class="flex justify-center">
+                            <div class="rounded-full bg-red-100 p-1">
+                              <X className="size-4 text-red-600" />
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <span class="text-sm text-gray-700">
+                          {feature.lydie}
+                        </span>
+                      )}
+                    </td>
+                    <td class="py-4 px-6 border-b border-gray-100 text-center">
+                      {typeof feature.competitor === "boolean" ? (
+                        feature.competitor ? (
+                          <div class="flex justify-center">
+                            <div class="rounded-full bg-green-100 p-1">
+                              <Check className="size-4 text-green-600" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div class="flex justify-center">
+                            <div class="rounded-full bg-red-100 p-1">
+                              <X className="size-4 text-red-600" />
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <span class="text-xs text-gray-700">
+                          {feature.competitor}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {
+        sections.length > 0 && (
+          <div class="flex flex-col gap-y-16 py-16">
+            {sections.map((section, index) => (
+              <FeatureSection
+                title={section.title}
+                description={section.description}
+                illustrationId={section.illustrationId}
+                imageAlt={section.imageAlt}
+                imagePosition={index % 2 === 0 ? "right" : "left"}
+                featurePageUrl={section.featurePageUrl}
+              />
+            ))}
+          </div>
+        )
+      }
+
+      <div class="flex flex-col items-center gap-y-4 py-12">
+        <div class="flex flex-col items-center gap-y-2 text-center">
+          <h2
+            class="text-2xl font-heading font-medium tracking-tight text-gray-950"
+          >
+            Ready to get started?
+          </h2>
+        </div>
+        <Button
+          href="https://app.lydie.co/auth"
+          size="lg"
+          className="self-center"
+        >
+          <div class="flex items-center gap-x-1">
+            <span>Start writing</span>
+            <ChevronRight
+              className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+            />
+          </div>
+        </Button>
+      </div>
+    </div>
+  </Container>
+</Layout>

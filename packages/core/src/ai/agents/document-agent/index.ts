@@ -11,7 +11,6 @@ import { replaceInDocument } from "../../tools/replace-in-document";
 import { searchDocuments } from "../../tools/search-documents";
 import { readDocument } from "../../tools/read-document";
 import { listDocuments } from "../../tools/list-documents";
-import { google } from "@ai-sdk/google";
 
 export interface DocumentChatMessageMetadata {
   createdAt?: string;

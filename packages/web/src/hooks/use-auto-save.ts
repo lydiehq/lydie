@@ -16,22 +16,17 @@ export function useAutoSave({
   // Simple debounced save using Zero's optimistic mutations
   // The server-side mutator will automatically trigger embedding generation
   // with a delay after this update is synced
-  const debouncedSave = useDebounceCallback(
-    (data: { title?: string; json_content?: any }) => {
-      z.mutate(
-        mutators.document.update({
-          documentId,
-          ...(data.title !== undefined && { title: data.title }),
-          ...(data.json_content !== undefined && {
-            jsonContent: data.json_content,
-          }),
-          indexStatus: "outdated", // Mark as needing re-indexing
-          organizationId: organization?.id || "",
-        })
-      );
-    },
-    debounceMs
-  );
+  // Content is auto-synced by Yjs, so we only need to save title
+  const debouncedSave = useDebounceCallback((data: { title?: string }) => {
+    z.mutate(
+      mutators.document.update({
+        documentId,
+        ...(data.title !== undefined && { title: data.title }),
+        indexStatus: "outdated", // Mark as needing re-indexing
+        organizationId: organization.id,
+      })
+    );
+  }, debounceMs);
 
   return {
     saveDocument: debouncedSave,

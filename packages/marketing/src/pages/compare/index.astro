@@ -1,0 +1,44 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { comparisons } from "../../utils/comparisons";
+---
+
+<Layout
+  title="Compare - Lydie"
+  description="Compare Lydie with other document management and collaboration tools."
+>
+  <Container className="flex flex-col gap-y-12">
+    <div class="flex flex-col gap-y-4">
+      <h1
+        class="text-2xl font-heading font-medium tracking-tight text-gray-800"
+      >
+        Compare
+      </h1>
+      <p class="text-[15px]/relaxed text-gray-600 max-w-[65ch] text-balance">
+        See how Lydie compares to other document management and collaboration
+        tools.
+
+        <br />
+        <br />
+      </p>
+    </div>
+
+    <ul class="flex flex-col gap-y-0.5">
+      {
+        comparisons.map((comparison) => (
+          <li>
+            <a
+              href={`/compare/${comparison.slug}`}
+              class="px-2 py-1.5 rounded-md hover:bg-black/5 transition-all duration-75 flex justify-between"
+            >
+              <span class="text-sm font-medium text-gray-700">
+                {comparison.name}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Container>
+</Layout>

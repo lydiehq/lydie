@@ -18,6 +18,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { format } from "date-fns";
 import { mutators } from "@lydie/zero/mutators";
+import { trackEvent } from "@/lib/posthog";
 
 type DocumentMenuProps = {
   documentId: string;
@@ -34,18 +35,14 @@ export function DocumentMenu({
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(documentName);
   const z = useZero();
-  const { deleteDocument } = useDocumentActions();
+  const { deleteDocument, createDocument, publishDocument } = useDocumentActions();
   const { id: currentDocId } = useParams({ strict: false });
   const { organization } = useOrganization();
 
-  // Query document data (only used when info dialog is open)
   const [document] = useQuery(
-    organization?.id
-      ? queries.documents.byId({ organizationId: organization.id, documentId })
-      : queries.documents.byId({ organizationId: "", documentId }) // Fallback query that won't return results
+    queries.documents.byId({ organizationId: organization.id, documentId })
   );
 
-  // Sync renameValue when dialog opens or documentName changes
   useEffect(() => {
     if (isRenameDialogOpen) {
       setRenameValue(documentName);
@@ -58,11 +55,6 @@ export function DocumentMenu({
       return;
     }
 
-    if (!organization?.id) {
-      toast.error("Organization not found");
-      return;
-    }
-
     try {
       z.mutate(
         mutators.document.update({
@@ -71,6 +63,13 @@ export function DocumentMenu({
           title: renameValue.trim(),
         })
       );
+      
+      // Track document rename
+      trackEvent("document_renamed", {
+        documentId,
+        organizationId: organization.id,
+      });
+      
       toast.success("Document renamed");
       setIsRenameDialogOpen(false);
     } catch (error) {
@@ -79,12 +78,22 @@ export function DocumentMenu({
   };
 
   const handleDelete = () => {
+    // If document is part of an integration, let deleteDocument handle the confirmation
+    // with strict warning ensuring user knows about external side effects.
+    if (document?.integration_link_id) {
+      deleteDocument(
+        documentId,
+        currentDocId === documentId,
+        document.integration_link_id
+      );
+      return;
+    }
+
     const itemName = documentName;
 
     confirmDialog({
-      title: `Delete "${
-        itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName
-      }"`,
+      title: `Delete "${itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName
+        }"`,
       message: `This action cannot be undone. This document will be permanently deleted.`,
       onConfirm: () => {
         deleteDocument(documentId, currentDocId === documentId);
@@ -97,6 +106,14 @@ export function DocumentMenu({
       <Menu placement={placement}>
         <MenuItem onAction={() => setIsInfoDialogOpen(true)}>Info</MenuItem>
         <MenuItem onAction={() => setIsRenameDialogOpen(true)}>Rename</MenuItem>
+        <MenuItem onAction={() => createDocument(documentId)}>
+          Add sub document
+        </MenuItem>
+        {document?.integration_link_id && !document?.published && (
+          <MenuItem onAction={() => publishDocument(documentId)}>
+            Publish
+          </MenuItem>
+        )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
       </Menu>
 
@@ -186,11 +203,10 @@ export function DocumentMenu({
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${
-                        document.published
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${document.published
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-700"
+                        }`}
                     >
                       {document.published ? "Published" : "Draft"}
                     </span>
@@ -205,11 +221,10 @@ export function DocumentMenu({
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${
-                        document.index_status === "indexed"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${document.index_status === "indexed"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-yellow-100 text-yellow-700"
+                        }`}
                     >
                       {document.index_status === "indexed"
                         ? "Indexed"
@@ -232,14 +247,6 @@ export function DocumentMenu({
                     </Label>
                     <p className="text-sm text-gray-900 mt-1">
                       {format(new Date(document.updated_at), "PPpp")}
-                    </p>
-                  </div>
-                )}
-                {document.folder && (
-                  <div>
-                    <Label className="text-xs text-gray-500">Folder</Label>
-                    <p className="text-sm text-gray-900 mt-1">
-                      {document.folder.name}
                     </p>
                   </div>
                 )}

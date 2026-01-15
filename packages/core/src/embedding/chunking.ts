@@ -1,10 +1,3 @@
-/**
- * Enhanced chunking strategy for document embeddings
- *
- * This module provides heading-aware chunking that creates more meaningful
- * semantic chunks by respecting document structure (headings, sections).
- */
-
 import { serializeToHTML } from "../serialization/html";
 import { serializeToPlainText } from "../serialization/text";
 
@@ -13,12 +6,138 @@ export interface Chunk {
   heading?: string;
   level?: number;
   index: number;
+  sectionKey?: string;
 }
 
-/**
- * Extract content with headings from TipTap JSON structure
- * Returns HTML-formatted content for better LLM readability
- */
+export interface ParagraphChunk {
+  content: string;
+  headerBreadcrumb: string;
+  headerPath: string[];
+  headerLevels: number[];
+  index: number;
+  sectionKey?: string;
+}
+
+export function generateParagraphChunks(
+  jsonContent: any,
+  minChunkSize: number = 50,
+  sectionKey?: string
+): ParagraphChunk[] {
+  const chunks: ParagraphChunk[] = [];
+
+  if (!jsonContent?.content || !Array.isArray(jsonContent.content)) {
+    return chunks;
+  }
+
+  const headingStack: { text: string; level: number }[] = [];
+  let pendingContent: string[] = [];
+  let chunkIndex = 0;
+
+  function getHeaderBreadcrumb(): {
+    breadcrumb: string;
+    path: string[];
+    levels: number[];
+  } {
+    if (headingStack.length === 0) {
+      return { breadcrumb: "", path: [], levels: [] };
+    }
+
+    const path = headingStack.map((h) => h.text);
+    const levels = headingStack.map((h) => h.level);
+    const breadcrumb = headingStack
+      .map((h) => `${"#".repeat(h.level)} ${h.text}`)
+      .join(" > ");
+
+    return { breadcrumb, path, levels };
+  }
+
+  function flushPendingContent() {
+    if (pendingContent.length === 0) return;
+
+    const content = pendingContent.join("\n");
+    const plainTextLength = stripHtmlTags(content).length;
+
+    if (plainTextLength >= minChunkSize) {
+      const { breadcrumb, path, levels } = getHeaderBreadcrumb();
+
+      const contentWithContext = breadcrumb
+        ? `${breadcrumb}\n\n${content}`
+        : content;
+
+      chunks.push({
+        content: contentWithContext,
+        headerBreadcrumb: breadcrumb,
+        headerPath: path,
+        headerLevels: levels,
+        index: chunkIndex++,
+        sectionKey,
+      });
+    }
+
+    pendingContent = [];
+  }
+
+  function updateHeadingStack(text: string, level: number) {
+    while (
+      headingStack.length > 0 &&
+      headingStack[headingStack.length - 1]!.level >= level
+    ) {
+      headingStack.pop();
+    }
+
+    headingStack.push({ text, level });
+  }
+
+  for (const node of jsonContent.content) {
+    if (!node || typeof node !== "object" || !node.type) continue;
+
+    if (node.type === "heading") {
+      flushPendingContent();
+
+      const headingText = serializeToPlainText(node).trim();
+      const level = node.attrs?.level || 1;
+
+      if (headingText) {
+        updateHeadingStack(headingText, level);
+      }
+    } else if (
+      node.type === "paragraph" ||
+      node.type === "bulletList" ||
+      node.type === "orderedList" ||
+      node.type === "blockquote" ||
+      node.type === "codeBlock"
+    ) {
+      try {
+        const html = serializeToHTML(node);
+        const plainText = serializeToPlainText(node).trim();
+
+        if (plainText.length > 0) {
+          if (plainText.length >= minChunkSize * 2) {
+            flushPendingContent();
+            pendingContent.push(html);
+            flushPendingContent();
+          } else {
+            pendingContent.push(html);
+
+            const accumulatedLength = stripHtmlTags(
+              pendingContent.join("\n")
+            ).length;
+            if (accumulatedLength >= minChunkSize * 3) {
+              flushPendingContent();
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`[ParagraphChunking] Error processing ${node.type}:`, error);
+      }
+    }
+  }
+
+  flushPendingContent();
+
+  return chunks;
+}
+
 function extractContentWithHeadings(jsonContent: any): Array<{
   type: "heading" | "content";
   htmlContent: string;
@@ -37,42 +156,48 @@ function extractContentWithHeadings(jsonContent: any): Array<{
   }
 
   function traverse(node: any) {
-    if (!node || typeof node !== "object") return;
+    if (!node || typeof node !== "object" || !node.type) return;
 
-    // Handle heading nodes
-    if (node.type === "heading" && node.content) {
-      const headingHtml = serializeToHTML(node);
-      const plainText = serializeToPlainText(node);
+    if (node.type === "heading") {
+      try {
+        const headingHtml = serializeToHTML(node);
+        const plainText = serializeToPlainText(node);
 
-      if (plainText.trim()) {
-        items.push({
-          type: "heading",
-          htmlContent: headingHtml,
-          plainText: plainText.trim(),
-          level: node.attrs?.level || 1,
-        });
+        if (plainText.trim()) {
+          items.push({
+            type: "heading",
+            htmlContent: headingHtml,
+            plainText: plainText.trim(),
+            level: node.attrs?.level || 1,
+          });
+        }
+      } catch (error) {
+        console.warn(`[Chunking] Error processing heading node:`, error);
       }
-    }
-    // Handle paragraph and other block nodes
-    else if (
+    } else if (
       node.type === "paragraph" ||
       node.type === "bulletList" ||
-      node.type === "orderedList"
+      node.type === "orderedList" ||
+      node.type === "blockquote" ||
+      node.type === "codeBlock"
     ) {
-      const contentHtml = serializeToHTML(node);
-      const plainText = serializeToPlainText(node);
+      try {
+        const contentHtml = serializeToHTML(node);
+        const plainText = serializeToPlainText(node);
 
-      if (plainText.trim()) {
-        items.push({
-          type: "content",
-          htmlContent: contentHtml,
-          plainText: plainText.trim(),
-        });
+        if (plainText.trim()) {
+          items.push({
+            type: "content",
+            htmlContent: contentHtml,
+            plainText: plainText.trim(),
+          });
+        }
+      } catch (error) {
+        console.warn(`[Chunking] Error processing ${node.type} node:`, error);
       }
     }
 
-    // For document root, traverse children
-    if (node.type === "doc" && node.content && Array.isArray(node.content)) {
+    if (node.content && Array.isArray(node.content)) {
       node.content.forEach(traverse);
     }
   }
@@ -81,9 +206,6 @@ function extractContentWithHeadings(jsonContent: any): Array<{
   return items;
 }
 
-/**
- * Strip HTML tags to get plain text (for length calculations)
- */
 function stripHtmlTags(html: string): string {
   return html
     .replace(/<[^>]*>/g, " ")
@@ -91,23 +213,12 @@ function stripHtmlTags(html: string): string {
     .trim();
 }
 
-/**
- * Generate heading-aware chunks from TipTap JSON content
- *
- * Strategy:
- * 1. Group paragraphs under their parent headings
- * 2. Split large sections into smaller chunks while preserving heading context
- * 3. Each chunk includes the heading it belongs to for better context
- *
- * @param jsonContent - TipTap JSON document structure
- * @param maxChunkSize - Maximum characters per chunk (default: 500)
- * @param minChunkSize - Minimum characters per chunk (default: 50)
- * @returns Array of chunks with heading context
- */
 export function generateHeadingAwareChunks(
   jsonContent: any,
-  maxChunkSize: number = 500,
-  minChunkSize: number = 50
+  maxChunkSize: number = 1000,
+  minChunkSize: number = 100,
+  overlapSize: number = 200,
+  sectionKey?: string
 ): Chunk[] {
   const items = extractContentWithHeadings(jsonContent);
   const chunks: Chunk[] = [];
@@ -115,87 +226,90 @@ export function generateHeadingAwareChunks(
   let currentHeading: string | undefined;
   let currentLevel: number | undefined;
   let currentChunkHtml: string[] = [];
+  let previousChunkOverlapHtml: string[] = [];
   let chunkIndex = 0;
 
   function flushChunk() {
     if (currentChunkHtml.length === 0) return;
 
-    // Join HTML content (LLM will see clean HTML)
     const htmlContent = currentChunkHtml.join("\n");
-
-    // Check length using plain text (without HTML tags)
-    // Note: We still use stripHtmlTags here because we're working with HTML strings,
-    // not TipTap nodes. For TipTap nodes, use serializeToPlainText instead.
     const plainTextLength = stripHtmlTags(htmlContent).length;
 
     if (plainTextLength >= minChunkSize) {
       chunks.push({
-        content: htmlContent, // Store HTML for LLM readability
+        content: htmlContent,
         heading: currentHeading,
         level: currentLevel,
         index: chunkIndex++,
+        sectionKey: sectionKey,
       });
+
+      previousChunkOverlapHtml = [];
+      let overlapLength = 0;
+
+      for (let i = currentChunkHtml.length - 1; i >= 0; i--) {
+        const itemLength = stripHtmlTags(currentChunkHtml[i]!).length;
+        if (overlapLength + itemLength <= overlapSize) {
+          previousChunkOverlapHtml.unshift(currentChunkHtml[i]!);
+          overlapLength += itemLength;
+        } else {
+          break;
+        }
+      }
     }
+
     currentChunkHtml = [];
   }
 
   for (const item of items) {
     if (item.type === "heading") {
-      // Flush previous chunk before starting new section
       flushChunk();
 
-      // Update current heading context (use plain text for metadata)
+      previousChunkOverlapHtml = [];
+
       currentHeading = item.plainText;
       currentLevel = item.level;
 
-      // Start new chunk with heading HTML
       currentChunkHtml.push(item.htmlContent);
     } else {
-      // Calculate combined length using plain text
+      const overlapLength =
+        previousChunkOverlapHtml.length > 0
+          ? stripHtmlTags(previousChunkOverlapHtml.join("\n")).length
+          : 0;
       const currentPlainLength = stripHtmlTags(
         currentChunkHtml.join("\n")
       ).length;
       const itemPlainLength = item.plainText.length;
-      const combinedLength = currentPlainLength + itemPlainLength;
+      const combinedLength =
+        overlapLength + currentPlainLength + itemPlainLength;
 
       if (combinedLength > maxChunkSize && currentChunkHtml.length > 0) {
-        // Current chunk is full, flush it
         flushChunk();
 
-        // Start new chunk with same heading context
-        currentChunkHtml.push(item.htmlContent);
+        currentChunkHtml = [...previousChunkOverlapHtml, item.htmlContent];
       } else {
-        // Add to current chunk
         currentChunkHtml.push(item.htmlContent);
       }
     }
   }
 
-  // Flush remaining content
   flushChunk();
 
   return chunks;
 }
 
-/**
- * Fallback chunking for when JSON parsing fails
- * This is the original paragraph-based chunking
- */
 export function generateSimpleChunks(
   text: string,
   maxChunkSize: number = 300
 ): Chunk[] {
-  // Split text into paragraphs first (split by double newlines)
   const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim());
 
   const chunks: string[] = [];
 
-  // If a paragraph is too long, split it into sentences
   paragraphs.forEach((paragraph) => {
     if (paragraph.length <= maxChunkSize) {
       chunks.push(paragraph.trim());
     } else {
-      // For longer paragraphs, split into sentences but keep some context
       const sentences = paragraph.split(/(?<=\.|\?|\!)\s+/);
       let currentChunk = "";
 

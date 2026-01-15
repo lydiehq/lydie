@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { useOrganization } from "@/context/organization.context";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
-import { useAuth } from "@/context/auth.context";
 import {
   parseReferences,
   type ParsedTextSegment,
@@ -55,7 +54,7 @@ export function UserMessage({
       exit={{ opacity: 0, y: -10 }}
     >
       <div className="flex flex-col items-end max-w-[80%]">
-        <div className="bg-black/8 text-gray-800 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
+        <div className="bg-black/8 text-gray-700 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
           {message.parts?.map((part: any, index: number) => {
             if (part.type === "text") {
               return (
@@ -181,17 +180,12 @@ function ReferenceSegment({
 
 function DocumentReferencePill({ documentId }: { documentId: string }) {
   const { organization } = useOrganization();
-  const { session } = useAuth();
   const [document] = useQuery(
     queries.documents.byId({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
       documentId,
     })
   );
-
-  if (!organization?.id) {
-    return null;
-  }
 
   const title = document?.title || "Untitled";
   const href = `/w/${organization.id}/${documentId}`;
