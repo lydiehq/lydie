@@ -285,7 +285,7 @@ export const comparisons: Comparison[] = [
         name: "API access",
         description: "Programmatic access to documents and data via API",
         lydie: true,
-        competitor: "Confluence REST API available",
+        competitor: "REST API available",
       },
       {
         name: "Modern interface",
