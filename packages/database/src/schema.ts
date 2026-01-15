@@ -157,41 +157,6 @@ export const invitationsTable = pgTable(
   ]
 );
 
-export const foldersTable = pgTable(
-  "folders",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    name: text("name").notNull(),
-    userId: text("user_id").references(() => usersTable.id, {
-      onDelete: "set null",
-    }),
-    organizationId: text("organization_id")
-      .notNull()
-      .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    parentId: text("parent_id").references(
-      (): PgColumn<any> => foldersTable.id,
-      {
-        onDelete: "cascade",
-      }
-    ),
-    integrationLinkId: text("integration_link_id").references(
-      () => integrationLinksTable.id,
-      {
-        onDelete: "cascade",
-      }
-    ),
-    deletedAt: timestamp("deleted_at"),
-    ...timestamps,
-  },
-  (table) => [
-    index("folders_organization_id_idx").on(table.organizationId),
-    index("folders_integration_link_id_idx").on(table.integrationLinkId),
-  ]
-);
-
 export const documentsTable = pgTable(
   "documents",
   {
@@ -201,14 +166,16 @@ export const documentsTable = pgTable(
       .$default(() => createId()),
     title: text("title").notNull(),
     slug: text("slug").notNull(),
-    jsonContent: jsonb("json_content").notNull(),
     yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
-    folderId: text("folder_id").references(() => foldersTable.id, {
-      onDelete: "set null",
-    }),
+    parentId: text("parent_id").references(
+      (): PgColumn<any> => documentsTable.id,
+      {
+        onDelete: "set null",
+      }
+    ),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
@@ -218,29 +185,30 @@ export const documentsTable = pgTable(
         onDelete: "set null",
       }
     ),
-    externalId: text("external_id"), // Path/ID in external system (e.g., "docs/guide.md" in GitHub)
+    externalId: text("external_id"),
     customFields:
       jsonb("custom_fields").$type<Record<string, string | number>>(),
     indexStatus: text("index_status").notNull().default("outdated"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
     lastIndexedContentHash: text("last_indexed_content_hash"),
+    sectionHashes: jsonb("section_hashes").$type<Record<string, string>>(), // Track which sections have changed for incremental updates
     deletedAt: timestamp("deleted_at"),
+    isLocked: boolean("is_locked").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
     ...timestamps,
   },
   (table) => [
-    // Unique slugs for user-created documents within organization
     uniqueIndex("documents_user_organization_id_slug_key")
       .on(table.organizationId, table.slug)
       .where(
         sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`
       ),
-    // Unique slugs for integration documents within organization and integration link
     uniqueIndex("documents_integration_organization_link_slug_key")
       .on(table.organizationId, table.integrationLinkId, table.slug)
       .where(sql`deleted_at IS NULL`),
     index("documents_organization_id_idx").on(table.organizationId),
-    index("documents_folder_id_idx").on(table.folderId),
+    index("documents_parent_id_idx").on(table.parentId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
   ]
 );
@@ -274,6 +242,7 @@ export const documentEmbeddingsTable = pgTable(
     chunkIndex: integer("chunk_index"),
     heading: text("heading"),
     headingLevel: integer("heading_level"),
+    headerBreadcrumb: text("header_breadcrumb"), // Full header hierarchy: "## Section > ### Subsection"
     ...timestamps,
   },
   (table) => [
@@ -436,8 +405,6 @@ export const llmUsageTable = pgTable(
       .notNull()
       .$default(() => createId()),
     conversationId: text("conversation_id").notNull(),
-    // messageId can point to either a document or assistant message, so we keep it
-    // as a plain text field instead of a strict FK.
     messageId: text("message_id"),
     organizationId: text("organization_id").references(
       () => organizationsTable.id,
@@ -467,8 +434,8 @@ export const userSettingsTable = pgTable("user_settings", {
   persistDocumentTreeExpansion: boolean("persist_document_tree_expansion")
     .notNull()
     .default(true),
-  aiPromptStyle: text("ai_prompt_style").default("default"), // 'default', 'journalistic', 'essay'
-  customPrompt: text("custom_prompt"), // For PRO feature
+  aiPromptStyle: text("ai_prompt_style").default("default"),
+  customPrompt: text("custom_prompt"),
   ...timestamps,
 });
 
@@ -507,8 +474,6 @@ export const integrationConnectionsTable = pgTable(
   ]
 );
 
-// Integration links - configurable "symlinks" to external sources
-// Each link represents a specific path/source in an external system (e.g., a folder in a GitHub repo)
 export const integrationLinksTable = pgTable(
   "integration_links",
   {
@@ -525,11 +490,7 @@ export const integrationLinksTable = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    integrationType: text("integration_type").notNull(), // Denormalized from connection for easier querying
-    // Integration-specific config for this link
-    // GitHub: { owner, repo, branch, path }
-    // WordPress: { postType }
-    // Shopify: { blogId }
+    integrationType: text("integration_type").notNull(),
     config: jsonb("config").notNull(),
     lastSyncedAt: timestamp("last_synced_at"),
     syncStatus: text("sync_status").default("idle"), // 'idle', 'pulling', 'pushing', 'error'
@@ -596,21 +557,28 @@ export const integrationActivityLogsTable = pgTable(
   ]
 );
 
-export const waitlistTable = pgTable(
-  "waitlist",
+export const assetsTable = pgTable(
+  "assets",
   {
     id: text("id")
       .primaryKey()
       .notNull()
       .$default(() => createId()),
-    email: text("email").notNull().unique(),
-    status: text("status").notNull().default("pending"), // 'pending', 'invited', 'joined'
-    invitedAt: timestamp("invited_at"),
-    joinedAt: timestamp("joined_at"),
+    key: text("key").notNull().unique(), // S3 key: organizationId/userId/uniqueId.extension
+    filename: text("filename").notNull(), // Original filename
+    contentType: text("content_type").notNull(),
+    size: integer("size"), // File size in bytes
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "set null" }),
     ...timestamps,
   },
   (table) => [
-    index("waitlist_email_idx").on(table.email),
-    index("waitlist_status_idx").on(table.status),
+    index("assets_organization_id_idx").on(table.organizationId),
+    index("assets_user_id_idx").on(table.userId),
+    index("assets_key_idx").on(table.key),
   ]
 );

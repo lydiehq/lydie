@@ -1,7 +1,10 @@
 import { useState, useRef, useLayoutEffect } from "react";
-import { Button } from "react-aria-components";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { ToolContainer, type ToolAction } from "./ToolContainer";
+import { Button as AriaButton } from "react-aria-components";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { motion } from "motion/react";
+import { StickToBottom } from "use-stick-to-bottom";
+import { Button } from "@/components/generic/Button";
+import { Separator } from "@/components/generic/Separator";
 import { countWords } from "@/utils/text";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
@@ -142,99 +145,124 @@ export function ReplaceInDocumentTool({
     console.groupEnd();
   };
 
-  // Show error state
-  if (tool.state === "output-error") {
-    return (
-      <ToolContainer title="Document modification error" className={className}>
-        <div className="text-red-600 text-sm">
-          Error: {tool.errorText || "Unknown error occurred"}
-        </div>
-      </ToolContainer>
-    );
-  }
+  const isError = tool.state === "output-error";
+  const roundedWordCount = Math.floor(wordCount / 10) * 10;
 
-  // Show input available or output available states
-  const actions: ToolAction[] = [
-    {
-      label: "Copy",
-      onPress: handleCopy,
-      intent: "secondary",
-      disabled: isApplying || isStreaming,
-    },
-    {
-      label: isApplying
-        ? applyStatus || "Applying..."
-        : isApplied
-        ? "Applied"
-        : "Apply",
-      onPress: handleApply,
-      intent: "primary",
-      disabled: isApplied || isApplying || isStreaming || !editor,
-      pending: isApplying || isUsingLLM,
-    },
-  ];
-
-  if (isAdmin(user)) {
-    actions.unshift({
-      label: "Debug",
-      onPress: handleDebug,
-      intent: "secondary",
-    });
-  }
-
-  const title = isStreaming
-    ? `Generating content...${wordCount > 0 ? ` | ${wordCount} words` : ""}`
-    : isOverwrite
-    ? `Overwrite document | ${wordCount} words`
-    : `Modify document | ${wordCount} words`;
+  const getStatusText = () => {
+    if (isError) return "Failed to modify document";
+    if (isApplied) return "Changes applied";
+    if (isApplying) return "Applying changes";
+    if (isStreaming) return "Generating content";
+    if (isOverwrite) return "Overwrite document";
+    return "Modify document";
+  };
 
   return (
-    <ToolContainer title={title} actions={actions} className={className}>
-      {replaceText && (
-        <div
-          className="overflow-hidden relative"
-          style={{
-            height: isExpanded || !hasOverflow ? "auto" : 140,
-          }}
-        >
-          <div
-            ref={contentRef}
-            className="editor-content-sm"
-            dangerouslySetInnerHTML={{ __html: replaceText }}
-          />
-          {!isExpanded && hasOverflow && (
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-white to-transparent pointer-events-none" />
+    <motion.div
+      className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}
+    >
+      <div className="p-1">
+        <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
+          {isStreaming && (
+            <Loader2 className="size-3 animate-spin text-blue-500" />
+          )}
+          <motion.span
+            key={getStatusText()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {getStatusText()}
+          </motion.span>
+          {wordCount > 0 && (
+            <span className="text-gray-500">{roundedWordCount} words</span>
+          )}
+        </motion.div>
+      </div>
+      <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
+        <div className="p-2">
+          {replaceText && (
+            <div
+              className="overflow-hidden relative"
+              style={{
+                height: isExpanded || !hasOverflow ? "auto" : 140,
+              }}
+            >
+              <StickToBottom
+                className="text-xs text-gray-600 overflow-y-auto"
+                initial="instant"
+              >
+                <StickToBottom.Content>
+                  <div
+                    ref={contentRef}
+                    className="editor-content-sm"
+                    dangerouslySetInnerHTML={{ __html: replaceText }}
+                  />
+                </StickToBottom.Content>
+              </StickToBottom>
+              {!isExpanded && hasOverflow && (
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-white to-transparent pointer-events-none" />
+              )}
+            </div>
+          )}
+          {hasOverflow && (
+            <AriaButton
+              onPress={() => setIsExpanded(!isExpanded)}
+              className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 w-full justify-center mt-2"
+            >
+              {isExpanded ? (
+                <div className="flex items-center gap-1">
+                  <ChevronUp className="size-3" />
+                  <span>Show less</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <ChevronDown className="size-3" />
+                  <span>Show more</span>
+                </div>
+              )}
+            </AriaButton>
+          )}
+          {(replaceText || isApplied) && (
+            <>
+              <Separator className="my-2" />
+              <motion.div
+                className="flex justify-end gap-2 mt-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isAdmin(user) && (
+                  <Button intent="secondary" size="xs" onPress={handleDebug}>
+                    Debug
+                  </Button>
+                )}
+                <Button
+                  intent="secondary"
+                  size="xs"
+                  onPress={handleCopy}
+                  isDisabled={isApplying || isStreaming}
+                >
+                  Copy
+                </Button>
+                <Button
+                  intent="secondary"
+                  size="xs"
+                  onPress={handleApply}
+                  isDisabled={isApplied || isApplying || isStreaming || !editor}
+                  isPending={isApplying || isUsingLLM}
+                >
+                  {isApplying
+                    ? applyStatus || "Applying..."
+                    : isApplied
+                    ? "Applied"
+                    : "Apply"}
+                </Button>
+              </motion.div>
+            </>
           )}
         </div>
-      )}
-      {isStreaming && (
-        <div className="flex items-center gap-2 pt-2">
-          <div className="flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-            ))}
-          </div>
-          <span className="text-xs text-gray-500">Streaming content...</span>
-        </div>
-      )}
-      {hasOverflow && (
-        <Button
-          onPress={() => setIsExpanded(!isExpanded)}
-          className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 w-full justify-center"
-        >
-          {isExpanded ? (
-            <div className="flex items-center gap-1">
-              <ChevronUp className="size-3" />
-              <span>Show less</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1">
-              <ChevronDown className="size-3" />
-              <span>Show more</span>
-            </div>
-          )}
-        </Button>
-      )}
-    </ToolContainer>
+      </div>
+    </motion.div>
   );
 }

@@ -15,7 +15,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { Popover } from "../generic/Popover";
 import { OrganizationAvatar } from "./OrganizationAvatar";
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDownIcon } from "@/icons";
+import { useAuth } from "@/context/auth.context";
+import { clearSession } from "@/lib/auth/session";
+import { clearZeroInstance } from "@/lib/zero/instance";
 
 type Props = {
   isCollapsed: boolean;
@@ -24,17 +27,18 @@ type Props = {
 export function OrganizationMenu({ isCollapsed }: Props) {
   const navigate = useNavigate();
   const { organization } = useOrganization();
+  const { session } = useAuth();
+  const userId = session?.userId;
   const queryClient = useQueryClient();
   const router = useRouter();
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] =
     useState(false);
 
   const signOut = async () => {
-    clearActiveOrganizationSlug();
+    clearActiveOrganizationSlug(userId);
     await authClient.signOut();
-    queryClient.removeQueries({
-      queryKey: ["auth", "getSession"],
-    });
+    await clearSession(queryClient);
+    clearZeroInstance();
     await router.invalidate();
     navigate({ to: "/auth" });
   };
@@ -57,7 +61,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">
                 {organization?.name}
               </div>
-              <ChevronsUpDown className="size-3.5 text-gray-500" />
+              <ChevronsUpDownIcon className="size-3.5 text-gray-500" />
             </>
           )}
         </RACButton>
@@ -85,7 +89,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
             </MenuItemLink>
             <MenuSeparator />
             <MenuItem onAction={() => setIsOrganizationDialogOpen(true)}>
-              Switch organization
+              Switch workspace
             </MenuItem>
             <MenuItem onAction={signOut}>Sign Out</MenuItem>
           </Menu>

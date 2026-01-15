@@ -4,7 +4,7 @@ export type Context = Session & {
   organizations?: Array<{
     id: string;
     name: string;
-    slug: string | null;
+    slug: string;
     [key: string]: any;
   }>;
 };
@@ -44,7 +44,7 @@ export function hasOrganizationAccess(
 
   if (!hasAccess) {
     throw new Error(
-      `Access denied: You do not have permission to access this organization`
+      `Access denied: You do not have permission to access this workspace`
     );
   }
 }
@@ -61,7 +61,7 @@ export function hasOrganizationAccessBySlug(
   isAuthenticated(session);
 
   if (!session.organizations || session.organizations.length === 0) {
-    throw new Error("No organization access");
+    throw new Error("No workspace access");
   }
 
   const hasAccess = session.organizations.some(
@@ -70,7 +70,7 @@ export function hasOrganizationAccessBySlug(
 
   if (!hasAccess) {
     throw new Error(
-      `Access denied: You do not have permission to access this organization`
+      `Access denied: You do not have permission to access this workspace`
     );
   }
 }

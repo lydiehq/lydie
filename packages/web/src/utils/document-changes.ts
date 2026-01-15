@@ -211,23 +211,29 @@ function findAndReplaceInDocument(
   }
 
   // Strategy 5: Try searching for just the text content (strip all HTML)
-  const searchTextOnly = searchText.replace(/<[^>]*>/g, "");
-  const replaceTextOnly = replaceText.replace(/<[^>]*>/g, "");
+  // BUT: Skip this if replacement text contains HTML we want to preserve (like links)
+  const replaceTextHasHTML = /<[^>]+>/.test(replaceText);
+  const replaceTextHasLinks = /<a[^>]*>/.test(replaceText);
 
-  if (searchTextOnly.trim() && currentHTML.includes(searchTextOnly)) {
-    const newHTML = currentHTML.replace(searchTextOnly, replaceTextOnly);
-    editor.commands.setContent(newHTML);
+  if (!replaceTextHasHTML && !replaceTextHasLinks) {
+    const searchTextOnly = searchText.replace(/<[^>]*>/g, "");
+    const replaceTextOnly = replaceText.replace(/<[^>]*>/g, "");
 
-    console.debug(
-      "Successfully applied change using text-only fallback strategy:",
-      {
-        originalSearch: searchText,
-        fallbackSearch: searchTextOnly,
-        replaceText: replaceTextOnly,
-      }
-    );
+    if (searchTextOnly.trim() && currentHTML.includes(searchTextOnly)) {
+      const newHTML = currentHTML.replace(searchTextOnly, replaceTextOnly);
+      editor.commands.setContent(newHTML);
 
-    return true;
+      console.debug(
+        "Successfully applied change using text-only fallback strategy:",
+        {
+          originalSearch: searchText,
+          fallbackSearch: searchTextOnly,
+          replaceText: replaceTextOnly,
+        }
+      );
+
+      return true;
+    }
   }
 
   return false;

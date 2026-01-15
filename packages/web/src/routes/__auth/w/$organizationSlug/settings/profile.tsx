@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { toast } from "sonner";
 import { Form } from "react-aria-components";
 import { Button } from "@/components/generic/Button";
@@ -11,6 +12,7 @@ import { useImageUpload } from "@/hooks/use-image-upload";
 import { useState, useRef } from "react";
 import { Camera, X } from "lucide-react";
 import { Card } from "@/components/layout/Card";
+import { trackEvent } from "@/lib/posthog";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/profile"
@@ -19,7 +21,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const { uploadImage } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -43,8 +45,7 @@ function RouteComponent() {
         return;
       }
 
-      const hasChanges =
-        values.value.name.trim() !== user.name;
+      const hasChanges = values.value.name.trim() !== user.name;
 
       if (!hasChanges && previewImage === user.image) {
         return;
@@ -63,11 +64,17 @@ function RouteComponent() {
         }
 
         await authClient.updateUser(updateData);
+
+        // Track profile update
+        trackEvent("profile_updated", {
+          hasImageUpdate: previewImage !== user.image,
+          hasNameUpdate: values.value.name.trim() !== user.name,
+        });
+
         toast.success("Profile updated successfully");
         // The session will be automatically updated by better-auth
       } catch (error: any) {
-        const errorMessage =
-          error?.message || "Failed to update profile";
+        const errorMessage = error?.message || "Failed to update profile";
         toast.error(errorMessage);
         console.error("Profile update error:", error);
       }
@@ -135,12 +142,10 @@ function RouteComponent() {
       <Separator />
 
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Profile Information</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            Update your profile information and profile picture.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Profile Information"
+          description="Update your profile information and profile picture."
+        />
 
         <Form
           className="flex flex-col gap-y-4"
@@ -172,7 +177,8 @@ function RouteComponent() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 text-2xl font-medium">
-                        {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                        {user.name?.[0]?.toUpperCase() ||
+                          user.email[0].toUpperCase()}
                       </div>
                     )}
                   </div>
@@ -276,4 +282,3 @@ function RouteComponent() {
     </div>
   );
 }
-

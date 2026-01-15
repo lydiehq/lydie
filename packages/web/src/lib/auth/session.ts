@@ -12,7 +12,7 @@ type ExtendedSessionData = SessionData & {
     organizations?: Array<{
       id: string;
       name: string;
-      slug: string | null;
+      slug: string;
       [key: string]: any;
     }>;
   };
@@ -23,7 +23,7 @@ export type LoadSessionResult = {
   organizations: Array<{
     id: string;
     name: string;
-    slug: string | null;
+    slug: string;
     [key: string]: any;
   }>;
 };
@@ -63,5 +63,17 @@ export async function revalidateSession(queryClient: QueryClient) {
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
     staleTime: 0,
+  });
+}
+
+/**
+ * Clear session data (useful for logout)
+ */
+export async function clearSession(queryClient: QueryClient) {
+  await queryClient.invalidateQueries({
+    queryKey: SESSION_QUERY_KEY,
+  });
+  queryClient.removeQueries({
+    queryKey: SESSION_QUERY_KEY,
   });
 }

@@ -4,7 +4,6 @@ import {
   integrationConnectionsTable,
   integrationLinksTable,
   documentsTable,
-  foldersTable,
 } from "@lydie/database";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import { createId } from "@lydie/core/id";

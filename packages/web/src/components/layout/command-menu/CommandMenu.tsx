@@ -22,7 +22,7 @@ import {
   Upload,
   Plug,
 } from "lucide-react";
-import { DialogTrigger, ModalOverlay, Modal } from "react-aria-components";
+import { ModalOverlay, Modal } from "react-aria-components";
 import { overlayStyles } from "../../generic/Modal";
 import { Dialog } from "../../generic/Dialog";
 import { cva } from "cva";
@@ -49,7 +49,7 @@ const modalStyles = cva({
 });
 
 export function CommandMenu() {
-  const { createDocument, createFolder, deleteDocument, publishDocument } =
+  const { createDocument, deleteDocument, publishDocument } =
     useDocumentActions();
   const params = useParams({ strict: false });
   const navigate = useNavigate();
@@ -63,35 +63,34 @@ export function CommandMenu() {
   const [currentDocument] = useQuery(
     currentDocumentId
       ? queries.documents.byId({
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
           documentId: currentDocumentId,
         })
       : queries.documents.byId({
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
           documentId: "non-existent",
         })
   );
 
-  // Search documents and folders using Zero - only when on search page
+  // Search documents using Zero - only when on search page
   const [searchData] = useQuery(
     currentPage === "search"
-      ? queries.organizations.searchDocumentsAndFolders({
-          organizationId: organization?.id || "",
+      ? queries.organizations.searchDocuments({
+          organizationId: organization.id,
           searchTerm: search,
         })
-      : queries.organizations.searchDocumentsAndFolders({
-          organizationId: organization?.id || "",
+      : queries.organizations.searchDocuments({
+          organizationId: organization.id,
           searchTerm: "",
         })
   );
 
   const searchDocuments = searchData?.documents || [];
-  const searchFolders = searchData?.folders || [];
 
   // Load integration links to show appropriate icons
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
@@ -151,12 +150,6 @@ export function CommandMenu() {
         icon: Plus,
         action: createDocument,
       },
-      {
-        id: "create-folder",
-        label: "Create new folder…",
-        icon: Plus,
-        action: createFolder,
-      },
     ];
 
     if (currentDocument) {
@@ -193,7 +186,7 @@ export function CommandMenu() {
     const navigationItems: MenuItem[] = [
       {
         id: "search",
-        label: "Search documents and folders…",
+        label: "Search documents…",
         icon: Search,
         action: () => {
           setPages([...pages, "search"]);
@@ -295,9 +288,6 @@ export function CommandMenu() {
         action: () => {
           navigate({
             to: getIntegrationRoute(integration.id),
-            params: {
-              organizationId: organization?.id as string,
-            },
           });
         },
       })),
@@ -327,89 +317,90 @@ export function CommandMenu() {
     ];
   }, [
     createDocument,
-    createFolder,
     currentDocument,
     currentDocumentId,
     deleteDocument,
     navigate,
-    organization?.id,
+    organization.id,
     pages,
     z,
   ]);
 
   return (
-    <DialogTrigger isOpen={isOpen} onOpenChange={setOpen}>
-      <ModalOverlay isDismissable className={overlayStyles}>
-        <Modal className={modalStyles}>
-          <Dialog className="flex flex-col bg-gray-50">
-            <Command
-              onKeyDown={(e) => {
-                // Escape goes to previous page
-                // Backspace goes to previous page when search is empty
-                if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
-                  e.preventDefault();
-                  setPages((pages) => pages.slice(0, -1));
+    <ModalOverlay
+      isOpen={isOpen}
+      onOpenChange={setOpen}
+      isDismissable
+      className={overlayStyles}
+    >
+      <Modal className={modalStyles}>
+        <Dialog className="flex flex-col bg-gray-50">
+          <Command
+            onKeyDown={(e) => {
+              // Escape goes to previous page
+              // Backspace goes to previous page when search is empty
+              if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
+                e.preventDefault();
+                setPages((pages) => pages.slice(0, -1));
+              }
+            }}
+          >
+            <div className="flex items-center border-b border-gray-100 px-3">
+              <Search className="size-4 text-gray-400 mr-2" />
+              <Command.Input
+                value={search}
+                onValueChange={setSearch}
+                autoFocus
+                placeholder={
+                  currentPage === "search"
+                    ? "Search documents..."
+                    : "Type a command or search..."
                 }
-              }}
-            >
-              <div className="flex items-center border-b border-gray-100 px-3">
-                <Search className="size-4 text-gray-400 mr-2" />
-                <Command.Input
-                  value={search}
-                  onValueChange={setSearch}
-                  autoFocus
-                  placeholder={
-                    currentPage === "search"
-                      ? "Search documents and folders..."
-                      : "Type a command or search..."
+                className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <Command.List className="max-h-72 overflow-y-auto overflow-x-hidden p-2">
+              <Command.Empty className="py-6 text-center text-sm text-gray-500">
+                No results found.
+              </Command.Empty>
+
+              {/* Main page */}
+              {!currentPage && (
+                <>
+                  {/* Menu sections */}
+                  {menuSections.map((section) => (
+                    <CommandMenuSection
+                      key={section.id}
+                      section={section}
+                      onSelect={(item) => {
+                        // Don't close dialog for "search" - it navigates to a sub-page
+                        if (item.id === "search") {
+                          item.action();
+                        } else {
+                          handleCommand(item.action);
+                        }
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Search page */}
+              {currentPage === "search" && (
+                <SearchResults
+                  searchDocuments={[...searchDocuments]}
+                  integrationLinks={integrationLinks}
+                  organizationId={organization.id}
+                  onNavigate={(options) =>
+                    handleCommand(() => navigate(options))
                   }
-                  className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-              </div>
-              <Command.List className="max-h-72 overflow-y-auto overflow-x-hidden p-2">
-                <Command.Empty className="py-6 text-center text-sm text-gray-500">
-                  No results found.
-                </Command.Empty>
-
-                {/* Main page */}
-                {!currentPage && (
-                  <>
-                    {/* Menu sections */}
-                    {menuSections.map((section) => (
-                      <CommandMenuSection
-                        key={section.id}
-                        section={section}
-                        onSelect={(item) => {
-                          // Don't close dialog for "search" - it navigates to a sub-page
-                          if (item.id === "search") {
-                            item.action();
-                          } else {
-                            handleCommand(item.action);
-                          }
-                        }}
-                      />
-                    ))}
-                  </>
-                )}
-
-                {/* Search page */}
-                {currentPage === "search" && (
-                  <SearchResults
-                    searchDocuments={[...searchDocuments]}
-                    searchFolders={[...searchFolders]}
-                    integrationLinks={integrationLinks}
-                    organizationId={organization?.id as string}
-                    onNavigate={(options) =>
-                      handleCommand(() => navigate(options))
-                    }
-                  />
-                )}
-              </Command.List>
-            </Command>
-            <CommandMenuKeyboardHelp showBack={pages.length > 0} />
-          </Dialog>
-        </Modal>
-      </ModalOverlay>
-    </DialogTrigger>
+              )}
+            </Command.List>
+          </Command>
+          <CommandMenuKeyboardHelp showBack={pages.length > 0} />
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
   );
 }

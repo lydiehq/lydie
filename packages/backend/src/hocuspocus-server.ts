@@ -4,6 +4,7 @@ import { db } from "@lydie/database";
 import { documentsTable, membersTable } from "@lydie/database/schema";
 import { eq, and } from "drizzle-orm";
 import { authClient } from "@lydie/core/auth";
+import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 
 // Verify user has access to document
 async function verifyDocumentAccess(
@@ -11,18 +12,15 @@ async function verifyDocumentAccess(
   userId: string
 ): Promise<boolean> {
   try {
-    // Get the document
-    const doc = await db
+    const [document] = await db
       .select()
       .from(documentsTable)
       .where(eq(documentsTable.id, documentId))
       .limit(1);
 
-    if (!doc[0]) {
+    if (!document) {
       return false;
     }
-
-    const document = doc[0];
 
     // Check if user is a member of the organization
     const membership = await db
@@ -42,11 +40,9 @@ async function verifyDocumentAccess(
   }
 }
 
-// Create Hocuspocus server instance
 export const hocuspocus = new Hocuspocus({
   extensions: [
     new Database({
-      // Fetch document state from database
       fetch: async ({ documentName }) => {
         try {
           const result = await db
@@ -66,27 +62,34 @@ export const hocuspocus = new Hocuspocus({
           return null;
         }
       },
-      // Store document state to database
       store: async ({ documentName, state }) => {
-        try {
-          // Convert Uint8Array to base64 string for storage
-          const base64State = Buffer.from(state).toString("base64");
+        // Convert Uint8Array to base64 string for storage
+        const base64State = Buffer.from(state).toString("base64");
 
-          await db
-            .update(documentsTable)
-            .set({
-              yjsState: base64State,
-              updatedAt: new Date(),
-            })
-            .where(eq(documentsTable.id, documentName));
-        } catch (error) {
-          // Silently fail - state will be retried on next update
-        }
+        await db
+          .update(documentsTable)
+          .set({
+            yjsState: base64State,
+            updatedAt: new Date(),
+          })
+          .where(eq(documentsTable.id, documentName));
+
+        processDocumentEmbedding(
+          {
+            documentId: documentName,
+            yjsState: base64State,
+          },
+          db
+        ).catch((error) => {
+          console.error(
+            `Failed to generate content embeddings for document ${documentName}:`,
+            error
+          );
+        });
       },
     }),
   ],
 
-  // Authentication hook
   async onAuthenticate({
     documentName,
     request,
@@ -116,7 +119,7 @@ export const hocuspocus = new Hocuspocus({
         throw new Error("Access denied");
       }
 
-      // Return user data for awareness
+      // Awareness
       return {
         id: session.user.id,
         name: session.user.name,
@@ -126,5 +129,5 @@ export const hocuspocus = new Hocuspocus({
     }
   },
 
-  debounce: 30000,
+  debounce: 25000,
 });

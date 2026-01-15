@@ -1,0 +1,115 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { Button } from "../../components/generic/Button";
+import { ChevronRight } from "lucide-react";
+import { HeroBackground } from "../../components/landing/HeroBackground";
+import { CTASection } from "../../components/landing/CTASection";
+import KnowledgeBaseIllustration from "../../components/illustrations/KnowledgeBaseIllustration.astro";
+import "../../styles/grainy-gradient.css";
+
+const title = "Organized Knowledge Base - Lydie";
+const description =
+  "Build a centralized knowledge base that grows with your team. Create nested pages, link related documents, and organize information in a way that makes sense for your workflow.";
+
+const windowControls = Array(3).fill(null);
+---
+
+<Layout title={title} description={description}>
+  <!-- Hero Section -->
+  <div class="md:px-4">
+    <HeroBackground
+      client:load
+      className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4"
+    >
+      <Container className="relative z-20 pb-20 md:pb-16 md:pt-28 pt-20">
+        <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <!-- Text Content (Left) -->
+          <div class="flex flex-col gap-y-6">
+            <div
+              class="mb-2 rounded-full bg-white/15 self-start px-2.5 py-[3px] flex items-center gap-x-1.5"
+              style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
+            >
+              <span class="text-[12px] font-medium text-white">
+                Knowledge organization
+              </span>
+            </div>
+
+            <h1
+              class="text-4xl md:text-5xl lg:text-6xl font-heading font-medium tracking-tight text-white drop-shadow-text"
+            >
+              Organized knowledge base
+            </h1>
+            <p
+              class="text-[17px] md:text-lg text-white/90 text-balance leading-relaxed"
+            >
+              Build a centralized knowledge base that grows with your team.
+              Create nested pages, link related documents, and organize
+              information in a way that makes sense for your workflow.
+            </p>
+
+            <div class="flex items-center gap-x-4 mt-2">
+              <Button
+                href="https://app.lydie.co/auth"
+                size="lg"
+                intent="primary"
+              >
+                <div class="flex items-center gap-x-1">
+                  <span>Get started for free</span>
+                  <ChevronRight
+                    className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+                  />
+                </div>
+              </Button>
+            </div>
+          </div>
+
+          <!-- Knowledge Base Illustration (Right) -->
+          <div
+            class="relative z-10 bg-white/20 flex flex-col rounded-[14px] p-2 overflow-hidden"
+            style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+            aria-hidden="true"
+            aria-label="Knowledge base illustration showing organized documents"
+          >
+            <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
+              {windowControls.map(() => (
+                <div
+                  class="rounded-full size-[13px] bg-white/20"
+                  style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+                />
+              ))}
+            </div>
+
+            <div
+              class="bg-white rounded-lg flex items-center justify-center px-6 py-8 md:px-8 md:py-10 shadow-surface overflow-hidden"
+            >
+              <KnowledgeBaseIllustration />
+            </div>
+          </div>
+        </div>
+      </Container>
+    </HeroBackground>
+  </div>
+
+  <Container className="flex flex-col gap-y-16 pb-24 pt-24">
+    <!-- Description Section -->
+    <div class="max-w-3xl mx-auto w-full">
+      <div class="prose max-w-2xl mx-auto">
+        <p class="">
+          Lydie's knowledge base feature enables teams to organize information
+          hierarchically with nested pages and internal linking. Create a
+          centralized repository of documentation, notes, and knowledge that
+          grows with your team and adapts to your workflow.
+        </p>
+        <p class="">
+          With powerful search capabilities, flexible organization structures,
+          and seamless document linking, Lydie helps you build a knowledge graph
+          of your content. Whether you're maintaining technical documentation,
+          product wikis, or team knowledge bases, our knowledge organization
+          tools make it easy to find and connect related information.
+        </p>
+      </div>
+    </div>
+  </Container>
+  <CTASection client:load />
+</Layout>

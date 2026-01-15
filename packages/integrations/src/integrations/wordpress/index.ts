@@ -28,7 +28,7 @@ interface WpUser {
   slug: string;
 }
 
-// Helper functions (module-level, not exported)
+// Helper functions
 
 function getAuthHeaders(config: WordpressConfig) {
   const credentials = btoa(`${config.username}:${config.applicationPassword}`);
@@ -42,10 +42,7 @@ function cleanUrl(url: string): string {
   return url.replace(/\/$/, "");
 }
 
-/**
- * WordPress sync integration
- * Syncs documents to WordPress sites via REST API
- */
+// WordPress sync integration - syncs documents to WordPress sites via REST API
 export const wordpressIntegration: Integration = {
   onConnect(): { links?: DefaultLink[] } {
     return {
@@ -92,7 +89,6 @@ export const wordpressIntegration: Integration = {
       }
 
       const user = (await response.json()) as WpUser;
-      // Optional: Check if we are actually the user we expect?? Not strictly necessary.
 
       return { valid: true };
     } catch (error: any) {
@@ -139,12 +135,9 @@ export const wordpressIntegration: Integration = {
 
     const htmlContent = serializeToHTML(document.content as ContentNode);
     const title = document.title || "Untitled";
-    const slug = document.slug; // WP uses 'slug' field
+    const slug = document.slug;
 
-    // resourceType is usually selected by the user when choosing a folder to sync to
-    // If not set, default to "pages" or whatever logic applies
     const resourceType = config.resourceType || "pages";
-    // Note: WP API endpoints are /pages and /posts
     const endpointType = resourceType === "posts" ? "posts" : "pages";
 
     const headers = getAuthHeaders(config);
@@ -155,7 +148,7 @@ export const wordpressIntegration: Integration = {
       let method = "POST";
       let existingId: number | null = null;
 
-      // 1. Check if it exists by slug
+      // Check if it exists by slug
       const searchRes = await fetch(
         `${baseUrl}/wp-json/wp/v2/${endpointType}?slug=${slug}&status=any,publish,draft`,
         { headers }
@@ -176,12 +169,12 @@ export const wordpressIntegration: Integration = {
         title,
         content: htmlContent,
         slug,
-        status: "publish", // Explicitly publish, or user preference? Default to publish for now.
+        status: "publish",
       };
 
       if (existingId) {
         endpoint = `${baseUrl}/wp-json/wp/v2/${endpointType}/${existingId}`;
-        method = "POST"; // WP REST API allows POST for updates too, or PUT.
+        method = "POST";
       } else {
         endpoint = `${baseUrl}/wp-json/wp/v2/${endpointType}`;
         method = "POST";
@@ -246,7 +239,6 @@ export const wordpressIntegration: Integration = {
 
       if (!response.ok) {
         if (response.status === 404) {
-          // Resource doesn't exist, consider deletion successful
           return {
             success: true,
             documentId,
@@ -287,9 +279,7 @@ export const wordpressIntegration: Integration = {
     const baseUrl = cleanUrl(config.siteUrl);
 
     try {
-      // Function to fetch and process a specific type (pages or posts)
       const processType = async (type: "pages" | "posts") => {
-        // Fetch latest 100?
         const res = await fetch(
           `${baseUrl}/wp-json/wp/v2/${type}?per_page=100`,
           { headers }
@@ -302,19 +292,18 @@ export const wordpressIntegration: Integration = {
         const items = (await res.json()) as Array<{
           id: number;
           title: { rendered: string };
-          content: { rendered: string }; // This is HTML
+          content: { rendered: string };
           slug: string;
         }>;
 
         for (const item of items) {
           try {
             const html = item.content.rendered;
-            // deserializeFromHTML expects full HTML.
             const content = deserializeFromHTML(html);
 
             results.push({
               success: true,
-              documentId: "", // Backend handles
+              documentId: "",
               externalId: String(item.id),
               message: `Pulled ${type.slice(0, -1)}: ${item.title.rendered}`,
               metadata: {

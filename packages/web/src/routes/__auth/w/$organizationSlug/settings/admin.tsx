@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useOrganization } from "@/context/organization.context";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useQuery } from "@rocicorp/zero/react";
 import { useState } from "react";
 import { Download } from "lucide-react";
@@ -25,10 +26,8 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { organization } = useOrganization();
   const { user } = useAuth();
-  const z = useZero();
   const [isExporting, setIsExporting] = useState(false);
 
-  // Check if user is admin
   if (!isAdmin(user)) {
     return (
       <div className="flex flex-col gap-y-6">
@@ -37,9 +36,7 @@ function RouteComponent() {
         </div>
         <Separator />
         <Card className="p-8 text-center">
-          <div className="text-sm font-medium text-gray-700">
-            Access Denied
-          </div>
+          <div className="text-sm font-medium text-gray-700">Access Denied</div>
           <div className="text-xs mt-1 text-gray-500">
             You do not have permission to access this page.
           </div>
@@ -48,9 +45,8 @@ function RouteComponent() {
     );
   }
 
-  // Query all documents for the organization
   const [documents] = useQuery(
-    queries.documents.byUpdated({ organizationId: organization?.id || "" })
+    queries.documents.byUpdated({ organizationId: organization.id })
   );
 
   const handleExportDocuments = async () => {
@@ -76,17 +72,18 @@ function RouteComponent() {
           // For the most up-to-date content, users should ensure documents are saved before exporting.
           // Convert the JSON content to markdown
           const markdown = serializeToMarkdown(doc.json_content as ContentNode);
-          
+
           // Create a safe filename from the title
-          const safeTitle = doc.title
-            .replace(/[^a-z0-9]/gi, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "")
-            .toLowerCase() || "untitled";
-          
+          const safeTitle =
+            doc.title
+              .replace(/[^a-z0-9]/gi, "-")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "")
+              .toLowerCase() || "untitled";
+
           // Use the document's slug as the filename for consistency
           const filename = `${doc.slug || safeTitle}.md`;
-          
+
           // Add metadata header to markdown
           const metadataHeader = `---
 title: ${doc.title}
@@ -96,9 +93,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
 ---
 
 `;
-          
+
           const fullContent = metadataHeader + markdown;
-          
+
           // Add the file to the zip
           zip.file(filename, fullContent);
         } catch (error) {
@@ -114,7 +111,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${organization.name}-documents-${new Date().toISOString().split("T")[0]}.zip`;
+      link.download = `${organization.name}-documents-${
+        new Date().toISOString().split("T")[0]
+      }.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -138,13 +137,10 @@ updated: ${new Date(doc.updated_at).toISOString()}
 
       {/* Export Documents Section */}
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Export Documents</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            Export all documents in your workspace as Markdown files in a
-            downloadable ZIP archive.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Export Documents"
+          description="Export all documents in your workspace as Markdown files in a downloadable ZIP archive."
+        />
         <Card className="p-6">
           <div className="flex flex-col gap-y-4">
             <div className="flex items-center justify-between">
@@ -154,7 +150,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
                 </div>
                 <div className="text-xs text-gray-600">
                   {documents
-                    ? `${documents.length} document${documents.length !== 1 ? "s" : ""} available`
+                    ? `${documents.length} document${
+                        documents.length !== 1 ? "s" : ""
+                      } available`
                     : "Loading..."}
                 </div>
               </div>
@@ -175,7 +173,9 @@ updated: ${new Date(doc.updated_at).toISOString()}
                 <li>All documents converted to Markdown format</li>
                 <li>Metadata header with title, slug, and timestamps</li>
                 <li>Files organized in a ZIP archive</li>
-                <li>Compatible with most Markdown editors and note-taking apps</li>
+                <li>
+                  Compatible with most Markdown editors and note-taking apps
+                </li>
               </ul>
             </div>
           </div>
@@ -186,14 +186,11 @@ updated: ${new Date(doc.updated_at).toISOString()}
 
       {/* Future Admin Features Placeholder */}
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Additional Admin Features</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            More administrative features will be added here in the future.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Additional Admin Features"
+          description="More administrative features will be added here in the future."
+        />
       </div>
     </div>
   );
 }
-

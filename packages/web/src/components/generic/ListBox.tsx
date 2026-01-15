@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { CheckIcon } from "@/icons";
 import {
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
@@ -25,7 +25,7 @@ export function ListBox<T extends object>({
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "outline-0 p-1 border border-gray-300 dark:border-zinc-600 rounded-lg"
+        "outline-none max-h-[inherit] overflow-auto p-1 bg-white"
       )}
     >
       {children}
@@ -55,14 +55,23 @@ export function ListBoxItem(props: ListBoxItemProps) {
     <AriaListBoxItem
       {...props}
       textValue={textValue}
-      className={compose(itemStyles, focusRing)}
+      className={compose(dropdownItemStyles, focusRing)}
     >
-      {composeRenderProps(props.children, (children) => (
-        <>
-          {children}
-          <div className="absolute left-4 right-4 bottom-0 h-px bg-white/20 forced-colors:bg-[HighlightText] hidden [.group[data-selected]:has(+[data-selected])_&]:block" />
-        </>
-      ))}
+      {composeRenderProps(
+        props.children,
+        (children, { selectionMode, isSelected }) => (
+          <>
+            {selectionMode !== "none" && (
+              <span className="flex items-center w-4">
+                {isSelected && <CheckIcon aria-hidden className="w-4 h-4" />}
+              </span>
+            )}
+            <span className="flex items-center flex-1 truncate group-selected:font-semibold text-sm font-normal text-gray-800">
+              {children}
+            </span>
+          </>
+        )
+      )}
     </AriaListBoxItem>
   );
 }
@@ -90,16 +99,21 @@ export function DropdownItem(props: ListBoxItemProps) {
       textValue={textValue}
       className={dropdownItemStyles}
     >
-      {composeRenderProps(props.children, (children, { isSelected }) => (
-        <>
-          <span className="flex items-center flex-1 gap-2 font-normal truncate group-selected:font-semibold">
-            {children}
-          </span>
-          <span className="flex items-center w-5">
-            {isSelected && <Check className="w-4 h-4" />}
-          </span>
-        </>
-      ))}
+      {composeRenderProps(
+        props.children,
+        (children, { selectionMode, isSelected }) => (
+          <>
+            {selectionMode !== "none" && (
+              <span className="flex items-center w-4">
+                {isSelected && <CheckIcon aria-hidden className="w-4 h-4" />}
+              </span>
+            )}
+            <span className="flex items-center flex-1 truncate group-selected:font-semibold text-sm font-normal text-gray-800">
+              {children}
+            </span>
+          </>
+        )
+      )}
     </AriaListBoxItem>
   );
 }

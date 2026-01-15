@@ -1,22 +1,21 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { Resource } from "sst";
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createId } from "@lydie/core/id";
+import { db } from "@lydie/database";
+import { assetsTable } from "@lydie/database/schema";
 
 type Variables = {
   organizationId: string;
   user: any;
 };
 
-const s3Client = new S3Client({
-  region: "us-east-1",
-});
-
-export const ImagesRoute = new Hono<{ Variables: Variables }>()
-  .post("/upload-url", async (c) => {
-    const { filename, contentType } = await c.req.json();
+export const ImagesRoute = new Hono<{ Variables: Variables }>().post(
+  "/upload-url",
+  async (c) => {
+    const { filename, contentType, size } = await c.req.json();
 
     if (!filename || typeof filename !== "string") {
       throw new HTTPException(400, {
@@ -40,51 +39,37 @@ export const ImagesRoute = new Hono<{ Variables: Variables }>()
     const organizationId = c.get("organizationId");
     const userId = c.get("user").id;
 
-    // Generate a unique key for the image
     const extension = filename.split(".").pop() || "jpg";
     const key = `${organizationId}/${userId}/${createId()}.${extension}`;
 
-    // Generate presigned URL for upload
     const command = new PutObjectCommand({
-      Bucket: Resource.Images.name,
+      Bucket: Resource.OrganizationAssets.name,
       Key: key,
       ContentType: contentType,
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600, // 1 hour
+    const uploadUrl = await getSignedUrl(new S3Client({}), command);
+
+    await db.insert(assetsTable).values({
+      key,
+      filename,
+      contentType,
+      size: size || null,
+      organizationId,
+      userId,
     });
 
-    // Get the bucket domain URL for the image
-    const imageUrl = `https://${Resource.Images.domain}/${key}`;
+    // Extract domain from router URL (handles both full URL and domain-only)
+    const routerUrl = Resource.AssetsRouter.url;
+    const assetDomain = routerUrl.startsWith("http")
+      ? new URL(routerUrl).hostname
+      : routerUrl;
+    const imageUrl = `https://${assetDomain}/${key}`;
 
     return c.json({
       uploadUrl,
       key,
       url: imageUrl,
     });
-  })
-  .get("/:key", async (c) => {
-    const key = c.req.param("key");
-    const organizationId = c.get("organizationId");
-
-    // Verify the key belongs to this organization
-    if (!key.startsWith(`${organizationId}/`)) {
-      throw new HTTPException(403, {
-        message: "Access denied",
-      });
-    }
-
-    // Generate presigned URL for viewing (if needed)
-    const command = new GetObjectCommand({
-      Bucket: Resource.Images.name,
-      Key: key,
-    });
-
-    const viewUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600, // 1 hour
-    });
-
-    return c.redirect(viewUrl);
-  });
-
+  }
+);

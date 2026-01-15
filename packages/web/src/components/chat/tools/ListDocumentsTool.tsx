@@ -1,8 +1,17 @@
 import { Disclosure, DisclosurePanel, Button } from "react-aria-components";
-import { Loader, List, ExternalLink, Calendar, Clock } from "lucide-react";
+import {
+  Loader,
+  List,
+  ExternalLink,
+  Calendar,
+  Clock,
+  File,
+  FileText,
+} from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ToolContainer } from "./ToolContainer";
+import { motion, AnimatePresence } from "motion/react";
 
 export interface ListDocumentsToolProps {
   tool: {
@@ -12,6 +21,10 @@ export interface ListDocumentsToolProps {
       sortBy?: "title" | "updated" | "created";
       sortOrder?: "asc" | "desc";
       titleFilter?: string;
+      createdAfter?: string;
+      createdBefore?: string;
+      minWords?: number;
+      maxWords?: number;
     };
     output?: {
       state?: string;
@@ -24,10 +37,15 @@ export interface ListDocumentsToolProps {
         updatedAt: string;
         contentPreview?: string;
         contentLength?: number;
+        wordCount?: number;
       }>;
       totalFound?: number;
       filters?: {
-        titleFilter?: string;
+        titleFilter?: string | null;
+        createdAfter?: string | null;
+        createdBefore?: string | null;
+        minWords?: number | null;
+        maxWords?: number | null;
         sortBy: string;
         sortOrder: string;
         limit: number;
@@ -41,36 +59,121 @@ export function ListDocumentsTool({
   tool,
   className = "",
 }: ListDocumentsToolProps) {
-  const isLoading =
-    tool.state === "input-streaming" || tool.state === "call-streaming";
-  const hasOutput = tool.state === "output-available";
+  const outputState = tool.output?.state;
+  const isToolLoading =
+    tool.state === "call-streaming" ||
+    (outputState && outputState !== "success");
   const documents = tool.output?.documents || [];
   const filters = tool.output?.filters;
-  const preliminaryState = tool.output?.state;
 
-  if (isLoading) {
-    let message = "Listing documents";
-    const titleFilter = tool.args?.titleFilter;
+  let loadingMessage = "Loading documents...";
+  if (outputState === "loading") {
+    loadingMessage = tool.output?.message || "Loading documents...";
+  }
 
-    if (preliminaryState === "loading") {
-      message = titleFilter
-        ? `Searching for documents matching "${titleFilter}"`
-        : "Loading documents";
-    } else if (titleFilter) {
-      message = `Listing documents matching "${titleFilter}"`;
-    }
+  const message = isToolLoading
+    ? loadingMessage
+    : `Found ${documents.length} document${documents.length !== 1 ? "s" : ""}`;
 
-    return (
-      <div className={`flex items-center gap-x-2 text-gray-500 ${className}`}>
-        <Loader className="size-3 animate-spin" />
-        <span className="text-[13px]">{message}...</span>
+  return (
+    <motion.div className="p-1 bg-gray-100 rounded-[10px] my-2">
+      <div className="p-1">
+        <motion.div
+          key={
+            isToolLoading
+              ? "loading"
+              : outputState === "success"
+              ? "success"
+              : "found"
+          }
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 25,
+          }}
+          className="text-[11px] text-gray-700"
+        >
+          {message}
+        </motion.div>
       </div>
-    );
-  }
 
-  if (!hasOutput) {
-    return null;
-  }
+      <motion.div
+        layout="size"
+        className="bg-white rounded-lg ring ring-black/2 shadow-surface p-0.5 overflow-hidden"
+      >
+        <AnimatePresence mode="wait">
+          {isToolLoading ? (
+            <motion.div
+              key="spinner"
+              className="flex items-center justify-center py-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Loader className="size-4 animate-spin text-gray-400" />
+            </motion.div>
+          ) : outputState === "success" && documents.length > 0 ? (
+            <motion.ul
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.5, delay: 0.5 }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: Math.max(
+                      0.02,
+                      Math.min(0.12, 0.12 - (documents.length - 1) * 0.01)
+                    ),
+                  },
+                },
+              }}
+            >
+              {documents.map((doc) => (
+                <motion.div
+                  key={doc.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                    },
+                  }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <Link
+                    to="/w/$organizationSlug/$id"
+                    from="/w/$organizationSlug"
+                    params={{ id: doc.id }}
+                    className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
+                  >
+                    <File className="text-gray-500 shrink-0 size-3.5" />
+                    <span className="truncate flex-1">
+                      {doc.title || "Untitled document"}
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.ul>
+          ) : outputState === "success" && documents.length === 0 ? (
+            <motion.div
+              key="empty"
+              className="flex items-center justify-center py-3 text-gray-500"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <span className="text-[13px]">No documents found</span>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
+  );
 
   return (
     <Disclosure className={`group w-full flex flex-col ${className}`}>
@@ -82,7 +185,9 @@ export function ListDocumentsTool({
         <ChevronRight className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">
           Listed {documents.length} document{documents.length !== 1 ? "s" : ""}
-          {filters?.titleFilter && ` matching "${filters.titleFilter}"`}
+          {filters && filters.titleFilter
+            ? ` matching "${filters.titleFilter}"`
+            : ""}
         </span>
       </Button>
       <DisclosurePanel className="overflow-hidden pl-5">
@@ -92,14 +197,28 @@ export function ListDocumentsTool({
               {/* Filter/Sort Info */}
               {filters && (
                 <div className="text-xs text-gray-500 bg-gray-50 rounded-md p-2">
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span>
-                      Sort: {filters.sortBy} ({filters.sortOrder})
+                      Sort: {filters?.sortBy} ({filters?.sortOrder})
                     </span>
-                    <span>Limit: {filters.limit}</span>
-                    {filters.titleFilter && (
-                      <span>Filter: "{filters.titleFilter}"</span>
+                    <span>Limit: {filters?.limit}</span>
+                    {filters?.titleFilter && (
+                      <span>Title: "{filters?.titleFilter}"</span>
                     )}
+                    {filters?.createdAfter && (
+                      <span>Created after: {filters?.createdAfter}</span>
+                    )}
+                    {filters?.createdBefore && (
+                      <span>Created before: {filters?.createdBefore}</span>
+                    )}
+                    {filters?.minWords !== null &&
+                      filters?.minWords !== undefined && (
+                        <span>Min words: {filters?.minWords}</span>
+                      )}
+                    {filters?.maxWords !== null &&
+                      filters?.maxWords !== undefined && (
+                        <span>Max words: {filters?.maxWords}</span>
+                      )}
                   </div>
                 </div>
               )}
@@ -120,14 +239,14 @@ export function ListDocumentsTool({
                           className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 text-sm"
                         >
                           <span className="truncate">{doc.title}</span>
-                          <ExternalLink className="size-3 flex-shrink-0" />
+                          <ExternalLink className="size-3 shrink-0" />
                         </Link>
                         <div className="text-xs text-gray-500 mt-1">
                           /{doc.slug}
                         </div>
                       </div>
 
-                      <div className="text-xs text-gray-400 flex-shrink-0">
+                      <div className="text-xs text-gray-400 shrink-0">
                         <div className="flex items-center gap-1">
                           <Clock className="size-3" />
                           {new Date(doc.updatedAt).toLocaleDateString()}
@@ -160,6 +279,12 @@ export function ListDocumentsTool({
                         <Calendar className="size-3" />
                         Created: {new Date(doc.createdAt).toLocaleDateString()}
                       </div>
+                      {doc.wordCount !== undefined && (
+                        <div className="flex items-center gap-1">
+                          <FileText className="size-3" />
+                          {doc.wordCount} words
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

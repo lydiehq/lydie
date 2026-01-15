@@ -1,12 +1,11 @@
 import { Hono } from "hono";
-import { google } from "@lydie/core/ai/llm";
+import { chatModel } from "@lydie/core/ai/llm";
 import {
   validateUIMessages,
   createAgentUIStreamResponse,
   ToolLoopAgent,
   smoothStream,
   stepCountIs,
-  tool,
 } from "ai";
 import {
   db,
@@ -25,8 +24,8 @@ import { checkDailyMessageLimit } from "../utils/usage-limits";
 import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
 import { readDocument } from "@lydie/core/ai/tools/read-document";
 import { listDocuments } from "@lydie/core/ai/tools/list-documents";
-import { createFolder } from "@lydie/core/ai/tools/create-folder";
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
+import { createDocument } from "@lydie/core/ai/tools/create-document";
 import type { PromptStyle } from "@lydie/core/prompts";
 
 export const messageMetadataSchema = z.object({
@@ -67,7 +66,7 @@ export const AssistantRoute = new Hono<{
             message: "You are not authorized to access this conversation",
           });
         }
-        
+
         // Verify conversation belongs to the user
         if (conversation.userId !== userId) {
           throw new HTTPException(403, {
@@ -111,9 +110,11 @@ export const AssistantRoute = new Hono<{
       });
 
       if (!limitCheck.allowed) {
-        throw new HTTPException(429, {
-          message: `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
-        });
+        throw new VisibleError(
+          "usage_limit_exceeded",
+          `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
+          429
+        );
       }
     }
 
@@ -141,31 +142,21 @@ export const AssistantRoute = new Hono<{
     const startTime = Date.now();
 
     const agent = new ToolLoopAgent({
-      model: google("gemini-3-flash-preview"),
+      providerOptions: {
+        openai: { reasoningEffort: "low" },
+      },
+      model: chatModel,
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
       // @ts-expect-error - experimental_transform is not typed
       experimental_transform: smoothStream({ chunking: "word" }),
       tools: {
-        searchDocuments: searchDocuments(userId, organizationId),
-        readDocument: readDocument(userId, organizationId),
-        listDocuments: listDocuments(userId, organizationId),
-        createFolder: createFolder(userId, organizationId),
-        moveDocuments: moveDocuments(userId, organizationId),
-        createDocument: tool({
-          description:
-            "Create a new document. This tool creates the document in the system but DOES NOT redirect the user. The user will see a preview and a button to open it. Use this when the user asks to create a new document, note, or page. You can optionally provide content for the new document.",
-          inputSchema: z.object({
-            title: z.string().optional().describe("The title of the document"),
-            content: z
-              .string()
-              .optional()
-              .describe(
-                "The initial content of the document in HTML format. Use HTML tags like <p>, <h2>, <ul>, etc."
-              ),
-          }),
-        }),
+        search_documents: searchDocuments(userId, organizationId),
+        read_document: readDocument(userId, organizationId),
+        list_documents: listDocuments(userId, organizationId),
+        move_documents: moveDocuments(userId, organizationId),
+        create_document: createDocument(userId, organizationId),
       },
     });
 
@@ -223,18 +214,14 @@ export const AssistantRoute = new Hono<{
       },
     });
   } catch (e) {
-    console.error(e);
-    // Re-throw HTTPException as-is
-    if (e instanceof HTTPException) {
-      throw e;
-    }
-    // Re-throw VisibleError as-is for backward compatibility
     if (e instanceof VisibleError) {
       throw e;
     }
-    throw new HTTPException(500, {
-      message: "An error occurred while processing your request",
-    });
+
+    throw new VisibleError(
+      "chat_processing_error",
+      "An error occurred while processing your request"
+    );
   }
 });
 

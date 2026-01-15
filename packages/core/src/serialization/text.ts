@@ -1,19 +1,13 @@
 import { renderWithBuilder, type ContentNode } from "../content";
-import {
-  PlainTextSerializer,
-  PlainTextSerializer as PlainTextBuilder,
-} from "./plaintext-serializer";
+import { PlainTextSerializer } from "./plaintext-serializer";
 import {
   deserializeFromText,
   type TextDeserializeOptions,
-} from "./text-deserializer";
+} from "./plaintext-deserializer";
 
-export { PlainTextSerializer, PlainTextBuilder };
+export { PlainTextSerializer };
+export { deserializeFromText };
 
-export {
-  deserializeFromText,
-  deserializeFromText as parseTextToTipTap,
-};
 export type {
   TextDeserializeOptions,
   TextDeserializeOptions as TextParseOptions,
@@ -23,5 +17,3 @@ export function serializeToPlainText(content: ContentNode): string {
   const serializer = new PlainTextSerializer();
   return renderWithBuilder(content, serializer);
 }
-
-

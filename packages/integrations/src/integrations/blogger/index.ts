@@ -64,7 +64,6 @@ interface BloggerPage {
   selfLink: string;
 }
 
-// Helper functions
 function getAuthHeaders(accessToken: string) {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -72,10 +71,7 @@ function getAuthHeaders(accessToken: string) {
   };
 }
 
-/**
- * Blogger sync integration
- * Syncs documents to Google Blogger via REST API
- */
+// Blogger sync integration - syncs documents to Google Blogger via REST API
 export const bloggerIntegration: Integration & OAuthIntegration = {
   onConnect(): { links?: DefaultLink[] } {
     return {
@@ -99,7 +95,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
     }
 
     try {
-      // Validate by fetching user info
       const response = await fetch(
         "https://www.googleapis.com/blogger/v3/users/self",
         {
@@ -117,7 +112,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
                 await this.getOAuthCredentials()
               );
               if (refreshed) {
-                // Token was refreshed, connection is valid
                 return { valid: true };
               }
             } catch (refreshError) {
@@ -159,7 +153,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
     const resources: ExternalResource[] = [];
 
     try {
-      // Fetch user's blogs
       const response = await fetch(
         "https://www.googleapis.com/blogger/v3/users/self/blogs",
         { headers }
@@ -172,7 +165,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
         if (data.items) {
           for (const blog of data.items) {
-            // Add Posts resource for each blog
             resources.push({
               id: `${blog.id}-posts`,
               name: `${blog.name} - Posts`,
@@ -180,7 +172,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
               metadata: { type: "posts", blogId: blog.id, blogName: blog.name },
             });
 
-            // Add Pages resource for each blog
             resources.push({
               id: `${blog.id}-pages`,
               name: `${blog.name} - Pages`,
@@ -212,11 +203,9 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
       return createErrorResult(document.id, "Missing Blogger access token");
     }
 
-    // Get blog ID from config
-    // blogId can be extracted from resourceId (format: "blogId-posts" or "blogId-pages")
+    // Get blog ID from config (can be extracted from resourceId: "blogId-posts" or "blogId-pages")
     let blogId = config.blogId;
     if (!blogId && config.resourceId) {
-      // Extract blogId from resourceId (e.g., "123456789-posts" -> "123456789")
       const parts = config.resourceId.split("-");
       if (parts.length >= 2) {
         blogId = parts.slice(0, -1).join("-"); // Handle blog IDs with hyphens
@@ -244,8 +233,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
       let existingId: string | null = null;
 
       // Check if post/page exists by searching
-      // Blogger API doesn't support direct slug search, so we fetch recent items
-      // and check URLs. For better performance, we could store externalId in sync metadata
+      // Blogger API doesn't support direct slug search, so we fetch recent items and check URLs
       const searchEndpoint =
         resourceType === "pages"
           ? `https://www.googleapis.com/blogger/v3/blogs/${blogId}/pages?maxResults=500`
@@ -260,7 +248,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
         if (searchData.items) {
           // Try to find by URL - Blogger URLs typically end with the slug
-          // Format: https://blogname.blogspot.com/YYYY/MM/slug.html
           const matchingItem = searchData.items.find((item) => {
             const urlParts = item.url.split("/");
             const urlSlug = urlParts[urlParts.length - 1]?.replace(
@@ -281,8 +268,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
         content: htmlContent,
       };
 
-      // Blogger doesn't support custom slugs directly via API
-      // The slug is auto-generated from the title
+      // Blogger doesn't support custom slugs directly via API - slug is auto-generated from title
 
       if (existingId) {
         endpoint =
@@ -347,7 +333,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
       let blogId = config.blogId;
       if (!blogId && config.resourceId) {
-        // Extract blogId from resourceId (e.g., "123456789-posts" -> "123456789")
         const parts = config.resourceId.split("-");
         if (parts.length >= 2) {
           blogId = parts.slice(0, -1).join("-");
@@ -374,7 +359,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
       if (!response.ok) {
         if (response.status === 404) {
-          // Resource doesn't exist, consider deletion successful
           return {
             success: true,
             documentId,
@@ -415,12 +399,10 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
     const headers = getAuthHeaders(config.accessToken);
 
     try {
-      // Get blog ID from config or fetch all blogs
       const blogId = config.blogId;
       const blogsToProcess: Array<{ id: string; name: string }> = [];
 
       if (blogId) {
-        // Fetch specific blog info
         const blogRes = await fetch(
           `https://www.googleapis.com/blogger/v3/blogs/${blogId}`,
           { headers }
@@ -430,7 +412,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
           blogsToProcess.push({ id: blog.id, name: blog.name });
         }
       } else {
-        // Fetch all blogs
         const blogsRes = await fetch(
           "https://www.googleapis.com/blogger/v3/users/self/blogs",
           { headers }
@@ -447,9 +428,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
         }
       }
 
-      // Process each blog
       for (const blog of blogsToProcess) {
-        // Fetch Posts
         const postsRes = await fetch(
           `https://www.googleapis.com/blogger/v3/blogs/${blog.id}/posts?maxResults=500`,
           { headers }
@@ -465,7 +444,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
                 results.push({
                   success: true,
-                  documentId: "", // Backend handles
+                  documentId: "",
                   externalId: post.id,
                   message: `Pulled post: ${post.title}`,
                   metadata: {
@@ -506,7 +485,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
                 results.push({
                   success: true,
-                  documentId: "", // Backend handles
+                  documentId: "",
                   externalId: page.id,
                   message: `Pulled page: ${page.title}`,
                   metadata: {
@@ -596,7 +575,6 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
       throw new Error("Missing authorization code");
     }
 
-    // Exchange authorization code for access token
     const tokenUrl = "https://oauth2.googleapis.com/token";
     const response = await fetch(tokenUrl, {
       method: "POST",
@@ -651,7 +629,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
     const data = (await response.json()) as BloggerTokenResponse;
     return {
       accessToken: data.access_token,
-      refreshToken: data.refresh_token || refreshToken, // Keep old refresh token if new one not provided
+      refreshToken: data.refresh_token || refreshToken,
     };
   },
 };

@@ -65,6 +65,7 @@ export async function searchDocumentsByTitle(
       .where(
         and(
           eq(documentsTable.organizationId, organizationId),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // More lenient similarity threshold for titles
           sql`(${documentTitleEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding
@@ -178,6 +179,7 @@ export async function searchDocumentsInSpecificDocument(
       .select({
         content: documentEmbeddingsTable.content,
         similarity,
+        headerBreadcrumb: documentEmbeddingsTable.headerBreadcrumb,
       })
       .from(documentEmbeddingsTable)
       .where(
@@ -252,6 +254,7 @@ export async function findRelatedDocuments(
         and(
           eq(documentsTable.organizationId, organizationId),
           eq(documentsTable.published, true),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // Exclude the current document
           sql`${documentsTable.id} != ${documentId}`,
           // Reasonable similarity threshold
@@ -319,6 +322,7 @@ export async function findRelatedDocumentsByContent(
         and(
           eq(documentsTable.organizationId, organizationId),
           eq(documentsTable.published, true),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // Exclude the current document
           sql`${documentsTable.id} != ${documentId}`,
           // Reasonable similarity threshold
@@ -368,6 +372,7 @@ export async function searchDocuments(
         title: documentsTable.title,
         id: documentsTable.id,
         slug: documentsTable.slug,
+        headerBreadcrumb: documentEmbeddingsTable.headerBreadcrumb,
       })
       .from(documentEmbeddingsTable)
       .innerJoin(
@@ -377,6 +382,7 @@ export async function searchDocuments(
       .where(
         and(
           eq(documentsTable.organizationId, organizationId),
+          sql`${documentsTable.deletedAt} IS NULL`,
           // Only return results with reasonable similarity
           sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding
@@ -407,6 +413,7 @@ export async function searchDocuments(
       documentMap.get(result.id)!.contentChunks.push({
         content: result.content,
         similarity: result.similarity,
+        headerBreadcrumb: result.headerBreadcrumb,
       });
     }
 

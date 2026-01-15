@@ -1,143 +1,154 @@
 import { Button } from "react-aria-components";
-import { SquarePen, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import clsx from "clsx";
-import { useZero } from "@/services/zero";
-import { queries } from "@lydie/zero/queries";
-import type { QueryResultType } from "@rocicorp/zero";
+import { SquarePen, MessageCircle } from "lucide-react";
 import { SidebarIcon } from "../layout/SidebarIcon";
+import { useCallback } from "react";
+import clsx from "clsx";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { mutators } from "@lydie/zero/mutators";
-
-type Conversation = NonNullable<
-  QueryResultType<typeof queries.assistant.conversations>
->[number];
+import { formatDistanceToNow } from "date-fns";
+import { useQuery } from "@rocicorp/zero/react";
+import { queries } from "@lydie/zero/queries";
+import { useAssistant } from "@/context/assistant.context";
+import { useNavigate } from "@tanstack/react-router";
+import { useOrganization } from "@/context/organization.context";
 
 type Props = {
-  conversations: Conversation[];
-  currentConversationId: string;
-  onSelect: (id: string) => void;
-  onNewChat: () => void;
   isCollapsed: boolean;
   onToggle: () => void;
 };
 
-export function AssistantSidebar({
-  conversations,
-  currentConversationId,
-  onSelect,
-  onNewChat,
-  isCollapsed,
-  onToggle,
-}: Props) {
-  const z = useZero();
+export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
+  const { conversationId, resetConversation } = useAssistant();
+  const navigate = useNavigate();
+  const { organization } = useOrganization();
+  const [conversations] = useQuery(
+    queries.assistant.conversationsByUser({
+      organizationSlug: organization.slug,
+    })
+  );
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (confirm("Are you sure you want to delete this chat?")) {
-      z.mutate(mutators.assistantConversation.delete({ conversationId: id }));
-      if (id === currentConversationId) {
-        onNewChat();
-      }
-    }
-  };
+  const handleNewConversation = useCallback(() => {
+    resetConversation();
+    navigate({
+      to: "/w/$organizationSlug/assistant",
+      params: { organizationSlug: organization.slug },
+      search: {},
+    });
+  }, [resetConversation, navigate, organization.slug]);
+
+  const handleSelectConversation = useCallback(
+    (id: string) => {
+      navigate({
+        to: "/w/$organizationSlug/assistant",
+        params: { organizationSlug: organization.slug },
+        search: { conversationId: id },
+      });
+    },
+    [navigate, organization.slug]
+  );
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 border-l border-gray-200 overflow-hidden">
+    <div className="overflow-hidden flex flex-col border-l border-black/8 bg-surface rounded-r-lg size-full">
       <div
         className={clsx(
-          "flex items-center p-2 shrink-0",
-          isCollapsed ? "flex-col gap-2 justify-center" : "justify-between"
+          "flex justify-between shrink-0 border-b border-black/8",
+          isCollapsed
+            ? "h-full flex-col p-1.5"
+            : "h-10 items-center flex-row p-3"
         )}
       >
         {!isCollapsed && (
-          <span className="font-semibold text-sm text-gray-700 px-2">
-            Chats
+          <span className="text-sm font-medium text-gray-700 truncate">
+            Conversations
           </span>
         )}
-        <TooltipTrigger>
-          <Button
-            onPress={onNewChat}
-            className={clsx(
-              "p-1.5 rounded-md text-gray-600 hover:bg-gray-200 transition-colors",
-              isCollapsed &&
-                "w-full aspect-square flex items-center justify-center"
-            )}
-          >
-            <SquarePen className="size-4" />
-          </Button>
-          <Tooltip placement="right">New Chat</Tooltip>
-        </TooltipTrigger>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1 scrollbar-thin">
-        {conversations.map((conversation) => {
-          const isActive = conversation.id === currentConversationId;
-          return (
-            <div
-              key={conversation.id}
-              onClick={() => onSelect(conversation.id)}
+        <div
+          className={clsx(
+            "flex",
+            isCollapsed ? "flex-col gap-y-1" : "flex-row gap-x-0.5"
+          )}
+        >
+          <TooltipTrigger>
+            <Button
               className={clsx(
-                "group flex items-center gap-2 p-2 rounded-md cursor-pointer text-sm transition-colors relative",
-                isActive
-                  ? "bg-white shadow-sm text-gray-900"
-                  : "text-gray-600 hover:bg-gray-200/50",
-                isCollapsed && "justify-center px-1"
+                "rounded hover:bg-gray-100 text-gray-600 group flex flex-col items-center justify-center",
+                isCollapsed ? "aspect-square" : "p-1"
               )}
+              onPress={handleNewConversation}
             >
-              {!isCollapsed ? (
-                <>
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate font-medium">
-                      {conversation.title || "Untitled Conversation"}
-                    </div>
-                    <div className="text-xs text-gray-400 truncate">
-                      {formatDistanceToNow(new Date(conversation.created_at), {
-                        addSuffix: true,
-                      })}
-                    </div>
-                  </div>
-                  <Button
-                    onPress={(e: any) => handleDelete(e, conversation.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 hover:text-red-600 rounded transition-all"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </>
-              ) : (
-                <TooltipTrigger>
-                  <div className="size-2 rounded-full bg-gray-400 group-hover:bg-gray-600" />
-                  <Tooltip placement="right">
-                    {conversation.title || "Untitled Conversation"}
-                    <div className="text-xs opacity-75">
-                      {formatDistanceToNow(new Date(conversation.created_at), {
-                        addSuffix: true,
-                      })}
-                    </div>
-                  </Tooltip>
-                </TooltipTrigger>
+              <SquarePen className="size-3.5" />
+            </Button>
+            <Tooltip placement={isCollapsed ? "left" : undefined}>
+              New Conversation
+            </Tooltip>
+          </TooltipTrigger>
+          <TooltipTrigger>
+            <Button
+              className={clsx(
+                "rounded hover:bg-gray-100 text-gray-700 group flex flex-col items-center justify-center",
+                isCollapsed ? "aspect-square" : "p-1"
               )}
-            </div>
-          );
-        })}
+              onPress={onToggle}
+              aria-label="Toggle Sidebar"
+            >
+              <SidebarIcon direction="right" collapsed={isCollapsed} />
+            </Button>
+            <Tooltip placement={isCollapsed ? "left" : undefined}>
+              Toggle Sidebar
+            </Tooltip>
+          </TooltipTrigger>
+        </div>
       </div>
+      {!isCollapsed && (
+        <div className="flex-1 overflow-y-auto">
+          {conversations && conversations.length > 0 ? (
+            <div className="flex flex-col">
+              {conversations.map((conversation) => {
+                const isActive = conversation.id === conversationId;
+                const firstMessage = conversation.messages?.[0];
+                const preview =
+                  firstMessage?.role === "user"
+                    ? typeof firstMessage.parts === "string"
+                      ? firstMessage.parts
+                      : firstMessage.parts?.[0]?.text || "New conversation"
+                    : conversation.title || "New conversation";
 
-      <div
-        className={clsx(
-          "p-2 border-t border-gray-200 shrink-0 flex",
-          isCollapsed ? "justify-center" : "justify-end"
-        )}
-      >
-        <TooltipTrigger>
-          <Button
-            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-200 transition-colors"
-            onPress={onToggle}
-          >
-            <SidebarIcon direction="left" collapsed={isCollapsed} />
-          </Button>
-          <Tooltip placement="right">Toggle Sidebar</Tooltip>
-        </TooltipTrigger>
-      </div>
+                return (
+                  <button
+                    key={conversation.id}
+                    onClick={() => handleSelectConversation(conversation.id)}
+                    className={clsx(
+                      "flex flex-col p-3 border-b border-black/8 hover:bg-gray-50 transition-colors text-left",
+                      isActive && "bg-blue-50 hover:bg-blue-50"
+                    )}
+                  >
+                    <div className="flex items-start gap-2">
+                      <MessageCircle className="size-4 text-gray-400 shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 line-clamp-2 break-words">
+                          {preview}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatDistanceToNow(
+                            new Date(conversation.updated_at),
+                            {
+                              addSuffix: true,
+                            }
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+              <MessageCircle className="size-8 text-gray-300 mb-2" />
+              <p className="text-sm text-gray-500">No conversations yet</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

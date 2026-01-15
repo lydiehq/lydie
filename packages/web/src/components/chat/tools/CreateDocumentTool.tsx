@@ -1,71 +1,125 @@
-import { Card } from "@/components/layout/Card";
-import { FileText, ExternalLink } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { motion } from "motion/react";
+import { countWords } from "@/utils/text";
+import { useOrganization } from "@/context/organization.context";
+import { StickToBottom } from "use-stick-to-bottom";
+import { Button } from "@/components/generic/Button";
+import { Separator } from "@/components/generic/Separator";
 
-interface CreateDocumentToolProps {
+type Props = {
   tool: {
     toolCallId: string;
+    state?:
+      | "input-streaming"
+      | "input-available"
+      | "call-streaming"
+      | "output-available"
+      | "output-error";
     input?: {
       title?: string;
       content?: string;
     };
     output?: {
-      id: string;
-      title: string;
-      snippet?: string;
+      state?: "success" | "error";
+      message?: string;
+      document?: {
+        id: string;
+        title: string;
+        slug: string;
+        parentId?: string | null;
+      };
+      contentApplied?: boolean;
+      error?: string;
     };
   };
-  organizationId: string;
-}
+};
 
-export function CreateDocumentTool({
-  tool,
-  organizationId,
-}: CreateDocumentToolProps) {
+export function CreateDocumentTool({ tool }: Props) {
   const { output, input } = tool;
-  const title = output?.title || input?.title || "Untitled Document";
-  const snippet = output?.snippet || input?.content || "";
 
-  // Strip HTML from snippet for preview
-  const plainSnippet = snippet
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 150)
-    .concat(snippet.length > 150 ? "..." : "");
+  const documentId = output?.document?.id;
+  const fullContent = input?.content || "";
+
+  const isInputStreaming = tool.state === "input-streaming";
+  const isCreated = !!documentId;
+  const isError = output?.state === "error" || tool.state === "output-error";
+  const isSuccess = output?.state === "success";
+
+  const hasContent = fullContent.length > 0;
+  const wordCount = countWords(fullContent);
+
+  const roundedWordCount = Math.floor(wordCount / 10) * 10;
+
+  const getStatusText = () => {
+    if (isError) return "Failed to create document";
+    if (isCreated && isSuccess) return "Document created";
+    if (isInputStreaming && hasContent) return "Writing content";
+    return "Writing content";
+  };
 
   return (
-    <Card className="w-full max-w-sm border border-gray-200 overflow-hidden my-2">
-      <div className="p-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-        <div className="bg-white p-1.5 rounded border border-gray-200">
-          <FileText size={16} className="text-blue-600" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-medium text-gray-900 truncate">
-            {title}
-          </h3>
-          <p className="text-xs text-gray-500">Document Created</p>
+    <motion.div className="p-1 bg-gray-100 rounded-[10px] my-4 relative">
+      <div className="p-1">
+        <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
+          <motion.span
+            key={getStatusText()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {getStatusText()}
+          </motion.span>
+          {hasContent && wordCount > 0 && (
+            <span className="text-gray-500">{roundedWordCount} words</span>
+          )}
+        </motion.div>
+      </div>
+      <div className="relative">
+        <motion.div
+          initial={{ rotate: 0 }}
+          animate={{ rotate: -2 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+          className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden absolute h-full left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2  w-[calc(100%-1rem)] z-0 opacity-80"
+        />
+        <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
+          <div className="p-2">
+            <StickToBottom
+              className="text-xs text-gray-600 h-56 overflow-y-auto"
+              initial="instant"
+            >
+              <StickToBottom.Content>
+                <div
+                  className="editor-content-sm"
+                  dangerouslySetInnerHTML={{ __html: fullContent }}
+                />
+              </StickToBottom.Content>
+            </StickToBottom>
+            {documentId && (
+              <>
+                <Separator className="my-2" />
+                <motion.div
+                  className="flex justify-end mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Button
+                    intent="secondary"
+                    size="xs"
+                    to="/w/$organizationSlug/$id"
+                    from="/w/$organizationSlug"
+                    params={{
+                      id: documentId,
+                    }}
+                  >
+                    Open Document
+                  </Button>
+                </motion.div>
+              </>
+            )}
+          </div>
         </div>
       </div>
-
-      {plainSnippet && (
-        <div className="p-3 text-xs text-gray-600 bg-white border-b border-gray-100">
-          {plainSnippet}
-        </div>
-      )}
-
-      {output?.id && (
-        <div className="p-2 bg-gray-50 flex justify-end">
-          <Link
-            to="/w/$organizationSlug/$id"
-            params={{ organizationId, id: output.id }}
-            className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
-          >
-            Open Document
-            <ExternalLink size={12} />
-          </Link>
-        </div>
-      )}
-    </Card>
+    </motion.div>
   );
 }

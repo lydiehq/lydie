@@ -225,14 +225,14 @@ function RouteComponent() {
     e.stopPropagation();
   }, []);
 
-  const preCreateFolders = async (
+  const preCreatePages = async (
     files: FileWithPath[]
   ): Promise<Map<string, string>> => {
     const client = await createClient();
-    const folderCache = new Map<string, string>();
+    const pageCache = new Map<string, string>();
 
-    // Get unique folder paths (excluding null/undefined)
-    const uniqueFolderPaths = [
+    // Get unique page paths (excluding null/undefined)
+    const uniquePagePaths = [
       ...new Set(
         files
           .map((f) => f.folderPath)
@@ -240,37 +240,37 @@ function RouteComponent() {
       ),
     ];
 
-    // Sort by depth (shortest first) to ensure parent folders are created before children
-    uniqueFolderPaths.sort((a, b) => {
+    // Sort by depth (shortest first) to ensure parent pages are created before children
+    uniquePagePaths.sort((a, b) => {
       const depthA = a.split("/").length;
       const depthB = b.split("/").length;
       return depthA - depthB;
     });
 
-    // Create folders sequentially to ensure proper ordering
-    for (const folderPath of uniqueFolderPaths) {
+    // Create pages sequentially to ensure proper ordering
+    for (const pagePath of uniquePagePaths) {
       try {
-        const response = await client.internal["mdx-import"]["create-folder"]
+        const response = await client.internal["mdx-import"]["create-page"]
           .$post({
-            json: { folderPath },
+            json: { pagePath },
           })
           .then((res) => res.json());
 
-        if (response.folderId) {
-          folderCache.set(folderPath, response.folderId);
+        if (response.pageId) {
+          pageCache.set(pagePath, response.pageId);
         }
       } catch (error) {
-        console.error(`Failed to create folder ${folderPath}:`, error);
-        // Continue with other folders even if one fails
+        console.error(`Failed to create page ${pagePath}:`, error);
+        // Continue with other pages even if one fails
       }
     }
 
-    return folderCache;
+    return pageCache;
   };
 
   const processFilesInBatches = async (
     files: FileWithPath[],
-    folderCache: Map<string, string>,
+    pageCache: Map<string, string>,
     batchSize: number = 5
   ): Promise<ImportResult[]> => {
     const results: ImportResult[] = [];
@@ -299,17 +299,17 @@ function RouteComponent() {
             reader.readAsText(file);
           });
 
-          // Get folderId from cache if available
-          const folderId = folderPath ? folderCache.get(folderPath) : undefined;
+          // Get parentId from cache if available
+          const parentId = folderPath ? pageCache.get(folderPath) : undefined;
 
-          // Upload to API with folderId (preferred) or folderPath (fallback)
+          // Upload to API with parentId (preferred) or pagePath (fallback)
           const response = await client.internal["mdx-import"]
             .$post({
               json: {
                 mdxContent: content,
                 filename: file.name,
-                folderId: folderId || null,
-                folderPath: folderPath || null,
+                parentId: parentId || null,
+                pagePath: folderPath || null,
               },
             })
             .then((res) => res.json());
@@ -368,17 +368,13 @@ function RouteComponent() {
     setUploadResults([]);
 
     try {
-      // Step 1: Pre-create all unique folders to avoid duplicates
-      toast.info("Creating folder structure...");
-      const folderCache = await preCreateFolders(selectedFiles);
+      // Step 1: Pre-create all unique pages to avoid duplicates
+      toast.info("Creating page structure...");
+      const pageCache = await preCreatePages(selectedFiles);
 
-      // Step 2: Import files with pre-created folder IDs
+      // Step 2: Import files with pre-created page IDs
       toast.info("Importing files...");
-      const results = await processFilesInBatches(
-        selectedFiles,
-        folderCache,
-        5
-      );
+      const results = await processFilesInBatches(selectedFiles, pageCache, 5);
       setUploadResults(results);
 
       // Show summary toast
@@ -441,10 +437,10 @@ function RouteComponent() {
           <Upload className="mx-auto h-12 w-12 text-gray-400" />
           <div>
             <h3 className="text-lg font-medium text-gray-900">
-              Select MDX Files or Folders
+              Select MDX Files
             </h3>
             <p className="text-gray-500">
-              Choose .md or .mdx files, or drop a folder to preserve folder
+              Choose .md or .mdx files, or drop a folder to preserve page
               hierarchy
             </p>
           </div>

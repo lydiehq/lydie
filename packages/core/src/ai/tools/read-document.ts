@@ -66,7 +66,7 @@ Use this tool when you need to access the complete content of a document to refe
       if (documentId) {
         conditions.push(eq(documentsTable.id, documentId));
       } else if (documentTitle) {
-        conditions.push(ilike(documentsTable.title, `% ${documentTitle}% `));
+        conditions.push(ilike(documentsTable.title, `%${documentTitle}%`));
       }
 
       // Apply all conditions at once
@@ -90,11 +90,10 @@ Use this tool when you need to access the complete content of a document to refe
       if (!document) {
         yield {
           state: "error",
-          error: `No document found with ${
-            documentId
-              ? `ID "${documentId}"`
-              : `title containing "${documentTitle}"`
-          }`,
+          error: `No document found with ${documentId
+            ? `ID "${documentId}"`
+            : `title containing "${documentTitle}"`
+            }`,
         };
         return;
       }
@@ -105,9 +104,6 @@ Use this tool when you need to access the complete content of a document to refe
         message: `Reading document "${document.title}"...`,
         documentTitle: document.title,
       };
-
-      // Add fake delay to see loading state (remove in production)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Use Yjs as source of truth
       if (!document.yjsState) {

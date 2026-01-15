@@ -246,7 +246,7 @@ function DeleteLinkDialog({
     zero.mutate(
       mutators.integration.deleteLink({
         linkId: link.id,
-        organizationId: organization?.id || "",
+        organizationId: organization.id,
         deleteDocuments: true,
       })
     );

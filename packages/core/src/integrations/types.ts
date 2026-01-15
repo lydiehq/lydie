@@ -38,8 +38,28 @@ export interface SyncDocument {
   published: boolean;
   updatedAt: Date;
   organizationId: string;
-  folderId?: string | null; // Optional folder ID for maintaining folder structure
-  folderPath?: string | null; // Optional folder path (e.g., "docs/guides") for folder creation
+  /** 
+   * Path/ID in external system - used for matching during pull operations
+   * For push operations, the path should be computed from parent hierarchy
+   * This field may be stale if the document was moved - always compute path from hierarchy when pushing
+   */
+  externalId?: string | null;
+  /** 
+   * Whether the document is locked (read-only in UI)
+   * Used for integration-managed documents like folder pages
+   */
+  isLocked?: boolean;
+  /** 
+   * Parent document ID for pages-in-pages structure
+   * Used to compute the file path in external systems
+   */
+  parentId?: string | null;
+  /**
+   * Computed path segments from parent hierarchy (root to immediate parent)
+   * If provided, integrations should use this instead of computing from parentId
+   * This ensures the path reflects the current document location even if externalId is stale
+   */
+  parentPathSegments?: string[];
   customFields?: Record<string, string | number>;
 }
 
@@ -62,12 +82,27 @@ export interface IntegrationConnection {
 export interface SyncResult {
   success: boolean;
   documentId: string;
-  externalId?: string; // ID in the external system (e.g., GitHub file path)
+  /** 
+   * Path/ID in external system:
+   * - For GitHub files: file path (e.g., "docs/guide.md")
+   * - For GitHub folders: "__folder__<path>" format (e.g., "__folder__docs")
+   * - For other integrations: platform-specific identifier
+   * Used to track documents across syncs and determine parent relationships
+   */
+  externalId?: string;
   message?: string;
   error?: string;
   conflictDetected?: boolean;
   conflictDetails?: ConflictDetails;
-  metadata?: any; // Additional data (e.g., pulled document content)
+  /**
+   * Additional data for pull operations, typically includes:
+   * - title: Document title
+   * - slug: URL-friendly slug
+   * - content: TipTap JSON content
+   * - isLocked: Whether document is locked (e.g., folder pages)
+   * - customFields: Integration-specific metadata
+   */
+  metadata?: any;
 }
 
 /**

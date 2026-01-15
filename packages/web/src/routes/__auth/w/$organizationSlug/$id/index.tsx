@@ -5,26 +5,34 @@ import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
 import { Surface } from "@/components/layout/Surface";
 import { Button } from "@/components/generic/Button";
+import { useTrackOnMount } from "@/hooks/use-posthog-tracking";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   component: RouteComponent,
-  loader: async ({ context, params }) => {
-    const { zero } = context;
-    const { organizationSlug } = params;
-    // Get organization by slug first to get the ID
-    const org = await zero.run(
-      queries.organizations.bySlug({ organizationSlug })
-    );
-    if (org) {
-      zero.run(
-        queries.documents.byId({
-          organizationId: org.id,
-          documentId: params.id,
-        })
-      );
-    }
-  },
   ssr: false,
+  loader: async ({ context, params }) => {
+    const { zero, organization } = context;
+    const { id } = params;
+
+    const doc = zero.run(
+      queries.documents.byId({
+        organizationId: organization.id,
+        documentId: id,
+      })
+    );
+
+    return { doc };
+  },
+  // head: async ({ loaderData }) => {
+  //   const doc = await loaderData?.doc;
+  //   return {
+  //     meta: [
+  //       {
+  //         title: doc ? `${doc.title} | Lydie` : "Lydie",
+  //       },
+  //     ],
+  //   };
+  // },
 });
 
 function RouteComponent() {
@@ -32,10 +40,16 @@ function RouteComponent() {
   const { organization } = useOrganization();
   const [doc, status] = useQuery(
     queries.documents.byId({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
       documentId: id,
     })
   );
+
+  // Track document opened
+  useTrackOnMount("document_opened", {
+    documentId: id,
+    organizationId: organization.id,
+  });
 
   if (!doc && status.type === "complete") {
     return (

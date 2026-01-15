@@ -1,12 +1,14 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { db, documentsTable, foldersTable } from "@lydie/database";
+import { db, documentsTable } from "@lydie/database";
 import { eq, and, isNull, inArray } from "drizzle-orm";
+
+type DocumentToMove = { id: string; title: string; parentId: string | null };
 
 export const moveDocuments = (userId: string, organizationId: string) =>
   tool({
-    description: `Move one or more documents to a folder (or to root level if no folder specified).
-Use this tool when the user asks to move documents, organize documents into folders, or rearrange their workspace.
+    description: `Move one or more documents to be children of another document (or to root level if no parent specified).
+Use this tool when the user asks to move documents or rearrange their workspace.
 You can move documents by their IDs or by searching for documents matching certain criteria.`,
     inputSchema: z.object({
       documentIds: z
@@ -14,35 +16,28 @@ You can move documents by their IDs or by searching for documents matching certa
         .describe(
           "Array of document IDs to move. Use the listDocuments tool first to get document IDs if needed. Not required if moveAll is true."
         )
-        .optional()
         .default([]),
-      folderId: z
+      parentId: z
         .string()
         .describe(
-          "ID of the destination folder. Leave empty or set to null to move documents to root level."
+          "ID of the destination parent document. Leave empty or set to null to move documents to root level."
         )
         .optional()
         .nullable(),
-      folderName: z
+      parentTitle: z
         .string()
         .describe(
-          "Name of the destination folder. Will search for existing folder by name. Use this if you don't have the folder ID."
+          "Title of the destination parent document. Will search for existing document by title. Use this if you don't have the document ID."
         )
         .optional(),
       moveAll: z
         .boolean()
         .describe(
-          "If true, move all documents in the workspace to the specified folder. Overrides documentIds."
+          "If true, move all documents in the workspace to the specified parent. Overrides documentIds."
         )
         .default(false),
     }),
-    execute: async function* ({
-      documentIds = [],
-      folderId,
-      folderName,
-      moveAll = false,
-    }) {
-      // Yield initial moving state
+    execute: async function* ({ documentIds, parentId, parentTitle, moveAll }) {
       yield {
         state: "moving",
         message: moveAll
@@ -52,114 +47,136 @@ You can move documents by their IDs or by searching for documents matching certa
             }...`,
       };
 
-      // Resolve destination folder
-      let resolvedFolderId: string | null = null;
+      // Resolve destination parent document
+      let resolvedParentId: string | null = null;
+      let parentDisplayName = "root level";
 
-      if (folderId) {
-        // Verify folder exists and user has access
-        const [folder] = await db
-          .select()
-          .from(foldersTable)
+      if (parentId) {
+        const [parent] = await db
+          .select({ id: documentsTable.id, title: documentsTable.title })
+          .from(documentsTable)
           .where(
             and(
-              eq(foldersTable.id, folderId),
-              eq(foldersTable.organizationId, organizationId),
-              isNull(foldersTable.deletedAt)
+              eq(documentsTable.id, parentId),
+              eq(documentsTable.organizationId, organizationId),
+              isNull(documentsTable.deletedAt)
             )
           )
           .limit(1);
 
-        if (!folder) {
+        if (!parent) {
           yield {
             state: "error",
-            error: `Folder with ID "${folderId}" not found or you don't have access to it`,
+            error: `Parent document with ID "${parentId}" not found or you don't have access to it`,
           };
           return;
         }
 
-        resolvedFolderId = folderId;
-      } else if (folderName) {
-        // Search for folder by name (check root level first)
-        const [folder] = await db
-          .select()
-          .from(foldersTable)
+        resolvedParentId = parentId;
+        parentDisplayName = `"${parent.title}"`;
+      } else if (parentTitle) {
+        const [parent] = await db
+          .select({ id: documentsTable.id })
+          .from(documentsTable)
           .where(
             and(
-              eq(foldersTable.name, folderName),
-              eq(foldersTable.organizationId, organizationId),
-              isNull(foldersTable.deletedAt),
-              isNull(foldersTable.parentId) // Root level folder
+              eq(documentsTable.title, parentTitle),
+              eq(documentsTable.organizationId, organizationId),
+              isNull(documentsTable.deletedAt),
+              isNull(documentsTable.parentId)
             )
           )
           .limit(1);
 
-        if (!folder) {
+        if (!parent) {
           yield {
             state: "error",
-            error: `Folder "${folderName}" not found at root level`,
+            error: `Parent document "${parentTitle}" not found at root level`,
           };
           return;
         }
 
-        resolvedFolderId = folder.id;
+        resolvedParentId = parent.id;
+        parentDisplayName = `"${parentTitle}"`;
       }
 
       // Get documents to move
-      let documentsToMove: any[] = [];
+      const baseConditions = [
+        eq(documentsTable.organizationId, organizationId),
+        isNull(documentsTable.deletedAt),
+      ];
 
-      if (moveAll) {
-        // Get all documents for the user/organization
-        documentsToMove = await db
-          .select({
-            id: documentsTable.id,
-            title: documentsTable.title,
-            folderId: documentsTable.folderId,
-          })
-          .from(documentsTable)
-          .where(
-            and(
-              eq(documentsTable.organizationId, organizationId),
-              isNull(documentsTable.deletedAt)
+      const documentsToMove: DocumentToMove[] = moveAll
+        ? await db
+            .select({
+              id: documentsTable.id,
+              title: documentsTable.title,
+              parentId: documentsTable.parentId,
+            })
+            .from(documentsTable)
+            .where(and(...baseConditions))
+        : documentIds.length > 0
+        ? await db
+            .select({
+              id: documentsTable.id,
+              title: documentsTable.title,
+              parentId: documentsTable.parentId,
+            })
+            .from(documentsTable)
+            .where(
+              and(...baseConditions, inArray(documentsTable.id, documentIds))
             )
-          );
-      } else {
-        if (documentIds.length === 0) {
-          yield {
-            state: "error",
-            error: "Either provide documentIds or set moveAll to true",
-          };
-          return;
-        }
-        // Get specific documents
-        documentsToMove = await db
-          .select({
-            id: documentsTable.id,
-            title: documentsTable.title,
-            folderId: documentsTable.folderId,
-          })
-          .from(documentsTable)
-          .where(
-            and(
-              eq(documentsTable.organizationId, organizationId),
-              inArray(documentsTable.id, documentIds),
-              isNull(documentsTable.deletedAt)
-            )
-          );
-      }
+        : [];
 
       if (documentsToMove.length === 0) {
         yield {
           state: "error",
-          error: "No documents found to move",
+          error: moveAll
+            ? "No documents found to move"
+            : "Either provide documentIds or set moveAll to true",
         };
         return;
+      }
+
+      // Check for circular references by walking up from the target parent
+      if (resolvedParentId) {
+        const idsBeingMoved = new Set(documentsToMove.map((d) => d.id));
+
+        if (idsBeingMoved.has(resolvedParentId)) {
+          yield {
+            state: "error",
+            error: "Cannot move a document into itself",
+          };
+          return;
+        }
+
+        // Walk up the ancestor chain to check if any ancestor is being moved
+        let currentId: string | null = resolvedParentId;
+        while (currentId) {
+          const [parent] = await db
+            .select({ parentId: documentsTable.parentId })
+            .from(documentsTable)
+            .where(eq(documentsTable.id, currentId))
+            .limit(1);
+
+          currentId = parent?.parentId ?? null;
+
+          if (currentId && idsBeingMoved.has(currentId)) {
+            yield {
+              state: "error",
+              error: "Cannot move documents into their own descendants",
+            };
+            return;
+          }
+        }
       }
 
       // Update documents
       const updatedDocuments = await db
         .update(documentsTable)
         .set({
-          folderId: resolvedFolderId,
+          parentId: resolvedParentId,
+          updatedAt: new Date(),
         })
         .where(
           and(
@@ -174,24 +191,15 @@ You can move documents by their IDs or by searching for documents matching certa
         .returning({
           id: documentsTable.id,
           title: documentsTable.title,
-          folderId: documentsTable.folderId,
+          parentId: documentsTable.parentId,
         });
 
-      const folderInfo = resolvedFolderId
-        ? `folder "${folderName || folderId}"`
-        : "root level";
-
-      // Yield final success state
       yield {
         state: "success",
         message: `Successfully moved ${updatedDocuments.length} document${
           updatedDocuments.length === 1 ? "" : "s"
-        } to ${folderInfo}`,
-        movedDocuments: updatedDocuments.map((doc) => ({
-          id: doc.id,
-          title: doc.title,
-          folderId: doc.folderId,
-        })),
+        } to ${parentDisplayName}`,
+        movedDocuments: updatedDocuments,
         totalMoved: updatedDocuments.length,
       };
     },

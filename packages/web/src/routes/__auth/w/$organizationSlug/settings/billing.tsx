@@ -22,6 +22,8 @@ import { authClient } from "@/utils/auth";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { Card } from "@/components/layout/Card";
+import { useTrackOnMount } from "@/hooks/use-posthog-tracking";
+import { trackEvent } from "@/lib/posthog";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/billing"
@@ -46,6 +48,11 @@ function RouteComponent() {
   const [billingData] = useQuery(
     queries.organizations.billing({ organizationSlug })
   );
+
+  // Track billing page viewed
+  useTrackOnMount("billing_viewed", {
+    organizationId: organization.id,
+  });
 
   const currentPlan = useMemo(() => {
     if (!billingData) {
@@ -107,10 +114,18 @@ function RouteComponent() {
 
   const handleUpgrade = async () => {
     setIsUpgrading(true);
+
+    // Track subscription upgrade initiation
+    trackEvent("subscription_upgrade_initiated", {
+      organizationId: organization.id,
+      fromPlan: currentPlan,
+      toPlan: "pro",
+    });
+
     try {
       await authClient.checkout({
         slug: "pro",
-        referenceId: organization?.id,
+        referenceId: organization.id,
       });
     } catch (error: any) {
       console.error("Upgrade error:", error);

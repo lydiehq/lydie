@@ -26,34 +26,11 @@ interface LinkMetadata {
 }
 
 /**
- * Transforms a single internal:// link href to a relative path
- */
-function transformInternalLink(
-  href: string,
-  metadata?: LinkMetadata,
-  options?: LinkTransformOptions
-): string {
-  // Check if it's an internal link
-  if (!href.startsWith("internal://")) {
-    return href;
-  }
-
-  const documentId = href.replace("internal://", "");
-  const basePath = options?.basePath || "";
-
-  // If using IDs or no metadata available, use the ID
-  if (options?.useIds || !metadata?.slug) {
-    return `${basePath}/${documentId}`;
-  }
-
-  // Otherwise, use the slug for better SEO
-  return `${basePath}/${metadata.slug}`;
-}
-
-/**
  * Extracts all internal:// links from document content
  */
-export function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
+export function extractInternalLinks(
+  content: ContentNode | TextNode
+): Set<string> {
   const internalLinks = new Set<string>();
 
   function traverse(node: ContentNode | TextNode) {
@@ -149,12 +126,14 @@ function transformContentLinks(
       // Check if there's an internal link mark
       const internalLinkMark = node.marks.find(
         (mark) =>
-          mark.type === "link" &&
-          mark.attrs?.href?.startsWith("internal://")
+          mark.type === "link" && mark.attrs?.href?.startsWith("internal://")
       );
 
       if (internalLinkMark) {
-        const documentId = internalLinkMark.attrs!.href!.replace("internal://", "");
+        const documentId = internalLinkMark.attrs!.href!.replace(
+          "internal://",
+          ""
+        );
         const metadata = metadataMap.get(documentId);
 
         // Replace the link mark with internal-link mark, preserve other marks
@@ -188,25 +167,7 @@ function transformContentLinks(
   return transform(clone);
 }
 
-/**
- * Main function to transform internal links in a document's content
- * @deprecated Use transformDocumentLinksToInternalLinkMarks instead
- * This function is kept for backwards compatibility but will be removed
- */
-export async function transformDocumentLinks(
-  jsonContent: ContentNode,
-  options: LinkTransformOptions
-): Promise<ContentNode> {
-  return transformDocumentLinksToInternalLinkMarks(
-    jsonContent,
-    options.organizationId
-  );
-}
-
-/**
- * Transforms internal:// links to internal-link marks (always fetches metadata)
- * This is now the only transformation function - always includes metadata
- */
+// Transforms internal:// links to internal-link marks (always fetches metadata)
 export async function transformDocumentLinksToInternalLinkMarks(
   jsonContent: ContentNode,
   organizationId: string
@@ -226,9 +187,7 @@ export async function transformDocumentLinksToInternalLinkMarks(
   );
 
   // Transform all links in the content to internal-link marks
-  return transformContentLinks(
-    jsonContent,
-    metadataMap,
-    { organizationId }
-  ) as ContentNode;
+  return transformContentLinks(jsonContent, metadataMap, {
+    organizationId,
+  }) as ContentNode;
 }

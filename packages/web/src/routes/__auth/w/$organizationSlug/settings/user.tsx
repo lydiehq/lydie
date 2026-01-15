@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Separator } from "@/components/generic/Separator";
 import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@lydie/zero/queries";
 import { useZero } from "@/services/zero";
@@ -20,20 +21,26 @@ import { authClient } from "@/utils/auth";
 import { Button } from "@/components/generic/Button";
 import { formatDistanceToNow } from "date-fns";
 import { Check, X, Building2, User as UserIcon, Clock } from "lucide-react";
+import { useAuth } from "@/context/auth.context";
 
-export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user")(
-  {
-    component: RouteComponent,
-  }
-);
+export const Route = createFileRoute(
+  "/__auth/w/$organizationSlug/settings/user"
+)({
+  component: RouteComponent,
+});
 
 function RouteComponent() {
   const z = useZero();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [userSettings] = useQuery(queries.settings.user({}));
   const [fontSize, setFontSize] = useAtom(rootFontSizeAtom);
-  const [userInvitations] = useQuery(queries.invitations.byUser({}));
+  const [userInvitations] = useQuery(
+    queries.invitations.byUser({
+      email: user.email,
+    })
+  );
 
   const handleTogglePersistDocumentTreeExpansion = async (
     isSelected: boolean
@@ -55,7 +62,10 @@ function RouteComponent() {
     }
   };
 
-  const handleAcceptInvitation = async (invitationId: string, organizationSlug: string) => {
+  const handleAcceptInvitation = async (
+    invitationId: string,
+    organizationSlug: string
+  ) => {
     try {
       await authClient.organization.acceptInvitation({
         invitationId,
@@ -67,8 +77,7 @@ function RouteComponent() {
         params: { organizationSlug },
       });
     } catch (error: any) {
-      const errorMessage =
-        error?.message || "Failed to accept invitation";
+      const errorMessage = error?.message || "Failed to accept invitation";
       toast.error(errorMessage);
       console.error("Accept invitation error:", error);
     }
@@ -81,8 +90,7 @@ function RouteComponent() {
       });
       toast.success("Invitation rejected");
     } catch (error: any) {
-      const errorMessage =
-        error?.message || "Failed to reject invitation";
+      const errorMessage = error?.message || "Failed to reject invitation";
       toast.error(errorMessage);
       console.error("Reject invitation error:", error);
     }
@@ -109,12 +117,11 @@ function RouteComponent() {
 
       {/* Preferences Section */}
       <div className="flex flex-col gap-y-6">
-        <div className="flex flex-col gap-y-0.5">
-          <h2 className="text-md/none font-medium">Preferences</h2>
-          <p className="text-sm/relaxed text-gray-700">
-            Customize your personal preferences and settings.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Preferences"
+          description="Customize your personal preferences and settings."
+          descriptionClassName="text-sm/relaxed text-gray-700"
+        />
 
         <Card className="p-4 flex flex-col gap-y-4">
           <div className="flex items-center justify-between">
@@ -126,9 +133,9 @@ function RouteComponent() {
                 Persist Document Tree Expansion
               </Label>
               <p className="text-xs text-gray-500">
-                Save the expanded state of folders in the document tree to local
-                storage. When enabled, your expanded folders will remain open
-                after refreshing the page.
+                Save the expanded state of documents in the document tree to
+                local storage. When enabled, your expanded folders will remain
+                open after refreshing the page.
               </p>
             </div>
             <Switch
@@ -181,12 +188,10 @@ function RouteComponent() {
 
       {/* Pending Invitations Section */}
       <div className="flex flex-col gap-y-4">
-        <div className="flex flex-col gap-y-0.5">
-          <Heading level={2}>Pending Invitations</Heading>
-          <p className="text-sm/relaxed text-gray-600">
-            You have been invited to join these organizations.
-          </p>
-        </div>
+        <SectionHeader
+          heading="Pending Invitations"
+          description="You have been invited to join these organizations."
+        />
 
         {userInvitations && userInvitations.length > 0 ? (
           <div className="flex flex-col gap-y-3">
@@ -197,26 +202,34 @@ function RouteComponent() {
                     <div className="flex items-center gap-2">
                       <Building2 className="size-4 text-gray-500" />
                       <span className="font-medium text-gray-900">
-                        {invitation.organization?.name || "Unknown Organization"}
+                        {invitation.organization?.name ||
+                          "Unknown Organization"}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <UserIcon className="size-3.5" />
                         <span>
-                          Role: <span className="capitalize font-medium">{invitation.role || "member"}</span>
+                          Role:{" "}
+                          <span className="capitalize font-medium">
+                            {invitation.role || "member"}
+                          </span>
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <UserIcon className="size-3.5" />
                         <span>
-                          Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
+                          Invited by:{" "}
+                          {invitation.inviter?.name ||
+                            invitation.inviter?.email ||
+                            "Unknown"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Clock className="size-3.5" />
                         <span>
-                          Expires {formatDistanceToNow(invitation.expires_at, {
+                          Expires{" "}
+                          {formatDistanceToNow(invitation.expires_at, {
                             addSuffix: true,
                           })}
                         </span>

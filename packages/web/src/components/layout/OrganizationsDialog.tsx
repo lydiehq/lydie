@@ -4,10 +4,8 @@ import { Dialog } from "../generic/Dialog";
 import { Heading, Button as RACButton } from "react-aria-components";
 import { Separator } from "../generic/Separator";
 import { Button } from "../generic/Button";
-import { authClient } from "@/utils/auth";
 import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { CreateOrganizationDialog } from "./CreateOrganizationDialog";
 import { useOrganization } from "@/context/organization.context";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 
@@ -20,7 +18,6 @@ export function OrganizationsDialog({
 }) {
   const { organization } = useOrganization();
   const { organizations } = useRouteContext({ from: "/__auth" });
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -42,7 +39,7 @@ export function OrganizationsDialog({
         <Dialog>
           <div className="p-3">
             <Heading slot="title" className="text-sm font-medium text-gray-700">
-              My organizations
+              My workspaces
             </Heading>
           </div>
           <Separator />
@@ -75,16 +72,11 @@ export function OrganizationsDialog({
           <Separator />
           <div className="flex justify-end p-3">
             <Button size="sm" href="/onboarding">
-              Create organization
+              Create workspace
             </Button>
           </div>
         </Dialog>
       </Modal>
-
-      <CreateOrganizationDialog
-        isOpen={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { Sidebar } from "@/components/layout/Sidebar";
 import {
   Panel,
@@ -8,22 +8,33 @@ import {
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { useRef, useState } from "react";
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
-import { queries } from "@lydie/zero/queries";
 import { useOrganization } from "@/context/organization.context";
 import { setActiveOrganizationSlug } from "@/lib/active-organization";
+import { loadOrganization } from "@/lib/organization/loadOrganization";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
   beforeLoad: async ({ context, params }) => {
-    // Set as active organization when navigating to it (handles direct navigation via URLs)
-    setActiveOrganizationSlug(params.organizationSlug);
+    try {
+      const { zero, auth, queryClient } = context;
+      const { organizationSlug } = params;
 
-    context.zero.run(
-      queries.organizations.bySlug({
-        organizationSlug: params.organizationSlug,
-      })
-    );
+      const organization = await loadOrganization(
+        queryClient,
+        zero,
+        organizationSlug
+      );
+
+      setActiveOrganizationSlug(params.organizationSlug, auth?.session?.userId);
+      return { organization };
+    } catch (error) {
+      console.error(error);
+      throw notFound();
+    }
   },
+  notFoundComponent: () => <div>Organization not found</div>,
+  gcTime: Infinity,
+  staleTime: Infinity,
   ssr: false,
 });
 

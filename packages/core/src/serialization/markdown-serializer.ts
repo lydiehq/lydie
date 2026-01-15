@@ -13,7 +13,12 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     return `*${content}*`;
   }
 
-  link(content: string, href?: string, _rel?: string, _target?: string): string {
+  link(
+    content: string,
+    href?: string,
+    _rel?: string,
+    _target?: string
+  ): string {
     if (!href) {
       return content;
     }
@@ -54,11 +59,19 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     const lines = content.split("\n");
     const firstLine = lines[0];
     const restLines = lines.slice(1).map((line) => `  ${line}`);
-    return `- ${firstLine}${restLines.length > 0 ? "\n" + restLines.join("\n") : ""}`;
+    return `- ${firstLine}${
+      restLines.length > 0 ? "\n" + restLines.join("\n") : ""
+    }`;
   }
 
   horizontalRule(): string {
     return "---";
+  }
+
+  codeBlock(children: string[], language?: string | null): string {
+    const code = children.join("");
+    const lang = language || "";
+    return `\`\`\`${lang}\n${code}\n\`\`\``;
   }
 
   customBlock(name: string, properties: Record<string, any>): string {
@@ -71,7 +84,7 @@ export class MarkdownSerializer implements NodeBuilder<string> {
         return `${key}={${JSON.stringify(value)}}`;
       })
       .join(" ");
-    
+
     return `<${name}${propsString ? " " + propsString : ""} />`;
   }
 
@@ -91,7 +104,7 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     // 3. Most markdown parsers handle literal characters well within marked sections
     return text
       .replace(/\\/g, "\\\\") // Backslash must be escaped
-      .replace(/\[/g, "\\[")  // Opening bracket (for links)
+      .replace(/\[/g, "\\[") // Opening bracket (for links)
       .replace(/\]/g, "\\]"); // Closing bracket (for links)
   }
 
@@ -102,4 +115,3 @@ export class MarkdownSerializer implements NodeBuilder<string> {
 
 // For backwards compatibility
 export { MarkdownSerializer as MarkdownBuilder };
-

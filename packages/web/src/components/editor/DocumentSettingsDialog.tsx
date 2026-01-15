@@ -29,7 +29,7 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
       z.mutate(
         mutators.document.update({
           documentId: doc.id,
-          organizationId: organization?.id || "",
+          organizationId: organization.id,
           slug: value.slug,
         })
       );
@@ -42,7 +42,7 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
-        organizationId: organization?.id || "",
+        organizationId: organization.id,
         published: true,
       })
     );
@@ -52,7 +52,7 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
     z.mutate(
       mutators.document.update({
         documentId: doc.id,
-        organizationId: organization?.id || "",
+        organizationId: organization.id,
         published: false,
       })
     );

@@ -1,4 +1,4 @@
-import { XIcon } from 'lucide-react';
+import { XIcon } from '@/icons';
 import React, { createContext, useContext } from 'react';
 import {
   Tag as AriaTag,

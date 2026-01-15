@@ -11,6 +11,9 @@ import { slugify } from "@lydie/core/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { revalidateSession } from "@/lib/auth/session";
 import { mutators } from "@lydie/zero/mutators";
+import { clearZeroInstance } from "@/lib/zero/instance";
+import { useTrackOnMount } from "@/hooks/use-posthog-tracking";
+import { trackEvent } from "@/lib/posthog";
 
 export const Route = createFileRoute("/__auth/onboarding/")({
   component: RouteComponent,
@@ -22,19 +25,23 @@ function RouteComponent() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  // Track onboarding started
+  useTrackOnMount("onboarding_started");
+
   const form = useAppForm({
     defaultValues: {
-      workspaceName: "",
+      name: "",
     },
     onSubmit: async (values) => {
       try {
         const id = createId();
-        const slug = slugify(values.value.workspaceName);
+        const baseSlug = slugify(values.value.name);
+        const slug = `${baseSlug}-${createId().slice(0, 6)}`;
 
         const write = z.mutate(
           mutators.organization.create({
             id,
-            name: values.value.workspaceName,
+            name: values.value.name,
             slug,
           })
         );
@@ -43,7 +50,16 @@ function RouteComponent() {
         await write.server;
 
         await revalidateSession(queryClient);
+        clearZeroInstance();
         await router.invalidate();
+
+        // Track organization created and onboarding completed
+        trackEvent("organization_created", {
+          organizationId: id,
+          organizationSlug: slug,
+          organizationName: values.value.name,
+        });
+        trackEvent("onboarding_completed");
 
         navigate({
           to: "/w/$organizationSlug",
@@ -75,13 +91,13 @@ function RouteComponent() {
 
           <div className="gap-y-4 flex flex-col">
             <form.AppField
-              name="workspaceName"
+              name="name"
               children={(field) => (
                 <field.TextField
                   autoFocus
                   label="Workspace Name"
                   placeholder="My Workspace"
-                  description="This will be the name of your organization"
+                  description="This will be the name of your workspace"
                 />
               )}
             />
@@ -92,8 +108,8 @@ function RouteComponent() {
               className="w-full"
             >
               {form.state.isSubmitting
-                ? "Creating workspace..."
-                : "Create Workspace"}
+                ? "Creating organization..."
+                : "Create Organization"}
             </Button>
           </div>
         </Form>

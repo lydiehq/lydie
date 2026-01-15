@@ -18,6 +18,7 @@ import { Modal } from "@/components/generic/Modal";
 import { Dialog } from "@/components/generic/Dialog";
 import { WordPressConnectionForm } from "@/components/integrations/forms/wordpress-connection-form";
 import { useOrganization } from "@/context/organization.context";
+import { trackEvent } from "@/lib/posthog";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/integrations/$integrationType"
@@ -27,25 +28,16 @@ export const Route = createFileRoute(
     integrationType: z.string().optional(),
   }),
   loader: async ({ context, params }) => {
-    const { zero } = context;
-    const { integrationType, organizationSlug } = params;
+    const { zero, organization } = context;
 
-    // Get organization by slug first to get the ID
-    const org = await zero.run(
-      queries.organizations.bySlug({ organizationSlug })
+    zero.run(
+      queries.integrations.byIntegrationType({
+        integrationType: params.integrationType,
+        organizationId: organization.id,
+      })
     );
 
-    if (org) {
-      // Preload integration connections
-      zero.run(
-        queries.integrations.byIntegrationType({
-          integrationType,
-          organizationId: org.id,
-        })
-      );
-    }
-
-    const integration = getIntegrationMetadata(integrationType);
+    const integration = getIntegrationMetadata(params.integrationType);
     if (!integration) throw notFound();
     // TODO: default image
     const iconUrl = getIntegrationIconUrl(integration.id) ?? "";
@@ -64,12 +56,12 @@ function RouteComponent() {
   const [integrationConnections] = useQuery(
     queries.integrations.byIntegrationType({
       integrationType: integrationDetails.id,
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 
   const isEnabled = integrationConnections.length > 0;
-  const authType = integrationDetails.authType || "oauth"; // Default to OAuth for backwards compatibility
+  const authType = integrationDetails.authType || "oauth";
   const isOAuth = authType === "oauth";
 
   const [isConnecting, setIsConnecting] = useState(false);
@@ -98,7 +90,14 @@ function RouteComponent() {
 
   const handleConnectionSuccess = () => {
     setIsConnectionDialogOpen(false);
-    // The connection will be automatically reflected via the query
+    
+    // Track integration connected
+    trackEvent("integration_connected", {
+      integrationType: integrationDetails.id,
+      integrationName: integrationDetails.name,
+      organizationId: organization.id,
+      authType,
+    });
   };
 
   const disconnect = () => {
@@ -110,9 +109,16 @@ function RouteComponent() {
         zero.mutate(
           mutators.integrationConnection.disconnect({
             connectionId: integrationConnections[0].id,
-            organizationId: organization?.id || "",
+            organizationId: organization.id,
           })
         );
+        
+        // Track integration disconnected
+        trackEvent("integration_disconnected", {
+          integrationType: integrationDetails.id,
+          integrationName: integrationDetails.name,
+          organizationId: organization.id,
+        });
       },
     });
   };
@@ -170,7 +176,7 @@ function RouteComponent() {
                     <div className="p-4">
                       {integrationDetails.id === "wordpress" && (
                         <WordPressConnectionForm
-                          organizationId={organization?.id || ""}
+                          organizationId={organization.id}
                           integrationType={integrationDetails.id}
                           onSuccess={handleConnectionSuccess}
                           onCancel={() => setIsConnectionDialogOpen(false)}

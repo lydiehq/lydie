@@ -2,11 +2,13 @@
 
 Lydie is an AI-powered document editor designed for modern workflows. It integrates advanced AI capabilities with a seamless, real-time editing experience.
 
+![Screenshot](./screenshot.png)
+
 ## Tech Stack
 
 - **Monorepo Manager:** [Bun](https://bun.sh) workspaces
 - **Infrastructure:** [SST](https://sst.dev) on AWS
-- **Frontend:** React, Vite (Web App), Astro (Landing Page)
+- **Frontend:** React, Vite (Web App), Astro (Marketing Site)
 - **Backend:** Hono, Better Auth
 - **Database & Sync:** Postgres, Drizzle ORM, [Zero](https://zero.rocicorp.dev)
 - **AI:** Vercel AI SDK (OpenAI, Google)
@@ -41,7 +43,7 @@ This command runs `sst dev`, which orchestrates the local development environmen
 The project is organized as a monorepo:
 
 - **`packages/web`**: The main web application (React/Vite).
-- **`packages/landing`**: The marketing website (Astro).
+- **`packages/marketing`**: The marketing website (Astro).
 - **`packages/backend`**: API services and backend logic.
 - **`packages/core`**: Shared core logic, AI utilities, and types.
 - **`packages/database`**: Database schema, migrations, and configuration.

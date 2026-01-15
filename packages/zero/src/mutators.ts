@@ -1,170 +1,12 @@
 import { defineMutators, defineMutator } from "@rocicorp/zero";
 import { createId } from "@lydie/core/id";
+import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
+import { slugify } from "@lydie/core/utils";
 import { z } from "zod";
 import { isAuthenticated, hasOrganizationAccess } from "./auth";
 import { zql } from "./schema";
 
 export const mutators = defineMutators({
-  folder: {
-    create: defineMutator(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        organizationId: z.string(),
-        parentId: z.string().optional(),
-      }),
-      async ({ tx, ctx, args: { id, name, organizationId, parentId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        await tx.mutate.folders.insert({
-          id,
-          name,
-          parent_id: parentId || null,
-          user_id: ctx.userId,
-          organization_id: organizationId,
-          created_at: Date.now(),
-          updated_at: Date.now(),
-        });
-      }
-    ),
-    rename: defineMutator(
-      z.object({
-        folderId: z.string(),
-        name: z.string(),
-        organizationId: z.string(),
-      }),
-      async ({ tx, ctx, args: { folderId, name, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        // Verify folder belongs to the organization
-        const folder = await tx.run(
-          zql.folders
-            .where("id", folderId)
-            .where("organization_id", organizationId)
-            .where("deleted_at", "IS", null)
-            .one()
-        );
-
-        if (!folder) {
-          throw new Error(`Folder not found: ${folderId}`);
-        }
-
-        await tx.mutate.folders.update({
-          id: folderId,
-          name,
-          updated_at: Date.now(),
-        });
-      }
-    ),
-    move: defineMutator(
-      z.object({
-        folderId: z.string(),
-        newParentId: z.string().optional(),
-        organizationId: z.string(),
-      }),
-      async ({ tx, ctx, args: { folderId, newParentId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        // Verify folder belongs to the organization
-        const folder = await tx.run(
-          zql.folders
-            .where("id", folderId)
-            .where("organization_id", organizationId)
-            .where("deleted_at", "IS", null)
-            .one()
-        );
-
-        if (!folder) {
-          throw new Error(`Folder not found: ${folderId}`);
-        }
-
-        // If moving to a parent folder, verify parent belongs to same organization
-        if (newParentId) {
-          const parentFolder = await tx.run(
-            zql.folders
-              .where("id", newParentId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-              .one()
-          );
-
-          if (!parentFolder) {
-            throw new Error(`Parent folder not found: ${newParentId}`);
-          }
-        }
-
-        await tx.mutate.folders.update({
-          id: folderId,
-          parent_id: newParentId || null,
-          updated_at: Date.now(),
-        });
-      }
-    ),
-    delete: defineMutator(
-      z.object({
-        folderId: z.string(),
-        organizationId: z.string(),
-      }),
-      async ({ tx, ctx, args: { folderId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
-
-        // Verify folder belongs to the organization
-        const folder = await tx.run(
-          zql.folders
-            .where("id", folderId)
-            .where("organization_id", organizationId)
-            .where("deleted_at", "IS", null)
-            .one()
-        );
-
-        if (!folder) {
-          throw new Error(`Folder not found: ${folderId}`);
-        }
-
-        // Helper function for recursive folder soft deletion
-        const softDeleteFolderRecursive = async (folderId: string) => {
-          // Recursively soft-delete all child folders (only within same organization)
-          const childFolders = await tx.run(
-            zql.folders
-              .where("parent_id", folderId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-          );
-
-          for (const childFolder of childFolders) {
-            // Recursively soft-delete each child folder (which will handle their children)
-            await softDeleteFolderRecursive(childFolder.id);
-          }
-
-          // Soft-delete all documents in this folder (only within same organization)
-          const documents = await tx.run(
-            zql.documents
-              .where("folder_id", folderId)
-              .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-          );
-
-          for (const document of documents) {
-            await tx.mutate.documents.update({
-              id: document.id,
-              deleted_at: Date.now(),
-              updated_at: Date.now(),
-            });
-          }
-
-          // Finally, soft-delete the folder itself
-          await tx.mutate.folders.update({
-            id: folderId,
-            deleted_at: Date.now(),
-            updated_at: Date.now(),
-          });
-        };
-
-        // Soft-delete the folder and all its children recursively
-        await softDeleteFolderRecursive(folderId);
-      }
-    ),
-  },
   document: {
     publish: defineMutator(
       z.object({
@@ -203,41 +45,68 @@ export const mutators = defineMutators({
         id: z.string(),
         organizationId: z.string(),
         title: z.string().optional(),
-        folderId: z.string().optional(),
-        jsonContent: z.any().optional(),
+        parentId: z.string().optional(),
+        integrationLinkId: z.string().optional(),
       }),
       async ({
         tx,
         ctx,
-        args: { id, organizationId, title = "", folderId, jsonContent },
+        args: { id, organizationId, title = "", parentId, integrationLinkId },
       }) => {
         hasOrganizationAccess(ctx, organizationId);
 
-        // If creating in a folder, verify folder belongs to same organization
-        if (folderId) {
-          const folder = await tx.run(
-            zql.folders
-              .where("id", folderId)
+        let finalIntegrationLinkId = integrationLinkId;
+
+        // If creating as a child page, verify parent document belongs to same organization
+        if (parentId) {
+          const parent = await tx.run(
+            zql.documents
+              .where("id", parentId)
               .where("organization_id", organizationId)
               .where("deleted_at", "IS", null)
               .one()
           );
 
-          if (!folder) {
-            throw new Error(`Folder not found: ${folderId}`);
+          if (!parent) {
+            throw new Error(`Parent document not found: ${parentId}`);
+          }
+
+          // Inherit integration link from parent
+          if (parent.integration_link_id) {
+            finalIntegrationLinkId = parent.integration_link_id;
           }
         }
+
+        // Get the highest sort_order at this level to append new document at the end
+        const siblings = await tx.run(
+          zql.documents
+            .where("organization_id", organizationId)
+            .where("parent_id", parentId ? "=" : "IS", parentId || null)
+            .where("deleted_at", "IS", null)
+        );
+
+        const maxSortOrder = siblings.reduce(
+          (max, doc) => Math.max(max, doc.sort_order ?? 0),
+          0
+        );
+
+        // Create empty Yjs state for new document
+        const emptyContent = { type: "doc", content: [] };
+        const yjsState = convertJsonToYjs(emptyContent);
 
         await tx.mutate.documents.insert({
           id,
           slug: id,
           title,
-          json_content: jsonContent || { type: "doc", content: [] },
+          yjs_state: yjsState,
           user_id: ctx.userId,
           organization_id: organizationId,
           index_status: "pending",
+          integration_link_id: finalIntegrationLinkId || null,
+          is_locked: false,
           published: false,
-          folder_id: folderId || null,
+          parent_id: parentId || null,
+          sort_order: maxSortOrder + 1,
           created_at: Date.now(),
           updated_at: Date.now(),
         });
@@ -247,11 +116,10 @@ export const mutators = defineMutators({
       z.object({
         documentId: z.string(),
         title: z.string().optional(),
-        jsonContent: z.any().optional(),
         published: z.boolean().optional(),
         slug: z.string().optional(),
         indexStatus: z.string().optional(),
-        customFields: z.record(z.string(), z.string()).optional(),
+        customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
         organizationId: z.string(),
       }),
       async ({
@@ -260,7 +128,6 @@ export const mutators = defineMutators({
         args: {
           documentId,
           title,
-          jsonContent,
           published,
           slug,
           indexStatus,
@@ -283,13 +150,19 @@ export const mutators = defineMutators({
           throw new Error(`Document not found: ${documentId}`);
         }
 
+        // Block title updates for locked pages
+        if (document.is_locked && title !== undefined) {
+          throw new Error(
+            "Cannot edit locked document. This page is managed by an integration."
+          );
+        }
+
         const updates: any = {
           id: documentId,
           updated_at: Date.now(),
         };
 
         if (title !== undefined) updates.title = title;
-        if (jsonContent !== undefined) updates.json_content = jsonContent;
         if (published !== undefined) updates.published = published;
         if (slug !== undefined) updates.slug = slug;
         if (indexStatus !== undefined) updates.index_status = indexStatus;
@@ -320,6 +193,13 @@ export const mutators = defineMutators({
           throw new Error(`Document not found: ${documentId}`);
         }
 
+        // Block rename for locked pages
+        if (document.is_locked) {
+          throw new Error(
+            "Cannot rename locked document. This page is managed by an integration."
+          );
+        }
+
         await tx.mutate.documents.update({
           id: documentId,
           title,
@@ -327,13 +207,13 @@ export const mutators = defineMutators({
         });
       }
     ),
-    moveToFolder: defineMutator(
+    moveToParent: defineMutator(
       z.object({
         documentId: z.string(),
-        folderId: z.string().optional(),
+        parentId: z.string().optional(),
         organizationId: z.string(),
       }),
-      async ({ tx, ctx, args: { documentId, folderId, organizationId } }) => {
+      async ({ tx, ctx, args: { documentId, parentId, organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId);
 
         // Verify document belongs to the organization
@@ -349,26 +229,137 @@ export const mutators = defineMutators({
           throw new Error(`Document not found: ${documentId}`);
         }
 
-        // If moving to a folder, verify folder belongs to same organization
-        if (folderId) {
-          const folder = await tx.run(
-            zql.folders
-              .where("id", folderId)
+        // If moving to a parent document, verify parent belongs to same organization
+        // and check for circular references
+        if (parentId) {
+          if (parentId === documentId) {
+            throw new Error("Cannot move document into itself");
+          }
+
+          const parent = await tx.run(
+            zql.documents
+              .where("id", parentId)
               .where("organization_id", organizationId)
               .where("deleted_at", "IS", null)
               .one()
           );
 
-          if (!folder) {
-            throw new Error(`Folder not found: ${folderId}`);
+          if (!parent) {
+            throw new Error(`Parent document not found: ${parentId}`);
+          }
+
+          // Check for circular reference - ensure parent is not a descendant of this document
+          let currentParentId: string | null = parent.parent_id;
+          while (currentParentId) {
+            if (currentParentId === documentId) {
+              throw new Error("Cannot move document into its own descendant");
+            }
+            const currentParent = await tx.run(
+              zql.documents
+                .where("id", currentParentId)
+                .where("organization_id", organizationId)
+                .where("deleted_at", "IS", null)
+                .one()
+            );
+            if (!currentParent) break;
+            currentParentId = currentParent.parent_id;
           }
         }
 
         await tx.mutate.documents.update({
           id: documentId,
-          folder_id: folderId || null,
+          parent_id: parentId || null,
           updated_at: Date.now(),
         });
+      }
+    ),
+    reorder: defineMutator(
+      z.object({
+        documentIds: z.array(z.string()),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { documentIds, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        // Verify all documents belong to the organization
+        const documents = await Promise.all(
+          documentIds.map((id) =>
+            tx.run(
+              zql.documents
+                .where("id", id)
+                .where("organization_id", organizationId)
+                .where("deleted_at", "IS", null)
+                .one()
+            )
+          )
+        );
+
+        // Check if any documents are missing
+        for (let i = 0; i < documentIds.length; i++) {
+          if (!documents[i]) {
+            throw new Error(`Document not found: ${documentIds[i]}`);
+          }
+        }
+
+        // Update sort_order for each document based on array position
+        await Promise.all(
+          documentIds.map((id, index) =>
+            tx.mutate.documents.update({
+              id,
+              sort_order: index,
+              updated_at: Date.now(),
+            })
+          )
+        );
+      }
+    ),
+    move: defineMutator(
+      z.object({
+        documentId: z.string(),
+        targetParentId: z.string().optional().nullable(),
+        targetIntegrationLinkId: z.string().optional().nullable(),
+        organizationId: z.string(),
+      }),
+      async ({
+        tx,
+        ctx,
+        args: { documentId, targetParentId, targetIntegrationLinkId, organizationId },
+      }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        const updates: any = {
+          id: documentId,
+          updated_at: Date.now(),
+        };
+
+        let parentIdQuery = targetParentId || null;
+        let integrationLinkIdQuery = targetIntegrationLinkId || null;
+
+        const siblings = await tx.run(
+          zql.documents
+            .where("organization_id", organizationId)
+            .where("parent_id", parentIdQuery ? "=" : "IS", parentIdQuery)
+            .where("integration_link_id", integrationLinkIdQuery ? "=" : "IS", integrationLinkIdQuery)
+            .where("deleted_at", "IS", null)
+        );
+
+        const maxSortOrder = siblings.reduce(
+          (max, doc) => Math.max(max, doc.sort_order ?? 0),
+          0
+        );
+        updates.sort_order = maxSortOrder + 1;
+
+        if (targetParentId !== undefined) updates.parent_id = targetParentId;
+        if (targetIntegrationLinkId !== undefined) updates.integration_link_id = targetIntegrationLinkId;
+
+        // Ensure we clear integration link if we are moving out (targetParentId set but targetIntegrationLinkId not)
+        // This logic is a bit implicit in client mutator, but server mutator handles it strictly.
+        // For client optimistic update: if targetParentId is set and targetIntegrationLinkId is NOT set, 
+        // we might want to assume it's moving out? 
+        // Or we rely on the caller passing null for targetIntegrationLinkId explicitly if clearing.
+        // My use-document-drag-drop implementation will need to be explicit.
+
+        await tx.mutate.documents.update(updates);
       }
     ),
     delete: defineMutator(
@@ -389,21 +380,61 @@ export const mutators = defineMutators({
           throw new Error(`Document not found: ${documentId}`);
         }
 
+        // Recursively find all child documents (including nested children)
+        const findAllChildIds = async (
+          parentId: string,
+          childIds: string[] = []
+        ): Promise<string[]> => {
+          const children = await tx.run(
+            zql.documents
+              .where("parent_id", parentId)
+              .where("organization_id", organizationId)
+              .where("deleted_at", "IS", null)
+          );
+
+          for (const child of children) {
+            childIds.push(child.id);
+            // Recursively get children of this child
+            await findAllChildIds(child.id, childIds);
+          }
+
+          return childIds;
+        };
+
+        const childIds = await findAllChildIds(documentId);
+
         // Soft-delete by setting deleted_at
         const isIntegrationDocument = Boolean(
           document.integration_link_id && document.external_id
         );
 
+        const now = Date.now();
+
         // If document is part of an integration, delete it completely from Lydie on delete
         if (isIntegrationDocument) {
+          // For integration documents, hard delete all children first
+          for (const childId of childIds) {
+            await tx.mutate.documents.delete({
+              id: childId,
+            });
+          }
           await tx.mutate.documents.delete({
             id: documentId,
           });
         } else {
+          // For regular documents, soft-delete all children first
+          for (const childId of childIds) {
+            await tx.mutate.documents.update({
+              id: childId,
+              deleted_at: now,
+              updated_at: now,
+            });
+          }
+          // Then soft-delete the parent
           await tx.mutate.documents.update({
             id: documentId,
-            deleted_at: Date.now(),
-            updated_at: Date.now(),
+            deleted_at: now,
+            updated_at: now,
           });
         }
       }
@@ -606,10 +637,31 @@ export const mutators = defineMutators({
       async ({ tx, ctx, args: { id, name, slug, logo, metadata } }) => {
         isAuthenticated(ctx);
 
+        // Verify slug doesn't already exist and make it unique if needed
+        let finalSlug = slug;
+        let existingOrg = await tx.run(
+          zql.organizations.where("slug", finalSlug).one()
+        );
+
+        // If slug exists, try with a longer suffix
+        if (existingOrg) {
+          const baseSlug = slugify(name);
+          finalSlug = `${baseSlug}-${createId().slice(0, 8)}`;
+          existingOrg = await tx.run(
+            zql.organizations.where("slug", finalSlug).one()
+          );
+        }
+
+        // If still exists, use organization ID as suffix (guaranteed unique)
+        if (existingOrg) {
+          const baseSlug = slugify(name);
+          finalSlug = `${baseSlug}-${id.slice(0, 8)}`;
+        }
+
         await tx.mutate.organizations.insert({
           id,
           name,
-          slug,
+          slug: finalSlug,
           logo: logo || null,
           metadata: metadata || null,
           subscription_status: "free",
@@ -859,7 +911,6 @@ export const mutators = defineMutators({
         // to avoid duplicate slug violations when documents are moved to root organization
 
         // For each integration link, delete all associated documents
-        // (folders will be automatically deleted via cascade when links are deleted)
         for (const link of connection.links) {
           const linkWithDocuments = await tx.run(
             zql.integration_links

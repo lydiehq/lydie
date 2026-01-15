@@ -1,5 +1,5 @@
 import { Button } from "./Button";
-import { Trash2 } from "lucide-react";
+import { Trash2Icon } from "@/icons";
 import { motion, AnimatePresence } from "motion/react";
 
 interface BottomActionBarProps {
@@ -31,7 +31,7 @@ export function BottomActionBar({
             </div>
             <div className="flex items-center gap-2">
               <Button intent="danger" size="sm" onPress={onDelete}>
-                <Trash2 className="size-4" />
+                <Trash2Icon className="size-4" />
                 Delete
               </Button>
             </div>

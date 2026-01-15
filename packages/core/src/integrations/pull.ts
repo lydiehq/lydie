@@ -3,11 +3,11 @@ import {
   integrationConnectionsTable,
   integrationLinksTable,
   documentsTable,
-  foldersTable,
 } from "@lydie/database";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { createId } from "@lydie/core/id";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
+import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import type { Integration } from "./types";
 
 export interface PullFromLinkOptions {
@@ -30,7 +30,7 @@ export interface PullFromLinkResult {
  * - Fetching the link and connection
  * - Refreshing tokens if needed
  * - Calling integration.pull()
- * - Creating documents and folders from results
+ * - Creating documents from results
  * - Updating link sync timestamp
  * - Updating connection status
  */
@@ -135,102 +135,52 @@ export async function pullFromIntegrationLink(
     let imported = 0;
     let failed = 0;
 
-    // Helper function to get or create folder by path
-    const getOrCreateFolderByPath = async (
-      folderPath: string | null | undefined
-    ): Promise<string | undefined> => {
-      if (!folderPath || folderPath.trim() === "" || folderPath === "/") {
-        return undefined; // Root level
-      }
+    // Build a map of external IDs to document IDs for parent resolution
+    const externalIdToDocId = new Map<string, string>();
 
-      // Normalize path: remove leading/trailing slashes and split
-      const parts = folderPath
-        .replace(/^\/+|\/+$/g, "")
-        .split("/")
-        .filter((part) => part.length > 0);
-
-      if (parts.length === 0) {
-        return undefined;
-      }
-
-      let currentParentId: string | undefined = undefined;
-
-      // Traverse the path, creating folders as needed
-      for (const folderName of parts) {
-        // Check if folder already exists with this name, parent, and organization
-        const [existingFolder] = await db
-          .select()
-          .from(foldersTable)
-          .where(
-            and(
-              eq(foldersTable.name, folderName),
-              eq(foldersTable.organizationId, organizationId),
-              eq(foldersTable.integrationLinkId, linkId),
-              isNull(foldersTable.deletedAt),
-              currentParentId
-                ? eq(foldersTable.parentId, currentParentId)
-                : isNull(foldersTable.parentId)
-            )
-          )
-          .limit(1);
-
-        if (existingFolder) {
-          // Reuse existing folder
-          currentParentId = existingFolder.id;
-        } else {
-          // Create new folder
-          const newFolderId = createId();
-          await db.insert(foldersTable).values({
-            id: newFolderId,
-            name: folderName,
-            userId: userId,
-            organizationId,
-            parentId: currentParentId || null,
-            integrationLinkId: linkId,
-          });
-          currentParentId = newFolderId;
-        }
-      }
-
-      return currentParentId;
-    };
-
-    // Create documents from pull results
+    // First pass: create/update all documents (including locked folder pages)
     for (const result of results) {
       if (result.success && result.metadata) {
         try {
-          // Get or create folder if folderPath is provided
-          const folderPath = result.metadata.folderPath as
-            | string
-            | null
+          const isLocked = result.metadata.isLocked ?? false;
+          const customFields = result.metadata.customFields as
+            | Record<string, string | number>
             | undefined;
-          const folderId = await getOrCreateFolderByPath(folderPath);
 
-          // Check if document already exists (using the partial unique index criteria)
-          const existingDocument = await db.query.documentsTable.findFirst({
-            where: {
-              organizationId: organizationId,
-              integrationLinkId: link.id,
-              slug: result.metadata.slug,
-              deletedAt: undefined,
-            },
-          });
+          // Check if document already exists by externalId
+          let existingDocument = null;
+          if (result.externalId) {
+            const docs = await db
+              .select()
+              .from(documentsTable)
+              .where(
+                and(
+                  eq(documentsTable.externalId, result.externalId),
+                  eq(documentsTable.integrationLinkId, link.id)
+                )
+              )
+              .limit(1);
+            existingDocument = docs[0] || null;
+          }
 
           let insertedDocument;
+          let documentId: string;
 
           if (existingDocument) {
             // Update existing document
-            const customFields = result.metadata.customFields as
-              | Record<string, string | number>
-              | undefined;
+            documentId = existingDocument.id;
+
+            // Convert TipTap JSON to Yjs format
+            const yjsState = convertJsonToYjs(result.metadata.content);
+
             await db
               .update(documentsTable)
               .set({
                 title: result.metadata.title,
-                jsonContent: result.metadata.content,
-                folderId: folderId || null,
-                externalId: result.externalId ?? null,
+                slug: result.metadata.slug,
+                yjsState: yjsState,
                 customFields: customFields || null,
+                isLocked,
                 indexStatus: "pending", // Re-index when content changes
                 updatedAt: new Date(),
                 deletedAt: null, // Ensure document is not marked as deleted
@@ -245,21 +195,22 @@ export async function pullFromIntegrationLink(
             });
           } else {
             // Insert new document
-            const documentId = createId();
-            const customFields = result.metadata.customFields as
-              | Record<string, string | number>
-              | undefined;
+            documentId = createId();
+
+            // Convert TipTap JSON to Yjs format
+            const yjsState = convertJsonToYjs(result.metadata.content);
+
             await db.insert(documentsTable).values({
               id: documentId,
               title: result.metadata.title,
               slug: result.metadata.slug,
-              jsonContent: result.metadata.content,
+              yjsState: yjsState,
               userId: userId,
               organizationId,
-              folderId: folderId || null, // Use created folder or null for root
               integrationLinkId: link.id,
               externalId: result.externalId ?? null,
               customFields: customFields || null,
+              isLocked,
               indexStatus: "pending",
               published: true, // Documents from integrations are published by default
               createdAt: new Date(),
@@ -274,32 +225,28 @@ export async function pullFromIntegrationLink(
             });
           }
 
-          if (insertedDocument) {
-            // Generate embeddings for the imported/updated document asynchronously (don't block)
-            processDocumentEmbedding(insertedDocument, db)
-              .then(() => {
-                console.log(
-                  `[Integration Pull] Successfully generated embeddings for document ${insertedDocument.id} (${result.externalId})`
-                );
-              })
-              .catch((error) => {
+          // Store in map for parent resolution
+          if (result.externalId) {
+            externalIdToDocId.set(result.externalId, documentId);
+          }
+
+          if (insertedDocument && insertedDocument.yjsState) {
+            processDocumentEmbedding(
+              {
+                documentId: insertedDocument.id,
+                yjsState: insertedDocument.yjsState,
+                title: insertedDocument.title,
+              },
+              db
+            ).catch((error) => {
                 console.error(
                   `[Integration Pull] Failed to generate embeddings for document ${insertedDocument.id} (${result.externalId}):`,
                   error
                 );
               });
-          } else {
-            console.warn(
-              `[Integration Pull] Could not find document after upsert for ${result.externalId}`
-            );
           }
 
           imported++;
-          console.log(
-            `[Integration Pull] Imported/Updated: ${result.externalId}${
-              folderPath ? ` (folder: ${folderPath})` : ""
-            }`
-          );
         } catch (error) {
           failed++;
           console.error(
@@ -310,6 +257,65 @@ export async function pullFromIntegrationLink(
       } else {
         failed++;
         console.error(`[Integration Pull] Pull failed: ${result.error}`);
+      }
+    }
+
+    // Second pass: set parent relationships based on externalId paths
+    // For files: externalId is the file path (e.g., "docs/guide.md")
+    // For folders: externalId is "__folder__<path>" (e.g., "__folder__docs")
+    // Parent is determined by the directory containing the file/folder
+    console.log("[Integration Pull] Setting parent relationships...");
+    for (const result of results) {
+      if (!result.success || !result.metadata || !result.externalId) continue;
+
+      // Determine parent path from externalId
+      let parentPath: string | null = null;
+
+      if (result.externalId.startsWith("__folder__")) {
+        // For folder pages, parent is the parent directory
+        const folderPath = result.externalId.substring("__folder__".length);
+        const pathParts = folderPath.split("/");
+        if (pathParts.length > 1) {
+          pathParts.pop(); // Remove last segment
+          parentPath = pathParts.join("/");
+        }
+      } else {
+        // For regular files, parent is the containing directory
+        const pathParts = result.externalId.split("/");
+        if (pathParts.length > 1) {
+          pathParts.pop(); // Remove filename
+          parentPath = pathParts.join("/");
+        }
+      }
+
+      // If we have a parent path, find the corresponding folder document
+      if (parentPath) {
+        const parentExternalId = `__folder__${parentPath}`;
+        const parentDocId = externalIdToDocId.get(parentExternalId);
+
+        if (parentDocId) {
+          const docId = externalIdToDocId.get(result.externalId);
+          if (docId) {
+            try {
+              await db
+                .update(documentsTable)
+                .set({
+                  parentId: parentDocId,
+                  updatedAt: new Date(),
+                })
+                .where(eq(documentsTable.id, docId));
+
+              console.log(
+                `[Integration Pull] Set parent for ${result.externalId} -> ${parentPath}`
+              );
+            } catch (error) {
+              console.error(
+                `[Integration Pull] Failed to set parent for ${result.externalId}:`,
+                error
+              );
+            }
+          }
+        }
       }
     }
 

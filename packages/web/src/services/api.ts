@@ -13,10 +13,10 @@ export const useAuthenticatedApi = () => {
       },
       headers: {
         "Content-Type": "application/json",
-        "X-Organization-Id": organization?.id || "",
+        "X-Organization-Id": organization.id,
       },
     });
-  }, [organization?.id]);
+  }, [organization.id]);
 
   return {
     createClient,

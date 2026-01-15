@@ -10,7 +10,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { EditorToolbar } from "./editor/EditorToolbar";
 import { PanelResizer } from "./panels/PanelResizer";
 import { BottomBar } from "./editor/BottomBar";
-import { useTitleEditor } from "@/utils/editor";
+import { useTitleEditor } from "@/lib/editor/title-editor";
 import {
   SelectedContentProvider,
   useSelectedContent,
@@ -22,8 +22,8 @@ import { queries } from "@lydie/zero/queries";
 import { Surface } from "./layout/Surface";
 import type { DocumentChatRef } from "./editor/DocumentChat";
 import { mutators } from "@lydie/zero/mutators";
-import { CustomFieldsEditor } from "./editor/CustomFieldsEditor";
-import { useCollaborativeEditor } from "@/utils/collaborative-editor";
+import { useDocumentEditor } from "@/lib/editor/document-editor";
+import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -46,6 +46,9 @@ function EditorContainer({ doc }: Props) {
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { setFocusedContent } = useSelectedContent();
   const openLinkDialogRef = useRef<(() => void) | null>(null);
+  const sidebarRef = useRef<DocumentChatRef>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isLocked = doc.is_locked ?? false;
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current;
@@ -58,21 +61,6 @@ function EditorContainer({ doc }: Props) {
     setTitle(finalTitle);
   };
 
-  const handleManualSave = () => {
-    if (!contentEditor.editor) return;
-    // Manual save now only updates the title and marks index as outdated
-    // Content is auto-synced by Yjs
-    z.mutate(
-      mutators.document.update({
-        documentId: doc.id,
-        title: title || "",
-        jsonContent: contentEditor.editor.getJSON(),
-        indexStatus: "outdated",
-        organizationId: doc.organization_id,
-      })
-    );
-  };
-
   const handleOpenLinkDialog = useCallback(() => {
     if (openLinkDialogRef.current) {
       openLinkDialogRef.current();
@@ -83,9 +71,6 @@ function EditorContainer({ doc }: Props) {
     openLinkDialogRef.current = callback;
   }, []);
 
-  const sidebarRef = useRef<DocumentChatRef>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   const selectText = (selectedText: string) => {
     setFocusedContent(selectedText);
     if (sidebarRef.current) {
@@ -93,9 +78,8 @@ function EditorContainer({ doc }: Props) {
     }
   };
 
-  const contentEditor = useCollaborativeEditor({
+  const contentEditor = useDocumentEditor({
     doc,
-    onSave: handleManualSave,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
   });
@@ -109,6 +93,7 @@ function EditorContainer({ doc }: Props) {
         contentEditor.editor.commands.focus(0);
       }
     },
+    editable: !isLocked,
   });
 
   useEffect(() => {
@@ -154,31 +139,30 @@ function EditorContainer({ doc }: Props) {
           >
             <EditorToolbar
               editor={contentEditor.editor}
-              saveDocument={handleManualSave}
               doc={doc}
               onAddLink={handleOpenLinkDialog}
             />
+            {isLocked && (
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
+                This page is managed by an integration and cannot be edited.
+              </div>
+            )}
             <div
               ref={scrollContainerRef}
               className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"
             >
-              <div className="mx-auto w-full h-full max-w-[65ch]">
-                <div className="mb-6">
-                  <EditorContent
-                    editor={titleEditor.editor}
-                    aria-label="Document title"
-                  />
-                </div>
-                <div className="mb-6">
-                  <CustomFieldsEditor
-                    documentId={doc.id}
-                    organizationId={doc.organization_id}
-                    initialFields={
-                      (doc.custom_fields as Record<string, string | number>) ||
-                      {}
-                    }
-                  />
-                </div>
+              <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
+                <EditorContent
+                  editor={titleEditor.editor}
+                  aria-label="Document title"
+                  className="mb-6"
+                />
+                <DocumentMetadataTabs
+                  doc={doc}
+                  initialFields={
+                    (doc.custom_fields as Record<string, string | number>) || {}
+                  }
+                />
                 <LinkPopover
                   editor={contentEditor.editor}
                   onOpenLinkDialog={registerLinkDialogCallback}
@@ -190,7 +174,7 @@ function EditorContainer({ doc }: Props) {
                 <EditorContent
                   aria-label="Document content"
                   editor={contentEditor.editor}
-                  className="min-h-full size-full pb-12 block"
+                  className="block grow"
                 />
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { Command } from "cmdk";
-import { FileText, Folder, Plug } from "lucide-react";
+import { FileText, Plug } from "lucide-react";
 
 function getIntegrationIcon(integrationType: string | null | undefined) {
   if (!integrationType) return null;
@@ -14,7 +14,6 @@ function getIntegrationIcon(integrationType: string | null | undefined) {
 
 interface SearchResultsProps {
   searchDocuments: any[];
-  searchFolders: any[];
   integrationLinks: any[];
   organizationId: string;
   onNavigate: (options: any) => void;
@@ -22,7 +21,6 @@ interface SearchResultsProps {
 
 export function SearchResults({
   searchDocuments,
-  searchFolders,
   integrationLinks,
   organizationId,
   onNavigate,
@@ -39,43 +37,6 @@ export function SearchResults({
     <Command.Group
       heading={<CommandGroupHeading>Search Results</CommandGroupHeading>}
     >
-      {searchFolders.map((folder) => {
-        const link = integrationLinks?.find(
-          (l) => l.id === folder.integration_link_id
-        );
-        const IntegrationIcon = link?.connection
-          ? getIntegrationIcon(link.connection.integration_type)
-          : null;
-
-        return (
-          <Command.Item
-            key={`search-folder-${folder.id}`}
-            value={`search-folder-${folder.id}-${folder.name}`}
-            onSelect={() =>
-              onNavigate({
-                to: "/w/$organizationSlug",
-                params: {
-                  organizationId,
-                },
-                search: {
-                  tree: folder.id,
-                  q: undefined,
-                  focusSearch: undefined,
-                },
-              })
-            }
-            className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
-          >
-            <div className="flex items-center gap-1 mr-2">
-              <Folder className="size-4 text-gray-400" />
-              {IntegrationIcon && (
-                <IntegrationIcon className="size-3 text-blue-500" />
-              )}
-            </div>
-            <span className="truncate">{folder.name}</span>
-          </Command.Item>
-        );
-      })}
       {searchDocuments.map((doc) => {
         const link = integrationLinks?.find(
           (l) => l.id === doc.integration_link_id

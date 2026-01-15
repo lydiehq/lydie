@@ -5,7 +5,7 @@ import { CircleArrowUp, X, Square } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { queries } from "@lydie/zero/queries";
-import { type EditorHookResult } from "@/utils/editor";
+import { type DocumentEditorHookResult } from "@/lib/editor/document-editor";
 import { applyContentChanges } from "@/utils/document-changes";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import {
@@ -30,7 +30,7 @@ export type DocumentChatRef = {
 };
 
 type Props = {
-  contentEditor: EditorHookResult;
+  contentEditor: DocumentEditorHookResult;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
   conversation: NonNullable<
     QueryResultType<typeof queries.documents.byId>
@@ -45,7 +45,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
   const [alert, setAlert] = useState<ChatAlertState | null>(null);
 
   const [documents] = useQuery(
-    queries.documents.byUpdated({ organizationId: organization?.id || "" })
+    queries.documents.byUpdated({ organizationId: organization.id })
   );
 
   const availableDocuments = useMemo(
@@ -134,7 +134,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
               onClick: () => {
                 router.navigate({
                   to: "/w/$organizationSlug/settings/billing",
-                  params: { organizationId: organization?.id || "" },
+                  params: { organizationId: organization.id },
                 });
               },
             },
@@ -192,7 +192,7 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
         result = await applyContentChanges(
           contentEditor.editor,
           edits.changes,
-          organization?.id || "",
+          organization.id,
           onProgress
         );
 
@@ -221,11 +221,11 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
         onApplyContent={applyContent}
         status={status}
         editor={contentEditor.editor}
-        organizationId={organization?.id || ""}
+        organizationId={organization.id}
       />
       <div className="p-3 relative">
         <div className="top-0 absolute inset-x-0 h-6 bg-linear-to-t from-gray-50 via-gray-50" />
-        <div className="rounded-lg bg-white ring-1 ring-black/10 p-2 flex flex-col gap-y-2 z-10 relative">
+        <div className="rounded-lg bg-white p-2 flex flex-col gap-y-2 z-10 relative shadow-surface">
           <AnimatePresence mode="sync">
             {alert && (
               <motion.div

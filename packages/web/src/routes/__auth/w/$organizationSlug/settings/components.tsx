@@ -51,7 +51,7 @@ function RouteComponent() {
 
   const [blocks] = useQuery(
     queries.components.byOrganization({
-      organizationId: organization?.id || "",
+      organizationId: organization.id,
     })
   );
 

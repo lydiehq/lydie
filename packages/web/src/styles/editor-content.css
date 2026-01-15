@@ -74,37 +74,37 @@
   }
 
   h1 {
-    font-size: var(--text-3xl);
+    font-size: var(--text-2xl);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
     color: #0d0d0d;
   }
 
   h2 {
-    font-size: var(--text-2xl);
+    font-size: var(--text-xl);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
     color: #0d0d0d;
   }
 
   h3 {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     line-height: 1;
     color: #0d0d0d;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
   }
 
   h4 {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     line-height: 1;
     color: #0d0d0d;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
   }
@@ -135,9 +135,6 @@
     text-underline-offset: 0.2em;
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    & code {
-      font-weight: var(--font-weight-semibold);
-    }
   }
 
   a:hover {
@@ -146,7 +143,7 @@
 
   strong {
     color: var(--editor-content-strong-color);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code {
@@ -157,7 +154,7 @@
   }
 
   :where(h2, h3, h4) code {
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code::before,
@@ -183,7 +180,7 @@
   pre code {
     font-variant-ligatures: none;
     font-family: var(--font-mono);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     line-height: 2;
   }
 
@@ -412,37 +409,37 @@
   }
 
   h1 {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
     color: #0d0d0d;
   }
 
   h2 {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     line-height: 1;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
     color: #0d0d0d;
   }
 
   h3 {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     line-height: 1;
     color: #0d0d0d;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
   }
 
   h4 {
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     line-height: 1;
     color: #0d0d0d;
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 3);
     font-family: var(--font-heading);
   }
@@ -474,7 +471,7 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     & code {
-      font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-medium);
     }
   }
 
@@ -484,7 +481,7 @@
 
   strong {
     color: var(--editor-content-strong-color);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code {
@@ -495,7 +492,7 @@
   }
 
   :where(h2, h3, h4) code {
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
   }
 
   code::before,
@@ -518,12 +515,12 @@
     content: none;
   }
 
-  pre code {
+  /* pre code {
     font-variant-ligatures: none;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     line-height: 1.8;
-  }
+  } */
 
   table {
     width: 100%;

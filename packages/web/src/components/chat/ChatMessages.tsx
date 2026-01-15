@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { StickToBottom } from "use-stick-to-bottom";
 import { format } from "date-fns";
 import { Button, DialogTrigger } from "react-aria-components";
-import { MoreVertical } from "lucide-react";
+import { MoreVerticalIcon } from "@/icons";
 import { Popover } from "../generic/Popover";
 import { ReplaceInDocumentTool } from "./tools/ReplaceInDocumentTool";
 import { SearchDocumentsTool } from "./tools/SearchDocumentsTool";
@@ -11,12 +11,14 @@ import { ReadDocumentTool } from "./tools/ReadDocumentTool";
 import { ReadCurrentDocumentTool } from "./tools/ReadCurrentDocumentTool";
 import { ListDocumentsTool } from "./tools/ListDocumentsTool";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
+import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";
+import { WebSearchTool } from "./tools/WebSearchTool";
 import { UserMessage } from "./Message";
 import { Streamdown } from "streamdown";
 import type { Editor } from "@tiptap/react";
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 
-interface ChatMessagesProps {
+type Props = {
   messages: DocumentChatAgentUIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   editor?: Editor | null;
@@ -25,19 +27,15 @@ interface ChatMessagesProps {
     edits: any,
     onProgress?: (current: number, total: number, usedLLM: boolean) => void
   ) => void;
-}
+};
 
-/**
- * Main chat messages component used by both assistant chat and document chat.
- * Handles message rendering, tool displays, and auto-scrolling.
- */
 export function ChatMessages({
   messages,
   status,
   editor = null,
   organizationId,
   onApplyContent,
-}: ChatMessagesProps) {
+}: Props) {
   const lastMessage = messages[messages.length - 1];
   const isSubmitting =
     status === "submitted" &&
@@ -94,31 +92,29 @@ function ThinkingIndicator() {
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center gap-3">
-        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gray-100 ring-1 ring-gray-200">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 2,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "linear",
-            }}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 2,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "linear",
+          }}
+        >
+          <svg
+            className="size-3.5 text-gray-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <svg
-              className="size-3.5 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 3v3m6.366-.366-2.12 2.12M21 12h-3m.366 6.366-2.12-2.12M12 21v-3m-6.366.366 2.12-2.12M3 12h3m-.366-6.366 2.12 2.12"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-              />
-            </svg>
-          </motion.div>
-        </div>
+            <path
+              d="M12 3v3m6.366-.366-2.12 2.12M21 12h-3m.366 6.366-2.12-2.12M12 21v-3m-6.366.366 2.12-2.12M3 12h3m-.366-6.366 2.12 2.12"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+            />
+          </svg>
+        </motion.div>
         <div className="flex items-center gap-1 text-gray-600 text-sm">
           <span>Thinking</span>
           <span className="inline-flex gap-0.5">
@@ -245,7 +241,7 @@ function AssistantMessageWithTools({
           <div className="flex gap-x-1">
             <DialogTrigger>
               <Button className="p-0.5 hover:bg-gray-100 rounded">
-                <MoreVertical className="size-3" />
+                <MoreVerticalIcon className="size-3" />
               </Button>
               <Popover>
                 <div className="flex flex-col gap-y-1 text-[11px] text-gray-500 divide-y divide-gray-200">
@@ -342,7 +338,15 @@ function MessagePart({
   }
 
   if (part.type === "tool-create_document") {
-    return <CreateDocumentTool tool={part} organizationId={organizationId} />;
+    return <CreateDocumentTool tool={part} />;
+  }
+
+  if (part.type === "tool-move_documents") {
+    return <MoveDocumentsTool tool={part} />;
+  }
+
+  if (part.type === "tool-web_search") {
+    return <WebSearchTool tool={part} />;
   }
 
   if (part.type?.startsWith("tool-") && import.meta.env.DEV) {

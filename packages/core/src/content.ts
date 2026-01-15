@@ -1,10 +1,3 @@
-// Core content types and utilities without React dependencies
-// This module contains shared functionality used across packages
-
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface CustomBlockProps {
   properties: Record<string, any>;
   [key: string]: any;
@@ -37,6 +30,7 @@ export interface Document {
   published: boolean;
   lastIndexedTitle: string | null;
   lastIndexedContentHash: string | null;
+  customFields: Record<string, string | number> | null;
   createdAt: string;
   updatedAt: string;
   path: string;
@@ -62,6 +56,7 @@ export interface DocumentListItem {
   path: string;
   fullPath: string;
   published: boolean;
+  customFields: Record<string, string | number> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -108,20 +103,18 @@ export interface Mark {
   };
 }
 
-// ============================================================================
-// Node Builder Interface
-// ============================================================================
-
-/**
- * Generic builder interface for different output formats (HTML, React, Vue, etc.)
- */
 export interface NodeBuilder<T> {
   // Text and marks
   text(content: string): T;
   bold(content: T): T;
   italic(content: T): T;
   link(content: T, href?: string, rel?: string, target?: string): T;
-  internalLink?(content: T, documentId?: string, documentSlug?: string, documentTitle?: string): T;
+  internalLink?(
+    content: T,
+    documentId?: string,
+    documentSlug?: string,
+    documentTitle?: string
+  ): T;
 
   // Block elements
   doc(children: T[]): T;
@@ -131,6 +124,7 @@ export interface NodeBuilder<T> {
   orderedList(children: T[], start?: number): T;
   listItem(children: T[]): T;
   horizontalRule(): T;
+  codeBlock(children: T[], language?: string | null): T;
 
   // Custom blocks
   customBlock(name: string, properties: Record<string, any>): T;
@@ -246,6 +240,11 @@ export function renderWithBuilder<T>(
 
         case "horizontalRule":
           return builder.horizontalRule();
+
+        case "codeBlock": {
+          const language = node.attrs?.language;
+          return builder.codeBlock(renderChildren(node), language);
+        }
 
         case "customBlock":
           const componentName = node.attrs?.name;

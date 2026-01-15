@@ -7,10 +7,9 @@ import { logIntegrationActivity } from "@lydie/core/integrations";
 import { mutators as sharedMutators } from "../../mutators";
 
 import { integrationRegistry } from "@lydie/integrations";
+import { MutatorContext } from "../../server-mutators";
 
-export const deleteDocumentMutation = (
-  asyncTasks: Array<() => Promise<void>>
-) =>
+export const deleteDocumentMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
     z.object({
       documentId: z.string(),

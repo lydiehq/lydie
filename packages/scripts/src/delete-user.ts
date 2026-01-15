@@ -37,7 +37,6 @@ async function deleteUser() {
   console.log(`  - All sessions`);
   console.log(`  - All accounts`);
   console.log(`  - All memberships (organizations)`);
-  console.log(`  - All folders`);
   console.log(`  - All documents`);
   console.log(`  - All conversations and messages`);
   console.log(`  - All related data (cascades automatically)`);
@@ -45,7 +44,6 @@ async function deleteUser() {
   // Ask for confirmation (in a real script, you might want to add readline)
   console.log(`\n⚠️  DESTRUCTIVE OPERATION: Deleting user ${user.email}...`);
 
-  // @ts-expect-error - TODO: fix this
   await db.delete(usersTable).where(eq(usersTable.id, user.id));
 
   console.log(`✅ User deleted successfully!`);
