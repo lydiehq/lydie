@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
-import { Users } from "lucide-react";
+import { UsersIcon } from "@/icons";
 
 type AwarenessUser = {
   clientID: number;
@@ -79,7 +79,7 @@ export function PresenceIndicators({ provider }: Props) {
       {/* Active collaborators */}
       {users.length > 0 && (
         <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
-          <Users className="w-4 h-4 text-gray-500" />
+          <UsersIcon className="w-4 h-4 text-gray-500" />
           <div className="flex -space-x-2">
             {users.slice(0, 5).map((user) => (
               <div

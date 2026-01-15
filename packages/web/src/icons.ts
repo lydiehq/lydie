@@ -85,20 +85,36 @@ export { default as SparklesIcon } from "~icons/ion/sparkles";
 export { default as ZapIcon } from "~icons/ion/flash";
 
 // Editor Actions (Text formatting - using closest matches)
-export { default as BoldIcon } from "~icons/ion/text"; // Closest match
-export { default as ItalicIcon } from "~icons/ion/text"; // Closest match
-export { default as StrikethroughIcon } from "~icons/ion/text"; // Closest match
-export { default as Heading1Icon } from "~icons/ion/text"; // Closest match
-export { default as Heading2Icon } from "~icons/ion/text"; // Closest match
-export { default as Heading3Icon } from "~icons/ion/text"; // Closest match
+export { default as BoldIcon } from "~icons/ion/text";
+export { default as ItalicIcon } from "~icons/ion/text";
+export { default as StrikethroughIcon } from "~icons/ion/text";
+export { default as Heading1Icon } from "~icons/ion/text";
+export { default as Heading2Icon } from "~icons/ion/text";
+export { default as Heading3Icon } from "~icons/ion/text";
 export { default as UndoIcon } from "~icons/ion/arrow-undo";
 export { default as RedoIcon } from "~icons/ion/arrow-redo";
-export { default as TableIcon } from "~icons/ion/grid"; // Closest match
-export { default as ColumnsIcon } from "~icons/ion/grid"; // Closest match
-export { default as RowsIcon } from "~icons/ion/grid"; // Closest match
+export { default as TableIcon } from "~icons/ion/grid";
+export { default as ColumnsIcon } from "~icons/ion/grid";
+export { default as RowsIcon } from "~icons/ion/grid";
 
 // Arrows
 export { default as ChevronForwardIcon } from "~icons/ion/chevron-forward";
 
 export { default as ArrowDownBIcon } from "~icons/ion/arrow-down-b";
 export { default as ArrowRightBIcon } from "~icons/ion/arrow-right-b";
+export { default as ArrowRightIcon } from "~icons/ion/arrow-forward";
+
+// Additional icons
+export { default as GlobeIcon } from "~icons/ion/globe";
+export { default as GripVerticalIcon } from "~icons/ion/reorder-two"; // Closest match
+export { default as CameraIcon } from "~icons/ion/camera";
+export { default as ClockFadingIcon } from "~icons/ion/time"; // Closest match
+export { default as UnlinkIcon } from "~icons/ion/link"; // Closest match
+export { default as CopyIcon } from "~icons/ion/copy";
+export { default as EyeIcon } from "~icons/ion/eye";
+export { default as EyeOffIcon } from "~icons/ion/eye-off";
+export { default as MailIcon } from "~icons/ion/mail";
+export { default as ShieldIcon } from "~icons/ion/shield";
+export { default as KeyIcon } from "~icons/ion/key";
+export { default as TrendingUpIcon } from "~icons/ion/trending-up";
+export { default as CheckCircleIcon } from "~icons/ion/checkmark-circle";

@@ -10,7 +10,7 @@ import { useAuth } from "@/context/auth.context";
 import { authClient } from "@/utils/auth";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { useState, useRef } from "react";
-import { Camera, X } from "lucide-react";
+import { CameraIcon, XIcon } from "@/icons";
 import { Card } from "@/components/layout/Card";
 import { trackEvent } from "@/lib/posthog";
 
@@ -189,7 +189,7 @@ function RouteComponent() {
                       className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
                       aria-label="Remove profile picture"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <XIcon className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
@@ -208,7 +208,7 @@ function RouteComponent() {
                     onPress={handleImageClick}
                     isDisabled={isUploading}
                   >
-                    <Camera className="size-3.5 mr-1" />
+                    <CameraIcon className="size-3.5 mr-1" />
                     {isUploading ? "Uploading..." : "Upload Picture"}
                   </Button>
                   {previewImage && (

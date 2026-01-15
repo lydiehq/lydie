@@ -20,7 +20,7 @@ import { Card } from "@/components/layout/Card";
 import { authClient } from "@/utils/auth";
 import { Button } from "@/components/generic/Button";
 import { formatDistanceToNow } from "date-fns";
-import { Check, X, Building2, User as UserIcon, Clock } from "lucide-react";
+import { CheckIcon, XIcon, Building2Icon, UserIcon, ClockIcon } from "@/icons";
 import { useAuth } from "@/context/auth.context";
 
 export const Route = createFileRoute(
@@ -200,7 +200,7 @@ function RouteComponent() {
                 <div className="flex items-start justify-between">
                   <div className="flex flex-col gap-y-2 flex-1">
                     <div className="flex items-center gap-2">
-                      <Building2 className="size-4 text-gray-500" />
+                      <Building2Icon className="size-4 text-gray-500" />
                       <span className="font-medium text-gray-900">
                         {invitation.organization?.name ||
                           "Unknown Organization"}
@@ -226,7 +226,7 @@ function RouteComponent() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Clock className="size-3.5" />
+                        <ClockIcon className="size-3.5" />
                         <span>
                           Expires{" "}
                           {formatDistanceToNow(invitation.expires_at, {
@@ -246,7 +246,7 @@ function RouteComponent() {
                         )
                       }
                     >
-                      <Check className="size-3.5 mr-1" />
+                      <CheckIcon className="size-3.5 mr-1" />
                       Accept
                     </Button>
                     <Button
@@ -254,7 +254,7 @@ function RouteComponent() {
                       size="sm"
                       onPress={() => handleRejectInvitation(invitation.id)}
                     >
-                      <X className="size-3.5 mr-1" />
+                      <XIcon className="size-3.5 mr-1" />
                       Decline
                     </Button>
                   </div>

@@ -183,7 +183,7 @@ function EditorContainer({ doc }: Props) {
               lastSaved={new Date(doc.updated_at)}
             />
           </Panel>
-          <PanelResizer />
+          {/* <PanelResizer />
           <Panel
             ref={sidebarPanelRef}
             id="editor-sidebar"
@@ -200,7 +200,7 @@ function EditorContainer({ doc }: Props) {
               isCollapsed={sidebarSize === COLLAPSED_SIZE}
               onToggle={toggleSidebar}
             />
-          </Panel>
+          </Panel> */}
         </PanelGroup>
       </Surface>
     </div>

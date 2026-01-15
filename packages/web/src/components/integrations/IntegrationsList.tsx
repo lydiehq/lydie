@@ -1,5 +1,4 @@
 import { useQuery } from "@rocicorp/zero/react";
-import { CheckCircle2 } from "lucide-react";
 import { queries } from "@lydie/zero/queries";
 import {
   integrationMetadata,
@@ -10,6 +9,8 @@ import { Link } from "@/components/generic/Link";
 import { cardStyles } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
 import { Eyebrow } from "../generic/Eyebrow";
+import { CheckCircle2Icon } from "@/icons";
+
 export function IntegrationsList() {
   const { organization } = useOrganization();
   const [connections] = useQuery(
@@ -104,7 +105,7 @@ export function IntegrationsListItem({
             </h3>
             {isEnabled && (
               <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-50 border border-green-200">
-                <CheckCircle2 className="size-3 text-green-600" />
+                <CheckCircle2Icon className="size-3 text-green-600" />
                 <span className="text-xs font-medium text-green-700">On</span>
               </div>
             )}

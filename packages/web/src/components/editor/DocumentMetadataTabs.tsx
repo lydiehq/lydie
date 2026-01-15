@@ -10,7 +10,7 @@ import { useState } from "react";
 import { CustomFieldsEditor } from "./CustomFieldsEditor";
 import { ArrowDownBIcon } from "@/icons";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { File, Plus } from "lucide-react";
+import { DocumentIcon, PlusIcon } from "@/icons";
 import { Button as GenericButton } from "@/components/generic/Button";
 import { Link } from "../generic/Link";
 import type { QueryResultType } from "@rocicorp/zero";
@@ -40,7 +40,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
           onPress={handleCreateChildPage}
           className="text-gray-600 hover:text-gray-900"
         >
-          <Plus className="size-4 mr-1" />
+          <PlusIcon className="size-4 mr-1" />
           Add document
         </GenericButton>
       </div>
@@ -67,7 +67,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
             className="px-2 py-1.5 rounded-md hover:bg-black/5 transition-all duration-75 flex justify-between"
           >
             <div className="flex gap-x-1.5 items-center">
-              <File className="size-3.5 text-gray-400" />
+              <DocumentIcon className="size-3.5 text-gray-400" />
               <span className="truncate text-sm font-medium text-gray-600">
                 {child.title || "Untitled document"}
               </span>

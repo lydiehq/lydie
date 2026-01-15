@@ -5,7 +5,7 @@ import {
   MenuTrigger,
   DialogTrigger,
 } from "react-aria-components";
-import { MoreHorizontal, LinkIcon, Loader } from "lucide-react";
+import { MoreHorizontalIcon, LinkIcon, LoaderIcon } from "@/icons";
 import { useZero } from "@rocicorp/zero/react";
 import { mutators } from "@lydie/zero/mutators";
 import { useOrganization } from "@/context/organization.context";
@@ -186,7 +186,7 @@ export function IntegrationLinkListItem({
           <span className="font-medium">{link.name}</span>
           {isPullingResources && (
             <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <Loader className="size-3 animate-spin" />
+              <LoaderIcon className="size-3 animate-spin" />
               <span>pulling resources...</span>
             </div>
           )}
@@ -207,7 +207,7 @@ export function IntegrationLinkListItem({
         </div>
         <MenuTrigger>
           <RACButton>
-            <MoreHorizontal className="size-4 text-gray-500" />
+            <MoreHorizontalIcon className="size-4 text-gray-500" />
           </RACButton>
           <Menu>
             <MenuItem onAction={onSync}>Resync</MenuItem>

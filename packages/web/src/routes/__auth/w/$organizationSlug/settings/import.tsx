@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import { Form } from "react-aria-components";
 import { useState, useRef, useCallback } from "react";
 import {
-  Upload,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  Folder,
-} from "lucide-react";
+  AlertCircleIcon,
+  CheckCircle2Icon,
+  DocumentIcon,
+  FolderIcon,
+  UploadIcon,
+} from "@/icons";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/settings/import"
@@ -434,7 +434,7 @@ function RouteComponent() {
         onDragOver={handleDragOver}
       >
         <div className="text-center space-y-4">
-          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+          <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
           <div>
             <h3 className="text-lg font-medium text-gray-900">
               Select MDX Files
@@ -478,9 +478,9 @@ function RouteComponent() {
                       className="flex items-center space-x-2 py-1"
                     >
                       {fileWithPath.folderPath ? (
-                        <Folder className="h-4 w-4 text-blue-500" />
+                        <FolderIcon className="h-4 w-4 text-blue-500" />
                       ) : (
-                        <FileText className="h-4 w-4" />
+                        <DocumentIcon className="h-4 w-4" />
                       )}
                       <span className="flex-1 truncate">
                         {fileWithPath.folderPath && (
@@ -564,9 +564,9 @@ function RouteComponent() {
               >
                 <div className="flex items-start space-x-3">
                   {result.success ? (
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                    <CheckCircle2Icon className="h-5 w-5 text-green-500 mt-0.5" />
                   ) : (
-                    <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                    <AlertCircleIcon className="h-5 w-5 text-red-500 mt-0.5" />
                   )}
 
                   <div className="flex-1">

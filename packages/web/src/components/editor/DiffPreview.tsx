@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Button as RACButton } from "react-aria-components";
-import { Check, X } from "lucide-react";
+import { CheckIcon, XIcon } from "@/icons";
 import { Diff } from "./Diff";
 
 type DiffPreviewProps = {
@@ -63,14 +63,14 @@ export function DiffPreview({
             onPress={onReject}
             className="text-xs font-medium px-3 py-1 rounded-md text-gray-600 hover:bg-gray-100 flex items-center gap-1"
           >
-            <X className="size-3" />
+            <XIcon className="size-3" />
             Reject
           </RACButton>
           <RACButton
             onPress={onAccept}
             className="text-xs font-medium px-3 py-1 rounded-md text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-1"
           >
-            <Check className="size-3" />
+            <CheckIcon className="size-3" />
             Accept
           </RACButton>
         </div>

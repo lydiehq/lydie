@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Loader2Icon } from "@/icons";
 import { motion } from "motion/react";
 import { countWords } from "@/utils/text";
 import { useOrganization } from "@/context/organization.context";

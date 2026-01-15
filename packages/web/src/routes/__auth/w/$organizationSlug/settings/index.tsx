@@ -19,18 +19,18 @@ import { Dialog } from "@/components/generic/Dialog";
 import { AlertDialog } from "@/components/generic/AlertDialog";
 import { Menu, MenuItem } from "@/components/generic/Menu";
 import {
-  Copy,
-  Eye,
-  EyeOff,
-  Plus,
-  MoreHorizontal,
-  X,
-  User,
-  Mail,
-  Shield,
-  Clock,
-  Key,
-} from "lucide-react";
+  CopyIcon,
+  EyeIcon,
+  EyeOffIcon,
+  PlusIcon,
+  MoreHorizontalIcon,
+  XIcon,
+  UserIcon,
+  MailIcon,
+  ShieldIcon,
+  ClockIcon,
+  KeyIcon,
+} from "@/icons";
 import { useZero } from "@/services/zero";
 import { queries } from "@lydie/zero/queries";
 import { confirmDialog } from "@/stores/confirm-dialog";
@@ -371,7 +371,7 @@ function RouteComponent() {
             size="sm"
             intent="secondary"
           >
-            <Plus className="size-3.5 mr-1" />
+            <PlusIcon className="size-3.5 mr-1" />
             Invite Member
           </Button>
         </div>
@@ -386,18 +386,18 @@ function RouteComponent() {
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-y-2 flex-1">
                       <div className="flex items-center gap-2">
-                        <User className="size-4 text-gray-500" />
+                        <UserIcon className="size-4 text-gray-500" />
                         <span className="font-medium text-gray-900">
                           {member.user?.name || "Unknown"}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5">
-                          <Mail className="size-3.5" />
+                          <MailIcon className="size-3.5" />
                           <span>{member.user?.email || "Unknown"}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Shield className="size-3.5" />
+                          <ShieldIcon className="size-3.5" />
                           <span>
                             Role:{" "}
                             <span className="capitalize font-medium">
@@ -406,7 +406,7 @@ function RouteComponent() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Clock className="size-3.5" />
+                          <ClockIcon className="size-3.5" />
                           <span>
                             Joined{" "}
                             {formatDistanceToNow(member.created_at, {
@@ -419,7 +419,7 @@ function RouteComponent() {
                     <div className="ml-4">
                       <MenuTrigger>
                         <RACButton>
-                          <MoreHorizontal className="size-4 text-gray-500" />
+                          <MoreHorizontalIcon className="size-4 text-gray-500" />
                         </RACButton>
                         <Menu>
                           <MenuItem
@@ -457,14 +457,14 @@ function RouteComponent() {
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-y-2 flex-1">
                       <div className="flex items-center gap-2">
-                        <Mail className="size-4 text-gray-500" />
+                        <MailIcon className="size-4 text-gray-500" />
                         <span className="font-medium text-gray-900">
                           {invitation.email}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5">
-                          <Shield className="size-3.5" />
+                          <ShieldIcon className="size-3.5" />
                           <span>
                             Role:{" "}
                             <span className="capitalize font-medium">
@@ -473,7 +473,7 @@ function RouteComponent() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <User className="size-3.5" />
+                          <UserIcon className="size-3.5" />
                           <span>
                             Invited by:{" "}
                             {invitation.inviter?.name ||
@@ -482,7 +482,7 @@ function RouteComponent() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Clock className="size-3.5" />
+                          <ClockIcon className="size-3.5" />
                           <span>
                             Expires{" "}
                             {formatDistanceToNow(invitation.expires_at, {
@@ -503,7 +503,7 @@ function RouteComponent() {
                           )
                         }
                       >
-                        <X className="size-3.5 mr-1" />
+                        <XIcon className="size-3.5 mr-1" />
                         Cancel
                       </Button>
                     </div>
@@ -545,7 +545,7 @@ function RouteComponent() {
             size="sm"
             intent="secondary"
           >
-            <Plus className="size-3.5 mr-1" />
+            <PlusIcon className="size-3.5 mr-1" />
             Create API Key
           </Button>
         </div>
@@ -557,14 +557,14 @@ function RouteComponent() {
                 <div className="flex items-start justify-between">
                   <div className="flex flex-col gap-y-2 flex-1">
                     <div className="flex items-center gap-2">
-                      <Key className="size-4 text-gray-500" />
+                      <KeyIcon className="size-4 text-gray-500" />
                       <span className="font-medium text-gray-900">
                         {key.name}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-1.5">
-                        <Clock className="size-3.5" />
+                        <ClockIcon className="size-3.5" />
                         <span>
                           Created{" "}
                           {formatDistanceToNow(key.created_at, {
@@ -573,7 +573,7 @@ function RouteComponent() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Clock className="size-3.5" />
+                        <ClockIcon className="size-3.5" />
                         <span>
                           Last used:{" "}
                           {key.last_used_at
@@ -584,7 +584,7 @@ function RouteComponent() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Key className="size-3.5" />
+                        <KeyIcon className="size-3.5" />
                         <code className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
                           {key.partial_key}
                         </code>
@@ -594,7 +594,7 @@ function RouteComponent() {
                   <div className="ml-4">
                     <MenuTrigger>
                       <RACButton>
-                        <MoreHorizontal className="size-4 text-gray-500" />
+                        <MoreHorizontalIcon className="size-4 text-gray-500" />
                       </RACButton>
                       <Menu>
                         <MenuItem
@@ -805,9 +805,9 @@ function ApiKeyDialog({
                         className="px-2"
                       >
                         {showKey ? (
-                          <EyeOff className="size-4" />
+                          <EyeOffIcon className="size-4" />
                         ) : (
-                          <Eye className="size-4" />
+                          <EyeIcon className="size-4" />
                         )}
                       </Button>
                       <Button
@@ -816,7 +816,7 @@ function ApiKeyDialog({
                         onPress={() => onCopyKey(newApiKey)}
                         className="px-2"
                       >
-                        <Copy className="size-4" />
+                        <CopyIcon className="size-4" />
                       </Button>
                     </div>
                   </div>

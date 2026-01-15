@@ -1,6 +1,5 @@
 import { Disclosure, DisclosurePanel, Button } from "react-aria-components";
-import { Loader, Search } from "lucide-react";
-import { ChevronRight } from "lucide-react";
+import { LoaderIcon, SearchIcon, ChevronRightIcon } from "@/icons";
 import { ToolContainer } from "./ToolContainer";
 
 interface SearchResult {
@@ -57,7 +56,7 @@ export function SearchInDocumentTool({
 
     return (
       <div className={`flex items-center gap-x-2 text-gray-500 ${className}`}>
-        <Loader className="size-3 animate-spin" />
+        <LoaderIcon className="size-3 animate-spin" />
         <span className="text-[13px]">{message}...</span>
       </div>
     );
@@ -79,7 +78,7 @@ export function SearchInDocumentTool({
       // No results found
       return (
         <div className={`flex items-center gap-x-2 text-gray-500 ${className}`}>
-          <Search className="size-3" />
+          <SearchIcon className="size-3" />
           <span className="text-[13px]">Section not found</span>
         </div>
       );
@@ -97,8 +96,8 @@ export function SearchInDocumentTool({
         className="group flex items-center gap-x-2 truncate relative text-gray-500 hover:text-gray-700"
         slot="trigger"
       >
-        <Search className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
-        <ChevronRight className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
+        <SearchIcon className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
+        <ChevronRightIcon className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">
           Read {topResult?.heading ? `"${topResult.heading}"` : "section"}
         </span>

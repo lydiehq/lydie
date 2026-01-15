@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Loader } from "lucide-react";
+import { CheckIcon, LoaderIcon } from "@/icons";
 
 export interface ReadCurrentDocumentToolProps {
   tool: {
@@ -50,7 +50,7 @@ export function ReadCurrentDocumentTool({
   if (isToolLoading) {
     content = (
       <div className="flex items-center gap-x-2 text-gray-500 truncate">
-        <Loader className="size-3 animate-spin" />
+        <LoaderIcon className="size-3 animate-spin" />
         <span className="text-[13px] whitespace-nowrap">
           {loadingMessage}...
         </span>
@@ -66,7 +66,7 @@ export function ReadCurrentDocumentTool({
   } else if (outputState === "success" && tool.output?.title) {
     content = (
       <div className="flex items-center gap-x-1 truncate text-gray-500">
-        <Check className="size-2.5" />
+        <CheckIcon className="size-2.5" />
         <span className="text-[13px] whitespace-nowrap">
           Read current document: "{tool.output.title}"
         </span>

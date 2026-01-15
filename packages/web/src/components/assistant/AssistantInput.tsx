@@ -1,7 +1,7 @@
 import { EditorContent } from "@tiptap/react";
 import { Button, Form } from "react-aria-components";
 import { motion } from "motion/react";
-import { ChevronUp, Square } from "lucide-react";
+import { ChevronUpIcon, SquareIcon } from "@/icons";
 import { useChatEditor } from "@/lib/editor/chat-editor";
 import { useCallback, useRef, useMemo } from "react";
 import { useOrganization } from "@/context/organization.context";
@@ -226,9 +226,9 @@ export function AssistantInput({
           isDisabled={false}
         >
           {canStop ? (
-            <Square className="size-3 text-white fill-white" />
+            <SquareIcon className="size-3 text-white fill-white" />
           ) : (
-            <ChevronUp className="size-4 text-white" />
+            <ChevronUpIcon className="size-4 text-white" />
           )}
         </Button>
       </Form>

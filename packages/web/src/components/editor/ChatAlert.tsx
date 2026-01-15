@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Button as RACButton } from "react-aria-components";
-import { X, AlertCircle, Sparkles, Zap } from "lucide-react";
+import { XIcon, AlertCircleIcon, SparklesIcon, ZapIcon } from "@/icons";
 import { useRouter } from "@tanstack/react-router";
 import { useOrganization } from "@/context/organization.context";
 import clsx from "clsx";
@@ -40,13 +40,13 @@ export function ChatAlert({ alert, onDismiss }: ChatAlertProps) {
           <div className="flex justify-between items-start p-2 border-b border-black/5">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {alert.type === "error" && (
-                <AlertCircle className="size-4 text-red-500 shrink-0" />
+                <AlertCircleIcon className="size-4 text-red-500 shrink-0" />
               )}
               {alert.type === "warning" && (
-                <Zap className="size-4 text-amber-500 shrink-0" />
+                <ZapIcon className="size-4 text-amber-500 shrink-0" />
               )}
               {alert.type === "info" && (
-                <Sparkles className="size-4 text-blue-500 shrink-0" />
+                <SparklesIcon className="size-4 text-blue-500 shrink-0" />
               )}
               <span
                 className={clsx(
@@ -63,7 +63,7 @@ export function ChatAlert({ alert, onDismiss }: ChatAlertProps) {
               onPress={onDismiss}
               className="text-gray-500 hover:text-gray-700 ml-2"
             >
-              <X className="size-4" />
+              <XIcon className="size-4" />
             </RACButton>
           </div>
           <div className="p-2">

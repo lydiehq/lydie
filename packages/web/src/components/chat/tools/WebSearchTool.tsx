@@ -1,4 +1,4 @@
-import { Loader, Globe, ExternalLink } from "lucide-react";
+import { LoaderIcon, GlobeIcon, ExternalLinkIcon } from "@/icons";
 import { motion, AnimatePresence } from "motion/react";
 
 export interface WebSearchToolProps {
@@ -78,7 +78,7 @@ export function WebSearchTool({ tool }: WebSearchToolProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Loader className="size-4 animate-spin text-gray-400" />
+              <LoaderIcon className="size-4 animate-spin text-gray-400" />
             </motion.div>
           ) : sources.length > 0 ? (
             <motion.ul
@@ -117,11 +117,11 @@ export function WebSearchTool({ tool }: WebSearchToolProps) {
                     rel="noopener noreferrer"
                     className="group flex items-center gap-x-1.5 py-1.5 rounded-md text-sm px-2 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
-                    <Globe className="text-gray-500 shrink-0 size-3.5" />
+                    <GlobeIcon className="text-gray-500 shrink-0 size-3.5" />
                     <span className="truncate flex-1 text-[13px]">
                       {source.url || "Unknown source"}
                     </span>
-                    <ExternalLink className="text-gray-400 shrink-0 size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ExternalLinkIcon className="text-gray-400 shrink-0 size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </a>
                 </motion.li>
               ))}

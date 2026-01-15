@@ -13,15 +13,15 @@ import {
   commandMenuStateAtom,
 } from "@/stores/command-menu";
 import {
-  Search,
-  Plus,
-  Home,
-  Bot,
-  Settings,
-  CreditCard,
-  Upload,
-  Plug,
-} from "lucide-react";
+  SearchIcon,
+  PlusIcon,
+  HomeIcon,
+  BotIcon,
+  SettingsIcon,
+  CreditCardIcon,
+  UploadIcon,
+  PlugIcon,
+} from "@/icons";
 import { ModalOverlay, Modal } from "react-aria-components";
 import { overlayStyles } from "../../generic/Modal";
 import { Dialog } from "../../generic/Dialog";
@@ -147,7 +147,7 @@ export function CommandMenu() {
       {
         id: "create-document",
         label: "Create new document…",
-        icon: Plus,
+        icon: PlusIcon,
         action: createDocument,
       },
     ];
@@ -156,7 +156,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "publish",
         label: "Publish document",
-        icon: Plus,
+        icon: PlusIcon,
         action: () => {
           if (currentDocument) {
             publishDocument(currentDocument.id);
@@ -166,7 +166,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
-        icon: Plus,
+        icon: PlusIcon,
         action: () => {
           if (currentDocumentId) {
             const documentTitle = currentDocument.title || "Untitled Document";
@@ -187,7 +187,7 @@ export function CommandMenu() {
       {
         id: "search",
         label: "Search documents…",
-        icon: Search,
+        icon: SearchIcon,
         action: () => {
           setPages([...pages, "search"]);
           setSearch(""); // Clear search when entering search page
@@ -196,7 +196,7 @@ export function CommandMenu() {
       {
         id: "go-home",
         label: "Go home",
-        icon: Home,
+        icon: HomeIcon,
         action: () => {
           navigate({
             to: "/w/$organizationSlug",
@@ -214,7 +214,7 @@ export function CommandMenu() {
       {
         id: "go-assistant",
         label: "Go to assistant",
-        icon: Bot,
+        icon: BotIcon,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/assistant",
@@ -227,7 +227,7 @@ export function CommandMenu() {
       {
         id: "organization-settings",
         label: "Go to organization settings",
-        icon: Settings,
+        icon: SettingsIcon,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings",
@@ -240,7 +240,7 @@ export function CommandMenu() {
       {
         id: "billing",
         label: "Go to billing settings",
-        icon: CreditCard,
+        icon: CreditCardIcon,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings/billing",
@@ -253,7 +253,7 @@ export function CommandMenu() {
       {
         id: "mdx-import",
         label: "Go to import settings",
-        icon: Upload,
+        icon: UploadIcon,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings/import",
@@ -266,7 +266,7 @@ export function CommandMenu() {
       {
         id: "integrations",
         label: "Go to integrations",
-        icon: Plug,
+        icon: PlugIcon,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings/integrations",
@@ -294,7 +294,7 @@ export function CommandMenu() {
       {
         id: "create-organization",
         label: "Create new organization",
-        icon: Plus,
+        icon: PlusIcon,
         action: () => {
           navigate({
             to: "/onboarding",
@@ -346,7 +346,7 @@ export function CommandMenu() {
             }}
           >
             <div className="flex items-center border-b border-gray-100 px-3">
-              <Search className="size-4 text-gray-400 mr-2" />
+              <SearchIcon className="size-4 text-gray-400 mr-2" />
               <Command.Input
                 value={search}
                 onValueChange={setSearch}

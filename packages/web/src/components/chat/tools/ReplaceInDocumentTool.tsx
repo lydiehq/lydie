@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect } from "react";
 import { Button as AriaButton } from "react-aria-components";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Loader2Icon } from "@/icons";
 import { motion } from "motion/react";
 import { StickToBottom } from "use-stick-to-bottom";
 import { Button } from "@/components/generic/Button";
@@ -164,7 +164,7 @@ export function ReplaceInDocumentTool({
       <div className="p-1">
         <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
           {isStreaming && (
-            <Loader2 className="size-3 animate-spin text-blue-500" />
+            <Loader2Icon className="size-3 animate-spin text-blue-500" />
           )}
           <motion.span
             key={getStatusText()}
@@ -212,12 +212,12 @@ export function ReplaceInDocumentTool({
             >
               {isExpanded ? (
                 <div className="flex items-center gap-1">
-                  <ChevronUp className="size-3" />
+                  <ChevronUpIcon className="size-3" />
                   <span>Show less</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
-                  <ChevronDown className="size-3" />
+                  <ChevronDownIcon className="size-3" />
                   <span>Show more</span>
                 </div>
               )}

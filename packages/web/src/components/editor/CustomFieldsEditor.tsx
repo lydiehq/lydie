@@ -3,7 +3,7 @@ import { useZero } from "@/services/zero";
 import { mutators } from "@lydie/zero/mutators";
 import { useDebounceCallback } from "usehooks-ts";
 import { useMemo } from "react";
-import { X, GripVertical, Calendar, List } from "lucide-react";
+import { XIcon, GripVerticalIcon, CalendarIcon, ListIcon } from "@/icons";
 
 type CustomField = {
   key: string;
@@ -76,16 +76,16 @@ export function CustomFieldsEditor({
   const getFieldIcon = (key: string) => {
     const lowerKey = key.toLowerCase();
     if (lowerKey.includes("date") || lowerKey.includes("time")) {
-      return Calendar;
+      return CalendarIcon;
     }
     if (
       lowerKey.includes("class") ||
       lowerKey.includes("tag") ||
       lowerKey.includes("category")
     ) {
-      return List;
+      return ListIcon;
     }
-    return GripVertical;
+    return GripVerticalIcon;
   };
 
   return (
@@ -173,7 +173,7 @@ export function CustomFieldsEditor({
                         className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-all shrink-0"
                         aria-label="Remove property"
                       >
-                        <X className="w-4 h-4" />
+                        <XIcon className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
