@@ -11,7 +11,7 @@
     "test:e2e": "bun sst shell playwright test -- --ui"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.37",
+    "@ai-sdk/react": "^3.0.38",
     "@floating-ui/dom": "^1.7.4",
     "@floating-ui/react": "^0.27.16",
     "@fontsource-variable/dm-sans": "^5.2.8",
