@@ -335,6 +335,166 @@ export const comparisons: Comparison[] = [
       },
     ],
   },
+  {
+    slug: "microsoft-word",
+    name: "Microsoft Word",
+    description:
+      "Replace Microsoft Word with Lydie for a modern, cloud-native document editor. While Word excels at offline editing and complex formatting, Lydie offers real-time collaboration, integrated AI, and the freedom to self-host. Perfect for teams who want seamless collaboration without Microsoft's ecosystem lock-in.",
+    sections: [
+      {
+        id: "opensource",
+        title: "Open-source alternative to Microsoft Word",
+        description:
+          "Microsoft Word locks you into their ecosystem with licensing fees and cloud dependencies. Lydie is fully open-source and self-hostable, giving you complete control over your documents and data. No more subscription fees or vendor lock-in.",
+      },
+      {
+        id: "collaboration",
+        title: "Better real-time collaboration than Word",
+        description:
+          "While Word Online offers some collaboration features, Lydie's real-time collaboration is built from the ground up. See live cursors, instant updates, and seamless teamwork without the complexity of Microsoft's co-authoring system.",
+      },
+      {
+        id: "ai",
+        title: "AI built-in, not a premium add-on",
+        description:
+          "Microsoft Copilot requires a separate subscription. With Lydie, AI assistance is built directly into the editor and available to everyone. Get writing help, generate content, and chat with your documents without paying extra.",
+      },
+    ],
+    features: [
+      {
+        name: "Real-time collaboration",
+        description: "Collaborate with your team in real-time on documents",
+        lydie: true,
+        competitor: "Word Online only",
+      },
+      {
+        name: "Open-source",
+        description: "Self-host and customize the platform to your needs",
+        lydie: true,
+        competitor: false,
+      },
+      {
+        name: "Integrated AI",
+        description: "AI-powered features built directly into the editor",
+        lydie: true,
+        competitor: "Microsoft Copilot (separate subscription)",
+      },
+      {
+        name: "Version history",
+        description: "Track and restore previous versions of your documents",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "External platform sync",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        lydie: true,
+        competitor: "Limited to Microsoft ecosystem",
+      },
+      {
+        name: "Offline editing",
+        description: "Edit documents without internet connection",
+        lydie: "Planned",
+        competitor: true,
+      },
+      {
+        name: "Advanced formatting",
+        description: "Complex document formatting and styling options",
+        lydie: "Basic formatting available",
+        competitor: true,
+      },
+      {
+        name: "Cloud-native",
+        description: "Built for cloud collaboration from the start",
+        lydie: true,
+        competitor: "Desktop-first, cloud added later",
+      },
+    ],
+  },
+  {
+    slug: "obsidian",
+    name: "Obsidian",
+    description:
+      "Switch from Obsidian to Lydie for a collaborative, cloud-native knowledge base. While Obsidian excels at personal note-taking with local-first architecture, Lydie brings powerful team collaboration, integrated AI, and seamless cloud sync. Perfect for teams who need to share and collaborate on knowledge.",
+    sections: [
+      {
+        id: "collaboration",
+        title: "Real-time collaboration vs. local-first",
+        description:
+          "Obsidian is built for personal use with local-first architecture, making team collaboration challenging. Lydie is built for collaboration from the ground up, with real-time editing, live cursors, and seamless teamwork. Share knowledge instantly with your team.",
+      },
+      {
+        id: "ai",
+        title: "AI built-in, not a plugin",
+        description:
+          "While Obsidian has AI plugins, they require setup and may have limitations. Lydie includes powerful AI features right out of the box. Get writing assistance, generate content, and chat with your documents without configuring plugins.",
+      },
+      {
+        id: "opensource",
+        title: "Open-source with cloud collaboration",
+        description:
+          "Like Obsidian, Lydie is open-source and self-hostable. But unlike Obsidian's local-first approach, Lydie offers seamless cloud collaboration while still giving you the freedom to self-host. Get the best of both worlds.",
+      },
+    ],
+    features: [
+      {
+        name: "Real-time collaboration",
+        description: "Collaborate with your team in real-time on documents",
+        lydie: true,
+        competitor: "Limited (via plugins or Obsidian Sync)",
+      },
+      {
+        name: "Open-source",
+        description: "Self-host and customize the platform to your needs",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "Integrated AI",
+        description: "AI-powered features built directly into the editor",
+        lydie: true,
+        competitor: "Via plugins",
+      },
+      {
+        name: "Version history",
+        description: "Track and restore previous versions of your documents",
+        lydie: true,
+        competitor: "Via Git or plugins",
+      },
+      {
+        name: "External platform sync",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        lydie: true,
+        competitor: "Via plugins",
+      },
+      {
+        name: "Graph view",
+        description: "Visualize connections between documents",
+        lydie: "Planned",
+        competitor: true,
+      },
+      {
+        name: "Local-first",
+        description: "Store files locally with optional cloud sync",
+        lydie: false,
+        competitor: true,
+      },
+      {
+        name: "Markdown support",
+        description: "Native Markdown editing and rendering",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "Team workspaces",
+        description: "Dedicated spaces for team collaboration",
+        lydie: true,
+        competitor: false,
+      },
+    ],
+  },
 ];
 
 export function getComparison(slug: string): Comparison | undefined {
