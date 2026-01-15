@@ -11,10 +11,8 @@ export function CTASection() {
           <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-tight text-white drop-shadow-text">
             Ready to transform your writing?
           </h2>
-          <p className="text-[15px] md:text-base text-white/90 leading-relaxed">
-            Join thousands of writers who are already using Lydie to write
-            better, faster, and smarter. No credit card required.
-          </p>
+          {/* <p className="text-[15px] md:text-base text-white/90 leading-relaxed">
+          </p> */}
           <div className="flex justify-center mt-4">
             <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
               <div className="flex items-center gap-x-1">

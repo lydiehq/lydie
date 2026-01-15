@@ -40,6 +40,10 @@ const linkGroups = [
         label: "Roadmap",
       },
       {
+        href: "/features",
+        label: "Features",
+      },
+      {
         href: "/self-hosting",
         label: "Self-hosting",
         comingSoon: true,
@@ -98,7 +102,9 @@ const linkGroups = [
         <slot />
       </main>
       <div class="relative">
-        <footer class="border-t border-black/5 bg-white backdrop-blur-sm pt-32 md:pt-40">
+        <footer
+          class="border-t border-black/5 bg-white backdrop-blur-sm pt-32 md:pt-40"
+        >
           <Container className="flex justify-between py-12">
             <Logo className="text-gray-200 size-6" />
             <nav

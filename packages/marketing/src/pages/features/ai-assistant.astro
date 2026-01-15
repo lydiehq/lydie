@@ -2,303 +2,115 @@
 import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
 import { Button } from "../../components/generic/Button";
-import {
-  ChevronRight,
-  Sparkles,
-  MessageSquare,
-  FileText,
-  Zap,
-} from "lucide-react";
-import { Logo } from "../../components/Logo";
+import { ChevronRight } from "lucide-react";
+import { HeroBackground } from "../../components/landing/HeroBackground";
+import { CTASection } from "../../components/landing/CTASection";
 import AIAssistantIllustration from "../../components/illustrations/AIAssistantIllustration.astro";
+import "../../styles/grainy-gradient.css";
 
 const title = "AI Assistant Built-In - Lydie";
 const description =
   "Get writing assistance, generate content, and chat with your documents using our integrated AI features. Built directly into the editor for seamless help.";
+
+const windowControls = Array(3).fill(null);
 ---
 
 <Layout title={title} description={description}>
-  <Container className="flex flex-col gap-y-16 pb-16">
-    <!-- Hero Section -->
-    <div class="max-w-4xl mx-auto flex flex-col gap-y-8 pt-8">
-      <div class="flex flex-col gap-y-6 items-center text-center">
-        <Logo className="size-6 text-gray-200" />
-
-        <div class="flex flex-col gap-y-4">
-          <h1
-            class="text-5xl font-heading font-medium tracking-tight text-gray-950 max-w-3xl"
-          >
-            AI assistant built-in
-          </h1>
-          <p class="text-lg text-gray-600 max-w-2xl">
-            Get writing assistance, generate content, and chat with your
-            documents using our integrated AI features. Unlike add-ons or
-            extensions, Lydie's AI is built directly into the editor.
-          </p>
-        </div>
-
-        <div class="flex gap-x-4 items-center">
-          <Button href="https://app.lydie.co/auth" size="lg">
-            <div class="flex items-center gap-x-1">
-              <span>Get started for free</span>
-              <ChevronRight
-                className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-              />
-            </div>
-          </Button>
-        </div>
-      </div>
-
-      <!-- Illustration -->
-      <div class="w-full max-w-3xl mx-auto">
-        <div class="rounded-xl overflow-hidden ring-1 ring-black/5">
-          <AIAssistantIllustration />
-        </div>
-      </div>
-    </div>
-
-    <!-- Features Grid -->
-    <div class="max-w-5xl mx-auto w-full">
-      <div class="flex flex-col gap-y-8">
-        <div class="text-center">
-          <h2
-            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
-          >
-            Everything you need for AI-powered writing
-          </h2>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-8">
-          <!-- Writing Assistance -->
-          <div
-            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
-          >
+  <!-- Hero Section -->
+  <div class="md:px-4">
+    <HeroBackground
+      client:load
+      className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4"
+    >
+      <Container className="relative z-20 pb-20 md:pb-16 md:pt-28 pt-20">
+        <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <!-- Text Content (Left) -->
+          <div class="flex flex-col gap-y-6">
             <div
-              class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center"
+              class="mb-2 rounded-full bg-white/15 self-start px-2.5 py-[3px] flex items-center gap-x-1.5"
+              style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
             >
-              <Sparkles className="size-5 text-purple-600" />
+              <span class="text-[12px] font-medium text-white">
+                AI-powered writing
+              </span>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900">
-              Writing assistance
-            </h3>
-            <p class="text-gray-600 text-[15px]/relaxed">
-              Get suggestions, improve your writing, and refine your content
-              with AI-powered assistance. From grammar fixes to style
-              improvements, AI helps you write better.
+
+            <h1
+              class="text-4xl md:text-5xl lg:text-6xl font-heading font-medium tracking-tight text-white drop-shadow-text"
+            >
+              AI assistant built-in
+            </h1>
+            <p
+              class="text-[17px] md:text-lg text-white/90 text-balance leading-relaxed"
+            >
+              Get writing assistance, generate content, and chat with your
+              documents using our integrated AI features. Unlike add-ons or
+              extensions, Lydie's AI is built directly into the editor.
             </p>
-          </div>
 
-          <!-- Content Generation -->
-          <div
-            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
-          >
-            <div
-              class="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center"
-            >
-              <Zap className="size-5 text-pink-600" />
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900">
-              Content generation
-            </h3>
-            <p class="text-gray-600 text-[15px]/relaxed">
-              Generate drafts, outlines, and content ideas instantly. Start with
-              a prompt and let AI help you create the first version, then refine
-              it to match your voice.
-            </p>
-          </div>
-
-          <!-- Document Chat -->
-          <div
-            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
-          >
-            <div
-              class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center"
-            >
-              <MessageSquare className="size-5 text-indigo-600" />
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900">
-              Chat with your documents
-            </h3>
-            <p class="text-gray-600 text-[15px]/relaxed">
-              Ask questions about your documents and get instant answers. AI
-              understands your content and can help you find information,
-              summarize sections, or explain complex topics.
-            </p>
-          </div>
-
-          <!-- Seamless Integration -->
-          <div
-            class="flex flex-col gap-y-3 p-6 rounded-lg border border-gray-200 bg-white"
-          >
-            <div
-              class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"
-            >
-              <FileText className="size-5 text-blue-600" />
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900">
-              Seamless integration
-            </h3>
-            <p class="text-gray-600 text-[15px]/relaxed">
-              AI features are built directly into the editor, not added as an
-              extension. Access writing help, content generation, and document
-              chat without leaving your document.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Use Cases -->
-    <div class="max-w-4xl mx-auto w-full">
-      <div class="flex flex-col gap-y-8">
-        <div class="text-center">
-          <h2
-            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
-          >
-            Perfect for every writer
-          </h2>
-        </div>
-
-        <div class="flex flex-col gap-y-4">
-          <div
-            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
-          >
-            <div
-              class="shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mt-1"
-            >
-              <FileText className="size-4 text-purple-600" />
-            </div>
-            <div class="flex flex-col gap-y-1">
-              <h3 class="font-semibold text-gray-900">Content creators</h3>
-              <p class="text-gray-600 text-[15px]/relaxed">
-                Generate blog post ideas, create outlines, and get writing
-                suggestions to help you produce more content faster without
-                sacrificing quality.
-              </p>
+            <div class="flex items-center gap-x-4 mt-2">
+              <Button
+                href="https://app.lydie.co/auth"
+                size="lg"
+                intent="primary"
+              >
+                <div class="flex items-center gap-x-1">
+                  <span>Get started for free</span>
+                  <ChevronRight
+                    className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+                  />
+                </div>
+              </Button>
             </div>
           </div>
 
+          <!-- AI Assistant Illustration (Right) -->
           <div
-            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
+            class="relative z-10 bg-white/20 flex flex-col rounded-[14px] p-2 overflow-hidden"
+            style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+            aria-hidden="true"
+            aria-label="AI assistant illustration showing AI-powered features"
           >
-            <div
-              class="shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mt-1"
-            >
-              <MessageSquare className="size-4 text-indigo-600" />
+            <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
+              {windowControls.map(() => (
+                <div
+                  class="rounded-full size-[13px] bg-white/20"
+                  style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+                />
+              ))}
             </div>
-            <div class="flex flex-col gap-y-1">
-              <h3 class="font-semibold text-gray-900">Knowledge workers</h3>
-              <p class="text-gray-600 text-[15px]/relaxed">
-                Quickly find information in long documents, get summaries of
-                complex topics, and ask questions about your content to
-                understand it better.
-              </p>
-            </div>
-          </div>
 
-          <div
-            class="flex gap-x-4 p-5 rounded-lg bg-gray-50 border border-gray-200"
-          >
             <div
-              class="shrink-0 w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center mt-1"
+              class="bg-white rounded-lg flex items-center justify-center px-6 py-8 md:px-8 md:py-10 shadow-surface overflow-hidden"
             >
-              <Sparkles className="size-4 text-pink-600" />
-            </div>
-            <div class="flex flex-col gap-y-1">
-              <h3 class="font-semibold text-gray-900">
-                Students and researchers
-              </h3>
-              <p class="text-gray-600 text-[15px]/relaxed">
-                Get help with writing, improve your drafts, and use AI to
-                explore ideas and concepts. Perfect for essays, research papers,
-                and academic writing.
-              </p>
+              <AIAssistantIllustration />
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Container>
+    </HeroBackground>
+  </div>
 
-    <!-- How it works -->
-    <div class="max-w-4xl mx-auto w-full">
-      <div class="flex flex-col gap-y-8">
-        <div class="text-center">
-          <h2
-            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
-          >
-            How it works
-          </h2>
-        </div>
-
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="flex flex-col gap-y-3 text-center">
-            <div
-              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
-            >
-              1
-            </div>
-            <h3 class="font-semibold text-gray-900">Start writing</h3>
-            <p class="text-gray-600 text-sm">
-              Begin your document or open an existing one. AI features are
-              always available right in the editor.
-            </p>
-          </div>
-
-          <div class="flex flex-col gap-y-3 text-center">
-            <div
-              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
-            >
-              2
-            </div>
-            <h3 class="font-semibold text-gray-900">Get AI help</h3>
-            <p class="text-gray-600 text-sm">
-              Ask for writing suggestions, generate content, or chat with your
-              document. AI understands context and provides relevant help.
-            </p>
-          </div>
-
-          <div class="flex flex-col gap-y-3 text-center">
-            <div
-              class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mx-auto font-semibold"
-            >
-              3
-            </div>
-            <h3 class="font-semibold text-gray-900">Refine and improve</h3>
-            <p class="text-gray-600 text-sm">
-              Use AI suggestions to improve your writing, or refine generated
-              content to match your unique voice and style.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CTA Section -->
+  <Container className="flex flex-col gap-y-16 pb-24 pt-24">
+    <!-- Description Section -->
     <div class="max-w-3xl mx-auto w-full">
-      <div
-        class="flex flex-col gap-y-6 items-center text-center p-12 rounded-2xl bg-linear-to-br from-gray-50 to-gray-100 border border-gray-200"
-      >
-        <div class="flex flex-col gap-y-3">
-          <h2
-            class="text-3xl font-heading font-medium tracking-tight text-gray-950"
-          >
-            Ready to write with AI?
-          </h2>
-          <p class="text-gray-600 max-w-lg">
-            Start using AI-powered writing assistance today. No credit card
-            required, no setup hassle.
-          </p>
-        </div>
-
-        <Button href="https://app.lydie.co/auth" size="lg">
-          <div class="flex items-center gap-x-1">
-            <span>Get started for free</span>
-            <ChevronRight
-              className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-            />
-          </div>
-        </Button>
+      <div class="prose max-w-2xl mx-auto">
+        <p class="">
+          Lydie's AI assistant is built directly into the editor, providing
+          seamless writing assistance, content generation, and document chat
+          capabilities. Unlike browser extensions or add-ons, our AI features are
+          integrated at the core of the editing experience.
+        </p>
+        <p class="">
+          Get instant writing suggestions, generate drafts and outlines, and
+          chat with your documents to find information or get answers. Our AI
+          understands context and provides relevant help whether you're writing
+          articles, documentation, or any other content. Perfect for content
+          creators, knowledge workers, and anyone who wants AI-powered writing
+          assistance without leaving their document.
+        </p>
       </div>
     </div>
   </Container>
+  <CTASection client:load />
 </Layout>

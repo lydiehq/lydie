@@ -3,99 +3,12 @@ import { InteractiveMockEditor } from "./InteractiveMockEditor";
 import { Eyebrow } from "./Eyebrow";
 import { Container } from "../Container";
 import { HeroBackground } from "./HeroBackground";
+import CollaborationEditorIllustration from "../illustrations/CollaborationEditorIllustration.astro";
 import "../../styles/grainy-gradient.css";
 import { Search } from "lucide-react";
 ---
 
 <style>
-  /* Collaborative cursors */
-  .collab-cursor {
-    position: relative;
-    display: inline-block;
-    vertical-align: baseline;
-    pointer-events: none;
-  }
-
-  .collab-cursor-line {
-    position: absolute;
-    top: -1rem;
-    left: 0;
-    width: 2px;
-    height: 1.45em;
-    background: currentColor;
-  }
-
-  .collab-cursor-label {
-    position: absolute;
-    top: -2.45rem;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: 4px;
-    white-space: nowrap;
-    z-index: 10;
-  }
-
-  .collab-cursor-1 .collab-cursor-label {
-    background: #3b82f6;
-    color: white;
-  }
-
-  .collab-cursor-2 .collab-cursor-label {
-    background: #10b981;
-    color: white;
-  }
-
-  .collab-cursor-1 .collab-cursor-label::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid #3b82f6;
-  }
-
-  .collab-cursor-2 .collab-cursor-label::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid #10b981;
-  }
-
-  .collab-cursor-1 {
-    color: #3b82f6;
-  }
-
-  .collab-cursor-2 {
-    color: #10b981;
-  }
-
-  /* Text selection highlight */
-  .collab-selection {
-    padding: 0 2px;
-    border-radius: 2px;
-  }
-
-  .collab-selection.collab-cursor-1 {
-    background: rgba(59, 130, 246, 0.2);
-  }
-
-  .collab-selection.collab-cursor-2 {
-    background: rgba(16, 185, 129, 0.2);
-  }
-
   /* Search highlight */
   .search-highlight {
     background: #fef08a;
@@ -157,61 +70,7 @@ import { Search } from "lucide-react";
             </div>
           </div>
         </div>
-        <div
-          class="bg-white/10 z-20 pl-2 pt-2 h-full border-l border-t rounded-tl-xl border-white/20 relative transform transition-transform duration-300 mt-12"
-          aria-hidden="true"
-          aria-label="Mock editor showing collaborative editing with live cursors and text selection"
-        >
-          <div
-            class="bg-white w-[600px] size-full rounded-tl-lg flex items-center justify-center px-10 py-12"
-          >
-            <div class="flex-1 max-w-2xl mx-auto relative">
-              <h1
-                class="text-2xl font-semibold text-gray-900 mb-6 leading-tight"
-              >
-                Product Roadmap Q1 2026
-              </h1>
-              <div class="space-y-4 text-gray-700 leading-7 relative">
-                <p class="text-sm/relaxed relative">
-                  This quarter we're focusing on enhancing our core
-                  <span
-                    class="collab-cursor collab-cursor-1"
-                    aria-hidden="true"
-                    aria-label="Sarah's cursor"
-                  >
-                    <span class="collab-cursor-line"></span>
-                    <span class="collab-cursor-label">Sarah</span>
-                  </span>
-                  platform capabilities and expanding integrations with key tools
-                  your team already uses.
-                </p>
-                <p class="text-sm/relaxed relative">
-                  Our primary objectives include improving performance, adding
-                  new
-                  <span
-                    class="collab-selection collab-cursor-2"
-                    aria-hidden="true"
-                    aria-label="Alex's text selection">collaboration</span
-                  ><span
-                    class="collab-cursor collab-cursor-2"
-                    aria-hidden="true"
-                    aria-label="Alex's cursor"
-                  >
-                    <span class="collab-cursor-line"></span>
-                    <span class="collab-cursor-label">Alex</span>
-                  </span>
-                  features, and building out our API ecosystem to support more custom
-                  workflows.
-                </p>
-                <p class="text-[15px] relative">
-                  We're also investing heavily in AI-powered features that will
-                  help teams work more efficiently and make better decisions
-                  faster.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CollaborationEditorIllustration variant="feature" />
       </HeroBackground>
     </div>
 
@@ -240,7 +99,7 @@ import { Search } from "lucide-react";
               <div class="flex-1 relative w-full">
                 <!-- Tooling & Access Title -->
                 <h2 class="text-2xl font-semibold text-gray-900 mb-4">
-                  Tooling & Access
+                  Choose the best alternative to Notion
                 </h2>
 
                 <!-- Tab Navigation -->
@@ -258,7 +117,7 @@ import { Search } from "lucide-react";
                       class="text-sm text-gray-500 pb-2 hover:text-gray-700"
                       aria-label="Documents tab"
                     >
-                      Documents 0
+                      Documents 2
                     </button>
                   </div>
                   <button
@@ -302,7 +161,9 @@ import { Search } from "lucide-react";
                     </div>
                     <div class="flex-1 flex items-center justify-between">
                       <span class="text-sm text-gray-500">slug</span>
-                      <span class="text-sm text-gray-400">how-to-choose-best-alternative-to-notion</span>
+                      <span class="text-sm text-gray-400"
+                        >how-to-choose-best-alternative-to-notion</span
+                      >
                     </div>
                   </div>
 

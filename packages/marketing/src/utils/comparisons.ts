@@ -171,7 +171,7 @@ export const comparisons: Comparison[] = [
         name: "Integrated AI",
         description: "AI-powered features built directly into the editor",
         lydie: true,
-        competitor: "AI features via Coda AI (paid add-on)",
+        competitor: true,
       },
       {
         name: "Version history",

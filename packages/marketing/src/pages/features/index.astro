@@ -1,0 +1,98 @@
+---
+import { Container } from "../../components/Container";
+import Layout from "../../layouts/Layout.astro";
+import { Button } from "../../components/generic/Button";
+import { ChevronRight, ArrowRight } from "lucide-react";
+import { Logo } from "../../components/Logo";
+import { CTASection } from "../../components/landing/CTASection";
+
+const title = "Features - Lydie";
+const description =
+  "Discover all the powerful features that make Lydie the perfect writing and collaboration platform for modern teams.";
+
+const features = [
+  {
+    title: "Real-Time Collaborative Editing",
+    description:
+      "Work together seamlessly with your team. See changes as they happen, with live cursors, instant updates, and built-in communication tools.",
+    href: "/features/collaborative-editing",
+  },
+  {
+    title: "AI Assistant Built-In",
+    description:
+      "Get writing assistance, generate content, and chat with your documents using our integrated AI features. Built directly into the editor for seamless help.",
+    href: "/features/ai-assistant",
+  },
+  {
+    title: "Organized Knowledge Base",
+    description:
+      "Build a centralized knowledge base that grows with your team. Create nested pages, link related documents, and organize information in a way that makes sense for your workflow.",
+    href: "/features/knowledge-base",
+  },
+];
+---
+
+<Layout title={title} description={description}>
+  <Container className="flex flex-col gap-y-16 pb-16">
+    <!-- Hero Section -->
+    <div class="max-w-4xl mx-auto flex flex-col gap-y-8 pt-8">
+      <div class="flex flex-col gap-y-6 items-center text-center">
+        <Logo className="size-6 text-gray-200" />
+
+        <div class="flex flex-col gap-y-4">
+          <h1
+            class="text-5xl font-heading font-medium tracking-tight text-gray-950 max-w-3xl"
+          >
+            Powerful features for modern teams
+          </h1>
+          <p class="text-lg text-gray-600 max-w-2xl">
+            Discover all the features that make Lydie the perfect writing and
+            collaboration platform. From real-time collaboration to AI-powered
+            assistance, everything you need is built right in.
+          </p>
+        </div>
+
+        <div class="flex gap-x-4 items-center">
+          <Button href="https://app.lydie.co/auth" size="lg">
+            <div class="flex items-center gap-x-1">
+              <span>Get started for free</span>
+              <ChevronRight
+                className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+              />
+            </div>
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="grid md:grid-cols-3 gap-8">
+        {
+          features.map((feature) => {
+            return (
+              <a
+                href={feature.href}
+                class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+              >
+                <div class="flex flex-col gap-y-2">
+                  <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p class="text-gray-600 text-[15px]/relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+                <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto">
+                  <span>Learn more</span>
+                  <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+  </Container>
+  <CTASection client:load />
+</Layout>
