@@ -1,4 +1,4 @@
-import { db, usersTable } from "@lydie/database";
+import { db, usersTable, assetsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
@@ -34,6 +34,7 @@ async function deleteUser() {
   console.log(`  Email: ${user.email}`);
   console.log(`  Role: ${user.role}`);
   console.log(`\n⚠️  This will delete:`);
+  console.log(`  - All assets (database records only, not S3)`);
   console.log(`  - All sessions`);
   console.log(`  - All accounts`);
   console.log(`  - All memberships (organizations)`);
@@ -43,6 +44,12 @@ async function deleteUser() {
 
   // Ask for confirmation (in a real script, you might want to add readline)
   console.log(`\n⚠️  DESTRUCTIVE OPERATION: Deleting user ${user.email}...`);
+
+  // Delete user assets from database (not from S3)
+  const deletedAssets = await db
+    .delete(assetsTable)
+    .where(eq(assetsTable.userId, user.id));
+  console.log(`✅ Deleted user assets from database`);
 
   await db.delete(usersTable).where(eq(usersTable.id, user.id));
 
