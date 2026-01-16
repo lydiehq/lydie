@@ -3,6 +3,12 @@ import { secret } from "./secret";
 import { cluster } from "./cluster";
 import { email } from "./email";
 import { organizationAssetsBucket, assetsRouter } from "./web";
+import {
+  onboardingEmailProcessorFunction,
+  onboardingEmailProcessorFunctionLinkable,
+  onboardingSchedulerRole,
+  onboardingSchedulerRoleLinkable,
+} from "./onboarding";
 
 const commonSecrets = [
   secret.googleAiStudioApiKey,
@@ -54,6 +60,14 @@ export const backend = new sst.aws.Service("Backend", {
     email,
     organizationAssetsBucket,
     assetsRouter,
+    onboardingEmailProcessorFunction,
+    onboardingEmailProcessorFunctionLinkable,
+    onboardingSchedulerRole,
+    onboardingSchedulerRoleLinkable,
+  ],
+  permissions: [
+    { actions: ["scheduler:CreateSchedule"], resources: ["*"] },
+    { actions: ["iam:PassRole"], resources: [onboardingSchedulerRole.arn] },
   ],
   transform: {
     target: {

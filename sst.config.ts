@@ -14,6 +14,7 @@ export default $config({
     };
   },
   async run() {
+    await import("./infra/onboarding");
     await import("./infra/backend");
     await import("./infra/web");
     await import("./infra/zero");
