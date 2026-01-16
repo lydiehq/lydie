@@ -59,6 +59,18 @@ declare module "sst" {
       "type": "sst.aws.StaticSite"
       "url": string
     }
+    "OnboardingEmailProcessorFunction": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
+    "OnboardingEmailProcessorFunctionLinkable": {
+      "arn": string
+      "type": "sst.sst.Linkable"
+    }
+    "OnboardingSchedulerRoleLinkable": {
+      "arn": string
+      "type": "sst.sst.Linkable"
+    }
     "OpenAiApiKey": {
       "type": "sst.sst.Secret"
       "value": string

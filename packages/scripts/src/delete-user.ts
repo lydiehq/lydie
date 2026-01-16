@@ -45,15 +45,13 @@ async function deleteUser() {
   // Ask for confirmation (in a real script, you might want to add readline)
   console.log(`\n⚠️  DESTRUCTIVE OPERATION: Deleting user ${user.email}...`);
 
-  // Delete user assets from database (not from S3)
-  const deletedAssets = await db
-    .delete(assetsTable)
-    .where(eq(assetsTable.userId, user.id));
+  await db.delete(assetsTable).where(eq(assetsTable.userId, user.id));
   console.log(`✅ Deleted user assets from database`);
 
   await db.delete(usersTable).where(eq(usersTable.id, user.id));
 
   console.log(`✅ User deleted successfully!`);
+  process.exit(0);
 }
 
 deleteUser().catch((error) => {

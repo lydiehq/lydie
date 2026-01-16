@@ -29,7 +29,6 @@ export function OrganizationMenu({ isCollapsed }: Props) {
   const { session } = useAuth();
   const userId = session?.userId;
   const queryClient = useQueryClient();
-  const router = useRouter();
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] =
     useState(false);
 
@@ -38,7 +37,6 @@ export function OrganizationMenu({ isCollapsed }: Props) {
     await authClient.signOut();
     await clearSession(queryClient);
     clearZeroInstance();
-    await router.invalidate();
     window.location.href = "https://lydie.co";
   };
 

@@ -126,7 +126,6 @@ function RouteComponent() {
                     {section.routes
                       .filter((route) => !route.adminOnly || userIsAdmin)
                       .map((route) => {
-                        const Icon = route.icon;
                         return (
                           <li key={route.path}>
                             <Link
@@ -138,17 +137,14 @@ function RouteComponent() {
                               })}
                               activeOptions={{
                                 exact: true,
-                                includeSearch: false,
                               }}
                             >
                               <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                {Icon && (
-                                  <Icon
-                                    className={sidebarItemIconStyles({
-                                      className: "size-4 shrink-0",
-                                    })}
-                                  />
-                                )}
+                                <route.icon
+                                  className={sidebarItemIconStyles({
+                                    className: "size-4 shrink-0",
+                                  })}
+                                />
                                 <span className="truncate flex-1">
                                   {route.label}
                                 </span>
