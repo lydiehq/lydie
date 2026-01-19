@@ -439,6 +439,42 @@ export const mutators = defineMutators({
         }
       }
     ),
+    deleteAllOnboarding: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        // Find all onboarding documents
+        const onboardingDocs = await tx.run(
+          zql.documents
+            .where("organization_id", organizationId)
+            .where("deleted_at", "IS", null)
+        );
+
+        // Filter to only onboarding documents (check custom_fields)
+        const onboardingDocumentIds = onboardingDocs
+          .filter(
+            (doc) =>
+              doc.custom_fields &&
+              typeof doc.custom_fields === "object" &&
+              "isOnboarding" in doc.custom_fields &&
+              doc.custom_fields.isOnboarding === "true"
+          )
+          .map((doc) => doc.id);
+
+        // Soft-delete all onboarding documents
+        const now = Date.now();
+        for (const docId of onboardingDocumentIds) {
+          await tx.mutate.documents.update({
+            id: docId,
+            deleted_at: now,
+            updated_at: now,
+          });
+        }
+      }
+    ),
   },
   documentComponent: {
     create: defineMutator(
@@ -587,8 +623,9 @@ export const mutators = defineMutators({
     update: defineMutator(
       z.object({
         organizationId: z.string(),
+        onboardingStatus: z.json().optional(),
       }),
-      async ({ tx, ctx, args: { organizationId } }) => {
+      async ({ tx, ctx, args: { organizationId, onboardingStatus } }) => {
         hasOrganizationAccess(ctx, organizationId);
 
         // Get or create the organization's settings
@@ -604,6 +641,7 @@ export const mutators = defineMutators({
           await tx.mutate.organization_settings.insert({
             id,
             organization_id: organizationId,
+            onboarding_status: null,
             created_at: Date.now(),
             updated_at: Date.now(),
           });
@@ -621,6 +659,10 @@ export const mutators = defineMutators({
           updated_at: Date.now(),
         };
 
+        if (onboardingStatus !== undefined) {
+          updates.onboarding_status = onboardingStatus;
+        }
+
         await tx.mutate.organization_settings.update(updates);
       }
     ),
@@ -633,8 +675,13 @@ export const mutators = defineMutators({
         slug: z.string(),
         logo: z.string().optional(),
         metadata: z.string().optional(),
+        importDemoContent: z.boolean().optional(),
       }),
-      async ({ tx, ctx, args: { id, name, slug, logo, metadata } }) => {
+      async ({
+        tx,
+        ctx,
+        args: { id, name, slug, logo, metadata, importDemoContent },
+      }) => {
         isAuthenticated(ctx);
 
         // Verify slug doesn't already exist and make it unique if needed
@@ -687,6 +734,34 @@ export const mutators = defineMutators({
           created_at: Date.now(),
           updated_at: Date.now(),
         });
+
+        // Create seeded onboarding documents
+        if (importDemoContent !== false) {
+          const { demoContent } = await import("./demo-content");
+
+          for (const doc of demoContent) {
+            const docId = createId();
+            const yjsState = convertJsonToYjs(doc.content);
+
+            await tx.mutate.documents.insert({
+              id: docId,
+              slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
+              title: doc.title,
+              yjs_state: yjsState,
+              user_id: ctx.userId,
+              organization_id: id,
+              index_status: "pending",
+              integration_link_id: null,
+              is_locked: false,
+              published: false,
+              parent_id: null,
+              sort_order: demoContent.indexOf(doc),
+              custom_fields: { isOnboarding: "true" },
+              created_at: Date.now(),
+              updated_at: Date.now(),
+            });
+          }
+        }
       }
     ),
     update: defineMutator(
@@ -1028,6 +1103,31 @@ export const mutators = defineMutators({
             updated_at: Date.now(),
           });
         }
+      }
+    ),
+  },
+  feedback: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        type: z.enum(["feedback", "help"]),
+        message: z.string().min(1),
+        metadata: z.any().optional(),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { id, type, message, metadata, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId);
+
+        await tx.mutate.feedback_submissions.insert({
+          id,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          type,
+          message,
+          metadata: metadata || null,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
       }
     ),
   },

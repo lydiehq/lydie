@@ -11,7 +11,6 @@ import { Link } from "../generic/Link";
 
 export function UsageStats() {
   const { organization } = useOrganization();
-  const { session } = useAuth();
 
   const [todayUsage] = useQuery(
     queries.usage.today({ organizationId: organization.id })

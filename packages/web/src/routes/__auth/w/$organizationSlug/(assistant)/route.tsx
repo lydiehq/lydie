@@ -6,6 +6,7 @@ import { z } from "zod";
 
 const assistantSearchSchema = z.object({
   conversationId: z.string().optional(),
+  prompt: z.string().optional(),
 });
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)")(

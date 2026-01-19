@@ -1,11 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Surface } from "@/components/layout/Surface";
 import { Button } from "@/components/generic/Button";
-import { PuzzleIcon, DocumentIcon, UploadIcon, UsersIcon } from "@/icons";
+import { CheckIcon, ArrowRightIcon } from "lucide-react";
 import { useAuth } from "@/context/auth.context";
-import { useAssistant } from "@/context/assistant.context";
-import { useCallback } from "react";
-import { AssistantInput } from "@/components/assistant/AssistantInput";
+import { useOrganization } from "@/context/organization.context";
+import { useZero } from "@/services/zero";
+import { useQuery } from "@rocicorp/zero/react";
+import { queries } from "@lydie/zero/queries";
+import { mutators } from "@lydie/zero/mutators";
+import { clsx } from "clsx";
+import { ONBOARDING_TASKS, type OnboardingTask } from "@/constants/onboarding";
+import { Separator } from "@/components/generic/Separator";
+import { motion } from "motion/react";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/(assistant)/"
@@ -15,214 +21,224 @@ export const Route = createFileRoute(
 });
 
 function PageComponent() {
-  const onboardingSections = [
+  const { user } = useAuth();
+  const { organization } = useOrganization();
+  const { organizationSlug } = Route.useParams();
+  const navigate = useNavigate();
+  const z = useZero();
+
+  const [settings] = useQuery(
+    queries.settings.organization({ organizationId: organization.id })
+  );
+
+  const completedTasks = ((settings?.onboarding_status as any)?.completedTasks as string[]) || [];
+
+  const handleTaskAction = (task: OnboardingTask) => {
+    // Optimistically mark as complete
+    if (!completedTasks.includes(task.id)) {
+      z.mutate(
+        mutators.organizationSettings.update({
+          organizationId: organization.id,
+          onboardingStatus: {
+            completedTasks: [...completedTasks, task.id],
+            dismissed: false,
+          },
+        })
+      );
+    }
+
+    if (task.prompt) {
+      navigate({
+        to: "/w/$organizationSlug/assistant",
+        params: { organizationSlug },
+        search: { prompt: task.prompt },
+      });
+    } else if (task.path) {
+      navigate({
+        to: task.path,
+        params: { organizationSlug },
+      });
+    }
+  };
+
+  const progress = Math.round((completedTasks.length / ONBOARDING_TASKS.length) * 100);
+  const size = 20;
+  const strokeWidth = 2;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress / 100) * circumference;
+
+  const handlePromptClick = (prompt: string) => {
+    navigate({
+      to: "/w/$organizationSlug/assistant",
+      params: { organizationSlug },
+      search: { prompt },
+    });
+  };
+
+  const promptButtons = [
     {
-      id: "integrations",
-      icon: PuzzleIcon,
-      title: "Connect integrations",
-      tasks: [
-        {
-          id: "connect-first",
-          title: "Connect your first integration",
-          description: "Connect your favorite tools to Lydie to get started.",
-          action: "Connect",
-        },
-        {
-          id: "configure-sync",
-          title: "Configure sync settings",
-          description: "Set up how your integrations sync with Lydie.",
-          action: "Configure",
-        },
-      ],
+      title: "Organize documents",
+      prompt: "Please organize our documents",
     },
     {
-      id: "documents",
-      icon: DocumentIcon,
-      title: "Create your first document",
-      tasks: [
-        {
-          id: "create-document",
-          title: "Create a new document",
-          description:
-            "Start by creating a document to organize your knowledge.",
-          action: "Create",
-        },
-        {
-          id: "organize-content",
-          title: "Organize your content",
-          description: "Structure your documents with folders and collections.",
-          action: "Organize",
-        },
-      ],
+      title: "Create a new document",
+      prompt: "Please create a new document",
     },
     {
-      id: "import",
-      icon: UploadIcon,
-      title: "Import content",
-      tasks: [
-        {
-          id: "import-files",
-          title: "Import existing files",
-          description: "Import existing content from various sources.",
-          action: "Import",
-        },
-        {
-          id: "sync-integrations",
-          title: "Sync from integrations",
-          description: "Pull content from your connected integrations.",
-          action: "Sync",
-        },
-      ],
-    },
-    {
-      id: "team",
-      icon: UsersIcon,
-      title: "Invite team members",
-      tasks: [
-        {
-          id: "invite-members",
-          title: "Invite your first member",
-          description: "Collaborate with your team by inviting members.",
-          action: "Invite",
-        },
-        {
-          id: "set-permissions",
-          title: "Set member permissions",
-          description: "Configure access levels for your team members.",
-          action: "Configure",
-        },
-      ],
+      title: "Delete documents",
+      prompt: "Please help me delete documents",
     },
   ];
 
-  const { user } = useAuth();
-  const { sendMessage, stop, conversationId } = useAssistant();
-  const navigate = useNavigate();
-
-  const handleSubmit = useCallback(
-    (text: string) => {
-      sendMessage({
-        text,
-        metadata: {
-          createdAt: new Date().toISOString(),
-        },
-      });
-
-      navigate({
-        to: "/w/$organizationSlug/assistant",
-        from: "/w/$organizationSlug",
-        search: {
-          conversationId,
-        },
-      });
-    },
-    [sendMessage, navigate, conversationId]
-  );
-
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Surface className="overflow-hidden size-full">
-        <div className="mt-[34svh] max-w-xl mx-auto flex flex-col gap-y-4 items-center w-full">
-          <div className="flex flex-col gap-y-4 items-center w-full">
-            <h1 className="text-2xl font-medium text-gray-900">
-              Ask anything about your documents
-            </h1>
-            <AssistantInput
-              onSubmit={handleSubmit}
-              onStop={stop}
-              placeholder="Ask anything. Use @ to refer to documents"
-            />
+      <Surface className="overflow-y-auto size-full grid grid-cols-1">
+        <div className="flex items-center justify-center size-full">
+          <div className="p-12">
+            <div className="flex flex-col gap-y-6 max-w-lg">
+
+              <div className="flex items-center gap-x-2">
+                <svg width={size} height={size} className="transform -rotate-90">
+                  <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="#e5e7eb"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                  />
+                  <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="#9c9c9c"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={offset}
+                    strokeLinecap="round"
+                    className="transition-all duration-300"
+                  />
+                </svg>
+              </div>
+              <span className="text-lg font-medium text-gray-900">Let's get you started!</span>
+              <p className="text-gray-700 text-sm/relaxed">We&apos;ve created a few documents for you to get started. Use the assistant chat to help you organize and find your documents.</p>
+              <div className="flex items-center gap-x-1">
+                {promptButtons.map(({ title, prompt }) => (
+                  <Button
+                    key={title}
+                    onPress={() => handlePromptClick(prompt)}
+                    intent="secondary"
+                    size="sm"
+                    rounded
+                  >
+                    {title}
+                  </Button>
+                ))}
+              </div>
+              <Separator />
+              <Button intent="secondary" size="sm">Skip and delete documents</Button>
+            </div>
           </div>
         </div>
+        {/* <div className="bg-gray-50 border-l border-gray-200 size-full"></div> */}
+
       </Surface>
     </div>
-  );
+  )
+
+
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-y-auto size-full">
-        <div className="py-8 max-w-3xl mx-auto flex flex-col gap-y-8 w-full px-8 pb-16">
-          <div className="flex flex-col gap-y-2">
-            <h1 className="text-2xl font-medium text-gray-900">
+        <div className="max-w-3xl mx-auto w-full px-8 py-12 flex flex-col gap-12">
+
+          <div className="flex flex-col gap-4">
+            <h1 className="text-3xl font-medium text-gray-900">
               Welcome to Lydie, {user.name?.split(" ")[0]}!
             </h1>
-            <p className="text-gray-500 text-sm">
-              We&apos;ve suggested some tasks here to help you get started.
+            <p className="text-gray-500 text-lg max-w-xl">
+              Let's get your workspace set up. Follow these steps to get the most out of Lydie.
             </p>
           </div>
-          <div className="relative">
-            {/* Timeline line */}
-            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
 
-            {/* Sections */}
-            <div className="flex flex-col gap-y-12">
-              {onboardingSections.map((section) => (
-                <OnboardingSection key={section.id} section={section} />
-              ))}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between text-sm font-medium text-gray-700">
+              <span>Your Progress</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-indigo-500 transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </div>
+
+          <div className="grid gap-4">
+            {ONBOARDING_TASKS.map((task) => {
+              const isCompleted = completedTasks.includes(task.id);
+              return (
+                <div
+                  key={task.id}
+                  className={clsx(
+                    "group relative flex items-start gap-4 p-6 rounded-xl border transition-all duration-200",
+                    isCompleted
+                      ? "bg-gray-50 border-gray-200"
+                      : "bg-white border-gray-200 hover:border-indigo-200 hover:shadow-sm"
+                  )}
+                >
+                  <div className={clsx(
+                    "flex-none flex items-center justify-center w-6 h-6 rounded-full border transition-colors",
+                    isCompleted
+                      ? "bg-green-500 border-green-500 text-white"
+                      : "border-gray-300 text-transparent"
+                  )}>
+                    <CheckIcon className="w-3.5 h-3.5" strokeWidth={3} />
+                  </div>
+
+                  <div className="flex-1 flex flex-col gap-1">
+                    <h3 className={clsx("font-medium", isCompleted ? "text-gray-500 line-through" : "text-gray-900")}>
+                      {task.title}
+                    </h3>
+                    <p className={clsx("text-sm", isCompleted ? "text-gray-400" : "text-gray-500")}>
+                      {task.description}
+                    </p>
+                  </div>
+
+                  <div className="flex-none">
+                    {!isCompleted && (
+                      <Button
+                        size="sm"
+                        intent="secondary"
+                        className="group-hover:opacity-100 opacity-0 transition-opacity"
+                        onPress={() => handleTaskAction(task)}
+                      >
+                        {task.actionLabel}
+                        <ArrowRightIcon className="ml-2 w-3.5 h-3.5 opacity-50" />
+                      </Button>
+                    )}
+                    {isCompleted && (
+                      <Button
+                        size="sm"
+                        intent="ghost"
+                        className="opacity-50 pointer-events-none"
+                      >
+                        Completed
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
         </div>
       </Surface>
     </div>
   );
 }
 
-interface OnboardingSectionProps {
-  section: {
-    id: string;
-    icon: React.ComponentType<{ className?: string }>;
-    title: string;
-    tasks: Array<{
-      id: string;
-      title: string;
-      description: string;
-      action: string;
-    }>;
-  };
-}
 
-function OnboardingSection({ section }: OnboardingSectionProps) {
-  const Icon = section.icon;
-
-  return (
-    <div className="relative">
-      {/* Icon on timeline */}
-      <div className="absolute left-0 top-0 w-12 h-12 flex items-center justify-center">
-        <div className="relative z-10 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center ring-4 ring-white">
-          <Icon className="w-5 h-5 text-gray-700" />
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="ml-16 flex flex-col gap-y-4">
-        <h2 className="text-lg font-medium text-gray-900">{section.title}</h2>
-
-        {/* Task cards */}
-        <div className="flex flex-col gap-y-3">
-          {section.tasks.map((task) => (
-            <div key={task.id} className="relative">
-              {/* Connecting line from timeline to task */}
-              <div className="absolute -left-8 top-6 w-8 h-0.5 bg-gray-200" />
-
-              {/* Task card */}
-              <div className="flex items-start gap-x-3 p-4 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-colors">
-                <div className="mt-0.5">
-                  <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
-                </div>
-                <div className="flex-1 flex flex-col gap-y-1">
-                  <h3 className="font-medium text-gray-900 text-sm">
-                    {task.title}
-                  </h3>
-                  <p className="text-gray-500 text-sm">{task.description}</p>
-                </div>
-                <Button onPress={() => null} size="xs" intent="ghost">
-                  {task.action}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}

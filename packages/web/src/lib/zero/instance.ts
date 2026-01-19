@@ -1,14 +1,14 @@
 import { Zero } from "@rocicorp/zero";
 import { mutators } from "@lydie/zero/mutators";
-import { schema } from "@lydie/zero/schema";
+import { schema, type Schema } from "@lydie/zero/schema";
 
 const ZERO_INSTANCE_KEY = Symbol.for("__lydie_zero_instance__");
 
 interface GlobalWithZero {
-  [ZERO_INSTANCE_KEY]?: Zero;
+  [ZERO_INSTANCE_KEY]?: Zero<Schema>;
 }
 
-export function getZeroInstance(auth: any): Zero {
+export function getZeroInstance(auth: any): Zero<Schema> {
   const globalWithZero = globalThis as GlobalWithZero;
 
   const userID = auth?.session?.userId ?? "anon";
