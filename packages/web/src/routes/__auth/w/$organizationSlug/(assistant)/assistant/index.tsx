@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { MessageCircleIcon } from "@/icons";
 import { Surface } from "@/components/layout/Surface";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { useOrganization } from "@/context/organization.context";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatAlert } from "@/components/editor/ChatAlert";
@@ -76,11 +76,33 @@ function AssistantChat() {
   } = useAssistant();
   const navigate = useNavigate();
   const { organizationSlug } = Route.useParams();
+  const search = useSearch({ from: "/__auth/w/$organizationSlug/(assistant)/assistant/" });
+  const [initialPrompt, setInitialPrompt] = useState<string | undefined>(
+    (search as { prompt?: string })?.prompt
+  );
 
   // Track assistant opened
   useTrackOnMount("assistant_opened", {
     organizationId: organization.id,
   });
+
+  // Clear prompt from URL after it's been set (with a small delay to ensure input has time to receive it)
+  useEffect(() => {
+    if (initialPrompt) {
+      const timer = setTimeout(() => {
+        navigate({
+          to: "/w/$organizationSlug/assistant",
+          from: "/w/$organizationSlug/assistant",
+          search: {
+            conversationId,
+          },
+          replace: true,
+        });
+        setInitialPrompt(undefined);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [initialPrompt, navigate, conversationId, organizationSlug]);
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -117,6 +139,7 @@ function AssistantChat() {
               onSubmit={handleSubmit}
               onStop={stop}
               placeholder="Ask anything. Use @ to refer to documents"
+              initialPrompt={initialPrompt}
             />
           </div>
         ) : (
@@ -141,6 +164,7 @@ function AssistantChat() {
                   onStop={stop}
                   placeholder="Ask anything. Use @ to refer to documents"
                   canStop={canStop}
+                  initialPrompt={initialPrompt}
                 />
               </div>
             </div>

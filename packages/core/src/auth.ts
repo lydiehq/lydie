@@ -68,8 +68,8 @@ export const authClient = betterAuth({
       ...(Resource.App.stage === "production"
         ? {}
         : {
-            sameSite: "none",
-          }),
+          sameSite: "none",
+        }),
       partitioned: true,
       secure: Resource.App.stage !== "production",
     },
@@ -97,18 +97,6 @@ export const authClient = betterAuth({
             userId: user.id,
             email: user.email,
             fullName: user.name || `${firstName}`,
-          });
-
-          const organizationName = `${firstName}'s Organization`;
-          const baseSlug = slugify(organizationName);
-          // Make slug unique by appending random characters
-          const slug = `${baseSlug}-${createId().slice(0, 6)}`;
-
-          // Create organization with all required setup (organization, member, settings)
-          await createOrganization({
-            name: organizationName,
-            slug: slug,
-            userId: user.id,
           });
 
           // Create default user settings if they don't exist

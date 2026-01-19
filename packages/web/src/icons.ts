@@ -118,3 +118,5 @@ export { default as ShieldIcon } from "~icons/ion/shield";
 export { default as KeyIcon } from "~icons/ion/key";
 export { default as TrendingUpIcon } from "~icons/ion/trending-up";
 export { default as CheckCircleIcon } from "~icons/ion/checkmark-circle";
+export { default as LifeBuoyIcon } from "~icons/ion/help-buoy";
+export { default as HelpCircleIcon } from "~icons/ion/help-circle";

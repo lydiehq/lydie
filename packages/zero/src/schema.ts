@@ -205,6 +205,7 @@ const organizationSettings = table("organization_settings")
   .columns({
     id: string(),
     organization_id: string(),
+    onboarding_status: json().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -580,6 +581,34 @@ const integrationActivityLogsRelations = relationships(
   })
 );
 
+const feedbackSubmissions = table("feedback_submissions")
+  .columns({
+    id: string(),
+    user_id: string(),
+    organization_id: string(),
+    type: string(),
+    message: string(),
+    metadata: json().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const feedbackSubmissionsRelations = relationships(
+  feedbackSubmissions,
+  ({ one }) => ({
+    user: one({
+      sourceField: ["user_id"],
+      destField: ["id"],
+      destSchema: users,
+    }),
+    organization: one({
+      sourceField: ["organization_id"],
+      destField: ["id"],
+      destSchema: organizations,
+    }),
+  })
+);
+
 export const schema = createSchema({
   tables: [
     users,
@@ -601,6 +630,7 @@ export const schema = createSchema({
     syncMetadata,
     integrationActivityLogs,
     documentPublications,
+    feedbackSubmissions,
   ],
   relationships: [
     documentsRelations,
@@ -622,6 +652,7 @@ export const schema = createSchema({
     syncMetadataRelations,
     integrationActivityLogsRelations,
     documentPublicationsRelations,
+    feedbackSubmissionsRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,
