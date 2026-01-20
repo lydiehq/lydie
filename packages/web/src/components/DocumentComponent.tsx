@@ -1,5 +1,5 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { PlusIcon, Trash2Icon } from "@/icons";
+import { AddIcon, Trash2Icon } from "@/icons";
 import { Button } from "./generic/Button";
 import {
   TextField as AriaTextField,
@@ -195,7 +195,7 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
                   size="xs"
                   className="w-full justify-center border-dashed"
                 >
-                  <PlusIcon className="size-3 mr-1.5" />
+                  <AddIcon className="size-3 mr-1.5" />
                   Add Item
                 </Button>
               </div>

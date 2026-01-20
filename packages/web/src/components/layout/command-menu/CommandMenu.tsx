@@ -14,7 +14,7 @@ import {
 } from "@/stores/command-menu";
 import {
   SearchIcon,
-  PlusIcon,
+  AddIcon,
   HomeIcon,
   BotIcon,
   SettingsIcon,
@@ -63,26 +63,26 @@ export function CommandMenu() {
   const [currentDocument] = useQuery(
     currentDocumentId
       ? queries.documents.byId({
-          organizationId: organization.id,
-          documentId: currentDocumentId,
-        })
+        organizationId: organization.id,
+        documentId: currentDocumentId,
+      })
       : queries.documents.byId({
-          organizationId: organization.id,
-          documentId: "non-existent",
-        })
+        organizationId: organization.id,
+        documentId: "non-existent",
+      })
   );
 
   // Search documents using Zero - only when on search page
   const [searchData] = useQuery(
     currentPage === "search"
       ? queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: search,
-        })
+        organizationId: organization.id,
+        searchTerm: search,
+      })
       : queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: "",
-        })
+        organizationId: organization.id,
+        searchTerm: "",
+      })
   );
 
   const searchDocuments = searchData?.documents || [];
@@ -147,7 +147,7 @@ export function CommandMenu() {
       {
         id: "create-document",
         label: "Create new document…",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: createDocument,
       },
     ];
@@ -156,7 +156,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "publish",
         label: "Publish document",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           if (currentDocument) {
             publishDocument(currentDocument.id);
@@ -166,7 +166,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           if (currentDocumentId) {
             const documentTitle = currentDocument.title || "Untitled Document";
@@ -294,7 +294,7 @@ export function CommandMenu() {
       {
         id: "create-organization",
         label: "Create new organization",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           navigate({
             to: "/onboarding",

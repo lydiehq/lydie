@@ -14,6 +14,6 @@
     "sst": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^25.0.8"
+    "@types/node": "^25.0.9"
   }
 }

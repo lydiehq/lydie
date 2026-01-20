@@ -10,7 +10,7 @@ import { useState } from "react";
 import { CustomFieldsEditor } from "./CustomFieldsEditor";
 import { ArrowDownBIcon } from "@/icons";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { DocumentIcon, PlusIcon } from "@/icons";
+import { DocumentIcon, AddIcon } from "@/icons";
 import { Button as GenericButton } from "@/components/generic/Button";
 import { Link } from "../generic/Link";
 import type { QueryResultType } from "@rocicorp/zero";
@@ -40,7 +40,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
           onPress={handleCreateChildPage}
           className="text-gray-600 hover:text-gray-900"
         >
-          <PlusIcon className="size-4 mr-1" />
+          <AddIcon className="size-4 mr-1" />
           Add document
         </GenericButton>
       </div>

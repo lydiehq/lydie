@@ -9,7 +9,7 @@ import { useDocumentSearch } from "@/hooks/use-document-search";
 import { usePageNavigation } from "@/hooks/use-page-navigation";
 import { useBulkDelete } from "@/hooks/use-bulk-delete";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
-import { PlusIcon } from "@/icons";
+import { AddIcon } from "@/icons";
 import { GridList } from "react-aria-components";
 import { useState, useMemo, useEffect } from "react";
 import { Heading } from "@/components/generic/Heading";
@@ -69,8 +69,8 @@ export function HomeFileExplorer() {
   const documents = search.trim()
     ? allDocuments
     : tree
-    ? allDocuments.filter((doc) => doc.parent_id === tree)
-    : allDocuments.filter((doc) => !doc.parent_id);
+      ? allDocuments.filter((doc) => doc.parent_id === tree)
+      : allDocuments.filter((doc) => !doc.parent_id);
 
   // Create items for documents
   const documentItems: ItemType[] = useMemo(
@@ -183,13 +183,13 @@ export function HomeFileExplorer() {
       recentlyOpenedList.selectedKeys === "all"
         ? true
         : recentlyOpenedList.selectedKeys instanceof Set &&
-          recentlyOpenedList.selectedKeys.has(item.id)
+        recentlyOpenedList.selectedKeys.has(item.id)
     ),
     ...documentList.items.filter((item) =>
       documentList.selectedKeys === "all"
         ? true
         : documentList.selectedKeys instanceof Set &&
-          documentList.selectedKeys.has(item.id)
+        documentList.selectedKeys.has(item.id)
     ),
   ];
 
@@ -216,7 +216,7 @@ export function HomeFileExplorer() {
         <div className="flex items-center gap-2">
           <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           <Button onPress={() => createDocument(tree)} size="sm">
-            <PlusIcon className="size-4" />
+            <AddIcon className="size-4" />
             New Document
           </Button>
         </div>
@@ -242,7 +242,7 @@ export function HomeFileExplorer() {
           </div>
         )}
         {documentList.items.length === 0 &&
-        recentlyOpenedList.items.length === 0 ? (
+          recentlyOpenedList.items.length === 0 ? (
           <EmptyState hasSearch={search.trim().length > 0} />
         ) : (
           <div className="flex flex-col gap-y-4">
@@ -275,7 +275,7 @@ export function HomeFileExplorer() {
                         recentlyOpenedList.selectedKeys === "all"
                           ? true
                           : recentlyOpenedList.selectedKeys instanceof Set &&
-                            recentlyOpenedList.selectedKeys.has(item.id)
+                          recentlyOpenedList.selectedKeys.has(item.id)
                       }
                     />
                   )}
@@ -310,7 +310,7 @@ export function HomeFileExplorer() {
                       documentList.selectedKeys === "all"
                         ? true
                         : documentList.selectedKeys instanceof Set &&
-                          documentList.selectedKeys.has(item.id)
+                        documentList.selectedKeys.has(item.id)
                     }
                   />
                 )}
