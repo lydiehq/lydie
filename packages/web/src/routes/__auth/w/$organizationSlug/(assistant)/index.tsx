@@ -1,8 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Surface } from "@/components/layout/Surface";
 import { Button } from "@/components/generic/Button";
 import { Separator } from "@/components/generic/Separator";
-import { useFloatingAssistant } from "@/context/floating-assistant.context";
+import { CircularProgress } from "@/components/generic/CircularProgress";
+import { useOnboardingSteps } from "@/hooks/use-onboarding-steps";
+import { OnboardingStepDocuments } from "@/components/onboarding/OnboardingStepDocuments";
+import { OnboardingStepAssistant } from "@/components/onboarding/OnboardingStepAssistant";
+import { OnboardingStepIntegrations } from "@/components/onboarding/OnboardingStepIntegrations";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/icons";
+import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/(assistant)/"
@@ -22,81 +28,119 @@ function PageComponent() {
 }
 
 function Onboarding() {
-  const { open: openAssistant } = useFloatingAssistant();
+  const {
+    currentStep,
+    nextStep,
+    previousStep,
+    completeOnboarding,
+    getProgress,
+    getCurrentStepIndex,
+    getTotalSteps,
+    isFirstStep,
+    isLastStep,
+  } = useOnboardingSteps();
+  const navigate = useNavigate();
+  const { organization } = useOrganization();
 
-  const handlePromptClick = (prompt: string) => {
-    openAssistant({ prompt });
+  const progress = getProgress();
+
+  const handleSkip = () => {
+    completeOnboarding();
+    navigate({
+      to: "/w/$organizationSlug",
+      params: { organizationSlug: organization.slug },
+    });
   };
 
-  const promptButtons = [
-    {
-      title: "Organize documents",
-      prompt: "Please organize our documents",
-    },
-    {
-      title: "Create a new document",
-      prompt: "Please create a new document",
-    },
-    {
-      title: "Delete documents",
-      prompt: "Please help me delete documents",
-    },
-  ];
+  const handleNext = () => {
+    if (isLastStep) {
+      completeOnboarding();
+      navigate({
+        to: "/w/$organizationSlug",
+        params: { organizationSlug: organization.slug },
+      });
+    } else {
+      nextStep();
+    }
+  };
 
-  const progress = 0; // You can calculate this based on your needs
-  const size = 20;
-  const strokeWidth = 2;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
+  const stepTitles = {
+    documents: "Let's get you started!",
+    assistant: "Meet your assistant",
+    integrations: "Connect your tools",
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case "documents":
+        return <OnboardingStepDocuments />;
+      case "assistant":
+        return <OnboardingStepAssistant />;
+      case "integrations":
+        return <OnboardingStepIntegrations />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="flex items-center justify-center size-full">
-      <div className="p-12">
+    <div className="flex p-8 bg-white shadow-surface rounded-xl gap-x-16 items-center size-full">
+      {/* <div className="h-full rounded-lg bg-gray-100 w-[420px] relative overflow-hidden ring ring-black/8">
+        <img src="/screenshot_sidebar.png" className="size-full object-cover" />
+      </div> */}
+
+      <div className="">
         <div className="flex flex-col gap-y-6 max-w-lg">
           <div className="flex items-center gap-x-2">
-            <svg width={size} height={size} className="transform -rotate-90">
-              <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                stroke="#e5e7eb"
-                strokeWidth={strokeWidth}
-                fill="none"
-              />
-              <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                stroke="#9c9c9c"
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                className="transition-all duration-300"
-              />
-            </svg>
+            <CircularProgress
+              progress={progress}
+              size={20}
+              progressColor="#9c9c9c"
+            />
+            <span className="text-xs text-gray-500">
+              Step {getCurrentStepIndex() + 1} of {getTotalSteps()}
+            </span>
           </div>
-          <span className="text-lg font-medium text-gray-900">Let's get you started!</span>
-          <p className="text-gray-700 text-sm/relaxed">
-            We&apos;ve created a few documents for you to get started. Use the assistant chat to help you organize and find your documents.
-          </p>
-          <div className="flex items-center gap-x-1">
-            {promptButtons.map(({ title, prompt }) => (
+          <span className="text-lg font-medium text-gray-900">
+            {stepTitles[currentStep]}
+          </span>
+          {renderStepContent()}
+          <Separator />
+          <div className="flex items-center justify-between gap-x-2">
+            <div className="flex items-center gap-x-2">
+              {!isFirstStep && (
+                <Button
+                  onPress={previousStep}
+                  intent="secondary"
+                  size="sm"
+                >
+                  <span className="flex items-center gap-x-1">
+                    <ChevronLeftIcon className="size-4" />
+                    Previous
+                  </span>
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-x-2">
               <Button
-                key={title}
-                onPress={() => handlePromptClick(prompt)}
+                onPress={handleSkip}
                 intent="secondary"
                 size="sm"
-                rounded
               >
-                {title}
+                Skip
               </Button>
-            ))}
+              <Button
+                onPress={handleNext}
+                intent="primary"
+                size="sm"
+              >
+                <span className="flex items-center gap-x-1">
+                  {isLastStep ? "Get started" : "Next"}
+                  {!isLastStep && <ChevronRightIcon className="size-4" />}
+                </span>
+              </Button>
+            </div>
           </div>
-          <Separator />
-          <Button intent="secondary" size="sm">Skip and delete documents</Button>
         </div>
       </div>
     </div>

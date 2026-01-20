@@ -40,7 +40,7 @@ export function FloatingAssistant() {
             layoutId="floating-assistant"
             initial={false}
             transition={{ type: "spring", stiffness: 450, damping: 35 }}
-            className="fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/4 shadow-surface flex flex-col overflow-hidden z-50"
+            className="fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/8 shadow-lg flex flex-col overflow-hidden z-50"
           >
             <div className="flex items-center justify-between px-4 py-3">
               <h2 className="text-sm font-medium text-gray-900">AI Assistant</h2>
@@ -154,16 +154,16 @@ function FloatingAssistantChatContent({
   const canStop = status === "submitted" || status === "streaming";
 
   return (
-    <div className="flex flex-col overflow-hidden grow bg-blue-200">
+    <div className="flex flex-col overflow-hidden grow h-full">
       <ChatMessages
         messages={messages}
         status={status as "submitted" | "streaming" | "ready" | "error"}
         editor={null}
         organizationId={organizationId}
       />
-      <div className="p-3 relative shrink-0">
+      <div className="p-1.5 relative">
         <div className="top-0 absolute inset-x-0 h-6 bg-linear-to-t from-gray-50 via-gray-50" />
-        <div className="rounded-lg bg-white p-2 flex flex-col gap-y-2 z-10 relative shadow-surface">
+        <div className="rounded-lg p-2 flex flex-col gap-y-2 z-10 relative bg-gray-100 ring ring-black/8">
           <AnimatePresence mode="sync">
             {alert && (
               <motion.div
