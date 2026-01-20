@@ -18,7 +18,7 @@ import { createId } from "@lydie/core/id";
 import { mutators } from "@lydie/zero/mutators";
 import {
   SearchIcon,
-  PlusIcon,
+  AddIcon,
   HomeIcon,
   BotIcon,
   SettingsIcon,
@@ -67,26 +67,26 @@ export function CommandMenu() {
   const [currentDocument] = useQuery(
     currentDocumentId
       ? queries.documents.byId({
-          organizationId: organization.id,
-          documentId: currentDocumentId,
-        })
+        organizationId: organization.id,
+        documentId: currentDocumentId,
+      })
       : queries.documents.byId({
-          organizationId: organization.id,
-          documentId: "non-existent",
-        })
+        organizationId: organization.id,
+        documentId: "non-existent",
+      })
   );
 
   // Search documents using Zero - only when on search page
   const [searchData] = useQuery(
     currentPage === "search"
       ? queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: search,
-        })
+        organizationId: organization.id,
+        searchTerm: search,
+      })
       : queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: "",
-        })
+        organizationId: organization.id,
+        searchTerm: "",
+      })
   );
 
   const searchDocuments = searchData?.documents || [];
@@ -163,56 +163,12 @@ export function CommandMenu() {
     `/w/$organizationSlug/settings/integrations/${integrationType}`;
 
   const menuSections = useMemo<MenuSection[]>(() => {
-    const favoritesItems: MenuItem[] = [];
-
-    // Add special onboarding guide item during documents onboarding step
-    if (currentStep === "documents") {
-      favoritesItems.push({
-        id: "create-onboarding-guide",
-        label: "✨ Create Interactive Guide (Recommended)",
-        icon: PlusIcon,
-        action: async () => {
-          try {
-            // Generate IDs on the client side
-            const parentId = createId();
-            const childId = createId();
-            
-            await z.mutate(
-              mutators.document.createOnboardingGuide({
-                organizationId: organization.id,
-                parentId,
-                childId,
-              })
-            );
-            
-            // Mark checklist items as complete
-            setChecked("documents:create-document", true);
-            setChecked("documents:explore-editor", true);
-            
-            // Navigate to the parent document
-            navigate({
-              from: "/w/$organizationSlug",
-              to: "/w/$organizationSlug/$id",
-              params: { id: parentId, organizationSlug: organization.slug || "" },
-            });
-          } catch (error) {
-            console.error("Failed to create onboarding guide:", error);
-          }
-        },
-        customClassName:
-          "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-3 text-sm outline-none data-[selected=true]:bg-blue-100 data-[selected=true]:text-blue-950 text-blue-700 bg-blue-50 border border-blue-200 transition-colors duration-150 font-medium",
-      });
-    }
-
-    favoritesItems.push({
-      id: "create-document",
-      label: "Create new document…",
-      icon: PlusIcon,
-      action: () => {
-        createDocument();
-        if (currentStep === "documents") {
-          setChecked("documents:create-document", true);
-        }
+    const favoritesItems: MenuItem[] = [
+      {
+        id: "create-document",
+        label: "Create new document…",
+        icon: AddIcon,
+        action: createDocument,
       },
     });
 
@@ -220,7 +176,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "publish",
         label: "Publish document",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           if (currentDocument) {
             publishDocument(currentDocument.id);
@@ -230,7 +186,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           if (currentDocumentId) {
             const documentTitle = currentDocument.title || "Untitled Document";
@@ -358,7 +314,7 @@ export function CommandMenu() {
       {
         id: "create-organization",
         label: "Create new organization",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           navigate({
             to: "/onboarding",

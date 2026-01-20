@@ -22,7 +22,7 @@ import {
   CopyIcon,
   EyeIcon,
   EyeOffIcon,
-  PlusIcon,
+  AddIcon,
   MoreHorizontalIcon,
   XIcon,
   UserIcon,
@@ -371,7 +371,7 @@ function RouteComponent() {
             size="sm"
             intent="secondary"
           >
-            <PlusIcon className="size-3.5 mr-1" />
+            <AddIcon className="size-3.5 mr-1" />
             Invite Member
           </Button>
         </div>
@@ -427,8 +427,8 @@ function RouteComponent() {
                               handleRemoveMember(
                                 member.id,
                                 member.user?.name ||
-                                  member.user?.email ||
-                                  "this member"
+                                member.user?.email ||
+                                "this member"
                               )
                             }
                             className="text-red-600"
@@ -545,7 +545,7 @@ function RouteComponent() {
             size="sm"
             intent="secondary"
           >
-            <PlusIcon className="size-3.5 mr-1" />
+            <AddIcon className="size-3.5 mr-1" />
             Create API Key
           </Button>
         </div>
@@ -578,8 +578,8 @@ function RouteComponent() {
                           Last used:{" "}
                           {key.last_used_at
                             ? formatDistanceToNow(key.last_used_at, {
-                                addSuffix: true,
-                              })
+                              addSuffix: true,
+                            })
                             : "Never"}
                         </span>
                       </div>

@@ -20,7 +20,7 @@ export { default as FolderIcon } from "~icons/ion/folder";
 export { default as FolderOpenIcon } from "~icons/ion/folder-open";
 
 // Actions
-export { default as PlusIcon } from "~icons/ion/add";
+export { default as AddIcon } from "~icons/ion/add";
 export { default as MinusIcon } from "~icons/ion/remove";
 export { default as CheckIcon } from "~icons/ion/checkmark";
 export { default as XIcon } from "~icons/ion/close";
