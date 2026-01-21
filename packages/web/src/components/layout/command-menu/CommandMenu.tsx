@@ -12,6 +12,8 @@ import {
   commandMenuOpenAtom,
   commandMenuStateAtom,
 } from "@/stores/command-menu";
+import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
+import { useOnboardingSteps } from "@/hooks/use-onboarding-steps";
 import {
   SearchIcon,
   PlusIcon,
@@ -96,6 +98,8 @@ export function CommandMenu() {
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
   const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom);
+  const { setChecked } = useOnboardingChecklist();
+  const { currentStep } = useOnboardingSteps();
 
   // Initialize pages from the atom's initialPage when menu opens
   useEffect(() => {
@@ -107,6 +111,13 @@ export function CommandMenu() {
       });
     }
   }, [isOpen, commandMenuState.initialPage]);
+
+  // Mark search menu as checked when search page is active during onboarding
+  useEffect(() => {
+    if (isOpen && currentPage === "search" && currentStep === "documents") {
+      setChecked("documents:search-menu", true);
+    }
+  }, [isOpen, currentPage, currentStep, setChecked]);
 
   // Reset pages and search when menu closes
   useEffect(() => {

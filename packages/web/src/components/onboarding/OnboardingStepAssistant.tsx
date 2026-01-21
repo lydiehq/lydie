@@ -49,8 +49,6 @@ export function OnboardingStepAssistant() {
           </Button>
         ))}
       </div>
-      <Separator />
-      <Button intent="secondary" size="sm">Skip and delete documents</Button>
     </div>
   );
 }

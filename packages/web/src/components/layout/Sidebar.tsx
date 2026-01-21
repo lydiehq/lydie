@@ -275,22 +275,6 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           {isFreePlan && !userIsAdmin && <UsageStats />}
         </div>
         <BottomBar />
-        {/* <div className="flex flex-col">
-          <Separator />
-          <nav className="py-2">
-            <ul className="flex flex-col gap-y-2">
-              <li>
-                <Link
-                  to="/w/$organizationSlug/settings"
-                  from="/w/$organizationSlug"
-                  className="text-xs font-medium text-gray-700"
-                >
-                  Send feedback
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div> */}
       </div>
     </div>
   );

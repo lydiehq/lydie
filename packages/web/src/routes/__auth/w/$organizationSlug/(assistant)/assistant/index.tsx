@@ -54,7 +54,6 @@ function PageComponent() {
   const { conversation } = Route.useLoaderData();
   const [sidebarSize, setSidebarSize] = useState(25);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
-  const { organizationSlug } = Route.useParams();
   const search = useSearch({ from: "/__auth/w/$organizationSlug/(assistant)/assistant/" });
   const initialPrompt = (search as { prompt?: string })?.prompt;
 

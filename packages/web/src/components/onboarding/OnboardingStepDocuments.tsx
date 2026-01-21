@@ -1,18 +1,9 @@
-import { Button } from "@/components/generic/Button";
 import { DocumentIcon, FolderIcon, SearchIcon } from "@/icons";
-import { useNavigate } from "@tanstack/react-router";
-import { useOrganization } from "@/context/organization.context";
+import { Checkbox } from "@/components/generic/Checkbox";
+import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
 
 export function OnboardingStepDocuments() {
-  const navigate = useNavigate();
-  const { organization } = useOrganization();
-
-  const handleExploreDocuments = () => {
-    navigate({
-      to: "/w/$organizationSlug",
-      params: { organizationSlug: organization.slug },
-    });
-  };
+  const { isChecked, setChecked } = useOnboardingChecklist();
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -26,47 +17,59 @@ export function OnboardingStepDocuments() {
         Your workspace is organized with documents. Create, organize, and manage all your content in one place. Documents can be nested in folders and linked together.
       </p>
       <div className="flex flex-col gap-y-3">
-        <div className="flex items-start gap-x-3">
-          <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-            <FolderIcon className="size-4 text-gray-600" />
+        <Checkbox
+          isSelected={isChecked("documents:organize-folders")}
+          onChange={(checked) => setChecked("documents:organize-folders", checked)}
+          className="items-start"
+        >
+          <div className="flex items-start gap-x-3">
+            <div className="p-1.5 bg-gray-50 rounded mt-0.5">
+              <FolderIcon className="size-4 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Organize with folders</p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Create folders to group related documents together
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Organize with folders</p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Create folders to group related documents together
-            </p>
+        </Checkbox>
+        <Checkbox
+          isSelected={isChecked("documents:search-menu")}
+          onChange={(checked) => setChecked("documents:search-menu", checked)}
+          className="items-start"
+        >
+          <div className="flex items-start gap-x-3">
+            <div className="p-1.5 bg-gray-50 rounded mt-0.5">
+              <SearchIcon className="size-4 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Search and discover</p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Quickly find any document using search (⌘K or click the search button)
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-start gap-x-3">
-          <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-            <SearchIcon className="size-4 text-gray-600" />
+        </Checkbox>
+        <Checkbox
+          isSelected={isChecked("documents:rich-editing")}
+          onChange={(checked) => setChecked("documents:rich-editing", checked)}
+          className="items-start"
+        >
+          <div className="flex items-start gap-x-3">
+            <div className="p-1.5 bg-gray-50 rounded mt-0.5">
+              <DocumentIcon className="size-4 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Rich editing</p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Edit documents with markdown support and formatting
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Search and discover</p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Quickly find any document using search
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-3">
-          <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-            <DocumentIcon className="size-4 text-gray-600" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Rich editing</p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Edit documents with markdown support and formatting
-            </p>
-          </div>
-        </div>
+        </Checkbox>
       </div>
-      <Button
-        onPress={handleExploreDocuments}
-        intent="primary"
-        size="sm"
-      >
-        Explore documents
-      </Button>
+
     </div>
   );
 }

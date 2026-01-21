@@ -77,3 +77,54 @@ body {
     margin-bottom: -2px;
   }
 }
+
+/* Animated checkbox checkmark */
+.checkbox-checkmark {
+  width: calc(100% - 0.5rem);
+  height: calc(100% - 0.5rem);
+  fill: none;
+  stroke: white;
+  stroke-width: 3px;
+  stroke-dasharray: 22px;
+  stroke-dashoffset: 66px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-dashoffset 200ms, stroke 200ms, fill 200ms;
+}
+
+.dark .checkbox-checkmark {
+  stroke: rgb(203 213 225); /* slate-300 */
+}
+
+.checkbox-checkmark-selected {
+  stroke-dashoffset: 44px;
+}
+
+.checkbox-checkmark-indeterminate {
+  stroke: none;
+  fill: white;
+  stroke-dashoffset: 0;
+}
+
+.dark .checkbox-checkmark-indeterminate {
+  fill: rgb(203 213 225); /* slate-300 */
+}
+
+.checkbox-checkmark-disabled {
+  stroke: rgb(156 163 175); /* gray-400 */
+}
+
+.dark .checkbox-checkmark-disabled {
+  stroke: rgb(100 116 139); /* slate-600 */
+  fill: rgb(100 116 139);
+}
+
+@media (forced-colors: active) {
+  .checkbox-checkmark {
+    stroke: HighlightText;
+  }
+  
+  .checkbox-checkmark-indeterminate {
+    fill: HighlightText;
+  }
+}

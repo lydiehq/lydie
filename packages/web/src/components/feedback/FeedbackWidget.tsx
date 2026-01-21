@@ -87,7 +87,7 @@ export function FeedbackWidget() {
                                     size="sm"
                                     onPress={close}
                                     aria-label="Close"
-                                    className="!p-1 text-gray-500 hover:text-gray-900"
+                                    className="p-1 text-gray-500 hover:text-gray-900"
                                 >
                                     <XIcon className="size-4" />
                                 </Button>
