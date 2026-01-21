@@ -3,7 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { Resource } from "sst"
 
 export const google = createGoogleGenerativeAI({
-	apiKey: Resource.GoogleAiStudioApiKey.value,
+  apiKey: Resource.GoogleAiStudioApiKey.value,
 })
 export const openAi = createOpenAI({ apiKey: Resource.OpenAiApiKey.value })
 export const embeddingModel = openAi.embedding("text-embedding-ada-002")

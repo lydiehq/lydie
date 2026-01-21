@@ -8,6 +8,6 @@ export { deserializeFromText }
 export type { TextDeserializeOptions, TextDeserializeOptions as TextParseOptions }
 
 export function serializeToPlainText(content: ContentNode): string {
-	const serializer = new PlainTextSerializer()
-	return renderWithBuilder(content, serializer)
+  const serializer = new PlainTextSerializer()
+  return renderWithBuilder(content, serializer)
 }

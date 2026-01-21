@@ -8,68 +8,65 @@ import { Button } from "@/components/generic/Button"
 import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
-	component: RouteComponent,
-	ssr: false,
-	loader: async ({ context, params }) => {
-		const { zero, organization } = context
-		const { id } = params
+  component: RouteComponent,
+  ssr: false,
+  loader: async ({ context, params }) => {
+    const { zero, organization } = context
+    const { id } = params
 
-		const doc = zero.run(
-			queries.documents.byId({
-				organizationId: organization.id,
-				documentId: id,
-			}),
-		)
+    const doc = zero.run(
+      queries.documents.byId({
+        organizationId: organization.id,
+        documentId: id,
+      }),
+    )
 
-		return { doc }
-	},
-	// head: async ({ loaderData }) => {
-	//   const doc = await loaderData?.doc;
-	//   return {
-	//     meta: [
-	//       {
-	//         title: doc ? `${doc.title} | Lydie` : "Lydie",
-	//       },
-	//     ],
-	//   };
-	// },
+    return { doc }
+  },
+  // head: async ({ loaderData }) => {
+  //   const doc = await loaderData?.doc;
+  //   return {
+  //     meta: [
+  //       {
+  //         title: doc ? `${doc.title} | Lydie` : "Lydie",
+  //       },
+  //     ],
+  //   };
+  // },
 })
 
 function RouteComponent() {
-	const { id } = Route.useParams()
-	const { organization } = useOrganization()
-	const [doc, status] = useQuery(
-		queries.documents.byId({
-			organizationId: organization.id,
-			documentId: id,
-		}),
-	)
+  const { id } = Route.useParams()
+  const { organization } = useOrganization()
+  const [doc, status] = useQuery(
+    queries.documents.byId({
+      organizationId: organization.id,
+      documentId: id,
+    }),
+  )
 
-	// Track document opened
-	useTrackOnMount("document_opened", {
-		documentId: id,
-		organizationId: organization.id,
-	})
+  // Track document opened
+  useTrackOnMount("document_opened", {
+    documentId: id,
+    organizationId: organization.id,
+  })
 
-	if (!doc && status.type === "complete") {
-		return (
-			<div className="h-screen py-1 pr-1 flex flex-col pl-1">
-				<Surface className="flex items-center justify-center">
-					<div className="flex flex-col items-center justify-center gap-y-2">
-						<span className="text-sm font-medium text-gray-900">Document not found</span>
-						<p className="text-sm text-gray-500">
-							{" "}
-							The document you are looking for does not exist.
-						</p>
-						<Button size="sm" href={`/w/${organization?.slug}`}>
-							Go back
-						</Button>
-					</div>
-				</Surface>
-			</div>
-		)
-	}
-	if (!doc) return null
+  if (!doc && status.type === "complete") {
+    return (
+      <div className="h-screen py-1 pr-1 flex flex-col pl-1">
+        <Surface className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-y-2">
+            <span className="text-sm font-medium text-gray-900">Document not found</span>
+            <p className="text-sm text-gray-500"> The document you are looking for does not exist.</p>
+            <Button size="sm" href={`/w/${organization?.slug}`}>
+              Go back
+            </Button>
+          </div>
+        </Surface>
+      </div>
+    )
+  }
+  if (!doc) return null
 
-	return <Editor doc={doc} key={id} />
+  return <Editor doc={doc} key={id} />
 }

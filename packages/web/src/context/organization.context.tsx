@@ -3,6 +3,6 @@ import { Route } from "@/routes/__auth/w/$organizationSlug/route"
 import type { QueryResultType } from "@rocicorp/zero"
 
 export function useOrganization() {
-	const { organization } = Route.useRouteContext()
-	return { organization }
+  const { organization } = Route.useRouteContext()
+  return { organization }
 }

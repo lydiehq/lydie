@@ -4,19 +4,19 @@
 
 // Generation utilities
 export {
-	embeddingModel,
-	generateEmbedding,
-	generateTitleEmbedding,
-	generateManyEmbeddings,
+  embeddingModel,
+  generateEmbedding,
+  generateTitleEmbedding,
+  generateManyEmbeddings,
 } from "./generation"
 
 // Chunking utilities
 export {
-	generateHeadingAwareChunks,
-	generateSimpleChunks,
-	generateParagraphChunks,
-	type Chunk,
-	type ParagraphChunk,
+  generateHeadingAwareChunks,
+  generateSimpleChunks,
+  generateParagraphChunks,
+  type Chunk,
+  type ParagraphChunk,
 } from "./chunking"
 
 // Document processing
@@ -27,11 +27,11 @@ export { processDocumentTitleEmbedding } from "./title-processing"
 
 // Search utilities
 export {
-	storeTitleEmbedding,
-	searchDocumentsByTitle,
-	hybridSearchDocuments,
-	searchDocumentsInSpecificDocument,
-	findRelatedDocuments,
-	findRelatedDocumentsByContent,
-	searchDocuments,
+  storeTitleEmbedding,
+  searchDocumentsByTitle,
+  hybridSearchDocuments,
+  searchDocumentsInSpecificDocument,
+  findRelatedDocuments,
+  findRelatedDocumentsByContent,
+  searchDocuments,
 } from "./search"

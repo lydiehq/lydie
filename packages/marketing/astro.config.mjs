@@ -7,20 +7,20 @@ import tailwindcss from "@tailwindcss/vite"
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://lydie.co",
-	integrations: [mdx(), sitemap(), react()],
-	output: "static",
-	vite: {
-		plugins: [tailwindcss()],
-	},
-	trailingSlash: "never",
-	image: {
-		service: {
-			entrypoint: "astro/assets/services/sharp",
-			config: {
-				limitInputPixels: false,
-			},
-		},
-		remotePatterns: [],
-	},
+  site: "https://lydie.co",
+  integrations: [mdx(), sitemap(), react()],
+  output: "static",
+  vite: {
+    plugins: [tailwindcss()],
+  },
+  trailingSlash: "never",
+  image: {
+    service: {
+      entrypoint: "astro/assets/services/sharp",
+      config: {
+        limitInputPixels: false,
+      },
+    },
+    remotePatterns: [],
+  },
 })

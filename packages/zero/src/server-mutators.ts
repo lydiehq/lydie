@@ -8,24 +8,24 @@ import { disconnectIntegrationMutation } from "./server-mutators/integrations/di
 import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link"
 
 export interface MutatorContext {
-	asyncTasks: Array<() => Promise<void>>
+  asyncTasks: Array<() => Promise<void>>
 }
 
 export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
-	const context = { asyncTasks }
+  const context = { asyncTasks }
 
-	return defineMutators(sharedMutators, {
-		document: {
-			publish: publishDocumentMutation(context),
-			update: updateDocumentMutation(context),
-			move: moveDocumentMutation(context),
-			delete: deleteDocumentMutation(context),
-		},
-		integrationConnection: {
-			disconnect: disconnectIntegrationMutation(context),
-		},
-		integration: {
-			createLink: createIntegrationLinkMutation(context),
-		},
-	})
+  return defineMutators(sharedMutators, {
+    document: {
+      publish: publishDocumentMutation(context),
+      update: updateDocumentMutation(context),
+      move: moveDocumentMutation(context),
+      delete: deleteDocumentMutation(context),
+    },
+    integrationConnection: {
+      disconnect: disconnectIntegrationMutation(context),
+    },
+    integration: {
+      createLink: createIntegrationLinkMutation(context),
+    },
+  })
 }
