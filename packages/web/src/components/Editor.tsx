@@ -87,10 +87,6 @@ function EditorContainer({ doc }: Props) {
     editable: !isLocked,
   })
 
-  useEffect(() => {
-    titleEditor.setContent(doc.title)
-  }, [doc.title, titleEditor])
-
   // Handle blur event for title editor
   useEffect(() => {
     if (!titleEditor.editor) return
