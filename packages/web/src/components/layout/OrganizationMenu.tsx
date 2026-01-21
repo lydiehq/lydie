@@ -76,7 +76,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
             </MenuItemLink>
             <MenuSeparator />
             <MenuItem onAction={() => setIsOrganizationDialogOpen(true)}>Switch workspace</MenuItem>
-            <MenuItem onAction={signOut}>Sign Out</MenuItem>
+            <MenuItem onAction={signOut}>Sign out</MenuItem>
           </Menu>
         </Popover>
       </MenuTrigger>

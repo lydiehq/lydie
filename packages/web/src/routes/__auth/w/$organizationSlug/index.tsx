@@ -19,7 +19,7 @@ import { DialogTrigger, Heading, Button as RACButton } from "react-aria-componen
 import { AnimatePresence, motion } from "motion/react"
 import { toast } from "sonner"
 
-export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)/")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
   component: PageComponent,
   ssr: false,
 })

@@ -81,10 +81,10 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
         <div className="flex gap-3 mt-4">
           <Button intent="primary" onPress={handleReload}>
             <RefreshCwIcon className="size-4 mr-2" />
-            Reload Page
+            Reload page
           </Button>
           <Button intent="secondary" onPress={signOut}>
-            Sign Out
+            Sign out
           </Button>
         </div>
       </div>

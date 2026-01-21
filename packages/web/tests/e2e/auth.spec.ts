@@ -29,7 +29,7 @@ test.describe("workspace auth", () => {
     await page.waitForURL(`/w/${organization.slug}`)
     await page.getByRole("button", { name: organization.name }).first().click()
 
-    await page.getByRole("menuitem", { name: "Sign Out" }).click()
+    await page.getByRole("menuitem", { name: "Sign out" }).click()
 
     await page.waitForURL(/\/auth/)
   })
