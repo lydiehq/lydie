@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react"
-import { useCallback, useState, useMemo } from "react"
+import { useCallback, useState, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
 import { EditorContent } from "@tiptap/react"
 import { Form, Button as RACButton, Button } from "react-aria-components"
@@ -16,11 +16,17 @@ import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatCon
 import { ChatAlert } from "@/components/editor/ChatAlert"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
 import { useOrganization } from "@/context/organization.context"
-import { AssistantProvider, useAssistant } from "@/context/assistant.context"
 import { useChatComposer } from "@/components/chat/useChatComposer"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
+import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
+import { createId } from "@lydie/core/id"
+import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
+import type { ChatAlertState } from "@/components/editor/ChatAlert"
+import { trackEvent } from "@/lib/posthog"
 
 export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: string | null }) {
   const { isOpen, close, toggle, isDocked, dock, undock, initialPrompt, clearPrompt } = useFloatingAssistant()
@@ -99,14 +105,12 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         </div>
       </div>
       <div className="flex-1 min-h-0">
-        <AssistantProvider organizationId={organization.id}>
-          <FloatingAssistantChatContent
-            organizationId={organization.id}
-            currentDocumentId={currentDocumentId}
-            initialPrompt={initialPrompt}
-            onPromptUsed={clearPrompt}
-          />
-        </AssistantProvider>
+        <FloatingAssistantChatContent
+          organizationId={organization.id}
+          currentDocumentId={currentDocumentId}
+          initialPrompt={initialPrompt}
+          onPromptUsed={clearPrompt}
+        />
       </div>
     </motion.div>
   )
@@ -125,11 +129,76 @@ function FloatingAssistantChatContent({
   initialPrompt?: string
   onPromptUsed?: () => void
 }) {
-  const { messages, sendMessage, stop, status, alert, setAlert } = useAssistant()
   const { organization } = useOrganization()
   const [hasUsedInitialPrompt, setHasUsedInitialPrompt] = useState(false)
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
   const [isCurrentDocumentDismissed, setIsCurrentDocumentDismissed] = useState(false)
+  const [conversationId] = useState(() => createId())
+  const [alert, setAlert] = useState<ChatAlertState | null>(null)
+  const messageStartTimeRef = useRef<number>(0)
+
+  const {
+    messages,
+    sendMessage: originalSendMessage,
+    stop,
+    status,
+  } = useChat<DocumentChatAgentUIMessage>({
+    id: conversationId,
+    transport: new DefaultChatTransport({
+      api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
+      credentials: "include",
+      body: {
+        conversationId,
+      },
+      headers: {
+        "X-Organization-Id": organizationId,
+      },
+    }),
+    onError: (error) => {
+      console.error("Assistant chat error:", error)
+      const { message } = parseChatError(error)
+
+      if (isUsageLimitError(error)) {
+        setAlert({
+          show: true,
+          type: "error",
+          title: "Daily Limit Reached",
+          message,
+        })
+      } else {
+        setAlert({
+          show: true,
+          type: "error",
+          title: "Something went wrong",
+          message,
+        })
+      }
+    },
+    onFinish: () => {
+      const responseTime = messageStartTimeRef.current ? Date.now() - messageStartTimeRef.current : undefined
+
+      trackEvent("assistant_response_received", {
+        conversationId,
+        organizationId,
+        responseTimeMs: responseTime,
+      })
+    },
+  })
+
+  const sendMessage = useCallback(
+    (options: { text: string; metadata?: any }) => {
+      messageStartTimeRef.current = Date.now()
+
+      trackEvent("assistant_message_sent", {
+        conversationId,
+        organizationId,
+        messageLength: options.text.length,
+      })
+
+      return originalSendMessage(options)
+    },
+    [originalSendMessage, conversationId, organizationId],
+  )
 
   const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
   const [currentDocument] = useQuery(

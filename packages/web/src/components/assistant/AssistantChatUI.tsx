@@ -3,13 +3,20 @@ import { useNavigate } from "@tanstack/react-router"
 import { ChatMessages } from "@/components/chat/ChatMessages"
 import { ChatAlert } from "@/components/editor/ChatAlert"
 import { AssistantInput } from "@/components/assistant/AssistantInput"
-import { useAssistant } from "@/context/assistant.context"
+import type { ChatAlertState } from "@/components/editor/ChatAlert"
 
 interface AssistantChatUIProps {
   organizationId: string
   initialPrompt?: string
   onPromptUsed?: () => void
   showEmptyState?: boolean
+  messages: any[]
+  sendMessage: (options: { text: string; metadata?: any }) => void
+  stop: () => void
+  status: string
+  alert: ChatAlertState | null
+  setAlert: (alert: ChatAlertState | null) => void
+  conversationId: string
 }
 
 export function AssistantChatUI({
@@ -17,8 +24,14 @@ export function AssistantChatUI({
   initialPrompt,
   onPromptUsed,
   showEmptyState = true,
+  messages,
+  sendMessage,
+  stop,
+  status,
+  alert,
+  setAlert,
+  conversationId,
 }: AssistantChatUIProps) {
-  const { messages, sendMessage, stop, status, alert, setAlert, conversationId } = useAssistant()
   const navigate = useNavigate()
   const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(initialPrompt)
 
