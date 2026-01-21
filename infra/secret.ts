@@ -1,3 +1,4 @@
+// oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
 
 export const secret = {

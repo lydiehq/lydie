@@ -1,12 +1,14 @@
+// oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
 import { secret } from "./secret"
 import { zero } from "./zero"
 
 export const organizationAssetsBucket = new sst.aws.Bucket("OrganizationAssets", { access: "cloudfront" })
 
-export const assetsRouter = new sst.aws.Router("AssetsRouter", {
-  ...($app.stage === "production" ? { domain: "assets.lydie.co" } : {}),
-})
+export const assetsRouter = new sst.aws.Router(
+  "AssetsRouter",
+  $app.stage === "production" ? { domain: "assets.lydie.co" } : {},
+)
 
 assetsRouter.routeBucket("*", organizationAssetsBucket)
 
