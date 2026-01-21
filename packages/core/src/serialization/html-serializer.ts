@@ -1,47 +1,42 @@
-import type { NodeBuilder } from "../content";
+import type { NodeBuilder } from "../content"
 
 export class HTMLSerializer implements NodeBuilder<string> {
-  private linkPrefix?: string;
+  private linkPrefix?: string
 
   constructor(options?: { linkPrefix?: string }) {
-    this.linkPrefix = options?.linkPrefix;
+    this.linkPrefix = options?.linkPrefix
   }
 
-  internalLink(
-    content: string,
-    documentId?: string,
-    documentSlug?: string,
-    documentTitle?: string
-  ): string {
+  internalLink(content: string, documentId?: string, documentSlug?: string, documentTitle?: string): string {
     // Use slug if available, otherwise fall back to document ID
-    let href = documentSlug || documentId || "#";
+    let href = documentSlug || documentId || "#"
     if (!href.startsWith("/") && !href.startsWith("http")) {
-      href = `/${href}`;
-    }
-    
-    if (this.linkPrefix) {
-      href = `${this.linkPrefix}${href}`;
+      href = `/${href}`
     }
 
-    const titleAttr = documentTitle ? ` title="${this.escape(documentTitle)}"` : "";
-    return `<a href="${this.escape(href)}"${titleAttr}>${content}</a>`;
+    if (this.linkPrefix) {
+      href = `${this.linkPrefix}${href}`
+    }
+
+    const titleAttr = documentTitle ? ` title="${this.escape(documentTitle)}"` : ""
+    return `<a href="${this.escape(href)}"${titleAttr}>${content}</a>`
   }
 
   text(content: string): string {
-    return this.escape(content);
+    return this.escape(content)
   }
 
   bold(content: string): string {
-    return `<strong>${content}</strong>`;
+    return `<strong>${content}</strong>`
   }
 
   italic(content: string): string {
-    return `<em>${content}</em>`;
+    return `<em>${content}</em>`
   }
 
   link(content: string, href?: string, rel?: string, target?: string): string {
     // Apply link prefix if provided and href is a relative path
-    let finalHref = href;
+    let finalHref = href
     if (
       this.linkPrefix &&
       href &&
@@ -50,41 +45,39 @@ export class HTMLSerializer implements NodeBuilder<string> {
       !href.startsWith("tel:")
     ) {
       // Only prefix relative paths (not absolute URLs or protocols)
-      finalHref = `${this.linkPrefix}${
-        href.startsWith("/") ? href : `/${href}`
-      }`;
+      finalHref = `${this.linkPrefix}${href.startsWith("/") ? href : `/${href}`}`
     }
 
-    const hrefAttr = finalHref ? ` href="${this.escape(finalHref)}"` : "";
-    const relAttr = rel ? ` rel="${this.escape(rel)}"` : "";
-    const targetAttr = target ? ` target="${this.escape(target)}"` : "";
-    return `<a${hrefAttr}${relAttr}${targetAttr}>${content}</a>`;
+    const hrefAttr = finalHref ? ` href="${this.escape(finalHref)}"` : ""
+    const relAttr = rel ? ` rel="${this.escape(rel)}"` : ""
+    const targetAttr = target ? ` target="${this.escape(target)}"` : ""
+    return `<a${hrefAttr}${relAttr}${targetAttr}>${content}</a>`
   }
 
   doc(children: string[]): string {
-    return `<div>${children.join("")}</div>`;
+    return `<div>${children.join("")}</div>`
   }
 
   paragraph(children: string[]): string {
-    return `<p>${children.join("")}</p>`;
+    return `<p>${children.join("")}</p>`
   }
 
   heading(level: number, children: string[]): string {
-    const safeLevel = level >= 1 && level <= 6 ? level : 1;
-    return `<h${safeLevel}>${children.join("")}</h${safeLevel}>`;
+    const safeLevel = level >= 1 && level <= 6 ? level : 1
+    return `<h${safeLevel}>${children.join("")}</h${safeLevel}>`
   }
 
   bulletList(children: string[]): string {
-    return `<ul>${children.join("")}</ul>`;
+    return `<ul>${children.join("")}</ul>`
   }
 
   orderedList(children: string[], start?: number): string {
-    const startAttr = typeof start === "number" ? ` start="${start}"` : "";
-    return `<ol${startAttr}>${children.join("")}</ol>`;
+    const startAttr = typeof start === "number" ? ` start="${start}"` : ""
+    return `<ol${startAttr}>${children.join("")}</ol>`
   }
 
   listItem(children: string[]): string {
-    return `<li>${children.join("")}</li>`;
+    return `<li>${children.join("")}</li>`
   }
 
   blockquote(children: string[]): string {
@@ -92,29 +85,27 @@ export class HTMLSerializer implements NodeBuilder<string> {
   }
 
   horizontalRule(): string {
-    return "<hr>";
+    return "<hr>"
   }
 
   codeBlock(children: string[], language?: string | null): string {
-    const code = children.join("");
-    const langAttr = language ? ` class="language-${this.escape(language)}"` : "";
-    return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`;
+    const code = children.join("")
+    const langAttr = language ? ` class="language-${this.escape(language)}"` : ""
+    return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`
   }
 
   customBlock(name: string, properties: Record<string, any>): string {
-    return `<div class="custom-block" data-component="${this.escape(
-      name
-    )}" data-properties="${this.escape(
-      JSON.stringify(properties)
-    )}">[Custom Block: ${this.escape(name)}]</div>`;
+    return `<div class="custom-block" data-component="${this.escape(name)}" data-properties="${this.escape(
+      JSON.stringify(properties),
+    )}">[Custom Block: ${this.escape(name)}]</div>`
   }
 
   fragment(children: string[]): string {
-    return children.join("");
+    return children.join("")
   }
 
   empty(): string {
-    return "";
+    return ""
   }
 
   escape(text: string): string {
@@ -123,9 +114,9 @@ export class HTMLSerializer implements NodeBuilder<string> {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+      .replace(/'/g, "&#39;")
   }
 }
 
 // For backwards compatibility
-export { HTMLSerializer as HTMLBuilder };
+export { HTMLSerializer as HTMLBuilder }

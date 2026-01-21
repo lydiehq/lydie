@@ -1,66 +1,66 @@
-import React, { useState } from "react";
-import { TipTapEditor } from "../generic/TipTapEditor";
-import { Container } from "../Container";
-import { Button } from "../generic/Button";
-import { Trash2, Download, FileText } from "lucide-react";
-import type { Editor } from "@tiptap/react";
-import { ToolHeader } from "./ToolHeader";
+import React, { useState } from "react"
+import { TipTapEditor } from "../generic/TipTapEditor"
+import { Container } from "../Container"
+import { Button } from "../generic/Button"
+import { Trash2, Download, FileText } from "lucide-react"
+import type { Editor } from "@tiptap/react"
+import { ToolHeader } from "./ToolHeader"
 
 export function TextToPdfTool() {
-  const [editor, setEditor] = useState<Editor | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [editor, setEditor] = useState<Editor | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const handleUpdate = (editorInstance: Editor) => {
-    setEditor(editorInstance);
-  };
+    setEditor(editorInstance)
+  }
 
   const clearText = () => {
     if (editor) {
-      editor.commands.clearContent();
+      editor.commands.clearContent()
     }
-  };
+  }
 
   const generatePdf = async () => {
-    if (!editor || isGenerating) return;
+    if (!editor || isGenerating) return
 
-    setIsGenerating(true);
+    setIsGenerating(true)
     try {
       // Dynamically import jspdf and html2canvas
       const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
         import("jspdf"),
         import("html2canvas-pro"),
-      ]);
+      ])
 
       // Get the editor content element from the editor instance
-      const editorElement = editor.view.dom as HTMLElement;
+      const editorElement = editor.view.dom as HTMLElement
 
       if (!editorElement) {
-        throw new Error("Editor content not found");
+        throw new Error("Editor content not found")
       }
 
       // Create a temporary container with better styling for PDF
-      const tempContainer = document.createElement("div");
-      tempContainer.style.position = "absolute";
-      tempContainer.style.left = "-9999px";
-      tempContainer.style.width = "210mm"; // A4 width
-      tempContainer.style.padding = "20mm";
-      tempContainer.style.fontFamily = "system-ui, -apple-system, sans-serif";
-      tempContainer.style.fontSize = "12pt";
-      tempContainer.style.lineHeight = "1.6";
-      tempContainer.style.color = "#000";
-      tempContainer.style.backgroundColor = "#fff";
+      const tempContainer = document.createElement("div")
+      tempContainer.style.position = "absolute"
+      tempContainer.style.left = "-9999px"
+      tempContainer.style.width = "210mm" // A4 width
+      tempContainer.style.padding = "20mm"
+      tempContainer.style.fontFamily = "system-ui, -apple-system, sans-serif"
+      tempContainer.style.fontSize = "12pt"
+      tempContainer.style.lineHeight = "1.6"
+      tempContainer.style.color = "#000"
+      tempContainer.style.backgroundColor = "#fff"
 
       // Clone the editor content
-      const clonedContent = editorElement.cloneNode(true) as HTMLElement;
+      const clonedContent = editorElement.cloneNode(true) as HTMLElement
 
       // Clean up the cloned content for better PDF rendering
-      clonedContent.style.width = "100%";
-      clonedContent.style.maxWidth = "none";
-      clonedContent.style.margin = "0";
-      clonedContent.style.padding = "0";
+      clonedContent.style.width = "100%"
+      clonedContent.style.maxWidth = "none"
+      clonedContent.style.margin = "0"
+      clonedContent.style.padding = "0"
 
-      tempContainer.appendChild(clonedContent);
-      document.body.appendChild(tempContainer);
+      tempContainer.appendChild(clonedContent)
+      document.body.appendChild(tempContainer)
 
       // Convert to canvas
       const canvas = await html2canvas(tempContainer, {
@@ -68,46 +68,46 @@ export function TextToPdfTool() {
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-      });
+      })
 
       // Clean up
-      document.body.removeChild(tempContainer);
+      document.body.removeChild(tempContainer)
 
       // Create PDF
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
-      });
+      })
 
-      const imgData = canvas.toDataURL("image/png");
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      const imgData = canvas.toDataURL("image/png")
+      const imgWidth = 210 // A4 width in mm
+      const pageHeight = 297 // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      let heightLeft = imgHeight
+      let position = 0
 
       // Add first page
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
 
       // Add additional pages if needed
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
       }
 
       // Save the PDF
-      pdf.save("document.pdf");
+      pdf.save("document.pdf")
     } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      console.error("Error generating PDF:", error)
+      alert("Failed to generate PDF. Please try again.")
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
   return (
     <Container>
@@ -119,10 +119,7 @@ export function TextToPdfTool() {
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label
-                htmlFor="editor"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="editor" className="block text-sm font-medium text-gray-700">
                 Enter your text
               </label>
               <div className="flex items-center gap-2">
@@ -170,13 +167,10 @@ export function TextToPdfTool() {
             <div className="flex items-start gap-3">
               <FileText className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-900">
-                  How it works
-                </h3>
+                <h3 className="text-sm font-semibold text-gray-900">How it works</h3>
                 <p className="text-sm text-gray-600">
-                  Type or paste your text into the editor above. The tool
-                  supports basic formatting like headings, bold, italic, and
-                  lists. When you're ready, click the "Download PDF" button to
+                  Type or paste your text into the editor above. The tool supports basic formatting like
+                  headings, bold, italic, and lists. When you're ready, click the "Download PDF" button to
                   generate and download your document as a PDF file.
                 </p>
               </div>
@@ -202,5 +196,5 @@ export function TextToPdfTool() {
         />
       </div>
     </Container>
-  );
+  )
 }

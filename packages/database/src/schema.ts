@@ -1,4 +1,4 @@
-import { createId } from "@lydie/core/id";
+import { createId } from "@lydie/core/id"
 import {
   index,
   PgColumn,
@@ -10,13 +10,13 @@ import {
   jsonb,
   boolean,
   integer,
-} from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+} from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
 
 const timestamps = {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-};
+}
 
 export const usersTable = pgTable("users", {
   id: text("id")
@@ -34,7 +34,7 @@ export const usersTable = pgTable("users", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   ...timestamps,
-});
+})
 
 export const sessionsTable = pgTable(
   "sessions",
@@ -55,8 +55,8 @@ export const sessionsTable = pgTable(
     impersonatedBy: text("impersonated_by"),
     ...timestamps,
   },
-  (table) => [index("sessions_user_id_idx").on(table.userId)]
-);
+  (table) => [index("sessions_user_id_idx").on(table.userId)],
+)
 
 export const accountsTable = pgTable(
   "accounts",
@@ -79,8 +79,8 @@ export const accountsTable = pgTable(
     password: text("password"),
     ...timestamps,
   },
-  (table) => [index("accounts_user_id_idx").on(table.userId)]
-);
+  (table) => [index("accounts_user_id_idx").on(table.userId)],
+)
 
 export const verificationsTable = pgTable(
   "verifications",
@@ -91,8 +91,8 @@ export const verificationsTable = pgTable(
     expiresAt: timestamp("expires_at").notNull(),
     ...timestamps,
   },
-  (table) => [index("verifications_identifier_idx").on(table.identifier)]
-);
+  (table) => [index("verifications_identifier_idx").on(table.identifier)],
+)
 
 export const organizationsTable = pgTable("organizations", {
   id: text("id")
@@ -108,7 +108,7 @@ export const organizationsTable = pgTable("organizations", {
   subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'pro'
   polarSubscriptionId: text("polar_subscription_id"),
   ...timestamps,
-});
+})
 
 export const membersTable = pgTable(
   "members",
@@ -129,8 +129,8 @@ export const membersTable = pgTable(
   (table) => [
     index("members_user_id_idx").on(table.userId),
     index("members_organization_id_idx").on(table.organizationId),
-  ]
-);
+  ],
+)
 
 export const invitationsTable = pgTable(
   "invitations",
@@ -154,8 +154,8 @@ export const invitationsTable = pgTable(
   (table) => [
     index("invitations_email_idx").on(table.email),
     index("invitations_organization_id_idx").on(table.organizationId),
-  ]
-);
+  ],
+)
 
 export const documentsTable = pgTable(
   "documents",
@@ -170,24 +170,17 @@ export const documentsTable = pgTable(
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
-    parentId: text("parent_id").references(
-      (): PgColumn<any> => documentsTable.id,
-      {
-        onDelete: "set null",
-      }
-    ),
+    parentId: text("parent_id").references((): PgColumn<any> => documentsTable.id, {
+      onDelete: "set null",
+    }),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    integrationLinkId: text("integration_link_id").references(
-      () => integrationLinksTable.id,
-      {
-        onDelete: "set null",
-      }
-    ),
+    integrationLinkId: text("integration_link_id").references(() => integrationLinksTable.id, {
+      onDelete: "set null",
+    }),
     externalId: text("external_id"),
-    customFields:
-      jsonb("custom_fields").$type<Record<string, string | number>>(),
+    customFields: jsonb("custom_fields").$type<Record<string, string | number>>(),
     indexStatus: text("index_status").notNull().default("outdated"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
@@ -201,17 +194,15 @@ export const documentsTable = pgTable(
   (table) => [
     uniqueIndex("documents_user_organization_id_slug_key")
       .on(table.organizationId, table.slug)
-      .where(
-        sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`
-      ),
+      .where(sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`),
     uniqueIndex("documents_integration_organization_link_slug_key")
       .on(table.organizationId, table.integrationLinkId, table.slug)
       .where(sql`deleted_at IS NULL`),
     index("documents_organization_id_idx").on(table.organizationId),
     index("documents_parent_id_idx").on(table.parentId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
-  ]
-);
+  ],
+)
 
 export const documentPublicationsTable = pgTable("document_publications", {
   id: text("id")
@@ -225,7 +216,7 @@ export const documentPublicationsTable = pgTable("document_publications", {
     .notNull()
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   ...timestamps,
-});
+})
 
 export const documentEmbeddingsTable = pgTable(
   "document_embeddings",
@@ -246,13 +237,10 @@ export const documentEmbeddingsTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    index("embedding_index").using(
-      "hnsw",
-      table.embedding.op("vector_cosine_ops")
-    ),
+    index("embedding_index").using("hnsw", table.embedding.op("vector_cosine_ops")),
     index("document_embeddings_document_id_idx").on(table.documentId),
-  ]
-);
+  ],
+)
 
 export const documentTitleEmbeddingsTable = pgTable(
   "document_title_embeddings",
@@ -269,13 +257,10 @@ export const documentTitleEmbeddingsTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    index("title_embedding_index").using(
-      "hnsw",
-      table.embedding.op("vector_cosine_ops")
-    ),
+    index("title_embedding_index").using("hnsw", table.embedding.op("vector_cosine_ops")),
     index("document_title_embeddings_document_id_idx").on(table.documentId),
-  ]
-);
+  ],
+)
 
 export const documentConversationsTable = pgTable(
   "document_conversations",
@@ -293,10 +278,8 @@ export const documentConversationsTable = pgTable(
       .references(() => documentsTable.id, { onDelete: "cascade" }),
     ...timestamps,
   },
-  (table) => [
-    index("document_conversations_document_id_idx").on(table.documentId),
-  ]
-);
+  (table) => [index("document_conversations_document_id_idx").on(table.documentId)],
+)
 
 export const assistantConversationsTable = pgTable(
   "assistant_conversations",
@@ -314,12 +297,8 @@ export const assistantConversationsTable = pgTable(
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
     ...timestamps,
   },
-  (table) => [
-    index("assistant_conversations_organization_id_idx").on(
-      table.organizationId
-    ),
-  ]
-);
+  (table) => [index("assistant_conversations_organization_id_idx").on(table.organizationId)],
+)
 
 export const documentMessagesTable = pgTable(
   "document_messages",
@@ -336,10 +315,8 @@ export const documentMessagesTable = pgTable(
     metadata: jsonb("metadata"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (table) => [
-    index("document_messages_conversation_id_idx").on(table.conversationId),
-  ]
-);
+  (table) => [index("document_messages_conversation_id_idx").on(table.conversationId)],
+)
 
 export const assistantMessagesTable = pgTable(
   "assistant_messages",
@@ -358,10 +335,8 @@ export const assistantMessagesTable = pgTable(
     metadata: jsonb("metadata"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (table) => [
-    index("assistant_messages_conversation_id_idx").on(table.conversationId),
-  ]
-);
+  (table) => [index("assistant_messages_conversation_id_idx").on(table.conversationId)],
+)
 
 export const apiKeysTable = pgTable(
   "api_keys",
@@ -380,8 +355,8 @@ export const apiKeysTable = pgTable(
     lastUsedAt: timestamp("last_used_at"),
     ...timestamps,
   },
-  (table) => [index("api_keys_hashed_key_idx").on(table.hashedKey)]
-);
+  (table) => [index("api_keys_hashed_key_idx").on(table.hashedKey)],
+)
 
 export const documentComponentsTable = pgTable("document_components", {
   id: text("id")
@@ -394,7 +369,7 @@ export const documentComponentsTable = pgTable("document_components", {
     .notNull()
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   ...timestamps,
-});
+})
 
 // LLM usage tracking (unified for both document and assistant chat)
 export const llmUsageTable = pgTable(
@@ -406,10 +381,9 @@ export const llmUsageTable = pgTable(
       .$default(() => createId()),
     conversationId: text("conversation_id").notNull(),
     messageId: text("message_id"),
-    organizationId: text("organization_id").references(
-      () => organizationsTable.id,
-      { onDelete: "cascade" }
-    ),
+    organizationId: text("organization_id").references(() => organizationsTable.id, {
+      onDelete: "cascade",
+    }),
     source: text("source").notNull(), // 'document' or 'assistant'
     model: text("model").notNull(),
     promptTokens: integer("prompt_tokens").notNull(),
@@ -419,8 +393,8 @@ export const llmUsageTable = pgTable(
     toolCalls: jsonb("tool_calls"),
     ...timestamps,
   },
-  (table) => [index("llm_usage_organization_id_idx").on(table.organizationId)]
-);
+  (table) => [index("llm_usage_organization_id_idx").on(table.organizationId)],
+)
 
 export const userSettingsTable = pgTable("user_settings", {
   id: text("id")
@@ -431,13 +405,11 @@ export const userSettingsTable = pgTable("user_settings", {
     .notNull()
     .unique()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  persistDocumentTreeExpansion: boolean("persist_document_tree_expansion")
-    .notNull()
-    .default(true),
+  persistDocumentTreeExpansion: boolean("persist_document_tree_expansion").notNull().default(true),
   aiPromptStyle: text("ai_prompt_style").default("default"),
   customPrompt: text("custom_prompt"),
   ...timestamps,
-});
+})
 
 export const organizationSettingsTable = pgTable("organization_settings", {
   id: text("id")
@@ -450,7 +422,7 @@ export const organizationSettingsTable = pgTable("organization_settings", {
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   onboardingStatus: jsonb("onboarding_status"),
   ...timestamps,
-});
+})
 
 export const integrationConnectionsTable = pgTable(
   "integration_connections",
@@ -468,12 +440,8 @@ export const integrationConnectionsTable = pgTable(
     statusMessage: text("status_message"), // Optional error/status details
     ...timestamps,
   },
-  (table) => [
-    index("integration_connections_organization_id_idx").on(
-      table.organizationId
-    ),
-  ]
-);
+  (table) => [index("integration_connections_organization_id_idx").on(table.organizationId)],
+)
 
 export const integrationLinksTable = pgTable(
   "integration_links",
@@ -501,8 +469,8 @@ export const integrationLinksTable = pgTable(
     index("integration_links_connection_id_idx").on(table.connectionId),
     index("integration_links_organization_id_idx").on(table.organizationId),
     index("integration_links_integration_type_idx").on(table.integrationType),
-  ]
-);
+  ],
+)
 
 export const syncMetadataTable = pgTable(
   "sync_metadata",
@@ -527,14 +495,11 @@ export const syncMetadataTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    uniqueIndex("sync_metadata_document_connection_idx").on(
-      table.documentId,
-      table.connectionId
-    ),
+    uniqueIndex("sync_metadata_document_connection_idx").on(table.documentId, table.connectionId),
     index("sync_metadata_document_id_idx").on(table.documentId),
     index("sync_metadata_connection_id_idx").on(table.connectionId),
-  ]
-);
+  ],
+)
 
 export const integrationActivityLogsTable = pgTable(
   "integration_activity_logs",
@@ -553,10 +518,8 @@ export const integrationActivityLogsTable = pgTable(
     activityStatus: text("activity_status").notNull(), // 'success', 'failure', 'conflict', 'error'
     ...timestamps,
   },
-  (table) => [
-    index("integration_activity_logs_connection_id_idx").on(table.connectionId),
-  ]
-);
+  (table) => [index("integration_activity_logs_connection_id_idx").on(table.connectionId)],
+)
 
 export const assetsTable = pgTable(
   "assets",

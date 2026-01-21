@@ -1,38 +1,33 @@
-import { useQuery } from "@rocicorp/zero/react";
-import { queries } from "@lydie/zero/queries";
-import {
-  integrationMetadata,
-  type IntegrationMetadata,
-} from "@lydie/integrations/client";
-import { getIntegrationIconUrl } from "@/utils/integration-icons";
-import { Link } from "@/components/generic/Link";
-import { cardStyles } from "@/components/layout/Card";
-import { useOrganization } from "@/context/organization.context";
-import { Eyebrow } from "../generic/Eyebrow";
-import { CheckCircle2Icon } from "@/icons";
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { integrationMetadata, type IntegrationMetadata } from "@lydie/integrations/client"
+import { getIntegrationIconUrl } from "@/utils/integration-icons"
+import { Link } from "@/components/generic/Link"
+import { cardStyles } from "@/components/layout/Card"
+import { useOrganization } from "@/context/organization.context"
+import { Eyebrow } from "../generic/Eyebrow"
+import { CheckCircle2Icon } from "@/icons"
 
 export function IntegrationsList() {
-  const { organization } = useOrganization();
+  const { organization } = useOrganization()
   const [connections] = useQuery(
     queries.integrations.byOrganization({
       organizationId: organization.id,
-    })
-  );
+    }),
+  )
 
   const connectedIntegrationIds = new Set(
-    connections
-      ?.filter((conn) => conn.status === "active")
-      .map((conn) => conn.integration_type)
-  );
+    connections?.filter((conn) => conn.status === "active").map((conn) => conn.integration_type),
+  )
 
   // Split integrations into enabled and not enabled
   const connectedIntegrations = integrationMetadata.filter((integration) =>
-    connectedIntegrationIds.has(integration.id)
-  );
+    connectedIntegrationIds.has(integration.id),
+  )
 
   const notConnectedIntegrations = integrationMetadata.filter(
-    (integration) => !connectedIntegrationIds.has(integration.id)
-  );
+    (integration) => !connectedIntegrationIds.has(integration.id),
+  )
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -41,11 +36,7 @@ export function IntegrationsList() {
           <Eyebrow>Enabled</Eyebrow>
           <ul className="flex flex-col gap-y-2">
             {connectedIntegrations.map((integration) => (
-              <IntegrationsListItem
-                key={integration.id}
-                integration={integration}
-                isEnabled={true}
-              />
+              <IntegrationsListItem key={integration.id} integration={integration} isEnabled={true} />
             ))}
           </ul>
         </div>
@@ -55,30 +46,23 @@ export function IntegrationsList() {
           <Eyebrow>Not Enabled</Eyebrow>
           <ul className="flex flex-col gap-y-2">
             {notConnectedIntegrations.map((integration) => (
-              <IntegrationsListItem
-                key={integration.id}
-                integration={integration}
-                isEnabled={false}
-              />
+              <IntegrationsListItem key={integration.id} integration={integration} isEnabled={false} />
             ))}
           </ul>
         </div>
       )}
     </div>
-  );
+  )
 }
 
 type IntegrationsListItemProps = {
-  integration: IntegrationMetadata;
-  isEnabled: boolean;
-};
+  integration: IntegrationMetadata
+  isEnabled: boolean
+}
 
-export function IntegrationsListItem({
-  integration,
-  isEnabled,
-}: IntegrationsListItemProps) {
-  const iconUrl = getIntegrationIconUrl(integration.id);
-  const integrationRoute = `/w/$organizationSlug/settings/integrations/${integration.id}`;
+export function IntegrationsListItem({ integration, isEnabled }: IntegrationsListItemProps) {
+  const iconUrl = getIntegrationIconUrl(integration.id)
+  const integrationRoute = `/w/$organizationSlug/settings/integrations/${integration.id}`
 
   return (
     <li
@@ -91,18 +75,12 @@ export function IntegrationsListItem({
           <div className="flex items-center gap-x-2">
             <div className="rounded-md ring ring-black/6 p-[2px]">
               {iconUrl ? (
-                <img
-                  src={iconUrl}
-                  alt={`${integration.name} icon`}
-                  className="rounded-[5px] size-7"
-                />
+                <img src={iconUrl} alt={`${integration.name} icon`} className="rounded-[5px] size-7" />
               ) : (
                 <div className="rounded-sm size-7 bg-gray-100" />
               )}
             </div>
-            <h3 className="text-sm font-medium text-gray-950">
-              {integration.name}
-            </h3>
+            <h3 className="text-sm font-medium text-gray-950">{integration.name}</h3>
             {isEnabled && (
               <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-50 border border-green-200">
                 <CheckCircle2Icon className="size-3 text-green-600" />
@@ -114,5 +92,5 @@ export function IntegrationsListItem({
         </div>
       </Link>
     </li>
-  );
+  )
 }

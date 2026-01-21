@@ -1,48 +1,37 @@
-import { Hono } from "hono";
-import { chatModel } from "@lydie/core/ai/llm";
-import {
-  validateUIMessages,
-  createAgentUIStreamResponse,
-  ToolLoopAgent,
-  smoothStream,
-  stepCountIs,
-} from "ai";
-import {
-  db,
-  documentMessagesTable,
-  userSettingsTable,
-  llmUsageTable,
-} from "@lydie/database";
-import { documentConversationsTable, documentsTable } from "@lydie/database";
-import { eq, and, sql } from "drizzle-orm";
-import { generateConversationTitle } from "../utils/conversation";
-import { HTTPException } from "hono/http-exception";
-import { VisibleError } from "@lydie/core/error";
-import { checkDailyMessageLimit } from "../utils/usage-limits";
-import type { PromptStyle } from "@lydie/core/prompts";
-import { buildSystemPrompt } from "../utils/ai/document-chat/system-prompt";
-import { z } from "zod";
-import { searchInDocument } from "@lydie/core/ai/tools/search-in-document";
-import { readCurrentDocument } from "@lydie/core/ai/tools/read-current-document";
-import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
-import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
-import { readDocument } from "@lydie/core/ai/tools/read-document";
-import { listDocuments } from "@lydie/core/ai/tools/list-documents";
-import { openai } from "@ai-sdk/openai";
+import { Hono } from "hono"
+import { chatModel } from "@lydie/core/ai/llm"
+import { validateUIMessages, createAgentUIStreamResponse, ToolLoopAgent, smoothStream, stepCountIs } from "ai"
+import { db, documentMessagesTable, userSettingsTable, llmUsageTable } from "@lydie/database"
+import { documentConversationsTable, documentsTable } from "@lydie/database"
+import { eq, and, sql } from "drizzle-orm"
+import { generateConversationTitle } from "../utils/conversation"
+import { HTTPException } from "hono/http-exception"
+import { VisibleError } from "@lydie/core/error"
+import { checkDailyMessageLimit } from "../utils/usage-limits"
+import type { PromptStyle } from "@lydie/core/prompts"
+import { buildSystemPrompt } from "../utils/ai/document-chat/system-prompt"
+import { z } from "zod"
+import { searchInDocument } from "@lydie/core/ai/tools/search-in-document"
+import { readCurrentDocument } from "@lydie/core/ai/tools/read-current-document"
+import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document"
+import { searchDocuments } from "@lydie/core/ai/tools/search-documents"
+import { readDocument } from "@lydie/core/ai/tools/read-document"
+import { listDocuments } from "@lydie/core/ai/tools/list-documents"
+import { openai } from "@ai-sdk/openai"
 
 export const messageMetadataSchema = z.object({
   usage: z.number().optional(),
   createdAt: z.string().optional(),
   duration: z.number().optional(),
-});
+})
 
-export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
+export type MessageMetadata = z.infer<typeof messageMetadataSchema>
 
 export const DocumentChatRoute = new Hono<{
   Variables: {
-    organizationId: string;
-    user: any;
-  };
+    organizationId: string
+    user: any
+  }
 }>().post("/", async (c) => {
   try {
     const {
@@ -50,17 +39,17 @@ export const DocumentChatRoute = new Hono<{
       conversationId: providedConversationId,
       documentId,
       documentWordCount,
-    } = await c.req.json();
-    const userId = c.get("user").id;
+    } = await c.req.json()
+    const userId = c.get("user").id
 
-    let conversationId = providedConversationId;
-    let conversation = null;
+    let conversationId = providedConversationId
+    let conversation = null
 
     if (conversationId) {
-      [conversation] = await db
+      ;[conversation] = await db
         .select()
         .from(documentConversationsTable)
-        .where(eq(documentConversationsTable.id, conversationId));
+        .where(eq(documentConversationsTable.id, conversationId))
 
       if (conversation) {
         // Check if user has access to the document through organization membership
@@ -68,16 +57,13 @@ export const DocumentChatRoute = new Hono<{
           .select()
           .from(documentsTable)
           .where(
-            and(
-              eq(documentsTable.id, conversation.documentId),
-              sql`${documentsTable.deletedAt} IS NULL`
-            )
-          );
+            and(eq(documentsTable.id, conversation.documentId), sql`${documentsTable.deletedAt} IS NULL`),
+          )
 
         if (!document) {
           throw new HTTPException(404, {
             message: "Document not found",
-          });
+          })
         }
 
         // Verify user has access to this organization
@@ -92,27 +78,27 @@ export const DocumentChatRoute = new Hono<{
               },
             },
           },
-        });
+        })
 
         if (!organization || organization.members.length === 0) {
           throw new HTTPException(403, {
             message: "You are not authorized to access this conversation",
-          });
+          })
         }
       }
     }
 
     if (!conversation) {
-      const title = await generateConversationTitle(messages[0]);
+      const title = await generateConversationTitle(messages[0])
       await db.insert(documentConversationsTable).values({
         id: providedConversationId,
         userId,
         documentId,
         title,
-      });
+      })
     }
 
-    const organizationId = c.get("organizationId");
+    const organizationId = c.get("organizationId")
 
     const [currentDocument] = await db
       .select()
@@ -121,14 +107,14 @@ export const DocumentChatRoute = new Hono<{
         and(
           eq(documentsTable.id, documentId),
           eq(documentsTable.organizationId, organizationId),
-          sql`${documentsTable.deletedAt} IS NULL`
-        )
-      );
+          sql`${documentsTable.deletedAt} IS NULL`,
+        ),
+      )
 
     if (!currentDocument) {
       throw new HTTPException(404, {
         message: "Document not found",
-      });
+      })
     }
 
     // Verify user has access to this organization (double-check for security)
@@ -143,33 +129,33 @@ export const DocumentChatRoute = new Hono<{
           },
         },
       },
-    });
+    })
 
     if (!organization || organization.members.length === 0) {
       throw new HTTPException(403, {
         message: "You are not authorized to access this document",
-      });
+      })
     }
 
-    const latestMessage = messages[messages.length - 1];
-    const user = c.get("user");
+    const latestMessage = messages[messages.length - 1]
+    const user = c.get("user")
 
     // Check daily message limit BEFORE saving to prevent exceeding the limit
     // Skip limit check for admin users
-    const isAdmin = (user as any)?.role === "admin";
+    const isAdmin = (user as any)?.role === "admin"
     if (!isAdmin) {
       const limitCheck = await checkDailyMessageLimit({
         id: organization.id,
         subscriptionPlan: organization.subscriptionPlan,
         subscriptionStatus: organization.subscriptionStatus,
-      });
+      })
 
       if (!limitCheck.allowed) {
         throw new VisibleError(
           "usage_limit_exceeded",
           `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
-          429
-        );
+          429,
+        )
       }
     }
 
@@ -179,14 +165,11 @@ export const DocumentChatRoute = new Hono<{
       parts: latestMessage.parts,
       role: "user",
       metadata: latestMessage.metadata,
-    });
+    })
 
-    const focusedContent = latestMessage.metadata?.focusedContent;
+    const focusedContent = latestMessage.metadata?.focusedContent
 
-    const contextInfo = createContextInfo(
-      focusedContent,
-      documentWordCount ?? 0
-    );
+    const contextInfo = createContextInfo(focusedContent, documentWordCount ?? 0)
 
     const enhancedLatestMessage = {
       ...latestMessage,
@@ -197,23 +180,22 @@ export const DocumentChatRoute = new Hono<{
           text: `${latestMessage.content}\n\n${contextInfo}`,
         },
       ],
-    };
+    }
 
-    const enhancedMessages = [...messages.slice(0, -1), enhancedLatestMessage];
+    const enhancedMessages = [...messages.slice(0, -1), enhancedLatestMessage]
 
     const [userSettings] = await db
       .select()
       .from(userSettingsTable)
       .where(eq(userSettingsTable.userId, userId))
-      .limit(1);
+      .limit(1)
 
-    const promptStyle =
-      (userSettings?.aiPromptStyle as PromptStyle) || "default";
-    const customPrompt = userSettings?.customPrompt || null;
+    const promptStyle = (userSettings?.aiPromptStyle as PromptStyle) || "default"
+    const customPrompt = userSettings?.customPrompt || null
 
-    const startTime = Date.now();
+    const startTime = Date.now()
 
-    const systemPrompt = buildSystemPrompt(promptStyle, customPrompt);
+    const systemPrompt = buildSystemPrompt(promptStyle, customPrompt)
 
     const agent = new ToolLoopAgent({
       model: chatModel,
@@ -231,26 +213,14 @@ export const DocumentChatRoute = new Hono<{
           searchContextSize: "low",
         }),
         // google_search: google.tools.googleSearch({}),
-        search_in_document: searchInDocument(
-          documentId,
-          userId,
-          currentDocument.organizationId
-        ),
+        search_in_document: searchInDocument(documentId, userId, currentDocument.organizationId),
         read_current_document: readCurrentDocument(documentId),
         replace_in_document: replaceInDocument(),
-        search_documents: searchDocuments(
-          userId,
-          currentDocument.organizationId,
-          currentDocument.id
-        ),
+        search_documents: searchDocuments(userId, currentDocument.organizationId, currentDocument.id),
         read_document: readDocument(userId, currentDocument.organizationId),
-        list_documents: listDocuments(
-          userId,
-          currentDocument.organizationId,
-          currentDocument.id
-        ),
+        list_documents: listDocuments(userId, currentDocument.organizationId, currentDocument.id),
       },
-    });
+    })
 
     return createAgentUIStreamResponse({
       agent,
@@ -261,34 +231,34 @@ export const DocumentChatRoute = new Hono<{
         if (part.type === "start") {
           return {
             createdAt: new Date().toISOString(),
-          };
+          }
         }
         if (part.type === "finish") {
           return {
             duration: Date.now() - startTime,
             usage: part.totalUsage.totalTokens,
-          };
+          }
         }
-        return undefined;
+        return undefined
       },
       onFinish: async ({ messages: finalMessages }) => {
-        const assistantMessage = finalMessages[finalMessages.length - 1];
+        const assistantMessage = finalMessages[finalMessages.length - 1]
         const savedMessage = await saveMessage({
           conversationId,
           parts: assistantMessage.parts,
           metadata: assistantMessage.metadata as MessageMetadata,
           role: "assistant",
-        });
+        })
 
         // Extract usage data from metadata
-        const metadata = assistantMessage.metadata as MessageMetadata;
-        const totalTokens = metadata?.usage || 0;
+        const metadata = assistantMessage.metadata as MessageMetadata
+        const totalTokens = metadata?.usage || 0
 
         // Save LLM usage data to the usage table
         if (totalTokens > 0) {
           // Estimate token split (Gemini doesn't always provide detailed breakdown)
-          const promptTokens = Math.floor(totalTokens * 0.7);
-          const completionTokens = totalTokens - promptTokens;
+          const promptTokens = Math.floor(totalTokens * 0.7)
+          const completionTokens = totalTokens - promptTokens
 
           await db.insert(llmUsageTable).values({
             conversationId,
@@ -301,31 +271,25 @@ export const DocumentChatRoute = new Hono<{
             totalTokens,
             finishReason: "stop",
             toolCalls: null,
-          });
+          })
         }
       },
-    });
+    })
   } catch (e) {
-    console.error(e);
+    console.error(e)
     // Re-throw VisibleError as-is (including usage limit errors)
     if (e instanceof VisibleError) {
-      throw e;
+      throw e
     }
-    throw new VisibleError(
-      "chat_processing_error",
-      "An error occurred while processing your request"
-    );
+    throw new VisibleError("chat_processing_error", "An error occurred while processing your request")
   }
-});
+})
 
-function createContextInfo(
-  focusedContent: string | undefined,
-  documentWordCount: number
-): string {
+function createContextInfo(focusedContent: string | undefined, documentWordCount: number): string {
   let context = `<additional_data>
 Below are some potentially helpful pieces of information for responding to the user's request:
 
-Document Word Count: ${documentWordCount}`;
+Document Word Count: ${documentWordCount}`
 
   if (focusedContent && focusedContent.trim()) {
     context += `
@@ -335,13 +299,13 @@ The user has selected the following content, which may indicate their area of fo
 \`\`\`
 ${focusedContent}
 \`\`\`
-</focused_selection>`;
+</focused_selection>`
   }
 
   context += `
-</additional_data>`;
+</additional_data>`
 
-  return context;
+  return context
 }
 
 async function saveMessage({
@@ -350,13 +314,13 @@ async function saveMessage({
   role,
   metadata,
 }: {
-  conversationId: string;
-  parts: object | undefined;
-  role: string;
-  metadata: MessageMetadata | undefined;
+  conversationId: string
+  parts: object | undefined
+  role: string
+  metadata: MessageMetadata | undefined
 }) {
   if (!parts) {
-    throw new Error("Message parts cannot be undefined");
+    throw new Error("Message parts cannot be undefined")
   }
 
   const [savedMessage] = await db
@@ -367,7 +331,7 @@ async function saveMessage({
       role,
       metadata,
     })
-    .returning();
+    .returning()
 
-  return savedMessage;
+  return savedMessage
 }

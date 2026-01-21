@@ -1,39 +1,36 @@
-import {
-  SchedulerClient,
-  CreateScheduleCommand,
-} from "@aws-sdk/client-scheduler";
-import { sendEmail } from "./email";
-import { Resource } from "sst";
+import { SchedulerClient, CreateScheduleCommand } from "@aws-sdk/client-scheduler"
+import { sendEmail } from "./email"
+import { Resource } from "sst"
 
-const schedulerClient = new SchedulerClient({});
+const schedulerClient = new SchedulerClient({})
 
 interface UserOnboardingData {
-  userId: string;
-  email: string;
-  fullName: string;
+  userId: string
+  email: string
+  fullName: string
 }
 
 interface ScheduledEmailEvent {
-  userId: string;
-  email: string;
-  fullName: string;
-  emailType: "checkin" | "feedback";
+  userId: string
+  email: string
+  fullName: string
+  emailType: "checkin" | "feedback"
 }
 
 export async function scheduleOnboardingEmails(userData: UserOnboardingData) {
-  const { email, fullName } = userData;
-  const firstName = fullName.split(" ")[0] || "there";
+  const { email, fullName } = userData
+  const firstName = fullName.split(" ")[0] || "there"
 
-  await sendWelcomeEmail(email, firstName);
-  await scheduleFollowupEmails(userData);
+  await sendWelcomeEmail(email, firstName)
+  await scheduleFollowupEmails(userData)
 }
 
 async function scheduleFollowupEmails(userData: UserOnboardingData) {
-  const { userId, email, fullName } = userData;
+  const { userId, email, fullName } = userData
 
-  const now = new Date();
-  const day1 = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000);
-  const day2 = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+  const now = new Date()
+  const day1 = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
+  const day2 = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
 
   await createSchedule({
     name: `onboarding-feedback-${userId}`,
@@ -42,7 +39,7 @@ async function scheduleFollowupEmails(userData: UserOnboardingData) {
     userId,
     email,
     fullName,
-  });
+  })
 
   await createSchedule({
     name: `onboarding-checkin-${userId}`,
@@ -51,7 +48,7 @@ async function scheduleFollowupEmails(userData: UserOnboardingData) {
     userId,
     email,
     fullName,
-  });
+  })
 }
 
 async function createSchedule({
@@ -62,24 +59,24 @@ async function createSchedule({
   email,
   fullName,
 }: {
-  name: string;
-  scheduleTime: Date;
-  emailType: "checkin" | "feedback";
-  userId: string;
-  email: string;
-  fullName: string;
+  name: string
+  scheduleTime: Date
+  emailType: "checkin" | "feedback"
+  userId: string
+  email: string
+  fullName: string
 }) {
-  const scheduleExpression = `at(${scheduleTime.toISOString().split(".")[0]})`;
+  const scheduleExpression = `at(${scheduleTime.toISOString().split(".")[0]})`
 
   const input: ScheduledEmailEvent = {
     userId,
     email,
     fullName,
     emailType,
-  };
+  }
 
-  const lambdaArn = Resource.OnboardingEmailProcessorFunctionLinkable.arn;
-  const roleArn = Resource.OnboardingSchedulerRoleLinkable.arn;
+  const lambdaArn = Resource.OnboardingEmailProcessorFunctionLinkable.arn
+  const roleArn = Resource.OnboardingSchedulerRoleLinkable.arn
 
   try {
     await schedulerClient.send(
@@ -96,32 +93,30 @@ async function createSchedule({
           Input: JSON.stringify(input),
         },
         ActionAfterCompletion: "DELETE",
-      })
-    );
+      }),
+    )
 
-    console.log(
-      `Scheduled ${emailType} email for ${email} at ${scheduleTime.toISOString()}`
-    );
+    console.log(`Scheduled ${emailType} email for ${email} at ${scheduleTime.toISOString()}`)
   } catch (error) {
-    console.error(`Failed to schedule ${emailType} email:`, error);
+    console.error(`Failed to schedule ${emailType} email:`, error)
     // Don't throw - we don't want to fail user registration if scheduling fails
   }
 }
 
 export async function processScheduledEmail(event: ScheduledEmailEvent) {
-  const { email, fullName, emailType } = event;
+  const { email, fullName, emailType } = event
 
-  const firstName = fullName.split(" ")[0] || "there";
+  const firstName = fullName.split(" ")[0] || "there"
 
   if (emailType === "checkin") {
-    await sendCheckInEmail(email, firstName);
+    await sendCheckInEmail(email, firstName)
   } else if (emailType === "feedback") {
-    await sendFeedbackEmail(email, firstName);
+    await sendFeedbackEmail(email, firstName)
   }
 }
 
 async function sendCheckInEmail(email: string, firstName: string) {
-  const subject = "How's Lydie working for you?";
+  const subject = "How's Lydie working for you?"
   const html = `
     <p>Hi ${firstName},</p>
     
@@ -141,34 +136,34 @@ async function sendCheckInEmail(email: string, firstName: string) {
     <p>Thanks for giving Lydie a try!</p>
     
     <p>Best,<br>Lars<br><a href="https://lydie.co">lydie.co</a></p>
-  `;
+  `
 
   await sendEmail({
     to: email,
     subject,
     html,
-  });
+  })
 }
 
 async function sendWelcomeEmail(email: string, firstName: string) {
-  const subject = "Welcome to Lydie!";
+  const subject = "Welcome to Lydie!"
   const html = `
     <p>Hi ${firstName},</p>
     <p>Welcome to Lydie! I'm excited to have you on board.</p>
     <p>Lydie is still an early project, but I'm working hard to make it better every day.</p>
     <p>To make this easier for me, I welcome any feedback or suggestions you have. You can join our <a href="https://discord.gg/gHzKhW9vzg">Discord server</a> to connect!</p>
     <p>Best,<br>Lars</p>
-  `;
+  `
 
   await sendEmail({
     to: email,
     subject,
     html,
-  });
+  })
 }
 
 async function sendFeedbackEmail(email: string, firstName: string) {
-  const subject = "Quick favor? I'd love your feedback on Lydie";
+  const subject = "Quick favor? I'd love your feedback on Lydie"
   const html = `
     <p>Hi ${firstName},</p>
     
@@ -183,11 +178,11 @@ async function sendFeedbackEmail(email: string, firstName: string) {
     <p>You can just reply straight to this email and I will respond to you personally.</p>
     
     <p>Thanks,<br>Lars<br><a href="https://lydie.co">lydie.co</a></p>
-  `;
+  `
 
   await sendEmail({
     to: email,
     subject,
     html,
-  });
+  })
 }

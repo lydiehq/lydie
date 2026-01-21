@@ -18,27 +18,24 @@ import { createId } from "@lydie/core/id";
 import { mutators } from "@lydie/zero/mutators";
 import {
   SearchIcon,
-  PlusIcon,
+  AddIcon,
   HomeIcon,
   BotIcon,
   SettingsIcon,
   CreditCardIcon,
   UploadIcon,
   PlugIcon,
-} from "@/icons";
-import { ModalOverlay, Modal } from "react-aria-components";
-import { overlayStyles } from "../../generic/Modal";
-import { Dialog } from "../../generic/Dialog";
-import { cva } from "cva";
-import type { MenuItem } from "./CommandMenuItem";
-import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
-import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
-import { SearchResults } from "./CommandMenuSearchResults";
-import {
-  integrationMetadata,
-  type IntegrationMetadata,
-} from "@lydie/integrations/client";
-import { getIntegrationIconUrl } from "@/utils/integration-icons";
+} from "@/icons"
+import { ModalOverlay, Modal } from "react-aria-components"
+import { overlayStyles } from "../../generic/Modal"
+import { Dialog } from "../../generic/Dialog"
+import { cva } from "cva"
+import type { MenuItem } from "./CommandMenuItem"
+import { CommandMenuSection, type MenuSection } from "./CommandMenuSection"
+import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp"
+import { SearchResults } from "./CommandMenuSearchResults"
+import { integrationMetadata, type IntegrationMetadata } from "@lydie/integrations/client"
+import { getIntegrationIconUrl } from "@/utils/integration-icons"
 
 const modalStyles = cva({
   base: "w-full max-w-lg max-h-full rounded-lg shadow-2xl bg-clip-padding ring ring-black/10 overflow-hidden",
@@ -50,20 +47,19 @@ const modalStyles = cva({
       true: "animate-out fade-out duration-75 ease-in",
     },
   },
-});
+})
 
 export function CommandMenu() {
-  const { createDocument, deleteDocument, publishDocument } =
-    useDocumentActions();
-  const params = useParams({ strict: false });
-  const navigate = useNavigate();
-  const { organization } = useOrganization();
-  const z = useZero();
-  const [search, setSearch] = useState("");
-  const [pages, setPages] = useState<string[]>([]);
-  const currentPage = pages[pages.length - 1];
+  const { createDocument, deleteDocument, publishDocument } = useDocumentActions()
+  const params = useParams({ strict: false })
+  const navigate = useNavigate()
+  const { organization } = useOrganization()
+  const z = useZero()
+  const [search, setSearch] = useState("")
+  const [pages, setPages] = useState<string[]>([])
+  const currentPage = pages[pages.length - 1]
 
-  const currentDocumentId = params.id as string | undefined;
+  const currentDocumentId = params.id as string | undefined
   const [currentDocument] = useQuery(
     currentDocumentId
       ? queries.documents.byId({
@@ -73,8 +69,8 @@ export function CommandMenu() {
       : queries.documents.byId({
           organizationId: organization.id,
           documentId: "non-existent",
-        })
-  );
+        }),
+  )
 
   // Search documents using Zero - only when on search page
   const [searchData] = useQuery(
@@ -86,17 +82,17 @@ export function CommandMenu() {
       : queries.organizations.searchDocuments({
           organizationId: organization.id,
           searchTerm: "",
-        })
-  );
+        }),
+  )
 
-  const searchDocuments = searchData?.documents || [];
+  const searchDocuments = searchData?.documents || []
 
   // Load integration links to show appropriate icons
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byOrganization({
       organizationId: organization.id,
-    })
-  );
+    }),
+  )
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
   const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom);
@@ -106,13 +102,13 @@ export function CommandMenu() {
   // Initialize pages from the atom's initialPage when menu opens
   useEffect(() => {
     if (isOpen && commandMenuState.initialPage) {
-      setPages([commandMenuState.initialPage]);
+      setPages([commandMenuState.initialPage])
       setCommandMenuState({
         ...commandMenuState,
         initialPage: undefined,
-      });
+      })
     }
-  }, [isOpen, commandMenuState.initialPage]);
+  }, [isOpen, commandMenuState.initialPage])
 
   // Mark command menu as checked when opened during onboarding
   useEffect(() => {
@@ -131,36 +127,36 @@ export function CommandMenu() {
   // Reset pages and search when menu closes
   useEffect(() => {
     if (!isOpen) {
-      setPages([]);
-      setSearch("");
+      setPages([])
+      setSearch("")
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   // Keyboard shortcut handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        const target = e.target as HTMLElement;
-        const isInEditor = target.closest(".ProseMirror");
-        if (isInEditor) return;
+        const target = e.target as HTMLElement
+        const isInEditor = target.closest(".ProseMirror")
+        if (isInEditor) return
 
-        e.preventDefault();
-        setOpen(!isOpen);
+        e.preventDefault()
+        setOpen(!isOpen)
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, setOpen]);
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, setOpen])
 
   const handleCommand = (action: () => void) => {
-    action();
-    setOpen(false);
-  };
+    action()
+    setOpen(false)
+  }
 
   // Use dynamic integration route for all integrations
   const getIntegrationRoute = (integrationType: string) =>
-    `/w/$organizationSlug/settings/integrations/${integrationType}`;
+    `/w/$organizationSlug/settings/integrations/${integrationType}`
 
   const menuSections = useMemo<MenuSection[]>(() => {
     const favoritesItems: MenuItem[] = [];
@@ -220,31 +216,30 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "publish",
         label: "Publish document",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           if (currentDocument) {
-            publishDocument(currentDocument.id);
+            publishDocument(currentDocument.id)
           }
         },
-      });
+      })
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           if (currentDocumentId) {
-            const documentTitle = currentDocument.title || "Untitled Document";
+            const documentTitle = currentDocument.title || "Untitled Document"
             confirmDialog({
               title: `Delete "${documentTitle}"`,
-              message:
-                "This action cannot be undone. This document will be permanently deleted.",
+              message: "This action cannot be undone. This document will be permanently deleted.",
               onConfirm: () => {
-                deleteDocument(currentDocumentId, true);
+                deleteDocument(currentDocumentId, true)
               },
-            });
+            })
           }
         },
-      });
+      })
     }
 
     const navigationItems: MenuItem[] = [
@@ -253,8 +248,8 @@ export function CommandMenu() {
         label: "Search documents…",
         icon: SearchIcon,
         action: () => {
-          setPages([...pages, "search"]);
-          setSearch(""); // Clear search when entering search page
+          setPages([...pages, "search"])
+          setSearch("") // Clear search when entering search page
         },
       },
       {
@@ -272,7 +267,7 @@ export function CommandMenu() {
               q: undefined,
               focusSearch: undefined,
             },
-          });
+          })
         },
       },
       {
@@ -285,7 +280,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          });
+          })
         },
       },
       {
@@ -298,7 +293,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          });
+          })
         },
       },
       {
@@ -311,7 +306,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          });
+          })
         },
       },
       {
@@ -324,7 +319,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          });
+          })
         },
       },
       {
@@ -342,7 +337,7 @@ export function CommandMenu() {
               error: undefined,
               connectionId: undefined,
             },
-          });
+          })
         },
       },
       ...integrationMetadata.map((integration: IntegrationMetadata) => ({
@@ -352,20 +347,20 @@ export function CommandMenu() {
         action: () => {
           navigate({
             to: getIntegrationRoute(integration.id),
-          });
+          })
         },
       })),
       {
         id: "create-organization",
         label: "Create new organization",
-        icon: PlusIcon,
+        icon: AddIcon,
         action: () => {
           navigate({
             to: "/onboarding",
-          });
+          })
         },
       },
-    ];
+    ]
 
     return [
       {
@@ -378,7 +373,7 @@ export function CommandMenu() {
         heading: "Navigation",
         items: navigationItems,
       },
-    ];
+    ]
   }, [
     createDocument,
     currentDocument,
@@ -394,12 +389,7 @@ export function CommandMenu() {
   ]);
 
   return (
-    <ModalOverlay
-      isOpen={isOpen}
-      onOpenChange={setOpen}
-      isDismissable
-      className={overlayStyles}
-    >
+    <ModalOverlay isOpen={isOpen} onOpenChange={setOpen} isDismissable className={overlayStyles}>
       <Modal className={modalStyles}>
         <Dialog className="flex flex-col bg-gray-50">
           <Command
@@ -407,8 +397,8 @@ export function CommandMenu() {
               // Escape goes to previous page
               // Backspace goes to previous page when search is empty
               if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
-                e.preventDefault();
-                setPages((pages) => pages.slice(0, -1));
+                e.preventDefault()
+                setPages((pages) => pages.slice(0, -1))
               }
             }}
           >
@@ -418,11 +408,7 @@ export function CommandMenu() {
                 value={search}
                 onValueChange={setSearch}
                 autoFocus
-                placeholder={
-                  currentPage === "search"
-                    ? "Search documents..."
-                    : "Type a command or search..."
-                }
+                placeholder={currentPage === "search" ? "Search documents..." : "Type a command or search..."}
                 className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
@@ -442,9 +428,9 @@ export function CommandMenu() {
                       onSelect={(item) => {
                         // Don't close dialog for "search" - it navigates to a sub-page
                         if (item.id === "search") {
-                          item.action();
+                          item.action()
                         } else {
-                          handleCommand(item.action);
+                          handleCommand(item.action)
                         }
                       }}
                     />
@@ -458,9 +444,7 @@ export function CommandMenu() {
                   searchDocuments={[...searchDocuments]}
                   integrationLinks={integrationLinks}
                   organizationId={organization.id}
-                  onNavigate={(options) =>
-                    handleCommand(() => navigate(options))
-                  }
+                  onNavigate={(options) => handleCommand(() => navigate(options))}
                 />
               )}
             </Command.List>
@@ -469,5 +453,5 @@ export function CommandMenu() {
         </Dialog>
       </Modal>
     </ModalOverlay>
-  );
+  )
 }

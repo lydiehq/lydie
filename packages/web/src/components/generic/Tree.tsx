@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 import {
   Tree as AriaTree,
   TreeItem as AriaTreeItem,
@@ -7,11 +7,11 @@ import {
   TreeItemProps,
   TreeItemContentProps as AriaTreeItemContentProps,
   TreeProps,
-} from "react-aria-components";
-import { ChevronRightIcon } from "@/icons";
-import { tv } from "tailwind-variants";
-import { Checkbox } from "./Checkbox";
-import { composeTailwindRenderProps, focusRing } from "./utils";
+} from "react-aria-components"
+import { ChevronRightIcon } from "@/icons"
+import { tv } from "tailwind-variants"
+import { Checkbox } from "./Checkbox"
+import { composeTailwindRenderProps, focusRing } from "./utils"
 
 const itemStyles = tv({
   extend: focusRing,
@@ -25,7 +25,7 @@ const itemStyles = tv({
       true: "text-slate-300 dark:text-zinc-600 forced-colors:text-[GrayText] z-10",
     },
   },
-});
+})
 
 export function Tree<T extends object>({ children, ...props }: TreeProps<T>) {
   return (
@@ -33,20 +33,19 @@ export function Tree<T extends object>({ children, ...props }: TreeProps<T>) {
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "overflow-auto relative border border-gray-200 dark:border-zinc-600 rounded-lg"
+        "overflow-auto relative border border-gray-200 dark:border-zinc-600 rounded-lg",
       )}
     >
       {children}
     </AriaTree>
-  );
+  )
 }
 
 export function TreeItem(props: TreeItemProps) {
-  return <AriaTreeItem className={itemStyles} {...props} />;
+  return <AriaTreeItem className={itemStyles} {...props} />
 }
-interface TreeItemContentProps
-  extends Omit<AriaTreeItemContentProps, "children"> {
-  children: React.ReactNode;
+interface TreeItemContentProps extends Omit<AriaTreeItemContentProps, "children"> {
+  children: React.ReactNode
 }
 
 const expandButton = tv({
@@ -57,7 +56,7 @@ const expandButton = tv({
       true: "text-gray-300 dark:text-zinc-600 forced-colors:text-[GrayText]",
     },
   },
-});
+})
 
 const chevron = tv({
   base: "w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ease-in-out",
@@ -69,29 +68,18 @@ const chevron = tv({
       true: "text-gray-300 dark:text-zinc-600 forced-colors:text-[GrayText]",
     },
   },
-});
+})
 
 export function TreeItemContent({ children, ...props }: TreeItemContentProps) {
   return (
     <AriaTreeItemContent {...props}>
-      {({
-        selectionMode,
-        selectionBehavior,
-        hasChildItems,
-        isExpanded,
-        isDisabled,
-      }) => (
+      {({ selectionMode, selectionBehavior, hasChildItems, isExpanded, isDisabled }) => (
         <div className={`flex items-center`}>
-          {selectionMode === "multiple" && selectionBehavior === "toggle" && (
-            <Checkbox slot="selection" />
-          )}
+          {selectionMode === "multiple" && selectionBehavior === "toggle" && <Checkbox slot="selection" />}
           <div className="shrink-0 w-[calc(calc(var(--tree-item-level)_-_1)_*_calc(var(--spacing)_*_3))]" />
           {hasChildItems ? (
             <Button slot="chevron" className={expandButton({ isDisabled })}>
-              <ChevronRightIcon
-                aria-hidden
-                className={chevron({ isExpanded, isDisabled })}
-              />
+              <ChevronRightIcon aria-hidden className={chevron({ isExpanded, isDisabled })} />
             </Button>
           ) : (
             <div className="shrink-0 w-8 h-8" />
@@ -100,5 +88,5 @@ export function TreeItemContent({ children, ...props }: TreeItemContentProps) {
         </div>
       )}
     </AriaTreeItemContent>
-  );
+  )
 }

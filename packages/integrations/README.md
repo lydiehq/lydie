@@ -34,10 +34,10 @@ export const wordpressIntegration: Integration = {
         { name: "Pages", config: { type: "pages" } },
         { name: "Posts", config: { type: "posts" } },
       ],
-    };
+    }
   },
   // ... other methods
-};
+}
 ```
 
 ## Integration Interface
@@ -47,27 +47,23 @@ Every integration is a plain object implementing the `Integration` interface:
 ```typescript
 interface Integration {
   // Validate credentials work
-  validateConnection(
-    connection: IntegrationConnection
-  ): Promise<{ valid: boolean; error?: string }>;
+  validateConnection(connection: IntegrationConnection): Promise<{ valid: boolean; error?: string }>
 
   // Push document to external platform
-  push(options: PushOptions): Promise<SyncResult>;
+  push(options: PushOptions): Promise<SyncResult>
 
   // Pull documents from external platform
-  pull(options: PullOptions): Promise<SyncResult[]>;
+  pull(options: PullOptions): Promise<SyncResult[]>
 
   // Fetch available resources for the authenticated user/connection
   // Examples: GitHub repositories, Shopify collections, WordPress sites
-  fetchResources(
-    connection: IntegrationConnection
-  ): Promise<ExternalResource[]>;
+  fetchResources(connection: IntegrationConnection): Promise<ExternalResource[]>
 
   // Optional: cleanup when connection is disconnected
-  onDisconnect?(connection: IntegrationConnection): Promise<void>;
+  onDisconnect?(connection: IntegrationConnection): Promise<void>
 
   // Optional: auto-create links on connection
-  onConnect?(): { links?: DefaultLink[] };
+  onConnect?(): { links?: DefaultLink[] }
 }
 ```
 
@@ -96,8 +92,8 @@ interface OAuthIntegration {
 ### Example: Non-OAuth Integration
 
 ```typescript
-import type { Integration } from "@lydie/integrations";
-import { createErrorResult } from "@lydie/integrations";
+import type { Integration } from "@lydie/integrations"
+import { createErrorResult } from "@lydie/integrations"
 
 // Helper functions (module-level, not exported)
 function someHelper() {
@@ -109,16 +105,16 @@ export const myIntegration: Integration = {
   onConnect(): { links?: DefaultLink[] } {
     return {
       links: [{ name: "Content", config: { type: "content" } }],
-    };
+    }
   },
 
   async validateConnection(connection: IntegrationConnection) {
     // Verify credentials by making an API call
     try {
       // ... validation logic
-      return { valid: true };
+      return { valid: true }
     } catch (error) {
-      return { valid: false, error: "Validation failed" };
+      return { valid: false, error: "Validation failed" }
     }
   },
 
@@ -130,29 +126,24 @@ export const myIntegration: Integration = {
         success: true,
         documentId: options.document.id,
         externalId: "external-id",
-      };
+      }
     } catch (error) {
-      return createErrorResult(
-        options.document.id,
-        error instanceof Error ? error.message : "Unknown error"
-      );
+      return createErrorResult(options.document.id, error instanceof Error ? error.message : "Unknown error")
     }
   },
 
   async pull(options: PullOptions): Promise<SyncResult[]> {
     // Fetch content and convert using deserializeFromHTML/deserializeFromMarkdown
-    const results: SyncResult[] = [];
+    const results: SyncResult[] = []
     // ... pull logic
-    return results;
+    return results
   },
 
-  async fetchResources(
-    connection: IntegrationConnection
-  ): Promise<ExternalResource[]> {
+  async fetchResources(connection: IntegrationConnection): Promise<ExternalResource[]> {
     // List available resources
-    return [];
+    return []
   },
-};
+}
 ```
 
 ## Sync Flow
@@ -176,12 +167,6 @@ export const myIntegration: Integration = {
 Use the format-specific serializers from `@lydie/core/serialization/*` in push/pull methods:
 
 ```typescript
-import {
-  serializeToHTML,
-  deserializeFromHTML,
-} from "@lydie/core/serialization/html";
-import {
-  serializeToMarkdown,
-  deserializeFromMarkdown,
-} from "@lydie/core/serialization/markdown";
+import { serializeToHTML, deserializeFromHTML } from "@lydie/core/serialization/html"
+import { serializeToMarkdown, deserializeFromMarkdown } from "@lydie/core/serialization/markdown"
 ```

@@ -3,10 +3,10 @@ import {
   type TextFieldProps as AriaTextFieldProps,
   TextArea,
   type ValidationResult,
-} from "react-aria-components";
-import { useFieldContext } from "@/hooks/use-app-form";
-import { Description, FieldError, Input, Label } from "./Field";
-import { composeTailwindRenderProps, focusRing } from "./utils";
+} from "react-aria-components"
+import { useFieldContext } from "@/hooks/use-app-form"
+import { Description, FieldError, Input, Label } from "./Field"
+import { composeTailwindRenderProps, focusRing } from "./utils"
 
 export interface TextFieldProps extends Omit<AriaTextFieldProps, "name"> {
   label?: string;
@@ -28,7 +28,7 @@ export function TextField({
   descriptionClassName,
   ...props
 }: TextFieldProps) {
-  const field = useFieldContext<string>();
+  const field = useFieldContext<string>()
 
   return (
     <AriaTextField
@@ -36,10 +36,7 @@ export function TextField({
       value={field.state.value}
       onChange={(value) => field.handleChange(value)}
       onBlur={field.handleBlur}
-      className={composeTailwindRenderProps(
-        props.className,
-        "flex flex-col gap-1"
-      )}
+      className={composeTailwindRenderProps(props.className, "flex flex-col gap-1")}
       validationBehavior="aria"
       isInvalid={field.state.meta.errors.length > 0}
     >
@@ -53,10 +50,8 @@ export function TextField({
         <Description className={descriptionClassName}>{description}</Description>
       )}
       <FieldError>
-        {field.state.meta.errors.length > 0
-          ? field.state.meta.errors.join(", ")
-          : errorMessage}
+        {field.state.meta.errors.length > 0 ? field.state.meta.errors.join(", ") : errorMessage}
       </FieldError>
     </AriaTextField>
-  );
+  )
 }

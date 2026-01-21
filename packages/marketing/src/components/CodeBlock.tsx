@@ -1,12 +1,12 @@
-import React from "react";
-import { codeToHtml } from "shiki";
-import type { CustomBlockProps } from "@lydie-app/sdk/react";
+import React from "react"
+import { codeToHtml } from "shiki"
+import type { CustomBlockProps } from "@lydie-app/sdk/react"
 
 interface CodeBlockProps extends CustomBlockProps {
   properties: {
-    language?: string | null;
-    code?: string;
-  };
+    language?: string | null
+    code?: string
+  }
 }
 
 function escapeHtml(text: string): string {
@@ -15,18 +15,18 @@ function escapeHtml(text: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/'/g, "&#39;")
 }
 
 export function CodeBlock({ properties }: CodeBlockProps) {
-  const { code } = properties;
-  const codeContent = code || "";
+  const { code } = properties
+  const codeContent = code || ""
 
-  const language = "typescript";
+  const language = "typescript"
 
   // Use Shiki to highlight the code with light theme
-  const [highlightedCode, setHighlightedCode] = React.useState<string>("");
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [highlightedCode, setHighlightedCode] = React.useState<string>("")
+  const [isLoading, setIsLoading] = React.useState(true)
 
   React.useEffect(() => {
     async function highlight() {
@@ -35,32 +35,30 @@ export function CodeBlock({ properties }: CodeBlockProps) {
         const html = await codeToHtml(codeContent, {
           lang: "ts",
           theme: "github-light",
-        });
-        setHighlightedCode(html);
+        })
+        setHighlightedCode(html)
       } catch (error) {
-        console.warn("[CodeBlock] Error highlighting code:", error);
+        console.warn("[CodeBlock] Error highlighting code:", error)
         // Fallback to plain code
-        setHighlightedCode(
-          `<pre><code>${escapeHtml(codeContent)}</code></pre>`
-        );
+        setHighlightedCode(`<pre><code>${escapeHtml(codeContent)}</code></pre>`)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
     if (codeContent) {
-      highlight();
+      highlight()
     } else {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [codeContent, language]);
+  }, [codeContent, language])
 
   if (isLoading) {
     return (
       <pre className="rounded-lg bg-gray-50 border border-gray-200 p-3 my-0 overflow-x-auto">
         <code>{codeContent}</code>
       </pre>
-    );
+    )
   }
 
   return (
@@ -68,5 +66,5 @@ export function CodeBlock({ properties }: CodeBlockProps) {
       className="rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3 my-0 overflow-x-auto [&_pre]:bg-transparent! [&_pre]:p-0! [&_pre]:m-0! [&_pre]:border-0! [&_pre]:overflow-x-auto!"
       dangerouslySetInnerHTML={{ __html: highlightedCode }}
     />
-  );
+  )
 }

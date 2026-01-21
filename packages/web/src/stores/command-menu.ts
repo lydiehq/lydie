@@ -1,14 +1,14 @@
-import { atom } from "jotai";
+import { atom } from "jotai"
 
 export type CommandMenuState = {
-  isOpen: boolean;
-  initialPage?: string;
-};
+  isOpen: boolean
+  initialPage?: string
+}
 
 export const commandMenuStateAtom = atom<CommandMenuState>({
   isOpen: false,
   initialPage: undefined,
-});
+})
 
 // Helper atoms for easier access
 export const commandMenuOpenAtom = atom(
@@ -19,9 +19,9 @@ export const commandMenuOpenAtom = atom(
       isOpen,
       // Reset initialPage when closing
       initialPage: isOpen ? get(commandMenuStateAtom).initialPage : undefined,
-    });
-  }
-);
+    })
+  },
+)
 
 export const commandMenuInitialPageAtom = atom(
   (get) => get(commandMenuStateAtom).initialPage,
@@ -29,6 +29,6 @@ export const commandMenuInitialPageAtom = atom(
     set(commandMenuStateAtom, {
       ...get(commandMenuStateAtom),
       initialPage,
-    });
-  }
-);
+    })
+  },
+)

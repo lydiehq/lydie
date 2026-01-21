@@ -1,33 +1,32 @@
-import { Extension } from "@tiptap/core";
+import { Extension } from "@tiptap/core"
 
 export interface KeyboardShortcutOptions {
-  onAddLink?: () => void;
+  onAddLink?: () => void
 }
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     keyboardShortcuts: {
-      openLinkDialog: () => ReturnType;
-    };
+      openLinkDialog: () => ReturnType
+    }
   }
 }
 
-export const KeyboardShortcutExtension =
-  Extension.create<KeyboardShortcutOptions>({
-    name: "keyboardShortcuts",
+export const KeyboardShortcutExtension = Extension.create<KeyboardShortcutOptions>({
+  name: "keyboardShortcuts",
 
-    addOptions() {
-      return {
-        onAddLink: undefined,
-      };
-    },
+  addOptions() {
+    return {
+      onAddLink: undefined,
+    }
+  },
 
-    addCommands() {
-      return {
-        openLinkDialog: () => () => {
-          this.options.onAddLink?.();
-          return true;
-        },
-      };
-    },
-  });
+  addCommands() {
+    return {
+      openLinkDialog: () => () => {
+        this.options.onAddLink?.()
+        return true
+      },
+    }
+  },
+})

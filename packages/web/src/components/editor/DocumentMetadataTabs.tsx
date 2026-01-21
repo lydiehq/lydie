@@ -1,35 +1,28 @@
-import {
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  Button,
-} from "react-aria-components";
-import { useState } from "react";
-import { CustomFieldsEditor } from "./CustomFieldsEditor";
-import { ArrowDownBIcon } from "@/icons";
-import { useDocumentActions } from "@/hooks/use-document-actions";
-import { DocumentIcon, PlusIcon } from "@/icons";
-import { Button as GenericButton } from "@/components/generic/Button";
-import { Link } from "../generic/Link";
-import type { QueryResultType } from "@rocicorp/zero";
-import { queries } from "@lydie/zero/queries";
+import { Tabs, TabList, Tab, TabPanels, TabPanel, Button } from "react-aria-components"
+import { useState } from "react"
+import { CustomFieldsEditor } from "./CustomFieldsEditor"
+import { ArrowDownBIcon } from "@/icons"
+import { useDocumentActions } from "@/hooks/use-document-actions"
+import { DocumentIcon, AddIcon } from "@/icons"
+import { Button as GenericButton } from "@/components/generic/Button"
+import { Link } from "../generic/Link"
+import type { QueryResultType } from "@rocicorp/zero"
+import { queries } from "@lydie/zero/queries"
 
-type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
+type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>
 
 type Props = {
-  doc: DocumentType;
-  initialFields?: Record<string, string | number>;
-};
+  doc: DocumentType
+  initialFields?: Record<string, string | number>
+}
 
 function SubDocuments({ doc }: { doc: DocumentType }) {
-  const { createDocument } = useDocumentActions();
-  const children = doc?.children || [];
+  const { createDocument } = useDocumentActions()
+  const children = doc?.children || []
 
   const handleCreateChildPage = async () => {
-    createDocument(doc.id);
-  };
+    createDocument(doc.id)
+  }
 
   if (children.length === 0) {
     return (
@@ -40,11 +33,11 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
           onPress={handleCreateChildPage}
           className="text-gray-600 hover:text-gray-900"
         >
-          <PlusIcon className="size-4 mr-1" />
+          <AddIcon className="size-4 mr-1" />
           Add document
         </GenericButton>
       </div>
-    );
+    )
   }
 
   return (
@@ -76,23 +69,23 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selectedKey, setSelectedKey] = useState<string | number>("fields");
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [selectedKey, setSelectedKey] = useState<string | number>("fields")
 
-  const documentCount = doc?.children?.length || 0;
+  const documentCount = doc?.children?.length || 0
 
   const handleSelectionChange = (key: string | number) => {
-    const previousKey = selectedKey;
-    setSelectedKey(key);
+    const previousKey = selectedKey
+    setSelectedKey(key)
     // If switching to a different tab and it's collapsed, uncollapse
     if (key !== previousKey && isCollapsed) {
-      setIsCollapsed(false);
+      setIsCollapsed(false)
     }
-  };
+  }
 
   return (
     <Tabs
@@ -143,5 +136,5 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
         </TabPanels>
       </div>
     </Tabs>
-  );
+  )
 }

@@ -1,87 +1,68 @@
-import React from "react";
-import { CheckIcon, LoaderIcon } from "@/icons";
-import { motion, AnimatePresence } from "motion/react";
+import React from "react"
+import { CheckIcon, LoaderIcon } from "@/icons"
+import { motion, AnimatePresence } from "motion/react"
 
 export interface MoveDocumentsToolProps {
   tool: {
-    state:
-      | "input-streaming"
-      | "input-available"
-      | "call-streaming"
-      | "output-available"
-      | "output-error";
+    state: "input-streaming" | "input-available" | "call-streaming" | "output-available" | "output-error"
     args?: {
-      documentIds?: string[];
-      parentId?: string | null;
-      parentTitle?: string;
-      moveAll?: boolean;
-    };
+      documentIds?: string[]
+      parentId?: string | null
+      parentTitle?: string
+      moveAll?: boolean
+    }
     output?: {
-      message?: string;
-      state?: "moving" | "success" | "error";
+      message?: string
+      state?: "moving" | "success" | "error"
       movedDocuments?: Array<{
-        id: string;
-        title: string;
-        parentId: string | null;
-      }>;
-      totalMoved?: number;
-      error?: string;
-    };
-  };
-  className?: string;
+        id: string
+        title: string
+        parentId: string | null
+      }>
+      totalMoved?: number
+      error?: string
+    }
+  }
+  className?: string
 }
 
-export function MoveDocumentsTool({
-  tool,
-  className = "",
-}: MoveDocumentsToolProps) {
-  const outputState = tool.output?.state;
+export function MoveDocumentsTool({ tool, className = "" }: MoveDocumentsToolProps) {
+  const outputState = tool.output?.state
   const isToolLoading =
-    tool.state === "call-streaming" ||
-    (outputState && outputState !== "success" && outputState !== "error");
+    tool.state === "call-streaming" || (outputState && outputState !== "success" && outputState !== "error")
 
   // Determine loading message
-  let loadingMessage = "Moving documents";
+  let loadingMessage = "Moving documents"
   if (outputState === "moving") {
-    loadingMessage = tool.output?.message || "Moving documents";
+    loadingMessage = tool.output?.message || "Moving documents"
   } else if (tool.args?.moveAll) {
-    loadingMessage = "Moving all documents";
+    loadingMessage = "Moving all documents"
   } else if (tool.args?.documentIds && tool.args.documentIds.length > 0) {
-    const count = tool.args.documentIds.length;
-    loadingMessage = `Moving ${count} document${count === 1 ? "" : "s"}`;
+    const count = tool.args.documentIds.length
+    loadingMessage = `Moving ${count} document${count === 1 ? "" : "s"}`
   }
 
   // Don't render if no meaningful state
-  if (
-    tool.state !== "output-available" &&
-    tool.state !== "call-streaming" &&
-    !isToolLoading
-  ) {
-    return null;
+  if (tool.state !== "output-available" && tool.state !== "call-streaming" && !isToolLoading) {
+    return null
   }
 
   const message = isToolLoading
     ? loadingMessage
     : outputState === "error" || tool.output?.error
-    ? "Error moving documents"
-    : outputState === "success" && tool.output?.message
-    ? tool.output.message
-    : "Moving documents";
+      ? "Error moving documents"
+      : outputState === "success" && tool.output?.message
+        ? tool.output.message
+        : "Moving documents"
 
-  const movedDocuments = tool.output?.movedDocuments || [];
-  const totalMoved = tool.output?.totalMoved || movedDocuments.length;
+  const movedDocuments = tool.output?.movedDocuments || []
+  const totalMoved = tool.output?.totalMoved || movedDocuments.length
 
   return (
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-2 ${className}`}>
       <div className="p-1">
         <motion.div
-          key={
-            isToolLoading
-              ? "loading"
-              : outputState === "error"
-              ? "error"
-              : "success"
-          }
+          key={isToolLoading ? "loading" : outputState === "error" ? "error" : "success"}
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -170,15 +151,12 @@ export function MoveDocumentsTool({
                 </motion.ul>
               )}
               {movedDocuments.length > 5 && (
-                <div className="text-xs text-gray-500 mt-2 pl-2">
-                  ...and {movedDocuments.length - 5} more
-                </div>
+                <div className="text-xs text-gray-500 mt-2 pl-2">...and {movedDocuments.length - 5} more</div>
               )}
             </motion.div>
           ) : null}
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  );
+  )
 }
-

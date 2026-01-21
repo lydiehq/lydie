@@ -10,11 +10,11 @@ import { createFeedbackMutation } from "./server-mutators/feedback/create";
 import { createOrganizationMutation } from "./server-mutators/organizations/create";
 
 export interface MutatorContext {
-  asyncTasks: Array<() => Promise<void>>;
+  asyncTasks: Array<() => Promise<void>>
 }
 
 export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
-  const context = { asyncTasks };
+  const context = { asyncTasks }
 
   return defineMutators(sharedMutators, {
     document: {

@@ -13,58 +13,53 @@ import { CircularProgress } from "../generic/CircularProgress";
 export function UsageStats() {
   const { organization } = useOrganization();
 
-  const [todayUsage] = useQuery(
-    queries.usage.today({ organizationId: organization.id })
-  );
+  const [todayUsage] = useQuery(queries.usage.today({ organizationId: organization.id }))
 
   const currentPlan = useMemo(() => {
     if (!organization) {
-      return PLAN_TYPES.FREE;
+      return PLAN_TYPES.FREE
     }
 
     const hasProAccess =
-      organization.subscriptionPlan === "pro" &&
-      organization.subscriptionStatus === "active";
+      organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active"
 
-    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE;
-  }, [organization]);
+    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE
+  }, [organization])
 
-  const planInfo = PLAN_LIMITS[currentPlan];
-  const maxMessages = planInfo.maxMessagesPerDay || 0;
+  const planInfo = PLAN_LIMITS[currentPlan]
+  const maxMessages = planInfo.maxMessagesPerDay || 0
 
   const usageStats = useMemo(() => {
     if (!todayUsage) {
       return {
         messagesUsedToday: 0,
-      };
+      }
     }
 
     // Count user messages to track actual message sends
     const messagesUsedToday = todayUsage.filter(
-      (usage: any) =>
-        usage.source === "document" || usage.source === "assistant"
-    ).length;
+      (usage: any) => usage.source === "document" || usage.source === "assistant",
+    ).length
 
     return {
       messagesUsedToday,
-    };
-  }, [todayUsage]);
+    }
+  }, [todayUsage])
 
-  const isAtLimit = usageStats.messagesUsedToday >= maxMessages;
-  const isNearLimit =
-    maxMessages > 0 && usageStats.messagesUsedToday >= maxMessages * 0.8;
+  const isAtLimit = usageStats.messagesUsedToday >= maxMessages
+  const isNearLimit = maxMessages > 0 && usageStats.messagesUsedToday >= maxMessages * 0.8
 
   // Calculate progress percentage
   const progress = useMemo(() => {
-    if (maxMessages === 0) return 0;
-    return Math.min((usageStats.messagesUsedToday / maxMessages) * 100, 100);
-  }, [usageStats.messagesUsedToday, maxMessages]);
+    if (maxMessages === 0) return 0
+    return Math.min((usageStats.messagesUsedToday / maxMessages) * 100, 100)
+  }, [usageStats.messagesUsedToday, maxMessages])
 
   // Get color based on usage state
   const progressColor = useMemo(() => {
-    if (isNearLimit) return "#f59e0b";
-    return "var(--color-gray-900)";
-  }, [isAtLimit, isNearLimit]);
+    if (isNearLimit) return "#f59e0b"
+    return "var(--color-gray-900)"
+  }, [isAtLimit, isNearLimit])
 
   return (
     <TooltipTrigger>
@@ -76,8 +71,8 @@ export function UsageStats() {
           isAtLimit
             ? "bg-red-50 border-red-200 hover:border-red-300"
             : isNearLimit
-            ? "bg-amber-50 border-amber-200 hover:border-amber-300"
-            : "bg-gray-50 border-gray-200 hover:border-gray-300"
+              ? "bg-amber-50 border-amber-200 hover:border-amber-300"
+              : "bg-gray-50 border-gray-200 hover:border-gray-300",
         )}
       >
         <div className="flex items-center gap-2 justify-between">
@@ -89,18 +84,14 @@ export function UsageStats() {
                 progressColor={progressColor}
               />
             </div>
-            <span className="text-xs font-medium text-gray-900">
-              Free daily messages
-            </span>
+            <span className="text-xs font-medium text-gray-900">Free daily messages</span>
           </div>
           <span className="text-gray-700 text-xs font-medium">
             {usageStats.messagesUsedToday}/{maxMessages}
           </span>
         </div>
       </Link>
-      <Tooltip placement="right">
-        Upgrade to Pro for unlimited daily messages
-      </Tooltip>
+      <Tooltip placement="right">Upgrade to Pro for unlimited daily messages</Tooltip>
     </TooltipTrigger>
-  );
+  )
 }

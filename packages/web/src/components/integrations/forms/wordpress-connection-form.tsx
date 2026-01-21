@@ -1,23 +1,23 @@
-import { useAppForm } from "@/hooks/use-app-form";
-import { useAuthenticatedApi } from "@/services/api";
-import { toast } from "sonner";
-import { Label } from "@/components/generic/Field";
-import { Input } from "react-aria-components";
-import { TextField } from "react-aria-components";
-import { Button } from "@/components/generic/Button";
+import { useAppForm } from "@/hooks/use-app-form"
+import { useAuthenticatedApi } from "@/services/api"
+import { toast } from "sonner"
+import { Label } from "@/components/generic/Field"
+import { Input } from "react-aria-components"
+import { TextField } from "react-aria-components"
+import { Button } from "@/components/generic/Button"
 
 export type WordPressConnectionConfig = {
-  siteUrl: string;
-  username: string;
-  applicationPassword: string;
-};
+  siteUrl: string
+  username: string
+  applicationPassword: string
+}
 
 export type WordPressConnectionFormProps = {
-  organizationId: string;
-  integrationType: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-};
+  organizationId: string
+  integrationType: string
+  onSuccess: () => void
+  onCancel: () => void
+}
 
 export function WordPressConnectionForm({
   organizationId,
@@ -25,7 +25,7 @@ export function WordPressConnectionForm({
   onSuccess,
   onCancel,
 }: WordPressConnectionFormProps) {
-  const { createClient } = useAuthenticatedApi();
+  const { createClient } = useAuthenticatedApi()
 
   const form = useAppForm({
     defaultValues: {
@@ -35,7 +35,7 @@ export function WordPressConnectionForm({
     },
     onSubmit: async (values) => {
       try {
-        const client = await createClient();
+        const client = await createClient()
         const response = await client.internal.integrations[":type"].connect
           .$post({
             param: { type: integrationType },
@@ -48,37 +48,33 @@ export function WordPressConnectionForm({
               },
             },
           })
-          .then((res: Response) => res.json());
+          .then((res: Response) => res.json())
 
         if ("error" in response) {
-          toast.error(response.error);
-          return;
+          toast.error(response.error)
+          return
         }
 
-        toast.success("WordPress connected successfully!");
-        onSuccess();
+        toast.success("WordPress connected successfully!")
+        onSuccess()
       } catch (error) {
-        console.error("Failed to connect WordPress:", error);
-        toast.error(
-          "Failed to connect WordPress. Please check your credentials."
-        );
+        console.error("Failed to connect WordPress:", error)
+        toast.error("Failed to connect WordPress. Please check your credentials.")
       }
     },
-  });
+  })
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
+        e.preventDefault()
+        form.handleSubmit()
       }}
       className="flex flex-col gap-y-4"
     >
       <div>
         <h3 className="text-lg font-medium text-gray-900">Connect WordPress</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Enter your WordPress site credentials to connect.
-        </p>
+        <p className="text-sm text-gray-600 mt-1">Enter your WordPress site credentials to connect.</p>
       </div>
 
       <div className="flex flex-col gap-y-3">
@@ -95,9 +91,7 @@ export function WordPressConnectionForm({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               />
               {field.state.meta.errors.length > 0 && (
-                <p className="text-xs text-red-600">
-                  {field.state.meta.errors.join(", ")}
-                </p>
+                <p className="text-xs text-red-600">{field.state.meta.errors.join(", ")}</p>
               )}
             </div>
           )}
@@ -116,9 +110,7 @@ export function WordPressConnectionForm({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               />
               {field.state.meta.errors.length > 0 && (
-                <p className="text-xs text-red-600">
-                  {field.state.meta.errors.join(", ")}
-                </p>
+                <p className="text-xs text-red-600">{field.state.meta.errors.join(", ")}</p>
               )}
             </div>
           )}
@@ -138,13 +130,10 @@ export function WordPressConnectionForm({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Generate this in your WordPress User Profile settings under
-                Application Passwords.
+                Generate this in your WordPress User Profile settings under Application Passwords.
               </p>
               {field.state.meta.errors.length > 0 && (
-                <p className="text-xs text-red-600">
-                  {field.state.meta.errors.join(", ")}
-                </p>
+                <p className="text-xs text-red-600">{field.state.meta.errors.join(", ")}</p>
               )}
             </div>
           )}
@@ -160,5 +149,5 @@ export function WordPressConnectionForm({
         </Button>
       </div>
     </form>
-  );
+  )
 }

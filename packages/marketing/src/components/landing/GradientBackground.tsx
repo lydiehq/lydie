@@ -1,11 +1,11 @@
-import { motion } from "motion/react";
-import { useEffect, useRef, useId } from "react";
+import { motion } from "motion/react"
+import { useEffect, useRef, useId } from "react"
 
 interface GradientBackgroundProps {
-  imageSrc: string;
-  imageAlt: string;
-  className?: string;
-  position?: "left" | "right";
+  imageSrc: string
+  imageAlt: string
+  className?: string
+  position?: "left" | "right"
 }
 
 export function GradientBackground({
@@ -14,53 +14,50 @@ export function GradientBackground({
   className = "",
   position = "right",
 }: GradientBackgroundProps) {
-  const filterId = useId();
-  const gradientBgRef = useRef<HTMLDivElement>(null);
-  const interBubbleRef = useRef<HTMLDivElement>(null);
-  const mousePosRef = useRef({ x: 0, y: 0 });
-  const curPosRef = useRef({ x: 0, y: 0 });
+  const filterId = useId()
+  const gradientBgRef = useRef<HTMLDivElement>(null)
+  const interBubbleRef = useRef<HTMLDivElement>(null)
+  const mousePosRef = useRef({ x: 0, y: 0 })
+  const curPosRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
       if (gradientBgRef.current) {
-        const rect = gradientBgRef.current.getBoundingClientRect();
+        const rect = gradientBgRef.current.getBoundingClientRect()
         // Calculate mouse position relative to container center
         mousePosRef.current = {
           x: event.clientX - rect.left - rect.width / 2,
           y: event.clientY - rect.top - rect.height / 2,
-        };
+        }
       }
-    };
+    }
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove)
 
     const animate = () => {
       if (interBubbleRef.current) {
-        const tgX = mousePosRef.current.x;
-        const tgY = mousePosRef.current.y;
-        const curX = curPosRef.current.x;
-        const curY = curPosRef.current.y;
+        const tgX = mousePosRef.current.x
+        const tgY = mousePosRef.current.y
+        const curX = curPosRef.current.x
+        const curY = curPosRef.current.y
 
-        const newX = curX + (tgX - curX) / 20;
-        const newY = curY + (tgY - curY) / 20;
+        const newX = curX + (tgX - curX) / 20
+        const newY = curY + (tgY - curY) / 20
 
-        curPosRef.current = { x: newX, y: newY };
-        interBubbleRef.current.style.transform = `translate(${Math.round(
-          newX
-        )}px, ${Math.round(newY)}px)`;
+        curPosRef.current = { x: newX, y: newY }
+        interBubbleRef.current.style.transform = `translate(${Math.round(newX)}px, ${Math.round(newY)}px)`
       }
-      requestAnimationFrame(animate);
-    };
+      requestAnimationFrame(animate)
+    }
 
-    animate();
+    animate()
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
+      window.removeEventListener("mousemove", handleMouseMove)
+    }
+  }, [])
 
-  const positionClasses =
-    position === "left" ? "right-[calc(46ch+4rem)]" : "left-[calc(46ch+1rem)]";
+  const positionClasses = position === "left" ? "right-[calc(46ch+4rem)]" : "left-[calc(46ch+1rem)]"
 
   return (
     <motion.div
@@ -81,11 +78,7 @@ export function GradientBackground({
       <svg>
         <defs>
           <filter id={filterId}>
-            <feGaussianBlur
-              in="SourceGraphic"
-              stdDeviation="10"
-              result="blur"
-            />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
             <feColorMatrix
               in="blur"
               mode="matrix"
@@ -96,10 +89,7 @@ export function GradientBackground({
           </filter>
         </defs>
       </svg>
-      <div
-        className="gradients-container"
-        style={{ filter: `url(#${filterId}) blur(40px)` }}
-      >
+      <div className="gradients-container" style={{ filter: `url(#${filterId}) blur(40px)` }}>
         <div className="g1"></div>
         <div className="g2"></div>
         <div className="g3"></div>
@@ -115,5 +105,5 @@ export function GradientBackground({
         className="rounded-lg shrink-0 ring-1 ring-black/2 relative z-10 shadow-legit  "
       />
     </motion.div>
-  );
+  )
 }

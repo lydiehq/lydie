@@ -1,8 +1,8 @@
-import { Container } from "../Container";
-import { ChevronRight, Code, BookOpen, Zap } from "lucide-react";
-import { Eyebrow } from "./Eyebrow";
-import { AsciiBackground } from "./AsciiBackground";
-import { Button } from "../generic/Button";
+import { Container } from "../Container"
+import { ChevronRight, Code, BookOpen, Zap } from "lucide-react"
+import { Eyebrow } from "./Eyebrow"
+import { AsciiBackground } from "./AsciiBackground"
+import { Button } from "../generic/Button"
 
 const points = [
   {
@@ -13,8 +13,7 @@ const points = [
   },
   {
     title: "REST API",
-    description:
-      "Low-level API access for complete control. Simple HTTP endpoints with full type safety.",
+    description: "Low-level API access for complete control. Simple HTTP endpoints with full type safety.",
     icon: Code,
   },
   {
@@ -23,7 +22,7 @@ const points = [
       "Official SDK with React hooks, HTML rendering, and full TypeScript support for advanced integrations.",
     icon: Zap,
   },
-];
+]
 
 export function ApiSection() {
   return (
@@ -34,22 +33,18 @@ export function ApiSection() {
             Easily setup a blog.
           </h2>
           <span className="text-[15px]/relaxed text-gray-600 w-[30ch]">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsa,
-            obcaecati!
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsa, obcaecati!
           </span>
         </div>
         <div className="rounded-xl ring ring-black/8 p-4 relative h-[600px]"></div>
       </Container>
     </section>
-  );
+  )
 
   return (
     <section className="pt-px z-0 relative -mb-40">
       <Container className="relative flex flex-col items-start py-4 md:flex-row md:py-0">
-        <AsciiBackground
-          className="right-[200px] inset-y-6"
-          startPercentage={75}
-        />
+        <AsciiBackground className="right-[200px] inset-y-6" startPercentage={75} />
         <div className="relative flex flex-col gap-y-4 md:flex-row">
           <div className="-mr-[500px] relative">
             <div className="w-[700px] md:h-[600px] z-10 relative md:w-[980px] p-2 bg-white ring ring-black/4 rounded-2xl">
@@ -57,9 +52,7 @@ export function ApiSection() {
                 <div className="flex flex-col gap-y-4 h-full">
                   <div className="flex items-center gap-x-2">
                     <Code className="size-4 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-400">
-                      REST API
-                    </span>
+                    <span className="text-xs font-medium text-gray-400">REST API</span>
                   </div>
                   <pre className="text-xs text-gray-300 font-mono overflow-x-auto">
                     <code>{`GET /v1/:orgId/documents/:slug
@@ -69,9 +62,7 @@ curl https://api.lydie.co/v1/your-org/documents/getting-started \\
                   </pre>
                   <div className="flex items-center gap-x-2 mt-4 pt-4 border-t border-gray-800">
                     <Code className="size-4 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-400">
-                      TypeScript SDK
-                    </span>
+                    <span className="text-xs font-medium text-gray-400">TypeScript SDK</span>
                   </div>
                   <pre className="text-xs text-gray-300 font-mono overflow-x-auto flex-1">
                     <code>{`import { LydieClient } from "@lydie/sdk/client";
@@ -93,27 +84,17 @@ const doc = await client.getDocument("getting-started");`}</code>
               Easily set up <br /> a blog.
             </h2>
             <span className="text-[15px]/relaxed text-gray-600 text-balance">
-              Deploy a blog in minutes with our ready-to-use examples, or use
-              our low-level REST API and TypeScript SDK for complete control
-              over your integration.
+              Deploy a blog in minutes with our ready-to-use examples, or use our low-level REST API and
+              TypeScript SDK for complete control over your integration.
             </span>
             <div className="flex items-center gap-x-3">
-              <Button
-                href="https://app.lydie.co/auth"
-                size="lg"
-                className="self-start"
-              >
+              <Button href="https://app.lydie.co/auth" size="lg" className="self-start">
                 <div className="flex items-center gap-x-1">
                   <span>Get started</span>
                   <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
                 </div>
               </Button>
-              <Button
-                href="/documentation/examples"
-                intent="secondary"
-                size="lg"
-                className="self-start"
-              >
+              <Button href="/documentation/examples" intent="secondary" size="lg" className="self-start">
                 <div className="flex items-center gap-x-1">
                   <span>View examples</span>
                   <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
@@ -126,13 +107,9 @@ const doc = await client.getDocument("getting-started");`}</code>
                 <div className="flex flex-col gap-y-4 shrink-0" key={i}>
                   <div className="flex items-center gap-x-2">
                     <point.icon className="size-4 text-gray-700" />
-                    <h3 className="font-medium text-[15px]/0 text-gray-900">
-                      {point.title}
-                    </h3>
+                    <h3 className="font-medium text-[15px]/0 text-gray-900">{point.title}</h3>
                   </div>
-                  <p className="text-[0.8125rem]/relaxed text-gray-600">
-                    {point.description}
-                  </p>
+                  <p className="text-[0.8125rem]/relaxed text-gray-600">{point.description}</p>
                 </div>
               ))}
             </div>
@@ -140,5 +117,5 @@ const doc = await client.getDocument("getting-started");`}</code>
         </div>
       </Container>
     </section>
-  );
+  )
 }

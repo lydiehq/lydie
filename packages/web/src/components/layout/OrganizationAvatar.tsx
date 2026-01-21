@@ -1,5 +1,5 @@
-import { cva, type VariantProps } from "cva";
-import { useOrganization } from "@/context/organization.context";
+import { cva, type VariantProps } from "cva"
+import { useOrganization } from "@/context/organization.context"
 
 const avatarStyles = cva({
   base: [
@@ -15,24 +15,24 @@ const avatarStyles = cva({
   defaultVariants: {
     size: "small",
   },
-});
+})
 
 type OrganizationAvatarProps = VariantProps<typeof avatarStyles> & {
-  className?: string;
-  organization?: { name?: string | null } | null;
-};
+  className?: string
+  organization?: { name?: string | null } | null
+}
 
 export function OrganizationAvatar({
   size,
   className,
   organization: organizationProp,
 }: OrganizationAvatarProps) {
-  const { organization: organizationFromContext } = useOrganization();
-  const organization = organizationProp ?? organizationFromContext;
+  const { organization: organizationFromContext } = useOrganization()
+  const organization = organizationProp ?? organizationFromContext
 
   return (
     <div className={avatarStyles({ size, className })} aria-hidden="true">
       {organization?.name?.slice(0, 1).toUpperCase() || ""}
     </div>
-  );
+  )
 }

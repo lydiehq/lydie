@@ -2,28 +2,6 @@
   "name": "lydie",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "sst dev",
-    "db:push": "bun --filter=@lydie/database db:push",
-    "db:sync": "bun --filter=@lydie/database db:sync-zero-publication",
-    "db:studio": "bun --filter=@lydie/database db:studio",
-    "deploy:prod": "sst deploy --stage production",
-    "deploy:web": "sst deploy --target Web --stage production",
-    "sso": "aws sso login --sso-session=lydie --use-device-code",
-    "sdk:publish": "bun --filter=@lydie-app/sdk sdk:publish",
-    "test:e2e": "bun --filter=@lydie/web test:e2e",
-    "copy-integration-assets": "bun --filter=@lydie/scripts copy-integration-assets"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "packageManager": "bun@1.3.6",
-  "devDependencies": {
-    "@tsconfig/node20": "^20.1.8",
-    "@types/bun": "^1.3.6",
-    "sst": "catalog:",
-    "typescript": "^5.9.3"
-  },
   "workspaces": {
     "packages": [
       "packages/*"
@@ -40,6 +18,33 @@
       "ai": "^6.0.3"
     }
   },
+  "scripts": {
+    "dev": "sst dev",
+    "db:push": "bun --filter=@lydie/database db:push",
+    "db:sync": "bun --filter=@lydie/database db:sync-zero-publication",
+    "db:studio": "bun --filter=@lydie/database db:studio",
+    "deploy:prod": "sst deploy --stage production",
+    "deploy:web": "sst deploy --target Web --stage production",
+    "sso": "aws sso login --sso-session=lydie --use-device-code",
+    "sdk:publish": "bun --filter=@lydie-app/sdk sdk:publish",
+    "test:e2e": "bun --filter=@lydie/web test:e2e",
+    "copy-integration-assets": "bun --filter=@lydie/scripts copy-integration-assets",
+    "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.8",
+    "@types/bun": "^1.3.6",
+    "oxfmt": "^0.26.0",
+    "oxlint": "^1.41.0",
+    "sst": "catalog:",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "bun@1.3.6",
   "trustedDependencies": [
     "@rocicorp/zero-sqlite3"
   ]

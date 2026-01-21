@@ -2,11 +2,11 @@
   "name": "@lydie/integrations",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {},
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*.ts"
   },
+  "scripts": {},
   "dependencies": {
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.0.8",
+    "@types/node": "^25.0.9",
     "sst": "catalog:",
     "typescript": "^5.9.3"
   }

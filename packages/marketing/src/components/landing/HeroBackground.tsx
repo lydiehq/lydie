@@ -1,19 +1,14 @@
-import "../../styles/grainy-gradient.css";
-import styles from "./Hero.module.css";
+import "../../styles/grainy-gradient.css"
+import styles from "./Hero.module.css"
 
 interface HeroBackgroundProps {
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
 }
 
-export function HeroBackground({
-  children,
-  className = "",
-}: HeroBackgroundProps) {
+export function HeroBackground({ children, className = "" }: HeroBackgroundProps) {
   return (
-    <div
-      className={`grainy-gradient-container custom-inner-shadow relative ${className}`}
-    >
+    <div className={`grainy-gradient-container custom-inner-shadow relative ${className}`}>
       <div className="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20 gradient-overlay"></div>
       <svg className="grainy-gradient-svg">
         <filter id="noiseFilter">
@@ -25,11 +20,7 @@ export function HeroBackground({
           ></feTurbulence>
         </filter>
       </svg>
-      <svg
-        viewBox="0 0 256 256"
-        xmlns="http://www.w3.org/2000/svg"
-        className={styles.embossedLogo}
-      >
+      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" className={styles.embossedLogo}>
         <path
           fill="currentColor"
           fillRule="evenodd"
@@ -39,5 +30,5 @@ export function HeroBackground({
       </svg>
       {children}
     </div>
-  );
+  )
 }

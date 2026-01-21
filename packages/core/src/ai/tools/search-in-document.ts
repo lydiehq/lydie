@@ -1,14 +1,10 @@
-import { tool } from "ai";
-import { z } from "zod";
-import { db, documentsTable, documentEmbeddingsTable } from "@lydie/database";
-import { eq, and, sql } from "drizzle-orm";
-import { generateEmbedding } from "../../embedding";
+import { tool } from "ai"
+import { z } from "zod"
+import { db, documentsTable, documentEmbeddingsTable } from "@lydie/database"
+import { eq, and, sql } from "drizzle-orm"
+import { generateEmbedding } from "../../embedding"
 
-export const searchInDocument = (
-  currentDocumentId: string,
-  userId: string,
-  organizationId: string
-) =>
+export const searchInDocument = (currentDocumentId: string, userId: string, organizationId: string) =>
   tool({
     description: `Read specific sections or content within a document.
 This is the MOST EFFICIENT way to access specific parts of a document without loading the entire content.
@@ -50,13 +46,13 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
       query: z
         .string()
         .describe(
-          "The search query to find relevant content. Use key terms, concepts, or topics mentioned by the user. Examples: 'economics section', 'coffee brewing methods', 'introduction about climate'"
+          "The search query to find relevant content. Use key terms, concepts, or topics mentioned by the user. Examples: 'economics section', 'coffee brewing methods', 'introduction about climate'",
         ),
       documentId: z
         .string()
         .optional()
         .describe(
-          `The ID of the document to search. Leave empty to search the current document (ID: ${currentDocumentId}). Only provide if searching a different document.`
+          `The ID of the document to search. Leave empty to search the current document (ID: ${currentDocumentId}). Only provide if searching a different document.`,
         ),
       limit: z
         .number()
@@ -64,7 +60,7 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         .max(10)
         .default(5)
         .describe(
-          "Number of relevant chunks to return. Default: 5. Use fewer (2-3) for specific queries, more (7-10) for broader searches."
+          "Number of relevant chunks to return. Default: 5. Use fewer (2-3) for specific queries, more (7-10) for broader searches.",
         ),
     }),
 
@@ -74,12 +70,12 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         state: "searching",
         message: `Searching for "${query}" in current document...`,
         query,
-      };
+      }
 
       // Add fake delay to see loading state (remove in production)
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800))
 
-      const targetDocumentId = documentId || currentDocumentId;
+      const targetDocumentId = documentId || currentDocumentId
 
       // Verify document access
       const [document] = await db
@@ -90,29 +86,29 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         })
         .from(documentsTable)
         .where(eq(documentsTable.id, targetDocumentId))
-        .limit(1);
+        .limit(1)
 
       if (!document) {
         return {
           error: `Document with ID "${targetDocumentId}" not found`,
           results: [],
-        };
+        }
       }
 
       if (document.organizationId !== organizationId) {
         return {
           error: "You do not have permission to access this document",
           results: [],
-        };
+        }
       }
 
       // Generate query embedding
-      const queryEmbedding = await generateEmbedding(query);
+      const queryEmbedding = await generateEmbedding(query)
 
       // Search document chunks
       const similarity = sql<number>`1 - (${
         documentEmbeddingsTable.embedding
-      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
+      } <=> ${JSON.stringify(queryEmbedding)}::vector)`
 
       const results = await db
         .select({
@@ -127,17 +123,11 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
           and(
             eq(documentEmbeddingsTable.documentId, targetDocumentId),
             // Similarity threshold - more lenient for in-document search
-            sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(
-              queryEmbedding
-            )}::vector) < 0.6`
-          )
+            sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.6`,
+          ),
         )
-        .orderBy(
-          sql`${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(
-            queryEmbedding
-          )}::vector`
-        )
-        .limit(limit);
+        .orderBy(sql`${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector`)
+        .limit(limit)
 
       if (results.length === 0) {
         yield {
@@ -145,8 +135,8 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
           documentTitle: document.title,
           documentId: targetDocumentId,
           results: [],
-        };
-        return;
+        }
+        return
       }
 
       // Yield final result (this is what will be in tool.output)
@@ -164,6 +154,6 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
           heading: r.heading,
           headingLevel: r.headingLevel,
         })),
-      };
+      }
     },
-  });
+  })

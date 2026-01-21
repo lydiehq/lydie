@@ -20,7 +20,7 @@ import { trackEvent } from "@/lib/posthog";
 
 export const Route = createFileRoute("/__auth/onboarding/")({
   component: RouteComponent,
-});
+})
 
 function RouteComponent() {
   const z = useZero();
@@ -30,7 +30,7 @@ function RouteComponent() {
   const { auth } = Route.useRouteContext();
 
   // Track onboarding started
-  useTrackOnMount("onboarding_started");
+  useTrackOnMount("onboarding_started")
 
   const defaultName = auth?.user?.name
     ? `${auth.user.name.split(" ")[0]}'s Workspace`
@@ -57,32 +57,32 @@ function RouteComponent() {
         );
 
         // Wait for the server to exist in the database.
-        await write.server;
+        await write.server
 
-        await revalidateSession(queryClient);
-        clearZeroInstance();
-        await router.invalidate();
+        await revalidateSession(queryClient)
+        clearZeroInstance()
+        await router.invalidate()
 
         // Track organization created and onboarding completed
         trackEvent("organization_created", {
           organizationId: id,
           organizationSlug: slug,
           organizationName: values.value.name,
-        });
-        trackEvent("onboarding_completed");
+        })
+        trackEvent("onboarding_completed")
 
         navigate({
           to: "/w/$organizationSlug",
           params: { organizationSlug: slug },
-        });
+        })
 
-        toast.success("Workspace created successfully");
+        toast.success("Workspace created successfully")
       } catch (error) {
-        console.error("Failed to create workspace:", error);
-        toast.error("Failed to create workspace");
+        console.error("Failed to create workspace:", error)
+        toast.error("Failed to create workspace")
       }
     },
-  });
+  })
 
 
   const [invitations] = useZeroQuery(
@@ -274,5 +274,5 @@ function RouteComponent() {
         </div>
       </div>
     </div>
-  );
+  )
 }

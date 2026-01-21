@@ -7,12 +7,12 @@ import {
   json,
   boolean,
   createBuilder,
-} from "@rocicorp/zero";
+} from "@rocicorp/zero"
 
 const timestamps = {
   created_at: number(),
   updated_at: number(),
-};
+}
 
 const users = table("users")
   .columns({
@@ -22,7 +22,7 @@ const users = table("users")
     image: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const organizations = table("organizations")
   .columns({
@@ -37,7 +37,7 @@ const organizations = table("organizations")
     polar_subscription_id: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const members = table("members")
   .columns({
@@ -47,7 +47,7 @@ const members = table("members")
     role: string(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const invitations = table("invitations")
   .columns({
@@ -60,7 +60,7 @@ const invitations = table("invitations")
     inviter_id: string(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const documents = table("documents")
   .columns({
@@ -81,7 +81,7 @@ const documents = table("documents")
     sort_order: number(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const documentPublications = table("document_publications")
   .columns({
@@ -90,23 +90,20 @@ const documentPublications = table("document_publications")
     organization_id: string(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
-const documentPublicationsRelations = relationships(
-  documentPublications,
-  ({ one }) => ({
-    document: one({
-      sourceField: ["document_id"],
-      destField: ["id"],
-      destSchema: documents,
-    }),
-    organization: one({
-      sourceField: ["organization_id"],
-      destField: ["id"],
-      destSchema: organizations,
-    }),
-  })
-);
+const documentPublicationsRelations = relationships(documentPublications, ({ one }) => ({
+  document: one({
+    sourceField: ["document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+}))
 
 const documentConversations = table("document_conversations")
   .columns({
@@ -116,7 +113,7 @@ const documentConversations = table("document_conversations")
     document_id: string(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const documentMessages = table("document_messages")
   .columns({
@@ -127,7 +124,7 @@ const documentMessages = table("document_messages")
     metadata: json().optional(),
     created_at: number(),
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const assistantConversations = table("assistant_conversations")
   .columns({
@@ -137,7 +134,7 @@ const assistantConversations = table("assistant_conversations")
     organization_id: string(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const assistantMessages = table("assistant_messages")
   .columns({
@@ -148,7 +145,7 @@ const assistantMessages = table("assistant_messages")
     metadata: json().optional(),
     created_at: number(),
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 export const documentComponents = table("document_components")
   .columns({
@@ -158,7 +155,7 @@ export const documentComponents = table("document_components")
     organization_id: string(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const apiKeys = table("api_keys")
   .columns({
@@ -171,7 +168,7 @@ const apiKeys = table("api_keys")
     last_used_at: number().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const llmUsage = table("llm_usage")
   .columns({
@@ -188,7 +185,7 @@ const llmUsage = table("llm_usage")
     tool_calls: json().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const userSettings = table("user_settings")
   .columns({
@@ -199,7 +196,7 @@ const userSettings = table("user_settings")
     custom_prompt: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const organizationSettings = table("organization_settings")
   .columns({
@@ -208,7 +205,7 @@ const organizationSettings = table("organization_settings")
     onboarding_status: json().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const integrationConnections = table("integration_connections")
   .columns({
@@ -220,7 +217,7 @@ const integrationConnections = table("integration_connections")
     status_message: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 // Integration links - configurable "symlinks" to external sources
 const integrationLinks = table("integration_links")
@@ -235,7 +232,7 @@ const integrationLinks = table("integration_links")
     sync_status: string().optional(), // 'idle', 'pulling', 'pushing', 'error'
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const syncMetadata = table("sync_metadata")
   .columns({
@@ -249,7 +246,7 @@ const syncMetadata = table("sync_metadata")
     sync_error: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
 const documentsRelations = relationships(documents, ({ one, many }) => ({
   parent: one({
@@ -282,58 +279,55 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["document_id"],
     destSchema: documentPublications,
   }),
-}));
+}))
 
-const organizationsRelations = relationships(
-  organizations,
-  ({ one, many }) => ({
-    documents: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: documents,
-    }),
-    members: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: members,
-    }),
-    invitations: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: invitations,
-    }),
-    documentComponents: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: documentComponents,
-    }),
-    assistantConversations: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: assistantConversations,
-    }),
-    apiKeys: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: apiKeys,
-    }),
-    llmUsage: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: llmUsage,
-    }),
-    integrationConnections: many({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: integrationConnections,
-    }),
-    settings: one({
-      sourceField: ["id"],
-      destField: ["organization_id"],
-      destSchema: organizationSettings,
-    }),
-  })
-);
+const organizationsRelations = relationships(organizations, ({ one, many }) => ({
+  documents: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: documents,
+  }),
+  members: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: members,
+  }),
+  invitations: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: invitations,
+  }),
+  documentComponents: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: documentComponents,
+  }),
+  assistantConversations: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: assistantConversations,
+  }),
+  apiKeys: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: apiKeys,
+  }),
+  llmUsage: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: llmUsage,
+  }),
+  integrationConnections: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: integrationConnections,
+  }),
+  settings: one({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: organizationSettings,
+  }),
+}))
 
 const membersRelations = relationships(members, ({ one }) => ({
   organization: one({
@@ -346,7 +340,7 @@ const membersRelations = relationships(members, ({ one }) => ({
     destField: ["id"],
     destSchema: users,
   }),
-}));
+}))
 
 const invitationsRelations = relationships(invitations, ({ one }) => ({
   organization: one({
@@ -359,7 +353,7 @@ const invitationsRelations = relationships(invitations, ({ one }) => ({
     destField: ["id"],
     destSchema: users,
   }),
-}));
+}))
 
 const usersRelations = relationships(users, ({ many, one }) => ({
   members: many({
@@ -377,18 +371,15 @@ const usersRelations = relationships(users, ({ many, one }) => ({
     destField: ["user_id"],
     destSchema: userSettings,
   }),
-}));
+}))
 
-const documentComponentsRelations = relationships(
-  documentComponents,
-  ({ one }) => ({
-    organization: one({
-      sourceField: ["organization_id"],
-      destField: ["id"],
-      destSchema: organizations,
-    }),
-  })
-);
+const documentComponentsRelations = relationships(documentComponents, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+}))
 
 const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
   organization: one({
@@ -396,71 +387,59 @@ const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
     destField: ["id"],
     destSchema: organizations,
   }),
-}));
+}))
 
-const documentConversationsRelations = relationships(
-  documentConversations,
-  ({ one, many }) => ({
-    user: one({
-      sourceField: ["user_id"],
-      destField: ["id"],
-      destSchema: users,
-    }),
-    document: one({
-      sourceField: ["document_id"],
-      destField: ["id"],
-      destSchema: documents,
-    }),
-    messages: many({
-      sourceField: ["id"],
-      destField: ["conversation_id"],
-      destSchema: documentMessages,
-    }),
-  })
-);
+const documentConversationsRelations = relationships(documentConversations, ({ one, many }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  document: one({
+    sourceField: ["document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  messages: many({
+    sourceField: ["id"],
+    destField: ["conversation_id"],
+    destSchema: documentMessages,
+  }),
+}))
 
-const documentMessagesRelations = relationships(
-  documentMessages,
-  ({ one }) => ({
-    conversation: one({
-      sourceField: ["conversation_id"],
-      destField: ["id"],
-      destSchema: documentConversations,
-    }),
-  })
-);
+const documentMessagesRelations = relationships(documentMessages, ({ one }) => ({
+  conversation: one({
+    sourceField: ["conversation_id"],
+    destField: ["id"],
+    destSchema: documentConversations,
+  }),
+}))
 
-const assistantConversationsRelations = relationships(
-  assistantConversations,
-  ({ one, many }) => ({
-    user: one({
-      sourceField: ["user_id"],
-      destField: ["id"],
-      destSchema: users,
-    }),
-    organization: one({
-      sourceField: ["organization_id"],
-      destField: ["id"],
-      destSchema: organizations,
-    }),
-    messages: many({
-      sourceField: ["id"],
-      destField: ["conversation_id"],
-      destSchema: assistantMessages,
-    }),
-  })
-);
+const assistantConversationsRelations = relationships(assistantConversations, ({ one, many }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  messages: many({
+    sourceField: ["id"],
+    destField: ["conversation_id"],
+    destSchema: assistantMessages,
+  }),
+}))
 
-const assistantMessagesRelations = relationships(
-  assistantMessages,
-  ({ one }) => ({
-    conversation: one({
-      sourceField: ["conversation_id"],
-      destField: ["id"],
-      destSchema: assistantConversations,
-    }),
-  })
-);
+const assistantMessagesRelations = relationships(assistantMessages, ({ one }) => ({
+  conversation: one({
+    sourceField: ["conversation_id"],
+    destField: ["id"],
+    destSchema: assistantConversations,
+  }),
+}))
 
 const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
   organization: one({
@@ -483,7 +462,7 @@ const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
     destField: ["id"],
     destSchema: documentMessages,
   }),
-}));
+}))
 
 const userSettingsRelations = relationships(userSettings, ({ one }) => ({
   user: one({
@@ -491,60 +470,51 @@ const userSettingsRelations = relationships(userSettings, ({ one }) => ({
     destField: ["id"],
     destSchema: users,
   }),
-}));
+}))
 
-const organizationSettingsRelations = relationships(
-  organizationSettings,
-  ({ one }) => ({
-    organization: one({
-      sourceField: ["organization_id"],
-      destField: ["id"],
-      destSchema: organizations,
-    }),
-  })
-);
+const organizationSettingsRelations = relationships(organizationSettings, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+}))
 
-const integrationConnectionsRelations = relationships(
-  integrationConnections,
-  ({ one, many }) => ({
-    organization: one({
-      sourceField: ["organization_id"],
-      destField: ["id"],
-      destSchema: organizations,
-    }),
-    syncMetadata: many({
-      sourceField: ["id"],
-      destField: ["connection_id"],
-      destSchema: syncMetadata,
-    }),
-    links: many({
-      sourceField: ["id"],
-      destField: ["connection_id"],
-      destSchema: integrationLinks,
-    }),
-  })
-);
+const integrationConnectionsRelations = relationships(integrationConnections, ({ one, many }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  syncMetadata: many({
+    sourceField: ["id"],
+    destField: ["connection_id"],
+    destSchema: syncMetadata,
+  }),
+  links: many({
+    sourceField: ["id"],
+    destField: ["connection_id"],
+    destSchema: integrationLinks,
+  }),
+}))
 
-const integrationLinksRelations = relationships(
-  integrationLinks,
-  ({ one, many }) => ({
-    connection: one({
-      sourceField: ["connection_id"],
-      destField: ["id"],
-      destSchema: integrationConnections,
-    }),
-    organization: one({
-      sourceField: ["organization_id"],
-      destField: ["id"],
-      destSchema: organizations,
-    }),
-    documents: many({
-      sourceField: ["id"],
-      destField: ["integration_link_id"],
-      destSchema: documents,
-    }),
-  })
-);
+const integrationLinksRelations = relationships(integrationLinks, ({ one, many }) => ({
+  connection: one({
+    sourceField: ["connection_id"],
+    destField: ["id"],
+    destSchema: integrationConnections,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  documents: many({
+    sourceField: ["id"],
+    destField: ["integration_link_id"],
+    destSchema: documents,
+  }),
+}))
 
 const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
   document: one({
@@ -557,7 +527,7 @@ const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
     destField: ["id"],
     destSchema: integrationConnections,
   }),
-}));
+}))
 
 const integrationActivityLogs = table("integration_activity_logs")
   .columns({
@@ -568,18 +538,15 @@ const integrationActivityLogs = table("integration_activity_logs")
     integration_type: string(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
-const integrationActivityLogsRelations = relationships(
-  integrationActivityLogs,
-  ({ one }) => ({
-    connection: one({
-      sourceField: ["connection_id"],
-      destField: ["id"],
-      destSchema: integrationConnections,
-    }),
-  })
-);
+const integrationActivityLogsRelations = relationships(integrationActivityLogs, ({ one }) => ({
+  connection: one({
+    sourceField: ["connection_id"],
+    destField: ["id"],
+    destSchema: integrationConnections,
+  }),
+}))
 
 const feedbackSubmissions = table("feedback_submissions")
   .columns({
@@ -656,14 +623,14 @@ export const schema = createSchema({
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,
-});
+})
 
-export type Schema = typeof schema;
+export type Schema = typeof schema
 
-export const zql = createBuilder(schema);
+export const zql = createBuilder(schema)
 
 declare module "@rocicorp/zero" {
   interface DefaultTypes {
-    schema: Schema;
+    schema: Schema
   }
 }

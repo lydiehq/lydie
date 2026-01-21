@@ -1,14 +1,16 @@
+// oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
-import { secret } from "./secret";
-import { cluster } from "./cluster";
-import { email } from "./email";
-import { organizationAssetsBucket, assetsRouter } from "./web";
+
+import { secret } from "./secret"
+import { cluster } from "./cluster"
+import { email } from "./email"
+import { organizationAssetsBucket, assetsRouter } from "./web"
 import {
   onboardingEmailProcessorFunction,
   onboardingEmailProcessorFunctionLinkable,
   onboardingSchedulerRole,
   onboardingSchedulerRoleLinkable,
-} from "./onboarding";
+} from "./onboarding"
 
 const commonSecrets = [
   secret.googleAiStudioApiKey,
@@ -27,7 +29,7 @@ const commonSecrets = [
   secret.githubAppSlug,
   secret.shopifyClientId,
   secret.shopifyClientSecret,
-];
+]
 
 export const backend = new sst.aws.Service("Backend", {
   cluster,
@@ -83,4 +85,4 @@ export const backend = new sst.aws.Service("Backend", {
     directory: "packages/backend",
     url: "http://localhost:3001",
   },
-});
+})

@@ -1,120 +1,115 @@
 export interface CustomBlockProps {
-  properties: Record<string, any>;
-  [key: string]: any;
+  properties: Record<string, any>
+  [key: string]: any
 }
 
 export interface RelatedDocument {
-  id: string;
-  title: string;
-  slug: string;
-  similarity: number;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  title: string
+  slug: string
+  similarity: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface TocItem {
-  id: string;
-  level: number;
-  text: string;
+  id: string
+  level: number
+  text: string
 }
 
 export interface Document {
-  id: string;
-  title: string;
-  slug: string;
-  jsonContent: ContentNode;
-  userId: string;
-  folderId: string | null;
-  organizationId: string;
-  indexStatus: string;
-  published: boolean;
-  lastIndexedTitle: string | null;
-  lastIndexedContentHash: string | null;
-  customFields: Record<string, string | number> | null;
-  createdAt: string;
-  updatedAt: string;
-  path: string;
-  fullPath: string;
-  related?: RelatedDocument[];
-  toc?: TocItem[];
+  id: string
+  title: string
+  slug: string
+  jsonContent: ContentNode
+  userId: string
+  folderId: string | null
+  organizationId: string
+  indexStatus: string
+  published: boolean
+  lastIndexedTitle: string | null
+  lastIndexedContentHash: string | null
+  customFields: Record<string, string | number> | null
+  createdAt: string
+  updatedAt: string
+  path: string
+  fullPath: string
+  related?: RelatedDocument[]
+  toc?: TocItem[]
 }
 
 export interface LinkReference {
-  href: string;
-  id?: string;
-  slug?: string;
-  title?: string;
-  type?: "internal" | "external";
+  href: string
+  id?: string
+  slug?: string
+  title?: string
+  type?: "internal" | "external"
 }
 
-export type LinkResolver = (ref: LinkReference) => string;
+export type LinkResolver = (ref: LinkReference) => string
 
 export interface DocumentListItem {
-  id: string;
-  title: string;
-  slug: string;
-  path: string;
-  fullPath: string;
-  published: boolean;
-  customFields: Record<string, string | number> | null;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  title: string
+  slug: string
+  path: string
+  fullPath: string
+  published: boolean
+  customFields: Record<string, string | number> | null
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Folder {
-  id: string;
-  name: string;
-  parentId: string | null;
-  path: string;
-  documentCount: number;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  name: string
+  parentId: string | null
+  path: string
+  documentCount: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ContentNode {
-  type: string;
+  type: string
   attrs?: {
-    level?: number;
-    start?: number;
-    tight?: boolean;
-    name?: string;
-    properties?: Record<string, any>;
-  };
-  content?: (ContentNode | TextNode)[];
+    level?: number
+    start?: number
+    tight?: boolean
+    name?: string
+    properties?: Record<string, any>
+  }
+  content?: (ContentNode | TextNode)[]
 }
 
 export interface TextNode {
-  type: "text";
-  text: string;
-  marks?: Mark[];
+  type: "text"
+  text: string
+  marks?: Mark[]
 }
 
 export interface Mark {
-  type: string;
+  type: string
   attrs?: {
-    href?: string;
-    rel?: string;
-    target?: string;
-    class?: string | null;
-    "document-id"?: string;
-    "document-slug"?: string;
-    "document-title"?: string;
-    [key: string]: any;
-  };
+    href?: string
+    rel?: string
+    target?: string
+    class?: string | null
+    "document-id"?: string
+    "document-slug"?: string
+    "document-title"?: string
+    [key: string]: any
+  }
 }
 
 export interface NodeBuilder<T> {
   // Text and marks
-  text(content: string): T;
-  bold(content: T): T;
-  italic(content: T): T;
-  link(content: T, href?: string, rel?: string, target?: string): T;
-  internalLink?(
-    content: T,
-    documentId?: string,
-    documentSlug?: string,
-    documentTitle?: string
-  ): T;
+  text(content: string): T
+  bold(content: T): T
+  italic(content: T): T
+  link(content: T, href?: string, rel?: string, target?: string): T
+  internalLink?(content: T, documentId?: string, documentSlug?: string, documentTitle?: string): T
 
   // Block elements
   doc(children: T[]): T;
@@ -128,51 +123,43 @@ export interface NodeBuilder<T> {
   codeBlock(children: T[], language?: string | null): T;
 
   // Custom blocks
-  customBlock(name: string, properties: Record<string, any>): T;
+  customBlock(name: string, properties: Record<string, any>): T
 
   // Utilities
-  fragment(children: T[]): T;
-  empty(): T;
-  escape(text: string): string;
+  fragment(children: T[]): T
+  empty(): T
+  escape(text: string): string
 }
 
 // ============================================================================
 // Re-export HTML Builder for backwards compatibility
 // ============================================================================
 
-export { HTMLBuilder } from "./serialization/html";
+export { HTMLBuilder } from "./serialization/html"
 
 // ============================================================================
 // Core rendering engine
 // ============================================================================
 
-export function renderWithBuilder<T>(
-  content: ContentNode,
-  builder: NodeBuilder<T>
-): T {
+export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<T>): T {
   const renderMarks = (text: string, marks?: Mark[]): T => {
     if (!marks || marks.length === 0) {
-      return builder.text(text);
+      return builder.text(text)
     }
 
     try {
       return marks.reduce((wrapped: T, mark) => {
         if (!mark || typeof mark !== "object" || !mark.type) {
-          return wrapped;
+          return wrapped
         }
 
         switch (mark.type) {
           case "bold":
-            return builder.bold(wrapped);
+            return builder.bold(wrapped)
           case "italic":
-            return builder.italic(wrapped);
+            return builder.italic(wrapped)
           case "link":
-            return builder.link(
-              wrapped,
-              mark.attrs?.href,
-              mark.attrs?.rel,
-              mark.attrs?.target
-            );
+            return builder.link(wrapped, mark.attrs?.href, mark.attrs?.rel, mark.attrs?.target)
           case "internal-link":
             // Internal links are handled by the builder's internalLink method
             // If not implemented, fall back to link with document-id
@@ -181,114 +168,106 @@ export function renderWithBuilder<T>(
                 wrapped,
                 mark.attrs?.["document-id"],
                 mark.attrs?.["document-slug"],
-                mark.attrs?.["document-title"]
-              );
+                mark.attrs?.["document-title"],
+              )
             }
             // Fallback: treat as regular link if builder doesn't support internal-link
-            return wrapped;
+            return wrapped
           default:
-            return wrapped;
+            return wrapped
         }
-      }, builder.text(text));
+      }, builder.text(text))
     } catch (error) {
-      console.warn("[Lydie] Error rendering marks:", error);
-      return builder.text(text);
+      console.warn("[Lydie] Error rendering marks:", error)
+      return builder.text(text)
     }
-  };
+  }
 
   const renderNode = (node: ContentNode | TextNode): T => {
     try {
       // Validate node structure
       if (!node || typeof node !== "object" || !node.type) {
-        return builder.empty();
+        return builder.empty()
       }
 
       if (node.type === "text") {
-        const textNode = node as TextNode;
+        const textNode = node as TextNode
         if (typeof textNode.text !== "string") {
-          return builder.empty();
+          return builder.empty()
         }
-        return renderMarks(textNode.text, textNode.marks);
+        return renderMarks(textNode.text, textNode.marks)
       }
 
       const renderChildren = (node: ContentNode): T[] => {
-        if (!Array.isArray(node.content)) return [];
-        return node.content
-          .map(renderNode)
-          .filter((child) => child != null) as T[];
-      };
+        if (!Array.isArray(node.content)) return []
+        return node.content.map(renderNode).filter((child) => child != null) as T[]
+      }
 
       switch (node.type) {
         case "doc":
-          return builder.doc(renderChildren(node));
+          return builder.doc(renderChildren(node))
 
         case "paragraph":
-          return builder.paragraph(renderChildren(node));
+          return builder.paragraph(renderChildren(node))
 
         case "heading":
-          const level = node.attrs?.level || 1;
-          return builder.heading(level, renderChildren(node));
+          const level = node.attrs?.level || 1
+          return builder.heading(level, renderChildren(node))
 
         case "bulletList":
-          return builder.bulletList(renderChildren(node));
+          return builder.bulletList(renderChildren(node))
 
         case "orderedList":
-          const start = node.attrs?.start;
-          return builder.orderedList(renderChildren(node), start);
+          const start = node.attrs?.start
+          return builder.orderedList(renderChildren(node), start)
 
         case "listItem":
-          return builder.listItem(renderChildren(node));
+          return builder.listItem(renderChildren(node))
 
         case "blockquote":
           return builder.blockquote(renderChildren(node));
 
         case "horizontalRule":
-          return builder.horizontalRule();
+          return builder.horizontalRule()
 
         case "codeBlock": {
-          const language = node.attrs?.language;
-          return builder.codeBlock(renderChildren(node), language);
+          const language = node.attrs?.language
+          return builder.codeBlock(renderChildren(node), language)
         }
 
         case "customBlock":
-          const componentName = node.attrs?.name;
+          const componentName = node.attrs?.name
           if (componentName && typeof componentName === "string") {
-            return builder.customBlock(
-              componentName,
-              node.attrs?.properties || {}
-            );
+            return builder.customBlock(componentName, node.attrs?.properties || {})
           }
-          return builder.empty();
+          return builder.empty()
 
         case "documentComponent": {
-          const componentName = node.attrs?.name;
+          const componentName = node.attrs?.name
           if (componentName && typeof componentName === "string") {
-            return builder.customBlock(
-              componentName,
-              node.attrs?.properties || {}
-            );
+            return builder.customBlock(componentName, node.attrs?.properties || {})
           }
-          return builder.empty();
+          return builder.empty()
         }
 
         default:
-          console.warn(`[Lydie] Unknown content node type: ${node.type}`);
-          return builder.empty();
+          console.warn(`[Lydie] Unknown content node type: ${node.type}`)
+          return builder.empty()
       }
     } catch (error) {
-      console.warn("[Lydie] Error rendering node:", error);
-      return builder.empty();
+      console.warn("[Lydie] Error rendering node:", error)
+      return builder.empty()
     }
-  };
+  }
 
-  return renderNode(content);
+  return renderNode(content)
 }
 
 // ============================================================================
 // HTML Rendering (Re-export for backwards compatibility)
 // ============================================================================
 
-export { serializeToHTML } from "./serialization/html";
+export { serializeToHTML } from "./serialization/html"
 
 // ============================================================================
 // API Client
@@ -296,245 +275,211 @@ export { serializeToHTML } from "./serialization/html";
 
 // API Client for server-side operations
 export class LydieClient {
-  private apiKey: string;
-  private apiUrl: string;
-  private debug: boolean;
-  private organizationId: string;
+  private apiKey: string
+  private apiUrl: string
+  private debug: boolean
+  private organizationId: string
 
-  constructor(config: {
-    apiKey: string;
-    apiUrl?: string;
-    debug?: boolean;
-    organizationId: string;
-  }) {
-    this.apiKey = config.apiKey;
-    this.apiUrl = config.apiUrl || "https://api.lydie.co/v1";
-    this.debug = config.debug || false;
-    this.organizationId = config.organizationId;
+  constructor(config: { apiKey: string; apiUrl?: string; debug?: boolean; organizationId: string }) {
+    this.apiKey = config.apiKey
+    this.apiUrl = config.apiUrl || "https://api.lydie.co/v1"
+    this.debug = config.debug || false
+    this.organizationId = config.organizationId
   }
 
   private getHeaders(): Record<string, string> {
     return {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
-    };
+    }
   }
 
   private getBaseUrl(): string {
-    return `${this.apiUrl}/${this.organizationId}`;
+    return `${this.apiUrl}/${this.organizationId}`
   }
 
   async getDocuments(): Promise<{ documents: DocumentListItem[] }> {
     try {
-      const url = `${this.getBaseUrl()}/documents`;
+      const url = `${this.getBaseUrl()}/documents`
 
       if (this.debug) {
-        console.log(`[Lydie] Fetching documents from url: ${url}`);
-        console.log(`[Lydie] Using headers:`, this.getHeaders());
+        console.log(`[Lydie] Fetching documents from url: ${url}`)
+        console.log(`[Lydie] Using headers:`, this.getHeaders())
       }
 
       const response = await fetch(url, {
         headers: this.getHeaders(),
-      });
+      })
 
       if (this.debug) {
-        console.log(
-          `[Lydie] Documents fetch response status: ${response.status} ${response.statusText}`
-        );
+        console.log(`[Lydie] Documents fetch response status: ${response.status} ${response.statusText}`)
       }
 
       if (!response.ok) {
-        throw new Error(
-          `[Lydie] Failed to fetch documents: ${response.statusText}`
-        );
+        throw new Error(`[Lydie] Failed to fetch documents: ${response.statusText}`)
       }
 
-      const data = (await response.json()) as { documents: DocumentListItem[] };
+      const data = (await response.json()) as { documents: DocumentListItem[] }
 
       if (this.debug) {
-        console.log(
-          `[Lydie] Successfully fetched ${data.documents.length} documents`
-        );
+        console.log(`[Lydie] Successfully fetched ${data.documents.length} documents`)
       }
 
-      return data;
+      return data
     } catch (error) {
       if (this.debug) {
-        console.error("[Lydie] Error fetching documents:", error);
+        console.error("[Lydie] Error fetching documents:", error)
       }
-      throw error;
+      throw error
     }
   }
 
   async getDocument(
     slug: string,
     options?: {
-      related?: boolean;
-      toc?: boolean;
-    }
+      related?: boolean
+      toc?: boolean
+    },
   ): Promise<Document> {
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams()
       if (options?.related) {
-        params.set("include_related", "true");
+        params.set("include_related", "true")
       }
       if (options?.toc) {
-        params.set("include_toc", "true");
+        params.set("include_toc", "true")
       }
 
-      const url = `${this.getBaseUrl()}/documents/${slug}${
-        params.toString() ? `?${params.toString()}` : ""
-      }`;
+      const url = `${this.getBaseUrl()}/documents/${slug}${params.toString() ? `?${params.toString()}` : ""}`
 
       if (this.debug) {
-        console.log(`[Lydie] Fetching document from url: ${url}`);
-        console.log(`[Lydie] Using headers:`, this.getHeaders());
+        console.log(`[Lydie] Fetching document from url: ${url}`)
+        console.log(`[Lydie] Using headers:`, this.getHeaders())
         if (options?.related) {
-          console.log(`[Lydie] Including related documents`);
+          console.log(`[Lydie] Including related documents`)
         }
         if (options?.toc) {
-          console.log(`[Lydie] Including table of contents`);
+          console.log(`[Lydie] Including table of contents`)
         }
       }
 
       const response = await fetch(url, {
         headers: this.getHeaders(),
-      });
+      })
 
       if (this.debug) {
-        console.log(
-          `[Lydie] Document fetch response status: ${response.status} ${response.statusText}`
-        );
+        console.log(`[Lydie] Document fetch response status: ${response.status} ${response.statusText}`)
       }
 
       if (!response.ok) {
-        throw new Error(
-          `[Lydie] Failed to fetch document ${slug}: ${response.statusText}`
-        );
+        throw new Error(`[Lydie] Failed to fetch document ${slug}: ${response.statusText}`)
       }
 
-      const document = (await response.json()) as Document;
+      const document = (await response.json()) as Document
 
       if (this.debug) {
-        console.log(
-          `[Lydie] Successfully fetched document: ${document.title} (${document.slug})`
-        );
+        console.log(`[Lydie] Successfully fetched document: ${document.title} (${document.slug})`)
         if (document.related) {
-          console.log(
-            `[Lydie] Found ${document.related.length} related documents`
-          );
+          console.log(`[Lydie] Found ${document.related.length} related documents`)
         }
       }
 
-      return document;
+      return document
     } catch (error) {
       if (this.debug) {
-        console.error(`[Lydie] Error fetching document ${slug}:`, error);
+        console.error(`[Lydie] Error fetching document ${slug}:`, error)
       }
-      throw error;
+      throw error
     }
   }
 
   async getDocumentByPath(
     path: string,
     options?: {
-      related?: boolean;
-      toc?: boolean;
-    }
+      related?: boolean
+      toc?: boolean
+    },
   ): Promise<Document> {
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams()
       if (options?.related) {
-        params.set("include_related", "true");
+        params.set("include_related", "true")
       }
       if (options?.toc) {
-        params.set("include_toc", "true");
+        params.set("include_toc", "true")
       }
 
       const url = `${this.getBaseUrl()}/documents/by-path/${path}${
         params.toString() ? `?${params.toString()}` : ""
-      }`;
+      }`
 
       if (this.debug) {
-        console.log(`[Lydie] Fetching document by path from url: ${url}`);
-        console.log(`[Lydie] Using headers:`, this.getHeaders());
+        console.log(`[Lydie] Fetching document by path from url: ${url}`)
+        console.log(`[Lydie] Using headers:`, this.getHeaders())
       }
 
       const response = await fetch(url, {
         headers: this.getHeaders(),
-      });
+      })
 
       if (this.debug) {
         console.log(
-          `[Lydie] Document by path fetch response status: ${response.status} ${response.statusText}`
-        );
+          `[Lydie] Document by path fetch response status: ${response.status} ${response.statusText}`,
+        )
       }
 
       if (!response.ok) {
-        throw new Error(
-          `[Lydie] Failed to fetch document at path ${path}: ${response.statusText}`
-        );
+        throw new Error(`[Lydie] Failed to fetch document at path ${path}: ${response.statusText}`)
       }
 
-      const document = (await response.json()) as Document;
+      const document = (await response.json()) as Document
 
       if (this.debug) {
-        console.log(
-          `[Lydie] Successfully fetched document by path: ${document.title} (${document.fullPath})`
-        );
+        console.log(`[Lydie] Successfully fetched document by path: ${document.title} (${document.fullPath})`)
       }
 
-      return document;
+      return document
     } catch (error) {
       if (this.debug) {
-        console.error(
-          `[Lydie] Error fetching document by path ${path}:`,
-          error
-        );
+        console.error(`[Lydie] Error fetching document by path ${path}:`, error)
       }
-      throw error;
+      throw error
     }
   }
 
   async getFolders(): Promise<{ folders: Folder[] }> {
     try {
-      const url = `${this.getBaseUrl()}/folders`;
+      const url = `${this.getBaseUrl()}/folders`
 
       if (this.debug) {
-        console.log(`[Lydie] Fetching folders from url: ${url}`);
-        console.log(`[Lydie] Using headers:`, this.getHeaders());
+        console.log(`[Lydie] Fetching folders from url: ${url}`)
+        console.log(`[Lydie] Using headers:`, this.getHeaders())
       }
 
       const response = await fetch(url, {
         headers: this.getHeaders(),
-      });
+      })
 
       if (this.debug) {
-        console.log(
-          `[Lydie] Folders fetch response status: ${response.status} ${response.statusText}`
-        );
+        console.log(`[Lydie] Folders fetch response status: ${response.status} ${response.statusText}`)
       }
 
       if (!response.ok) {
-        throw new Error(
-          `[Lydie] Failed to fetch folders: ${response.statusText}`
-        );
+        throw new Error(`[Lydie] Failed to fetch folders: ${response.statusText}`)
       }
 
-      const data = (await response.json()) as { folders: Folder[] };
+      const data = (await response.json()) as { folders: Folder[] }
 
       if (this.debug) {
-        console.log(
-          `[Lydie] Successfully fetched ${data.folders.length} folders`
-        );
+        console.log(`[Lydie] Successfully fetched ${data.folders.length} folders`)
       }
 
-      return data;
+      return data
     } catch (error) {
       if (this.debug) {
-        console.error("[Lydie] Error fetching folders:", error);
+        console.error("[Lydie] Error fetching folders:", error)
       }
-      throw error;
+      throw error
     }
   }
 }
@@ -545,47 +490,47 @@ export class LydieClient {
 
 // Utility function to extract TOC from content
 export function extractTableOfContents(content: ContentNode): TocItem[] {
-  const headings: TocItem[] = [];
-  let headingCounter = 0;
+  const headings: TocItem[] = []
+  let headingCounter = 0
 
   const traverseNode = (node: ContentNode | TextNode) => {
     if (node.type === "heading") {
-      const level = node.attrs?.level || 1;
-      const text = extractTextFromNode(node);
+      const level = node.attrs?.level || 1
+      const text = extractTextFromNode(node)
       if (text.trim()) {
         headings.push({
           id: `heading-${headingCounter++}`,
           level,
           text: text.trim(),
-        });
+        })
       }
     }
 
     if ("content" in node && node.content) {
-      node.content.forEach(traverseNode);
+      node.content.forEach(traverseNode)
     }
-  };
+  }
 
-  traverseNode(content);
-  return headings;
+  traverseNode(content)
+  return headings
 }
 
 // Helper function to extract text content from a node
 function extractTextFromNode(node: ContentNode | TextNode): string {
   if (node.type === "text") {
-    return (node as TextNode).text;
+    return (node as TextNode).text
   }
 
   if ("content" in node && node.content) {
-    return node.content.map(extractTextFromNode).join("");
+    return node.content.map(extractTextFromNode).join("")
   }
 
-  return "";
+  return ""
 }
 
 /**
  * Extract plain text from content node
  */
 export function extractText(content: ContentNode): string {
-  return extractTextFromNode(content);
+  return extractTextFromNode(content)
 }

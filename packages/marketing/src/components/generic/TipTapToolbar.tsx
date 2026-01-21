@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import type { Editor } from "@tiptap/react";
-import { Toolbar, Group } from "react-aria-components";
+import React, { useEffect, useState } from "react"
+import type { Editor } from "@tiptap/react"
+import { Toolbar, Group } from "react-aria-components"
 import {
   Bold,
   Italic,
@@ -13,11 +13,11 @@ import {
   ListOrdered,
   Undo,
   Redo,
-} from "lucide-react";
-import { Button } from "./Button";
+} from "lucide-react"
+import { Button } from "./Button"
 
 interface TipTapToolbarProps {
-  editor: Editor;
+  editor: Editor
 }
 
 function ToolbarButton({
@@ -28,12 +28,12 @@ function ToolbarButton({
   isActive,
   isDisabled,
 }: {
-  editor: Editor;
-  onPress: () => void;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  isActive?: boolean;
-  isDisabled?: boolean;
+  editor: Editor
+  onPress: () => void
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  isActive?: boolean
+  isDisabled?: boolean
 }) {
   return (
     <Button
@@ -47,27 +47,27 @@ function ToolbarButton({
     >
       <Icon className="w-4 h-4" />
     </Button>
-  );
+  )
 }
 
 export function TipTapToolbar({ editor }: TipTapToolbarProps) {
-  const [, forceUpdate] = useState({});
+  const [, forceUpdate] = useState({})
 
   // Force re-render when editor state changes
   useEffect(() => {
-    const update = () => forceUpdate({});
-    editor.on("selectionUpdate", update);
-    editor.on("update", update);
-    editor.on("transaction", update);
+    const update = () => forceUpdate({})
+    editor.on("selectionUpdate", update)
+    editor.on("update", update)
+    editor.on("transaction", update)
 
     return () => {
-      editor.off("selectionUpdate", update);
-      editor.off("update", update);
-      editor.off("transaction", update);
-    };
-  }, [editor]);
+      editor.off("selectionUpdate", update)
+      editor.off("update", update)
+      editor.off("transaction", update)
+    }
+  }, [editor])
 
-  if (!editor) return null;
+  if (!editor) return null
 
   return (
     <div className="border-b border-gray-200 bg-gray-50 p-2">
@@ -127,27 +127,21 @@ export function TipTapToolbar({ editor }: TipTapToolbarProps) {
         <Group aria-label="Heading level" className="flex gap-1">
           <ToolbarButton
             editor={editor}
-            onPress={() =>
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-            }
+            onPress={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             icon={Heading1}
             title="Heading 1"
             isActive={editor.isActive("heading", { level: 1 })}
           />
           <ToolbarButton
             editor={editor}
-            onPress={() =>
-              editor.chain().focus().toggleHeading({ level: 2 }).run()
-            }
+            onPress={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             icon={Heading2}
             title="Heading 2"
             isActive={editor.isActive("heading", { level: 2 })}
           />
           <ToolbarButton
             editor={editor}
-            onPress={() =>
-              editor.chain().focus().toggleHeading({ level: 3 }).run()
-            }
+            onPress={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             icon={Heading3}
             title="Heading 3"
             isActive={editor.isActive("heading", { level: 3 })}
@@ -174,6 +168,5 @@ export function TipTapToolbar({ editor }: TipTapToolbarProps) {
         </Group>
       </Toolbar>
     </div>
-  );
+  )
 }
-

@@ -22,12 +22,10 @@ import { DialogTrigger, Heading, Button as RACButton } from "react-aria-componen
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute(
-  "/__auth/w/$organizationSlug/(assistant)/"
-)({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)/")({
   component: PageComponent,
   ssr: false,
-});
+})
 
 function PageComponent() {
   return (
@@ -36,7 +34,7 @@ function PageComponent() {
         <Onboarding />
       </Surface>
     </div>
-  );
+  )
 }
 
 function Onboarding() {
@@ -312,5 +310,5 @@ function Onboarding() {
         </div>
       </div>
     </div>
-  );
+  )
 }

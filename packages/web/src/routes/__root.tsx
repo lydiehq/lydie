@@ -1,5 +1,5 @@
-import type { RouterContext } from "@/main";
-import { loadSession } from "@/lib/auth/session";
+import type { RouterContext } from "@/main"
+import { loadSession } from "@/lib/auth/session"
 import {
   Outlet,
   createRootRouteWithContext,
@@ -23,29 +23,27 @@ import { useEffect } from "react";
 
 declare module "react-aria-components" {
   interface RouterConfig {
-    href: ToOptions["to"];
-    routerOptions: Omit<NavigateOptions, keyof ToOptions>;
+    href: ToOptions["to"]
+    routerOptions: Omit<NavigateOptions, keyof ToOptions>
   }
 }
 export const Route = createRootRouteWithContext<RouterContext>()({
   ssr: false,
   head: () => {
-    const zeroCacheURL = import.meta.env.VITE_ZERO_URL;
-    const siteURL = typeof window !== "undefined" ? window.location.origin : "";
+    const zeroCacheURL = import.meta.env.VITE_ZERO_URL
+    const siteURL = typeof window !== "undefined" ? window.location.origin : ""
     return {
       meta: [
         { title: "Lydie" },
         {
           name: "description",
-          content:
-            "A minimal, powerful writing environment supercharged with AI.",
+          content: "A minimal, powerful writing environment supercharged with AI.",
         },
         { property: "og:type", content: "website" },
         { property: "og:title", content: "Lydie" },
         {
           property: "og:description",
-          content:
-            "A minimal, powerful writing environment supercharged with AI.",
+          content: "A minimal, powerful writing environment supercharged with AI.",
         },
         {
           property: "og:image",
@@ -55,8 +53,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { property: "twitter:title", content: "Lydie" },
         {
           property: "twitter:description",
-          content:
-            "A minimal, powerful writing environment supercharged with AI.",
+          content: "A minimal, powerful writing environment supercharged with AI.",
         },
         {
           property: "twitter:image",
@@ -71,13 +68,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           },
         ]
         : [],
-    };
+    }
   },
   pendingComponent: LoadingScreen,
   errorComponent: ErrorPage,
   beforeLoad: async ({ context: { queryClient } }) => {
-    const { auth, organizations } = await loadSession(queryClient);
-    const zeroInstance = getZeroInstance(auth);
+    const { auth, organizations } = await loadSession(queryClient)
+    const zeroInstance = getZeroInstance(auth)
 
     // Redirect to onboarding if user has no organizations
     if (
@@ -94,15 +91,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return { auth, organizations, zero: zeroInstance };
   },
   component: () => {
-    const router = useRouter();
-    const { zero } = Route.useRouteContext();
+    const router = useRouter()
+    const { zero } = Route.useRouteContext()
     return (
       <>
         <HeadContent />
         <PostHogProvider>
-          <RouterProvider
-            navigate={(to, options) => router.navigate({ to, ...options })}
-          >
+          <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
             <ZeroProvider zero={zero}>
               <PostHogUserIdentifier />
               <FontSizeSync />
@@ -112,27 +107,27 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           </RouterProvider>
         </PostHogProvider>
       </>
-    );
+    )
   },
-});
+})
 
 // Component to identify users and track page views
 function PostHogUserIdentifier() {
-  const { auth, organizations } = Route.useRouteContext();
+  const { auth, organizations } = Route.useRouteContext()
 
   // Track page views automatically
-  usePageViewTracking();
+  usePageViewTracking()
 
   // Identify user when authenticated and track login/signup
   useEffect(() => {
     if (auth?.user) {
-      const isNewUser = organizations.length === 0;
+      const isNewUser = organizations.length === 0
 
       identifyUser(auth.user.id, {
         email: auth.user.email,
         hasOrganizations: organizations.length > 0,
         organizationCount: organizations.length,
-      });
+      })
 
       // Track signup or login based on whether user has organizations
       // This runs once when user first authenticates
@@ -142,7 +137,7 @@ function PostHogUserIdentifier() {
         // User has organizations, this is a login
       }
     }
-  }, [auth?.user, organizations]);
+  }, [auth?.user, organizations])
 
-  return null;
+  return null
 }

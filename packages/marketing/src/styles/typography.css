@@ -4,11 +4,7 @@
   --prose-strong-color: var(--color-gray-950);
   --prose-link-color: var(--color-gray-950);
   --prose-code-color: var(--color-gray-950);
-  --prose-marker-color: color-mix(
-    in oklab,
-    var(--color-gray-700) 25%,
-    transparent
-  );
+  --prose-marker-color: color-mix(in oklab, var(--color-gray-700) 25%, transparent);
   --prose-th-borders: var(--color-gray-300);
   --prose-td-borders: var(--color-gray-200);
   --prose-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
@@ -20,11 +16,7 @@
     --prose-strong-color: var(--color-white);
     --prose-link-color: var(--color-white);
     --prose-code-color: var(--color-white);
-    --prose-marker-color: color-mix(
-      in oklab,
-      var(--color-gray-300) 35%,
-      transparent
-    );
+    --prose-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
     --prose-th-borders: var(--color-gray-600);
     --prose-td-borders: var(--color-gray-700);
     --prose-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
@@ -37,18 +29,10 @@
       --prose-strong-color: var(--color-white);
       --prose-link-color: var(--color-white);
       --prose-code-color: var(--color-white);
-      --prose-marker-color: color-mix(
-        in oklab,
-        var(--color-gray-300) 35%,
-        transparent
-      );
+      --prose-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
       --prose-th-borders: var(--color-gray-600);
       --prose-td-borders: var(--color-gray-700);
-      --prose-hr-color: color-mix(
-        in oklab,
-        var(--color-white) 10%,
-        transparent
-      );
+      --prose-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
       --prose-blockquote-border-color: var(--color-gray-600);
     }
   }
@@ -57,8 +41,7 @@
   font-size: var(--text-base);
   line-height: 1.8;
 
-  *:where(:not(.not-prose, .not-prose *))
-    + *:where(:not(.not-prose, .not-prose *)) {
+  *:where(:not(.not-prose, .not-prose *)) + *:where(:not(.not-prose, .not-prose *)) {
     margin-top: calc(var(--spacing) * 4);
   }
 

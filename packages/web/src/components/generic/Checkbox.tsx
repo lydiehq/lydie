@@ -6,34 +6,30 @@ import {
   type CheckboxProps,
   type ValidationResult,
   composeRenderProps,
-} from "react-aria-components";
-import { cva } from "cva";
-import { Description, FieldError, Label } from "./Field";
-import { composeTailwindRenderProps } from "./utils";
+} from "react-aria-components"
+import { cva } from "cva"
+import { Description, FieldError, Label } from "./Field"
+import { composeTailwindRenderProps } from "./utils"
 
-export interface CheckboxGroupProps
-  extends Omit<AriaCheckboxGroupProps, "children"> {
-  label?: string;
-  children?: ReactNode;
-  description?: string;
-  errorMessage?: string | ((validation: ValidationResult) => string);
+export interface CheckboxGroupProps extends Omit<AriaCheckboxGroupProps, "children"> {
+  label?: string
+  children?: ReactNode
+  description?: string
+  errorMessage?: string | ((validation: ValidationResult) => string)
 }
 
 export function CheckboxGroup(props: CheckboxGroupProps) {
   return (
     <AriaCheckboxGroup
       {...props}
-      className={composeTailwindRenderProps(
-        props.className,
-        "flex flex-col gap-2"
-      )}
+      className={composeTailwindRenderProps(props.className, "flex flex-col gap-2")}
     >
       <Label>{props.label}</Label>
       {props.children}
       {props.description && <Description>{props.description}</Description>}
       <FieldError>{props.errorMessage}</FieldError>
     </AriaCheckboxGroup>
-  );
+  )
 }
 
 const checkboxStyles = cva({
@@ -44,7 +40,7 @@ const checkboxStyles = cva({
       true: "text-gray-300 dark:text-zinc-600 forced-colors:text-[GrayText]",
     },
   },
-});
+})
 
 const boxStyles = cva({
   base: "w-[18px] h-[18px] box-border rounded-sm transition-all duration-200 flex items-center justify-center flex-shrink-0 border",
@@ -55,7 +51,7 @@ const boxStyles = cva({
       true: "bg-gray-700 dark:bg-slate-300 border-gray-700 dark:border-slate-300 group-pressed:bg-gray-800 dark:group-pressed:bg-slate-200 forced-colors:bg-[Highlight] forced-colors:border-[Highlight]",
     },
   },
-});
+})
 
 const checkmarkStyles = "checkbox-checkmark";
 
@@ -64,7 +60,7 @@ export function Checkbox(props: CheckboxProps) {
     <AriaCheckbox
       {...props}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        checkboxStyles({ ...renderProps, className })
+        checkboxStyles({ ...renderProps, className }),
       )}
     >
       {({ isSelected, isIndeterminate, ...renderProps }) => (
@@ -96,5 +92,5 @@ export function Checkbox(props: CheckboxProps) {
         </>
       )}
     </AriaCheckbox>
-  );
+  )
 }

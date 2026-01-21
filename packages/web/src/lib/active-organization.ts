@@ -1,35 +1,26 @@
-import {
-  getUserStorage,
-  setUserStorage,
-  removeUserStorage,
-} from "./user-storage";
+import { getUserStorage, setUserStorage, removeUserStorage } from "./user-storage"
 
-const ACTIVE_ORG_KEY = "lydie:active-organization";
+const ACTIVE_ORG_KEY = "lydie:active-organization"
 
-export function getActiveOrganizationSlug(
-  userId?: string | null
-): string | null {
+export function getActiveOrganizationSlug(userId?: string | null): string | null {
   if (typeof window === "undefined") {
-    return null;
+    return null
   }
 
   try {
-    return getUserStorage(userId, ACTIVE_ORG_KEY);
+    return getUserStorage(userId, ACTIVE_ORG_KEY)
   } catch {
-    return null;
+    return null
   }
 }
 
-export function setActiveOrganizationSlug(
-  organizationSlug: string,
-  userId?: string | null
-): void {
+export function setActiveOrganizationSlug(organizationSlug: string, userId?: string | null): void {
   if (typeof window === "undefined") {
-    return;
+    return
   }
 
   try {
-    setUserStorage(userId, ACTIVE_ORG_KEY, organizationSlug);
+    setUserStorage(userId, ACTIVE_ORG_KEY, organizationSlug)
   } catch {
     // Ignore errors
   }
@@ -37,11 +28,11 @@ export function setActiveOrganizationSlug(
 
 export function clearActiveOrganizationSlug(userId?: string | null): void {
   if (typeof window === "undefined") {
-    return;
+    return
   }
 
   try {
-    removeUserStorage(userId, ACTIVE_ORG_KEY);
+    removeUserStorage(userId, ACTIVE_ORG_KEY)
   } catch {
     // Ignore errors
   }

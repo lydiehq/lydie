@@ -1,12 +1,7 @@
-import {
-  TreeItem,
-  TreeItemContent,
-  Button,
-  MenuTrigger,
-} from "react-aria-components";
-import { useParams, useNavigate } from "@tanstack/react-router";
-import { Collection } from "react-aria-components";
-import { type ReactElement, useRef } from "react";
+import { TreeItem, TreeItemContent, Button, MenuTrigger } from "react-aria-components"
+import { useParams, useNavigate } from "@tanstack/react-router"
+import { Collection } from "react-aria-components"
+import { type ReactElement, useRef } from "react"
 import {
   FolderSyncIcon,
   MoreVerticalIcon,
@@ -16,54 +11,51 @@ import {
   ArrowRightBIcon,
   DocumentIcon,
   DocumentsIcon,
-} from "@/icons";
-import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar";
-import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
-import { Menu, MenuItem } from "../generic/Menu";
-import type { QueryResultType } from "@rocicorp/zero";
-import { queries } from "@lydie/zero/queries";
-import { getIntegrationIconUrl } from "@/utils/integration-icons";
-import { useDocumentActions } from "@/hooks/use-document-actions";
+} from "@/icons"
+import { composeTailwindRenderProps, focusRing } from "../generic/utils"
+import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar"
+import { DocumentMenu } from "../home-file-explorer/DocumentMenu"
+import { Menu, MenuItem } from "../generic/Menu"
+import type { QueryResultType } from "@rocicorp/zero"
+import { queries } from "@lydie/zero/queries"
+import { getIntegrationIconUrl } from "@/utils/integration-icons"
+import { useDocumentActions } from "@/hooks/use-document-actions"
 
 type Props = {
   item: {
-    id: string;
-    name: string;
-    type: "document" | "integration-link" | "integration-group";
-    isLocked?: boolean;
+    id: string
+    name: string
+    type: "document" | "integration-link" | "integration-group"
+    isLocked?: boolean
     children?: Array<{
-      id: string;
-      name: string;
-      type: "document" | "integration-link" | "integration-group";
-      children?: any[];
-      integrationLinkId?: string | null;
-      integrationType?: string;
-      syncStatus?: string | null;
-      isLocked?: boolean;
-    }>;
-    integrationLinkId?: string | null;
-    integrationType?: string;
-    syncStatus?: string | null;
-  };
-  renderItem: (item: any) => ReactElement;
-  documents: NonNullable<
-    QueryResultType<typeof queries.organizations.documents>
-  >["documents"];
-};
+      id: string
+      name: string
+      type: "document" | "integration-link" | "integration-group"
+      children?: any[]
+      integrationLinkId?: string | null
+      integrationType?: string
+      syncStatus?: string | null
+      isLocked?: boolean
+    }>
+    integrationLinkId?: string | null
+    integrationType?: string
+    syncStatus?: string | null
+  }
+  renderItem: (item: any) => ReactElement
+  documents: NonNullable<QueryResultType<typeof queries.organizations.documents>>["documents"]
+}
 
 export function DocumentTreeItem({ item, renderItem }: Props) {
-  const { id: currentDocId } = useParams({ strict: false });
-  const navigate = useNavigate();
-  const chevronRef = useRef<HTMLButtonElement>(null);
+  const { id: currentDocId } = useParams({ strict: false })
+  const navigate = useNavigate()
+  const chevronRef = useRef<HTMLButtonElement>(null)
 
-  const isCurrentDocument =
-    item.type === "document" && currentDocId === item.id;
-  const isCurrent = isCurrentDocument;
+  const isCurrentDocument = item.type === "document" && currentDocId === item.id
+  const isCurrent = isCurrentDocument
 
-  const isIntegrationLink = item.type === "integration-link";
-  const isGroup = item.type === "integration-group";
-  const isLocked = item.isLocked ?? false;
+  const isIntegrationLink = item.type === "integration-link"
+  const isGroup = item.type === "integration-group"
+  const isLocked = item.isLocked ?? false
 
   const handleAction = () => {
     if (isGroup && item.integrationType) {
@@ -71,14 +63,14 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         to: "/w/$organizationSlug/settings/integrations/$integrationType",
         params: { integrationType: item.integrationType },
         from: "/w/$organizationSlug",
-      });
-      return;
+      })
+      return
     }
 
     // For integration links, trigger expansion by clicking the chevron button
     if (isIntegrationLink) {
-      chevronRef.current?.click();
-      return;
+      chevronRef.current?.click()
+      return
     }
 
     if (item.type === "document") {
@@ -86,9 +78,9 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         to: "/w/$organizationSlug/$id",
         params: { id: item.id },
         from: "/w/$organizationSlug",
-      });
+      })
     }
-  };
+  }
 
   return (
     <TreeItem
@@ -108,7 +100,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
             }
             ${isGroup ? "cursor-default" : ""}
           `,
-        })
+        }),
       )}
       style={{
         paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
@@ -156,15 +148,11 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                 <DocumentTreeItemIcon
                   isExpanded={isExpanded}
                   chevronRef={chevronRef}
-                  hasChildren={
-                    item.children !== undefined && item.children.length > 0
-                  }
+                  hasChildren={item.children !== undefined && item.children.length > 0}
                 />
               )}
 
-              <span
-                className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}
-              >
+              <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>
                 {getDisplayName(item.name)}
               </span>
             </div>
@@ -182,15 +170,13 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
           </>
         )}
       </TreeItemContent>
-      {item.children && (
-        <Collection items={item.children}>{renderItem}</Collection>
-      )}
+      {item.children && <Collection items={item.children}>{renderItem}</Collection>}
     </TreeItem>
-  );
+  )
 }
 
 function getDisplayName(name: string): string {
-  return name.trim() || "Untitled document";
+  return name.trim() || "Untitled document"
 }
 
 function IntegrationGroupChevron({
@@ -198,19 +184,16 @@ function IntegrationGroupChevron({
   name,
   isExpanded,
 }: {
-  integrationType?: string;
-  name: string;
-  isExpanded: boolean;
+  integrationType?: string
+  name: string
+  isExpanded: boolean
 }) {
-  const iconUrl = integrationType
-    ? getIntegrationIconUrl(integrationType)
-    : null;
+  const iconUrl = integrationType ? getIntegrationIconUrl(integrationType) : null
 
   return (
     <Button
       className={sidebarItemIconStyles({
-        className:
-          "p-1 rounded hover:bg-gray-200 -ml-1 group/chevron hover:text-black/60",
+        className: "p-1 rounded hover:bg-gray-200 -ml-1 group/chevron hover:text-black/60",
       })}
       slot="chevron"
     >
@@ -242,7 +225,7 @@ function IntegrationGroupChevron({
         </>
       )}
     </Button>
-  );
+  )
 }
 
 /**
@@ -253,9 +236,9 @@ function IntegrationLinkChevron({
   isExpanded,
   chevronRef,
 }: {
-  syncStatus?: string | null;
-  isExpanded: boolean;
-  chevronRef: React.RefObject<HTMLButtonElement | null>;
+  syncStatus?: string | null
+  isExpanded: boolean
+  chevronRef: React.RefObject<HTMLButtonElement | null>
 }) {
   return (
     <Button
@@ -285,7 +268,7 @@ function IntegrationLinkChevron({
         </>
       )}
     </Button>
-  );
+  )
 }
 
 function DocumentTreeItemIcon({
@@ -293,11 +276,11 @@ function DocumentTreeItemIcon({
   chevronRef,
   hasChildren,
 }: {
-  isExpanded: boolean;
-  chevronRef: React.RefObject<HTMLButtonElement | null>;
-  hasChildren: boolean;
+  isExpanded: boolean
+  chevronRef: React.RefObject<HTMLButtonElement | null>
+  hasChildren: boolean
 }) {
-  const IconComponent = hasChildren ? DocumentsIcon : DocumentIcon;
+  const IconComponent = hasChildren ? DocumentsIcon : DocumentIcon
 
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
@@ -309,7 +292,7 @@ function DocumentTreeItemIcon({
           })}
         />
       </div>
-    );
+    )
   }
 
   // If has children, show button with chevron on hover
@@ -321,8 +304,7 @@ function DocumentTreeItemIcon({
     >
       <IconComponent
         className={sidebarItemIconStyles({
-          className:
-            "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+          className: "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
         })}
       />
       <ArrowRightBIcon
@@ -332,26 +314,19 @@ function DocumentTreeItemIcon({
         })}
       />
     </Button>
-  );
+  )
 }
 
-function VerticalMenuButton({
-  "aria-label": ariaLabel,
-}: {
-  "aria-label": string;
-}) {
+function VerticalMenuButton({ "aria-label": ariaLabel }: { "aria-label": string }) {
   return (
-    <Button
-      className="p-1 text-black hover:text-black/60 group/options"
-      aria-label={ariaLabel}
-    >
+    <Button className="p-1 text-black hover:text-black/60 group/options" aria-label={ariaLabel}>
       <MoreVerticalIcon
         className={sidebarItemIconStyles({
           className: "size-3 group-hover/options:text-black/60 hover:",
         })}
       />
     </Button>
-  );
+  )
 }
 
 /**
@@ -364,17 +339,17 @@ function ItemContextMenu({
   integrationLinkId,
   integrationType,
 }: {
-  type: "document" | "integration-link" | "integration-group";
-  itemId: string;
-  itemName: string;
-  integrationLinkId?: string | null;
-  integrationType?: string;
+  type: "document" | "integration-link" | "integration-group"
+  itemId: string
+  itemName: string
+  integrationLinkId?: string | null
+  integrationType?: string
 }) {
-  const navigate = useNavigate();
-  const { createDocument } = useDocumentActions();
+  const navigate = useNavigate()
+  const { createDocument } = useDocumentActions()
 
   if (type === "integration-group") {
-    return null;
+    return null
   }
 
   if (type === "integration-link") {
@@ -389,7 +364,7 @@ function ItemContextMenu({
                   to: "/w/$organizationSlug/settings/integrations/$integrationType",
                   params: { integrationType },
                   from: "/w/$organizationSlug",
-                });
+                })
               }
             }}
           >
@@ -398,7 +373,7 @@ function ItemContextMenu({
           <MenuItem
             onAction={() => {
               if (integrationLinkId) {
-                createDocument(undefined, integrationLinkId);
+                createDocument(undefined, integrationLinkId)
               }
             }}
           >
@@ -406,7 +381,7 @@ function ItemContextMenu({
           </MenuItem>
         </Menu>
       </MenuTrigger>
-    );
+    )
   }
 
   return (
@@ -414,5 +389,5 @@ function ItemContextMenu({
       <VerticalMenuButton aria-label="Document options" />
       <DocumentMenu documentId={itemId} documentName={itemName} />
     </MenuTrigger>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 import {
   Tab as RACTab,
   TabList as RACTabList,
@@ -11,9 +11,9 @@ import {
   TabProps,
   TabsProps,
   composeRenderProps,
-} from "react-aria-components";
-import { tv } from "tailwind-variants";
-import { focusRing } from "./utils";
+} from "react-aria-components"
+import { tv } from "tailwind-variants"
+import { focusRing } from "./utils"
 
 const tabsStyles = tv({
   base: "flex gap-4",
@@ -23,17 +23,17 @@ const tabsStyles = tv({
       vertical: "flex-row w-[800px]",
     },
   },
-});
+})
 
 export function Tabs(props: TabsProps) {
   return (
     <RACTabs
       {...props}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        tabsStyles({ ...renderProps, className })
+        tabsStyles({ ...renderProps, className }),
       )}
     />
-  );
+  )
 }
 
 const tabListStyles = tv({
@@ -44,17 +44,17 @@ const tabListStyles = tv({
       vertical: "flex-col items-start",
     },
   },
-});
+})
 
 export function TabList<T extends object>(props: TabListProps<T>) {
   return (
     <RACTabList
       {...props}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        tabListStyles({ ...renderProps, className })
+        tabListStyles({ ...renderProps, className }),
       )}
     />
-  );
+  )
 }
 
 const tabProps = tv({
@@ -70,35 +70,35 @@ const tabProps = tv({
       true: "text-gray-200 dark:text-zinc-600 forced-colors:text-[GrayText] selected:text-gray-300 dark:selected:text-zinc-500 forced-colors:selected:text-[HighlightText] selected:bg-gray-200 dark:selected:bg-zinc-600 forced-colors:selected:bg-[GrayText]",
     },
   },
-});
+})
 
 export function Tab(props: TabProps) {
   return (
     <RACTab
       {...props}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        tabProps({ ...renderProps, className })
+        tabProps({ ...renderProps, className }),
       )}
     />
-  );
+  )
 }
 
 export function TabPanels<T extends object>(props: TabPanelsProps<T>) {
-  return <RACTabPanels {...props} />;
+  return <RACTabPanels {...props} />
 }
 
 const tabPanelStyles = tv({
   extend: focusRing,
   base: "flex-1 p-4 text-sm text-gray-900 dark:text-zinc-100",
-});
+})
 
 export function TabPanel(props: TabPanelProps) {
   return (
     <RACTabPanel
       {...props}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        tabPanelStyles({ ...renderProps, className })
+        tabPanelStyles({ ...renderProps, className }),
       )}
     />
-  );
+  )
 }

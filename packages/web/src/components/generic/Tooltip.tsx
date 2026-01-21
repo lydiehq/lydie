@@ -1,17 +1,17 @@
-import React from "react";
+import React from "react"
 import {
   Tooltip as AriaTooltip,
   type TooltipProps as AriaTooltipProps,
   OverlayArrow,
   composeRenderProps,
   TooltipTrigger as AriaTooltipTrigger,
-} from "react-aria-components";
-import { cva } from "cva";
-import type { TooltipTriggerProps } from "react-aria";
+} from "react-aria-components"
+import { cva } from "cva"
+import type { TooltipTriggerProps } from "react-aria"
 
 export interface TooltipProps extends Omit<AriaTooltipProps, "children"> {
-  children: React.ReactNode;
-  hotkeys?: string[];
+  children: React.ReactNode
+  hotkeys?: string[]
 }
 
 const styles = cva({
@@ -24,7 +24,7 @@ const styles = cva({
       true: "animate-out fade-out placement-bottom:slide-out-to-top-1 placement-top:slide-out-to-bottom-1 placement-left:slide-out-to-right-1 placement-right:slide-out-to-left-1 ease-in duration-75",
     },
   },
-});
+})
 
 export function Tooltip({ children, hotkeys, ...props }: TooltipProps) {
   return (
@@ -32,7 +32,7 @@ export function Tooltip({ children, hotkeys, ...props }: TooltipProps) {
       {...props}
       offset={14}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        styles({ ...renderProps, className })
+        styles({ ...renderProps, className }),
       )}
     >
       <OverlayArrow>
@@ -61,20 +61,13 @@ export function Tooltip({ children, hotkeys, ...props }: TooltipProps) {
         )}
       </div>
     </AriaTooltip>
-  );
+  )
 }
 
-export function TooltipTrigger({
-  children,
-  ...props
-}: TooltipTriggerProps & { children: React.ReactNode }) {
+export function TooltipTrigger({ children, ...props }: TooltipTriggerProps & { children: React.ReactNode }) {
   return (
-    <AriaTooltipTrigger
-      {...props}
-      delay={props.delay || 200}
-      closeDelay={props.closeDelay || 0}
-    >
+    <AriaTooltipTrigger {...props} delay={props.delay || 200} closeDelay={props.closeDelay || 0}>
       {children}
     </AriaTooltipTrigger>
-  );
+  )
 }

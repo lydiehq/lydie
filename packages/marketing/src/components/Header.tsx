@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { Container } from "./Container";
-import { Logo } from "./Logo";
-import clsx from "clsx";
-import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { Button } from "./generic/Button";
+import { useEffect, useState } from "react"
+import { Container } from "./Container"
+import { Logo } from "./Logo"
+import clsx from "clsx"
+import { Menu, X } from "lucide-react"
+import { motion, AnimatePresence } from "motion/react"
+import { Button } from "./generic/Button"
 
 const links = [
   {
@@ -23,41 +23,38 @@ const links = [
     href: "/roadmap",
     label: "Roadmap",
   },
-];
+]
 
 export function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+      setIsScrolled(window.scrollY > 20)
+    }
+    handleScroll()
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   useEffect(() => {
     if (isMenuOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = "hidden"
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "unset"
     }
-  }, [isMenuOpen]);
+  }, [isMenuOpen])
 
   return (
     <header
       className={clsx(
         "py-4 sticky top-0 z-40 bg-white backdrop-blur-md border-b transition-colors duration-1000",
-        isScrolled ? "border-black/8" : "border-transparent"
+        isScrolled ? "border-black/8" : "border-transparent",
       )}
     >
       <Container className="flex items-center justify-between">
-        <a
-          href="/"
-          className="flex items-center gap-x-1.5 z-50 relative focus:outline-none"
-        >
+        <a href="/" className="flex items-center gap-x-1.5 z-50 relative focus:outline-none">
           <Logo className="text-gray-950 size-5" />
           <span className="text-lg/0 font-semibold text-gray-800">Lydie</span>
         </a>
@@ -129,5 +126,5 @@ export function Header() {
         </AnimatePresence>
       </Container>
     </header>
-  );
+  )
 }

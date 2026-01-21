@@ -1,17 +1,17 @@
-import { useAtom } from "jotai";
-import { confirmDialogAtom, initConfirmDialog } from "@/stores/confirm-dialog";
-import { Modal } from "./Modal";
-import { Dialog } from "./Dialog";
-import { Button } from "./Button";
-import { useEffect } from "react";
-import { Heading } from "react-aria-components";
+import { useAtom } from "jotai"
+import { confirmDialogAtom, initConfirmDialog } from "@/stores/confirm-dialog"
+import { Modal } from "./Modal"
+import { Dialog } from "./Dialog"
+import { Button } from "./Button"
+import { useEffect } from "react"
+import { Heading } from "react-aria-components"
 
 export function ConfirmDialog() {
-  const [state, setState] = useAtom(confirmDialogAtom);
+  const [state, setState] = useAtom(confirmDialogAtom)
 
   useEffect(() => {
-    initConfirmDialog(setState);
-  }, [setState]);
+    initConfirmDialog(setState)
+  }, [setState])
 
   const handleClose = () => {
     setState({
@@ -19,21 +19,16 @@ export function ConfirmDialog() {
       title: "Confirm",
       message: "",
       onConfirm: undefined,
-    });
-  };
+    })
+  }
 
   const handleConfirm = () => {
-    state.onConfirm?.();
-    handleClose();
-  };
+    state.onConfirm?.()
+    handleClose()
+  }
 
   return (
-    <Modal
-      isOpen={state.isOpen}
-      onOpenChange={handleClose}
-      isDismissable
-      size="sm"
-    >
+    <Modal isOpen={state.isOpen} onOpenChange={handleClose} isDismissable size="sm">
       <Dialog role="alertdialog">
         <div className="p-4 flex flex-col gap-y-3">
           <Heading slot="title" className="text-lg font-medium text-gray-900">
@@ -51,5 +46,5 @@ export function ConfirmDialog() {
         </div>
       </Dialog>
     </Modal>
-  );
+  )
 }

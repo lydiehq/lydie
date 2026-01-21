@@ -20,9 +20,7 @@ const assistantSearchSchema = z.object({
   prompt: z.string().optional(),
 });
 
-export const Route = createFileRoute(
-  "/__auth/w/$organizationSlug/(assistant)/assistant/"
-)({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)/assistant/")({
   component: PageComponent,
   ssr: false,
   validateSearch: assistantSearchSchema,
@@ -47,7 +45,7 @@ export const Route = createFileRoute(
   },
 });
 
-const COLLAPSED_SIZE = 3.5;
+const COLLAPSED_SIZE = 3.5
 
 function PageComponent() {
   const { organization } = useOrganization();
@@ -63,10 +61,10 @@ function PageComponent() {
   });
 
   const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current;
-    if (!panel) return;
-    panel.isCollapsed() ? panel.expand() : panel.collapse();
-  };
+    const panel = sidebarPanelRef.current
+    if (!panel) return
+    panel.isCollapsed() ? panel.expand() : panel.collapse()
+  }
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
@@ -104,5 +102,5 @@ function PageComponent() {
         </AssistantProvider>
       </Surface>
     </div>
-  );
+  )
 }

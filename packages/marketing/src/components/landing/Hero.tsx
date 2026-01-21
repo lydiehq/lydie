@@ -1,26 +1,26 @@
-import { Container } from "../Container";
-import { Button } from "../generic/Button";
-import screenshotNew from "../../../public/screenshot_new.png";
-import styles from "./Hero.module.css";
-import { motion, AnimatePresence } from "motion/react";
-import { useState } from "react";
-import { HeroBackground } from "./HeroBackground";
+import { Container } from "../Container"
+import { Button } from "../generic/Button"
+import screenshotNew from "../../../public/screenshot_new.png"
+import styles from "./Hero.module.css"
+import { motion, AnimatePresence } from "motion/react"
+import { useState } from "react"
+import { HeroBackground } from "./HeroBackground"
 
-const imageSrc = screenshotNew.src;
+const imageSrc = screenshotNew.src
 const imageAlt =
-  "Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'.";
+  "Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
 
 function DemoButton() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleDemoClick = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     // Mock loading for 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    setIsLoading(false);
-  };
+    setIsLoading(false)
+  }
 
   return (
     <div className={`relative group ${styles.demoButtonContainer}`}>
@@ -74,10 +74,7 @@ function DemoButton() {
               viewBox="0 0 24 24"
               className="size-[11px] text-green-800 -rotate-45"
             >
-              <path
-                fill="currentColor"
-                d="m18 9l-6-6l-6 6zm0 6l-6 6l-6-6z"
-              ></path>
+              <path fill="currentColor" d="m18 9l-6-6l-6 6zm0 6l-6 6l-6-6z"></path>
             </motion.svg>
           )}
         </AnimatePresence>
@@ -87,7 +84,7 @@ function DemoButton() {
         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
       </div>
     </div>
-  );
+  )
 }
 
 export function Hero() {
@@ -103,14 +100,11 @@ export function Hero() {
                   "0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02)",
               }}
             >
-              <span className="text-[12px] font-medium text-white">
-                Now in open beta!
-              </span>
+              <span className="text-[12px] font-medium text-white">Now in open beta!</span>
             </div>
             <h1 className="text-5xl font-medium tracking-tight text-white drop-shadow-text">
               <span className={styles.heroWord1}>Centralize</span>{" "}
-              <span className={styles.heroWord2}>your</span>{" "}
-              <span className={styles.heroWord3}>writing</span>
+              <span className={styles.heroWord2}>your</span> <span className={styles.heroWord3}>writing</span>
             </h1>
             <p className="text-[17px]/relaxed text-white/90 text-balance">
               <span className={styles.heroSentence1}>
@@ -122,14 +116,8 @@ export function Hero() {
               </span>
             </p>
             <div className="flex items-center justify-center gap-x-1.5 mt-4">
-              <div
-                className={`${styles.heroButton1} ring ring-white/1 p-0.5 bg-black/4 rounded-[8px]`}
-              >
-                <Button
-                  href="https://app.lydie.co/auth"
-                  size="lg"
-                  intent="primary"
-                >
+              <div className={`${styles.heroButton1} ring ring-white/1 p-0.5 bg-black/4 rounded-[8px]`}>
+                <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
                   <span>Start Lydie free</span>
                 </Button>
               </div>
@@ -156,9 +144,7 @@ export function Hero() {
               "0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03)",
           }}
         >
-          <div
-            className={`${styles.shimmerContainer} absolute inset-0 pointer-events-none`}
-          ></div>
+          <div className={`${styles.shimmerContainer} absolute inset-0 pointer-events-none`}></div>
           <div className="flex items-center gap-x-1.5 mb-2 relative z-10">
             {[...Array(3)].map((_, i) => (
               <div
@@ -181,5 +167,5 @@ export function Hero() {
         </div>
       </HeroBackground>
     </div>
-  );
+  )
 }

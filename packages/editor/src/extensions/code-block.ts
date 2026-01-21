@@ -1,14 +1,14 @@
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
-import type { NodeViewRenderer } from "@tiptap/core";
-import { createLowlight, all } from "lowlight";
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight"
+import type { NodeViewRenderer } from "@tiptap/core"
+import { createLowlight, all } from "lowlight"
 
 // Create a lowlight instance with all languages loaded
-const lowlight = createLowlight(all);
+const lowlight = createLowlight(all)
 
 export interface CodeBlockOptions {
   // Allow overriding lowlight if needed, but default to our instance
-  lowlight?: typeof lowlight;
-  addNodeView?: () => NodeViewRenderer;
+  lowlight?: typeof lowlight
+  addNodeView?: () => NodeViewRenderer
 }
 
 export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
@@ -17,10 +17,10 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
       ...this.parent?.(),
       lowlight: lowlight,
       addNodeView: undefined,
-    };
+    }
   },
 
   addNodeView() {
-    return this.options.addNodeView?.() || this.parent?.() || null;
+    return this.options.addNodeView?.() || this.parent?.() || null
   },
-});
+})

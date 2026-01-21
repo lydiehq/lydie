@@ -1,17 +1,16 @@
+// oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
-import { secret } from "./secret";
-import { zero } from "./zero";
+import { secret } from "./secret"
+import { zero } from "./zero"
 
-export const organizationAssetsBucket = new sst.aws.Bucket(
-  "OrganizationAssets",
-  { access: "cloudfront" }
-);
+export const organizationAssetsBucket = new sst.aws.Bucket("OrganizationAssets", { access: "cloudfront" })
 
-export const assetsRouter = new sst.aws.Router("AssetsRouter", {
-  ...($app.stage === "production" ? { domain: "assets.lydie.co" } : {}),
-});
+export const assetsRouter = new sst.aws.Router(
+  "AssetsRouter",
+  $app.stage === "production" ? { domain: "assets.lydie.co" } : {},
+)
 
-assetsRouter.routeBucket("*", organizationAssetsBucket);
+assetsRouter.routeBucket("*", organizationAssetsBucket)
 
 new sst.aws.StaticSite("Web", {
   path: "./packages/web",
@@ -22,15 +21,13 @@ new sst.aws.StaticSite("Web", {
   environment: {
     VITE_ZERO_URL: zero.url,
     VITE_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
-    VITE_YJS_SERVER_URL: $dev
-      ? "ws://localhost:3001/yjs"
-      : "wss://api.lydie.co/yjs",
+    VITE_YJS_SERVER_URL: $dev ? "ws://localhost:3001/yjs" : "wss://api.lydie.co/yjs",
     VITE_ASSETS_DOMAIN: assetsRouter.url,
     VITE_PUBLIC_POSTHOG_KEY: "phc_XczR2cR4b5RKg1SHiagP2w4uFoRYZU80b5M4bcVyudC",
     VITE_PUBLIC_POSTHOG_HOST: "https://us.i.posthog.com",
   },
   ...($dev ? {} : { domain: "app.lydie.co" }),
-});
+})
 
 new sst.aws.StaticSite("Marketing", {
   path: "./packages/marketing",
@@ -39,9 +36,7 @@ new sst.aws.StaticSite("Marketing", {
     output: "dist",
   },
   environment: {
-    PUBLIC_VITE_API_URL: $dev
-      ? "http://localhost:3001"
-      : "https://api.lydie.co",
+    PUBLIC_VITE_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
     LYDIE_API_KEY: secret.lydieApiKey.value,
   },
   ...($dev ? {} : { domain: "lydie.co" }),
@@ -67,4 +62,4 @@ if (isRoot && hasToken) {
           },
         },
       }),
-});
+})

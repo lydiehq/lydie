@@ -17,29 +17,25 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
   beforeLoad: async ({ context, params }) => {
     try {
-      const { zero, auth, queryClient } = context;
-      const { organizationSlug } = params;
+      const { zero, auth, queryClient } = context
+      const { organizationSlug } = params
 
-      const organization = await loadOrganization(
-        queryClient,
-        zero,
-        organizationSlug
-      );
+      const organization = await loadOrganization(queryClient, zero, organizationSlug)
 
-      setActiveOrganizationSlug(params.organizationSlug, auth?.session?.userId);
-      return { organization };
+      setActiveOrganizationSlug(params.organizationSlug, auth?.session?.userId)
+      return { organization }
     } catch (error) {
-      console.error(error);
-      throw notFound();
+      console.error(error)
+      throw notFound()
     }
   },
   notFoundComponent: () => <div>Organization not found</div>,
   gcTime: Infinity,
   staleTime: Infinity,
   ssr: false,
-});
+})
 
-const COLLAPSED_SIZE = 3;
+const COLLAPSED_SIZE = 3
 
 function RouteComponent() {
   return (
@@ -54,10 +50,10 @@ function RouteLayout() {
   const [size, setSize] = useState(25);
 
   const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current;
-    if (!panel) return;
-    panel.isCollapsed() ? panel.expand() : panel.collapse();
-  };
+    const panel = sidebarPanelRef.current
+    if (!panel) return
+    panel.isCollapsed() ? panel.expand() : panel.collapse()
+  }
 
   return (
     <div className="flex h-screen flex-col">
@@ -75,10 +71,7 @@ function RouteLayout() {
           defaultSize={25}
           onResize={setSize}
         >
-          <Sidebar
-            isCollapsed={size === COLLAPSED_SIZE}
-            onToggle={toggleSidebar}
-          />
+          <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
         </Panel>
         <PanelResizer />
         <Panel>
@@ -86,5 +79,5 @@ function RouteLayout() {
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }

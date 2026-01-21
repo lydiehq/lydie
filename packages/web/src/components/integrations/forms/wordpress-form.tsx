@@ -1,30 +1,25 @@
-import { useAppForm } from "@/hooks/use-app-form";
-import { toast } from "sonner";
-import { RadioGroup, Radio } from "@/components/generic/RadioGroup";
-import { Label } from "@/components/generic/Field";
+import { useAppForm } from "@/hooks/use-app-form"
+import { toast } from "sonner"
+import { RadioGroup, Radio } from "@/components/generic/RadioGroup"
+import { Label } from "@/components/generic/Field"
 
 export type WordPressLinkConfig = {
-  type: "pages" | "posts";
-};
+  type: "pages" | "posts"
+}
 
 export type WordPressFormProps = {
-  connectionId: string;
-  organizationId: string;
-  onCreate: (name: string, config: WordPressLinkConfig) => Promise<void>;
-  onCancel: () => void;
-};
+  connectionId: string
+  organizationId: string
+  onCreate: (name: string, config: WordPressLinkConfig) => Promise<void>
+  onCancel: () => void
+}
 
 const RESOURCE_TYPES = [
   { value: "pages", label: "Pages", description: "Sync WordPress pages" },
   { value: "posts", label: "Posts", description: "Sync WordPress blog posts" },
-] as const;
+] as const
 
-export function WordPressForm({
-  connectionId,
-  organizationId,
-  onCreate,
-  onCancel,
-}: WordPressFormProps) {
+export function WordPressForm({ connectionId, organizationId, onCreate, onCancel }: WordPressFormProps) {
   const form = useAppForm({
     defaultValues: {
       resourceType: "" as "pages" | "posts" | "",
@@ -33,48 +28,41 @@ export function WordPressForm({
     onSubmit: async (values) => {
       try {
         if (!values.value.resourceType) {
-          toast.error("Please select a resource type");
-          return;
+          toast.error("Please select a resource type")
+          return
         }
 
-        const selectedType = RESOURCE_TYPES.find(
-          (t) => t.value === values.value.resourceType
-        );
+        const selectedType = RESOURCE_TYPES.find((t) => t.value === values.value.resourceType)
         if (!selectedType) {
-          toast.error("Invalid resource type");
-          return;
+          toast.error("Invalid resource type")
+          return
         }
 
-        const name =
-          values.value.linkName.trim() || selectedType.label;
+        const name = values.value.linkName.trim() || selectedType.label
 
         const config: WordPressLinkConfig = {
           type: values.value.resourceType as "pages" | "posts",
-        };
+        }
 
-        await onCreate(name, config);
+        await onCreate(name, config)
       } catch (error) {
-        console.error("Failed to create WordPress link:", error);
-        toast.error("Failed to create link");
+        console.error("Failed to create WordPress link:", error)
+        toast.error("Failed to create link")
       }
     },
-  });
+  })
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
+        e.preventDefault()
+        form.handleSubmit()
       }}
       className="flex flex-col gap-y-4"
     >
       <div>
-        <h3 className="text-lg font-medium text-gray-900">
-          Add WordPress Link
-        </h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Select whether to sync WordPress pages or posts.
-        </p>
+        <h3 className="text-lg font-medium text-gray-900">Add WordPress Link</h3>
+        <p className="text-sm text-gray-600 mt-1">Select whether to sync WordPress pages or posts.</p>
       </div>
 
       <div className="flex flex-col gap-y-3">
@@ -95,17 +83,13 @@ export function WordPressForm({
                   >
                     <div className="flex flex-col">
                       <span className="font-medium text-sm">{type.label}</span>
-                      <span className="text-xs text-gray-500">
-                        {type.description}
-                      </span>
+                      <span className="text-xs text-gray-500">{type.description}</span>
                     </div>
                   </Radio>
                 ))}
               </RadioGroup>
               {field.state.meta.errors.length > 0 && (
-                <p className="text-xs text-red-600">
-                  {field.state.meta.errors.join(", ")}
-                </p>
+                <p className="text-xs text-red-600">{field.state.meta.errors.join(", ")}</p>
               )}
             </div>
           )}
@@ -140,6 +124,5 @@ export function WordPressForm({
         </button>
       </div>
     </form>
-  );
+  )
 }
-
