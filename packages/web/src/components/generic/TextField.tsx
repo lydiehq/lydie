@@ -14,6 +14,8 @@ export interface TextFieldProps extends Omit<AriaTextFieldProps, "name"> {
   placeholder?: string
   errorMessage?: string | ((validation: ValidationResult) => string)
   textarea?: boolean
+  labelClassName?: string
+  descriptionClassName?: string
 }
 
 export function TextField({
@@ -42,7 +44,7 @@ export function TextField({
       ) : (
         <Input placeholder={placeholder} className={focusRing} />
       )}
-      {description && <Description>{description}</Description>}
+      {description && <Description className={descriptionClassName}>{description}</Description>}
       <FieldError>
         {field.state.meta.errors.length > 0 ? field.state.meta.errors.join(", ") : errorMessage}
       </FieldError>

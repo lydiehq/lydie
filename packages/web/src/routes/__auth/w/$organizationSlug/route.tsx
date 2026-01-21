@@ -4,9 +4,10 @@ import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-p
 import { PanelResizer } from "@/components/panels/PanelResizer"
 import { useRef, useState } from "react"
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu"
-import { useOrganization } from "@/context/organization.context"
 import { setActiveOrganizationSlug } from "@/lib/active-organization"
 import { loadOrganization } from "@/lib/organization/loadOrganization"
+import { FloatingAssistantProvider } from "@/context/floating-assistant.context"
+import { FloatingAssistant } from "@/components/assistant/FloatingAssistant"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
@@ -33,7 +34,14 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
 const COLLAPSED_SIZE = 3
 
 function RouteComponent() {
-  const { organization } = useOrganization()
+  return (
+    <FloatingAssistantProvider>
+      <RouteLayout />
+    </FloatingAssistantProvider>
+  )
+}
+
+function RouteLayout() {
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
   const [size, setSize] = useState(25)
 

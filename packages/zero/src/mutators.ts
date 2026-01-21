@@ -102,6 +102,299 @@ export const mutators = defineMutators({
         })
       },
     ),
+    createOnboardingGuide: defineMutator(
+      z.object({
+        organizationId: z.string(),
+        parentId: z.string(),
+        childId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId, parentId, childId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        // Get the highest sort_order to append at the end
+        const siblings = await tx.run(
+          zql.documents
+            .where("organization_id", organizationId)
+            .where("parent_id", "IS", null)
+            .where("deleted_at", "IS", null),
+        )
+
+        const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0)
+
+        // Parent document content with internal link
+        const parentContent = {
+          type: "doc",
+          content: [
+            {
+              type: "heading",
+              attrs: { level: 1 },
+              content: [{ type: "text", text: "📚 Welcome to Your Document Editor!" }],
+            },
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "This guide will help you learn the powerful features of the editor. Let's explore!",
+                },
+              ],
+            },
+            {
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: "🔗 Internal Links" }],
+            },
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "You can link to other documents in your workspace. For example, check out the ",
+                },
+                {
+                  type: "text",
+                  text: "advanced features page",
+                  marks: [
+                    {
+                      type: "link",
+                      attrs: {
+                        href: `internal://${childId}`,
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: "text",
+                  text: " to learn more!",
+                },
+              ],
+            },
+            {
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: "✨ Formatting Options" }],
+            },
+            {
+              type: "paragraph",
+              content: [
+                { type: "text", text: "You can use " },
+                { type: "text", text: "bold", marks: [{ type: "bold" }] },
+                { type: "text", text: ", " },
+                { type: "text", text: "italic", marks: [{ type: "italic" }] },
+                { type: "text", text: ", and " },
+                { type: "text", text: "code", marks: [{ type: "code" }] },
+                { type: "text", text: " formatting." },
+              ],
+            },
+            {
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: "📋 Lists" }],
+            },
+            {
+              type: "bulletList",
+              content: [
+                {
+                  type: "listItem",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Create bullet lists" }],
+                    },
+                  ],
+                },
+                {
+                  type: "listItem",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Organize your thoughts" }],
+                    },
+                  ],
+                },
+                {
+                  type: "listItem",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Keep track of tasks" }],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: "🎯 Next Steps" }],
+            },
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "Try editing this document, add your own content, and explore the child page below to learn about custom properties!",
+                },
+              ],
+            },
+          ],
+        }
+
+        // Child document content with custom properties
+        const childContent = {
+          type: "doc",
+          content: [
+            {
+              type: "heading",
+              attrs: { level: 1 },
+              content: [{ type: "text", text: "🚀 Advanced Features" }],
+            },
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "This is a child page! Notice how it's nested under the main guide. You can create hierarchies of documents to organize your knowledge.",
+                },
+              ],
+            },
+            {
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: "🏷️ Custom Properties" }],
+            },
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "This document has custom properties set (check the sidebar!). You can add metadata to any document:",
+                },
+              ],
+            },
+            {
+              type: "bulletList",
+              content: [
+                {
+                  type: "listItem",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [
+                        { type: "text", text: "Status: ", marks: [{ type: "bold" }] },
+                        { type: "text", text: "In Progress" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: "listItem",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [
+                        { type: "text", text: "Priority: ", marks: [{ type: "bold" }] },
+                        { type: "text", text: "High" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: "listItem",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [
+                        { type: "text", text: "Type: ", marks: [{ type: "bold" }] },
+                        { type: "text", text: "Tutorial" },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: "🎨 More Formatting" }],
+            },
+            {
+              type: "paragraph",
+              content: [
+                { type: "text", text: "You can also use: " },
+                {
+                  type: "text",
+                  text: "strikethrough",
+                  marks: [{ type: "strike" }],
+                },
+                { type: "text", text: " and create " },
+                {
+                  type: "text",
+                  text: "links",
+                  marks: [{ type: "link", attrs: { href: "https://example.com" } }],
+                },
+                { type: "text", text: "." },
+              ],
+            },
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "Now you're ready to create amazing documentation! Feel free to delete these guide pages when you're done exploring.",
+                },
+              ],
+            },
+          ],
+        }
+
+        const parentYjsState = convertJsonToYjs(parentContent)
+        const childYjsState = convertJsonToYjs(childContent)
+
+        // Insert parent document
+        await tx.mutate.documents.insert({
+          id: parentId,
+          slug: parentId,
+          title: "📚 Editor Guide",
+          yjs_state: parentYjsState,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          index_status: "pending",
+          integration_link_id: null,
+          is_locked: false,
+          published: false,
+          parent_id: null,
+          sort_order: maxSortOrder + 1,
+          custom_fields: { isOnboardingGuide: "true" },
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
+
+        // Insert child document
+        await tx.mutate.documents.insert({
+          id: childId,
+          slug: childId,
+          title: "🚀 Advanced Features",
+          yjs_state: childYjsState,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          index_status: "pending",
+          integration_link_id: null,
+          is_locked: false,
+          published: false,
+          parent_id: parentId,
+          sort_order: 0,
+          custom_fields: {
+            isOnboardingGuide: "true",
+            Status: "In Progress",
+            Priority: "High",
+            Type: "Tutorial",
+          },
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
+      },
+    ),
     update: defineMutator(
       z.object({
         documentId: z.string(),
@@ -402,6 +695,40 @@ export const mutators = defineMutators({
         }
       },
     ),
+    deleteAllOnboarding: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        // Find all onboarding documents
+        const onboardingDocs = await tx.run(
+          zql.documents.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        )
+
+        // Filter to only onboarding documents (check custom_fields)
+        const onboardingDocumentIds = onboardingDocs
+          .filter(
+            (doc) =>
+              doc.custom_fields &&
+              typeof doc.custom_fields === "object" &&
+              "isOnboarding" in doc.custom_fields &&
+              doc.custom_fields.isOnboarding === "true",
+          )
+          .map((doc) => doc.id)
+
+        // Soft-delete all onboarding documents
+        const now = Date.now()
+        for (const docId of onboardingDocumentIds) {
+          await tx.mutate.documents.update({
+            id: docId,
+            deleted_at: now,
+            updated_at: now,
+          })
+        }
+      },
+    ),
   },
   documentComponent: {
     create: defineMutator(
@@ -537,7 +864,7 @@ export const mutators = defineMutators({
       z.object({
         organizationId: z.string(),
       }),
-      async ({ tx, ctx, args: { organizationId } }) => {
+      async ({ tx, ctx, args: { organizationId, onboardingStatus } }) => {
         hasOrganizationAccess(ctx, organizationId)
 
         // Get or create the organization's settings
@@ -564,6 +891,10 @@ export const mutators = defineMutators({
           updated_at: Date.now(),
         }
 
+        if (onboardingStatus !== undefined) {
+          updates.onboarding_status = onboardingStatus
+        }
+
         await tx.mutate.organization_settings.update(updates)
       },
     ),
@@ -577,7 +908,7 @@ export const mutators = defineMutators({
         logo: z.string().optional(),
         metadata: z.string().optional(),
       }),
-      async ({ tx, ctx, args: { id, name, slug, logo, metadata } }) => {
+      async ({ tx, ctx, args: { id, name, slug, logo, metadata, importDemoContent } }) => {
         isAuthenticated(ctx)
 
         // Verify slug doesn't already exist and make it unique if needed
@@ -626,6 +957,34 @@ export const mutators = defineMutators({
           created_at: Date.now(),
           updated_at: Date.now(),
         })
+
+        // Create seeded onboarding documents
+        if (importDemoContent !== false) {
+          const { demoContent } = await import("./demo-content")
+
+          for (const doc of demoContent) {
+            const docId = createId()
+            const yjsState = convertJsonToYjs(doc.content)
+
+            await tx.mutate.documents.insert({
+              id: docId,
+              slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
+              title: doc.title,
+              yjs_state: yjsState,
+              user_id: ctx.userId,
+              organization_id: id,
+              index_status: "pending",
+              integration_link_id: null,
+              is_locked: false,
+              published: false,
+              parent_id: null,
+              sort_order: demoContent.indexOf(doc),
+              custom_fields: { isOnboarding: "true" },
+              created_at: Date.now(),
+              updated_at: Date.now(),
+            })
+          }
+        }
       },
     ),
     update: defineMutator(
@@ -933,6 +1292,31 @@ export const mutators = defineMutators({
             updated_at: Date.now(),
           })
         }
+      },
+    ),
+  },
+  feedback: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        type: z.enum(["feedback", "help"]),
+        message: z.string().min(1),
+        metadata: z.any().optional(),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { id, type, message, metadata, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        await tx.mutate.feedback_submissions.insert({
+          id,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          type,
+          message,
+          metadata: metadata || null,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
       },
     ),
   },

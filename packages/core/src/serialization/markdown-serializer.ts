@@ -57,6 +57,15 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     return `- ${firstLine}${restLines.length > 0 ? "\n" + restLines.join("\n") : ""}`
   }
 
+  blockquote(children: string[]): string {
+    const content = children.join("\n")
+    // Prefix each line with > for markdown blockquote
+    return content
+      .split("\n")
+      .map((line) => (line.trim() ? `> ${line}` : ">"))
+      .join("\n")
+  }
+
   horizontalRule(): string {
     return "---"
   }

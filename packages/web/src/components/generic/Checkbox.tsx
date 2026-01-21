@@ -1,4 +1,3 @@
-import { CheckIcon, MinusIcon } from "@/icons"
 import { type ReactNode } from "react"
 import {
   Checkbox as AriaCheckbox,
@@ -53,8 +52,7 @@ const boxStyles = cva({
   },
 })
 
-const iconStyles =
-  "w-4 h-4 text-white group-disabled:text-gray-400 dark:text-slate-900 dark:group-disabled:text-slate-600 forced-colors:text-[HighlightText]"
+const checkmarkStyles = "checkbox-checkmark"
 
 export function Checkbox(props: CheckboxProps) {
   return (

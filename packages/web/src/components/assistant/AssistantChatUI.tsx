@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { ChatMessages } from "@/components/chat/ChatMessages";
-import { ChatAlert } from "@/components/editor/ChatAlert";
-import { AssistantInput } from "@/components/assistant/AssistantInput";
-import { useAssistant } from "@/context/assistant.context";
+import { useCallback, useEffect, useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
+import { ChatMessages } from "@/components/chat/ChatMessages"
+import { ChatAlert } from "@/components/editor/ChatAlert"
+import { AssistantInput } from "@/components/assistant/AssistantInput"
+import { useAssistant } from "@/context/assistant.context"
 
 interface AssistantChatUIProps {
-  organizationId: string;
-  initialPrompt?: string;
-  onPromptUsed?: () => void;
-  showEmptyState?: boolean;
+  organizationId: string
+  initialPrompt?: string
+  onPromptUsed?: () => void
+  showEmptyState?: boolean
 }
 
 export function AssistantChatUI({
@@ -18,26 +18,16 @@ export function AssistantChatUI({
   onPromptUsed,
   showEmptyState = true,
 }: AssistantChatUIProps) {
-  const {
-    messages,
-    sendMessage,
-    stop,
-    status,
-    alert,
-    setAlert,
-    conversationId,
-  } = useAssistant();
-  const navigate = useNavigate();
-  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(
-    initialPrompt
-  );
+  const { messages, sendMessage, stop, status, alert, setAlert, conversationId } = useAssistant()
+  const navigate = useNavigate()
+  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(initialPrompt)
 
   // Clear prompt after it's been used
   useEffect(() => {
     if (currentInitialPrompt && initialPrompt !== currentInitialPrompt) {
-      setCurrentInitialPrompt(initialPrompt);
+      setCurrentInitialPrompt(initialPrompt)
     }
-  }, [initialPrompt, currentInitialPrompt]);
+  }, [initialPrompt, currentInitialPrompt])
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -46,7 +36,7 @@ export function AssistantChatUI({
         metadata: {
           createdAt: new Date().toISOString(),
         },
-      });
+      })
 
       navigate({
         to: "/w/$organizationSlug/assistant",
@@ -55,27 +45,25 @@ export function AssistantChatUI({
           conversationId: conversationId,
         },
         replace: true,
-      });
+      })
 
       // Clear the initial prompt after first submission
       if (currentInitialPrompt) {
-        setCurrentInitialPrompt(undefined);
-        onPromptUsed?.();
+        setCurrentInitialPrompt(undefined)
+        onPromptUsed?.()
       }
     },
-    [sendMessage, navigate, conversationId, currentInitialPrompt, onPromptUsed]
-  );
+    [sendMessage, navigate, conversationId, currentInitialPrompt, onPromptUsed],
+  )
 
-  const canStop = status === "submitted" || status === "streaming";
+  const canStop = status === "submitted" || status === "streaming"
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col flex-1 min-h-0">
         {messages.length === 0 && showEmptyState ? (
           <div className="mt-[34svh] flex flex-col gap-y-4 items-center px-4">
-            <h1 className="text-2xl font-medium text-gray-900">
-              Ask anything about your documents
-            </h1>
+            <h1 className="text-2xl font-medium text-gray-900">Ask anything about your documents</h1>
             <AssistantInput
               onSubmit={handleSubmit}
               onStop={stop}
@@ -96,9 +84,7 @@ export function AssistantChatUI({
               <div className="z-10 relative">
                 <ChatAlert
                   alert={alert}
-                  onDismiss={() =>
-                    setAlert(alert ? { ...alert, show: false } : null)
-                  }
+                  onDismiss={() => setAlert(alert ? { ...alert, show: false } : null)}
                 />
                 <AssistantInput
                   onSubmit={handleSubmit}
@@ -113,5 +99,5 @@ export function AssistantChatUI({
         )}
       </div>
     </div>
-  );
+  )
 }

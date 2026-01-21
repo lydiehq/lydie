@@ -1,21 +1,21 @@
-import { motion, AnimatePresence } from "motion/react";
-import { useCallback, useEffect, useState, useMemo } from "react";
-import { EditorContent } from "@tiptap/react";
-import { Form, Button as RACButton, Button } from "react-aria-components";
-import { CircleArrowUpIcon, SquareIcon, AsteriskIcon } from "@/icons";
-import { ChatMessages } from "@/components/chat/ChatMessages";
-import { ChatAlert } from "@/components/editor/ChatAlert";
-import { useFloatingAssistant } from "@/context/floating-assistant.context";
-import { useOrganization } from "@/context/organization.context";
-import { AssistantProvider, useAssistant } from "@/context/assistant.context";
-import { useChatComposer } from "@/components/chat/useChatComposer";
-import { useQuery } from "@rocicorp/zero/react";
-import { queries } from "@lydie/zero/queries";
-import { XIcon } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react"
+import { useCallback, useEffect, useState, useMemo } from "react"
+import { EditorContent } from "@tiptap/react"
+import { Form, Button as RACButton, Button } from "react-aria-components"
+import { CircleArrowUpIcon, SquareIcon, AsteriskIcon } from "@/icons"
+import { ChatMessages } from "@/components/chat/ChatMessages"
+import { ChatAlert } from "@/components/editor/ChatAlert"
+import { useFloatingAssistant } from "@/context/floating-assistant.context"
+import { useOrganization } from "@/context/organization.context"
+import { AssistantProvider, useAssistant } from "@/context/assistant.context"
+import { useChatComposer } from "@/components/chat/useChatComposer"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { XIcon } from "lucide-react"
 
 export function FloatingAssistant() {
-  const { isOpen, close, toggle, initialPrompt, clearPrompt } = useFloatingAssistant();
-  const { organization } = useOrganization();
+  const { isOpen, close, toggle, initialPrompt, clearPrompt } = useFloatingAssistant()
+  const { organization } = useOrganization()
 
   return (
     <>
@@ -44,10 +44,7 @@ export function FloatingAssistant() {
           >
             <div className="flex items-center justify-between px-4 py-3">
               <h2 className="text-sm font-medium text-gray-900">AI Assistant</h2>
-              <Button
-                onPress={close}
-                className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-              >
+              <Button onPress={close} className="p-1 hover:bg-gray-200 rounded-md transition-colors">
                 <XIcon className="size-4 text-gray-600" />
               </Button>
             </div>
@@ -64,7 +61,7 @@ export function FloatingAssistant() {
         )}
       </AnimatePresence>
     </>
-  );
+  )
 }
 
 function FloatingAssistantChatContent({
@@ -72,26 +69,15 @@ function FloatingAssistantChatContent({
   initialPrompt,
   onPromptUsed,
 }: {
-  organizationId: string;
-  initialPrompt?: string;
-  onPromptUsed?: () => void;
+  organizationId: string
+  initialPrompt?: string
+  onPromptUsed?: () => void
 }) {
-  const {
-    messages,
-    sendMessage,
-    stop,
-    status,
-    alert,
-    setAlert,
-  } = useAssistant();
-  const { organization } = useOrganization();
-  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(
-    initialPrompt
-  );
+  const { messages, sendMessage, stop, status, alert, setAlert } = useAssistant()
+  const { organization } = useOrganization()
+  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(initialPrompt)
 
-  const [documents] = useQuery(
-    queries.documents.byUpdated({ organizationId: organization.id })
-  );
+  const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
 
   const availableDocuments = useMemo(
     () =>
@@ -99,59 +85,59 @@ function FloatingAssistantChatContent({
         id: doc.id,
         title: doc.title,
       })),
-    [documents]
-  );
+    [documents],
+  )
 
   const chatEditor = useChatComposer({
     documents: availableDocuments,
     onEnter: () => {
-      const textContent = chatEditor.getTextContent();
+      const textContent = chatEditor.getTextContent()
       if (textContent.trim()) {
-        handleSubmit();
+        handleSubmit()
       }
     },
     placeholder: "Ask anything. Use @ to refer to documents",
-  });
+  })
 
   // Set initial prompt if provided
   useEffect(() => {
     if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
-      chatEditor.setContent(initialPrompt);
+      chatEditor.setContent(initialPrompt)
     }
-  }, [initialPrompt, chatEditor]);
+  }, [initialPrompt, chatEditor])
 
   // Clear prompt after it's been used
   useEffect(() => {
     if (currentInitialPrompt && initialPrompt !== currentInitialPrompt) {
-      setCurrentInitialPrompt(initialPrompt);
+      setCurrentInitialPrompt(initialPrompt)
     }
-  }, [initialPrompt, currentInitialPrompt]);
+  }, [initialPrompt, currentInitialPrompt])
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
-      e?.preventDefault();
-      const textContent = chatEditor.getTextContent();
-      if (!textContent.trim()) return;
+      e?.preventDefault()
+      const textContent = chatEditor.getTextContent()
+      if (!textContent.trim()) return
 
       sendMessage({
         text: textContent,
         metadata: {
           createdAt: new Date().toISOString(),
         },
-      });
+      })
 
-      chatEditor.clearContent();
+      chatEditor.clearContent()
 
       // Clear the initial prompt after first submission
       if (currentInitialPrompt) {
-        setCurrentInitialPrompt(undefined);
-        onPromptUsed?.();
+        setCurrentInitialPrompt(undefined)
+        onPromptUsed?.()
       }
     },
-    [sendMessage, chatEditor, currentInitialPrompt, onPromptUsed]
-  );
+    [sendMessage, chatEditor, currentInitialPrompt, onPromptUsed],
+  )
 
-  const canStop = status === "submitted" || status === "streaming";
+  const canStop = status === "submitted" || status === "streaming"
 
   return (
     <div className="flex flex-col overflow-hidden grow h-full">
@@ -176,10 +162,7 @@ function FloatingAssistantChatContent({
                   ease: [0.175, 0.885, 0.32, 1.1],
                 }}
               >
-                <ChatAlert
-                  alert={alert}
-                  onDismiss={() => setAlert(null)}
-                />
+                <ChatAlert alert={alert} onDismiss={() => setAlert(null)} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -204,5 +187,5 @@ function FloatingAssistantChatContent({
         </div>
       </div>
     </div>
-  );
+  )
 }

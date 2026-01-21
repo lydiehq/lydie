@@ -88,7 +88,10 @@ body {
   stroke-dashoffset: 66px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: stroke-dashoffset 200ms, stroke 200ms, fill 200ms;
+  transition:
+    stroke-dashoffset 200ms,
+    stroke 200ms,
+    fill 200ms;
 }
 
 .dark .checkbox-checkmark {
@@ -122,7 +125,7 @@ body {
   .checkbox-checkmark {
     stroke: HighlightText;
   }
-  
+
   .checkbox-checkmark-indeterminate {
     fill: HighlightText;
   }

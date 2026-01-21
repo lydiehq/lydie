@@ -545,3 +545,27 @@ export const assetsTable = pgTable(
     index("assets_key_idx").on(table.key),
   ],
 )
+
+export const feedbackSubmissionsTable = pgTable(
+  "feedback_submissions",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // 'feedback' or 'help'
+    message: text("message").notNull(),
+    metadata: jsonb("metadata"), // Optional context like current page, browser info, etc.
+    ...timestamps,
+  },
+  (table) => [
+    index("feedback_submissions_user_id_idx").on(table.userId),
+    index("feedback_submissions_organization_id_idx").on(table.organizationId),
+  ],
+)

@@ -41,6 +41,10 @@ export class PlainTextSerializer implements NodeBuilder<string> {
     return children.join("\n")
   }
 
+  blockquote(children: string[]): string {
+    return children.join("")
+  }
+
   horizontalRule(): string {
     return "---"
   }

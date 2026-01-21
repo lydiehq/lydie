@@ -1,18 +1,18 @@
-import { Button } from "@/components/generic/Button";
-import { PuzzleIcon, CodeIcon, GlobeIcon } from "@/icons";
-import { useNavigate } from "@tanstack/react-router";
-import { useOrganization } from "@/context/organization.context";
+import { Button } from "@/components/generic/Button"
+import { PuzzleIcon, CodeIcon, GlobeIcon } from "@/icons"
+import { useNavigate } from "@tanstack/react-router"
+import { useOrganization } from "@/context/organization.context"
 
 export function OnboardingStepIntegrations() {
-  const navigate = useNavigate();
-  const { organization } = useOrganization();
+  const navigate = useNavigate()
+  const { organization } = useOrganization()
 
   const handleGoToIntegrations = () => {
     navigate({
       to: "/w/$organizationSlug/settings/integrations",
       params: { organizationSlug: organization.slug },
-    });
-  };
+    })
+  }
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -23,7 +23,8 @@ export function OnboardingStepIntegrations() {
         <span className="text-lg font-medium text-gray-900">Integrations</span>
       </div>
       <p className="text-gray-700 text-sm/relaxed">
-        Connect your favorite tools to sync content automatically. Integrate with GitHub, Linear, and other services to keep your documents in sync.
+        Connect your favorite tools to sync content automatically. Integrate with GitHub, Linear, and other
+        services to keep your documents in sync.
       </p>
       <div className="flex flex-col gap-y-3">
         <div className="flex items-start gap-x-3">
@@ -32,9 +33,7 @@ export function OnboardingStepIntegrations() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">GitHub integration</p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Sync repositories, issues, and pull requests
-            </p>
+            <p className="text-xs text-gray-600 mt-0.5">Sync repositories, issues, and pull requests</p>
           </div>
         </div>
         <div className="flex items-start gap-x-3">
@@ -43,9 +42,7 @@ export function OnboardingStepIntegrations() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">Linear integration</p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Sync issues and projects from Linear
-            </p>
+            <p className="text-xs text-gray-600 mt-0.5">Sync issues and projects from Linear</p>
           </div>
         </div>
         <div className="flex items-start gap-x-3">
@@ -54,19 +51,13 @@ export function OnboardingStepIntegrations() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">More integrations</p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Connect with other tools and services
-            </p>
+            <p className="text-xs text-gray-600 mt-0.5">Connect with other tools and services</p>
           </div>
         </div>
       </div>
-      <Button
-        onPress={handleGoToIntegrations}
-        intent="primary"
-        size="sm"
-      >
+      <Button onPress={handleGoToIntegrations} intent="primary" size="sm">
         View integrations
       </Button>
     </div>
-  );
+  )
 }

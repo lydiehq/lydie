@@ -86,6 +86,7 @@ export function Button({ ref, ...props }: ButtonProps) {
           className,
           intent: props.intent,
           size: props.size,
+          rounded: props.rounded,
         }),
       )}
     >

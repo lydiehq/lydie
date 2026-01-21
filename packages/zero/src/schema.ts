@@ -557,23 +557,20 @@ const feedbackSubmissions = table("feedback_submissions")
     metadata: json().optional(),
     ...timestamps,
   })
-  .primaryKey("id");
+  .primaryKey("id")
 
-const feedbackSubmissionsRelations = relationships(
-  feedbackSubmissions,
-  ({ one }) => ({
-    user: one({
-      sourceField: ["user_id"],
-      destField: ["id"],
-      destSchema: users,
-    }),
-    organization: one({
-      sourceField: ["organization_id"],
-      destField: ["id"],
-      destSchema: organizations,
-    }),
-  })
-);
+const feedbackSubmissionsRelations = relationships(feedbackSubmissions, ({ one }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+}))
 
 export const schema = createSchema({
   tables: [

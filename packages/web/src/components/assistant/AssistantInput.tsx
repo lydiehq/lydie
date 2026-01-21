@@ -3,7 +3,7 @@ import { Button, Form } from "react-aria-components"
 import { motion } from "motion/react"
 import { ChevronUpIcon, SquareIcon } from "@/icons"
 import { useChatEditor } from "@/lib/editor/chat-editor"
-import { useCallback, useRef, useMemo } from "react"
+import { useCallback, useRef, useMemo, useEffect } from "react"
 import { useOrganization } from "@/context/organization.context"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
@@ -14,6 +14,7 @@ export interface AssistantInputProps {
   onStop?: () => void
   placeholder?: string
   canStop?: boolean
+  initialPrompt?: string
 }
 
 class MentionList {
@@ -184,6 +185,13 @@ export function AssistantInput({
       }
     },
   })
+
+  // Set initial prompt if provided (only once when component mounts or prompt changes)
+  useEffect(() => {
+    if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
+      chatEditor.setContent(initialPrompt)
+    }
+  }, [initialPrompt, chatEditor])
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {

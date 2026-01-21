@@ -8,14 +8,17 @@ import { Link } from "@tanstack/react-router"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { cva } from "cva"
 import { UsageStats } from "./UsageStats"
-import { useConnectionState } from "@rocicorp/zero/react"
+import { useConnectionState, useQuery } from "@rocicorp/zero/react"
 import { useZero } from "@/services/zero"
 import { useCallback } from "react"
 import clsx from "clsx"
+import { queries } from "@lydie/zero/queries"
+import { ONBOARDING_TASKS } from "@/constants/onboarding"
 import { useOrganization } from "@/context/organization.context"
 import { SidebarIcon } from "./SidebarIcon"
 import { useSetAtom } from "jotai"
 import { commandMenuStateAtom } from "@/stores/command-menu"
+import { FeedbackWidget } from "../feedback/FeedbackWidget"
 import {
   SearchIcon,
   HomeIcon,
@@ -87,6 +90,17 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
       initialPage: undefined,
     })
   }
+
+  const [settings] = useQuery(queries.settings.organization({ organizationId: organization.id }))
+
+  const completedTasks = ((settings?.onboarding_status as any)?.completedTasks as string[]) || []
+
+  const progress = Math.round((completedTasks.length / ONBOARDING_TASKS.length) * 100)
+  const size = 12
+  const strokeWidth = 1.5
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (progress / 100) * circumference
 
   return (
     <div className="flex flex-col grow max-h-screen overflow-hidden">
@@ -242,7 +256,12 @@ function BottomBar() {
   const { user } = useAuth()
   const userIsAdmin = isAdmin(user)
 
-  return <div className="flex flex-col gap-y-4 px-2.5 pb-1">{userIsAdmin && <ZeroConnectionStatus />}</div>
+  return (
+    <div className="flex flex-col gap-y-4 px-2.5 pb-1">
+      <FeedbackWidget />
+      {userIsAdmin && <ZeroConnectionStatus />}
+    </div>
+  )
 }
 
 function ZeroConnectionStatus() {

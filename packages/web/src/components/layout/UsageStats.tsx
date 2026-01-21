@@ -8,10 +8,10 @@ import clsx from "clsx"
 import { Tooltip } from "../generic/Tooltip"
 import { TooltipTrigger } from "react-aria-components"
 import { Link } from "../generic/Link"
+import { CircularProgress } from "../generic/CircularProgress"
 
 export function UsageStats() {
   const { organization } = useOrganization()
-  const { session } = useAuth()
 
   const [todayUsage] = useQuery(queries.usage.today({ organizationId: organization.id }))
 
@@ -85,30 +85,7 @@ export function UsageStats() {
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center">
-              <svg width={size} height={size} className="transform -rotate-90">
-                {/* Background circle */}
-                <circle
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={radius}
-                  stroke="#e5e7eb"
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={radius}
-                  stroke={progressColor}
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  strokeLinecap="round"
-                  className="transition-all duration-300"
-                />
-              </svg>
+              <CircularProgress progress={progress} size={16} progressColor={progressColor} />
             </div>
             <span className="text-xs font-medium text-gray-900">Free daily messages</span>
           </div>

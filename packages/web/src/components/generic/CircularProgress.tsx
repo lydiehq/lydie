@@ -1,21 +1,21 @@
-import { useMemo } from "react";
-import clsx from "clsx";
+import { useMemo } from "react"
+import clsx from "clsx"
 
 export interface CircularProgressProps {
   /** Progress value from 0 to 100 */
-  progress: number;
+  progress: number
   /** Size of the circle in pixels */
-  size?: number;
+  size?: number
   /** Width of the stroke */
-  strokeWidth?: number;
+  strokeWidth?: number
   /** Color of the background circle */
-  backgroundColor?: string;
+  backgroundColor?: string
   /** Color of the progress circle */
-  progressColor?: string;
+  progressColor?: string
   /** Additional className for the SVG element */
-  className?: string;
+  className?: string
   /** Additional className for the progress circle */
-  progressClassName?: string;
+  progressClassName?: string
 }
 
 export function CircularProgress({
@@ -28,18 +28,14 @@ export function CircularProgress({
   progressClassName,
 }: CircularProgressProps) {
   const { radius, circumference, offset } = useMemo(() => {
-    const r = (size - strokeWidth) / 2;
-    const c = 2 * Math.PI * r;
-    const o = c - (Math.min(Math.max(progress, 0), 100) / 100) * c;
-    return { radius: r, circumference: c, offset: o };
-  }, [size, strokeWidth, progress]);
+    const r = (size - strokeWidth) / 2
+    const c = 2 * Math.PI * r
+    const o = c - (Math.min(Math.max(progress, 0), 100) / 100) * c
+    return { radius: r, circumference: c, offset: o }
+  }, [size, strokeWidth, progress])
 
   return (
-    <svg
-      width={size}
-      height={size}
-      className={clsx("transform -rotate-90", className)}
-    >
+    <svg width={size} height={size} className={clsx("transform -rotate-90", className)}>
       {/* Background circle */}
       <circle
         cx={size / 2}
@@ -63,5 +59,5 @@ export function CircularProgress({
         className={clsx("transition-all duration-300", progressClassName)}
       />
     </svg>
-  );
+  )
 }
