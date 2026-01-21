@@ -66,7 +66,7 @@ export function OrganizationsDialog({
           </ul>
           <Separator />
           <div className="flex justify-end p-3">
-            <Button size="sm" href="/onboarding">
+            <Button size="sm" href="/new">
               Create workspace
             </Button>
           </div>

@@ -14,7 +14,7 @@ import { Route as _authRouteRouteImport } from './routes/__auth/route'
 import { Route as _authIndexRouteImport } from './routes/__auth/index'
 import { Route as LandingBlogIndexRouteImport } from './routes/_landing/blog/index'
 import { Route as LandingAuthIndexRouteImport } from './routes/_landing/auth/index'
-import { Route as _authOnboardingIndexRouteImport } from './routes/__auth/onboarding/index'
+import { Route as _authNewIndexRouteImport } from './routes/__auth/new/index'
 import { Route as _authWOrganizationSlugRouteRouteImport } from './routes/__auth/w/$organizationSlug/route'
 import { Route as _authWOrganizationSlugSettingsRouteRouteImport } from './routes/__auth/w/$organizationSlug/settings/route'
 import { Route as _authWOrganizationSlugassistantRouteRouteImport } from './routes/__auth/w/$organizationSlug/(assistant)/route'
@@ -57,9 +57,9 @@ const LandingAuthIndexRoute = LandingAuthIndexRouteImport.update({
   path: '/auth/',
   getParentRoute: () => LandingRouteRoute,
 } as any)
-const _authOnboardingIndexRoute = _authOnboardingIndexRouteImport.update({
-  id: '/onboarding/',
-  path: '/onboarding/',
+const _authNewIndexRoute = _authNewIndexRouteImport.update({
+  id: '/new/',
+  path: '/new/',
   getParentRoute: () => _authRouteRoute,
 } as any)
 const _authWOrganizationSlugRouteRoute =
@@ -181,7 +181,7 @@ const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute =
 export interface FileRoutesByFullPath {
   '/': typeof _authIndexRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugassistantRouteRouteWithChildren
-  '/onboarding/': typeof _authOnboardingIndexRoute
+  '/new/': typeof _authNewIndexRoute
   '/auth/': typeof LandingAuthIndexRoute
   '/blog/': typeof LandingBlogIndexRoute
   '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
@@ -204,7 +204,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof _authIndexRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugassistantIndexRoute
-  '/onboarding': typeof _authOnboardingIndexRoute
+  '/new': typeof _authNewIndexRoute
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
@@ -227,7 +227,7 @@ export interface FileRoutesById {
   '/_landing': typeof LandingRouteRouteWithChildren
   '/__auth/': typeof _authIndexRoute
   '/__auth/w/$organizationSlug': typeof _authWOrganizationSlugRouteRouteWithChildren
-  '/__auth/onboarding/': typeof _authOnboardingIndexRoute
+  '/__auth/new/': typeof _authNewIndexRoute
   '/_landing/auth/': typeof LandingAuthIndexRoute
   '/_landing/blog/': typeof LandingBlogIndexRoute
   '/__auth/w/$organizationSlug/(assistant)': typeof _authWOrganizationSlugassistantRouteRouteWithChildren
@@ -253,7 +253,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/w/$organizationSlug'
-    | '/onboarding/'
+    | '/new/'
     | '/auth/'
     | '/blog/'
     | '/w/$organizationSlug/settings'
@@ -276,7 +276,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/w/$organizationSlug'
-    | '/onboarding'
+    | '/new'
     | '/auth'
     | '/blog'
     | '/w/$organizationSlug/settings/admin'
@@ -298,7 +298,7 @@ export interface FileRouteTypes {
     | '/_landing'
     | '/__auth/'
     | '/__auth/w/$organizationSlug'
-    | '/__auth/onboarding/'
+    | '/__auth/new/'
     | '/_landing/auth/'
     | '/_landing/blog/'
     | '/__auth/w/$organizationSlug/(assistant)'
@@ -362,11 +362,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingAuthIndexRouteImport
       parentRoute: typeof LandingRouteRoute
     }
-    '/__auth/onboarding/': {
-      id: '/__auth/onboarding/'
-      path: '/onboarding'
-      fullPath: '/onboarding/'
-      preLoaderRoute: typeof _authOnboardingIndexRouteImport
+    '/__auth/new/': {
+      id: '/__auth/new/'
+      path: '/new'
+      fullPath: '/new/'
+      preLoaderRoute: typeof _authNewIndexRouteImport
       parentRoute: typeof _authRouteRoute
     }
     '/__auth/w/$organizationSlug': {
@@ -599,14 +599,14 @@ const _authWOrganizationSlugRouteRouteWithChildren =
 interface _authRouteRouteChildren {
   _authIndexRoute: typeof _authIndexRoute
   _authWOrganizationSlugRouteRoute: typeof _authWOrganizationSlugRouteRouteWithChildren
-  _authOnboardingIndexRoute: typeof _authOnboardingIndexRoute
+  _authNewIndexRoute: typeof _authNewIndexRoute
 }
 
 const _authRouteRouteChildren: _authRouteRouteChildren = {
   _authIndexRoute: _authIndexRoute,
   _authWOrganizationSlugRouteRoute:
     _authWOrganizationSlugRouteRouteWithChildren,
-  _authOnboardingIndexRoute: _authOnboardingIndexRoute,
+  _authNewIndexRoute: _authNewIndexRoute,
 }
 
 const _authRouteRouteWithChildren = _authRouteRoute._addFileChildren(

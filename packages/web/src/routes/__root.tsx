@@ -76,15 +76,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const { auth, organizations } = await loadSession(queryClient)
     const zeroInstance = getZeroInstance(auth)
 
-    // Redirect to onboarding if user has no organizations
+    // Redirect to new workspace creation if user has no organizations
     if (
       auth?.user &&
       organizations.length === 0 &&
-      !location.pathname.startsWith("/onboarding") &&
+      !location.pathname.startsWith("/new") &&
       !location.pathname.startsWith("/invitations")
     ) {
       throw redirect({
-        to: "/onboarding",
+        to: "/new",
       })
     }
 

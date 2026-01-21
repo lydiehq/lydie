@@ -111,6 +111,9 @@ export const mutators = defineMutators({
       async ({ tx, ctx, args: { organizationId, parentId, childId } }) => {
         hasOrganizationAccess(ctx, organizationId)
 
+        const { getOnboardingGuideContent } = await import("./onboarding-guide-content")
+        const guideContent = getOnboardingGuideContent(childId)
+
         // Get the highest sort_order to append at the end
         const siblings = await tx.run(
           zql.documents
@@ -121,241 +124,14 @@ export const mutators = defineMutators({
 
         const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0)
 
-        // Parent document content with internal link
-        const parentContent = {
-          type: "doc",
-          content: [
-            {
-              type: "heading",
-              attrs: { level: 1 },
-              content: [{ type: "text", text: "📚 Welcome to Your Document Editor!" }],
-            },
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "text",
-                  text: "This guide will help you learn the powerful features of the editor. Let's explore!",
-                },
-              ],
-            },
-            {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: "🔗 Internal Links" }],
-            },
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "text",
-                  text: "You can link to other documents in your workspace. For example, check out the ",
-                },
-                {
-                  type: "text",
-                  text: "advanced features page",
-                  marks: [
-                    {
-                      type: "link",
-                      attrs: {
-                        href: `internal://${childId}`,
-                      },
-                    },
-                  ],
-                },
-                {
-                  type: "text",
-                  text: " to learn more!",
-                },
-              ],
-            },
-            {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: "✨ Formatting Options" }],
-            },
-            {
-              type: "paragraph",
-              content: [
-                { type: "text", text: "You can use " },
-                { type: "text", text: "bold", marks: [{ type: "bold" }] },
-                { type: "text", text: ", " },
-                { type: "text", text: "italic", marks: [{ type: "italic" }] },
-                { type: "text", text: ", and " },
-                { type: "text", text: "code", marks: [{ type: "code" }] },
-                { type: "text", text: " formatting." },
-              ],
-            },
-            {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: "📋 Lists" }],
-            },
-            {
-              type: "bulletList",
-              content: [
-                {
-                  type: "listItem",
-                  content: [
-                    {
-                      type: "paragraph",
-                      content: [{ type: "text", text: "Create bullet lists" }],
-                    },
-                  ],
-                },
-                {
-                  type: "listItem",
-                  content: [
-                    {
-                      type: "paragraph",
-                      content: [{ type: "text", text: "Organize your thoughts" }],
-                    },
-                  ],
-                },
-                {
-                  type: "listItem",
-                  content: [
-                    {
-                      type: "paragraph",
-                      content: [{ type: "text", text: "Keep track of tasks" }],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: "🎯 Next Steps" }],
-            },
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "text",
-                  text: "Try editing this document, add your own content, and explore the child page below to learn about custom properties!",
-                },
-              ],
-            },
-          ],
-        }
-
-        // Child document content with custom properties
-        const childContent = {
-          type: "doc",
-          content: [
-            {
-              type: "heading",
-              attrs: { level: 1 },
-              content: [{ type: "text", text: "🚀 Advanced Features" }],
-            },
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "text",
-                  text: "This is a child page! Notice how it's nested under the main guide. You can create hierarchies of documents to organize your knowledge.",
-                },
-              ],
-            },
-            {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: "🏷️ Custom Properties" }],
-            },
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "text",
-                  text: "This document has custom properties set (check the sidebar!). You can add metadata to any document:",
-                },
-              ],
-            },
-            {
-              type: "bulletList",
-              content: [
-                {
-                  type: "listItem",
-                  content: [
-                    {
-                      type: "paragraph",
-                      content: [
-                        { type: "text", text: "Status: ", marks: [{ type: "bold" }] },
-                        { type: "text", text: "In Progress" },
-                      ],
-                    },
-                  ],
-                },
-                {
-                  type: "listItem",
-                  content: [
-                    {
-                      type: "paragraph",
-                      content: [
-                        { type: "text", text: "Priority: ", marks: [{ type: "bold" }] },
-                        { type: "text", text: "High" },
-                      ],
-                    },
-                  ],
-                },
-                {
-                  type: "listItem",
-                  content: [
-                    {
-                      type: "paragraph",
-                      content: [
-                        { type: "text", text: "Type: ", marks: [{ type: "bold" }] },
-                        { type: "text", text: "Tutorial" },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: "🎨 More Formatting" }],
-            },
-            {
-              type: "paragraph",
-              content: [
-                { type: "text", text: "You can also use: " },
-                {
-                  type: "text",
-                  text: "strikethrough",
-                  marks: [{ type: "strike" }],
-                },
-                { type: "text", text: " and create " },
-                {
-                  type: "text",
-                  text: "links",
-                  marks: [{ type: "link", attrs: { href: "https://example.com" } }],
-                },
-                { type: "text", text: "." },
-              ],
-            },
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "text",
-                  text: "Now you're ready to create amazing documentation! Feel free to delete these guide pages when you're done exploring.",
-                },
-              ],
-            },
-          ],
-        }
-
-        const parentYjsState = convertJsonToYjs(parentContent)
-        const childYjsState = convertJsonToYjs(childContent)
+        const parentYjsState = convertJsonToYjs(guideContent.parent.content)
+        const childYjsState = convertJsonToYjs(guideContent.child.content)
 
         // Insert parent document
         await tx.mutate.documents.insert({
           id: parentId,
           slug: parentId,
-          title: "📚 Editor Guide",
+          title: guideContent.parent.title,
           yjs_state: parentYjsState,
           user_id: ctx.userId,
           organization_id: organizationId,
@@ -374,7 +150,7 @@ export const mutators = defineMutators({
         await tx.mutate.documents.insert({
           id: childId,
           slug: childId,
-          title: "🚀 Advanced Features",
+          title: guideContent.child.title,
           yjs_state: childYjsState,
           user_id: ctx.userId,
           organization_id: organizationId,
@@ -729,6 +505,74 @@ export const mutators = defineMutators({
         }
       },
     ),
+    importDemoContent: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        // Import demo content to existing organization
+        const { demoContent, createIntroDocument } = await import("./demo-content")
+
+        // Step 1: Generate all document IDs first
+        const documentIdMap = new Map<string, string>()
+        for (const doc of demoContent) {
+          documentIdMap.set(doc.title, createId())
+        }
+
+        // Step 2: Create intro document first (with proper internal links)
+        const introDoc = createIntroDocument(documentIdMap)
+        const introDocId = createId()
+        documentIdMap.set(introDoc.title, introDocId)
+        const introYjsState = convertJsonToYjs(introDoc.content)
+
+        await tx.mutate.documents.insert({
+          id: introDocId,
+          slug: `${slugify(introDoc.title)}-${createId().slice(0, 6)}`,
+          title: introDoc.title,
+          yjs_state: introYjsState,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          index_status: "pending",
+          integration_link_id: null,
+          is_locked: false,
+          published: false,
+          parent_id: null,
+          sort_order: 0,
+          custom_fields: introDoc.customFields || { isOnboarding: "true" },
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
+
+        // Step 3: Create all other demo documents
+        for (let i = 0; i < demoContent.length; i++) {
+          const doc = demoContent[i]
+          const docId = documentIdMap.get(doc.title)!
+          const yjsState = convertJsonToYjs(doc.content)
+
+          await tx.mutate.documents.insert({
+            id: docId,
+            slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
+            title: doc.title,
+            yjs_state: yjsState,
+            user_id: ctx.userId,
+            organization_id: organizationId,
+            index_status: "pending",
+            integration_link_id: null,
+            is_locked: false,
+            published: false,
+            parent_id: null,
+            sort_order: i + 1, // Intro is 0, others start at 1
+            custom_fields: { isOnboarding: "true" },
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          })
+        }
+
+        return { welcomeDocumentId: introDocId }
+      },
+    ),
   },
   documentComponent: {
     create: defineMutator(
@@ -872,12 +716,18 @@ export const mutators = defineMutators({
         let settings = await tx.run(zql.organization_settings.where("organization_id", organizationId).one())
 
         if (!settings) {
-          // Create settings if they don't exist
+          // Create settings if they don't exist with default onboarding status
           const id = createId()
           await tx.mutate.organization_settings.insert({
             id,
             organization_id: organizationId,
-            onboarding_status: null,
+            onboarding_status: {
+              currentStep: "documents",
+              isCompleted: false,
+              completedSteps: [],
+              checkedItems: [],
+              createdDemoGuide: false,
+            },
             created_at: Date.now(),
             updated_at: Date.now(),
           })
@@ -898,6 +748,58 @@ export const mutators = defineMutators({
         }
 
         await tx.mutate.organization_settings.update(updates)
+      },
+    ),
+    resetOnboarding: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        // Get the organization's settings
+        const settings = await tx.run(zql.organization_settings.where("organization_id", organizationId).one())
+
+        if (!settings) {
+          throw new Error("Organization settings not found")
+        }
+
+        // Reset onboarding status to default
+        await tx.mutate.organization_settings.update({
+          id: settings.id,
+          onboarding_status: {
+            currentStep: "documents",
+            isCompleted: false,
+            completedSteps: [],
+            checkedItems: [],
+            createdDemoGuide: false,
+          },
+          updated_at: Date.now(),
+        })
+
+        // Delete all onboarding guide documents
+        const onboardingDocs = await tx.run(
+          zql.documents.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        )
+
+        const onboardingDocumentIds = onboardingDocs
+          .filter(
+            (doc) =>
+              doc.custom_fields &&
+              typeof doc.custom_fields === "object" &&
+              "isOnboardingGuide" in doc.custom_fields &&
+              doc.custom_fields.isOnboardingGuide === "true",
+          )
+          .map((doc) => doc.id)
+
+        const now = Date.now()
+        for (const docId of onboardingDocumentIds) {
+          await tx.mutate.documents.update({
+            id: docId,
+            deleted_at: now,
+            updated_at: now,
+          })
+        }
       },
     ),
   },
@@ -953,20 +855,59 @@ export const mutators = defineMutators({
           updated_at: Date.now(),
         })
 
-        // Create default organization settings
+        // Create default organization settings with default onboarding status
         await tx.mutate.organization_settings.insert({
           id: createId(),
           organization_id: id,
+          onboarding_status: {
+            currentStep: "documents",
+            isCompleted: false,
+            completedSteps: [],
+            checkedItems: [],
+            createdDemoGuide: false,
+          },
           created_at: Date.now(),
           updated_at: Date.now(),
         })
 
         // Create seeded onboarding documents
         if (importDemoContent !== false) {
-          const { demoContent } = await import("./demo-content")
+          const { demoContent, createIntroDocument } = await import("./demo-content")
 
+          // Step 1: Generate all document IDs first
+          const documentIdMap = new Map<string, string>()
           for (const doc of demoContent) {
-            const docId = createId()
+            documentIdMap.set(doc.title, createId())
+          }
+
+          // Step 2: Create intro document first (with proper internal links)
+          const introDoc = createIntroDocument(documentIdMap)
+          const introDocId = createId()
+          documentIdMap.set(introDoc.title, introDocId)
+          const introYjsState = convertJsonToYjs(introDoc.content)
+
+          await tx.mutate.documents.insert({
+            id: introDocId,
+            slug: `${slugify(introDoc.title)}-${createId().slice(0, 6)}`,
+            title: introDoc.title,
+            yjs_state: introYjsState,
+            user_id: ctx.userId,
+            organization_id: id,
+            index_status: "pending",
+            integration_link_id: null,
+            is_locked: false,
+            published: false,
+            parent_id: null,
+            sort_order: 0,
+            custom_fields: introDoc.customFields || { isOnboarding: "true" },
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          })
+
+          // Step 3: Create all other demo documents
+          for (let i = 0; i < demoContent.length; i++) {
+            const doc = demoContent[i]
+            const docId = documentIdMap.get(doc.title)!
             const yjsState = convertJsonToYjs(doc.content)
 
             await tx.mutate.documents.insert({
@@ -981,7 +922,7 @@ export const mutators = defineMutators({
               is_locked: false,
               published: false,
               parent_id: null,
-              sort_order: demoContent.indexOf(doc),
+              sort_order: i + 1, // Intro is 0, others start at 1
               custom_fields: { isOnboarding: "true" },
               created_at: Date.now(),
               updated_at: Date.now(),

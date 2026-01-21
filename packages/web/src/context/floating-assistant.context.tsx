@@ -1,9 +1,13 @@
 import { createContext, useContext, useState, useMemo, useCallback, type ReactNode } from "react"
-import { createId } from "@lydie/core/id"
+
+interface OpenOptions {
+  prompt?: string
+  documentId?: string
+}
 
 interface FloatingAssistantContextValue {
   isOpen: boolean
-  open: (options?: { prompt?: string }) => void
+  open: (options?: OpenOptions) => void
   close: () => void
   toggle: () => void
   initialPrompt?: string
@@ -28,11 +32,13 @@ export function FloatingAssistantProvider({ children }: FloatingAssistantProvide
   const [isOpen, setIsOpen] = useState(false)
   const [initialPrompt, setInitialPrompt] = useState<string | undefined>()
 
-  const open = useCallback((options?: { prompt?: string }) => {
+  const open = useCallback((options?: OpenOptions) => {
     setIsOpen(true)
     if (options?.prompt) {
       setInitialPrompt(options.prompt)
     }
+    // Note: documentId navigation is handled by the caller before opening
+    // This keeps the context simple and stateless
   }, [])
 
   const close = useCallback(() => {

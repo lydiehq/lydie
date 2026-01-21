@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { Form, Checkbox } from "react-aria-components"
+import { Form } from "react-aria-components"
 import { useAppForm } from "@/hooks/use-app-form"
 import { Button } from "@/components/generic/Button"
 import { Heading } from "@/components/generic/Heading"
@@ -18,7 +18,7 @@ import { clearZeroInstance } from "@/lib/zero/instance"
 import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { trackEvent } from "@/lib/posthog"
 
-export const Route = createFileRoute("/__auth/onboarding/")({
+export const Route = createFileRoute("/__auth/new/")({
   component: RouteComponent,
 })
 
@@ -38,7 +38,6 @@ function RouteComponent() {
     defaultValues: {
       name: defaultName,
       slug: slugify(defaultName),
-      importDemoContent: true,
     },
     onSubmit: async (values) => {
       try {
@@ -50,7 +49,7 @@ function RouteComponent() {
             id,
             name: values.value.name,
             slug,
-            importDemoContent: values.value.importDemoContent,
+            importDemoContent: true, // Always import demo content
           }),
         )
 
@@ -197,35 +196,6 @@ function RouteComponent() {
                   >
                     {form.state.isSubmitting ? "Creating workspace..." : "Create Workspace"}
                   </Button>
-
-                  <div className="flex items-center gap-x-2">
-                    <form.Field
-                      name="importDemoContent"
-                      children={(field) => (
-                        <Checkbox
-                          className="group flex gap-2 items-center text-white/70"
-                          isSelected={field.state.value}
-                          onChange={field.handleChange}
-                        >
-                          <div className="flex items-center justify-center w-4 h-4 rounded border border-white/20 bg-white/5 transition-all group-data-[selected]:bg-indigo-500 group-data-[selected]:border-indigo-500">
-                            <svg
-                              viewBox="0 0 18 18"
-                              aria-hidden="true"
-                              className="w-3 h-3 text-white opacity-0 group-data-[selected]:opacity-100 transition-opacity"
-                            >
-                              <polyline
-                                points="1 9 7 14 15 4"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                              />
-                            </svg>
-                          </div>
-                          <span className="text-sm font-medium">Import demo content</span>
-                        </Checkbox>
-                      )}
-                    />
-                  </div>
                 </div>
               </Form>
 

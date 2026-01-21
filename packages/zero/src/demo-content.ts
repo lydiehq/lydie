@@ -1,3 +1,342 @@
+/**
+ * Creates an introductory document that showcases editor features
+ * @param documentIdMap - Map of document titles to their IDs for internal linking
+ */
+export function createIntroDocument(documentIdMap: Map<string, string>) {
+  const apolloKickoffId = documentIdMap.get("Project Apollo - Kickoff Notes") || ""
+  const apolloArchitectureId = documentIdMap.get("Project Apollo - Architecture") || ""
+  const releaseChecklistId = documentIdMap.get("Release Checklist v1.0") || ""
+
+  return {
+    title: "Welcome to Your Workspace",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 1 },
+          content: [{ type: "text", text: "👋 Welcome to Your Workspace!" }],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "This workspace contains demo content to help you explore the editor's powerful features. Let's discover what you can do!",
+            },
+          ],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "🔗 Internal Linking" }],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "One of the most powerful features is internal linking. You can create connections between documents to build a knowledge graph. For example, check out the ",
+            },
+            ...(apolloKickoffId
+              ? [
+                  {
+                    type: "text",
+                    text: "Project Apollo Kickoff Notes",
+                    marks: [
+                      {
+                        type: "link",
+                        attrs: {
+                          href: `internal://${apolloKickoffId}`,
+                        },
+                      },
+                    ],
+                  },
+                ]
+              : [{ type: "text", text: "Project Apollo Kickoff Notes" }]),
+            {
+              type: "text",
+              text: " or explore the ",
+            },
+            ...(apolloArchitectureId
+              ? [
+                  {
+                    type: "text",
+                    text: "Architecture Diagram",
+                    marks: [
+                      {
+                        type: "link",
+                        attrs: {
+                          href: `internal://${apolloArchitectureId}`,
+                        },
+                      },
+                    ],
+                  },
+                ]
+              : [{ type: "text", text: "Architecture Diagram" }]),
+            {
+              type: "text",
+              text: " to see how documents can be interconnected.",
+            },
+          ],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "🏷️ Custom Properties" }],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "Notice the custom properties in the sidebar! This document has properties like:",
+            },
+          ],
+        },
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    { type: "text", text: "Status: ", marks: [{ type: "bold" }] },
+                    { type: "text", text: "Getting Started" },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    { type: "text", text: "Type: ", marks: [{ type: "bold" }] },
+                    { type: "text", text: "Guide" },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    { type: "text", text: "Priority: ", marks: [{ type: "bold" }] },
+                    { type: "text", text: "High" },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "You can add custom properties to any document to organize and filter your content. Try editing the properties in the sidebar!",
+            },
+          ],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "📝 Rich Text Editing" }],
+        },
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "The editor supports rich formatting: " },
+            { type: "text", text: "bold", marks: [{ type: "bold" }] },
+            { type: "text", text: ", " },
+            { type: "text", text: "italic", marks: [{ type: "italic" }] },
+            { type: "text", text: ", " },
+            {
+              type: "text",
+              text: "strikethrough",
+              marks: [{ type: "strike" }],
+            },
+            { type: "text", text: ", and more!" },
+          ],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "💻 Code Blocks" }],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "You can add syntax-highlighted code blocks. Check out the ",
+            },
+            ...(apolloArchitectureId
+              ? [
+                  {
+                    type: "text",
+                    text: "Architecture document",
+                    marks: [
+                      {
+                        type: "link",
+                        attrs: {
+                          href: `internal://${apolloArchitectureId}`,
+                        },
+                      },
+                    ],
+                  },
+                ]
+              : [{ type: "text", text: "Architecture document" }]),
+            {
+              type: "text",
+              text: " to see a Mermaid diagram example, or the ",
+            },
+            ...(releaseChecklistId
+              ? [
+                  {
+                    type: "text",
+                    text: "Release Checklist",
+                    marks: [
+                      {
+                        type: "link",
+                        attrs: {
+                          href: `internal://${releaseChecklistId}`,
+                        },
+                      },
+                    ],
+                  },
+                ]
+              : [{ type: "text", text: "Release Checklist" }]),
+            {
+              type: "text",
+              text: " to see task lists in action.",
+            },
+          ],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "📸 Screenshots & Images" }],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "You can add images and screenshots to your documents. Simply drag and drop images or use the image upload button. Screenshots are great for documenting processes and sharing visual information.",
+            },
+          ],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "💡 Tip: You can add screenshots here to show users how to use specific features. For example, you might include a screenshot of the custom properties panel or the internal link creation dialog.",
+            },
+          ],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "🎯 Next Steps" }],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "Now that you've seen the basics, explore the demo documents in this workspace. Try:",
+            },
+          ],
+        },
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Click on internal links to navigate between documents",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Edit documents to see the real-time collaboration features",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Try the assistant chat to organize and manage your documents",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Add custom properties to documents in the sidebar",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "Happy exploring! 🚀",
+            },
+          ],
+        },
+      ],
+    },
+    customFields: {
+      isOnboarding: "true",
+      Status: "Getting Started",
+      Type: "Guide",
+      Priority: "High",
+    },
+  }
+}
+
 export const demoContent = [
   {
     title: "Project Apollo - Kickoff Notes",

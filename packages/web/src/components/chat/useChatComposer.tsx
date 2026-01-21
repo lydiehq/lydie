@@ -15,6 +15,8 @@ export interface UseChatComposerOptions {
   documents: ChatComposerDocument[]
   onEnter?: () => void
   placeholder?: string
+  autoFocus?: boolean
+  initialContent?: string
 }
 
 export interface ChatComposerHandle {
@@ -29,6 +31,8 @@ export function useChatComposer({
   documents,
   onEnter,
   placeholder = "Ask anything. Use @ to refer to other elements",
+  autoFocus = false,
+  initialContent = "",
 }: UseChatComposerOptions): ChatComposerHandle {
   const mentionItems = useMemo(() => {
     return documents.map((doc) => ({
@@ -77,7 +81,8 @@ export function useChatComposer({
 
   const editor = useEditor({
     extensions,
-    content: "",
+    content: initialContent,
+    autofocus: autoFocus,
     editorProps: {
       attributes: {
         class: "focus:outline-none min-h-[100px] max-h-[200px] overflow-y-auto text-sm text-gray-700",

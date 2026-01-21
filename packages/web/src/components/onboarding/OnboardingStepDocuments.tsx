@@ -10,27 +10,27 @@ const keyboardKeyStyles = cva({
 })
 
 export function OnboardingStepDocuments() {
-  const { isChecked, setChecked } = useOnboardingChecklist()
+  const { isChecked } = useOnboardingChecklist()
   const [isCommandMenuOpen] = useAtom(commandMenuOpenAtom)
 
   return (
     <div className="flex flex-col gap-y-6">
       <div className="flex items-center gap-x-3">
-        <div className="p-2 bg-gray-100 rounded-lg">
-          <DocumentIcon className="size-6 text-gray-700" />
+        <div className="p-2 bg-gray-50 rounded-lg">
+          <DocumentIcon className="size-4 text-gray-500" />
         </div>
         <span className="text-lg font-medium text-gray-900">Documents</span>
       </div>
       <p className="text-gray-700 text-sm/relaxed">
-        Your workspace is organized with documents. Let's learn how to create and manage your content using
-        the command menu.
+        Learn how to use the command menu and explore the powerful editor features through demo content.
       </p>
       <div className="flex flex-col gap-y-3">
         <Checkbox
           isSelected={isChecked("documents:open-command-menu")}
-          onChange={(checked) => setChecked("documents:open-command-menu", checked)}
+          onChange={() => { }}
           className="items-start"
           isDisabled={isCommandMenuOpen}
+          isReadOnly
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
@@ -47,24 +47,28 @@ export function OnboardingStepDocuments() {
           </div>
         </Checkbox>
         <Checkbox
-          isSelected={isChecked("documents:create-document")}
-          onChange={(checked) => setChecked("documents:create-document", checked)}
+          isSelected={isChecked("documents:import-demo-content")}
+          onChange={() => { }}
           className="items-start"
+          isReadOnly
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
               <PlusIcon className="size-4 text-gray-600" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Create a document</p>
-              <p className="text-xs text-gray-600 mt-0.5">Use the command menu to create a new document</p>
+              <p className="text-sm font-medium text-gray-900">Use the Import Demo Content menu item</p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                In the command menu, click the blue "Import Demo Content" button to add sample documents
+              </p>
             </div>
           </div>
         </Checkbox>
         <Checkbox
           isSelected={isChecked("documents:explore-editor")}
-          onChange={(checked) => setChecked("documents:explore-editor", checked)}
+          onChange={() => { }}
           className="items-start"
+          isReadOnly
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
@@ -73,8 +77,7 @@ export function OnboardingStepDocuments() {
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Explore the editor</p>
               <p className="text-xs text-gray-600 mt-0.5">
-                Create an interactive guide document to learn about internal links, custom properties, and
-                formatting
+                Learn about internal links, custom properties, and rich formatting in the Welcome document
               </p>
             </div>
           </div>

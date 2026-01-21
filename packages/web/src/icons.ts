@@ -19,6 +19,8 @@ export { default as FileTextIcon } from "~icons/ion/document-text"
 export { default as FolderIcon } from "~icons/ion/folder"
 export { default as FolderOpenIcon } from "~icons/ion/folder-open"
 
+export { default as PlusIcon } from "~icons/ion/add"
+
 // Actions
 export { default as AddIcon } from "~icons/ion/add"
 export { default as MinusIcon } from "~icons/ion/remove"
