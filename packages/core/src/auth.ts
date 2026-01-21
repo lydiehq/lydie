@@ -93,18 +93,6 @@ export const authClient = betterAuth({
             fullName: user.name || `${firstName}`,
           })
 
-          const organizationName = `${firstName}'s Organization`
-          const baseSlug = slugify(organizationName)
-          // Make slug unique by appending random characters
-          const slug = `${baseSlug}-${createId().slice(0, 6)}`
-
-          // Create organization with all required setup (organization, member, settings)
-          await createOrganization({
-            name: organizationName,
-            slug: slug,
-            userId: user.id,
-          })
-
           // Create default user settings if they don't exist
           const existingSettings = await db
             .select()

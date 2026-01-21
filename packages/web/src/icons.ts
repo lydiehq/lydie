@@ -19,6 +19,8 @@ export { default as FileTextIcon } from "~icons/ion/document-text"
 export { default as FolderIcon } from "~icons/ion/folder"
 export { default as FolderOpenIcon } from "~icons/ion/folder-open"
 
+export { default as PlusIcon } from "~icons/ion/add"
+
 // Actions
 export { default as AddIcon } from "~icons/ion/add"
 export { default as MinusIcon } from "~icons/ion/remove"
@@ -118,3 +120,6 @@ export { default as ShieldIcon } from "~icons/ion/shield"
 export { default as KeyIcon } from "~icons/ion/key"
 export { default as TrendingUpIcon } from "~icons/ion/trending-up"
 export { default as CheckCircleIcon } from "~icons/ion/checkmark-circle"
+export { default as LifeBuoyIcon } from "~icons/ion/help-buoy"
+export { default as HelpCircleIcon } from "~icons/ion/help-circle"
+export { default as AsteriskIcon } from "~icons/ion/asterisk"

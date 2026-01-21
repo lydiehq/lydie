@@ -29,10 +29,15 @@ const styles = cva({
       xl: "h-11 px-8 text-sm [--button-radius:theme(radius.xl)]",
       icon: "h-10 w-10 text-sm",
     },
+    rounded: {
+      true: "rounded-full [--button-radius:9999px] before:rounded-full after:rounded-full",
+      false: "",
+    },
   },
   defaultVariants: {
     intent: "primary",
     size: "md",
+    rounded: false,
   },
 })
 
@@ -64,6 +69,7 @@ export function Button({ ref, ...props }: ButtonProps) {
           styles({
             intent: props.intent,
             size: props.size,
+            rounded: props.rounded,
             className,
           }),
         )}
@@ -86,6 +92,7 @@ export function Button({ ref, ...props }: ButtonProps) {
           className,
           intent: props.intent,
           size: props.size,
+          rounded: props.rounded,
         }),
       )}
     >

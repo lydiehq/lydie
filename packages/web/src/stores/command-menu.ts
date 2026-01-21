@@ -10,14 +10,12 @@ export const commandMenuStateAtom = atom<CommandMenuState>({
   initialPage: undefined,
 })
 
-// Helper atoms for easier access
 export const commandMenuOpenAtom = atom(
   (get) => get(commandMenuStateAtom).isOpen,
   (get, set, isOpen: boolean) => {
     set(commandMenuStateAtom, {
       ...get(commandMenuStateAtom),
       isOpen,
-      // Reset initialPage when closing
       initialPage: isOpen ? get(commandMenuStateAtom).initialPage : undefined,
     })
   },

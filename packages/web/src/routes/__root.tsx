@@ -7,6 +7,7 @@ import {
   type NavigateOptions,
   type ToOptions,
   HeadContent,
+  redirect,
 } from "@tanstack/react-router"
 import { LoadingScreen } from "@/components/layout/LoadingScreen"
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog"
@@ -74,6 +75,18 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context: { queryClient } }) => {
     const { auth, organizations } = await loadSession(queryClient)
     const zeroInstance = getZeroInstance(auth)
+
+    // Redirect to new workspace creation if user has no organizations
+    if (
+      auth?.user &&
+      organizations.length === 0 &&
+      !location.pathname.startsWith("/new") &&
+      !location.pathname.startsWith("/invitations")
+    ) {
+      throw redirect({
+        to: "/new",
+      })
+    }
 
     return { auth, organizations, zero: zeroInstance }
   },

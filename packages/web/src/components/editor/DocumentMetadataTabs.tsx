@@ -1,7 +1,7 @@
 import { Tabs, TabList, Tab, TabPanels, TabPanel, Button } from "react-aria-components"
 import { useState } from "react"
 import { CustomFieldsEditor } from "./CustomFieldsEditor"
-import { ArrowDownBIcon } from "@/icons"
+import { ArrowDownBIcon, PlusIcon } from "@/icons"
 import { useDocumentActions } from "@/hooks/use-document-actions"
 import { DocumentIcon, AddIcon } from "@/icons"
 import { Button as GenericButton } from "@/components/generic/Button"
@@ -48,7 +48,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
         onPress={handleCreateChildPage}
         className="text-gray-600 hover:text-gray-900"
       >
-        <Plus className="size-4 mr-1" />
+        <PlusIcon className="size-4 mr-1" />
         Add page
       </GenericButton>
       <div className="">

@@ -102,6 +102,75 @@ export const mutators = defineMutators({
         })
       },
     ),
+    createOnboardingGuide: defineMutator(
+      z.object({
+        organizationId: z.string(),
+        parentId: z.string(),
+        childId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId, parentId, childId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        const { getOnboardingGuideContent } = await import("./onboarding-guide-content")
+        const guideContent = getOnboardingGuideContent(childId)
+
+        // Get the highest sort_order to append at the end
+        const siblings = await tx.run(
+          zql.documents
+            .where("organization_id", organizationId)
+            .where("parent_id", "IS", null)
+            .where("deleted_at", "IS", null),
+        )
+
+        const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0)
+
+        const parentYjsState = convertJsonToYjs(guideContent.parent.content)
+        const childYjsState = convertJsonToYjs(guideContent.child.content)
+
+        // Insert parent document
+        await tx.mutate.documents.insert({
+          id: parentId,
+          slug: parentId,
+          title: guideContent.parent.title,
+          yjs_state: parentYjsState,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          index_status: "pending",
+          integration_link_id: null,
+          is_locked: false,
+          published: false,
+          parent_id: null,
+          sort_order: maxSortOrder + 1,
+          custom_fields: { isOnboardingGuide: "true" },
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
+
+        // Insert child document
+        await tx.mutate.documents.insert({
+          id: childId,
+          slug: childId,
+          title: guideContent.child.title,
+          yjs_state: childYjsState,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          index_status: "pending",
+          integration_link_id: null,
+          is_locked: false,
+          published: false,
+          parent_id: parentId,
+          sort_order: 0,
+          custom_fields: {
+            isOnboardingGuide: "true",
+            Status: "In Progress",
+            Priority: "High",
+            Type: "Tutorial",
+          },
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
+      },
+    ),
     update: defineMutator(
       z.object({
         documentId: z.string(),
@@ -402,6 +471,108 @@ export const mutators = defineMutators({
         }
       },
     ),
+    deleteAllOnboarding: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        // Find all onboarding documents
+        const onboardingDocs = await tx.run(
+          zql.documents.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        )
+
+        // Filter to only onboarding documents (check custom_fields)
+        const onboardingDocumentIds = onboardingDocs
+          .filter(
+            (doc) =>
+              doc.custom_fields &&
+              typeof doc.custom_fields === "object" &&
+              "isOnboarding" in doc.custom_fields &&
+              doc.custom_fields.isOnboarding === "true",
+          )
+          .map((doc) => doc.id)
+
+        // Soft-delete all onboarding documents
+        const now = Date.now()
+        for (const docId of onboardingDocumentIds) {
+          await tx.mutate.documents.update({
+            id: docId,
+            deleted_at: now,
+            updated_at: now,
+          })
+        }
+      },
+    ),
+    importDemoContent: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        // Import demo content to existing organization
+        const { demoContent, createIntroDocument } = await import("./demo-content")
+
+        // Step 1: Generate all document IDs first
+        const documentIdMap = new Map<string, string>()
+        for (const doc of demoContent) {
+          documentIdMap.set(doc.title, createId())
+        }
+
+        // Step 2: Create intro document first (with proper internal links)
+        const introDoc = createIntroDocument(documentIdMap)
+        const introDocId = createId()
+        documentIdMap.set(introDoc.title, introDocId)
+        const introYjsState = convertJsonToYjs(introDoc.content)
+
+        await tx.mutate.documents.insert({
+          id: introDocId,
+          slug: `${slugify(introDoc.title)}-${createId().slice(0, 6)}`,
+          title: introDoc.title,
+          yjs_state: introYjsState,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          index_status: "pending",
+          integration_link_id: null,
+          is_locked: false,
+          published: false,
+          parent_id: null,
+          sort_order: 0,
+          custom_fields: introDoc.customFields || { isOnboarding: "true" },
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
+
+        // Step 3: Create all other demo documents
+        for (let i = 0; i < demoContent.length; i++) {
+          const doc = demoContent[i]
+          const docId = documentIdMap.get(doc.title)!
+          const yjsState = convertJsonToYjs(doc.content)
+
+          await tx.mutate.documents.insert({
+            id: docId,
+            slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
+            title: doc.title,
+            yjs_state: yjsState,
+            user_id: ctx.userId,
+            organization_id: organizationId,
+            index_status: "pending",
+            integration_link_id: null,
+            is_locked: false,
+            published: false,
+            parent_id: null,
+            sort_order: i + 1, // Intro is 0, others start at 1
+            custom_fields: { isOnboarding: "true" },
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          })
+        }
+
+        return { welcomeDocumentId: introDocId }
+      },
+    ),
   },
   documentComponent: {
     create: defineMutator(
@@ -536,19 +707,27 @@ export const mutators = defineMutators({
     update: defineMutator(
       z.object({
         organizationId: z.string(),
+        onboardingStatus: z.json().optional(),
       }),
-      async ({ tx, ctx, args: { organizationId } }) => {
+      async ({ tx, ctx, args: { organizationId, onboardingStatus } }) => {
         hasOrganizationAccess(ctx, organizationId)
 
         // Get or create the organization's settings
         let settings = await tx.run(zql.organization_settings.where("organization_id", organizationId).one())
 
         if (!settings) {
-          // Create settings if they don't exist
+          // Create settings if they don't exist with default onboarding status
           const id = createId()
           await tx.mutate.organization_settings.insert({
             id,
             organization_id: organizationId,
+            onboarding_status: {
+              currentStep: "documents",
+              isCompleted: false,
+              completedSteps: [],
+              checkedItems: [],
+              createdDemoGuide: false,
+            },
             created_at: Date.now(),
             updated_at: Date.now(),
           })
@@ -564,7 +743,63 @@ export const mutators = defineMutators({
           updated_at: Date.now(),
         }
 
+        if (onboardingStatus !== undefined) {
+          updates.onboarding_status = onboardingStatus
+        }
+
         await tx.mutate.organization_settings.update(updates)
+      },
+    ),
+    resetOnboarding: defineMutator(
+      z.object({
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        // Get the organization's settings
+        const settings = await tx.run(zql.organization_settings.where("organization_id", organizationId).one())
+
+        if (!settings) {
+          throw new Error("Organization settings not found")
+        }
+
+        // Reset onboarding status to default
+        await tx.mutate.organization_settings.update({
+          id: settings.id,
+          onboarding_status: {
+            currentStep: "documents",
+            isCompleted: false,
+            completedSteps: [],
+            checkedItems: [],
+            createdDemoGuide: false,
+          },
+          updated_at: Date.now(),
+        })
+
+        // Delete all onboarding guide documents
+        const onboardingDocs = await tx.run(
+          zql.documents.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        )
+
+        const onboardingDocumentIds = onboardingDocs
+          .filter(
+            (doc) =>
+              doc.custom_fields &&
+              typeof doc.custom_fields === "object" &&
+              "isOnboardingGuide" in doc.custom_fields &&
+              doc.custom_fields.isOnboardingGuide === "true",
+          )
+          .map((doc) => doc.id)
+
+        const now = Date.now()
+        for (const docId of onboardingDocumentIds) {
+          await tx.mutate.documents.update({
+            id: docId,
+            deleted_at: now,
+            updated_at: now,
+          })
+        }
       },
     ),
   },
@@ -576,8 +811,9 @@ export const mutators = defineMutators({
         slug: z.string(),
         logo: z.string().optional(),
         metadata: z.string().optional(),
+        importDemoContent: z.boolean().optional(),
       }),
-      async ({ tx, ctx, args: { id, name, slug, logo, metadata } }) => {
+      async ({ tx, ctx, args: { id, name, slug, logo, metadata, importDemoContent } }) => {
         isAuthenticated(ctx)
 
         // Verify slug doesn't already exist and make it unique if needed
@@ -619,13 +855,80 @@ export const mutators = defineMutators({
           updated_at: Date.now(),
         })
 
-        // Create default organization settings
+        // Create default organization settings with default onboarding status
         await tx.mutate.organization_settings.insert({
           id: createId(),
           organization_id: id,
+          onboarding_status: {
+            currentStep: "documents",
+            isCompleted: false,
+            completedSteps: [],
+            checkedItems: [],
+            createdDemoGuide: false,
+          },
           created_at: Date.now(),
           updated_at: Date.now(),
         })
+
+        // Create seeded onboarding documents
+        if (importDemoContent !== false) {
+          const { demoContent, createIntroDocument } = await import("./demo-content")
+
+          // Step 1: Generate all document IDs first
+          const documentIdMap = new Map<string, string>()
+          for (const doc of demoContent) {
+            documentIdMap.set(doc.title, createId())
+          }
+
+          // Step 2: Create intro document first (with proper internal links)
+          const introDoc = createIntroDocument(documentIdMap)
+          const introDocId = createId()
+          documentIdMap.set(introDoc.title, introDocId)
+          const introYjsState = convertJsonToYjs(introDoc.content)
+
+          await tx.mutate.documents.insert({
+            id: introDocId,
+            slug: `${slugify(introDoc.title)}-${createId().slice(0, 6)}`,
+            title: introDoc.title,
+            yjs_state: introYjsState,
+            user_id: ctx.userId,
+            organization_id: id,
+            index_status: "pending",
+            integration_link_id: null,
+            is_locked: false,
+            published: false,
+            parent_id: null,
+            sort_order: 0,
+            custom_fields: introDoc.customFields || { isOnboarding: "true" },
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          })
+
+          // Step 3: Create all other demo documents
+          for (let i = 0; i < demoContent.length; i++) {
+            const doc = demoContent[i]
+            const docId = documentIdMap.get(doc.title)!
+            const yjsState = convertJsonToYjs(doc.content)
+
+            await tx.mutate.documents.insert({
+              id: docId,
+              slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
+              title: doc.title,
+              yjs_state: yjsState,
+              user_id: ctx.userId,
+              organization_id: id,
+              index_status: "pending",
+              integration_link_id: null,
+              is_locked: false,
+              published: false,
+              parent_id: null,
+              sort_order: i + 1, // Intro is 0, others start at 1
+              custom_fields: { isOnboarding: "true" },
+              created_at: Date.now(),
+              updated_at: Date.now(),
+            })
+          }
+        }
       },
     ),
     update: defineMutator(
@@ -933,6 +1236,31 @@ export const mutators = defineMutators({
             updated_at: Date.now(),
           })
         }
+      },
+    ),
+  },
+  feedback: {
+    create: defineMutator(
+      z.object({
+        id: z.string(),
+        type: z.enum(["feedback", "help"]),
+        message: z.string().min(1),
+        metadata: z.any().optional(),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { id, type, message, metadata, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+
+        await tx.mutate.feedback_submissions.insert({
+          id,
+          user_id: ctx.userId,
+          organization_id: organizationId,
+          type,
+          message,
+          metadata: metadata || null,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        })
       },
     ),
   },

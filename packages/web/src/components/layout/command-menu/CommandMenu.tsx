@@ -1,5 +1,5 @@
 import { Command } from "cmdk"
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { useDocumentActions } from "@/hooks/use-document-actions"
 import { useParams, useNavigate } from "@tanstack/react-router"
 import { useZero } from "@/services/zero"
@@ -9,6 +9,9 @@ import { queries } from "@lydie/zero/queries"
 import { confirmDialog } from "@/stores/confirm-dialog"
 import { useAtom } from "jotai"
 import { commandMenuOpenAtom, commandMenuStateAtom } from "@/stores/command-menu"
+import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
+import { useOnboardingSteps } from "@/hooks/use-onboarding-steps"
+import { mutators } from "@lydie/zero/mutators"
 import {
   SearchIcon,
   AddIcon,
@@ -18,6 +21,7 @@ import {
   CreditCardIcon,
   UploadIcon,
   PlugIcon,
+  PlusIcon,
 } from "@/icons"
 import { ModalOverlay, Modal } from "react-aria-components"
 import { overlayStyles } from "../../generic/Modal"
@@ -51,31 +55,32 @@ export function CommandMenu() {
   const [search, setSearch] = useState("")
   const [pages, setPages] = useState<string[]>([])
   const currentPage = pages[pages.length - 1]
+  const checkedItemsRef = useRef<Set<string>>(new Set())
 
   const currentDocumentId = params.id as string | undefined
   const [currentDocument] = useQuery(
     currentDocumentId
       ? queries.documents.byId({
-          organizationId: organization.id,
-          documentId: currentDocumentId,
-        })
+        organizationId: organization.id,
+        documentId: currentDocumentId,
+      })
       : queries.documents.byId({
-          organizationId: organization.id,
-          documentId: "non-existent",
-        }),
+        organizationId: organization.id,
+        documentId: "non-existent",
+      }),
   )
 
   // Search documents using Zero - only when on search page
   const [searchData] = useQuery(
     currentPage === "search"
       ? queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: search,
-        })
+        organizationId: organization.id,
+        searchTerm: search,
+      })
       : queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: "",
-        }),
+        organizationId: organization.id,
+        searchTerm: "",
+      }),
   )
 
   const searchDocuments = searchData?.documents || []
@@ -89,25 +94,28 @@ export function CommandMenu() {
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom)
   const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom)
+  const { setChecked } = useOnboardingChecklist()
+  const { currentStep } = useOnboardingSteps()
 
-  // Initialize pages from the atom's initialPage when menu opens
-  useEffect(() => {
-    if (isOpen && commandMenuState.initialPage) {
-      setPages([commandMenuState.initialPage])
-      setCommandMenuState({
-        ...commandMenuState,
-        initialPage: undefined,
-      })
-    }
-  }, [isOpen, commandMenuState.initialPage])
-
-  // Reset pages and search when menu closes
-  useEffect(() => {
-    if (!isOpen) {
+  // Handle menu open/close state changes
+  const handleOpenChange = useCallback((newIsOpen: boolean) => {
+    if (newIsOpen && !isOpen) {
+      // Opening the menu
+      if (commandMenuState.initialPage) {
+        setPages([commandMenuState.initialPage])
+        setCommandMenuState({
+          ...commandMenuState,
+          initialPage: undefined,
+        })
+      }
+    } else if (!newIsOpen && isOpen) {
+      // Closing the menu
       setPages([])
       setSearch("")
     }
-  }, [isOpen])
+
+    setOpen(newIsOpen)
+  }, [isOpen, commandMenuState, setCommandMenuState, setOpen])
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -118,32 +126,92 @@ export function CommandMenu() {
         if (isInEditor) return
 
         e.preventDefault()
-        setOpen(!isOpen)
+        const willOpen = !isOpen
+
+        // Mark onboarding item as checked when opening during onboarding
+        if (willOpen && currentStep === "documents" && !checkedItemsRef.current.has("documents:open-command-menu")) {
+          checkedItemsRef.current.add("documents:open-command-menu")
+          setChecked("documents:open-command-menu", true)
+        }
+
+        handleOpenChange(willOpen)
       }
     }
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [isOpen, setOpen])
+  }, [isOpen, handleOpenChange, currentStep, setChecked])
 
-  const handleCommand = (action: () => void) => {
+  const handleCommand = useCallback((action: () => void) => {
     action()
-    setOpen(false)
-  }
+    handleOpenChange(false)
+  }, [handleOpenChange])
 
   // Use dynamic integration route for all integrations
   const getIntegrationRoute = (integrationType: string) =>
     `/w/$organizationSlug/settings/integrations/${integrationType}`
 
   const menuSections = useMemo<MenuSection[]>(() => {
-    const favoritesItems: MenuItem[] = [
-      {
+    const onboardingItems: MenuItem[] = []
+
+    // Add special onboarding item to import demo content during documents onboarding step
+    if (currentStep === "documents") {
+      onboardingItems.push({
+        id: "import-demo-content",
+        label: "Import Demo Content",
+        description: "Quickly add sample documents to get started",
+        icon: PlusIcon,
+        action: async () => {
+          try {
+            // Import demo content to current workspace
+            const result = await z.mutate(
+              mutators.document.importDemoContent({
+                organizationId: organization.id,
+              }),
+            )
+
+            // Mark checklist items as complete
+            await setChecked("documents:import-demo-content", true)
+            await setChecked("documents:explore-editor", true)
+
+            // Navigate to the Welcome document
+            if (result?.client) {
+              const clientResult = await result.client
+              if (clientResult.type === "success") {
+                const welcomeDocId = (clientResult as any).result?.welcomeDocumentId
+                if (welcomeDocId) {
+                  navigate({
+                    to: "/w/$organizationSlug/$id",
+                    params: {
+                      organizationSlug: organization.slug,
+                      id: welcomeDocId,
+                    },
+                  })
+                }
+              }
+            }
+
+            // Close the command menu
+            handleOpenChange(false)
+          } catch (error) {
+            console.error("Failed to import demo content:", error)
+          }
+        },
+        customClassName:
+          "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-3 text-sm outline-none data-[selected=true]:bg-blue-100 data-[selected=true]:text-blue-950 text-blue-700 bg-blue-50 border border-blue-200 transition-colors duration-150 font-medium",
+      })
+    }
+
+    const favoritesItems: MenuItem[] = []
+
+      favoritesItems.push({
         id: "create-document",
         label: "Create new document…",
-        icon: AddIcon,
-        action: createDocument,
-      },
-    ]
+        icon: PlusIcon,
+        action: async () => {
+          createDocument()
+        },
+      })
 
     if (currentDocument) {
       favoritesItems.push({
@@ -289,13 +357,24 @@ export function CommandMenu() {
         icon: AddIcon,
         action: () => {
           navigate({
-            to: "/onboarding",
+            to: "/new",
           })
         },
       },
     ]
 
-    return [
+    const sections: MenuSection[] = []
+
+    // Add onboarding section if it has items
+    if (onboardingItems.length > 0) {
+      sections.push({
+        id: "onboarding",
+        heading: "Onboarding",
+        items: onboardingItems,
+      })
+    }
+
+    sections.push(
       {
         id: "favorites",
         heading: "Favorites",
@@ -306,7 +385,9 @@ export function CommandMenu() {
         heading: "Navigation",
         items: navigationItems,
       },
-    ]
+    )
+
+    return sections
   }, [
     createDocument,
     currentDocument,
@@ -314,12 +395,16 @@ export function CommandMenu() {
     deleteDocument,
     navigate,
     organization.id,
+    organization.slug,
     pages,
     z,
+    currentStep,
+    setChecked,
+    handleOpenChange,
   ])
 
   return (
-    <ModalOverlay isOpen={isOpen} onOpenChange={setOpen} isDismissable className={overlayStyles}>
+    <ModalOverlay isOpen={isOpen} onOpenChange={handleOpenChange} isDismissable className={overlayStyles}>
       <Modal className={modalStyles}>
         <Dialog className="flex flex-col bg-gray-50">
           <Command

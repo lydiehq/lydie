@@ -118,6 +118,7 @@ export interface NodeBuilder<T> {
   bulletList(children: T[]): T
   orderedList(children: T[], start?: number): T
   listItem(children: T[]): T
+  blockquote(children: T[]): T
   horizontalRule(): T
   codeBlock(children: T[], language?: string | null): T
 
@@ -222,6 +223,9 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
 
         case "listItem":
           return builder.listItem(renderChildren(node))
+
+        case "blockquote":
+          return builder.blockquote(renderChildren(node))
 
         case "horizontalRule":
           return builder.horizontalRule()

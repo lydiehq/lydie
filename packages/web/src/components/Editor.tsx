@@ -151,7 +151,10 @@ function EditorContainer({ doc }: Props) {
                 />
               </div>
             </div>
-            <BottomBar editor={contentEditor.editor} lastSaved={new Date(doc.updated_at)} />
+            {/* <BottomBar
+              editor={contentEditor.editor}
+              lastSaved={new Date(doc.updated_at)}
+            /> */}
           </Panel>
           {/* <PanelResizer />
           <Panel
