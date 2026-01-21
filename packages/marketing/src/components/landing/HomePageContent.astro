@@ -11,6 +11,7 @@ import { CTASection } from "./CTASection";
 import { Search, Globe, ChevronRight, Share2 } from "lucide-react";
 import { Container } from "../Container";
 import screenshotChat from "../../../public/screenshot_document_chat.png";
+import screenshotNew from "../../../public/screenshot_new.png";
 import { Button } from "../generic/Button";
 import { Logo } from "../Logo";
 
@@ -29,6 +30,23 @@ const chatSrcset = chatOptimizedImages
   .map((img) => `${img.src} ${img.options.width}w`)
   .join(", ");
 const chatDefaultImage = chatOptimizedImages[chatOptimizedImages.length - 1];
+
+// Optimize hero screenshot with responsive sizes
+const heroWidths = [640, 768, 1024, 1280, 1536, 1920];
+const heroOptimizedImages = await Promise.all(
+  heroWidths.map((width) =>
+    getImage({
+      src: screenshotNew,
+      width,
+      format: "webp",
+      quality: 90,
+    })
+  )
+);
+const heroSrcset = heroOptimizedImages
+  .map((img) => `${img.src} ${img.options.width}w`)
+  .join(", ");
+const heroDefaultImage = heroOptimizedImages[heroOptimizedImages.length - 1];
 
 const keyBenefits = [
   {
@@ -50,7 +68,15 @@ const keyBenefits = [
 ];
 ---
 
-<Hero client:load />
+<Hero
+  client:load
+  imageSrc={heroDefaultImage.src}
+  imageSrcSet={heroSrcset}
+  imageSizes="(max-width: 768px) 100vw, (max-width: 1536px) 90vw, 1536px"
+  imageAlt="Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
+  imageWidth={heroDefaultImage.options.width}
+  imageHeight={heroDefaultImage.options.height}
+/>
 <!-- <Container className="flex flex-col gap-y-12 relative">
   <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
     {

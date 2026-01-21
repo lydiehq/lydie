@@ -1,14 +1,18 @@
 import { Container } from "../Container"
 import { Button } from "../generic/Button"
-import screenshotNew from "../../../public/screenshot_new.png"
 import styles from "./Hero.module.css"
 import { motion, AnimatePresence } from "motion/react"
 import { useState } from "react"
 import { HeroBackground } from "./HeroBackground"
 
-const imageSrc = screenshotNew.src
-const imageAlt =
-  "Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
+interface HeroProps {
+  imageSrc: string
+  imageSrcSet?: string
+  imageSizes?: string
+  imageAlt: string
+  imageWidth?: number
+  imageHeight?: number
+}
 
 function DemoButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -87,7 +91,14 @@ function DemoButton() {
   )
 }
 
-export function Hero() {
+export function Hero({
+  imageSrc,
+  imageSrcSet,
+  imageSizes,
+  imageAlt,
+  imageWidth,
+  imageHeight,
+}: HeroProps) {
   return (
     <div className="md:px-4">
       <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4">
@@ -161,7 +172,17 @@ export function Hero() {
 
           <div className="p-px ring ring-white/20 rounded-[9px] bg-white/10 relative overflow-hidden">
             <div className="rounded-lg overflow-hidden shadow-surface ring ring-black/8 relative z-10">
-              <img src={imageSrc} alt={imageAlt} loading="eager" />
+              <img
+                src={imageSrc}
+                srcSet={imageSrcSet}
+                sizes={imageSizes}
+                alt={imageAlt}
+                width={imageWidth}
+                height={imageHeight}
+                loading="eager"
+                decoding="async"
+                className="w-full h-auto"
+              />
             </div>
           </div>
         </div>

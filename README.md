@@ -1,9 +1,7 @@
 # Lydie
 
-<em>
 Lydie is a high-performance writing workspace that scales from simple notes
 to deeply structured, interconnected knowledge systems.
-</em>
 
 ![Screenshot](./screenshot.png)
 

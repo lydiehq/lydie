@@ -7,17 +7,17 @@ import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
 import { formatDistanceToNow } from "date-fns"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
-import { useAssistant } from "@/context/assistant.context"
 import { useNavigate } from "@tanstack/react-router"
 import { useOrganization } from "@/context/organization.context"
 
 type Props = {
   isCollapsed: boolean
   onToggle: () => void
+  conversationId: string
+  onNewConversation: () => void
 }
 
-export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
-  const { conversationId, resetConversation } = useAssistant()
+export function AssistantSidebar({ isCollapsed, onToggle, conversationId, onNewConversation }: Props) {
   const navigate = useNavigate()
   const { organization } = useOrganization()
   const [conversations] = useQuery(
@@ -27,12 +27,12 @@ export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
   )
 
   const handleNewConversation = useCallback(() => {
-    resetConversation()
+    onNewConversation()
     navigate({
       to: "/w/$organizationSlug/assistant",
       params: { organizationSlug: organization.slug },
     })
-  }, [resetConversation, navigate, organization.slug])
+  }, [onNewConversation, navigate, organization.slug])
 
   const handleSelectConversation = useCallback(
     (id: string) => {
