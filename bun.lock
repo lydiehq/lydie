@@ -159,7 +159,7 @@
         "astro-sst": "^3.1.4",
         "clsx": "^2.1.1",
         "cva": "^1.0.0-beta.4",
-        "html2canvas-pro": "^1.6.5",
+        "html2canvas-pro": "^1.6.6",
         "jspdf": "^4.0.0",
         "lucide-react": "^0.562.0",
         "motion": "^12.27.5",
@@ -2340,7 +2340,7 @@
 
     "html2canvas": ["html2canvas@1.4.1", "", { "dependencies": { "css-line-break": "^2.1.0", "text-segmentation": "^1.0.3" } }, "sha512-fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA=="],
 
-    "html2canvas-pro": ["html2canvas-pro@1.6.5", "", { "dependencies": { "css-line-break": "^2.1.0", "text-segmentation": "^1.0.3" } }, "sha512-Ot3UpUpzQFkJoKmwAcGzwdGhNNlBSlVQV32RY/i5JABOFXGbkHGKkbSotCY3ePKx1Xua3FWsROR54PUW9X/2Qg=="],
+    "html2canvas-pro": ["html2canvas-pro@1.6.6", "", { "dependencies": { "css-line-break": "^2.1.0", "text-segmentation": "^1.0.3" } }, "sha512-5mRhTXZhv4B0kIcsn3bFBjol2o8vzP35mhtxdXBGPA3V3gZd6Sa2PIIFbT//DiqAX8UuywlcJit5jRKej4nV4Q=="],
 
     "http-cache-semantics": ["http-cache-semantics@4.2.0", "", {}, "sha512-dTxcvPXqPvXBQpq5dUr6mEMJX4oIEFv6bwom3FDwKRDsuIjjJGANqhBuoAn9c1RQJIdAKav33ED65E2ys+87QQ=="],
 
