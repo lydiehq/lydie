@@ -28,15 +28,15 @@ Integrations can define **default links** that are auto-created when a connectio
 
 ```typescript
 export const wordpressIntegration: Integration = {
-	onConnect(): { links?: DefaultLink[] } {
-		return {
-			links: [
-				{ name: "Pages", config: { type: "pages" } },
-				{ name: "Posts", config: { type: "posts" } },
-			],
-		}
-	},
-	// ... other methods
+  onConnect(): { links?: DefaultLink[] } {
+    return {
+      links: [
+        { name: "Pages", config: { type: "pages" } },
+        { name: "Posts", config: { type: "posts" } },
+      ],
+    }
+  },
+  // ... other methods
 }
 ```
 
@@ -46,24 +46,24 @@ Every integration is a plain object implementing the `Integration` interface:
 
 ```typescript
 interface Integration {
-	// Validate credentials work
-	validateConnection(connection: IntegrationConnection): Promise<{ valid: boolean; error?: string }>
+  // Validate credentials work
+  validateConnection(connection: IntegrationConnection): Promise<{ valid: boolean; error?: string }>
 
-	// Push document to external platform
-	push(options: PushOptions): Promise<SyncResult>
+  // Push document to external platform
+  push(options: PushOptions): Promise<SyncResult>
 
-	// Pull documents from external platform
-	pull(options: PullOptions): Promise<SyncResult[]>
+  // Pull documents from external platform
+  pull(options: PullOptions): Promise<SyncResult[]>
 
-	// Fetch available resources for the authenticated user/connection
-	// Examples: GitHub repositories, Shopify collections, WordPress sites
-	fetchResources(connection: IntegrationConnection): Promise<ExternalResource[]>
+  // Fetch available resources for the authenticated user/connection
+  // Examples: GitHub repositories, Shopify collections, WordPress sites
+  fetchResources(connection: IntegrationConnection): Promise<ExternalResource[]>
 
-	// Optional: cleanup when connection is disconnected
-	onDisconnect?(connection: IntegrationConnection): Promise<void>
+  // Optional: cleanup when connection is disconnected
+  onDisconnect?(connection: IntegrationConnection): Promise<void>
 
-	// Optional: auto-create links on connection
-	onConnect?(): { links?: DefaultLink[] }
+  // Optional: auto-create links on connection
+  onConnect?(): { links?: DefaultLink[] }
 }
 ```
 
@@ -97,55 +97,52 @@ import { createErrorResult } from "@lydie/integrations"
 
 // Helper functions (module-level, not exported)
 function someHelper() {
-	// ... helper logic
+  // ... helper logic
 }
 
 export const myIntegration: Integration = {
-	// Auto-create default links
-	onConnect(): { links?: DefaultLink[] } {
-		return {
-			links: [{ name: "Content", config: { type: "content" } }],
-		}
-	},
+  // Auto-create default links
+  onConnect(): { links?: DefaultLink[] } {
+    return {
+      links: [{ name: "Content", config: { type: "content" } }],
+    }
+  },
 
-	async validateConnection(connection: IntegrationConnection) {
-		// Verify credentials by making an API call
-		try {
-			// ... validation logic
-			return { valid: true }
-		} catch (error) {
-			return { valid: false, error: "Validation failed" }
-		}
-	},
+  async validateConnection(connection: IntegrationConnection) {
+    // Verify credentials by making an API call
+    try {
+      // ... validation logic
+      return { valid: true }
+    } catch (error) {
+      return { valid: false, error: "Validation failed" }
+    }
+  },
 
-	async push(options: PushOptions): Promise<SyncResult> {
-		// Convert content using serializeToHTML/serializeToMarkdown and upload
-		try {
-			// ... push logic (can use helper functions)
-			return {
-				success: true,
-				documentId: options.document.id,
-				externalId: "external-id",
-			}
-		} catch (error) {
-			return createErrorResult(
-				options.document.id,
-				error instanceof Error ? error.message : "Unknown error",
-			)
-		}
-	},
+  async push(options: PushOptions): Promise<SyncResult> {
+    // Convert content using serializeToHTML/serializeToMarkdown and upload
+    try {
+      // ... push logic (can use helper functions)
+      return {
+        success: true,
+        documentId: options.document.id,
+        externalId: "external-id",
+      }
+    } catch (error) {
+      return createErrorResult(options.document.id, error instanceof Error ? error.message : "Unknown error")
+    }
+  },
 
-	async pull(options: PullOptions): Promise<SyncResult[]> {
-		// Fetch content and convert using deserializeFromHTML/deserializeFromMarkdown
-		const results: SyncResult[] = []
-		// ... pull logic
-		return results
-	},
+  async pull(options: PullOptions): Promise<SyncResult[]> {
+    // Fetch content and convert using deserializeFromHTML/deserializeFromMarkdown
+    const results: SyncResult[] = []
+    // ... pull logic
+    return results
+  },
 
-	async fetchResources(connection: IntegrationConnection): Promise<ExternalResource[]> {
-		// List available resources
-		return []
-	},
+  async fetchResources(connection: IntegrationConnection): Promise<ExternalResource[]> {
+    // List available resources
+    return []
+  },
 }
 ```
 

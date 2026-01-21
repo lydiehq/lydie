@@ -21,8 +21,8 @@ import { LydieClient } from "@lydie/sdk/client"
 import { renderContentToHTML } from "@lydie/sdk/html"
 
 const client = new LydieClient({
-	apiKey: process.env.LYDIE_API_KEY!,
-	organizationId: "your-org",
+  apiKey: process.env.LYDIE_API_KEY!,
+  organizationId: "your-org",
 })
 
 // Fetch a document
@@ -40,21 +40,21 @@ const text = document.toPlainText() // Uses serializeToPlainText under the hood
 import { useLydieDocument } from "@lydie/sdk/react"
 
 export default function DocPage({ slug }: { slug: string }) {
-	const { document, loading, error } = useLydieDocument(slug, {
-		apiKey: import.meta.env.VITE_LYDIE_KEY,
-		organizationId: "your-org",
-		include: { related: true, toc: true },
-	})
+  const { document, loading, error } = useLydieDocument(slug, {
+    apiKey: import.meta.env.VITE_LYDIE_KEY,
+    organizationId: "your-org",
+    include: { related: true, toc: true },
+  })
 
-	if (loading) return <div>Loading...</div>
-	if (error) return <div>Error: {error.message}</div>
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
 
-	return (
-		<article>
-			<h1>{document.title}</h1>
-			{document.content}
-		</article>
-	)
+  return (
+    <article>
+      <h1>{document.title}</h1>
+      {document.content}
+    </article>
+  )
 }
 ```
 
@@ -65,25 +65,25 @@ import { LydieClient } from "@lydie/sdk/client"
 import { LydieContent } from "@lydie/sdk/react"
 
 export default async function Page({ params }) {
-	const client = new LydieClient({
-		apiKey: process.env.LYDIE_API_KEY!,
-		organizationId: "your-org",
-	})
+  const client = new LydieClient({
+    apiKey: process.env.LYDIE_API_KEY!,
+    organizationId: "your-org",
+  })
 
-	const doc = await client.getDocument(params.slug)
+  const doc = await client.getDocument(params.slug)
 
-	return (
-		<article>
-			<h1>{doc.title}</h1>
-			<LydieContent
-				content={doc.jsonContent}
-				components={{
-					CodeBlock: MyCodeBlock,
-					Chart: MyChart,
-				}}
-			/>
-		</article>
-	)
+  return (
+    <article>
+      <h1>{doc.title}</h1>
+      <LydieContent
+        content={doc.jsonContent}
+        components={{
+          CodeBlock: MyCodeBlock,
+          Chart: MyChart,
+        }}
+      />
+    </article>
+  )
 }
 ```
 
@@ -95,10 +95,10 @@ export default async function Page({ params }) {
 
 ```typescript
 const client = new LydieClient({
-	apiKey: string,
-	organizationId: string,
-	apiUrl: string, // defaults to "https://api.lydie.co/v1"
-	debug: boolean,
+  apiKey: string,
+  organizationId: string,
+  apiUrl: string, // defaults to "https://api.lydie.co/v1"
+  debug: boolean,
 })
 ```
 
@@ -114,8 +114,8 @@ const { documents } = await client.getDocuments()
 
 ```typescript
 const doc = await client.getDocument("getting-started", {
-	related: true, // Include related documents
-	toc: true, // Include table of contents
+  related: true, // Include related documents
+  toc: true, // Include table of contents
 })
 // Internal links are automatically transformed to internal-link marks with metadata
 ```
@@ -124,8 +124,8 @@ const doc = await client.getDocument("getting-started", {
 
 ```typescript
 const doc = await client.getDocumentByPath("/docs/api/authentication", {
-	related: true,
-	toc: true,
+  related: true,
+  toc: true,
 })
 // Internal links are automatically transformed to internal-link marks with metadata
 ```
@@ -144,7 +144,7 @@ const { folders } = await client.getFolders()
 import { renderContentToHTML } from "@lydie/sdk/html"
 
 const html = renderContentToHTML(contentNode, {
-	linkPrefix: "/docs", // Optional: prefix all relative links
+  linkPrefix: "/docs", // Optional: prefix all relative links
 })
 ```
 
@@ -154,14 +154,14 @@ const html = renderContentToHTML(contentNode, {
 import { useLydieDocument } from "@lydie/sdk/react"
 
 const {
-	document, // Document with pre-rendered content
-	loading, // Loading state
-	error, // Error object if failed
-	refresh, // Function to refetch
+  document, // Document with pre-rendered content
+  loading, // Loading state
+  error, // Error object if failed
+  refresh, // Function to refetch
 } = useLydieDocument(slug, {
-	apiKey: "your-key",
-	organizationId: "your-org",
-	include: { related: true, toc: true },
+  apiKey: "your-key",
+  organizationId: "your-org",
+  include: { related: true, toc: true },
 })
 ```
 
@@ -169,15 +169,14 @@ const {
 
 ```tsx
 import { LydieContent } from "@lydie/sdk/react"
-
 ;<LydieContent
-	content={doc.jsonContent}
-	components={{
-		// Map custom block names to your components
-		CodeBlock: MyCodeBlock,
-		Chart: MyChart,
-	}}
-	linkPrefix="/blog" // Optional: prefix all relative links
+  content={doc.jsonContent}
+  components={{
+    // Map custom block names to your components
+    CodeBlock: MyCodeBlock,
+    Chart: MyChart,
+  }}
+  linkPrefix="/blog" // Optional: prefix all relative links
 />
 ```
 
@@ -204,18 +203,18 @@ Internal links are presented as marks with embedded metadata:
 
 ```json
 {
-	"text": "what knowledge bases are",
-	"type": "text",
-	"marks": [
-		{
-			"type": "internal-link",
-			"attrs": {
-				"document-id": "abc123def",
-				"document-slug": "getting-started",
-				"document-title": "Getting Started"
-			}
-		}
-	]
+  "text": "what knowledge bases are",
+  "type": "text",
+  "marks": [
+    {
+      "type": "internal-link",
+      "attrs": {
+        "document-id": "abc123def",
+        "document-slug": "getting-started",
+        "document-title": "Getting Started"
+      }
+    }
+  ]
 }
 ```
 
@@ -225,18 +224,18 @@ Use the `linkResolver` prop to customize how internal links are rendered:
 
 ```tsx
 <LydieContent
-	content={doc.jsonContent}
-	linkResolver={(ref) => {
-		// ref.type === "internal"
-		// ref.id === "abc123def"
-		// ref.slug === "getting-started"
-		// ref.title === "Getting Started"
+  content={doc.jsonContent}
+  linkResolver={(ref) => {
+    // ref.type === "internal"
+    // ref.id === "abc123def"
+    // ref.slug === "getting-started"
+    // ref.title === "Getting Started"
 
-		if (ref.type === "internal" && ref.slug) {
-			return `/blog/${ref.slug}`
-		}
-		return ref.href || "#"
-	}}
+    if (ref.type === "internal" && ref.slug) {
+      return `/blog/${ref.slug}`
+    }
+    return ref.href || "#"
+  }}
 />
 ```
 
@@ -267,11 +266,11 @@ Create custom components for your document blocks:
 ```tsx
 // MyCodeBlock.tsx
 export function MyCodeBlock({ properties }: CustomBlockProps) {
-	return (
-		<pre className={`language-${properties.language}`}>
-			<code>{properties.code}</code>
-		</pre>
-	)
+  return (
+    <pre className={`language-${properties.language}`}>
+      <code>{properties.code}</code>
+    </pre>
+  )
 }
 
 // Usage
@@ -328,12 +327,12 @@ const html = renderContentToHTML(doc.jsonContent, {
 import { renderContentToHTML } from "@lydie/sdk/html"
 
 const html = renderContentToHTML(doc.jsonContent, {
-	linkPrefix: "https://mycompany.com", // Make links absolute for email
+  linkPrefix: "https://mycompany.com", // Make links absolute for email
 })
 
 await sendEmail({
-	to: user.email,
-	html: `<div style="font-family: sans-serif;">${html}</div>`,
+  to: user.email,
+  html: `<div style="font-family: sans-serif;">${html}</div>`,
 })
 ```
 

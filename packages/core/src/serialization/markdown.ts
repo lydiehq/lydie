@@ -8,8 +8,8 @@ export { deserializeFromMarkdown, deserializeFromMarkdown as parseMarkdownToTipT
 export type { MarkdownDeserializeOptions, MarkdownDeserializeOptions as MarkdownParseOptions }
 
 export function serializeToMarkdown(content: ContentNode): string {
-	const serializer = new MarkdownSerializer()
-	return renderWithBuilder(content, serializer)
+  const serializer = new MarkdownSerializer()
+  return renderWithBuilder(content, serializer)
 }
 
 export { parseFrontmatter } from "./frontmatter"

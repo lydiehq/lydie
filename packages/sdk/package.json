@@ -1,26 +1,26 @@
 {
-	"name": "@lydie-app/sdk",
-	"version": "0.0.1",
-	"private": false,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts",
-		"./client": "./src/client.ts",
-		"./react": "./src/react.tsx",
-		"./html": "./src/html.ts",
-		"./utils": "./src/utils.ts"
-	},
-	"publishConfig": {
-		"access": "public"
-	},
-	"scripts": {
-		"sdk:publish": "bun publish"
-	},
-	"dependencies": {
-		"@lydie/core": "workspace:*",
-		"react": "^19.2.3"
-	},
-	"devDependencies": {
-		"@types/react": "^19.2.8"
-	}
+  "name": "@lydie-app/sdk",
+  "version": "0.0.1",
+  "private": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./react": "./src/react.tsx",
+    "./html": "./src/html.ts",
+    "./utils": "./src/utils.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "sdk:publish": "bun publish"
+  },
+  "dependencies": {
+    "@lydie/core": "workspace:*",
+    "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8"
+  }
 }

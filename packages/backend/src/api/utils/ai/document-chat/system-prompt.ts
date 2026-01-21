@@ -69,15 +69,15 @@ Document-wide changes, positional edits: readCurrentDocument → replaceInDocume
 `
 
 export function buildSystemPrompt(promptStyle?: PromptStyle | null, customPrompt?: string | null): string {
-	let styleText = ""
+  let styleText = ""
 
-	if (customPrompt && customPrompt.trim()) {
-		styleText = customPrompt.trim()
-	} else {
-		styleText = getPromptStyleText(promptStyle)
-	}
+  if (customPrompt && customPrompt.trim()) {
+    styleText = customPrompt.trim()
+  } else {
+    styleText = getPromptStyleText(promptStyle)
+  }
 
-	return `${styleText}
+  return `${styleText}
 
 ${baseSystemPrompt}`
 }

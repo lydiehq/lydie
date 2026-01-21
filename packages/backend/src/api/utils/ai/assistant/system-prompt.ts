@@ -21,18 +21,18 @@ You are a helpful document assistant for a writing workspace. Help users find, c
 `
 
 export function buildAssistantSystemPrompt(
-	promptStyle?: PromptStyle | null,
-	customPrompt?: string | null,
+  promptStyle?: PromptStyle | null,
+  customPrompt?: string | null,
 ): string {
-	let styleText = ""
+  let styleText = ""
 
-	if (customPrompt && customPrompt.trim()) {
-		styleText = customPrompt.trim()
-	} else {
-		styleText = getPromptStyleText(promptStyle)
-	}
+  if (customPrompt && customPrompt.trim()) {
+    styleText = customPrompt.trim()
+  } else {
+    styleText = getPromptStyleText(promptStyle)
+  }
 
-	return `${styleText}
+  return `${styleText}
 
 ${assistantBasePrompt}`
 }

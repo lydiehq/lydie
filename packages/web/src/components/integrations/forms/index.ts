@@ -12,6 +12,6 @@ export type { WordPressConnectionFormProps, WordPressConnectionConfig } from "./
 
 // Union type for all possible link configs
 export type IntegrationLinkConfig =
-	| import("./github-form").GitHubLinkConfig
-	| import("./shopify-form").ShopifyLinkConfig
-	| import("./wordpress-form").WordPressLinkConfig
+  | import("./github-form").GitHubLinkConfig
+  | import("./shopify-form").ShopifyLinkConfig
+  | import("./wordpress-form").WordPressLinkConfig

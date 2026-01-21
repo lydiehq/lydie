@@ -9,9 +9,9 @@ import postgres from "postgres"
 const pg = postgres(Resource.PostgresConnectionStringDirect.value)
 
 export const db = drizzle({
-	client: pg,
-	schema,
-	relations,
+  client: pg,
+  schema,
+  relations,
 })
 
 export * from "./schema"

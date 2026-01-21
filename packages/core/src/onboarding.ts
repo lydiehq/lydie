@@ -5,119 +5,119 @@ import { Resource } from "sst"
 const schedulerClient = new SchedulerClient({})
 
 interface UserOnboardingData {
-	userId: string
-	email: string
-	fullName: string
+  userId: string
+  email: string
+  fullName: string
 }
 
 interface ScheduledEmailEvent {
-	userId: string
-	email: string
-	fullName: string
-	emailType: "checkin" | "feedback"
+  userId: string
+  email: string
+  fullName: string
+  emailType: "checkin" | "feedback"
 }
 
 export async function scheduleOnboardingEmails(userData: UserOnboardingData) {
-	const { email, fullName } = userData
-	const firstName = fullName.split(" ")[0] || "there"
+  const { email, fullName } = userData
+  const firstName = fullName.split(" ")[0] || "there"
 
-	await sendWelcomeEmail(email, firstName)
-	await scheduleFollowupEmails(userData)
+  await sendWelcomeEmail(email, firstName)
+  await scheduleFollowupEmails(userData)
 }
 
 async function scheduleFollowupEmails(userData: UserOnboardingData) {
-	const { userId, email, fullName } = userData
+  const { userId, email, fullName } = userData
 
-	const now = new Date()
-	const day1 = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
-	const day2 = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
+  const now = new Date()
+  const day1 = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
+  const day2 = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
 
-	await createSchedule({
-		name: `onboarding-feedback-${userId}`,
-		scheduleTime: day1,
-		emailType: "feedback",
-		userId,
-		email,
-		fullName,
-	})
+  await createSchedule({
+    name: `onboarding-feedback-${userId}`,
+    scheduleTime: day1,
+    emailType: "feedback",
+    userId,
+    email,
+    fullName,
+  })
 
-	await createSchedule({
-		name: `onboarding-checkin-${userId}`,
-		scheduleTime: day2,
-		emailType: "checkin",
-		userId,
-		email,
-		fullName,
-	})
+  await createSchedule({
+    name: `onboarding-checkin-${userId}`,
+    scheduleTime: day2,
+    emailType: "checkin",
+    userId,
+    email,
+    fullName,
+  })
 }
 
 async function createSchedule({
-	name,
-	scheduleTime,
-	emailType,
-	userId,
-	email,
-	fullName,
+  name,
+  scheduleTime,
+  emailType,
+  userId,
+  email,
+  fullName,
 }: {
-	name: string
-	scheduleTime: Date
-	emailType: "checkin" | "feedback"
-	userId: string
-	email: string
-	fullName: string
+  name: string
+  scheduleTime: Date
+  emailType: "checkin" | "feedback"
+  userId: string
+  email: string
+  fullName: string
 }) {
-	const scheduleExpression = `at(${scheduleTime.toISOString().split(".")[0]})`
+  const scheduleExpression = `at(${scheduleTime.toISOString().split(".")[0]})`
 
-	const input: ScheduledEmailEvent = {
-		userId,
-		email,
-		fullName,
-		emailType,
-	}
+  const input: ScheduledEmailEvent = {
+    userId,
+    email,
+    fullName,
+    emailType,
+  }
 
-	const lambdaArn = Resource.OnboardingEmailProcessorFunctionLinkable.arn
-	const roleArn = Resource.OnboardingSchedulerRoleLinkable.arn
+  const lambdaArn = Resource.OnboardingEmailProcessorFunctionLinkable.arn
+  const roleArn = Resource.OnboardingSchedulerRoleLinkable.arn
 
-	try {
-		await schedulerClient.send(
-			new CreateScheduleCommand({
-				Name: name,
-				ScheduleExpression: scheduleExpression,
-				ScheduleExpressionTimezone: "UTC",
-				FlexibleTimeWindow: {
-					Mode: "OFF",
-				},
-				Target: {
-					Arn: lambdaArn,
-					RoleArn: roleArn,
-					Input: JSON.stringify(input),
-				},
-				ActionAfterCompletion: "DELETE",
-			}),
-		)
+  try {
+    await schedulerClient.send(
+      new CreateScheduleCommand({
+        Name: name,
+        ScheduleExpression: scheduleExpression,
+        ScheduleExpressionTimezone: "UTC",
+        FlexibleTimeWindow: {
+          Mode: "OFF",
+        },
+        Target: {
+          Arn: lambdaArn,
+          RoleArn: roleArn,
+          Input: JSON.stringify(input),
+        },
+        ActionAfterCompletion: "DELETE",
+      }),
+    )
 
-		console.log(`Scheduled ${emailType} email for ${email} at ${scheduleTime.toISOString()}`)
-	} catch (error) {
-		console.error(`Failed to schedule ${emailType} email:`, error)
-		// Don't throw - we don't want to fail user registration if scheduling fails
-	}
+    console.log(`Scheduled ${emailType} email for ${email} at ${scheduleTime.toISOString()}`)
+  } catch (error) {
+    console.error(`Failed to schedule ${emailType} email:`, error)
+    // Don't throw - we don't want to fail user registration if scheduling fails
+  }
 }
 
 export async function processScheduledEmail(event: ScheduledEmailEvent) {
-	const { email, fullName, emailType } = event
+  const { email, fullName, emailType } = event
 
-	const firstName = fullName.split(" ")[0] || "there"
+  const firstName = fullName.split(" ")[0] || "there"
 
-	if (emailType === "checkin") {
-		await sendCheckInEmail(email, firstName)
-	} else if (emailType === "feedback") {
-		await sendFeedbackEmail(email, firstName)
-	}
+  if (emailType === "checkin") {
+    await sendCheckInEmail(email, firstName)
+  } else if (emailType === "feedback") {
+    await sendFeedbackEmail(email, firstName)
+  }
 }
 
 async function sendCheckInEmail(email: string, firstName: string) {
-	const subject = "How's Lydie working for you?"
-	const html = `
+  const subject = "How's Lydie working for you?"
+  const html = `
     <p>Hi ${firstName},</p>
     
     <p>It's been a few days since you joined Lydie, and I wanted to check in to see how things are going.</p>
@@ -138,16 +138,16 @@ async function sendCheckInEmail(email: string, firstName: string) {
     <p>Best,<br>Lars<br><a href="https://lydie.co">lydie.co</a></p>
   `
 
-	await sendEmail({
-		to: email,
-		subject,
-		html,
-	})
+  await sendEmail({
+    to: email,
+    subject,
+    html,
+  })
 }
 
 async function sendWelcomeEmail(email: string, firstName: string) {
-	const subject = "Welcome to Lydie!"
-	const html = `
+  const subject = "Welcome to Lydie!"
+  const html = `
     <p>Hi ${firstName},</p>
     <p>Welcome to Lydie! I'm excited to have you on board.</p>
     <p>Lydie is still an early project, but I'm working hard to make it better every day.</p>
@@ -155,16 +155,16 @@ async function sendWelcomeEmail(email: string, firstName: string) {
     <p>Best,<br>Lars</p>
   `
 
-	await sendEmail({
-		to: email,
-		subject,
-		html,
-	})
+  await sendEmail({
+    to: email,
+    subject,
+    html,
+  })
 }
 
 async function sendFeedbackEmail(email: string, firstName: string) {
-	const subject = "Quick favor? I'd love your feedback on Lydie"
-	const html = `
+  const subject = "Quick favor? I'd love your feedback on Lydie"
+  const html = `
     <p>Hi ${firstName},</p>
     
     <p>You've been using Lydie for about a week now, and I'm hoping you can help me out.</p>
@@ -180,9 +180,9 @@ async function sendFeedbackEmail(email: string, firstName: string) {
     <p>Thanks,<br>Lars<br><a href="https://lydie.co">lydie.co</a></p>
   `
 
-	await sendEmail({
-		to: email,
-		subject,
-		html,
-	})
+  await sendEmail({
+    to: email,
+    subject,
+    html,
+  })
 }

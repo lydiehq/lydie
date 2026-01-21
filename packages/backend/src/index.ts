@@ -5,8 +5,8 @@ import { hocuspocus } from "./hocuspocus-server"
 const port = 3001
 
 const server = serve({
-	fetch: app.fetch,
-	port,
+  fetch: app.fetch,
+  port,
 })
 
 injectWebSocket(server)

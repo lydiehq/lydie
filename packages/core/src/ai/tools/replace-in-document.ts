@@ -2,11 +2,11 @@ import { tool } from "ai"
 import { z } from "zod"
 
 export const replaceInDocument = () =>
-	tool({
-		onInputDelta: (delta) => {
-			console.log("Input delta:", delta)
-		},
-		description: `Replace content in the current document. Use this for ALL document modifications.
+  tool({
+    onInputDelta: (delta) => {
+      console.log("Input delta:", delta)
+    },
+    description: `Replace content in the current document. Use this for ALL document modifications.
 
 **CRITICAL: Changes require user approval. When you use this tool, the changes are NOT immediately applied to the document. They are presented to the user for review, and the user must manually accept them before they appear in the document. Never claim the content has been "added" or "placed" in the document—it's only prepared for review.**
 
@@ -38,31 +38,31 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
 - Empty document (wordCount = 0): search "" OR use overwrite: true
 - Delete content: replace ""
 - Document is minified HTML (no spaces between tags)`,
-		inputSchema: z.object({
-			search: z
-				.string()
-				.describe(
-					"Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max—just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string for empty document. Ignored when overwrite is true.",
-				)
-				.optional(),
-			replace: z
-				.string()
-				.describe(
-					'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>',
-				),
-			overwrite: z
-				.boolean()
-				.describe(
-					"If true, replace the entire document content with the replace text. The search parameter is ignored. Use for empty documents or when rewriting entire document. Decide autonomously based on task.",
-				)
-				.optional()
-				.default(false),
-		}),
-		execute: async function ({ search, replace, overwrite }) {
-			return {
-				search: search ?? "",
-				replace,
-				overwrite: overwrite ?? false,
-			}
-		},
-	})
+    inputSchema: z.object({
+      search: z
+        .string()
+        .describe(
+          "Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max—just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string for empty document. Ignored when overwrite is true.",
+        )
+        .optional(),
+      replace: z
+        .string()
+        .describe(
+          'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>',
+        ),
+      overwrite: z
+        .boolean()
+        .describe(
+          "If true, replace the entire document content with the replace text. The search parameter is ignored. Use for empty documents or when rewriting entire document. Decide autonomously based on task.",
+        )
+        .optional()
+        .default(false),
+    }),
+    execute: async function ({ search, replace, overwrite }) {
+      return {
+        search: search ?? "",
+        replace,
+        overwrite: overwrite ?? false,
+      }
+    },
+  })

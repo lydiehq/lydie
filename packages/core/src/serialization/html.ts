@@ -7,6 +7,6 @@ export { deserializeFromHTML }
 export type { HTMLDeserializeOptions }
 
 export function serializeToHTML(content: ContentNode, options?: { linkPrefix?: string }): string {
-	const serializer = new HTMLSerializer(options)
-	return renderWithBuilder(content, serializer)
+  const serializer = new HTMLSerializer(options)
+  return renderWithBuilder(content, serializer)
 }

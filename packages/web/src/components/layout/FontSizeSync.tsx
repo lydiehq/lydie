@@ -8,17 +8,17 @@ import { rootFontSizeAtom, getFontSizePixels } from "@/stores/font-size"
  * If the font size is "default", we remove the explicit font-size to use the browser default.
  */
 export function FontSizeSync() {
-	const fontSizeOption = useAtomValue(rootFontSizeAtom)
+  const fontSizeOption = useAtomValue(rootFontSizeAtom)
 
-	useEffect(() => {
-		if (fontSizeOption === "default") {
-			// Remove explicit font-size to use browser default
-			document.documentElement.style.removeProperty("font-size")
-		} else {
-			const fontSizePixels = getFontSizePixels(fontSizeOption)
-			document.documentElement.style.fontSize = `${fontSizePixels}px`
-		}
-	}, [fontSizeOption])
+  useEffect(() => {
+    if (fontSizeOption === "default") {
+      // Remove explicit font-size to use browser default
+      document.documentElement.style.removeProperty("font-size")
+    } else {
+      const fontSizePixels = getFontSizePixels(fontSizeOption)
+      document.documentElement.style.fontSize = `${fontSizePixels}px`
+    }
+  }, [fontSizeOption])
 
-	return null
+  return null
 }

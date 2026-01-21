@@ -72,18 +72,18 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import { Link } from "@tanstack/react-router"
 
 export const Route = createRootRoute({
-	component: () => (
-		<>
-			<header>
-				<nav>
-					<Link to="/">Home</Link>
-					<Link to="/about">About</Link>
-				</nav>
-			</header>
-			<Outlet />
-			<TanStackRouterDevtools />
-		</>
-	),
+  component: () => (
+    <>
+      <header>
+        <nav>
+          <Link to="/">Home</Link>
+          <Link to="/about">About</Link>
+        </nav>
+      </header>
+      <Outlet />
+      <TanStackRouterDevtools />
+    </>
+  ),
 })
 ```
 
@@ -99,26 +99,26 @@ For example:
 
 ```tsx
 const peopleRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/people",
-	loader: async () => {
-		const response = await fetch("https://swapi.dev/api/people")
-		return response.json() as Promise<{
-			results: {
-				name: string
-			}[]
-		}>
-	},
-	component: () => {
-		const data = peopleRoute.useLoaderData()
-		return (
-			<ul>
-				{data.results.map((person) => (
-					<li key={person.name}>{person.name}</li>
-				))}
-			</ul>
-		)
-	},
+  getParentRoute: () => rootRoute,
+  path: "/people",
+  loader: async () => {
+    const response = await fetch("https://swapi.dev/api/people")
+    return response.json() as Promise<{
+      results: {
+        name: string
+      }[]
+    }>
+  },
+  component: () => {
+    const data = peopleRoute.useLoaderData()
+    return (
+      <ul>
+        {data.results.map((person) => (
+          <li key={person.name}>{person.name}</li>
+        ))}
+      </ul>
+    )
+  },
 })
 ```
 
@@ -146,13 +146,13 @@ const queryClient = new QueryClient()
 // ...
 
 if (!rootElement.innerHTML) {
-	const root = ReactDOM.createRoot(rootElement)
+  const root = ReactDOM.createRoot(rootElement)
 
-	root.render(
-		<QueryClientProvider client={queryClient}>
-			<RouterProvider router={router} />
-		</QueryClientProvider>,
-	)
+  root.render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  )
 }
 ```
 
@@ -162,13 +162,13 @@ You can also add TanStack Query Devtools to the root route (optional).
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
 const rootRoute = createRootRoute({
-	component: () => (
-		<>
-			<Outlet />
-			<ReactQueryDevtools buttonPosition="top-right" />
-			<TanStackRouterDevtools />
-		</>
-	),
+  component: () => (
+    <>
+      <Outlet />
+      <ReactQueryDevtools buttonPosition="top-right" />
+      <TanStackRouterDevtools />
+    </>
+  ),
 })
 ```
 
@@ -180,24 +180,24 @@ import { useQuery } from "@tanstack/react-query"
 import "./App.css"
 
 function App() {
-	const { data } = useQuery({
-		queryKey: ["people"],
-		queryFn: () =>
-			fetch("https://swapi.dev/api/people")
-				.then((res) => res.json())
-				.then((data) => data.results as { name: string }[]),
-		initialData: [],
-	})
+  const { data } = useQuery({
+    queryKey: ["people"],
+    queryFn: () =>
+      fetch("https://swapi.dev/api/people")
+        .then((res) => res.json())
+        .then((data) => data.results as { name: string }[]),
+    initialData: [],
+  })
 
-	return (
-		<div>
-			<ul>
-				{data.map((person) => (
-					<li key={person.name}>{person.name}</li>
-				))}
-			</ul>
-		</div>
-	)
+  return (
+    <div>
+      <ul>
+        {data.map((person) => (
+          <li key={person.name}>{person.name}</li>
+        ))}
+      </ul>
+    </div>
+  )
 }
 
 export default App
@@ -225,12 +225,12 @@ import "./App.css"
 const countStore = new Store(0)
 
 function App() {
-	const count = useStore(countStore)
-	return (
-		<div>
-			<button onClick={() => countStore.setState((n) => n + 1)}>Increment - {count}</button>
-		</div>
-	)
+  const count = useStore(countStore)
+  return (
+    <div>
+      <button onClick={() => countStore.setState((n) => n + 1)}>Increment - {count}</button>
+    </div>
+  )
 }
 
 export default App
@@ -248,21 +248,21 @@ import "./App.css"
 const countStore = new Store(0)
 
 const doubledStore = new Derived({
-	fn: () => countStore.state * 2,
-	deps: [countStore],
+  fn: () => countStore.state * 2,
+  deps: [countStore],
 })
 doubledStore.mount()
 
 function App() {
-	const count = useStore(countStore)
-	const doubledCount = useStore(doubledStore)
+  const count = useStore(countStore)
+  const doubledCount = useStore(doubledStore)
 
-	return (
-		<div>
-			<button onClick={() => countStore.setState((n) => n + 1)}>Increment - {count}</button>
-			<div>Doubled - {doubledCount}</div>
-		</div>
-	)
+  return (
+    <div>
+      <button onClick={() => countStore.setState((n) => n + 1)}>Increment - {count}</button>
+      <div>Doubled - {doubledCount}</div>
+    </div>
+  )
 }
 
 export default App

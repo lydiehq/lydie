@@ -4,11 +4,11 @@ export type FontSizeOption = "xs" | "s" | "default" | "l" | "xl"
 
 // Font size mapping from labels to pixel values
 export const FONT_SIZE_MAP: Record<FontSizeOption, number> = {
-	xs: 12,
-	s: 14,
-	default: 16,
-	l: 18,
-	xl: 20,
+  xs: 12,
+  s: 14,
+  default: 16,
+  l: 18,
+  xl: 20,
 }
 
 // Default font size is "default" (16px - browser default)
@@ -19,5 +19,5 @@ export const rootFontSizeAtom = atomWithStorage<FontSizeOption>("lydie-root-font
 
 // Helper function to get pixel value from font size option
 export function getFontSizePixels(size: FontSizeOption): number {
-	return FONT_SIZE_MAP[size]
+  return FONT_SIZE_MAP[size]
 }

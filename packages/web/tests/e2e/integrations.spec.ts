@@ -7,19 +7,19 @@ const defaultIntegrations = ["github", "shopify", "wordpress"]
 // in the future we might create a "local" extension that we have control over
 // in order to test more in-depth.
 test.describe("integrations", () => {
-	test("metadata shows in the integrations list", async ({ page, organization }) => {
-		await page.goto(`/w/${organization.slug}/settings/integrations`)
-		await page.waitForURL(`/w/${organization.slug}/settings/integrations`)
+  test("metadata shows in the integrations list", async ({ page, organization }) => {
+    await page.goto(`/w/${organization.slug}/settings/integrations`)
+    await page.waitForURL(`/w/${organization.slug}/settings/integrations`)
 
-		await expect(page.getByRole("heading", { name: "GitHub" })).toBeVisible()
-	})
+    await expect(page.getByRole("heading", { name: "GitHub" })).toBeVisible()
+  })
 
-	test("can go to integration settings page", async ({ page, organization }) => {
-		for (const integration of defaultIntegrations) {
-			await page.goto(`/w/${organization.slug}/settings/integrations`)
-			await page.waitForURL(`/w/${organization.slug}/settings/integrations`)
-			await page.getByRole("link", { name: integration }).click()
-			await page.waitForURL(`/w/${organization.slug}/settings/integrations/${integration}`)
-		}
-	})
+  test("can go to integration settings page", async ({ page, organization }) => {
+    for (const integration of defaultIntegrations) {
+      await page.goto(`/w/${organization.slug}/settings/integrations`)
+      await page.waitForURL(`/w/${organization.slug}/settings/integrations`)
+      await page.getByRole("link", { name: integration }).click()
+      await page.waitForURL(`/w/${organization.slug}/settings/integrations/${integration}`)
+    }
+  })
 })
