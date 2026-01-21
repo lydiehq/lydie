@@ -1,48 +1,74 @@
-import { useState, useEffect } from "react"
-import { getUserStorage, setUserStorage } from "@/lib/user-storage"
-import { useAuth } from "@/context/auth.context"
+import { useCallback, useMemo } from "react"
+import { useOrganization } from "@/context/organization.context"
+import { useZero } from "@/services/zero"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { mutators } from "@lydie/zero/mutators"
+import type { OnboardingChecklistItem, OnboardingStatus } from "@lydie/core/onboarding-status"
+import { DEFAULT_ONBOARDING_STATUS } from "@lydie/core/onboarding-status"
 
-export type OnboardingChecklistItem =
-  | "documents:organize-folders"
-  | "documents:search-menu"
-  | "documents:rich-editing"
-  | "documents:open-command-menu"
-  | "documents:create-document"
-  | "documents:explore-editor"
-
-const ONBOARDING_CHECKLIST_KEY = "onboarding_checklist"
+export type { OnboardingChecklistItem }
 
 export function useOnboardingChecklist() {
-  const { session } = useAuth()
-  const userId = session?.userId
+  const { organization } = useOrganization()
+  const z = useZero()
 
-  const [checkedItems, setCheckedItemsState] = useState<Set<OnboardingChecklistItem>>(new Set())
+  // Query organization settings
+  const [settings] = useQuery(
+    queries.settings.organization({
+      organizationId: organization.id,
+    }),
+  )
 
-  // Load initial state from localStorage
-  useEffect(() => {
-    const stored = getUserStorage(userId, ONBOARDING_CHECKLIST_KEY)
-    if (stored && Array.isArray(stored)) {
-      setCheckedItemsState(new Set(stored as OnboardingChecklistItem[]))
+  // Parse onboarding status from settings
+  const onboardingStatus: OnboardingStatus = useMemo(() => {
+    if (!settings?.onboarding_status) {
+      return DEFAULT_ONBOARDING_STATUS
     }
-  }, [userId])
+    return {
+      ...DEFAULT_ONBOARDING_STATUS,
+      ...(settings.onboarding_status as unknown as OnboardingStatus),
+    }
+  }, [settings])
 
-  const setChecked = (item: OnboardingChecklistItem, checked: boolean) => {
-    setCheckedItemsState((prev) => {
-      const next = new Set(prev)
+  const checkedItems = useMemo(() => {
+    return new Set(onboardingStatus.checkedItems || [])
+  }, [onboardingStatus])
+
+  const setChecked = useCallback(
+    async (item: OnboardingChecklistItem, checked: boolean) => {
+      const currentItems = onboardingStatus.checkedItems || []
+      const itemSet = new Set(currentItems)
+
       if (checked) {
-        next.add(item)
+        // Only add if not already present to avoid unnecessary updates
+        if (itemSet.has(item)) return
+        itemSet.add(item)
       } else {
-        next.delete(item)
+        itemSet.delete(item)
       }
-      // Persist to localStorage
-      setUserStorage(userId, ONBOARDING_CHECKLIST_KEY, Array.from(next))
-      return next
-    })
-  }
 
-  const isChecked = (item: OnboardingChecklistItem) => {
-    return checkedItems.has(item)
-  }
+      const updatedStatus: OnboardingStatus = {
+        ...onboardingStatus,
+        checkedItems: Array.from(itemSet),
+      }
+
+      z.mutate(
+        mutators.organizationSettings.update({
+          organizationId: organization.id,
+          onboardingStatus: updatedStatus as any,
+        }),
+      )
+    },
+    [z, organization.id, onboardingStatus],
+  )
+
+  const isChecked = useCallback(
+    (item: OnboardingChecklistItem) => {
+      return checkedItems.has(item)
+    },
+    [checkedItems],
+  )
 
   return {
     isChecked,

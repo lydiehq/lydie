@@ -13,7 +13,6 @@ import { useZero } from "@/services/zero"
 import { useCallback } from "react"
 import clsx from "clsx"
 import { queries } from "@lydie/zero/queries"
-import { ONBOARDING_TASKS } from "@/constants/onboarding"
 import { useOrganization } from "@/context/organization.context"
 import { SidebarIcon } from "./SidebarIcon"
 import { useSetAtom } from "jotai"
@@ -36,6 +35,8 @@ import { Eyebrow } from "../generic/Eyebrow"
 import { useMemo } from "react"
 import { useAuth } from "@/context/auth.context"
 import { isAdmin } from "@/utils/admin"
+import { CircularProgress } from "../generic/CircularProgress"
+import type { OnboardingStatus } from "@lydie/core/onboarding-status"
 
 type Props = {
   isCollapsed: boolean
@@ -93,14 +94,33 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
 
   const [settings] = useQuery(queries.settings.organization({ organizationId: organization.id }))
 
-  const completedTasks = ((settings?.onboarding_status as any)?.completedTasks as string[]) || []
+  // Calculate onboarding progress based on checked items and completed steps
+  const onboardingProgress = useMemo(() => {
+    const onboardingStatus = settings?.onboarding_status as OnboardingStatus | null
 
-  const progress = Math.round((completedTasks.length / ONBOARDING_TASKS.length) * 100)
-  const size = 12
-  const strokeWidth = 1.5
-  const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference - (progress / 100) * circumference
+    if (!onboardingStatus) {
+      return 0
+    }
+
+    // If onboarding is completed, return 100%
+    if (onboardingStatus.isCompleted) {
+      return 100
+    }
+
+    // Define total items to track (6 checklist items + 3 steps)
+    const totalChecklistItems = 6 // All possible checklist items
+    const totalSteps = 3 // documents, assistant, integrations
+
+    // Calculate progress from checked items (weight: 70%)
+    const checkedItems = onboardingStatus.checkedItems?.length || 0
+    const checklistProgress = (checkedItems / totalChecklistItems) * 70
+
+    // Calculate progress from completed steps (weight: 30%)
+    const completedSteps = onboardingStatus.completedSteps?.length || 0
+    const stepsProgress = (completedSteps / totalSteps) * 30
+
+    return Math.round(checklistProgress + stepsProgress)
+  }, [settings])
 
   return (
     <div className="flex flex-col grow max-h-screen overflow-hidden">
@@ -152,7 +172,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
-        <div className="flex gap-x-1 max-w-[300px] px-2">
+        <div className="flex gap-x-1 px-2">
           <Button
             intent="secondary"
             size="sm"
@@ -180,9 +200,21 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             activeOptions={{ exact: true }}
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <HomeIcon className={sidebarItemIconStyles()} />
-              <span className="truncate flex-1">Home</span>
+            <div className="flex items-center w-full justify-between">
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <HomeIcon className={sidebarItemIconStyles()} />
+                <span className="truncate flex-1">Home</span>
+              </div>
+              <TooltipTrigger delay={500}>
+                <div className="flex items-center">
+                  <CircularProgress progress={onboardingProgress} size={12} strokeWidth={1.5} />
+                </div>
+                <Tooltip placement="right">
+                  {onboardingProgress === 100
+                    ? "Onboarding complete! 🎉"
+                    : `Onboarding progress: ${onboardingProgress}%`}
+                </Tooltip>
+              </TooltipTrigger>
             </div>
           </Link>
           <Link

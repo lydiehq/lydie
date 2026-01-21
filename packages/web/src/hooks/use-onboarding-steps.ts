@@ -1,65 +1,94 @@
-import { useState, useEffect } from "react"
-import { getUserStorage, setUserStorage } from "@/lib/user-storage"
-import { useAuth } from "@/context/auth.context"
+import { useCallback, useMemo } from "react"
+import { useOrganization } from "@/context/organization.context"
+import { useZero } from "@/services/zero"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { mutators } from "@lydie/zero/mutators"
+import type { OnboardingStep, OnboardingStatus } from "@lydie/core/onboarding-status"
+import { DEFAULT_ONBOARDING_STATUS, STEP_ORDER } from "@lydie/core/onboarding-status"
 
-export type OnboardingStep = "documents" | "assistant" | "integrations"
-
-const ONBOARDING_STEP_KEY = "onboarding_step"
-const ONBOARDING_COMPLETED_KEY = "onboarding_completed"
-
-const STEP_ORDER: OnboardingStep[] = ["documents", "assistant", "integrations"]
+export type { OnboardingStep }
 
 export function useOnboardingSteps() {
-  const { session } = useAuth()
-  const userId = session?.userId
+  const { organization } = useOrganization()
+  const z = useZero()
 
-  const [currentStep, setCurrentStepState] = useState<OnboardingStep>("documents")
-  const [isCompleted, setIsCompletedState] = useState(false)
+  // Query organization settings
+  const [settings] = useQuery(
+    queries.settings.organization({
+      organizationId: organization.id,
+    }),
+  )
 
-  // Load initial state from localStorage
-  useEffect(() => {
-    const storedStep = getUserStorage(userId, ONBOARDING_STEP_KEY) as OnboardingStep | null
-    const storedCompleted = getUserStorage(userId, ONBOARDING_COMPLETED_KEY) === "true"
-
-    if (storedStep && STEP_ORDER.includes(storedStep)) {
-      setCurrentStepState(storedStep)
+  // Parse onboarding status from settings
+  const onboardingStatus: OnboardingStatus = useMemo(() => {
+    if (!settings?.onboarding_status) {
+      return DEFAULT_ONBOARDING_STATUS
     }
-
-    if (storedCompleted) {
-      setIsCompletedState(true)
+    return {
+      ...DEFAULT_ONBOARDING_STATUS,
+      ...(settings.onboarding_status as OnboardingStatus),
     }
-  }, [userId])
+  }, [settings])
 
-  const setCurrentStep = (step: OnboardingStep) => {
-    setCurrentStepState(step)
-    setUserStorage(userId, ONBOARDING_STEP_KEY, step)
-  }
+  const currentStep = onboardingStatus.currentStep
+  const isCompleted = onboardingStatus.isCompleted
 
-  const nextStep = () => {
+  const setCurrentStep = useCallback(
+    async (step: OnboardingStep) => {
+      const updatedStatus: OnboardingStatus = {
+        ...onboardingStatus,
+        currentStep: step,
+      }
+
+      await z.mutate(
+        mutators.organizationSettings.update({
+          organizationId: organization.id,
+          onboardingStatus: updatedStatus as any,
+        }),
+      )
+    },
+    [z, organization.id, onboardingStatus],
+  )
+
+  const nextStep = useCallback(async () => {
     const currentIndex = STEP_ORDER.indexOf(currentStep)
     if (currentIndex < STEP_ORDER.length - 1) {
       const next = STEP_ORDER[currentIndex + 1]
-      setCurrentStep(next)
+      await setCurrentStep(next)
     }
-  }
+  }, [currentStep, setCurrentStep])
 
-  const previousStep = () => {
+  const previousStep = useCallback(async () => {
     const currentIndex = STEP_ORDER.indexOf(currentStep)
     if (currentIndex > 0) {
       const previous = STEP_ORDER[currentIndex - 1]
-      setCurrentStep(previous)
+      await setCurrentStep(previous)
     }
-  }
+  }, [currentStep, setCurrentStep])
 
-  const completeOnboarding = () => {
-    setIsCompletedState(true)
-    setUserStorage(userId, ONBOARDING_COMPLETED_KEY, "true")
-  }
+  const completeOnboarding = useCallback(async () => {
+    const updatedStatus: OnboardingStatus = {
+      ...onboardingStatus,
+      isCompleted: true,
+      completedSteps: [...STEP_ORDER],
+    }
 
-  const getStepIndex = (step: OnboardingStep) => STEP_ORDER.indexOf(step)
-  const getCurrentStepIndex = () => getStepIndex(currentStep)
-  const getTotalSteps = () => STEP_ORDER.length
-  const getProgress = () => ((getCurrentStepIndex() + 1) / getTotalSteps()) * 100
+    await z.mutate(
+      mutators.organizationSettings.update({
+        organizationId: organization.id,
+        onboardingStatus: updatedStatus as any,
+      }),
+    )
+  }, [z, organization.id, onboardingStatus])
+
+  const getStepIndex = useCallback((step: OnboardingStep) => STEP_ORDER.indexOf(step), [])
+  const getCurrentStepIndex = useCallback(() => getStepIndex(currentStep), [currentStep, getStepIndex])
+  const getTotalSteps = useCallback(() => STEP_ORDER.length, [])
+  const getProgress = useCallback(
+    () => ((getCurrentStepIndex() + 1) / getTotalSteps()) * 100,
+    [getCurrentStepIndex, getTotalSteps],
+  )
 
   const isFirstStep = getCurrentStepIndex() === 0
   const isLastStep = getCurrentStepIndex() === STEP_ORDER.length - 1

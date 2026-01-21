@@ -28,7 +28,7 @@ export const Route = createFileRoute("/__auth/")({
     }
 
     // No organizations found - redirect to onboarding to create one
-    throw redirect({ to: "/onboarding" })
+    throw redirect({ to: "/new" })
   },
 })
 

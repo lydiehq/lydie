@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react"
-import { useCallback, useEffect, useState, useMemo } from "react"
+import { useCallback, useState, useMemo } from "react"
 import { EditorContent } from "@tiptap/react"
 import { Form, Button as RACButton, Button } from "react-aria-components"
 import { CircleArrowUpIcon, SquareIcon, AsteriskIcon } from "@/icons"
@@ -22,7 +22,7 @@ export function FloatingAssistant() {
       {!isOpen && (
         <motion.div
           layoutId="floating-assistant"
-          className="fixed right-4 bottom-4 z-50"
+          className="fixed right-4 bottom-4 z-30"
           initial={false}
           transition={{ type: "spring", stiffness: 450, damping: 35 }}
         >
@@ -40,7 +40,7 @@ export function FloatingAssistant() {
             layoutId="floating-assistant"
             initial={false}
             transition={{ type: "spring", stiffness: 450, damping: 35 }}
-            className="fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/8 shadow-lg flex flex-col overflow-hidden z-50"
+            className="fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/8 shadow-lg flex flex-col overflow-hidden z-30"
           >
             <div className="flex items-center justify-between px-4 py-3">
               <h2 className="text-sm font-medium text-gray-900">AI Assistant</h2>
@@ -75,7 +75,7 @@ function FloatingAssistantChatContent({
 }) {
   const { messages, sendMessage, stop, status, alert, setAlert } = useAssistant()
   const { organization } = useOrganization()
-  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(initialPrompt)
+  const [hasUsedInitialPrompt, setHasUsedInitialPrompt] = useState(false)
 
   const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
 
@@ -97,21 +97,9 @@ function FloatingAssistantChatContent({
       }
     },
     placeholder: "Ask anything. Use @ to refer to documents",
+    autoFocus: true,
+    initialContent: initialPrompt && !hasUsedInitialPrompt ? initialPrompt : "",
   })
-
-  // Set initial prompt if provided
-  useEffect(() => {
-    if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
-      chatEditor.setContent(initialPrompt)
-    }
-  }, [initialPrompt, chatEditor])
-
-  // Clear prompt after it's been used
-  useEffect(() => {
-    if (currentInitialPrompt && initialPrompt !== currentInitialPrompt) {
-      setCurrentInitialPrompt(initialPrompt)
-    }
-  }, [initialPrompt, currentInitialPrompt])
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
@@ -129,12 +117,12 @@ function FloatingAssistantChatContent({
       chatEditor.clearContent()
 
       // Clear the initial prompt after first submission
-      if (currentInitialPrompt) {
-        setCurrentInitialPrompt(undefined)
+      if (initialPrompt && !hasUsedInitialPrompt) {
+        setHasUsedInitialPrompt(true)
         onPromptUsed?.()
       }
     },
-    [sendMessage, chatEditor, currentInitialPrompt, onPromptUsed],
+    [sendMessage, chatEditor, initialPrompt, hasUsedInitialPrompt, onPromptUsed],
   )
 
   const canStop = status === "submitted" || status === "streaming"

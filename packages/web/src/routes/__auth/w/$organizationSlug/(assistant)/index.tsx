@@ -9,10 +9,7 @@ import { OnboardingStepAssistant } from "@/components/onboarding/OnboardingStepA
 import { OnboardingStepIntegrations } from "@/components/onboarding/OnboardingStepIntegrations"
 import { ChevronLeftIcon, ChevronRightIcon } from "@/icons"
 import { useOrganization } from "@/context/organization.context"
-import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
-import { useAtom } from "jotai"
-import { commandMenuStateAtom } from "@/stores/command-menu"
-import { useEffect, useState, useRef } from "react"
+import { useState } from "react"
 import { useZero } from "@/services/zero"
 import { mutators } from "@lydie/zero/mutators"
 import { Modal } from "@/components/generic/Modal"
@@ -191,37 +188,13 @@ function Onboarding() {
   } = useOnboardingSteps()
   const navigate = useNavigate()
   const { organization } = useOrganization()
-  const { setChecked } = useOnboardingChecklist()
-  const [commandMenuState] = useAtom(commandMenuStateAtom)
   const z = useZero()
   const [isQuitDialogOpen, setIsQuitDialogOpen] = useState(false)
   const [deleteDemoContent, setDeleteDemoContent] = useState(true)
-  const [direction, setDirection] = useState<"forward" | "backward">("forward")
-  const previousStepRef = useRef(currentStep)
+  const [direction] = useState<"forward" | "backward">("forward")
 
   const progress = getProgress()
 
-  // Track direction of step changes
-  useEffect(() => {
-    const stepOrder = ["documents", "assistant", "integrations"]
-    const currentIndex = stepOrder.indexOf(currentStep)
-    const previousIndex = stepOrder.indexOf(previousStepRef.current)
-
-    if (currentIndex > previousIndex) {
-      setDirection("forward")
-    } else if (currentIndex < previousIndex) {
-      setDirection("backward")
-    }
-
-    previousStepRef.current = currentStep
-  }, [currentStep])
-
-  // Detect when command menu opens in search mode and mark it as checked
-  useEffect(() => {
-    if (commandMenuState.isOpen && commandMenuState.initialPage === "search" && currentStep === "documents") {
-      setChecked("documents:search-menu", true)
-    }
-  }, [commandMenuState.isOpen, commandMenuState.initialPage, currentStep, setChecked])
 
   const handleSkip = () => {
     completeOnboarding()
@@ -263,14 +236,9 @@ function Onboarding() {
       params: { organizationSlug: organization.slug },
     })
     setIsQuitDialogOpen(false)
-    setDeleteDemoContent(true) // Reset to default for next time
+    setDeleteDemoContent(true)
   }
 
-  const stepTitles = {
-    documents: "Let's get you started!",
-    assistant: "Meet your assistant",
-    integrations: "Connect your tools",
-  }
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -295,30 +263,6 @@ function Onboarding() {
               Step {getCurrentStepIndex() + 1} of {getTotalSteps()}
             </span>
           </div>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={`title-${currentStep}`}
-              initial={{
-                opacity: 0,
-                y: -10,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                y: 10,
-              }}
-              transition={{
-                duration: 0.2,
-                ease: [0.4, 0, 0.2, 1],
-              }}
-              className="text-lg font-medium text-gray-900 block"
-            >
-              {stepTitles[currentStep]}
-            </motion.span>
-          </AnimatePresence>
           <div className="min-h-[280px] relative">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -368,13 +312,33 @@ function Onboarding() {
               </Button>
             </div>
           </div>
-          <div>
+          <div className="flex items-center gap-x-4">
             <RACButton
               onPress={() => setIsQuitDialogOpen(true)}
               className="text-xs font-medium text-gray-600 hover:text-gray-900"
             >
               Quit intro
             </RACButton>
+            {import.meta.env.DEV && (
+              <RACButton
+                onPress={async () => {
+                  try {
+                    await z.mutate(
+                      mutators.organizationSettings.resetOnboarding({
+                        organizationId: organization.id,
+                      }),
+                    )
+                    toast.success("Onboarding reset successfully")
+                  } catch (error) {
+                    console.error("Failed to reset onboarding:", error)
+                    toast.error("Failed to reset onboarding")
+                  }
+                }}
+                className="text-xs font-medium text-orange-600 hover:text-orange-900"
+              >
+                [DEV] Reset Onboarding
+              </RACButton>
+            )}
           </div>
 
           <DialogTrigger
@@ -388,7 +352,7 @@ function Onboarding() {
           >
             <Modal isDismissable size="md">
               <Dialog role="alertdialog">
-                <div className="p-6 flex flex-col gap-y-4">
+                <div className="p-4 flex flex-col gap-y-4">
                   <Heading slot="title" className="text-lg font-medium text-gray-900">
                     Quit intro
                   </Heading>
