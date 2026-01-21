@@ -102,14 +102,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
       ...(link.config as Record<string, any>),
     }
 
-    // Use Yjs as source of truth
-    if (!document.yjsState) {
-      return {
-        success: false,
-        error: "Document has no content (yjsState is missing)",
-      }
-    }
-
     const jsonContent = convertYjsToJson(document.yjsState)
 
     // Compute path segments from parent hierarchy
