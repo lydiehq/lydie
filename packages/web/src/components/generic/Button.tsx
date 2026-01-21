@@ -93,7 +93,7 @@ export function Button({ ref, ...props }: ButtonProps) {
           intent: props.intent,
           size: props.size,
           rounded: props.rounded,
-        })
+        }),
       )}
     >
       <ButtonChildren children={children as React.ReactNode} isPending={props.isPending} size={props.size} />

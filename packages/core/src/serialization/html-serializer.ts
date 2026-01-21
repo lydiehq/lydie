@@ -81,7 +81,7 @@ export class HTMLSerializer implements NodeBuilder<string> {
   }
 
   blockquote(children: string[]): string {
-    return `<blockquote>${children.join("")}</blockquote>`;
+    return `<blockquote>${children.join("")}</blockquote>`
   }
 
   horizontalRule(): string {

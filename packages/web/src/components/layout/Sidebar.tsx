@@ -1,24 +1,24 @@
-import { DocumentTree } from "./DocumentTree";
-import { useDocumentActions } from "@/hooks/use-document-actions";
-import { Button as RACButton } from "react-aria-components";
-import { Button } from "../generic/Button";
-import { OrganizationMenu } from "./OrganizationMenu";
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { Link } from "@tanstack/react-router";
-import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { cva } from "cva";
-import { UsageStats } from "./UsageStats";
-import { useConnectionState, useQuery } from "@rocicorp/zero/react";
-import { useZero } from "@/services/zero";
-import { useCallback } from "react";
-import clsx from "clsx";
-import { queries } from "@lydie/zero/queries";
-import { ONBOARDING_TASKS } from "@/constants/onboarding";
-import { useOrganization } from "@/context/organization.context";
-import { SidebarIcon } from "./SidebarIcon";
-import { useSetAtom } from "jotai";
-import { commandMenuStateAtom } from "@/stores/command-menu";
-import { FeedbackWidget } from "../feedback/FeedbackWidget";
+import { DocumentTree } from "./DocumentTree"
+import { useDocumentActions } from "@/hooks/use-document-actions"
+import { Button as RACButton } from "react-aria-components"
+import { Button } from "../generic/Button"
+import { OrganizationMenu } from "./OrganizationMenu"
+import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
+import { Link } from "@tanstack/react-router"
+import { composeTailwindRenderProps, focusRing } from "../generic/utils"
+import { cva } from "cva"
+import { UsageStats } from "./UsageStats"
+import { useConnectionState, useQuery } from "@rocicorp/zero/react"
+import { useZero } from "@/services/zero"
+import { useCallback } from "react"
+import clsx from "clsx"
+import { queries } from "@lydie/zero/queries"
+import { ONBOARDING_TASKS } from "@/constants/onboarding"
+import { useOrganization } from "@/context/organization.context"
+import { SidebarIcon } from "./SidebarIcon"
+import { useSetAtom } from "jotai"
+import { commandMenuStateAtom } from "@/stores/command-menu"
+import { FeedbackWidget } from "../feedback/FeedbackWidget"
 import {
   SearchIcon,
   HomeIcon,
@@ -91,25 +91,20 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
     })
   }
 
-  const [settings] = useQuery(
-    queries.settings.organization({ organizationId: organization.id })
-  );
+  const [settings] = useQuery(queries.settings.organization({ organizationId: organization.id }))
 
-  const completedTasks = ((settings?.onboarding_status as any)?.completedTasks as string[]) || [];
+  const completedTasks = ((settings?.onboarding_status as any)?.completedTasks as string[]) || []
 
-  const progress = Math.round((completedTasks.length / ONBOARDING_TASKS.length) * 100);
-  const size = 12;
-  const strokeWidth = 1.5;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
+  const progress = Math.round((completedTasks.length / ONBOARDING_TASKS.length) * 100)
+  const size = 12
+  const strokeWidth = 1.5
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (progress / 100) * circumference
 
   return (
     <div className="flex flex-col grow max-h-screen overflow-hidden">
-      <div
-        className={`flex justify-between items-center p-3 ${!isCollapsed ? "-ml-1" : ""
-          }`}
-      >
+      <div className={`flex justify-between items-center p-3 ${!isCollapsed ? "-ml-1" : ""}`}>
         <OrganizationMenu isCollapsed={isCollapsed} />
         {/* <TooltipTrigger delay={500}>
           <RACButton
@@ -139,8 +134,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div
-        className={`h-full justify-between items-center flex flex-col p-3 ${!isCollapsed ? "hidden" : ""
-          }`}
+        className={`h-full justify-between items-center flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`}
       >
         <div></div>
         <TooltipTrigger delay={500}>
@@ -157,10 +151,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           <Tooltip>Expand sidebar</Tooltip>
         </TooltipTrigger>
       </div>
-      <div
-        className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""
-          } grow min-h-0`}
-      >
+      <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
         <div className="flex gap-x-1 max-w-[300px] px-2">
           <Button
             intent="secondary"
@@ -278,7 +269,7 @@ function BottomBar() {
       <FeedbackWidget />
       {userIsAdmin && <ZeroConnectionStatus />}
     </div>
-  );
+  )
 }
 
 function ZeroConnectionStatus() {

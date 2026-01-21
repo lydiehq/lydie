@@ -42,7 +42,7 @@ export class PlainTextSerializer implements NodeBuilder<string> {
   }
 
   blockquote(children: string[]): string {
-    return children.join("");
+    return children.join("")
   }
 
   horizontalRule(): string {

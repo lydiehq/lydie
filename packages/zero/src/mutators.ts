@@ -109,20 +109,17 @@ export const mutators = defineMutators({
         childId: z.string(),
       }),
       async ({ tx, ctx, args: { organizationId, parentId, childId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Get the highest sort_order to append at the end
         const siblings = await tx.run(
           zql.documents
             .where("organization_id", organizationId)
             .where("parent_id", "IS", null)
-            .where("deleted_at", "IS", null)
-        );
+            .where("deleted_at", "IS", null),
+        )
 
-        const maxSortOrder = siblings.reduce(
-          (max, doc) => Math.max(max, doc.sort_order ?? 0),
-          0
-        );
+        const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0)
 
         // Parent document content with internal link
         const parentContent = {
@@ -241,7 +238,7 @@ export const mutators = defineMutators({
               ],
             },
           ],
-        };
+        }
 
         // Child document content with custom properties
         const childContent = {
@@ -349,10 +346,10 @@ export const mutators = defineMutators({
               ],
             },
           ],
-        };
+        }
 
-        const parentYjsState = convertJsonToYjs(parentContent);
-        const childYjsState = convertJsonToYjs(childContent);
+        const parentYjsState = convertJsonToYjs(parentContent)
+        const childYjsState = convertJsonToYjs(childContent)
 
         // Insert parent document
         await tx.mutate.documents.insert({
@@ -371,7 +368,7 @@ export const mutators = defineMutators({
           custom_fields: { isOnboardingGuide: "true" },
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
+        })
 
         // Insert child document
         await tx.mutate.documents.insert({
@@ -395,8 +392,8 @@ export const mutators = defineMutators({
           },
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
     update: defineMutator(
       z.object({
@@ -703,14 +700,12 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Find all onboarding documents
         const onboardingDocs = await tx.run(
-          zql.documents
-            .where("organization_id", organizationId)
-            .where("deleted_at", "IS", null)
-        );
+          zql.documents.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        )
 
         // Filter to only onboarding documents (check custom_fields)
         const onboardingDocumentIds = onboardingDocs
@@ -719,20 +714,20 @@ export const mutators = defineMutators({
               doc.custom_fields &&
               typeof doc.custom_fields === "object" &&
               "isOnboarding" in doc.custom_fields &&
-              doc.custom_fields.isOnboarding === "true"
+              doc.custom_fields.isOnboarding === "true",
           )
-          .map((doc) => doc.id);
+          .map((doc) => doc.id)
 
         // Soft-delete all onboarding documents
-        const now = Date.now();
+        const now = Date.now()
         for (const docId of onboardingDocumentIds) {
           await tx.mutate.documents.update({
             id: docId,
             deleted_at: now,
             updated_at: now,
-          });
+          })
         }
-      }
+      },
     ),
   },
   documentComponent: {
@@ -871,7 +866,7 @@ export const mutators = defineMutators({
         onboardingStatus: z.json().optional(),
       }),
       async ({ tx, ctx, args: { organizationId, onboardingStatus } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Get or create the organization's settings
         let settings = await tx.run(zql.organization_settings.where("organization_id", organizationId).one())
@@ -899,11 +894,11 @@ export const mutators = defineMutators({
         }
 
         if (onboardingStatus !== undefined) {
-          updates.onboarding_status = onboardingStatus;
+          updates.onboarding_status = onboardingStatus
         }
 
-        await tx.mutate.organization_settings.update(updates);
-      }
+        await tx.mutate.organization_settings.update(updates)
+      },
     ),
   },
   organization: {
@@ -916,12 +911,8 @@ export const mutators = defineMutators({
         metadata: z.string().optional(),
         importDemoContent: z.boolean().optional(),
       }),
-      async ({
-        tx,
-        ctx,
-        args: { id, name, slug, logo, metadata, importDemoContent },
-      }) => {
-        isAuthenticated(ctx);
+      async ({ tx, ctx, args: { id, name, slug, logo, metadata, importDemoContent } }) => {
+        isAuthenticated(ctx)
 
         // Verify slug doesn't already exist and make it unique if needed
         let finalSlug = slug
@@ -968,15 +959,15 @@ export const mutators = defineMutators({
           organization_id: id,
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
+        })
 
         // Create seeded onboarding documents
         if (importDemoContent !== false) {
-          const { demoContent } = await import("./demo-content");
+          const { demoContent } = await import("./demo-content")
 
           for (const doc of demoContent) {
-            const docId = createId();
-            const yjsState = convertJsonToYjs(doc.content);
+            const docId = createId()
+            const yjsState = convertJsonToYjs(doc.content)
 
             await tx.mutate.documents.insert({
               id: docId,
@@ -994,10 +985,10 @@ export const mutators = defineMutators({
               custom_fields: { isOnboarding: "true" },
               created_at: Date.now(),
               updated_at: Date.now(),
-            });
+            })
           }
         }
-      }
+      },
     ),
     update: defineMutator(
       z.object({
@@ -1317,7 +1308,7 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { id, type, message, metadata, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         await tx.mutate.feedback_submissions.insert({
           id,
@@ -1328,10 +1319,10 @@ export const mutators = defineMutators({
           metadata: metadata || null,
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
   },
-});
+})
 
 export type Mutators = typeof mutators

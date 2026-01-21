@@ -8,18 +8,18 @@ import {
   type ToOptions,
   HeadContent,
   redirect,
-} from "@tanstack/react-router";
-import { LoadingScreen } from "@/components/layout/LoadingScreen";
-import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
-import { FontSizeSync } from "@/components/layout/FontSizeSync";
-import { RouterProvider } from "react-aria-components";
-import { ErrorPage } from "@/components/layout/ErrorPage";
-import { ZeroProvider } from "@rocicorp/zero/react";
-import { getZeroInstance } from "@/lib/zero/instance";
-import { PostHogProvider } from "@/context/posthog.context";
-import { usePageViewTracking } from "@/hooks/use-posthog-tracking";
-import { identifyUser } from "@/lib/posthog";
-import { useEffect } from "react";
+} from "@tanstack/react-router"
+import { LoadingScreen } from "@/components/layout/LoadingScreen"
+import { ConfirmDialog } from "@/components/generic/ConfirmDialog"
+import { FontSizeSync } from "@/components/layout/FontSizeSync"
+import { RouterProvider } from "react-aria-components"
+import { ErrorPage } from "@/components/layout/ErrorPage"
+import { ZeroProvider } from "@rocicorp/zero/react"
+import { getZeroInstance } from "@/lib/zero/instance"
+import { PostHogProvider } from "@/context/posthog.context"
+import { usePageViewTracking } from "@/hooks/use-posthog-tracking"
+import { identifyUser } from "@/lib/posthog"
+import { useEffect } from "react"
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -62,11 +62,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       ],
       links: zeroCacheURL
         ? [
-          {
-            rel: "preconnect",
-            href: zeroCacheURL,
-          },
-        ]
+            {
+              rel: "preconnect",
+              href: zeroCacheURL,
+            },
+          ]
         : [],
     }
   },
@@ -85,10 +85,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ) {
       throw redirect({
         to: "/onboarding",
-      });
+      })
     }
 
-    return { auth, organizations, zero: zeroInstance };
+    return { auth, organizations, zero: zeroInstance }
   },
   component: () => {
     const router = useRouter()

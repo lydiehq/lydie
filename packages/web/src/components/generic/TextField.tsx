@@ -9,13 +9,13 @@ import { Description, FieldError, Input, Label } from "./Field"
 import { composeTailwindRenderProps, focusRing } from "./utils"
 
 export interface TextFieldProps extends Omit<AriaTextFieldProps, "name"> {
-  label?: string;
-  description?: string;
-  placeholder?: string;
-  errorMessage?: string | ((validation: ValidationResult) => string);
-  textarea?: boolean;
-  labelClassName?: string;
-  descriptionClassName?: string;
+  label?: string
+  description?: string
+  placeholder?: string
+  errorMessage?: string | ((validation: ValidationResult) => string)
+  textarea?: boolean
+  labelClassName?: string
+  descriptionClassName?: string
 }
 
 export function TextField({
@@ -46,9 +46,7 @@ export function TextField({
       ) : (
         <Input placeholder={placeholder} className={focusRing} />
       )}
-      {description && (
-        <Description className={descriptionClassName}>{description}</Description>
-      )}
+      {description && <Description className={descriptionClassName}>{description}</Description>}
       <FieldError>
         {field.state.meta.errors.length > 0 ? field.state.meta.errors.join(", ") : errorMessage}
       </FieldError>

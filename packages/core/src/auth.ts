@@ -62,8 +62,8 @@ export const authClient = betterAuth({
       ...(Resource.App.stage === "production"
         ? {}
         : {
-          sameSite: "none",
-        }),
+            sameSite: "none",
+          }),
       partitioned: true,
       secure: Resource.App.stage !== "production",
     },

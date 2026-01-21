@@ -112,15 +112,15 @@ export interface NodeBuilder<T> {
   internalLink?(content: T, documentId?: string, documentSlug?: string, documentTitle?: string): T
 
   // Block elements
-  doc(children: T[]): T;
-  paragraph(children: T[]): T;
-  heading(level: number, children: T[]): T;
-  bulletList(children: T[]): T;
-  orderedList(children: T[], start?: number): T;
-  listItem(children: T[]): T;
-  blockquote(children: T[]): T;
-  horizontalRule(): T;
-  codeBlock(children: T[], language?: string | null): T;
+  doc(children: T[]): T
+  paragraph(children: T[]): T
+  heading(level: number, children: T[]): T
+  bulletList(children: T[]): T
+  orderedList(children: T[], start?: number): T
+  listItem(children: T[]): T
+  blockquote(children: T[]): T
+  horizontalRule(): T
+  codeBlock(children: T[], language?: string | null): T
 
   // Custom blocks
   customBlock(name: string, properties: Record<string, any>): T
@@ -225,7 +225,7 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
           return builder.listItem(renderChildren(node))
 
         case "blockquote":
-          return builder.blockquote(renderChildren(node));
+          return builder.blockquote(renderChildren(node))
 
         case "horizontalRule":
           return builder.horizontalRule()

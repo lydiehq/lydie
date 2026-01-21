@@ -1,14 +1,14 @@
-import { Button } from "@/components/generic/Button";
-import { Separator } from "@/components/generic/Separator";
-import { useFloatingAssistant } from "@/context/floating-assistant.context";
-import { BotIcon } from "@/icons";
+import { Button } from "@/components/generic/Button"
+import { Separator } from "@/components/generic/Separator"
+import { useFloatingAssistant } from "@/context/floating-assistant.context"
+import { BotIcon } from "@/icons"
 
 export function OnboardingStepAssistant() {
-  const { open: openAssistant } = useFloatingAssistant();
+  const { open: openAssistant } = useFloatingAssistant()
 
   const handlePromptClick = (prompt: string) => {
-    openAssistant({ prompt });
-  };
+    openAssistant({ prompt })
+  }
 
   const promptButtons = [
     {
@@ -23,7 +23,7 @@ export function OnboardingStepAssistant() {
       title: "Delete documents",
       prompt: "Please help me delete documents",
     },
-  ];
+  ]
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -34,21 +34,16 @@ export function OnboardingStepAssistant() {
         <span className="text-lg font-medium text-gray-900">Assistant</span>
       </div>
       <p className="text-gray-700 text-sm/relaxed">
-        Use the assistant chat to help you organize and find your documents. The assistant can help you create, edit, and manage your content.
+        Use the assistant chat to help you organize and find your documents. The assistant can help you
+        create, edit, and manage your content.
       </p>
       <div className="flex items-center gap-x-1 flex-wrap">
         {promptButtons.map(({ title, prompt }) => (
-          <Button
-            key={title}
-            onPress={() => handlePromptClick(prompt)}
-            intent="secondary"
-            size="sm"
-            rounded
-          >
+          <Button key={title} onPress={() => handlePromptClick(prompt)} intent="secondary" size="sm" rounded>
             {title}
           </Button>
         ))}
       </div>
     </div>
-  );
+  )
 }

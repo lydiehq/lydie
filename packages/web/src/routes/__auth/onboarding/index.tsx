@@ -1,40 +1,38 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Form, Checkbox } from "react-aria-components";
-import { useAppForm } from "@/hooks/use-app-form";
-import { Button } from "@/components/generic/Button";
-import { Heading } from "@/components/generic/Heading";
-import { useZero } from "@/services/zero";
-import { useNavigate, useRouter } from "@tanstack/react-router";
-import { createId } from "@lydie/core/id";
-import { toast } from "sonner";
-import { slugify } from "@lydie/core/utils";
-import { authClient } from "@/utils/auth";
-import { useQueryClient } from "@tanstack/react-query";
-import { useQuery as useZeroQuery } from "@rocicorp/zero/react";
-import { queries } from "@lydie/zero/queries";
-import { revalidateSession } from "@/lib/auth/session";
-import { mutators } from "@lydie/zero/mutators";
-import { clearZeroInstance } from "@/lib/zero/instance";
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking";
-import { trackEvent } from "@/lib/posthog";
+import { createFileRoute } from "@tanstack/react-router"
+import { Form, Checkbox } from "react-aria-components"
+import { useAppForm } from "@/hooks/use-app-form"
+import { Button } from "@/components/generic/Button"
+import { Heading } from "@/components/generic/Heading"
+import { useZero } from "@/services/zero"
+import { useNavigate, useRouter } from "@tanstack/react-router"
+import { createId } from "@lydie/core/id"
+import { toast } from "sonner"
+import { slugify } from "@lydie/core/utils"
+import { authClient } from "@/utils/auth"
+import { useQueryClient } from "@tanstack/react-query"
+import { useQuery as useZeroQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { revalidateSession } from "@/lib/auth/session"
+import { mutators } from "@lydie/zero/mutators"
+import { clearZeroInstance } from "@/lib/zero/instance"
+import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
+import { trackEvent } from "@/lib/posthog"
 
 export const Route = createFileRoute("/__auth/onboarding/")({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const z = useZero();
-  const navigate = useNavigate();
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const { auth } = Route.useRouteContext();
+  const z = useZero()
+  const navigate = useNavigate()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { auth } = Route.useRouteContext()
 
   // Track onboarding started
   useTrackOnMount("onboarding_started")
 
-  const defaultName = auth?.user?.name
-    ? `${auth.user.name.split(" ")[0]}'s Workspace`
-    : "My Workspace";
+  const defaultName = auth?.user?.name ? `${auth.user.name.split(" ")[0]}'s Workspace` : "My Workspace"
 
   const form = useAppForm({
     defaultValues: {
@@ -44,8 +42,8 @@ function RouteComponent() {
     },
     onSubmit: async (values) => {
       try {
-        const id = createId();
-        const slug = values.value.slug || slugify(values.value.name);
+        const id = createId()
+        const slug = values.value.slug || slugify(values.value.name)
 
         const write = z.mutate(
           mutators.organization.create({
@@ -53,8 +51,8 @@ function RouteComponent() {
             name: values.value.name,
             slug,
             importDemoContent: values.value.importDemoContent,
-          })
-        );
+          }),
+        )
 
         // Wait for the server to exist in the database.
         await write.server
@@ -84,27 +82,24 @@ function RouteComponent() {
     },
   })
 
-
-  const [invitations] = useZeroQuery(
-    queries.invitations.byUser({ email: auth?.user?.email || "" })
-  );
+  const [invitations] = useZeroQuery(queries.invitations.byUser({ email: auth?.user?.email || "" }))
 
   const acceptInvitation = async (invitationId: string) => {
     try {
       await authClient.organization.acceptInvitation({
         invitationId,
-      });
-      await revalidateSession(queryClient);
-      await router.invalidate();
-      toast.success("Invitation accepted");
+      })
+      await revalidateSession(queryClient)
+      await router.invalidate()
+      toast.success("Invitation accepted")
       // Redirect to home or specific workspace logic will be handled by auth state change or manual redirect
       // Often accepting invitation sets active organization, but we should redirect.
       // We can fetch user orgs and redirect to the new one.
-      navigate({ to: "/" });
+      navigate({ to: "/" })
     } catch (error) {
-      toast.error("Failed to accept invitation");
+      toast.error("Failed to accept invitation")
     }
-  };
+  }
 
   return (
     <div className="min-h-screen relative grainy-gradient-container custom-inner-shadow overflow-hidden">
@@ -146,16 +141,16 @@ function RouteComponent() {
             <div className="p-8 md:p-16 size-full rounded-[8px] flex flex-col gap-8">
               <Form
                 onSubmit={(e) => {
-                  e.preventDefault();
-                  form.handleSubmit();
+                  e.preventDefault()
+                  form.handleSubmit()
                 }}
                 className="flex flex-col gap-y-8"
               >
                 <div className="gap-y-2 flex flex-col">
                   <Heading className="text-white">Create Workspace</Heading>
                   <p className="text-white/90">
-                    Use workspaces for different areas of your company, or to
-                    separate your live and test environments.
+                    Use workspaces for different areas of your company, or to separate your live and test
+                    environments.
                   </p>
                 </div>
 
@@ -172,9 +167,9 @@ function RouteComponent() {
                         descriptionClassName="text-white/70"
                         className="text-white"
                         onChange={(v) => {
-                          field.handleChange(v);
-                          const newSlug = slugify(v);
-                          form.setFieldValue("slug", newSlug);
+                          field.handleChange(v)
+                          const newSlug = slugify(v)
+                          form.setFieldValue("slug", newSlug)
                         }}
                       />
                     )}
@@ -200,9 +195,7 @@ function RouteComponent() {
                     isPending={form.state.isSubmitting}
                     className="w-full"
                   >
-                    {form.state.isSubmitting
-                      ? "Creating workspace..."
-                      : "Create Workspace"}
+                    {form.state.isSubmitting ? "Creating workspace..." : "Create Workspace"}
                   </Button>
 
                   <div className="flex items-center gap-x-2">
@@ -258,10 +251,7 @@ function RouteComponent() {
                             Invited by {invitation.inviter?.email || "Unknown"}
                           </span>
                         </div>
-                        <Button
-                          size="sm"
-                          onPress={() => acceptInvitation(invitation.id)}
-                        >
+                        <Button size="sm" onPress={() => acceptInvitation(invitation.id)}>
                           Accept
                         </Button>
                       </div>

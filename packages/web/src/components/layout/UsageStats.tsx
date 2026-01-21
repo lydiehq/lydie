@@ -1,17 +1,17 @@
-import { useOrganization } from "@/context/organization.context";
-import { useAuth } from "@/context/auth.context";
-import { useQuery } from "@rocicorp/zero/react";
-import { queries } from "@lydie/zero/queries";
-import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
-import { useMemo } from "react";
-import clsx from "clsx";
-import { Tooltip } from "../generic/Tooltip";
-import { TooltipTrigger } from "react-aria-components";
-import { Link } from "../generic/Link";
-import { CircularProgress } from "../generic/CircularProgress";
+import { useOrganization } from "@/context/organization.context"
+import { useAuth } from "@/context/auth.context"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types"
+import { useMemo } from "react"
+import clsx from "clsx"
+import { Tooltip } from "../generic/Tooltip"
+import { TooltipTrigger } from "react-aria-components"
+import { Link } from "../generic/Link"
+import { CircularProgress } from "../generic/CircularProgress"
 
 export function UsageStats() {
-  const { organization } = useOrganization();
+  const { organization } = useOrganization()
 
   const [todayUsage] = useQuery(queries.usage.today({ organizationId: organization.id }))
 
@@ -78,11 +78,7 @@ export function UsageStats() {
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center">
-              <CircularProgress
-                progress={progress}
-                size={16}
-                progressColor={progressColor}
-              />
+              <CircularProgress progress={progress} size={16} progressColor={progressColor} />
             </div>
             <span className="text-xs font-medium text-gray-900">Free daily messages</span>
           </div>

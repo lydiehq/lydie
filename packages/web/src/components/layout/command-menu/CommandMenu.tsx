@@ -1,21 +1,18 @@
-import { Command } from "cmdk";
-import { useEffect, useState, useMemo } from "react";
-import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useParams, useNavigate } from "@tanstack/react-router";
-import { useZero } from "@/services/zero";
-import { useQuery } from "@rocicorp/zero/react";
-import { useOrganization } from "@/context/organization.context";
-import { queries } from "@lydie/zero/queries";
-import { confirmDialog } from "@/stores/confirm-dialog";
-import { useAtom } from "jotai";
-import {
-  commandMenuOpenAtom,
-  commandMenuStateAtom,
-} from "@/stores/command-menu";
-import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
-import { useOnboardingSteps } from "@/hooks/use-onboarding-steps";
-import { createId } from "@lydie/core/id";
-import { mutators } from "@lydie/zero/mutators";
+import { Command } from "cmdk"
+import { useEffect, useState, useMemo } from "react"
+import { useDocumentActions } from "@/hooks/use-document-actions"
+import { useParams, useNavigate } from "@tanstack/react-router"
+import { useZero } from "@/services/zero"
+import { useQuery } from "@rocicorp/zero/react"
+import { useOrganization } from "@/context/organization.context"
+import { queries } from "@lydie/zero/queries"
+import { confirmDialog } from "@/stores/confirm-dialog"
+import { useAtom } from "jotai"
+import { commandMenuOpenAtom, commandMenuStateAtom } from "@/stores/command-menu"
+import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
+import { useOnboardingSteps } from "@/hooks/use-onboarding-steps"
+import { createId } from "@lydie/core/id"
+import { mutators } from "@lydie/zero/mutators"
 import {
   SearchIcon,
   AddIcon,
@@ -94,10 +91,10 @@ export function CommandMenu() {
     }),
   )
 
-  const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
-  const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom);
-  const { setChecked } = useOnboardingChecklist();
-  const { currentStep } = useOnboardingSteps();
+  const [isOpen, setOpen] = useAtom(commandMenuOpenAtom)
+  const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom)
+  const { setChecked } = useOnboardingChecklist()
+  const { currentStep } = useOnboardingSteps()
 
   // Initialize pages from the atom's initialPage when menu opens
   useEffect(() => {
@@ -113,16 +110,16 @@ export function CommandMenu() {
   // Mark command menu as checked when opened during onboarding
   useEffect(() => {
     if (isOpen && currentStep === "documents") {
-      setChecked("documents:open-command-menu", true);
+      setChecked("documents:open-command-menu", true)
     }
-  }, [isOpen, currentStep, setChecked]);
+  }, [isOpen, currentStep, setChecked])
 
   // Mark search menu as checked when search page is active during onboarding
   useEffect(() => {
     if (isOpen && currentPage === "search" && currentStep === "documents") {
-      setChecked("documents:search-menu", true);
+      setChecked("documents:search-menu", true)
     }
-  }, [isOpen, currentPage, currentStep, setChecked]);
+  }, [isOpen, currentPage, currentStep, setChecked])
 
   // Reset pages and search when menu closes
   useEffect(() => {
@@ -159,7 +156,7 @@ export function CommandMenu() {
     `/w/$organizationSlug/settings/integrations/${integrationType}`
 
   const menuSections = useMemo<MenuSection[]>(() => {
-    const favoritesItems: MenuItem[] = [];
+    const favoritesItems: MenuItem[] = []
 
     // Add special onboarding guide item during documents onboarding step
     if (currentStep === "documents") {
@@ -170,34 +167,34 @@ export function CommandMenu() {
         action: async () => {
           try {
             // Generate IDs on the client side
-            const parentId = createId();
-            const childId = createId();
-            
+            const parentId = createId()
+            const childId = createId()
+
             await z.mutate(
               mutators.document.createOnboardingGuide({
                 organizationId: organization.id,
                 parentId,
                 childId,
-              })
-            );
-            
+              }),
+            )
+
             // Mark checklist items as complete
-            setChecked("documents:create-document", true);
-            setChecked("documents:explore-editor", true);
-            
+            setChecked("documents:create-document", true)
+            setChecked("documents:explore-editor", true)
+
             // Navigate to the parent document
             navigate({
               from: "/w/$organizationSlug",
               to: "/w/$organizationSlug/$id",
               params: { id: parentId, organizationSlug: organization.slug || "" },
-            });
+            })
           } catch (error) {
-            console.error("Failed to create onboarding guide:", error);
+            console.error("Failed to create onboarding guide:", error)
           }
         },
         customClassName:
           "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-3 text-sm outline-none data-[selected=true]:bg-blue-100 data-[selected=true]:text-blue-950 text-blue-700 bg-blue-50 border border-blue-200 transition-colors duration-150 font-medium",
-      });
+      })
     }
 
     favoritesItems.push({
@@ -205,12 +202,12 @@ export function CommandMenu() {
       label: "Create new document…",
       icon: PlusIcon,
       action: () => {
-        createDocument();
+        createDocument()
         if (currentStep === "documents") {
-          setChecked("documents:create-document", true);
+          setChecked("documents:create-document", true)
         }
       },
-    });
+    })
 
     if (currentDocument) {
       favoritesItems.push({
@@ -386,7 +383,7 @@ export function CommandMenu() {
     z,
     currentStep,
     setChecked,
-  ]);
+  ])
 
   return (
     <ModalOverlay isOpen={isOpen} onOpenChange={setOpen} isDismissable className={overlayStyles}>

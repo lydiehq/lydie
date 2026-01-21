@@ -1,20 +1,20 @@
-import { EditorContent } from "@tiptap/react";
-import { Button, Form } from "react-aria-components";
-import { motion } from "motion/react";
-import { ChevronUpIcon, SquareIcon } from "@/icons";
-import { useChatEditor } from "@/lib/editor/chat-editor";
-import { useCallback, useRef, useMemo, useEffect } from "react";
-import { useOrganization } from "@/context/organization.context";
-import { useQuery } from "@rocicorp/zero/react";
-import { queries } from "@lydie/zero/queries";
-import tippy from "tippy.js";
+import { EditorContent } from "@tiptap/react"
+import { Button, Form } from "react-aria-components"
+import { motion } from "motion/react"
+import { ChevronUpIcon, SquareIcon } from "@/icons"
+import { useChatEditor } from "@/lib/editor/chat-editor"
+import { useCallback, useRef, useMemo, useEffect } from "react"
+import { useOrganization } from "@/context/organization.context"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import tippy from "tippy.js"
 
 export interface AssistantInputProps {
-  onSubmit: (text: string) => void;
-  onStop?: () => void;
-  placeholder?: string;
-  canStop?: boolean;
-  initialPrompt?: string;
+  onSubmit: (text: string) => void
+  onStop?: () => void
+  placeholder?: string
+  canStop?: boolean
+  initialPrompt?: string
 }
 
 class MentionList {
@@ -190,9 +190,9 @@ export function AssistantInput({
   // Set initial prompt if provided (only once when component mounts or prompt changes)
   useEffect(() => {
     if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
-      chatEditor.setContent(initialPrompt);
+      chatEditor.setContent(initialPrompt)
     }
-  }, [initialPrompt, chatEditor]);
+  }, [initialPrompt, chatEditor])
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {

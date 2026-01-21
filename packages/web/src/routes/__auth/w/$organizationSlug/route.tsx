@@ -1,17 +1,13 @@
-import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
-import { Sidebar } from "@/components/layout/Sidebar";
-import {
-  Panel,
-  PanelGroup,
-  type ImperativePanelHandle,
-} from "react-resizable-panels";
-import { PanelResizer } from "@/components/panels/PanelResizer";
-import { useRef, useState } from "react";
-import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
-import { setActiveOrganizationSlug } from "@/lib/active-organization";
-import { loadOrganization } from "@/lib/organization/loadOrganization";
-import { FloatingAssistantProvider } from "@/context/floating-assistant.context";
-import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
+import { createFileRoute, notFound, Outlet } from "@tanstack/react-router"
+import { Sidebar } from "@/components/layout/Sidebar"
+import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
+import { PanelResizer } from "@/components/panels/PanelResizer"
+import { useRef, useState } from "react"
+import { CommandMenu } from "@/components/layout/command-menu/CommandMenu"
+import { setActiveOrganizationSlug } from "@/lib/active-organization"
+import { loadOrganization } from "@/lib/organization/loadOrganization"
+import { FloatingAssistantProvider } from "@/context/floating-assistant.context"
+import { FloatingAssistant } from "@/components/assistant/FloatingAssistant"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
@@ -42,12 +38,12 @@ function RouteComponent() {
     <FloatingAssistantProvider>
       <RouteLayout />
     </FloatingAssistantProvider>
-  );
+  )
 }
 
 function RouteLayout() {
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
-  const [size, setSize] = useState(25);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
+  const [size, setSize] = useState(25)
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current

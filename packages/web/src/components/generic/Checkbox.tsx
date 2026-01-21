@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode } from "react"
 import {
   Checkbox as AriaCheckbox,
   CheckboxGroup as AriaCheckboxGroup,
@@ -53,7 +53,7 @@ const boxStyles = cva({
   },
 })
 
-const checkmarkStyles = "checkbox-checkmark";
+const checkmarkStyles = "checkbox-checkmark"
 
 export function Checkbox(props: CheckboxProps) {
   return (

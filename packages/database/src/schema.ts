@@ -544,8 +544,8 @@ export const assetsTable = pgTable(
     index("assets_organization_id_idx").on(table.organizationId),
     index("assets_user_id_idx").on(table.userId),
     index("assets_key_idx").on(table.key),
-  ]
-);
+  ],
+)
 
 export const feedbackSubmissionsTable = pgTable(
   "feedback_submissions",
@@ -568,5 +568,5 @@ export const feedbackSubmissionsTable = pgTable(
   (table) => [
     index("feedback_submissions_user_id_idx").on(table.userId),
     index("feedback_submissions_organization_id_idx").on(table.organizationId),
-  ]
-);
+  ],
+)
