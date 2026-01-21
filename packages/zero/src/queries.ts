@@ -29,12 +29,6 @@ export const queries = defineQueries({
             q.where("deleted_at", "IS", null).orderBy("sort_order", "asc").orderBy("created_at", "asc"),
           )
           .related("organization")
-          .related("conversations", (q) =>
-            q
-              .related("messages", (q) => q.orderBy("created_at", "asc"))
-              .orderBy("created_at", "desc")
-              .limit(8),
-          )
       },
     ),
     search: defineQuery(

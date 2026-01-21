@@ -262,25 +262,6 @@ export const documentTitleEmbeddingsTable = pgTable(
   ],
 )
 
-export const documentConversationsTable = pgTable(
-  "document_conversations",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    title: text("title"),
-    userId: text("user_id")
-      .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
-    documentId: text("document_id")
-      .notNull()
-      .references(() => documentsTable.id, { onDelete: "cascade" }),
-    ...timestamps,
-  },
-  (table) => [index("document_conversations_document_id_idx").on(table.documentId)],
-)
-
 export const assistantConversationsTable = pgTable(
   "assistant_conversations",
   {
@@ -298,24 +279,6 @@ export const assistantConversationsTable = pgTable(
     ...timestamps,
   },
   (table) => [index("assistant_conversations_organization_id_idx").on(table.organizationId)],
-)
-
-export const documentMessagesTable = pgTable(
-  "document_messages",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    conversationId: text("conversation_id")
-      .notNull()
-      .references(() => documentConversationsTable.id, { onDelete: "cascade" }),
-    parts: jsonb("parts").notNull(),
-    role: text("role").notNull(),
-    metadata: jsonb("metadata"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [index("document_messages_conversation_id_idx").on(table.conversationId)],
 )
 
 export const assistantMessagesTable = pgTable(

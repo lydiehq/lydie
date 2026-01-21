@@ -14,6 +14,7 @@ export type ChatComposerDocument = {
 export interface UseChatComposerOptions {
   documents: ChatComposerDocument[]
   onEnter?: () => void
+  onChange?: (editor: any) => void
   placeholder?: string
   autoFocus?: boolean
   initialContent?: string
@@ -30,6 +31,7 @@ export interface ChatComposerHandle {
 export function useChatComposer({
   documents,
   onEnter,
+  onChange,
   placeholder = "Ask anything. Use @ to refer to other elements",
   autoFocus = false,
   initialContent = "",
@@ -88,6 +90,7 @@ export function useChatComposer({
         class: "focus:outline-none min-h-[100px] max-h-[200px] overflow-y-auto text-sm text-gray-700",
       },
     },
+    onUpdate: onChange ? ({ editor }) => onChange(editor) : undefined,
   })
 
   const getTextContent = useCallback(() => {

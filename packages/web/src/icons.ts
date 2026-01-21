@@ -80,6 +80,8 @@ export { default as BlocksIcon } from "~icons/ion/cube"
 // Arrows & Navigation
 export { default as ArrowUpIcon } from "~icons/ion/arrow-up"
 export { default as CircleArrowUpIcon } from "~icons/ion/arrow-up-circle"
+export { default as ArrowShrinkIcon } from "~icons/ion/arrow-shrink"
+export { default as ArrowExpandIcon } from "~icons/ion/arrow-expand"
 
 // Sync & Status
 export { default as FolderSyncIcon } from "~icons/ion/sync"

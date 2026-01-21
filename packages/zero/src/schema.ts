@@ -105,27 +105,6 @@ const documentPublicationsRelations = relationships(documentPublications, ({ one
   }),
 }))
 
-const documentConversations = table("document_conversations")
-  .columns({
-    id: string(),
-    title: string().optional(),
-    user_id: string(),
-    document_id: string(),
-    ...timestamps,
-  })
-  .primaryKey("id")
-
-const documentMessages = table("document_messages")
-  .columns({
-    id: string(),
-    conversation_id: string(),
-    parts: json(),
-    role: string(),
-    metadata: json().optional(),
-    created_at: number(),
-  })
-  .primaryKey("id")
-
 const assistantConversations = table("assistant_conversations")
   .columns({
     id: string(),
@@ -268,11 +247,6 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["id"],
     destSchema: integrationLinks,
   }),
-  conversations: many({
-    sourceField: ["id"],
-    destField: ["document_id"],
-    destSchema: documentConversations,
-  }),
   publications: many({
     sourceField: ["id"],
     destField: ["document_id"],
@@ -388,32 +362,6 @@ const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
   }),
 }))
 
-const documentConversationsRelations = relationships(documentConversations, ({ one, many }) => ({
-  user: one({
-    sourceField: ["user_id"],
-    destField: ["id"],
-    destSchema: users,
-  }),
-  document: one({
-    sourceField: ["document_id"],
-    destField: ["id"],
-    destSchema: documents,
-  }),
-  messages: many({
-    sourceField: ["id"],
-    destField: ["conversation_id"],
-    destSchema: documentMessages,
-  }),
-}))
-
-const documentMessagesRelations = relationships(documentMessages, ({ one }) => ({
-  conversation: one({
-    sourceField: ["conversation_id"],
-    destField: ["id"],
-    destSchema: documentConversations,
-  }),
-}))
-
 const assistantConversationsRelations = relationships(assistantConversations, ({ one, many }) => ({
   user: one({
     sourceField: ["user_id"],
@@ -446,11 +394,6 @@ const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
     destField: ["id"],
     destSchema: organizations,
   }),
-  documentConversation: one({
-    sourceField: ["conversation_id"],
-    destField: ["id"],
-    destSchema: documentConversations,
-  }),
   assistantConversation: one({
     sourceField: ["conversation_id"],
     destField: ["id"],
@@ -459,7 +402,7 @@ const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
   message: one({
     sourceField: ["message_id"],
     destField: ["id"],
-    destSchema: documentMessages,
+    destSchema: assistantMessages,
   }),
 }))
 
@@ -580,8 +523,6 @@ export const schema = createSchema({
     members,
     invitations,
     documentComponents,
-    documentConversations,
-    documentMessages,
     assistantConversations,
     assistantMessages,
     apiKeys,
@@ -601,8 +542,6 @@ export const schema = createSchema({
     invitationsRelations,
     usersRelations,
     documentComponentsRelations,
-    documentConversationsRelations,
-    documentMessagesRelations,
     assistantConversationsRelations,
     assistantMessagesRelations,
     apiKeysRelations,
