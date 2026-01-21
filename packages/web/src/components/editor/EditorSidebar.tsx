@@ -1,15 +1,13 @@
 import { DocumentChat, type DocumentChatRef } from "./DocumentChat"
 import { queries } from "@lydie/zero/queries"
-import { Button, MenuTrigger } from "react-aria-components"
-import { ClockFadingIcon, AlertCircleIcon, CreateIcon } from "@/icons"
+import { Button } from "react-aria-components"
+import { AlertCircleIcon, CreateIcon } from "@/icons"
 import type { ComponentType, SVGProps } from "react"
 import { SidebarIcon } from "../layout/SidebarIcon"
 import { type DocumentEditorHookResult } from "@/lib/editor/document-editor"
-import { Menu, MenuItem } from "../generic/Menu"
-import { useState, useMemo, forwardRef } from "react"
+import { useState, forwardRef } from "react"
 import clsx from "clsx"
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
-import { formatDistanceToNow } from "date-fns"
 import { createId } from "@lydie/core/id"
 import type { QueryResultType } from "@rocicorp/zero"
 import { isAdmin } from "@/utils/admin"
@@ -26,25 +24,7 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
   ({ contentEditor, doc, isCollapsed, onToggle }, ref) => {
     const { user } = useAuth()
 
-    const [currentConversationId, setCurrentConversationId] = useState<string>(
-      doc.conversations?.[0]?.id ?? createId(),
-    )
-
-    const currentConversation = useMemo(() => {
-      const existingConversation = doc.conversations?.find((c) => c.id === currentConversationId)
-      if (existingConversation) {
-        return existingConversation
-      }
-      return {
-        id: currentConversationId,
-        title: null,
-        user_id: "",
-        document_id: doc.id,
-        created_at: Date.now(),
-        updated_at: Date.now(),
-        messages: [],
-      }
-    }, [doc.conversations, currentConversationId, doc.id])
+    const [currentConversationId, setCurrentConversationId] = useState<string>(createId())
 
     const createNewConversation = () => {
       setCurrentConversationId(createId())
@@ -61,9 +41,9 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
           {!isCollapsed && (
             <span
               className="text-sm font-medium text-gray-700 truncate"
-              title={currentConversation?.title || "New Conversation"}
+              title="New Conversation"
             >
-              {currentConversation?.title || "New Conversation"}
+              New Conversation
             </span>
           )}
           <div className={clsx("flex", isCollapsed ? "flex-col gap-y-1" : "flex-row gap-x-0.5")}>
@@ -83,13 +63,6 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
               onPress={createNewConversation}
               isCollapsed={isCollapsed}
             />
-            <ConversationHistoryDropdown
-              conversations={doc.conversations}
-              onSelect={(id) => {
-                setCurrentConversationId(id)
-              }}
-              isCollapsed={isCollapsed}
-            />
             <TooltipTrigger>
               <Button
                 className={clsx(
@@ -107,11 +80,11 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
         </div>
         {!isCollapsed && (
           <DocumentChat
-            key={currentConversation.id}
+            key={currentConversationId}
             contentEditor={contentEditor}
             ref={ref}
             doc={doc}
-            conversation={currentConversation}
+            conversationId={currentConversationId}
           />
         )}
       </div>
@@ -120,43 +93,6 @@ export const EditorSidebar = forwardRef<DocumentChatRef, Props>(
 )
 
 EditorSidebar.displayName = "EditorSidebar"
-
-type ConversationHistoryDropdownProps = {
-  conversations: NonNullable<QueryResultType<typeof queries.documents.byId>>["conversations"]
-  onSelect: (id: string) => void
-  isCollapsed: boolean
-}
-
-function ConversationHistoryDropdown({
-  conversations,
-  onSelect,
-  isCollapsed,
-}: ConversationHistoryDropdownProps) {
-  return (
-    <MenuTrigger>
-      <SidebarButton
-        icon={ClockFadingIcon}
-        tooltip="Conversation History"
-        onPress={() => {}}
-        isCollapsed={isCollapsed}
-      />
-      <Menu placement="bottom end">
-        {conversations.map((conversation) => (
-          <MenuItem
-            key={conversation.id}
-            onAction={() => onSelect(conversation.id)}
-            className="flex justify-between"
-          >
-            <span className="truncate">{conversation.title || "Untitled Conversation"}</span>
-            <span className="text-xs text-gray-500 ml-1">
-              {formatDistanceToNow(new Date(conversation.created_at))}
-            </span>
-          </MenuItem>
-        ))}
-      </Menu>
-    </MenuTrigger>
-  )
-}
 
 type SidebarButtonProps = {
   icon: ComponentType<SVGProps<SVGSVGElement>>

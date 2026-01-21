@@ -13,8 +13,7 @@ export const PLAN_LIMITS: Record<
     maxRequestsPerPeriod: number | null
     maxMessagesPerDay: number | null
     features: {
-      documentChat: boolean
-      assistantChat: boolean
+      aiAssistant: boolean
     }
     price: {
       monthly: number | null
@@ -28,8 +27,7 @@ export const PLAN_LIMITS: Record<
     maxRequestsPerPeriod: 50,
     maxMessagesPerDay: 10,
     features: {
-      documentChat: true,
-      assistantChat: true,
+      aiAssistant: true,
     },
     price: {
       monthly: 0,
@@ -42,8 +40,7 @@ export const PLAN_LIMITS: Record<
     maxRequestsPerPeriod: null,
     maxMessagesPerDay: null,
     features: {
-      documentChat: true,
-      assistantChat: true,
+      aiAssistant: true,
     },
     price: {
       monthly: 2000,

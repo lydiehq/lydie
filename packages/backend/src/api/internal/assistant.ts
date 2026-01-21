@@ -7,8 +7,9 @@ import {
   assistantMessagesTable,
   llmUsageTable,
   userSettingsTable,
+  documentsTable,
 } from "@lydie/database"
-import { eq } from "drizzle-orm"
+import { eq, and, sql, inArray } from "drizzle-orm"
 import { generateConversationTitle } from "../utils/conversation"
 import { HTTPException } from "hono/http-exception"
 import { VisibleError } from "@lydie/core/error"
@@ -21,13 +22,17 @@ import { listDocuments } from "@lydie/core/ai/tools/list-documents"
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents"
 import { createDocument } from "@lydie/core/ai/tools/create-document"
 import type { PromptStyle } from "@lydie/core/prompts"
+import { searchInDocument } from "@lydie/core/ai/tools/search-in-document"
+import { readCurrentDocument } from "@lydie/core/ai/tools/read-current-document"
+import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document"
+import { openai } from "@ai-sdk/openai"
 
 export const messageMetadataSchema = z.object({
   usage: z.number().optional(),
-  timestamp: z.string().optional(),
+  createdAt: z.string().optional(),
   model: z.string().optional(),
   duration: z.number().optional(),
-})
+}).passthrough()
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>
 
@@ -39,7 +44,12 @@ export const AssistantRoute = new Hono<{
   }
 }>().post("/", async (c) => {
   try {
-    const { messages, conversationId: providedConversationId } = await c.req.json()
+    const {
+      messages,
+      conversationId: providedConversationId,
+      currentDocument: providedCurrentDocument,
+      contextDocumentIds: providedContextDocumentIds,
+    } = await c.req.json()
     const userId = c.get("user").id
     const organizationId = c.get("organizationId")
 
@@ -82,6 +92,19 @@ export const AssistantRoute = new Hono<{
     const latestMessage = messages[messages.length - 1]
     const user = c.get("user")
 
+    const messageMetadata = latestMessage?.metadata ?? {}
+    const currentDocumentId =
+      providedCurrentDocument?.id ?? messageMetadata.currentDocument?.id ?? messageMetadata.currentDocumentId
+    const documentWordCount =
+      providedCurrentDocument?.wordCount ??
+      messageMetadata.currentDocument?.wordCount ??
+      messageMetadata.documentWordCount
+    const contextDocumentIds = Array.isArray(providedContextDocumentIds)
+      ? providedContextDocumentIds
+      : Array.isArray(messageMetadata.contextDocumentIds)
+        ? messageMetadata.contextDocumentIds
+        : []
+
     // Check daily message limit BEFORE saving to prevent exceeding the limit
     // Skip limit check for admin users
     const organization = await db.query.organizationsTable.findFirst({
@@ -119,6 +142,52 @@ export const AssistantRoute = new Hono<{
       metadata: latestMessage.metadata,
     })
 
+    let currentDocument: { id: string; title: string; organizationId: string } | null = null
+
+    if (currentDocumentId) {
+      const [document] = await db
+        .select({
+          id: documentsTable.id,
+          title: documentsTable.title,
+          organizationId: documentsTable.organizationId,
+        })
+        .from(documentsTable)
+        .where(
+          and(
+            eq(documentsTable.id, currentDocumentId),
+            eq(documentsTable.organizationId, organizationId),
+            sql`${documentsTable.deletedAt} IS NULL`,
+          ),
+        )
+        .limit(1)
+
+      if (!document) {
+        throw new HTTPException(404, {
+          message: "Document not found",
+        })
+      }
+
+      currentDocument = document
+    }
+
+    const uniqueContextDocumentIds = Array.from(new Set(contextDocumentIds.filter(Boolean)))
+    const contextDocuments =
+      uniqueContextDocumentIds.length > 0
+        ? await db
+            .select({
+              id: documentsTable.id,
+              title: documentsTable.title,
+            })
+            .from(documentsTable)
+            .where(
+              and(
+                eq(documentsTable.organizationId, organizationId),
+                inArray(documentsTable.id, uniqueContextDocumentIds),
+                sql`${documentsTable.deletedAt} IS NULL`,
+              ),
+            )
+        : []
+
     // Fetch user settings for prompt style
     const [userSettings] = await db
       .select()
@@ -133,9 +202,50 @@ export const AssistantRoute = new Hono<{
 
     const startTime = Date.now()
 
+    const contextInfo = createContextInfo({
+      currentDocument,
+      contextDocuments,
+      documentWordCount,
+      focusedContent: messageMetadata.focusedContent,
+    })
+
+    const enhancedLatestMessage =
+      contextInfo && latestMessage
+        ? {
+            ...latestMessage,
+            parts: [
+              ...latestMessage.parts,
+              {
+                type: "text",
+                text: `${latestMessage.content ?? ""}\n\n${contextInfo}`,
+              },
+            ],
+          }
+        : latestMessage
+
+    const enhancedMessages =
+      enhancedLatestMessage && latestMessage ? [...messages.slice(0, -1), enhancedLatestMessage] : messages
+
+    const tools: Record<string, any> = {
+      web_search: openai.tools.webSearch({
+        searchContextSize: "low",
+      }),
+      search_documents: searchDocuments(userId, organizationId, currentDocument?.id),
+      read_document: readDocument(userId, organizationId),
+      list_documents: listDocuments(userId, organizationId, currentDocument?.id),
+      move_documents: moveDocuments(userId, organizationId),
+      create_document: createDocument(userId, organizationId),
+    }
+
+    if (currentDocument?.id) {
+      tools.search_in_document = searchInDocument(currentDocument.id, userId, currentDocument.organizationId)
+      tools.read_current_document = readCurrentDocument(currentDocument.id)
+      tools.replace_in_document = replaceInDocument()
+    }
+
     const agent = new ToolLoopAgent({
       providerOptions: {
-        openai: { reasoningEffort: "low" },
+        openai: { reasoningEffort: currentDocument ? "medium" : "low" },
       },
       model: chatModel,
       instructions: systemPrompt,
@@ -143,24 +253,18 @@ export const AssistantRoute = new Hono<{
       stopWhen: stepCountIs(50),
       // @ts-expect-error - experimental_transform is not typed
       experimental_transform: smoothStream({ chunking: "word" }),
-      tools: {
-        search_documents: searchDocuments(userId, organizationId),
-        read_document: readDocument(userId, organizationId),
-        list_documents: listDocuments(userId, organizationId),
-        move_documents: moveDocuments(userId, organizationId),
-        create_document: createDocument(userId, organizationId),
-      },
+      tools,
     })
 
     return createAgentUIStreamResponse({
       agent,
       uiMessages: await validateUIMessages({
-        messages,
+        messages: enhancedMessages,
       }),
       messageMetadata: ({ part }): MessageMetadata | undefined => {
         if (part.type === "start") {
           return {
-            timestamp: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
           }
         }
         if (part.type === "finish") {
@@ -195,7 +299,7 @@ export const AssistantRoute = new Hono<{
             messageId: savedMessage.id,
             organizationId,
             source: "assistant",
-            model: "gemini-3-flash-preview",
+            model: chatModel.modelId,
             promptTokens,
             completionTokens,
             totalTokens,
@@ -213,6 +317,65 @@ export const AssistantRoute = new Hono<{
     throw new VisibleError("chat_processing_error", "An error occurred while processing your request")
   }
 })
+
+function createContextInfo({
+  currentDocument,
+  contextDocuments,
+  documentWordCount,
+  focusedContent,
+}: {
+  currentDocument: { id: string; title: string; organizationId: string } | null
+  contextDocuments: Array<{ id: string; title: string | null }>
+  documentWordCount?: number
+  focusedContent?: string
+}) {
+  if (!currentDocument && contextDocuments.length === 0 && !focusedContent && !documentWordCount) {
+    return ""
+  }
+
+  let context = `<additional_data>
+Below are some potentially helpful pieces of information for responding to the user's request:`
+
+  if (currentDocument) {
+    context += `
+
+Current Document:
+- Title: ${currentDocument.title || "Untitled document"}
+- ID: ${currentDocument.id}`
+  }
+
+  if (typeof documentWordCount === "number") {
+    context += `
+
+Current Document Word Count: ${documentWordCount}`
+  }
+
+  if (contextDocuments.length > 0) {
+    context += `
+
+Context Documents:`
+    for (const doc of contextDocuments) {
+      context += `
+- ${doc.title || "Untitled document"} (ID: ${doc.id})`
+    }
+  }
+
+  if (focusedContent && focusedContent.trim()) {
+    context += `
+
+<focused_selection>
+The user has selected the following content, which may indicate their area of focus:
+\`\`\`
+${focusedContent}
+\`\`\`
+</focused_selection>`
+  }
+
+  context += `
+</additional_data>`
+
+  return context
+}
 
 async function saveMessage({
   conversationId,

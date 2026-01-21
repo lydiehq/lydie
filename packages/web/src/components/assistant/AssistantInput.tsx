@@ -3,14 +3,16 @@ import { Button, Form } from "react-aria-components"
 import { motion } from "motion/react"
 import { ChevronUpIcon, SquareIcon } from "@/icons"
 import { useChatEditor } from "@/lib/editor/chat-editor"
-import { useCallback, useRef, useMemo, useEffect } from "react"
+import { useCallback, useRef, useMemo, useEffect, useState } from "react"
 import { useOrganization } from "@/context/organization.context"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
 import tippy from "tippy.js"
+import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
+import { getReferenceDocumentIds } from "@/utils/parse-references"
 
 export interface AssistantInputProps {
-  onSubmit: (text: string) => void
+  onSubmit: (text: string, contextDocumentIds: string[]) => void
   onStop?: () => void
   placeholder?: string
   canStop?: boolean
@@ -91,6 +93,7 @@ export function AssistantInput({
 }: AssistantInputProps) {
   const { organization } = useOrganization()
   const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
+  const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
 
   const mentionDocuments = useMemo(
     () =>
@@ -100,6 +103,10 @@ export function AssistantInput({
       })),
     [documents],
   )
+
+  const documentTitleById = useMemo(() => {
+    return new Map(mentionDocuments.map((doc) => [doc.id, doc.title || "Untitled document"]))
+  }, [mentionDocuments])
 
   const mentionSuggestion = useMemo(() => {
     const mentionItems = mentionDocuments.map((doc) => ({
@@ -187,6 +194,23 @@ export function AssistantInput({
     },
   })
 
+  useEffect(() => {
+    const editor = chatEditor.editor
+    if (!editor) return
+
+    const updateMentions = () => {
+      const textContent = chatEditor.getTextContent()
+      setMentionedDocumentIds(getReferenceDocumentIds(textContent))
+    }
+
+    updateMentions()
+    editor.on("update", updateMentions)
+
+    return () => {
+      editor.off("update", updateMentions)
+    }
+  }, [chatEditor.editor, chatEditor.getTextContent])
+
   // Set initial prompt if provided (only once when component mounts or prompt changes)
   useEffect(() => {
     if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
@@ -194,16 +218,25 @@ export function AssistantInput({
     }
   }, [initialPrompt, chatEditor])
 
+  const contextItems = useMemo(() => {
+    return Array.from(new Set(mentionedDocumentIds)).map<ChatContextItem>((documentId) => ({
+      id: documentId,
+      type: "document",
+      label: documentTitleById.get(documentId) || "Untitled document",
+      source: "mention",
+    }))
+  }, [documentTitleById, mentionedDocumentIds])
+
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
       e?.preventDefault()
       const textContent = chatEditor.getTextContent()
       if (!textContent.trim()) return
 
-      onSubmit(textContent)
+      onSubmit(textContent, contextItems.map((item) => item.id))
       chatEditor.clearContent()
     },
-    [chatEditor, onSubmit],
+    [chatEditor, onSubmit, contextItems],
   )
 
   // Assign to ref so it can be called from onEnter callback
@@ -217,6 +250,7 @@ export function AssistantInput({
       initial={false}
     >
       <Form className="relative flex flex-col" onSubmit={handleSubmit}>
+        <ChatContextList items={contextItems} />
         <EditorContent editor={chatEditor.editor} className="text-sm text-start" />
         <Button
           type={canStop ? "button" : "submit"}

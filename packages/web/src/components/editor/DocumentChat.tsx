@@ -8,8 +8,7 @@ import { queries } from "@lydie/zero/queries"
 import { type DocumentEditorHookResult } from "@/lib/editor/document-editor"
 import { applyContentChanges } from "@/utils/document-changes"
 import { ChatMessages } from "@/components/chat/ChatMessages"
-import { useMemo, useState, useImperativeHandle, type ForwardedRef } from "react"
-import { createId } from "@lydie/core/id"
+import { useMemo, useState, useImperativeHandle, type ForwardedRef, useEffect } from "react"
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
 import { useSelectedContent } from "@/context/selected-content.context"
 import { useQuery } from "@rocicorp/zero/react"
@@ -19,6 +18,8 @@ import { useRouter } from "@tanstack/react-router"
 import { ChatAlert, type ChatAlertState } from "./ChatAlert"
 import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
 import { useChatComposer } from "@/components/chat/useChatComposer"
+import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
+import { getReferenceDocumentIds } from "@/utils/parse-references"
 
 export type DocumentChatRef = {
   focus: () => void
@@ -27,15 +28,17 @@ export type DocumentChatRef = {
 type Props = {
   contentEditor: DocumentEditorHookResult
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>
-  conversation: NonNullable<QueryResultType<typeof queries.documents.byId>>["conversations"][number]
+  conversationId: string
   ref: ForwardedRef<DocumentChatRef>
 }
 
-export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
+export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props) {
   const { focusedContent, clearFocusedContent } = useSelectedContent()
   const { organization } = useOrganization()
   const router = useRouter()
   const [alert, setAlert] = useState<ChatAlertState | null>(null)
+  const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
+  const [isCurrentDocumentDismissed, setIsCurrentDocumentDismissed] = useState(false)
 
   const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
 
@@ -48,9 +51,9 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
     [documents],
   )
 
-  const conversationId = useMemo(() => {
-    return conversation?.id || createId()
-  }, [conversation?.id])
+  const documentTitleById = useMemo(() => {
+    return new Map(availableDocuments.map((doc) => [doc.id, doc.title || "Untitled document"]))
+  }, [availableDocuments])
 
   const chatEditor = useChatComposer({
     documents: availableDocuments,
@@ -61,6 +64,23 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
       }
     },
   })
+
+  useEffect(() => {
+    const editor = chatEditor.editor
+    if (!editor) return
+
+    const updateMentions = () => {
+      const textContent = chatEditor.getTextContent()
+      setMentionedDocumentIds(getReferenceDocumentIds(textContent))
+    }
+
+    updateMentions()
+    editor.on("update", updateMentions)
+
+    return () => {
+      editor.off("update", updateMentions)
+    }
+  }, [chatEditor.editor, chatEditor.getTextContent])
 
   // Expose focus method via ref
   useImperativeHandle(ref, () => ({
@@ -83,30 +103,19 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
   const { messages, sendMessage, stop, status } = useChat<DocumentChatAgentUIMessage>({
     experimental_throttle: 100,
     transport: new DefaultChatTransport({
-      api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/document-chat",
+      api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
       credentials: "include",
       body: {
-        documentId: doc.id,
         conversationId: conversationId,
-        documentWordCount: editorState.wordCount,
+        currentDocument: {
+          id: doc.id,
+          organizationId: doc.organization_id,
+        },
       },
       headers: {
         "X-Organization-Id": doc.organization_id,
       },
     }),
-    // @ts-expect-error - TODO: fix this
-    messages: conversation?.messages.map(
-      (
-        msg: NonNullable<
-          QueryResultType<typeof queries.documents.byId>
-        >["conversations"][number]["messages"][number],
-      ) => ({
-        id: msg.id,
-        role: msg.role as "user" | "system" | "assistant",
-        parts: msg.parts,
-        metadata: msg.metadata,
-      }),
-    ),
     onError: (error) => {
       const { message } = parseChatError(error)
 
@@ -146,11 +155,53 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
 
     sendMessage({
       text: textContent,
+      metadata: {
+        createdAt: new Date().toISOString(),
+        focusedContent,
+        contextDocumentIds: Array.from(
+          new Set([
+            ...(isCurrentDocumentDismissed ? [] : [doc.id]),
+            ...mentionedDocumentIds,
+          ]),
+        ),
+        currentDocument: {
+          id: doc.id,
+          organizationId: doc.organization_id,
+          wordCount: editorState.wordCount,
+        },
+      },
     })
     chatEditor.clearContent()
     clearFocusedContent()
     contentEditor.editor?.commands.clearSelection()
+    setIsCurrentDocumentDismissed(false)
   }
+
+  const contextItems = useMemo(() => {
+    const items: ChatContextItem[] = []
+
+    if (!isCurrentDocumentDismissed) {
+      items.push({
+        id: doc.id,
+        type: "document",
+        label: doc.title || "Untitled document",
+        source: "current",
+        removable: true,
+      })
+    }
+
+    for (const documentId of mentionedDocumentIds) {
+      if (documentId === doc.id) continue
+      items.push({
+        id: documentId,
+        type: "document",
+        label: documentTitleById.get(documentId) || "Untitled document",
+        source: "mention",
+      })
+    }
+
+    return items
+  }, [doc.id, doc.title, documentTitleById, isCurrentDocumentDismissed, mentionedDocumentIds])
 
   const applyContent = async (
     edits: {
@@ -242,6 +293,14 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
 
           <div className="flex flex-col">
             <Form className="relative flex flex-col" onSubmit={handleSubmit}>
+              <ChatContextList
+                items={contextItems}
+                onRemove={(item) => {
+                  if (item.source === "current") {
+                    setIsCurrentDocumentDismissed(true)
+                  }
+                }}
+              />
               <EditorContent editor={chatEditor.editor} />
               <RACButton
                 type={canStop ? "button" : "submit"}

@@ -30,8 +30,6 @@ export function Editor({ doc }: Props) {
   )
 }
 
-const COLLAPSED_SIZE = 3.5
-
 function EditorContainer({ doc }: Props) {
   const z = useZero()
   const [sidebarSize, setSidebarSize] = useState(25)
@@ -91,7 +89,7 @@ function EditorContainer({ doc }: Props) {
 
   useEffect(() => {
     titleEditor.setContent(doc.title)
-  }, [doc.title])
+  }, [doc.title, titleEditor])
 
   // Handle blur event for title editor
   useEffect(() => {

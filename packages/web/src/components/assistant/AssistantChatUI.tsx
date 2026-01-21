@@ -30,11 +30,12 @@ export function AssistantChatUI({
   }, [initialPrompt, currentInitialPrompt])
 
   const handleSubmit = useCallback(
-    (text: string) => {
+    (text: string, contextDocumentIds: string[]) => {
       sendMessage({
         text,
         metadata: {
           createdAt: new Date().toISOString(),
+          contextDocumentIds,
         },
       })
 
@@ -63,7 +64,7 @@ export function AssistantChatUI({
       <div className="flex flex-col flex-1 min-h-0">
         {messages.length === 0 && showEmptyState ? (
           <div className="mt-[34svh] flex flex-col gap-y-4 items-center px-4">
-            <h1 className="text-2xl font-medium text-gray-900">Ask anything about your documents</h1>
+            <h1 className="text-2xl font-medium text-gray-900">Ask anything</h1>
             <AssistantInput
               onSubmit={handleSubmit}
               onStop={stop}

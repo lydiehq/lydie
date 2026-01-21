@@ -1,6 +1,5 @@
 import { Hono } from "hono"
 import { OrganizationRoute } from "./organization"
-import { DocumentChatRoute } from "./document-chat"
 import { AssistantRoute } from "./assistant"
 import { MDXImportRoute } from "./mdx-import"
 import { LLMReplaceRoute } from "./llm-replace"
@@ -25,7 +24,6 @@ const organizationScopedRouter = new Hono<{
 }>()
   .use("*", authenticatedWithOrganization)
   .route("/organization", OrganizationRoute)
-  .route("/document-chat", DocumentChatRoute)
   .route("/assistant", AssistantRoute)
   .route("/mdx-import", MDXImportRoute)
   .route("/llm-replace", LLMReplaceRoute)

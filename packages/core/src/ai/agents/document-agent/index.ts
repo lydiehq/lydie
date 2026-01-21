@@ -23,7 +23,7 @@ interface BuildDocumentAgentParams {
   model: LanguageModel
 }
 
-// This function is kept only for type inference - the actual agent creation is inlined in document-chat.ts
+// This function is kept only for type inference - the actual agent creation is inlined in assistant.ts
 function buildDocumentAgent(params: BuildDocumentAgentParams) {
   const { documentId, userId, currentDocument, instructions, model } = params
 

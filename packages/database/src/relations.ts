@@ -17,7 +17,6 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     embeddings: r.many.documentEmbeddingsTable(),
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
-    conversations: r.many.documentConversationsTable(),
     syncMetadata: r.many.syncMetadataTable(),
     publications: r.many.documentPublicationsTable(),
   },
@@ -33,22 +32,6 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.documentsTable.id,
     }),
   },
-  documentConversationsTable: {
-    user: r.one.usersTable({
-      from: r.documentConversationsTable.userId,
-      to: r.usersTable.id,
-    }),
-    document: r.one.documentsTable({
-      from: r.documentConversationsTable.documentId,
-      to: r.documentsTable.id,
-    }),
-    messages: r.many.documentMessagesTable(),
-    llmUsage: r.many.llmUsageTable({
-      from: r.documentConversationsTable.id,
-      to: r.llmUsageTable.conversationId,
-    }),
-  },
-
   assistantConversationsTable: {
     user: r.one.usersTable({
       from: r.assistantConversationsTable.userId,
@@ -62,17 +45,6 @@ export const relations = defineRelations(schema, (r) => ({
     llmUsage: r.many.llmUsageTable({
       from: r.assistantConversationsTable.id,
       to: r.llmUsageTable.conversationId,
-    }),
-  },
-
-  documentMessagesTable: {
-    conversation: r.one.documentConversationsTable({
-      from: r.documentMessagesTable.conversationId,
-      to: r.documentConversationsTable.id,
-    }),
-    llmUsage: r.many.llmUsageTable({
-      from: r.documentMessagesTable.id,
-      to: r.llmUsageTable.messageId,
     }),
   },
 
@@ -157,23 +129,18 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.llmUsageTable.organizationId,
       to: r.organizationsTable.id,
     }),
-    documentConversation: r.one.documentConversationsTable({
-      from: r.llmUsageTable.conversationId,
-      to: r.documentConversationsTable.id,
-    }),
     assistantConversation: r.one.assistantConversationsTable({
       from: r.llmUsageTable.conversationId,
       to: r.assistantConversationsTable.id,
     }),
-    message: r.one.documentMessagesTable({
+    message: r.one.assistantMessagesTable({
       from: r.llmUsageTable.messageId,
-      to: r.documentMessagesTable.id,
+      to: r.assistantMessagesTable.id,
     }),
   },
 
   usersTable: {
     documents: r.many.documentsTable(),
-    documentConversations: r.many.documentConversationsTable(),
     assistantConversations: r.many.assistantConversationsTable(),
     members: r.many.membersTable(),
     invitationsSent: r.many.invitationsTable(),

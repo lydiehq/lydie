@@ -88,3 +88,16 @@ export function parseReferences(text: string): ParsedTextSegment[] {
 export function hasReferences(text: string): boolean {
   return REFERENCE_PATTERN.test(text)
 }
+
+export function getReferenceDocumentIds(text: string): string[] {
+  const segments = parseReferences(text)
+  const ids = new Set<string>()
+
+  for (const segment of segments) {
+    if (segment.type === "reference" && segment.reference?.type === "document") {
+      ids.add(segment.reference.id)
+    }
+  }
+
+  return Array.from(ids)
+}
