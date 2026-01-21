@@ -1,4 +1,3 @@
-import { CheckIcon, MinusIcon } from "@/icons";
 import { type ReactNode } from "react";
 import {
   Checkbox as AriaCheckbox,
@@ -48,17 +47,17 @@ const checkboxStyles = cva({
 });
 
 const boxStyles = cva({
+  base: "w-[18px] h-[18px] box-border rounded-sm transition-all duration-200 flex items-center justify-center flex-shrink-0 border",
   variants: {
     isSelected: {
       false:
-        "bg-white dark:bg-zinc-900 border-(--color) [--color:var(--color-gray-400)] dark:[--color:colors.zinc-400)] group-pressed:[--color:var(--color-gray-500)] dark:group-pressed:[--color:var(--color-zinc-300)]",
-      true: "bg-(--color) border-(--color) [--color:var(--color-gray-700)] group-pressed:[--color:var(--color-gray-800)] dark:[--color:var(--color-slate-300)] dark:group-pressed:[--color:var(--color-slate-200)] forced-colors:[--color:Highlight]!",
+        "bg-white dark:bg-zinc-900 border-gray-400 dark:border-zinc-400 group-pressed:border-gray-500 dark:group-pressed:border-zinc-300",
+      true: "bg-gray-700 dark:bg-slate-300 border-gray-700 dark:border-slate-300 group-pressed:bg-gray-800 dark:group-pressed:bg-slate-200 forced-colors:bg-[Highlight] forced-colors:border-[Highlight]",
     },
   },
 });
 
-const iconStyles =
-  "w-4 h-4 text-white group-disabled:text-gray-400 dark:text-slate-900 dark:group-disabled:text-slate-600 forced-colors:text-[HighlightText]";
+const checkmarkStyles = "checkbox-checkmark";
 
 export function Checkbox(props: CheckboxProps) {
   return (
@@ -76,11 +75,22 @@ export function Checkbox(props: CheckboxProps) {
               ...renderProps,
             })}
           >
-            {isIndeterminate ? (
-              <MinusIcon aria-hidden className={iconStyles} />
-            ) : isSelected ? (
-              <CheckIcon aria-hidden className={iconStyles} />
-            ) : null}
+            <svg
+              viewBox="0 0 18 18"
+              aria-hidden="true"
+              key={isIndeterminate ? "indeterminate" : "check"}
+              className={`${checkmarkStyles}${
+                isSelected || isIndeterminate ? " checkbox-checkmark-selected" : ""
+              }${isIndeterminate ? " checkbox-checkmark-indeterminate" : ""}${
+                renderProps.isDisabled ? " checkbox-checkmark-disabled" : ""
+              }`}
+            >
+              {isIndeterminate ? (
+                <rect x={1} y={7.5} width={16} height={3} />
+              ) : (
+                <polyline points="2 9 7 14 16 4" />
+              )}
+            </svg>
           </div>
           {props.children}
         </>

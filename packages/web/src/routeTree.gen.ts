@@ -181,9 +181,9 @@ const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute =
 export interface FileRoutesByFullPath {
   '/': typeof _authIndexRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugassistantRouteRouteWithChildren
-  '/onboarding': typeof _authOnboardingIndexRoute
-  '/auth': typeof LandingAuthIndexRoute
-  '/blog': typeof LandingBlogIndexRoute
+  '/onboarding/': typeof _authOnboardingIndexRoute
+  '/auth/': typeof LandingAuthIndexRoute
+  '/blog/': typeof LandingBlogIndexRoute
   '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
@@ -192,12 +192,12 @@ export interface FileRoutesByFullPath {
   '/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
   '/w/$organizationSlug/settings/profile': typeof _authWOrganizationSlugSettingsProfileRoute
   '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
-  '/w/$organizationSlug/$id': typeof _authWOrganizationSlugIdIndexRoute
+  '/w/$organizationSlug/$id/': typeof _authWOrganizationSlugIdIndexRoute
   '/w/$organizationSlug/': typeof _authWOrganizationSlugassistantIndexRoute
   '/w/$organizationSlug/settings/': typeof _authWOrganizationSlugSettingsIndexRoute
   '/w/$organizationSlug/settings/integrations/$integrationType': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
-  '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugassistantAssistantIndexRoute
-  '/w/$organizationSlug/settings/integrations': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
+  '/w/$organizationSlug/assistant/': typeof _authWOrganizationSlugassistantAssistantIndexRoute
+  '/w/$organizationSlug/settings/integrations/': typeof _authWOrganizationSlugSettingsIntegrationsIndexRoute
   '/w/$organizationSlug/settings/integrations/$integrationType/activity': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute
   '/w/$organizationSlug/settings/integrations/$integrationType/': typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeIndexRoute
 }
@@ -253,9 +253,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/w/$organizationSlug'
-    | '/onboarding'
-    | '/auth'
-    | '/blog'
+    | '/onboarding/'
+    | '/auth/'
+    | '/blog/'
     | '/w/$organizationSlug/settings'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
@@ -264,12 +264,12 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/settings/import'
     | '/w/$organizationSlug/settings/profile'
     | '/w/$organizationSlug/settings/user'
-    | '/w/$organizationSlug/$id'
+    | '/w/$organizationSlug/$id/'
     | '/w/$organizationSlug/'
     | '/w/$organizationSlug/settings/'
     | '/w/$organizationSlug/settings/integrations/$integrationType'
-    | '/w/$organizationSlug/assistant'
-    | '/w/$organizationSlug/settings/integrations'
+    | '/w/$organizationSlug/assistant/'
+    | '/w/$organizationSlug/settings/integrations/'
     | '/w/$organizationSlug/settings/integrations/$integrationType/activity'
     | '/w/$organizationSlug/settings/integrations/$integrationType/'
   fileRoutesByTo: FileRoutesByTo
@@ -330,14 +330,14 @@ declare module '@tanstack/react-router' {
     '/_landing': {
       id: '/_landing'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof LandingRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/__auth': {
       id: '/__auth'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof _authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -351,21 +351,21 @@ declare module '@tanstack/react-router' {
     '/_landing/blog/': {
       id: '/_landing/blog/'
       path: '/blog'
-      fullPath: '/blog'
+      fullPath: '/blog/'
       preLoaderRoute: typeof LandingBlogIndexRouteImport
       parentRoute: typeof LandingRouteRoute
     }
     '/_landing/auth/': {
       id: '/_landing/auth/'
       path: '/auth'
-      fullPath: '/auth'
+      fullPath: '/auth/'
       preLoaderRoute: typeof LandingAuthIndexRouteImport
       parentRoute: typeof LandingRouteRoute
     }
     '/__auth/onboarding/': {
       id: '/__auth/onboarding/'
       path: '/onboarding'
-      fullPath: '/onboarding'
+      fullPath: '/onboarding/'
       preLoaderRoute: typeof _authOnboardingIndexRouteImport
       parentRoute: typeof _authRouteRoute
     }
@@ -407,7 +407,7 @@ declare module '@tanstack/react-router' {
     '/__auth/w/$organizationSlug/$id/': {
       id: '/__auth/w/$organizationSlug/$id/'
       path: '/$id'
-      fullPath: '/w/$organizationSlug/$id'
+      fullPath: '/w/$organizationSlug/$id/'
       preLoaderRoute: typeof _authWOrganizationSlugIdIndexRouteImport
       parentRoute: typeof _authWOrganizationSlugRouteRoute
     }
@@ -463,14 +463,14 @@ declare module '@tanstack/react-router' {
     '/__auth/w/$organizationSlug/settings/integrations/': {
       id: '/__auth/w/$organizationSlug/settings/integrations/'
       path: '/integrations'
-      fullPath: '/w/$organizationSlug/settings/integrations'
+      fullPath: '/w/$organizationSlug/settings/integrations/'
       preLoaderRoute: typeof _authWOrganizationSlugSettingsIntegrationsIndexRouteImport
       parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
     '/__auth/w/$organizationSlug/(assistant)/assistant/': {
       id: '/__auth/w/$organizationSlug/(assistant)/assistant/'
       path: '/assistant'
-      fullPath: '/w/$organizationSlug/assistant'
+      fullPath: '/w/$organizationSlug/assistant/'
       preLoaderRoute: typeof _authWOrganizationSlugassistantAssistantIndexRouteImport
       parentRoute: typeof _authWOrganizationSlugassistantRouteRoute
     }

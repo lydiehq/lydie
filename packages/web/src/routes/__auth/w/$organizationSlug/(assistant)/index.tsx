@@ -9,6 +9,18 @@ import { OnboardingStepAssistant } from "@/components/onboarding/OnboardingStepA
 import { OnboardingStepIntegrations } from "@/components/onboarding/OnboardingStepIntegrations";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/icons";
 import { useOrganization } from "@/context/organization.context";
+import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
+import { useAtom } from "jotai";
+import { commandMenuStateAtom } from "@/stores/command-menu";
+import { useEffect, useState, useRef } from "react";
+import { useZero } from "@/services/zero";
+import { mutators } from "@lydie/zero/mutators";
+import { Modal } from "@/components/generic/Modal";
+import { Dialog } from "@/components/generic/Dialog";
+import { Checkbox } from "@/components/generic/Checkbox";
+import { DialogTrigger, Heading, Button as RACButton } from "react-aria-components";
+import { AnimatePresence, motion } from "motion/react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/(assistant)/"
@@ -41,8 +53,41 @@ function Onboarding() {
   } = useOnboardingSteps();
   const navigate = useNavigate();
   const { organization } = useOrganization();
+  const { setChecked } = useOnboardingChecklist();
+  const [commandMenuState] = useAtom(commandMenuStateAtom);
+  const z = useZero();
+  const [isQuitDialogOpen, setIsQuitDialogOpen] = useState(false);
+  const [deleteDemoContent, setDeleteDemoContent] = useState(true);
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
+  const previousStepRef = useRef(currentStep);
 
   const progress = getProgress();
+
+  // Track direction of step changes
+  useEffect(() => {
+    const stepOrder = ["documents", "assistant", "integrations"];
+    const currentIndex = stepOrder.indexOf(currentStep);
+    const previousIndex = stepOrder.indexOf(previousStepRef.current);
+    
+    if (currentIndex > previousIndex) {
+      setDirection("forward");
+    } else if (currentIndex < previousIndex) {
+      setDirection("backward");
+    }
+    
+    previousStepRef.current = currentStep;
+  }, [currentStep]);
+
+  // Detect when command menu opens in search mode and mark it as checked
+  useEffect(() => {
+    if (
+      commandMenuState.isOpen &&
+      commandMenuState.initialPage === "search" &&
+      currentStep === "documents"
+    ) {
+      setChecked("documents:search-menu", true);
+    }
+  }, [commandMenuState.isOpen, commandMenuState.initialPage, currentStep, setChecked]);
 
   const handleSkip = () => {
     completeOnboarding();
@@ -62,6 +107,29 @@ function Onboarding() {
     } else {
       nextStep();
     }
+  };
+
+  const handleQuitIntro = () => {
+    if (deleteDemoContent) {
+      try {
+        z.mutate(
+          mutators.document.deleteAllOnboarding({
+            organizationId: organization.id,
+          })
+        );
+        toast.success("Demo content deleted");
+      } catch (error) {
+        console.error("Failed to delete demo content:", error);
+        toast.error("Failed to delete demo content");
+      }
+    }
+    completeOnboarding();
+    navigate({
+      to: "/w/$organizationSlug",
+      params: { organizationSlug: organization.slug },
+    });
+    setIsQuitDialogOpen(false);
+    setDeleteDemoContent(true); // Reset to default for next time
   };
 
   const stepTitles = {
@@ -84,10 +152,7 @@ function Onboarding() {
   };
 
   return (
-    <div className="flex p-8 bg-white shadow-surface rounded-xl gap-x-16 items-center size-full">
-      {/* <div className="h-full rounded-lg bg-gray-100 w-[420px] relative overflow-hidden ring ring-black/8">
-        <img src="/screenshot_sidebar.png" className="size-full object-cover" />
-      </div> */}
+    <div className="flex p-8 bg-white shadow-surface rounded-xl gap-x-16 items-center size-full justify-center">
 
       <div className="">
         <div className="flex flex-col gap-y-6 max-w-lg">
@@ -101,10 +166,55 @@ function Onboarding() {
               Step {getCurrentStepIndex() + 1} of {getTotalSteps()}
             </span>
           </div>
-          <span className="text-lg font-medium text-gray-900">
-            {stepTitles[currentStep]}
-          </span>
-          {renderStepContent()}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={`title-${currentStep}`}
+              initial={{
+                opacity: 0,
+                y: -10,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                y: 10,
+              }}
+              transition={{
+                duration: 0.2,
+                ease: [0.4, 0, 0.2, 1],
+              }}
+              className="text-lg font-medium text-gray-900 block"
+            >
+              {stepTitles[currentStep]}
+            </motion.span>
+          </AnimatePresence>
+          <div className="min-h-[280px] relative">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={currentStep}
+                initial={{
+                  opacity: 0,
+                  x: direction === "forward" ? 20 : -20,
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                }}
+                exit={{
+                  opacity: 0,
+                  x: direction === "forward" ? -20 : 20,
+                }}
+                transition={{
+                  duration: 0.3,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              >
+                {renderStepContent()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
           <Separator />
           <div className="flex items-center justify-between gap-x-2">
             <div className="flex items-center gap-x-2">
@@ -121,7 +231,8 @@ function Onboarding() {
                 </Button>
               )}
             </div>
-            <div className="flex items-center gap-x-2">
+            <div className="flex items-center justify-between">
+
               <Button
                 onPress={handleSkip}
                 intent="secondary"
@@ -140,7 +251,64 @@ function Onboarding() {
                 </span>
               </Button>
             </div>
+
           </div>
+          <div>
+            <RACButton
+              onPress={() => setIsQuitDialogOpen(true)}
+              className="text-xs font-medium text-gray-600 hover:text-gray-900"
+            >
+              Quit intro
+            </RACButton>
+          </div>
+
+
+          <DialogTrigger
+            isOpen={isQuitDialogOpen}
+            onOpenChange={(isOpen) => {
+              setIsQuitDialogOpen(isOpen);
+              if (!isOpen) {
+                setDeleteDemoContent(true); // Reset to default when dialog closes
+              }
+            }}
+          >
+            <Modal isDismissable size="md">
+              <Dialog role="alertdialog">
+                <div className="p-6 flex flex-col gap-y-4">
+                  <Heading slot="title" className="text-lg font-medium text-gray-900">
+                    Quit intro
+                  </Heading>
+                  <p className="text-sm text-slate-600">
+                    Are you sure you want to quit the intro?
+                  </p>
+                  <div className="flex items-center">
+                    <Checkbox
+                      isSelected={deleteDemoContent}
+                      onChange={setDeleteDemoContent}
+                    >
+                      Delete demo content
+                    </Checkbox>
+                  </div>
+                  <div className="flex gap-x-2 justify-end mt-2">
+                    <Button
+                      intent="secondary"
+                      onPress={() => setIsQuitDialogOpen(false)}
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      intent="primary"
+                      onPress={handleQuitIntro}
+                      size="sm"
+                    >
+                      Quit intro
+                    </Button>
+                  </div>
+                </div>
+              </Dialog>
+            </Modal>
+          </DialogTrigger>
         </div>
       </div>
     </div>
