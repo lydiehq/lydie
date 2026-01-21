@@ -1,6 +1,6 @@
-export { default as CollaborationIllustration } from "./CollaborationIllustration.astro";
-export { default as OpenSourceIllustration } from "./OpenSourceIllustration.astro";
-export { default as AIAssistantIllustration } from "./AIAssistantIllustration.astro";
-export { default as KnowledgeBaseIllustration } from "./KnowledgeBaseIllustration.astro";
-export { default as IntegrationsIllustration } from "./IntegrationsIllustration.astro";
-export { default as PerformanceIllustration } from "./PerformanceIllustration.astro";
+export { default as CollaborationIllustration } from "./CollaborationIllustration.astro"
+export { default as OpenSourceIllustration } from "./OpenSourceIllustration.astro"
+export { default as AIAssistantIllustration } from "./AIAssistantIllustration.astro"
+export { default as KnowledgeBaseIllustration } from "./KnowledgeBaseIllustration.astro"
+export { default as IntegrationsIllustration } from "./IntegrationsIllustration.astro"
+export { default as PerformanceIllustration } from "./PerformanceIllustration.astro"

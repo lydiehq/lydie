@@ -1,25 +1,25 @@
 {
-  "name": "@lydie/database",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "db:push": "bun sst shell drizzle-kit push",
-    "db:seed": "bun sst shell bun run src/seed/index.ts",
-    "db:studio": "bun sst shell bunx drizzle-kit studio",
-    "db:sync-zero-publication": "bun sst shell bun run src/sync-zero-publication.ts"
-  },
-  "exports": {
-    ".": "./src/index.ts",
-    "./*": "./src/*.ts"
-  },
-  "dependencies": {
-    "@lydie/core": "workspace:*",
-    "drizzle-kit": "^1.0.0-beta.9-e89174b",
-    "drizzle-orm": "catalog:",
-    "postgres": "^3.4.8"
-  },
-  "devDependencies": {
-    "@types/node": "^25.0.9",
-    "sst": "catalog:"
-  }
+	"name": "@lydie/database",
+	"version": "1.0.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./*": "./src/*.ts"
+	},
+	"scripts": {
+		"db:push": "bun sst shell drizzle-kit push",
+		"db:seed": "bun sst shell bun run src/seed/index.ts",
+		"db:studio": "bun sst shell bunx drizzle-kit studio",
+		"db:sync-zero-publication": "bun sst shell bun run src/sync-zero-publication.ts"
+	},
+	"dependencies": {
+		"@lydie/core": "workspace:*",
+		"drizzle-kit": "^1.0.0-beta.9-e89174b",
+		"drizzle-orm": "catalog:",
+		"postgres": "^3.4.8"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.9",
+		"sst": "catalog:"
+	}
 }

@@ -1,42 +1,42 @@
 {
-  "name": "@lydie/editor",
-  "version": "0.0.0",
-  "type": "module",
-  "exports": {
-    "./document-editor": "./src/document-editor.ts",
-    "./title": "./src/title.ts",
-    "./chat-editor": "./src/chat-editor.ts",
-    "./extensions": "./src/extensions/index.ts",
-    "./*": [
-      "./src/*.ts",
-      "./src/*/index.ts"
-    ]
-  },
-  "dependencies": {
-    "@lydie/core": "workspace:*",
-    "@tiptap/core": "^3.15.3",
-    "@tiptap/extension-character-count": "^3.15.3",
-    "@tiptap/extension-code-block-lowlight": "^3.15.3",
-    "@tiptap/extension-collaboration": "^3.15.3",
-    "@tiptap/extension-collaboration-caret": "^3.15.3",
-    "@tiptap/extension-document": "^3.15.3",
-    "@tiptap/extension-heading": "^3.15.3",
-    "@tiptap/extension-image": "^3.15.3",
-    "@tiptap/extension-link": "^3.15.3",
-    "@tiptap/extension-mention": "^3.15.3",
-    "@tiptap/extension-placeholder": "^3.15.3",
-    "@tiptap/extension-table": "^3.15.3",
-    "@tiptap/extension-text": "^3.15.3",
-    "@tiptap/extensions": "^3.15.3",
-    "@tiptap/pm": "^3.15.3",
-    "@tiptap/react": "^3.15.3",
-    "@tiptap/starter-kit": "^3.15.3",
-    "@tiptap/y-tiptap": "^3.0.1",
-    "lowlight": "^3.3.0",
-    "yjs": "^13.6.29"
-  },
-  "devDependencies": {
-    "@types/node": "^25.0.9",
-    "sst": "catalog:"
-  }
+	"name": "@lydie/editor",
+	"version": "0.0.0",
+	"type": "module",
+	"exports": {
+		"./document-editor": "./src/document-editor.ts",
+		"./title": "./src/title.ts",
+		"./chat-editor": "./src/chat-editor.ts",
+		"./extensions": "./src/extensions/index.ts",
+		"./*": [
+			"./src/*.ts",
+			"./src/*/index.ts"
+		]
+	},
+	"dependencies": {
+		"@lydie/core": "workspace:*",
+		"@tiptap/core": "^3.15.3",
+		"@tiptap/extension-character-count": "^3.15.3",
+		"@tiptap/extension-code-block-lowlight": "^3.15.3",
+		"@tiptap/extension-collaboration": "^3.15.3",
+		"@tiptap/extension-collaboration-caret": "^3.15.3",
+		"@tiptap/extension-document": "^3.15.3",
+		"@tiptap/extension-heading": "^3.15.3",
+		"@tiptap/extension-image": "^3.15.3",
+		"@tiptap/extension-link": "^3.15.3",
+		"@tiptap/extension-mention": "^3.15.3",
+		"@tiptap/extension-placeholder": "^3.15.3",
+		"@tiptap/extension-table": "^3.15.3",
+		"@tiptap/extension-text": "^3.15.3",
+		"@tiptap/extensions": "^3.15.3",
+		"@tiptap/pm": "^3.15.3",
+		"@tiptap/react": "^3.15.3",
+		"@tiptap/starter-kit": "^3.15.3",
+		"@tiptap/y-tiptap": "^3.0.1",
+		"lowlight": "^3.3.0",
+		"yjs": "^13.6.29"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.9",
+		"sst": "catalog:"
+	}
 }

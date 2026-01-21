@@ -1,60 +1,52 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lydie</title>
-    <link
-      rel="icon"
-      href="/favicon.svg"
-      type="image/svg+xml"
-      media="(prefers-color-scheme: dark)"
-    />
-    <link
-      rel="icon"
-      href="/favicon-dark.svg"
-      type="image/svg+xml"
-      media="(prefers-color-scheme: light)"
-    />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-tsrouter-app"
-    />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.json" />
-  </head>
-  <body style="background-color: rgb(248 248 248)">
-    <div id="app"></div>
-    <script>
-      (function () {
-        try {
-          const stored = localStorage.getItem("lydie-root-font-size");
-          if (stored) {
-            const fontSizeOption = JSON.parse(stored);
-            // If default, don't set explicit font-size (use browser default)
-            if (fontSizeOption === "default") {
-              // Ensure no explicit font-size is set
-              document.documentElement.style.removeProperty("font-size");
-            } else {
-              // Font size mapping
-              const fontSizes = {
-                xs: 14,
-                s: 15,
-                l: 17,
-                xl: 18,
-              };
-              const fontSizePixels = fontSizes[fontSizeOption];
-              if (fontSizePixels) {
-                document.documentElement.style.fontSize = fontSizePixels + "px";
-              }
-            }
-          }
-        } catch (e) {
-          // Ignore errors, use default
-        }
-      })();
-    </script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Lydie</title>
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
+		<link
+			rel="icon"
+			href="/favicon-dark.svg"
+			type="image/svg+xml"
+			media="(prefers-color-scheme: light)"
+		/>
+		<meta name="theme-color" content="#000000" />
+		<meta name="description" content="Web site created using create-tsrouter-app" />
+		<link rel="apple-touch-icon" href="/favicon.svg" />
+		<link rel="manifest" href="/manifest.json" />
+	</head>
+	<body style="background-color: rgb(248 248 248)">
+		<div id="app"></div>
+		<script>
+			;(function () {
+				try {
+					const stored = localStorage.getItem("lydie-root-font-size")
+					if (stored) {
+						const fontSizeOption = JSON.parse(stored)
+						// If default, don't set explicit font-size (use browser default)
+						if (fontSizeOption === "default") {
+							// Ensure no explicit font-size is set
+							document.documentElement.style.removeProperty("font-size")
+						} else {
+							// Font size mapping
+							const fontSizes = {
+								xs: 14,
+								s: 15,
+								l: 17,
+								xl: 18,
+							}
+							const fontSizePixels = fontSizes[fontSizeOption]
+							if (fontSizePixels) {
+								document.documentElement.style.fontSize = fontSizePixels + "px"
+							}
+						}
+					}
+				} catch (e) {
+					// Ignore errors, use default
+				}
+			})()
+		</script>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>
