@@ -1,14 +1,11 @@
-<p align="center">
-  <img src="path/to/your-logo.png" alt="Lydie logo" width="120" />
-</p>
+# Lydie
 
-<p align="center">
-  <i>
-    Lydie is a high-performance writing workspace that scales from simple notes
-    to deeply structured, interconnected knowledge systems.
-  </i>
-    <img alt="Screenshot of Lydie" src="./screenshot.png">
-</p>
+<em>
+Lydie is a high-performance writing workspace that scales from simple notes
+to deeply structured, interconnected knowledge systems.
+</em>
+
+![Screenshot](./screenshot.png)
 
 ## Tech Stack
 
