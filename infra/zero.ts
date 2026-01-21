@@ -1,3 +1,4 @@
+// oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
 
 import { secret } from "./secret"
@@ -36,6 +37,7 @@ const commonEnv = {
     : "https://api.lydie.co/internal/zero/queries",
 }
 
+// oxlint-disable-next-line no-unused-expressions
 !$dev
   ? new sst.aws.Service("ReplicationManager", {
       wait: true,

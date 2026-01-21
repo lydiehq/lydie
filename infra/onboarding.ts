@@ -1,4 +1,6 @@
+// oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
+
 import { secret } from "./secret"
 
 export const onboardingEmailProcessorFunction = new sst.aws.Function("OnboardingEmailProcessorFunction", {
