@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { DialogTrigger, Form, Button as RACButton } from "react-aria-components";
 import { Button } from "../generic/Button";
-import { DialogTrigger, Form } from "react-aria-components";
 import { Dialog } from "../generic/Dialog";
 import { Modal } from "../generic/Modal";
 import { RadioGroup, Radio } from "../generic/RadioGroup";
@@ -68,16 +68,15 @@ export function FeedbackWidget() {
 
     return (
         <DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-            <Button
-                intent="secondary"
-                size="sm"
-                className="w-full flex items-center justify-start gap-x-2"
+            <RACButton
+                className="w-full flex items-center justify-start gap-x-2 p-1 rounded-md hover:bg-gray-100 text-sm text-gray-700 transition-colors"
             >
                 <MessageCircleIcon className="size-4" />
                 <span>Send Feedback</span>
-            </Button>
+            </RACButton>
             <Modal isDismissable>
-                <Dialog className="p-6 outline-none">
+                <Dialog className="p-4">
+
                     {({ close }) => (
                         <>
                             <div className="flex items-center justify-between mb-4">
