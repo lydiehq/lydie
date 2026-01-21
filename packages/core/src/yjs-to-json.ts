@@ -31,7 +31,8 @@ export function yDocToJson(ydoc: Y.Doc) {
 
 export function convertYjsToJson(yjsStateBase64: string | null | undefined) {
   if (!yjsStateBase64) {
-    return null
+    // Return empty document structure for new/empty documents
+    return { type: "doc", content: [] }
   }
 
   try {
@@ -40,7 +41,8 @@ export function convertYjsToJson(yjsStateBase64: string | null | undefined) {
     return yDocToJson(ydoc)
   } catch (error) {
     console.error("Error converting Yjs to JSON:", error)
-    return null
+    // Return empty document on error as fallback
+    return { type: "doc", content: [] }
   }
 }
 

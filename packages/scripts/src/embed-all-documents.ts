@@ -21,16 +21,11 @@ async function embedAllDocuments() {
 
   for (const doc of documents) {
     try {
-      if (!doc.yjsState) {
-        console.warn(`Document ${doc.id} has no yjsState, skipping`)
-        skipped++
-        continue
-      }
+      // processDocumentEmbedding handles empty yjsState gracefully
       const result = await processDocumentEmbedding(
         {
           documentId: doc.id,
           yjsState: doc.yjsState,
-          title: doc.title,
         },
         db,
       )

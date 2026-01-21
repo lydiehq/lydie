@@ -117,7 +117,7 @@ async function pushToIntegration(documentId: string, integrationLinkId: string) 
       where: { id: documentId },
     })
 
-    if (!document || !document.published || !document.yjsState) return
+    if (!document || !document.published) return
 
     const integration = integrationRegistry.get(link.connection.integrationType)
     if (!integration) return

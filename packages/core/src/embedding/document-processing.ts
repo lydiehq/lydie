@@ -91,16 +91,8 @@ export async function processDocumentEmbedding(
 ): Promise<{ skipped: boolean; reason?: string }> {
   const { documentId, yjsState } = params
 
-  if (!yjsState) {
-    console.warn(`Document ${documentId} has no yjsState, skipping embedding processing`)
-    return { skipped: true, reason: "no_content" }
-  }
-
+  // convertYjsToJson handles empty yjsState by returning an empty document
   const jsonContent = convertYjsToJson(yjsState)
-  if (!jsonContent) {
-    console.warn(`Document ${documentId} failed to convert yjsState to JSON, skipping embedding processing`)
-    return { skipped: true, reason: "conversion_failed" }
-  }
 
   const sections = extractSections(jsonContent)
 

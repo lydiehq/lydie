@@ -89,15 +89,6 @@ Use this tool when you need to access the complete content of a document to refe
         documentTitle: document.title,
       }
 
-      // Use Yjs as source of truth
-      if (!document.yjsState) {
-        yield {
-          state: "error",
-          error: "Document has no content (yjsState is missing)",
-        }
-        return
-      }
-
       const jsonContent = convertYjsToJson(document.yjsState)
 
       // Convert jsonContent to HTML using our custom renderer
