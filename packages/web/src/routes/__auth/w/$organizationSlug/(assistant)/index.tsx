@@ -68,13 +68,13 @@ function Onboarding() {
     const stepOrder = ["documents", "assistant", "integrations"];
     const currentIndex = stepOrder.indexOf(currentStep);
     const previousIndex = stepOrder.indexOf(previousStepRef.current);
-    
+
     if (currentIndex > previousIndex) {
       setDirection("forward");
     } else if (currentIndex < previousIndex) {
       setDirection("backward");
     }
-    
+
     previousStepRef.current = currentStep;
   }, [currentStep]);
 

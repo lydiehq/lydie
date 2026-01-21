@@ -5,7 +5,10 @@ import { useAuth } from "@/context/auth.context";
 export type OnboardingChecklistItem = 
   | "documents:organize-folders"
   | "documents:search-menu"
-  | "documents:rich-editing";
+  | "documents:rich-editing"
+  | "documents:open-command-menu"
+  | "documents:create-document"
+  | "documents:explore-editor";
 
 const ONBOARDING_CHECKLIST_KEY = "onboarding_checklist";
 
