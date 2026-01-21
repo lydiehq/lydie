@@ -40,11 +40,8 @@ export function AssistantChatUI({
       })
 
       navigate({
-        to: "/w/$organizationSlug/assistant",
-        from: "/w/$organizationSlug/assistant",
-        search: {
-          conversationId: conversationId,
-        },
+        to: "/w/$organizationSlug/assistant/$chatId",
+        params: (prev) => ({ ...prev, chatId: conversationId }),
         replace: true,
       })
 

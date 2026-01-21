@@ -31,16 +31,14 @@ export function AssistantSidebar({ isCollapsed, onToggle }: Props) {
     navigate({
       to: "/w/$organizationSlug/assistant",
       params: { organizationSlug: organization.slug },
-      search: {},
     })
   }, [resetConversation, navigate, organization.slug])
 
   const handleSelectConversation = useCallback(
     (id: string) => {
       navigate({
-        to: "/w/$organizationSlug/assistant",
-        params: { organizationSlug: organization.slug },
-        search: { conversationId: id },
+        to: "/w/$organizationSlug/assistant/$chatId",
+        params: { organizationSlug: organization.slug, chatId: id },
       })
     },
     [navigate, organization.slug],

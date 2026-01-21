@@ -10,29 +10,25 @@ import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { queries } from "@lydie/zero/queries"
 import { z } from "zod"
 import { AssistantChatUI } from "@/components/assistant/AssistantChatUI"
+import { Button } from "@/components/generic/Button"
+import { useQuery } from "@rocicorp/zero/react"
 
 const assistantSearchSchema = z.object({
-  conversationId: z.string().optional(),
   prompt: z.string().optional(),
 })
 
-export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)/assistant/")({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/assistant/$chatId/")({
   component: PageComponent,
   ssr: false,
   validateSearch: assistantSearchSchema,
-  loaderDeps: ({ search }) => ({ conversationId: search.conversationId }),
-  loader: async ({ context, deps }) => {
+  loader: async ({ context, params }) => {
     const { zero, organization } = context
-    const { conversationId } = deps
-
-    if (!conversationId) {
-      return { conversation: undefined }
-    }
+    const { chatId } = params
 
     const conversation = await zero.run(
       queries.assistant.byId({
         organizationId: organization.id,
-        conversationId,
+        conversationId: chatId,
       }),
       { type: "complete" },
     )
@@ -44,16 +40,26 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)/as
 const COLLAPSED_SIZE = 3.5
 
 function PageComponent() {
+  const { chatId } = Route.useParams()
   const { organization } = useOrganization()
   const { conversation } = Route.useLoaderData()
   const [sidebarSize, setSidebarSize] = useState(25)
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
-  const search = useSearch({ from: "/__auth/w/$organizationSlug/(assistant)/assistant/" })
+  const search = useSearch({ from: "/__auth/w/$organizationSlug/assistant/$chatId/" })
   const initialPrompt = (search as { prompt?: string })?.prompt
+
+  // Also query the conversation reactively
+  const [conv, status] = useQuery(
+    queries.assistant.byId({
+      organizationId: organization.id,
+      conversationId: chatId,
+    }),
+  )
 
   // Track assistant opened
   useTrackOnMount("assistant_opened", {
     organizationId: organization.id,
+    conversationId: chatId,
   })
 
   const toggleSidebar = () => {
@@ -62,10 +68,29 @@ function PageComponent() {
     panel.isCollapsed() ? panel.expand() : panel.collapse()
   }
 
+  // Handle conversation not found
+  if (!conv && status.type === "complete") {
+    return (
+      <div className="h-screen py-1 pr-1 flex flex-col pl-1">
+        <Surface className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-y-2">
+            <span className="text-sm font-medium text-gray-900">Conversation not found</span>
+            <p className="text-sm text-gray-500">The conversation you are looking for does not exist.</p>
+            <Button size="sm" href={`/w/${organization?.slug}/assistant`}>
+              Start new conversation
+            </Button>
+          </div>
+        </Surface>
+      </div>
+    )
+  }
+
+  if (!conv) return null
+
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden size-full">
-        <AssistantProvider organizationId={organization.id} conversation={conversation}>
+        <AssistantProvider organizationId={organization.id} conversation={conv}>
           <PanelGroup autoSaveId="assistant-panel-group" direction="horizontal">
             <Panel minSize={20} defaultSize={75} className="flex flex-col grow">
               <div className="flex flex-col h-full mx-auto w-full max-w-xl">
