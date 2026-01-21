@@ -1,8 +1,14 @@
-# Lydie
+<p align="center">
+  <img src="path/to/your-logo.png" alt="Lydie logo" width="120" />
+</p>
 
-Lydie is an AI-powered document editor designed for modern workflows. It integrates advanced AI capabilities with a seamless, real-time editing experience.
-
-![Screenshot](./screenshot.png)
+<p align="center">
+  <i>
+    Lydie is a high-performance writing workspace that scales from simple notes
+    to deeply structured, interconnected knowledge systems.
+  </i>
+    <img alt="Screenshot of Lydie" src="./screenshot.png">
+</p>
 
 ## Tech Stack
 
