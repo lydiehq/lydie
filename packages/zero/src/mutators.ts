@@ -70,7 +70,7 @@ export const mutators = defineMutators({
           }
         }
 
-        // Get the highest sort_order at this level to append new document at the end
+        // Get the lowest sort_order at this level to prepend new document at the top
         const siblings = await tx.run(
           zql.documents
             .where("organization_id", organizationId)
@@ -78,7 +78,10 @@ export const mutators = defineMutators({
             .where("deleted_at", "IS", null),
         )
 
-        const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0)
+        const minSortOrder =
+          siblings.length > 0
+            ? siblings.reduce((min, doc) => Math.min(min, doc.sort_order ?? 0), siblings[0]?.sort_order ?? 0)
+            : 0
 
         // Create empty Yjs state for new document
         const emptyContent = { type: "doc", content: [] }
@@ -96,7 +99,7 @@ export const mutators = defineMutators({
           is_locked: false,
           published: false,
           parent_id: parentId || null,
-          sort_order: maxSortOrder + 1,
+          sort_order: minSortOrder - 1,
           created_at: Date.now(),
           updated_at: Date.now(),
         })
@@ -569,8 +572,6 @@ export const mutators = defineMutators({
             updated_at: Date.now(),
           })
         }
-
-        return { welcomeDocumentId: introDocId }
       },
     ),
   },
@@ -757,7 +758,9 @@ export const mutators = defineMutators({
         hasOrganizationAccess(ctx, organizationId)
 
         // Get the organization's settings
-        const settings = await tx.run(zql.organization_settings.where("organization_id", organizationId).one())
+        const settings = await tx.run(
+          zql.organization_settings.where("organization_id", organizationId).one(),
+        )
 
         if (!settings) {
           throw new Error("Organization settings not found")
