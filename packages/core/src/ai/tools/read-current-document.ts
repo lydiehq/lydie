@@ -1,9 +1,9 @@
-import { tool } from "ai";
-import { z } from "zod";
-import { db, documentsTable } from "@lydie/database";
-import { eq } from "drizzle-orm";
-import { serializeToHTML } from "../../serialization/html";
-import { convertYjsToJson } from "../../yjs-to-json";
+import { tool } from "ai"
+import { z } from "zod"
+import { db, documentsTable } from "@lydie/database"
+import { eq } from "drizzle-orm"
+import { serializeToHTML } from "../../serialization/html"
+import { convertYjsToJson } from "../../yjs-to-json"
 
 export const readCurrentDocument = (documentId: string) =>
   tool({
@@ -26,7 +26,7 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
       yield {
         state: "reading",
         message: "Reading current document...",
-      };
+      }
 
       const [document] = await db
         .select({
@@ -36,14 +36,14 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
         })
         .from(documentsTable)
         .where(eq(documentsTable.id, documentId))
-        .limit(1);
+        .limit(1)
 
       if (!document) {
         yield {
           state: "error",
           error: `Document with ID "${documentId}" not found`,
-        };
-        return;
+        }
+        return
       }
 
       // Yield processing state
@@ -51,41 +51,37 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
         state: "processing",
         message: `Processing document "${document.title}"...`,
         documentTitle: document.title,
-      };
+      }
 
       // Add fake delay to see loading state (remove in production)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       // Use Yjs as source of truth
       if (!document.yjsState) {
         yield {
           state: "error",
           error: "Document has no content (yjsState is missing)",
-        };
-        return;
+        }
+        return
       }
 
-      const jsonContent = convertYjsToJson(document.yjsState);
+      const jsonContent = convertYjsToJson(document.yjsState)
 
       // Convert jsonContent to HTML using our custom renderer
-      let htmlContent: string;
+      let htmlContent: string
       try {
-        htmlContent = serializeToHTML(jsonContent as any);
+        htmlContent = serializeToHTML(jsonContent as any)
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        console.error(
-          "[ReadCurrentDocument] Error converting jsonContent to HTML:",
-          error
-        );
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error("[ReadCurrentDocument] Error converting jsonContent to HTML:", error)
 
         // Yield error state
         yield {
           state: "error",
           error: `Failed to read document content: ${errorMessage}. The document may have an unsupported format. Try using searchInDocument instead to find specific content.`,
           title: document.title,
-        };
-        return;
+        }
+        return
       }
 
       // Yield final success state with content
@@ -94,6 +90,6 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
         message: `Current document content retrieved successfully`,
         title: document.title,
         content: htmlContent,
-      };
+      }
     },
-  });
+  })

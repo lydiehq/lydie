@@ -1,8 +1,5 @@
-import { cva } from "cva";
-import {
-  Separator as RACSeparator,
-  type SeparatorProps,
-} from "react-aria-components";
+import { cva } from "cva"
+import { Separator as RACSeparator, type SeparatorProps } from "react-aria-components"
 
 const styles = cva({
   base: "bg-black/3 border-black/3",
@@ -15,7 +12,7 @@ const styles = cva({
   defaultVariants: {
     orientation: "horizontal",
   },
-});
+})
 
 export function Separator(props: SeparatorProps) {
   return (
@@ -26,5 +23,5 @@ export function Separator(props: SeparatorProps) {
         className: props.className,
       })}
     />
-  );
+  )
 }

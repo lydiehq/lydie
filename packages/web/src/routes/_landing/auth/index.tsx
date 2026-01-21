@@ -1,17 +1,17 @@
-import { Button } from "@/components/generic/Button";
-import { Heading } from "@/components/generic/Heading";
-import { authClient } from "@/utils/auth";
-import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
-import { useState } from "react";
-import "@/styles/grainy-gradient.css";
+import { Button } from "@/components/generic/Button"
+import { Heading } from "@/components/generic/Heading"
+import { authClient } from "@/utils/auth"
+import { createFileRoute } from "@tanstack/react-router"
+import { z } from "zod"
+import { useState } from "react"
+import "@/styles/grainy-gradient.css"
 
 export const Route = createFileRoute("/_landing/auth/")({
   component: RouteComponent,
   validateSearch: z.object({
     redirect: z.string().optional(),
   }),
-});
+})
 
 function RouteComponent() {
   return (
@@ -58,27 +58,25 @@ function RouteComponent() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function AuthBox() {
-  const [isPending, setIsPending] = useState(false);
-  const { redirect } = Route.useSearch();
+  const [isPending, setIsPending] = useState(false)
+  const { redirect } = Route.useSearch()
 
   const handleGoogleSignIn = async () => {
-    setIsPending(true);
+    setIsPending(true)
     try {
-      const callbackURL = redirect
-        ? `${window.location.origin}${redirect}`
-        : window.location.origin;
+      const callbackURL = redirect ? `${window.location.origin}${redirect}` : window.location.origin
       await authClient.signIn.social({
         provider: "google",
         callbackURL,
-      });
+      })
     } catch (error) {
-      setIsPending(false);
+      setIsPending(false)
     }
-  };
+  }
 
   return (
     <div className="max-w-sm w-full gap-y-4 flex flex-col">
@@ -102,5 +100,5 @@ function AuthBox() {
         By continuing, you agree to our Terms of Service and Privacy Policy
       </div> */}
     </div>
-  );
+  )
 }

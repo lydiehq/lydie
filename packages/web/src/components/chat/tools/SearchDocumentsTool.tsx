@@ -1,56 +1,48 @@
-import { LoaderIcon, DocumentIcon } from "@/icons";
-import { Link } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "motion/react";
+import { LoaderIcon, DocumentIcon } from "@/icons"
+import { Link } from "@tanstack/react-router"
+import { motion, AnimatePresence } from "motion/react"
 
 export interface SearchDocumentsToolProps {
   tool: {
-    state: string;
+    state: string
     args?: {
-      query?: string;
-    };
+      query?: string
+    }
     output?: {
-      state?: string;
-      message?: string;
-      searchQuery?: string;
-      totalFound?: number;
+      state?: string
+      message?: string
+      searchQuery?: string
+      totalFound?: number
       results?: Array<{
-        documentId: string;
-        documentTitle: string;
-        documentSlug?: string;
-        searchType?: string;
-      }>;
-    };
-  };
-  className?: string;
+        documentId: string
+        documentTitle: string
+        documentSlug?: string
+        searchType?: string
+      }>
+    }
+  }
+  className?: string
 }
 
 export function SearchDocumentsTool({ tool }: SearchDocumentsToolProps) {
-  const outputState = tool.output?.state;
-  const isToolLoading =
-    tool.state === "call-streaming" ||
-    (outputState && outputState !== "success");
-  const results = tool.output?.results || [];
+  const outputState = tool.output?.state
+  const isToolLoading = tool.state === "call-streaming" || (outputState && outputState !== "success")
+  const results = tool.output?.results || []
 
-  let loadingMessage = "Searching documents...";
+  let loadingMessage = "Searching documents..."
   if (outputState === "searching") {
-    loadingMessage = tool.output?.message || "Searching documents...";
+    loadingMessage = tool.output?.message || "Searching documents..."
   }
 
   const message = isToolLoading
     ? loadingMessage
-    : `Found ${results.length} document${results.length !== 1 ? "s" : ""}`;
+    : `Found ${results.length} document${results.length !== 1 ? "s" : ""}`
 
   return (
     <motion.div className="p-1 bg-gray-100 rounded-[10px] my-2">
       <div className="p-1">
         <motion.div
-          key={
-            isToolLoading
-              ? "loading"
-              : outputState === "success"
-              ? "success"
-              : "found"
-          }
+          key={isToolLoading ? "loading" : outputState === "success" ? "success" : "found"}
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -89,10 +81,7 @@ export function SearchDocumentsTool({ tool }: SearchDocumentsToolProps) {
                 visible: {
                   opacity: 1,
                   transition: {
-                    staggerChildren: Math.max(
-                      0.02,
-                      Math.min(0.12, 0.12 - (results.length - 1) * 0.01)
-                    ),
+                    staggerChildren: Math.max(0.02, Math.min(0.12, 0.12 - (results.length - 1) * 0.01)),
                   },
                 },
               }}
@@ -116,9 +105,7 @@ export function SearchDocumentsTool({ tool }: SearchDocumentsToolProps) {
                     className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
                     <DocumentIcon className="text-gray-500 shrink-0 size-3.5" />
-                    <span className="truncate flex-1">
-                      {result.documentTitle || "Untitled document"}
-                    </span>
+                    <span className="truncate flex-1">{result.documentTitle || "Untitled document"}</span>
                   </Link>
                 </motion.div>
               ))}
@@ -138,5 +125,5 @@ export function SearchDocumentsTool({ tool }: SearchDocumentsToolProps) {
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  );
+  )
 }

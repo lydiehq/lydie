@@ -1,5 +1,5 @@
-import { Eyebrow } from "./Eyebrow";
-import { Container } from "../Container";
+import { Eyebrow } from "./Eyebrow"
+import { Container } from "../Container"
 
 const points = [
   {
@@ -12,15 +12,15 @@ const points = [
     description:
       "The AI understands your entire workspace, so it can answer questions and make suggestions based on all your documents.",
   },
-];
+]
 
 interface ChatSectionProps {
-  imageSrc: string;
-  imageSrcSet: string;
-  imageSizes: string;
-  imageAlt: string;
-  imageWidth?: number;
-  imageHeight?: number;
+  imageSrc: string
+  imageSrcSet: string
+  imageSizes: string
+  imageAlt: string
+  imageWidth?: number
+  imageHeight?: number
 }
 
 export function ChatSection({
@@ -58,9 +58,8 @@ export function ChatSection({
               Your AI writing <br /> companion, always ready.
             </h2>
             <span className="text-[15px]/relaxed text-gray-600 text-balance">
-              Chat with AI that understands your entire workspace. Get
-              suggestions, make edits, and improve your writing, all while
-              staying in complete control.
+              Chat with AI that understands your entire workspace. Get suggestions, make edits, and improve
+              your writing, all while staying in complete control.
             </span>
             {/* <hr className="border-gray-100 w-full my-4" />
             <div className="grid grid-cols-1 gap-6">
@@ -79,5 +78,5 @@ export function ChatSection({
         </div>
       </Container>
     </section>
-  );
+  )
 }

@@ -1,28 +1,23 @@
-import { Button } from "@/components/generic/Button";
-import React from "react";
+import { Button } from "@/components/generic/Button"
+import React from "react"
 
 export interface ToolAction {
-  label: string;
-  onPress: () => void;
-  intent?: "primary" | "secondary";
-  disabled?: boolean;
-  pending?: boolean;
+  label: string
+  onPress: () => void
+  intent?: "primary" | "secondary"
+  disabled?: boolean
+  pending?: boolean
 }
 
 export interface ToolContainerProps {
-  children: React.ReactNode;
-  title?: string;
-  actions?: ToolAction[];
-  className?: string;
+  children: React.ReactNode
+  title?: string
+  actions?: ToolAction[]
+  className?: string
 }
 
-export function ToolContainer({
-  children,
-  title,
-  actions = [],
-  className = "",
-}: ToolContainerProps) {
-  const hasTitle = !!(title || actions.length > 0);
+export function ToolContainer({ children, title, actions = [], className = "" }: ToolContainerProps) {
+  const hasTitle = !!(title || actions.length > 0)
 
   return (
     <div
@@ -39,9 +34,7 @@ export function ToolContainer({
     >
       {hasTitle && (
         <div className="flex justify-between items-center">
-          <div className="pl-2 py-1">
-            {title && <span className="text-xs text-gray-500">{title}</span>}
-          </div>
+          <div className="pl-2 py-1">{title && <span className="text-xs text-gray-500">{title}</span>}</div>
           <div className="pr-1 py-1 flex gap-x-1">
             {actions.map((action, index) => (
               <Button
@@ -53,8 +46,8 @@ export function ToolContainer({
                   action.intent === "secondary"
                     ? "ghost"
                     : action.intent === "primary"
-                    ? "secondary"
-                    : action.intent
+                      ? "secondary"
+                      : action.intent
                 }
                 size="xs"
               >
@@ -73,5 +66,5 @@ export function ToolContainer({
         {children}
       </div>
     </div>
-  );
+  )
 }

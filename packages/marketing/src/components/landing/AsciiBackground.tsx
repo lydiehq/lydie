@@ -1,5 +1,5 @@
-import { twMerge } from "tailwind-merge";
-import { useState, useEffect, useRef } from "react";
+import { twMerge } from "tailwind-merge"
+import { useState, useEffect, useRef } from "react"
 
 const shortStory = `
 The developer stared at the terminal, watching their deployment fail for the third time. "It works on my machine," they muttered, knowing full well it was a lie. The error message was cryptic, as if written by someone who had never met a human being. "Cannot read property 'undefined' of undefined," it taunted.
@@ -15,102 +15,97 @@ The developer chuckled. They had found the Easter egg. But wait, there was more.
 "Remember," the text concluded, "every blur hides a story. Every comment contains a secret. Every console.log is a cry for help. Keep exploring, keep inspecting, keep discovering. The best code is the code that makes you smile when you find its secrets."
 
 The developer closed DevTools, refreshed the page, and watched the typewriter effect play out again. This time, they knew what was being typed. They felt like they were in on a joke that only developers would understand. And honestly? That made their day.
-`;
+`
 
 type Props = {
-  className: string;
-  startPercentage?: number; // Percentage (0-100) of where to start the typewriter effect
-};
+  className: string
+  startPercentage?: number // Percentage (0-100) of where to start the typewriter effect
+}
 
 export function AsciiBackground({ className, startPercentage = 50 }: Props) {
-  const [displayedText, setDisplayedText] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const animationFrameRef = useRef<number | undefined>(undefined);
-  const currentIndexRef = useRef<number>(0);
-  const lastUpdateTimeRef = useRef<number>(0);
+  const [displayedText, setDisplayedText] = useState("")
+  const [isVisible, setIsVisible] = useState(false)
+  const [hasStarted, setHasStarted] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
+  const animationFrameRef = useRef<number | undefined>(undefined)
+  const currentIndexRef = useRef<number>(0)
+  const lastUpdateTimeRef = useRef<number>(0)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && !hasStarted) {
-            setIsVisible(true);
-            setHasStarted(true);
+            setIsVisible(true)
+            setHasStarted(true)
           }
-        });
+        })
       },
       {
         threshold: 0.1, // Trigger when 10% of the component is visible
-      }
-    );
+      },
+    )
 
     if (containerRef.current) {
-      observer.observe(containerRef.current);
+      observer.observe(containerRef.current)
     }
 
     return () => {
       if (containerRef.current) {
-        observer.unobserve(containerRef.current);
+        observer.unobserve(containerRef.current)
       }
-    };
-  }, [hasStarted]);
+    }
+  }, [hasStarted])
 
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible) return
 
-    const typingSpeed = 10; // milliseconds per character
+    const typingSpeed = 10 // milliseconds per character
     // Clamp percentage between 0 and 100, then calculate start index
-    const clampedPercentage = Math.max(0, Math.min(100, startPercentage));
-    const startIndex = Math.floor(
-      (shortStory.length * clampedPercentage) / 100
-    );
+    const clampedPercentage = Math.max(0, Math.min(100, startPercentage))
+    const startIndex = Math.floor((shortStory.length * clampedPercentage) / 100)
 
     // Set initial text up to start percentage
-    currentIndexRef.current = startIndex;
-    setDisplayedText(shortStory.slice(0, startIndex));
+    currentIndexRef.current = startIndex
+    setDisplayedText(shortStory.slice(0, startIndex))
 
     // Use requestAnimationFrame for smoother, more performant updates
     // Batch updates to reduce re-renders (update every frame instead of every character)
     const animate = (timestamp: number) => {
       if (!lastUpdateTimeRef.current) {
-        lastUpdateTimeRef.current = timestamp;
+        lastUpdateTimeRef.current = timestamp
       }
 
-      const elapsed = timestamp - lastUpdateTimeRef.current;
-      const charsToAdd = Math.floor(elapsed / typingSpeed);
+      const elapsed = timestamp - lastUpdateTimeRef.current
+      const charsToAdd = Math.floor(elapsed / typingSpeed)
 
       if (charsToAdd > 0 && currentIndexRef.current < shortStory.length) {
-        const newIndex = Math.min(
-          currentIndexRef.current + charsToAdd,
-          shortStory.length
-        );
-        currentIndexRef.current = newIndex;
+        const newIndex = Math.min(currentIndexRef.current + charsToAdd, shortStory.length)
+        currentIndexRef.current = newIndex
 
         // Direct DOM manipulation for better performance (avoids React re-render)
         if (textRef.current) {
-          textRef.current.textContent = shortStory.slice(0, newIndex);
+          textRef.current.textContent = shortStory.slice(0, newIndex)
         }
 
-        lastUpdateTimeRef.current = timestamp;
+        lastUpdateTimeRef.current = timestamp
       }
 
       if (currentIndexRef.current < shortStory.length) {
-        animationFrameRef.current = requestAnimationFrame(animate);
+        animationFrameRef.current = requestAnimationFrame(animate)
       }
-    };
+    }
 
-    animationFrameRef.current = requestAnimationFrame(animate);
+    animationFrameRef.current = requestAnimationFrame(animate)
 
     return () => {
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+        cancelAnimationFrame(animationFrameRef.current)
       }
-      lastUpdateTimeRef.current = 0;
-    };
-  }, [isVisible, startPercentage]);
+      lastUpdateTimeRef.current = 0
+    }
+  }, [isVisible, startPercentage])
 
   return (
     <div
@@ -118,10 +113,10 @@ export function AsciiBackground({ className, startPercentage = 50 }: Props) {
       aria-hidden="true"
       className={twMerge(
         "absolute overflow-hidden pointer-events-none select-none text-sm text-black/8 whitespace-pre-wrap blur-[2px]",
-        className
+        className,
       )}
     >
       <div ref={textRef}>{displayedText}</div>
     </div>
-  );
+  )
 }

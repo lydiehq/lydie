@@ -1,25 +1,21 @@
-import { db } from "@lydie/database";
-import {
-  integrationConnectionsTable,
-  integrationLinksTable,
-  documentsTable,
-} from "@lydie/database";
-import { eq } from "drizzle-orm";
-import type { Integration, SyncDocument } from "./types";
-import { validateCustomFields } from "./validation";
-import { convertYjsToJson } from "../yjs-to-json";
+import { db } from "@lydie/database"
+import { integrationConnectionsTable, integrationLinksTable, documentsTable } from "@lydie/database"
+import { eq } from "drizzle-orm"
+import type { Integration, SyncDocument } from "./types"
+import { validateCustomFields } from "./validation"
+import { convertYjsToJson } from "../yjs-to-json"
 
 export interface PushDocumentOptions {
-  documentId: string;
-  organizationId: string;
-  integration?: Integration; // Optional if caller already has it
+  documentId: string
+  organizationId: string
+  integration?: Integration // Optional if caller already has it
 }
 
 export interface PushDocumentResult {
-  success: boolean;
-  externalId?: string;
-  message?: string;
-  error?: string;
+  success: boolean
+  externalId?: string
+  message?: string
+  error?: string
 }
 
 /**
@@ -30,17 +26,11 @@ export interface PushDocumentResult {
  * - Calling integration.push()
  * - Updating document status
  */
-export async function pushDocumentToIntegration(
-  options: PushDocumentOptions
-): Promise<PushDocumentResult> {
-  const {
-    documentId,
-    organizationId,
-    integration: providedIntegration,
-  } = options;
+export async function pushDocumentToIntegration(options: PushDocumentOptions): Promise<PushDocumentResult> {
+  const { documentId, organizationId, integration: providedIntegration } = options
 
   try {
-    console.log(`[Integration Push] Starting push for document ${documentId}`);
+    console.log(`[Integration Push] Starting push for document ${documentId}`)
 
     // Fetch document with its integration link and connection
     const document = await db.query.documentsTable.findFirst({
@@ -52,13 +42,13 @@ export async function pushDocumentToIntegration(
           },
         },
       },
-    });
+    })
 
     if (!document || document.organizationId !== organizationId) {
       return {
         success: false,
         error: "Document not found or access denied",
-      };
+      }
     }
 
     // Check if document is linked to an integration
@@ -66,96 +56,89 @@ export async function pushDocumentToIntegration(
       return {
         success: false,
         error: "Document is not linked to an integration",
-      };
+      }
     }
 
-    const link = document.integrationLink;
-    const connection = link.connection;
+    const link = document.integrationLink
+    const connection = link.connection
 
     if (!connection) {
       return {
         success: false,
         error: "Integration connection not found",
-      };
+      }
     }
 
     // Get integration instance
-    const integration = providedIntegration;
+    const integration = providedIntegration
     if (!integration) {
       return {
         success: false,
         error: "Integration not available",
-      };
+      }
     }
 
-    console.log(
-      `[Integration Push] Pushing to ${connection.integrationType}: ${document.title}`
-    );
+    console.log(`[Integration Push] Pushing to ${connection.integrationType}: ${document.title}`)
 
     // Validate custom fields against integration schema
-    const schema = integration.getCustomFieldSchema?.();
+    const schema = integration.getCustomFieldSchema?.()
     const validation = validateCustomFields(
       document.customFields as Record<string, string | number> | undefined,
-      schema
-    );
+      schema,
+    )
 
     if (!validation.valid) {
-      const errorMessage = `Custom field validation failed: ${validation.errors.join(
-        ", "
-      )}`;
-      console.error(`[Integration Push] ${errorMessage}`);
+      const errorMessage = `Custom field validation failed: ${validation.errors.join(", ")}`
+      console.error(`[Integration Push] ${errorMessage}`)
       return {
         success: false,
         error: errorMessage,
-      };
+      }
     }
 
     // Merge connection config with link config for the push
     const mergedConfig = {
       ...(connection.config as Record<string, any>),
       ...(link.config as Record<string, any>),
-    };
+    }
 
     // Use Yjs as source of truth
     if (!document.yjsState) {
       return {
         success: false,
         error: "Document has no content (yjsState is missing)",
-      };
+      }
     }
 
-    const jsonContent = convertYjsToJson(document.yjsState);
+    const jsonContent = convertYjsToJson(document.yjsState)
 
     // Compute path segments from parent hierarchy
     // This ensures the path reflects the current document location, even if externalId is stale
-    const parentPathSegments: string[] = [];
+    const parentPathSegments: string[] = []
     if (document.parentId) {
-      let currentParentId: string | null = document.parentId;
-      const visited = new Set<string>(); // Prevent infinite loops
+      let currentParentId: string | null = document.parentId
+      const visited = new Set<string>() // Prevent infinite loops
 
       while (currentParentId && !visited.has(currentParentId)) {
-        visited.add(currentParentId);
+        visited.add(currentParentId)
         const parent = await db.query.documentsTable.findFirst({
           where: { id: currentParentId },
-        });
+        })
 
-        if (!parent) break;
+        if (!parent) break
 
         // For folder pages (locked documents with folder externalId), extract folder name
-        if (
-          parent.isLocked &&
-          parent.externalId?.startsWith("__folder__")
-        ) {
-          const folderPath = parent.externalId.substring("__folder__".length);
-          const folderName = folderPath.split("/").pop() || folderPath;
-          parentPathSegments.unshift(folderName); // Add to beginning (we're going up the tree)
+        if (parent.isLocked && parent.externalId?.startsWith("__folder__")) {
+          const folderPath = parent.externalId.substring("__folder__".length)
+          const folderName = folderPath.split("/").pop() || folderPath
+          parentPathSegments.unshift(folderName) // Add to beginning (we're going up the tree)
         } else {
           // For regular parent documents, use title
           // This shouldn't happen in practice for synced documents, but handle it gracefully
-          parentPathSegments.unshift(parent.title);
+          parentPathSegments.unshift(parent.title)
         }
 
-        currentParentId = parent.parentId;
+        currentParentId = parent.parentId
       }
     }
 
@@ -172,10 +155,8 @@ export async function pushDocumentToIntegration(
       isLocked: document.isLocked ?? false,
       parentId: document.parentId,
       parentPathSegments: parentPathSegments.length > 0 ? parentPathSegments : undefined,
-      customFields: document.customFields as
-        | Record<string, string | number>
-        | undefined,
-    };
+      customFields: document.customFields as Record<string, string | number> | undefined,
+    }
 
     // Call integration's push method
     const result = await integration.push({
@@ -188,7 +169,7 @@ export async function pushDocumentToIntegration(
         createdAt: connection.createdAt,
         updatedAt: connection.updatedAt,
       },
-    });
+    })
 
     if (result.success) {
       // Update document with external ID from the push result
@@ -200,7 +181,7 @@ export async function pushDocumentToIntegration(
             externalId: result.externalId,
             updatedAt: new Date(),
           })
-          .where(eq(documentsTable.id, documentId));
+          .where(eq(documentsTable.id, documentId))
       }
 
       // Ensure connection status is active on successful push
@@ -212,29 +193,24 @@ export async function pushDocumentToIntegration(
             statusMessage: null,
             updatedAt: new Date(),
           })
-          .where(eq(integrationConnectionsTable.id, connection.id));
+          .where(eq(integrationConnectionsTable.id, connection.id))
       }
 
       console.log(
-        `[Integration Push] Successfully pushed document ${documentId} to ${connection.integrationType}`
-      );
+        `[Integration Push] Successfully pushed document ${documentId} to ${connection.integrationType}`,
+      )
     } else {
-      console.error(
-        `[Integration Push] Failed to push document ${documentId}: ${result.error}`
-      );
+      console.error(`[Integration Push] Failed to push document ${documentId}: ${result.error}`)
     }
 
-    return result;
+    return result
   } catch (error) {
-    console.error("[Integration Push] Error during push:", error);
-    console.error(
-      "[Integration Push] Error stack:",
-      error instanceof Error ? error.stack : "No stack"
-    );
+    console.error("[Integration Push] Error during push:", error)
+    console.error("[Integration Push] Error stack:", error instanceof Error ? error.stack : "No stack")
 
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
-    };
+    }
   }
 }

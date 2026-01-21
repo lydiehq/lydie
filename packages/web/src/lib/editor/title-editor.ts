@@ -1,18 +1,18 @@
-import { useEditor, Editor } from "@tiptap/react";
-import { getTitleExtensions } from "@lydie/editor/title";
-import { useCallback, useMemo } from "react";
+import { useEditor, Editor } from "@tiptap/react"
+import { getTitleExtensions } from "@lydie/editor/title"
+import { useCallback, useMemo } from "react"
 
 export type TitleEditorHookResult = {
-  editor: Editor | null;
-  setContent: (title: string) => void;
-};
+  editor: Editor | null
+  setContent: (title: string) => void
+}
 
 export interface UseTitleEditorOptions {
-  initialTitle?: string;
-  onUpdate?: (title: string) => void;
-  onEnter?: () => void;
-  editable?: boolean;
-  placeholder?: string;
+  initialTitle?: string
+  onUpdate?: (title: string) => void
+  onEnter?: () => void
+  editable?: boolean
+  placeholder?: string
 }
 
 export function useTitleEditor({
@@ -22,10 +22,7 @@ export function useTitleEditor({
   editable = true,
   placeholder,
 }: UseTitleEditorOptions): TitleEditorHookResult {
-  const extensions = useMemo(
-    () => getTitleExtensions({ onEnter, placeholder }),
-    [onEnter, placeholder]
-  );
+  const extensions = useMemo(() => getTitleExtensions({ onEnter, placeholder }), [onEnter, placeholder])
 
   const editor = useEditor({
     autofocus: editable,
@@ -53,18 +50,18 @@ export function useTitleEditor({
           ],
         },
     onUpdate: ({ editor }) => {
-      onUpdate?.(editor.state.doc.textContent);
+      onUpdate?.(editor.state.doc.textContent)
     },
     editorProps: {
       attributes: {
         class: "focus:outline-none text-3xl font-medium text-gray-950",
       },
     },
-  });
+  })
 
   const setContent = useCallback(
     (title: string) => {
-      if (!editor) return;
+      if (!editor) return
       editor.commands.setContent({
         type: "doc",
         content: [
@@ -74,10 +71,10 @@ export function useTitleEditor({
             content: title ? [{ type: "text", text: title }] : [],
           },
         ],
-      });
+      })
     },
-    [editor]
-  );
+    [editor],
+  )
 
-  return { editor, setContent };
+  return { editor, setContent }
 }

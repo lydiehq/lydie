@@ -1,23 +1,18 @@
-import { Button } from "@/components/generic/Button";
-import { useAuthenticatedApi } from "@/services/api";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { useOrganization } from "@/context/organization.context";
-import { Separator } from "@/components/generic/Separator";
-import { Heading } from "@/components/generic/Heading";
-import { SectionHeader } from "@/components/generic/SectionHeader";
-import { useQuery } from "@rocicorp/zero/react";
-import { useState, useEffect } from "react";
-import {
-  DialogTrigger,
-  Form,
-  MenuTrigger,
-  Button as RACButton,
-} from "react-aria-components";
-import { Modal } from "@/components/generic/Modal";
-import { Dialog } from "@/components/generic/Dialog";
-import { AlertDialog } from "@/components/generic/AlertDialog";
-import { Menu, MenuItem } from "@/components/generic/Menu";
+import { Button } from "@/components/generic/Button"
+import { useAuthenticatedApi } from "@/services/api"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { toast } from "sonner"
+import { useOrganization } from "@/context/organization.context"
+import { Separator } from "@/components/generic/Separator"
+import { Heading } from "@/components/generic/Heading"
+import { SectionHeader } from "@/components/generic/SectionHeader"
+import { useQuery } from "@rocicorp/zero/react"
+import { useState, useEffect } from "react"
+import { DialogTrigger, Form, MenuTrigger, Button as RACButton } from "react-aria-components"
+import { Modal } from "@/components/generic/Modal"
+import { Dialog } from "@/components/generic/Dialog"
+import { AlertDialog } from "@/components/generic/AlertDialog"
+import { Menu, MenuItem } from "@/components/generic/Menu"
 import {
   CopyIcon,
   EyeIcon,
@@ -30,40 +25,39 @@ import {
   ShieldIcon,
   ClockIcon,
   KeyIcon,
-} from "@/icons";
-import { useZero } from "@/services/zero";
-import { queries } from "@lydie/zero/queries";
-import { confirmDialog } from "@/stores/confirm-dialog";
-import { useAppForm } from "@/hooks/use-app-form";
-import { formatDistanceToNow } from "date-fns";
-import { mutators } from "@lydie/zero/mutators";
-import { Card } from "@/components/layout/Card";
-import { slugify } from "@lydie/core/utils";
-import { authClient } from "@/utils/auth";
-import { useAuth } from "@/context/auth.context";
-import { clearActiveOrganizationSlug } from "@/lib/active-organization";
+} from "@/icons"
+import { useZero } from "@/services/zero"
+import { queries } from "@lydie/zero/queries"
+import { confirmDialog } from "@/stores/confirm-dialog"
+import { useAppForm } from "@/hooks/use-app-form"
+import { formatDistanceToNow } from "date-fns"
+import { mutators } from "@lydie/zero/mutators"
+import { Card } from "@/components/layout/Card"
+import { slugify } from "@lydie/core/utils"
+import { authClient } from "@/utils/auth"
+import { useAuth } from "@/context/auth.context"
+import { clearActiveOrganizationSlug } from "@/lib/active-organization"
 
-type ApiKeyDialogStep = "create" | "success";
+type ApiKeyDialogStep = "create" | "success"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/")({
   component: RouteComponent,
-});
+})
 
 function RouteComponent() {
-  const { createClient } = useAuthenticatedApi();
-  const { organization } = useOrganization();
-  const z = useZero();
-  const navigate = useNavigate();
-  const { session } = useAuth();
-  const userId = session?.userId;
-  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
-  const [apiKeyDialogStep, setApiKeyDialogStep] =
-    useState<ApiKeyDialogStep>("create");
-  const [newApiKey, setNewApiKey] = useState<string>("");
-  const [copied, setCopied] = useState(false);
-  const [showKey, setShowKey] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const { createClient } = useAuthenticatedApi()
+  const { organization } = useOrganization()
+  const z = useZero()
+  const navigate = useNavigate()
+  const { session } = useAuth()
+  const userId = session?.userId
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
+  const [apiKeyDialogStep, setApiKeyDialogStep] = useState<ApiKeyDialogStep>("create")
+  const [newApiKey, setNewApiKey] = useState<string>("")
+  const [copied, setCopied] = useState(false)
+  const [showKey, setShowKey] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
 
   // Workspace name form
   const workspaceForm = useAppForm({
@@ -73,29 +67,25 @@ function RouteComponent() {
     },
     onSubmit: async (values) => {
       if (!values.value.name.trim()) {
-        toast.error("Workspace name cannot be empty");
-        return;
+        toast.error("Workspace name cannot be empty")
+        return
       }
 
       if (!values.value.slug.trim()) {
-        toast.error("Workspace slug cannot be empty");
-        return;
+        toast.error("Workspace slug cannot be empty")
+        return
       }
 
-      const slugified = slugify(values.value.slug.trim());
+      const slugified = slugify(values.value.slug.trim())
       if (slugified !== values.value.slug.trim()) {
-        toast.error(
-          "Slug contains invalid characters. Only letters, numbers, and hyphens are allowed."
-        );
-        return;
+        toast.error("Slug contains invalid characters. Only letters, numbers, and hyphens are allowed.")
+        return
       }
 
-      const hasChanges =
-        values.value.name.trim() !== organization.name ||
-        slugified !== organization.slug;
+      const hasChanges = values.value.name.trim() !== organization.name || slugified !== organization.slug
 
       if (!hasChanges) {
-        return;
+        return
       }
 
       try {
@@ -104,19 +94,19 @@ function RouteComponent() {
             organizationId: organization.id,
             name: values.value.name.trim(),
             slug: slugified,
-          })
-        );
-        toast.success("Workspace updated successfully");
+          }),
+        )
+        toast.success("Workspace updated successfully")
       } catch (error: any) {
         const errorMessage =
           error?.message === "Slug is already taken"
             ? "This slug is already taken. Please choose a different one."
-            : "Failed to update workspace";
-        toast.error(errorMessage);
-        console.error("Workspace update error:", error);
+            : "Failed to update workspace"
+        toast.error(errorMessage)
+        console.error("Workspace update error:", error)
       }
     },
-  });
+  })
 
   // API key creation form
   const apiKeyForm = useAppForm({
@@ -125,95 +115,86 @@ function RouteComponent() {
     },
     onSubmit: async (values) => {
       if (!values.value.name.trim()) {
-        toast.error("Please enter a name for the API key");
-        return;
+        toast.error("Please enter a name for the API key")
+        return
       }
 
-      const client = await createClient();
+      const client = await createClient()
       try {
         const res = await client.internal.organization["api-key"]
           .$post({
             json: { name: values.value.name.trim() },
           })
-          .then((res) => res.json());
+          .then((res) => res.json())
 
-        setNewApiKey(res.key);
-        setApiKeyDialogStep("success");
-        apiKeyForm.reset();
+        setNewApiKey(res.key)
+        setApiKeyDialogStep("success")
+        apiKeyForm.reset()
       } catch (error) {
-        toast.error("Failed to create API key");
-        console.error("API key creation error:", error);
+        toast.error("Failed to create API key")
+        console.error("API key creation error:", error)
       }
     },
-  });
+  })
 
   const handleRevokeApiKey = async (keyId: string, keyName: string) => {
     confirmDialog({
       title: `Revoke API Key "${keyName}"`,
-      message:
-        "This action cannot be undone. The API key will be permanently revoked.",
+      message: "This action cannot be undone. The API key will be permanently revoked.",
       onConfirm: () => {
         try {
-          z.mutate(
-            mutators.apiKey.revoke({ keyId, organizationId: organization.id })
-          );
-          toast.success("API key revoked successfully");
+          z.mutate(mutators.apiKey.revoke({ keyId, organizationId: organization.id }))
+          toast.success("API key revoked successfully")
         } catch (error) {
-          toast.error("Failed to revoke API key");
-          console.error("API key revocation error:", error);
+          toast.error("Failed to revoke API key")
+          console.error("API key revocation error:", error)
         }
       },
-    });
-  };
+    })
+  }
 
   const handleCopyKey = async (key: string) => {
     try {
-      await navigator.clipboard.writeText(key);
-      setCopied(true);
-      toast.success("API key copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(key)
+      setCopied(true)
+      toast.success("API key copied to clipboard")
+      setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      toast.error("Failed to copy API key");
-      console.error("Copy error:", error);
+      toast.error("Failed to copy API key")
+      console.error("Copy error:", error)
     }
-  };
+  }
 
   const handleCloseApiKeyDialog = () => {
-    setIsApiKeyDialogOpen(false);
-    setApiKeyDialogStep("create");
-    setNewApiKey("");
-    setCopied(false);
-    setShowKey(false);
-  };
+    setIsApiKeyDialogOpen(false)
+    setApiKeyDialogStep("create")
+    setNewApiKey("")
+    setCopied(false)
+    setShowKey(false)
+  }
 
   const handleDeleteOrganization = () => {
     try {
-      z.mutate(
-        mutators.organization.delete({ organizationId: organization.id })
-      );
-      clearActiveOrganizationSlug(userId);
-      toast.success("Organization deleted successfully");
+      z.mutate(mutators.organization.delete({ organizationId: organization.id }))
+      clearActiveOrganizationSlug(userId)
+      toast.success("Organization deleted successfully")
       // Navigate to home - the route will redirect appropriately
-      navigate({ to: "/" });
+      navigate({ to: "/" })
     } catch (error) {
-      toast.error("Failed to delete organization");
-      console.error("Organization deletion error:", error);
+      toast.error("Failed to delete organization")
+      console.error("Organization deletion error:", error)
     }
-  };
+  }
 
-  const [keys] = useQuery(
-    queries.apiKeys.byOrganization({ organizationId: organization.id })
-  );
+  const [keys] = useQuery(queries.apiKeys.byOrganization({ organizationId: organization.id }))
 
-  const [members] = useQuery(
-    queries.members.byOrganization({ organizationId: organization.id })
-  );
+  const [members] = useQuery(queries.members.byOrganization({ organizationId: organization.id }))
 
   const [invitations] = useQuery(
     queries.invitations.byOrganization({
       organizationId: organization.id,
-    })
-  );
+    }),
+  )
 
   // Invitation form
   const invitationForm = useAppForm({
@@ -223,15 +204,15 @@ function RouteComponent() {
     },
     onSubmit: async (values) => {
       if (!values.value.email.trim()) {
-        toast.error("Please enter an email address");
-        return;
+        toast.error("Please enter an email address")
+        return
       }
 
       // Basic email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(values.value.email.trim())) {
-        toast.error("Please enter a valid email address");
-        return;
+        toast.error("Please enter a valid email address")
+        return
       }
 
       try {
@@ -239,27 +220,24 @@ function RouteComponent() {
           organizationId: organization.id,
           email: values.value.email.trim(),
           role: values.value.role,
-        });
-        toast.success("Invitation sent successfully");
-        invitationForm.reset();
-        setIsInviteDialogOpen(false);
+        })
+        toast.success("Invitation sent successfully")
+        invitationForm.reset()
+        setIsInviteDialogOpen(false)
       } catch (error: any) {
         const errorMessage = error?.message?.includes("already")
           ? "This user is already a member or has a pending invitation"
-          : "Failed to send invitation";
-        toast.error(errorMessage);
-        console.error("Invitation error:", error);
+          : "Failed to send invitation"
+        toast.error(errorMessage)
+        console.error("Invitation error:", error)
       }
     },
-  });
+  })
 
-  const handleCancelInvitation = async (
-    invitationId: string,
-    email: string
-  ) => {
+  const handleCancelInvitation = async (invitationId: string, email: string) => {
     if (!organization) {
-      toast.error("Organization not found");
-      return;
+      toast.error("Organization not found")
+      return
     }
 
     confirmDialog({
@@ -270,20 +248,20 @@ function RouteComponent() {
           await authClient.organization.cancelInvitation({
             organizationId: organization.id,
             invitationId,
-          });
-          toast.success("Invitation canceled");
+          })
+          toast.success("Invitation canceled")
         } catch (error) {
-          toast.error("Failed to cancel invitation");
-          console.error("Cancel invitation error:", error);
+          toast.error("Failed to cancel invitation")
+          console.error("Cancel invitation error:", error)
         }
       },
-    });
-  };
+    })
+  }
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
     if (!organization) {
-      toast.error("Organization not found");
-      return;
+      toast.error("Organization not found")
+      return
     }
 
     confirmDialog({
@@ -294,30 +272,27 @@ function RouteComponent() {
           await authClient.organization.removeMember({
             organizationId: organization.id,
             memberId,
-          });
-          toast.success("Member removed successfully");
+          })
+          toast.success("Member removed successfully")
         } catch (error) {
-          toast.error("Failed to remove member");
-          console.error("Remove member error:", error);
+          toast.error("Failed to remove member")
+          console.error("Remove member error:", error)
         }
       },
-    });
-  };
+    })
+  }
 
   return (
     <div className="flex flex-col gap-y-6">
       <Heading level={1}>Settings</Heading>
       <Separator />
       <div className="flex flex-col gap-y-4">
-        <SectionHeader
-          heading="General"
-          description="Update your workspace settings."
-        />
+        <SectionHeader heading="General" description="Update your workspace settings." />
         <Form
           className="flex flex-col gap-y-4"
           onSubmit={(e) => {
-            e.preventDefault();
-            workspaceForm.handleSubmit();
+            e.preventDefault()
+            workspaceForm.handleSubmit()
           }}
         >
           <workspaceForm.AppField
@@ -328,8 +303,8 @@ function RouteComponent() {
             name="slug"
             listeners={{
               onBlur: (e) => {
-                const slugified = slugify(e.value);
-                workspaceForm.setFieldValue("slug", slugified);
+                const slugified = slugify(e.value)
+                workspaceForm.setFieldValue("slug", slugified)
               },
             }}
             children={(field) => (
@@ -340,18 +315,10 @@ function RouteComponent() {
             )}
           />
           <div className="flex justify-end gap-x-1">
-            <Button
-              intent="secondary"
-              size="sm"
-              onPress={() => workspaceForm.reset()}
-            >
+            <Button intent="secondary" size="sm" onPress={() => workspaceForm.reset()}>
               Cancel
             </Button>
-            <Button
-              size="sm"
-              type="submit"
-              isPending={workspaceForm.state.isSubmitting}
-            >
+            <Button size="sm" type="submit" isPending={workspaceForm.state.isSubmitting}>
               {workspaceForm.state.isSubmitting ? "Saving..." : "Save"}
             </Button>
           </div>
@@ -366,11 +333,7 @@ function RouteComponent() {
             heading="Members & Invitations"
             description="Manage who has access to this workspace."
           />
-          <Button
-            onPress={() => setIsInviteDialogOpen(true)}
-            size="sm"
-            intent="secondary"
-          >
+          <Button onPress={() => setIsInviteDialogOpen(true)} size="sm" intent="secondary">
             <AddIcon className="size-3.5 mr-1" />
             Invite Member
           </Button>
@@ -387,9 +350,7 @@ function RouteComponent() {
                     <div className="flex flex-col gap-y-2 flex-1">
                       <div className="flex items-center gap-2">
                         <UserIcon className="size-4 text-gray-500" />
-                        <span className="font-medium text-gray-900">
-                          {member.user?.name || "Unknown"}
-                        </span>
+                        <span className="font-medium text-gray-900">{member.user?.name || "Unknown"}</span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5">
@@ -399,10 +360,7 @@ function RouteComponent() {
                         <div className="flex items-center gap-1.5">
                           <ShieldIcon className="size-3.5" />
                           <span>
-                            Role:{" "}
-                            <span className="capitalize font-medium">
-                              {member.role}
-                            </span>
+                            Role: <span className="capitalize font-medium">{member.role}</span>
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -426,9 +384,7 @@ function RouteComponent() {
                             onAction={() =>
                               handleRemoveMember(
                                 member.id,
-                                member.user?.name ||
-                                member.user?.email ||
-                                "this member"
+                                member.user?.name || member.user?.email || "this member",
                               )
                             }
                             className="text-red-600"
@@ -448,9 +404,7 @@ function RouteComponent() {
         {/* Pending Invitations */}
         {invitations && invitations.length > 0 && (
           <div className="flex flex-col gap-y-2">
-            <h3 className="text-sm font-medium text-gray-700">
-              Pending Invitations
-            </h3>
+            <h3 className="text-sm font-medium text-gray-700">Pending Invitations</h3>
             <div className="flex flex-col gap-y-3">
               {invitations.map((invitation) => (
                 <Card key={invitation.id} className="p-4">
@@ -458,27 +412,20 @@ function RouteComponent() {
                     <div className="flex flex-col gap-y-2 flex-1">
                       <div className="flex items-center gap-2">
                         <MailIcon className="size-4 text-gray-500" />
-                        <span className="font-medium text-gray-900">
-                          {invitation.email}
-                        </span>
+                        <span className="font-medium text-gray-900">{invitation.email}</span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5">
                           <ShieldIcon className="size-3.5" />
                           <span>
                             Role:{" "}
-                            <span className="capitalize font-medium">
-                              {invitation.role || "member"}
-                            </span>
+                            <span className="capitalize font-medium">{invitation.role || "member"}</span>
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <UserIcon className="size-3.5" />
                           <span>
-                            Invited by:{" "}
-                            {invitation.inviter?.name ||
-                              invitation.inviter?.email ||
-                              "Unknown"}
+                            Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -496,12 +443,7 @@ function RouteComponent() {
                       <Button
                         intent="secondary"
                         size="sm"
-                        onPress={() =>
-                          handleCancelInvitation(
-                            invitation.id,
-                            invitation.email
-                          )
-                        }
+                        onPress={() => handleCancelInvitation(invitation.id, invitation.email)}
                       >
                         <XIcon className="size-3.5 mr-1" />
                         Cancel
@@ -514,17 +456,12 @@ function RouteComponent() {
           </div>
         )}
 
-        {(!members || members.length === 0) &&
-          (!invitations || invitations.length === 0) && (
-            <Card className="p-8 text-center">
-              <div className="text-sm font-medium text-gray-700">
-                No members or invitations yet
-              </div>
-              <div className="text-xs mt-1 text-gray-500">
-                Invite your first team member to get started
-              </div>
-            </Card>
-          )}
+        {(!members || members.length === 0) && (!invitations || invitations.length === 0) && (
+          <Card className="p-8 text-center">
+            <div className="text-sm font-medium text-gray-700">No members or invitations yet</div>
+            <div className="text-xs mt-1 text-gray-500">Invite your first team member to get started</div>
+          </Card>
+        )}
       </div>
 
       <Separator />
@@ -539,8 +476,8 @@ function RouteComponent() {
           />
           <Button
             onPress={() => {
-              setIsApiKeyDialogOpen(true);
-              setApiKeyDialogStep("create");
+              setIsApiKeyDialogOpen(true)
+              setApiKeyDialogStep("create")
             }}
             size="sm"
             intent="secondary"
@@ -558,9 +495,7 @@ function RouteComponent() {
                   <div className="flex flex-col gap-y-2 flex-1">
                     <div className="flex items-center gap-2">
                       <KeyIcon className="size-4 text-gray-500" />
-                      <span className="font-medium text-gray-900">
-                        {key.name}
-                      </span>
+                      <span className="font-medium text-gray-900">{key.name}</span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-1.5">
@@ -578,8 +513,8 @@ function RouteComponent() {
                           Last used:{" "}
                           {key.last_used_at
                             ? formatDistanceToNow(key.last_used_at, {
-                              addSuffix: true,
-                            })
+                                addSuffix: true,
+                              })
                             : "Never"}
                         </span>
                       </div>
@@ -612,12 +547,8 @@ function RouteComponent() {
           </div>
         ) : (
           <Card className="p-8 text-center">
-            <div className="text-sm font-medium text-gray-700">
-              No API keys created yet
-            </div>
-            <div className="text-xs mt-1 text-gray-500">
-              Create your first API key to get started
-            </div>
+            <div className="text-sm font-medium text-gray-700">No API keys created yet</div>
+            <div className="text-xs mt-1 text-gray-500">Create your first API key to get started</div>
           </Card>
         )}
       </div>
@@ -625,28 +556,18 @@ function RouteComponent() {
       <Separator />
 
       <div className="flex flex-col gap-y-4">
-        <SectionHeader
-          heading="Danger Zone"
-          description="Irreversible and destructive actions."
-        />
+        <SectionHeader heading="Danger Zone" description="Irreversible and destructive actions." />
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">
           <div className="flex flex-col gap-y-2">
             <div className="flex flex-col gap-y-0.5">
-              <h3 className="text-sm font-medium text-red-900">
-                Delete workspace
-              </h3>
+              <h3 className="text-sm font-medium text-red-900">Delete workspace</h3>
               <p className="text-sm text-red-700">
-                Once you delete an organization, there is no going back. This
-                will permanently delete the organization and all associated
-                data, including documents, API keys, and settings.
+                Once you delete an organization, there is no going back. This will permanently delete the
+                organization and all associated data, including documents, API keys, and settings.
               </p>
             </div>
             <div className="flex justify-end">
-              <Button
-                intent="danger"
-                size="sm"
-                onPress={() => setIsDeleteDialogOpen(true)}
-              >
+              <Button intent="danger" size="sm" onPress={() => setIsDeleteDialogOpen(true)}>
                 Delete Organization
               </Button>
             </div>
@@ -673,10 +594,7 @@ function RouteComponent() {
         invitationForm={invitationForm}
       />
 
-      <DialogTrigger
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
+      <DialogTrigger isOpen={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <Modal isDismissable>
           <AlertDialog
             title="Delete Organization"
@@ -685,9 +603,8 @@ function RouteComponent() {
             cancelLabel="Cancel"
             onAction={handleDeleteOrganization}
           >
-            Are you absolutely sure you want to delete this organization? This
-            action cannot be undone. This will permanently delete the
-            organization and all associated data, including:
+            Are you absolutely sure you want to delete this organization? This action cannot be undone. This
+            will permanently delete the organization and all associated data, including:
             <ul className="mt-2 ml-4 list-disc text-sm">
               <li>All documents</li>
               <li>All API keys</li>
@@ -699,21 +616,21 @@ function RouteComponent() {
         </Modal>
       </DialogTrigger>
     </div>
-  );
+  )
 }
 
 type ApiKeyDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  step: ApiKeyDialogStep;
-  apiKeyForm: any; // Form type from useAppForm is complex to type properly
-  newApiKey: string;
-  showKey: boolean;
-  copied: boolean;
-  onShowKeyChange: (show: boolean) => void;
-  onCopyKey: (key: string) => void;
-  onClose: () => void;
-};
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
+  step: ApiKeyDialogStep
+  apiKeyForm: any // Form type from useAppForm is complex to type properly
+  newApiKey: string
+  showKey: boolean
+  copied: boolean
+  onShowKeyChange: (show: boolean) => void
+  onCopyKey: (key: string) => void
+  onClose: () => void
+}
 
 function ApiKeyDialog({
   isOpen,
@@ -734,8 +651,8 @@ function ApiKeyDialog({
           {step === "create" ? (
             <Form
               onSubmit={(e) => {
-                e.preventDefault();
-                apiKeyForm.handleSubmit();
+                e.preventDefault()
+                apiKeyForm.handleSubmit()
               }}
             >
               <div className="p-4 flex flex-col gap-y-4">
@@ -754,8 +671,8 @@ function ApiKeyDialog({
                   <Button
                     intent="secondary"
                     onPress={() => {
-                      onOpenChange(false);
-                      apiKeyForm.reset();
+                      onOpenChange(false)
+                      apiKeyForm.reset()
                     }}
                     type="button"
                     size="sm"
@@ -768,9 +685,7 @@ function ApiKeyDialog({
                     isPending={apiKeyForm.state.isSubmitting}
                     isDisabled={apiKeyForm.state.isSubmitting}
                   >
-                    {apiKeyForm.state.isSubmitting
-                      ? "Creating..."
-                      : "Create API Key"}
+                    {apiKeyForm.state.isSubmitting ? "Creating..." : "Create API Key"}
                   </Button>
                 </div>
               </div>
@@ -784,18 +699,15 @@ function ApiKeyDialog({
               <div className="mb-6">
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
                   <p className="text-sm text-amber-800">
-                    <strong>Important:</strong> This is the only time you will
-                    be able to see the full API key. Make sure to copy it and
-                    store it securely before closing this dialog.
+                    <strong>Important:</strong> This is the only time you will be able to see the full API
+                    key. Make sure to copy it and store it securely before closing this dialog.
                   </p>
                 </div>
 
                 <div className="relative">
                   <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
                     <code className="flex-1 font-mono text-sm break-all">
-                      {showKey
-                        ? newApiKey
-                        : `${newApiKey.slice(0, 12)}${"•".repeat(24)}`}
+                      {showKey ? newApiKey : `${newApiKey.slice(0, 12)}${"•".repeat(24)}`}
                     </code>
                     <div className="flex gap-1">
                       <Button
@@ -804,11 +716,7 @@ function ApiKeyDialog({
                         onPress={() => onShowKeyChange(!showKey)}
                         className="px-2"
                       >
-                        {showKey ? (
-                          <EyeOffIcon className="size-4" />
-                        ) : (
-                          <EyeIcon className="size-4" />
-                        )}
+                        {showKey ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
                       </Button>
                       <Button
                         intent="secondary"
@@ -836,28 +744,24 @@ function ApiKeyDialog({
         </Dialog>
       </Modal>
     </DialogTrigger>
-  );
+  )
 }
 
 type InviteDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  invitationForm: any;
-};
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
+  invitationForm: any
+}
 
-function InviteDialog({
-  isOpen,
-  onOpenChange,
-  invitationForm,
-}: InviteDialogProps) {
+function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDialogProps) {
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
       <Modal isDismissable>
         <Dialog>
           <Form
             onSubmit={(e) => {
-              e.preventDefault();
-              invitationForm.handleSubmit();
+              e.preventDefault()
+              invitationForm.handleSubmit()
             }}
           >
             <div className="p-4 flex flex-col gap-y-4">
@@ -878,24 +782,18 @@ function InviteDialog({
                 name="role"
                 children={(field: any) => (
                   <div className="flex flex-col gap-y-1">
-                    <label className="text-sm font-medium text-gray-900">
-                      Role
-                    </label>
+                    <label className="text-sm font-medium text-gray-900">Role</label>
                     <select
                       className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                       value={field.state.value}
-                      onChange={(e) =>
-                        field.handleChange(e.target.value as "member" | "admin")
-                      }
+                      onChange={(e) => field.handleChange(e.target.value as "member" | "admin")}
                       onBlur={field.handleBlur}
                     >
                       <option value="member">Member</option>
                       <option value="admin">Admin</option>
                     </select>
                     {field.state.meta.errors.length > 0 && (
-                      <p className="text-xs text-red-600">
-                        {field.state.meta.errors.join(", ")}
-                      </p>
+                      <p className="text-xs text-red-600">{field.state.meta.errors.join(", ")}</p>
                     )}
                   </div>
                 )}
@@ -904,8 +802,8 @@ function InviteDialog({
                 <Button
                   intent="secondary"
                   onPress={() => {
-                    onOpenChange(false);
-                    invitationForm.reset();
+                    onOpenChange(false)
+                    invitationForm.reset()
                   }}
                   type="button"
                   size="sm"
@@ -918,9 +816,7 @@ function InviteDialog({
                   isPending={invitationForm.state.isSubmitting}
                   isDisabled={invitationForm.state.isSubmitting}
                 >
-                  {invitationForm.state.isSubmitting
-                    ? "Sending..."
-                    : "Send Invitation"}
+                  {invitationForm.state.isSubmitting ? "Sending..." : "Send Invitation"}
                 </Button>
               </div>
             </div>
@@ -928,5 +824,5 @@ function InviteDialog({
         </Dialog>
       </Modal>
     </DialogTrigger>
-  );
+  )
 }

@@ -1,35 +1,35 @@
-import { useMemo } from "react";
-import { Button as RACButton } from "react-aria-components";
-import { CheckIcon, XIcon } from "@/icons";
-import { Diff } from "./Diff";
+import { useMemo } from "react"
+import { Button as RACButton } from "react-aria-components"
+import { CheckIcon, XIcon } from "@/icons"
+import { Diff } from "./Diff"
 
 type DiffPreviewProps = {
   changes: Array<{
-    search: string;
-    replace: string;
-    explanation: string;
-  }>;
-  originalContent: string;
-  onAccept: () => void;
-  onReject: () => void;
-};
+    search: string
+    replace: string
+    explanation: string
+  }>
+  originalContent: string
+  onAccept: () => void
+  onReject: () => void
+}
 
 function generatePreviewContent(
   originalContent: string,
-  changes: Array<{ search: string; replace: string }>
+  changes: Array<{ search: string; replace: string }>,
 ): string {
-  let previewContent = originalContent;
+  let previewContent = originalContent
 
   for (const change of changes) {
     if (change.search === "" && originalContent === "") {
       // Handle empty document case
-      previewContent = change.replace;
+      previewContent = change.replace
     } else if (previewContent.includes(change.search)) {
-      previewContent = previewContent.replace(change.search, change.replace);
+      previewContent = previewContent.replace(change.search, change.replace)
     }
   }
 
-  return previewContent;
+  return previewContent
 }
 
 function extractTextFromHtml(html: string): string {
@@ -37,22 +37,17 @@ function extractTextFromHtml(html: string): string {
   return html
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
 }
 
-export function DiffPreview({
-  changes,
-  originalContent,
-  onAccept,
-  onReject,
-}: DiffPreviewProps) {
+export function DiffPreview({ changes, originalContent, onAccept, onReject }: DiffPreviewProps) {
   const { originalText, previewText } = useMemo(() => {
-    const previewContent = generatePreviewContent(originalContent, changes);
+    const previewContent = generatePreviewContent(originalContent, changes)
     return {
       originalText: extractTextFromHtml(originalContent),
       previewText: extractTextFromHtml(previewContent),
-    };
-  }, [originalContent, changes]);
+    }
+  }, [originalContent, changes])
 
   return (
     <div className="ring-1 ring-black/10 rounded-lg overflow-hidden bg-white shadow-sm w-full">
@@ -79,5 +74,5 @@ export function DiffPreview({
         <Diff oldValue={originalText} newValue={previewText} />
       </div>
     </div>
-  );
+  )
 }

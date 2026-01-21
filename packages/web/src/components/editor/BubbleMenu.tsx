@@ -1,20 +1,13 @@
-import type { Editor } from "@tiptap/core";
-import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
-import { ToolbarButton } from "./toolbar/ToolbarButton";
-import { Separator } from "../generic/Separator";
-import {
-  BoldIcon,
-  ItalicIcon,
-  StrikethroughIcon,
-  CodeIcon,
-  SparklesIcon,
-  LinkIcon,
-} from "@/icons";
+import type { Editor } from "@tiptap/core"
+import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus"
+import { ToolbarButton } from "./toolbar/ToolbarButton"
+import { Separator } from "../generic/Separator"
+import { BoldIcon, ItalicIcon, StrikethroughIcon, CodeIcon, SparklesIcon, LinkIcon } from "@/icons"
 
 type Props = {
-  editor: Editor;
-  onAddLink?: () => void;
-};
+  editor: Editor
+  onAddLink?: () => void
+}
 
 export function BubbleMenu({ editor, onAddLink }: Props) {
   return (
@@ -57,7 +50,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       <ToolbarButton
         onPress={() => {
           if (onAddLink) {
-            onAddLink();
+            onAddLink()
           }
         }}
         title="Add Link"
@@ -71,7 +64,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       {/* Selection capture button - connects to TextSelectionExtension */}
       <ToolbarButton
         onPress={() => {
-          editor.commands.captureAndMarkSelection();
+          editor.commands.captureAndMarkSelection()
         }}
         title="Add to context"
         icon={SparklesIcon}
@@ -79,5 +72,5 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
         className="p-1.5 rounded hover:bg-gray-100"
       />
     </TiptapBubbleMenu>
-  );
+  )
 }

@@ -15,8 +15,7 @@
   --color-surface: #fcfcfc;
   --font-sans: Inter Variable, sans-serif;
   --text-sm: 0.8125rem;
-  --shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1),
-    0 0 1.5px 0 rgba(0, 0, 0, 0.2);
+  --shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1), 0 0 1.5px 0 rgba(0, 0, 0, 0.2);
 
   /* Use neutral gray colors as default gray */
   --color-gray-50: oklch(98.5% 0 0);

@@ -1,7 +1,7 @@
-import type { ContentNode, TextNode, Mark } from "./types";
-import { db } from "@lydie/database";
-import { eq, inArray } from "drizzle-orm";
-import { documentsTable } from "@lydie/database/schema";
+import type { ContentNode, TextNode, Mark } from "./types"
+import { db } from "@lydie/database"
+import { eq, inArray } from "drizzle-orm"
+import { documentsTable } from "@lydie/database/schema"
 
 /**
  * Transforms internal:// links in document content to relative paths.
@@ -11,38 +11,33 @@ import { documentsTable } from "@lydie/database/schema";
 
 export interface LinkTransformOptions {
   /** If true, use document IDs instead of slugs (e.g., /abc123 instead of /my-document) */
-  useIds?: boolean;
+  useIds?: boolean
   /** Custom base path for links (e.g., "/docs" -> "/docs/my-document") */
-  basePath?: string;
+  basePath?: string
   /** Organization ID for looking up document slugs */
-  organizationId: string;
+  organizationId: string
 }
 
 interface LinkMetadata {
-  id: string;
-  slug?: string;
-  title?: string;
-  exists?: boolean;
+  id: string
+  slug?: string
+  title?: string
+  exists?: boolean
 }
 
 /**
  * Extracts all internal:// links from document content
  */
-export function extractInternalLinks(
-  content: ContentNode | TextNode
-): Set<string> {
-  const internalLinks = new Set<string>();
+export function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
+  const internalLinks = new Set<string>()
 
   function traverse(node: ContentNode | TextNode) {
     // Check if this is a text node with marks
     if (node.type === "text" && "marks" in node && node.marks) {
       for (const mark of node.marks) {
-        if (
-          mark.type === "link" &&
-          mark.attrs?.href?.startsWith("internal://")
-        ) {
-          const documentId = mark.attrs.href.replace("internal://", "");
-          internalLinks.add(documentId);
+        if (mark.type === "link" && mark.attrs?.href?.startsWith("internal://")) {
+          const documentId = mark.attrs.href.replace("internal://", "")
+          internalLinks.add(documentId)
         }
       }
     }
@@ -50,13 +45,13 @@ export function extractInternalLinks(
     // Recursively traverse child nodes
     if ("content" in node && Array.isArray(node.content)) {
       for (const child of node.content) {
-        traverse(child);
+        traverse(child)
       }
     }
   }
 
-  traverse(content);
-  return internalLinks;
+  traverse(content)
+  return internalLinks
 }
 
 /**
@@ -64,10 +59,10 @@ export function extractInternalLinks(
  */
 export async function fetchDocumentMetadata(
   documentIds: string[],
-  organizationId: string
+  organizationId: string,
 ): Promise<Map<string, LinkMetadata>> {
   if (documentIds.length === 0) {
-    return new Map();
+    return new Map()
   }
 
   try {
@@ -78,9 +73,9 @@ export async function fetchDocumentMetadata(
         title: documentsTable.title,
       })
       .from(documentsTable)
-      .where(inArray(documentsTable.id, documentIds));
+      .where(inArray(documentsTable.id, documentIds))
 
-    const metadataMap = new Map<string, LinkMetadata>();
+    const metadataMap = new Map<string, LinkMetadata>()
 
     for (const doc of documents) {
       metadataMap.set(doc.id, {
@@ -88,7 +83,7 @@ export async function fetchDocumentMetadata(
         slug: doc.slug,
         title: doc.title,
         exists: true,
-      });
+      })
     }
 
     // Add entries for documents that don't exist
@@ -97,15 +92,15 @@ export async function fetchDocumentMetadata(
         metadataMap.set(id, {
           id,
           exists: false,
-        });
+        })
       }
     }
 
-    return metadataMap;
+    return metadataMap
   } catch (error) {
-    console.error("Error fetching document metadata for links:", error);
+    console.error("Error fetching document metadata for links:", error)
     // Return empty map on error - links will use IDs as fallback
-    return new Map();
+    return new Map()
   }
 }
 
@@ -115,33 +110,26 @@ export async function fetchDocumentMetadata(
 function transformContentLinks(
   content: ContentNode | TextNode,
   metadataMap: Map<string, LinkMetadata>,
-  options: LinkTransformOptions
+  options: LinkTransformOptions,
 ): ContentNode | TextNode {
   // Deep clone to avoid mutations
-  const clone = JSON.parse(JSON.stringify(content)) as ContentNode | TextNode;
+  const clone = JSON.parse(JSON.stringify(content)) as ContentNode | TextNode
 
   function transform(node: ContentNode | TextNode) {
     // Transform links in text node marks
     if (node.type === "text" && "marks" in node && node.marks) {
       // Check if there's an internal link mark
       const internalLinkMark = node.marks.find(
-        (mark) =>
-          mark.type === "link" && mark.attrs?.href?.startsWith("internal://")
-      );
+        (mark) => mark.type === "link" && mark.attrs?.href?.startsWith("internal://"),
+      )
 
       if (internalLinkMark) {
-        const documentId = internalLinkMark.attrs!.href!.replace(
-          "internal://",
-          ""
-        );
-        const metadata = metadataMap.get(documentId);
+        const documentId = internalLinkMark.attrs!.href!.replace("internal://", "")
+        const metadata = metadataMap.get(documentId)
 
         // Replace the link mark with internal-link mark, preserve other marks
         node.marks = node.marks.map((mark) => {
-          if (
-            mark.type === "link" &&
-            mark.attrs?.href?.startsWith("internal://")
-          ) {
+          if (mark.type === "link" && mark.attrs?.href?.startsWith("internal://")) {
             return {
               type: "internal-link",
               attrs: {
@@ -149,45 +137,42 @@ function transformContentLinks(
                 ...(metadata?.slug && { "document-slug": metadata.slug }),
                 ...(metadata?.title && { "document-title": metadata.title }),
               },
-            };
+            }
           }
-          return mark;
-        });
+          return mark
+        })
       }
     }
 
     // Recursively transform child nodes
     if ("content" in node && Array.isArray(node.content)) {
-      node.content = node.content.map((child) => transform(child));
+      node.content = node.content.map((child) => transform(child))
     }
 
-    return node;
+    return node
   }
 
-  return transform(clone);
+  return transform(clone)
 }
 
 // Transforms internal:// links to internal-link marks (always fetches metadata)
 export async function transformDocumentLinksToInternalLinkMarks(
   jsonContent: ContentNode,
-  organizationId: string
+  organizationId: string,
 ): Promise<ContentNode> {
   // Extract all internal links
-  const internalLinkIds = extractInternalLinks(jsonContent);
+  const internalLinkIds = extractInternalLinks(jsonContent)
 
   // If no internal links, return original content
   if (internalLinkIds.size === 0) {
-    return jsonContent;
+    return jsonContent
   }
 
   // Always fetch metadata for all linked documents
-  const metadataMap = await fetchDocumentMetadata(
-    Array.from(internalLinkIds),
-    organizationId
-  );
+  const metadataMap = await fetchDocumentMetadata(Array.from(internalLinkIds), organizationId)
 
   // Transform all links in the content to internal-link marks
   return transformContentLinks(jsonContent, metadataMap, {
     organizationId,
-  }) as ContentNode;
+  }) as ContentNode
 }

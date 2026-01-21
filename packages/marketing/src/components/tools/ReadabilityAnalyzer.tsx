@@ -1,23 +1,21 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import { StarterKit } from "@tiptap/starter-kit";
-import { Container } from "../Container";
+import React, { useState, useEffect, useCallback, useRef } from "react"
+import { useEditor, EditorContent, type Editor } from "@tiptap/react"
+import { StarterKit } from "@tiptap/starter-kit"
+import { Container } from "../Container"
 import {
   analyzeReadability,
   findReadabilityIssues,
   type ReadabilityResult,
   type ReadabilityIssue,
-} from "./readability-utils";
-import { ReadabilityHighlight } from "./readability-highlight";
-import { Eye, Trash2, Info } from "lucide-react";
+} from "./readability-utils"
+import { ReadabilityHighlight } from "./readability-highlight"
+import { Eye, Trash2, Info } from "lucide-react"
 
 export function ReadabilityAnalyzer() {
-  const [result, setResult] = useState<ReadabilityResult | null>(null);
-  const [issues, setIssues] = useState<ReadabilityIssue[]>([]);
-  const [selectedIssue, setSelectedIssue] = useState<ReadabilityIssue | null>(
-    null
-  );
-  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [result, setResult] = useState<ReadabilityResult | null>(null)
+  const [issues, setIssues] = useState<ReadabilityIssue[]>([])
+  const [selectedIssue, setSelectedIssue] = useState<ReadabilityIssue | null>(null)
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -29,174 +27,158 @@ export function ReadabilityAnalyzer() {
       },
     },
     onUpdate: ({ editor }) => {
-      const text = editor.getText();
+      const text = editor.getText()
       if (text.trim()) {
-        const analysis = analyzeReadability(text);
-        setResult(analysis);
+        const analysis = analyzeReadability(text)
+        setResult(analysis)
 
         // Debounce highlighting updates
         if (highlightTimeoutRef.current) {
-          clearTimeout(highlightTimeoutRef.current);
+          clearTimeout(highlightTimeoutRef.current)
         }
         highlightTimeoutRef.current = setTimeout(() => {
-          updateHighlights(editor, text);
-        }, 300);
+          updateHighlights(editor, text)
+        }, 300)
       } else {
-        setResult(null);
-        setIssues([]);
+        setResult(null)
+        setIssues([])
         // Clear all highlights
-        editor.commands.unsetReadabilityHighlight();
+        editor.commands.unsetReadabilityHighlight()
       }
     },
-  });
+  })
 
-  const updateHighlights = useCallback(
-    (editorInstance: Editor, text: string) => {
-      if (!editorInstance) return;
+  const updateHighlights = useCallback((editorInstance: Editor, text: string) => {
+    if (!editorInstance) return
 
-      // Find all issues
-      const foundIssues = findReadabilityIssues(text);
-      setIssues(foundIssues);
+    // Find all issues
+    const foundIssues = findReadabilityIssues(text)
+    setIssues(foundIssues)
 
-      // Get the current document
-      const { state } = editorInstance;
-      const markType = state.schema.marks.readabilityHighlight;
-      if (!markType) return;
+    // Get the current document
+    const { state } = editorInstance
+    const markType = state.schema.marks.readabilityHighlight
+    if (!markType) return
 
-      // Create a new transaction
-      const tr = state.tr;
+    // Create a new transaction
+    const tr = state.tr
 
-      // First, remove all existing readability highlights from the entire document
-      tr.removeMark(0, state.doc.content.size, markType);
+    // First, remove all existing readability highlights from the entire document
+    tr.removeMark(0, state.doc.content.size, markType)
 
-      // Convert text positions to document positions
-      const docText = editorInstance.getText();
-      let textPos = 0;
-      const positionMap: Array<{
-        textStart: number;
-        textEnd: number;
-        docStart: number;
-        docEnd: number;
-      }> = [];
+    // Convert text positions to document positions
+    const docText = editorInstance.getText()
+    let textPos = 0
+    const positionMap: Array<{
+      textStart: number
+      textEnd: number
+      docStart: number
+      docEnd: number
+    }> = []
 
-      state.doc.descendants((node, pos) => {
-        if (node.isText && node.text) {
-          const nodeStart = textPos;
-          const nodeEnd = textPos + node.text.length;
-          positionMap.push({
-            textStart: nodeStart,
-            textEnd: nodeEnd,
-            docStart: pos,
-            docEnd: pos + node.nodeSize,
-          });
-          textPos = nodeEnd;
+    state.doc.descendants((node, pos) => {
+      if (node.isText && node.text) {
+        const nodeStart = textPos
+        const nodeEnd = textPos + node.text.length
+        positionMap.push({
+          textStart: nodeStart,
+          textEnd: nodeEnd,
+          docStart: pos,
+          docEnd: pos + node.nodeSize,
+        })
+        textPos = nodeEnd
+      }
+    })
+
+    // Apply new highlights
+    foundIssues.forEach((issue) => {
+      // Find document positions for this issue
+      let docFrom: number | null = null
+      let docTo: number | null = null
+
+      for (const map of positionMap) {
+        // Check if issue starts in this text node
+        if (issue.start >= map.textStart && issue.start < map.textEnd && docFrom === null) {
+          const offset = issue.start - map.textStart
+          docFrom = map.docStart + offset
         }
-      });
-
-      // Apply new highlights
-      foundIssues.forEach((issue) => {
-        // Find document positions for this issue
-        let docFrom: number | null = null;
-        let docTo: number | null = null;
-
-        for (const map of positionMap) {
-          // Check if issue starts in this text node
-          if (
-            issue.start >= map.textStart &&
-            issue.start < map.textEnd &&
-            docFrom === null
-          ) {
-            const offset = issue.start - map.textStart;
-            docFrom = map.docStart + offset;
-          }
-          // Check if issue ends in this text node
-          if (
-            issue.end > map.textStart &&
-            issue.end <= map.textEnd &&
-            docTo === null
-          ) {
-            const offset = issue.end - map.textStart;
-            docTo = map.docStart + offset;
-          }
-
-          // If we found both positions, we're done
-          if (docFrom !== null && docTo !== null) break;
+        // Check if issue ends in this text node
+        if (issue.end > map.textStart && issue.end <= map.textEnd && docTo === null) {
+          const offset = issue.end - map.textStart
+          docTo = map.docStart + offset
         }
 
-        if (docFrom !== null && docTo !== null && docTo > docFrom) {
-          tr.addMark(
-            docFrom,
-            docTo,
-            markType.create({
-              type: issue.type,
-              severity: issue.severity,
-            })
-          );
-        }
-      });
+        // If we found both positions, we're done
+        if (docFrom !== null && docTo !== null) break
+      }
 
-      // Dispatch the transaction
-      editorInstance.view.dispatch(tr);
-    },
-    []
-  );
+      if (docFrom !== null && docTo !== null && docTo > docFrom) {
+        tr.addMark(
+          docFrom,
+          docTo,
+          markType.create({
+            type: issue.type,
+            severity: issue.severity,
+          }),
+        )
+      }
+    })
+
+    // Dispatch the transaction
+    editorInstance.view.dispatch(tr)
+  }, [])
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current);
+        clearTimeout(highlightTimeoutRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const clearText = () => {
     if (editor) {
-      editor.commands.clearContent();
-      setResult(null);
-      setIssues([]);
-      setSelectedIssue(null);
+      editor.commands.clearContent()
+      setResult(null)
+      setIssues([])
+      setSelectedIssue(null)
     }
-  };
+  }
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return "text-green-600";
-    if (score >= 50) return "text-yellow-600";
-    return "text-red-600";
-  };
+    if (score >= 70) return "text-green-600"
+    if (score >= 50) return "text-yellow-600"
+    return "text-red-600"
+  }
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 70) return "bg-green-50 border-green-200";
-    if (score >= 50) return "bg-yellow-50 border-yellow-200";
-    return "bg-red-50 border-red-200";
-  };
+    if (score >= 70) return "bg-green-50 border-green-200"
+    if (score >= 50) return "bg-yellow-50 border-yellow-200"
+    return "bg-red-50 border-red-200"
+  }
 
   const getIssueCounts = () => {
-    const veryHard = issues.filter(
-      (i) => i.type === "very-long-sentence"
-    ).length;
-    const hard = issues.filter((i) => i.type === "long-sentence").length;
-    const adverbs = issues.filter((i) => i.type === "adverb").length;
-    const passive = issues.filter((i) => i.type === "passive-voice").length;
-    const complex = issues.filter((i) => i.type === "complex-word").length;
+    const veryHard = issues.filter((i) => i.type === "very-long-sentence").length
+    const hard = issues.filter((i) => i.type === "long-sentence").length
+    const adverbs = issues.filter((i) => i.type === "adverb").length
+    const passive = issues.filter((i) => i.type === "passive-voice").length
+    const complex = issues.filter((i) => i.type === "complex-word").length
 
-    return { veryHard, hard, adverbs, passive, complex };
-  };
+    return { veryHard, hard, adverbs, passive, complex }
+  }
 
-  const issueCounts = getIssueCounts();
-  const totalIssues = issues.length;
+  const issueCounts = getIssueCounts()
+  const totalIssues = issues.length
 
   return (
     <Container className="py-12 max-w-7xl">
       <div className="space-y-8">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-heading font-bold text-gray-900">
-            Readability Analyzer
-          </h1>
+          <h1 className="text-4xl font-heading font-bold text-gray-900">Readability Analyzer</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Analyze your text's readability with real-time highlighting. Get
-            instant feedback on long sentences, adverbs, passive voice, and
-            complex words.
+            Analyze your text's readability with real-time highlighting. Get instant feedback on long
+            sentences, adverbs, passive voice, and complex words.
           </p>
         </div>
 
@@ -205,10 +187,7 @@ export function ReadabilityAnalyzer() {
           <div className="lg:col-span-2 space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label
-                  htmlFor="editor"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="editor" className="block text-sm font-medium text-gray-700">
                   Enter your text
                 </label>
                 <button
@@ -222,20 +201,14 @@ export function ReadabilityAnalyzer() {
               <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
                 <EditorContent editor={editor} />
               </div>
-              {editor && (
-                <p className="text-sm text-gray-500">
-                  {editor.getText().length} characters
-                </p>
-              )}
+              {editor && <p className="text-sm text-gray-500">{editor.getText().length} characters</p>}
             </div>
 
             {/* Issue Popover */}
             {selectedIssue && (
               <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-lg">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900">
-                    Readability issue
-                  </h3>
+                  <h3 className="font-semibold text-gray-900">Readability issue</h3>
                   <button
                     onClick={() => setSelectedIssue(null)}
                     className="text-gray-400 hover:text-gray-600"
@@ -265,40 +238,23 @@ export function ReadabilityAnalyzer() {
           <div className="space-y-6">
             {/* Readability Score */}
             {result && (
-              <div
-                className={`p-6 rounded-lg border-2 ${getScoreBgColor(
-                  result.fleschKincaid.score
-                )}`}
-              >
+              <div className={`p-6 rounded-lg border-2 ${getScoreBgColor(result.fleschKincaid.score)}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Readability checker
-                    </h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Readability checker</h2>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-2xl font-bold text-gray-900">
                         Grade{" "}
-                        {Math.round(
-                          parseFloat(
-                            result.fleschKincaid.gradeLevel.match(/\d+/)?.[0] ||
-                              "0"
-                          )
-                        )}
+                        {Math.round(parseFloat(result.fleschKincaid.gradeLevel.match(/\d+/)?.[0] || "0"))}
                       </span>
                       <Info className="w-4 h-4 text-gray-500" />
                     </div>
                   </div>
-                  <div
-                    className={`text-3xl font-bold ${getScoreColor(
-                      result.fleschKincaid.score
-                    )}`}
-                  >
+                  <div className={`text-3xl font-bold ${getScoreColor(result.fleschKincaid.score)}`}>
                     {result.fleschKincaid.score}
                   </div>
                 </div>
-                <div className="text-sm text-gray-600">
-                  {result.fleschKincaid.readabilityLevel}
-                </div>
+                <div className="text-sm text-gray-600">{result.fleschKincaid.readabilityLevel}</div>
               </div>
             )}
 
@@ -309,16 +265,13 @@ export function ReadabilityAnalyzer() {
                   <div
                     className="p-4 bg-red-50 border border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
                     onClick={() => {
-                      const issue = issues.find(
-                        (i) => i.type === "very-long-sentence"
-                      );
-                      if (issue) setSelectedIssue(issue);
+                      const issue = issues.find((i) => i.type === "very-long-sentence")
+                      if (issue) setSelectedIssue(issue)
                     }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-red-900">
-                        {issueCounts.veryHard} of {result.sentenceCount}{" "}
-                        sentences is very hard to read.
+                        {issueCounts.veryHard} of {result.sentenceCount} sentences is very hard to read.
                       </span>
                       <Eye className="w-4 h-4 text-red-600" />
                     </div>
@@ -329,16 +282,13 @@ export function ReadabilityAnalyzer() {
                   <div
                     className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
                     onClick={() => {
-                      const issue = issues.find(
-                        (i) => i.type === "long-sentence"
-                      );
-                      if (issue) setSelectedIssue(issue);
+                      const issue = issues.find((i) => i.type === "long-sentence")
+                      if (issue) setSelectedIssue(issue)
                     }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-yellow-900">
-                        {issueCounts.hard} of {result.sentenceCount} sentences
-                        is hard to read.
+                        {issueCounts.hard} of {result.sentenceCount} sentences is hard to read.
                       </span>
                       <Eye className="w-4 h-4 text-yellow-600" />
                     </div>
@@ -349,8 +299,8 @@ export function ReadabilityAnalyzer() {
                   <div
                     className="p-4 bg-blue-50 border border-blue-200 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
                     onClick={() => {
-                      const issue = issues.find((i) => i.type === "adverb");
-                      if (issue) setSelectedIssue(issue);
+                      const issue = issues.find((i) => i.type === "adverb")
+                      if (issue) setSelectedIssue(issue)
                     }}
                   >
                     <div className="flex items-center justify-between">
@@ -367,10 +317,8 @@ export function ReadabilityAnalyzer() {
                   <div
                     className="p-4 bg-green-50 border border-green-200 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
                     onClick={() => {
-                      const issue = issues.find(
-                        (i) => i.type === "passive-voice"
-                      );
-                      if (issue) setSelectedIssue(issue);
+                      const issue = issues.find((i) => i.type === "passive-voice")
+                      if (issue) setSelectedIssue(issue)
                     }}
                   >
                     <div className="flex items-center justify-between">
@@ -387,10 +335,8 @@ export function ReadabilityAnalyzer() {
                   <div
                     className="p-4 bg-purple-50 border border-purple-200 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors"
                     onClick={() => {
-                      const issue = issues.find(
-                        (i) => i.type === "complex-word"
-                      );
-                      if (issue) setSelectedIssue(issue);
+                      const issue = issues.find((i) => i.type === "complex-word")
+                      if (issue) setSelectedIssue(issue)
                     }}
                   >
                     <div className="flex items-center justify-between">
@@ -410,30 +356,22 @@ export function ReadabilityAnalyzer() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="text-xl font-bold text-gray-900">
-                      {result.wordCount.toLocaleString()}
-                    </div>
+                    <div className="text-xl font-bold text-gray-900">{result.wordCount.toLocaleString()}</div>
                     <div className="text-xs text-gray-600 mt-1">Words</div>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="text-xl font-bold text-gray-900">
-                      {result.sentenceCount}
-                    </div>
+                    <div className="text-xl font-bold text-gray-900">{result.sentenceCount}</div>
                     <div className="text-xs text-gray-600 mt-1">Sentences</div>
                   </div>
                 </div>
 
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700 font-medium">
-                      Reading Time:
-                    </span>
+                    <span className="text-sm text-gray-700 font-medium">Reading Time:</span>
                     <span className="text-lg font-bold text-blue-900">
                       {result.readingTime.minutes > 0
                         ? `${result.readingTime.minutes} min ${
-                            result.readingTime.seconds > 0
-                              ? `${result.readingTime.seconds} sec`
-                              : ""
+                            result.readingTime.seconds > 0 ? `${result.readingTime.seconds} sec` : ""
                           }`
                         : `${result.readingTime.seconds} sec`}
                     </span>
@@ -445,5 +383,5 @@ export function ReadabilityAnalyzer() {
         </div>
       </div>
     </Container>
-  );
+  )
 }

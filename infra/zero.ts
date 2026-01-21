@@ -1,21 +1,20 @@
+// oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
 
-import { secret } from "./secret";
-import { readFileSync } from "fs";
-import { cluster } from "./cluster";
+import { secret } from "./secret"
+import { readFileSync } from "fs"
+import { cluster } from "./cluster"
 
-const replicationBucket = new sst.aws.Bucket(`replication-bucket`);
+const replicationBucket = new sst.aws.Bucket(`replication-bucket`)
 
-const conn = secret.postgresConnectionStringDirect;
+const conn = secret.postgresConnectionStringDirect
 
 const tag = $dev
   ? `latest`
   : JSON.parse(
-      readFileSync(
-        "./packages/zero/node_modules/@rocicorp/zero/package.json"
-      ).toString()
-    ).version.replace("+", "-");
-const image = `registry.hub.docker.com/rocicorp/zero:${tag}`;
+      readFileSync("./packages/zero/node_modules/@rocicorp/zero/package.json").toString(),
+    ).version.replace("+", "-")
+const image = `registry.hub.docker.com/rocicorp/zero:${tag}`
 
 const commonEnv = {
   ZERO_ADMIN_PASSWORD: secret.zeroAdminPassword.value,
@@ -36,8 +35,9 @@ const commonEnv = {
   ZERO_QUERY_URL: $dev
     ? "http://localhost:3001/internal/zero/queries"
     : "https://api.lydie.co/internal/zero/queries",
-};
+}
 
+// oxlint-disable-next-line no-unused-expressions
 !$dev
   ? new sst.aws.Service("ReplicationManager", {
       wait: true,
@@ -83,7 +83,7 @@ const commonEnv = {
         },
       },
     })
-  : undefined;
+  : undefined
 
 export const zero = new sst.aws.Service("Zero", {
   cluster,
@@ -116,9 +116,7 @@ export const zero = new sst.aws.Service("Zero", {
     ...($dev ? {} : { domain: "zero.lydie.co" }),
     rules: [
       { listen: "80/http", forward: "4848/http" },
-      ...($dev
-        ? []
-        : [{ listen: "443/https" as const, forward: "4848/http" as const }]),
+      ...($dev ? [] : [{ listen: "443/https" as const, forward: "4848/http" as const }]),
     ],
   },
   transform: {
@@ -147,4 +145,4 @@ export const zero = new sst.aws.Service("Zero", {
     directory: "/packages/zero",
     url: "http://localhost:4848",
   },
-});
+})

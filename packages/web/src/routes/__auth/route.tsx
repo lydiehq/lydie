@@ -1,17 +1,17 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/__auth")({
   component: RouteComponent,
   beforeLoad: async ({ context }) => {
     if (!context.auth) {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/auth" })
     }
 
-    return { ...context, auth: context.auth };
+    return { ...context, auth: context.auth }
   },
   ssr: false,
-});
+})
 
 function RouteComponent() {
-  return <Outlet />;
+  return <Outlet />
 }

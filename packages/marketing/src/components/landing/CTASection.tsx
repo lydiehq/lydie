@@ -1,7 +1,7 @@
-import { Container } from "../Container";
-import { Button } from "../generic/Button";
-import { ChevronRight } from "lucide-react";
-import { HeroBackground } from "./HeroBackground";
+import { Container } from "../Container"
+import { Button } from "../generic/Button"
+import { ChevronRight } from "lucide-react"
+import { HeroBackground } from "./HeroBackground"
 
 export function CTASection() {
   return (
@@ -24,5 +24,5 @@ export function CTASection() {
         </div>
       </Container>
     </HeroBackground>
-  );
+  )
 }

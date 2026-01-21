@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { FileText, ChevronDown } from "lucide-react";
-import styles from "./Hero.module.css";
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "motion/react"
+import { FileText, ChevronDown } from "lucide-react"
+import styles from "./Hero.module.css"
 
-type FeatureTab = "fields" | "collaboration" | "linking";
+type FeatureTab = "fields" | "collaboration" | "linking"
 
 export function InteractiveMockEditor() {
-  const [activeTab, setActiveTab] = useState<FeatureTab>("fields");
-  const [showLinkPopover, setShowLinkPopover] = useState(false);
-  const [fieldsExpanded, setFieldsExpanded] = useState(false);
-  const [showEditingCursor, setShowEditingCursor] = useState(false);
+  const [activeTab, setActiveTab] = useState<FeatureTab>("fields")
+  const [showLinkPopover, setShowLinkPopover] = useState(false)
+  const [fieldsExpanded, setFieldsExpanded] = useState(false)
+  const [showEditingCursor, setShowEditingCursor] = useState(false)
 
   return (
     <div className="flex flex-col items-center gap-y-4">
@@ -18,8 +18,8 @@ export function InteractiveMockEditor() {
         <TabButton
           active={activeTab === "fields"}
           onClick={() => {
-            setActiveTab("fields");
-            setFieldsExpanded(true);
+            setActiveTab("fields")
+            setFieldsExpanded(true)
           }}
         >
           Custom Fields
@@ -27,8 +27,8 @@ export function InteractiveMockEditor() {
         <TabButton
           active={activeTab === "collaboration"}
           onClick={() => {
-            setActiveTab("collaboration");
-            setFieldsExpanded(false);
+            setActiveTab("collaboration")
+            setFieldsExpanded(false)
           }}
         >
           Collaborative Editing
@@ -36,9 +36,9 @@ export function InteractiveMockEditor() {
         <TabButton
           active={activeTab === "linking"}
           onClick={() => {
-            setActiveTab("linking");
-            setFieldsExpanded(false);
-            setTimeout(() => setShowLinkPopover(true), 600);
+            setActiveTab("linking")
+            setFieldsExpanded(false)
+            setTimeout(() => setShowLinkPopover(true), 600)
           }}
         >
           Internal Linking
@@ -126,34 +126,16 @@ export function InteractiveMockEditor() {
                 </div>
 
                 <div className="flex gap-x-1 items-center">
-                  <button
-                    className="p-1.5 rounded hover:bg-gray-100"
-                    aria-label="More options"
-                  >
+                  <button className="p-1.5 rounded hover:bg-gray-100" aria-label="More options">
                     <svg
                       className="size-3.5 text-gray-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <circle
-                        cx="12"
-                        cy="5"
-                        r="1.5"
-                        fill="currentColor"
-                      ></circle>
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="1.5"
-                        fill="currentColor"
-                      ></circle>
-                      <circle
-                        cx="12"
-                        cy="19"
-                        r="1.5"
-                        fill="currentColor"
-                      ></circle>
+                      <circle cx="12" cy="5" r="1.5" fill="currentColor"></circle>
+                      <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
+                      <circle cx="12" cy="19" r="1.5" fill="currentColor"></circle>
                     </svg>
                   </button>
                   <button className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
@@ -175,10 +157,10 @@ export function InteractiveMockEditor() {
                           expanded={activeTab === "fields" && fieldsExpanded}
                           onToggle={() => {
                             if (activeTab === "fields") {
-                              setFieldsExpanded(!fieldsExpanded);
+                              setFieldsExpanded(!fieldsExpanded)
                             } else {
-                              setActiveTab("fields");
-                              setFieldsExpanded(true);
+                              setActiveTab("fields")
+                              setFieldsExpanded(true)
                             }
                           }}
                           isActive={activeTab === "fields"}
@@ -196,12 +178,18 @@ export function InteractiveMockEditor() {
                                 <CollaboratorCursor
                                   name="Sarah"
                                   color="#3b82f6"
-                                  position={{ top: "0.5rem", left: "12rem" }}
+                                  position={{
+                                    top: "0.5rem",
+                                    left: "12rem",
+                                  }}
                                 />
                                 <CollaboratorCursor
                                   name="Alex"
                                   color="#10b981"
-                                  position={{ top: "0.5rem", left: "20rem" }}
+                                  position={{
+                                    top: "0.5rem",
+                                    left: "20rem",
+                                  }}
                                 />
                               </>
                             )}
@@ -211,13 +199,10 @@ export function InteractiveMockEditor() {
 
                       {/* Content */}
                       <div className="prose prose-sm max-w-none text-gray-700 space-y-3 relative">
-                        <h2 className="text-xl font-semibold text-gray-900 mt-4 mb-2">
-                          Overview
-                        </h2>
+                        <h2 className="text-xl font-semibold text-gray-900 mt-4 mb-2">Overview</h2>
                         <p className="leading-relaxed relative">
-                          This quarter we're focusing on enhancing our core
-                          platform capabilities and expanding integration
-                          support. Our key priorities include{" "}
+                          This quarter we're focusing on enhancing our core platform capabilities and
+                          expanding integration support. Our key priorities include{" "}
                           <CollaborativeTextEdit
                             originalText="performance improvements, advanced collaboration features"
                             newText="advanced collaboration features, performance improvements"
@@ -227,14 +212,16 @@ export function InteractiveMockEditor() {
                           and a revamped user experience.
                           {/* Editing Cursor */}
                           <AnimatePresence>
-                            {activeTab === "collaboration" &&
-                              showEditingCursor && (
-                                <CollaboratorCursor
-                                  name="Sarah"
-                                  color="#3b82f6"
-                                  position={{ top: "0.25rem", left: "12rem" }}
-                                />
-                              )}
+                            {activeTab === "collaboration" && showEditingCursor && (
+                              <CollaboratorCursor
+                                name="Sarah"
+                                color="#3b82f6"
+                                position={{
+                                  top: "0.25rem",
+                                  left: "12rem",
+                                }}
+                              />
+                            )}
                           </AnimatePresence>
                         </p>
 
@@ -243,9 +230,7 @@ export function InteractiveMockEditor() {
                           {/* Link Popover - Animated */}
                           <AnimatePresence>
                             {activeTab === "linking" && showLinkPopover && (
-                              <LinkPopoverMock
-                                onClose={() => setShowLinkPopover(false)}
-                              />
+                              <LinkPopoverMock onClose={() => setShowLinkPopover(false)} />
                             )}
                           </AnimatePresence>
                         </h3>
@@ -267,9 +252,7 @@ export function InteractiveMockEditor() {
                         >
                           <CollaboratorAvatar name="Sarah" color="#3b82f6" />
                           <CollaboratorAvatar name="Alex" color="#10b981" />
-                          <span className="text-xs text-gray-600 ml-1">
-                            2 people editing
-                          </span>
+                          <span className="text-xs text-gray-600 ml-1">2 people editing</span>
                         </motion.div>
                       )}
                     </div>
@@ -284,7 +267,7 @@ export function InteractiveMockEditor() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Tab Button Component
@@ -293,22 +276,20 @@ function TabButton({
   onClick,
   children,
 }: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
 }) {
   return (
     <button
       onClick={onClick}
       className={`relative px-2 py-1.5 rounded-full hover:bg-black/5 transition-colors duration-75 text-sm font-medium ${
-        active
-          ? "text-gray-900 bg-gray-100"
-          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+        active ? "text-gray-900 bg-gray-100" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
       }`}
     >
       {children}
     </button>
-  );
+  )
 }
 
 // Custom Fields Section Component
@@ -317,9 +298,9 @@ function CustomFieldsSection({
   onToggle,
   isActive,
 }: {
-  expanded: boolean;
-  onToggle: () => void;
-  isActive: boolean;
+  expanded: boolean
+  onToggle: () => void
+  isActive: boolean
 }) {
   return (
     <div className="flex flex-col gap-y-2 w-full border-b border-gray-200 pb-4">
@@ -330,9 +311,7 @@ function CustomFieldsSection({
         <div className="flex gap-x-4">
           <div
             className={`text-sm px-2 py-1 ${
-              isActive
-                ? "text-gray-900 border-b-2 border-gray-900"
-                : "text-gray-500"
+              isActive ? "text-gray-900 border-b-2 border-gray-900" : "text-gray-500"
             }`}
           >
             Fields
@@ -342,10 +321,7 @@ function CustomFieldsSection({
             <span className="text-xs text-gray-400 ml-1">3</span>
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: expanded ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown className="size-4 text-gray-500" />
         </motion.div>
       </button>
@@ -369,7 +345,7 @@ function CustomFieldsSection({
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }
 
 // Custom Field Component
@@ -381,7 +357,7 @@ function CustomField({ label, value }: { label: string; value: string }) {
         {value}
       </div>
     </div>
-  );
+  )
 }
 
 // Collaborator Cursor Component
@@ -390,9 +366,9 @@ function CollaboratorCursor({
   color,
   position,
 }: {
-  name: string;
-  color: string;
-  position: { top: string; left: string };
+  name: string
+  color: string
+  position: { top: string; left: string }
 }) {
   return (
     <motion.div
@@ -411,10 +387,7 @@ function CollaboratorCursor({
         xmlns="http://www.w3.org/2000/svg"
         style={{ color }}
       >
-        <path
-          d="M0 0L0 16L4.5 11.5L7 19L9.5 18L7 10.5L12 10.5L0 0Z"
-          fill="currentColor"
-        />
+        <path d="M0 0L0 16L4.5 11.5L7 19L9.5 18L7 10.5L12 10.5L0 0Z" fill="currentColor" />
       </svg>
       <motion.div
         initial={{ opacity: 0, y: -5 }}
@@ -426,7 +399,7 @@ function CollaboratorCursor({
         {name}
       </motion.div>
     </motion.div>
-  );
+  )
 }
 
 // Collaborator Avatar Component
@@ -439,7 +412,7 @@ function CollaboratorAvatar({ name, color }: { name: string; color: string }) {
     >
       {name[0]}
     </div>
-  );
+  )
 }
 
 // Link Popover Mock Component
@@ -455,9 +428,7 @@ function LinkPopoverMock({ onClose }: { onClose: () => void }) {
       <div className="flex gap-x-1 items-center">
         <div className="flex gap-x-2 overflow-hidden text-ellipsis whitespace-nowrap px-1 items-center">
           <FileText className="size-3.5 text-gray-500 shrink-0" />
-          <div className="text-xs text-gray-700 truncate">
-            API Documentation
-          </div>
+          <div className="text-xs text-gray-700 truncate">API Documentation</div>
         </div>
         <div className="h-4 w-px bg-gray-200 mx-1"></div>
         <div className="flex gap-x-0.5">
@@ -473,55 +444,31 @@ function LinkPopoverMock({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </motion.div>
-  );
+  )
 }
 
 // Popover Button Component
-function PopoverButton({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function PopoverButton({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <button
-      className="p-1 rounded hover:bg-gray-100"
-      title={title}
-      onClick={(e) => e.preventDefault()}
-    >
+    <button className="p-1 rounded hover:bg-gray-100" title={title} onClick={(e) => e.preventDefault()}>
       {children}
     </button>
-  );
+  )
 }
 
 // Toolbar Button Component
-function ToolbarButton({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function ToolbarButton({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <button
-      className="p-1 rounded hover:bg-gray-100 text-gray-700"
-      title={title}
-    >
+    <button className="p-1 rounded hover:bg-gray-100 text-gray-700" title={title}>
       {children}
     </button>
-  );
+  )
 }
 
 // Icon Components
 function BoldIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -535,26 +482,13 @@ function BoldIcon() {
         d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"
       ></path>
     </svg>
-  );
+  )
 }
 
 function ItalicIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <line
-        x1="19"
-        y1="4"
-        x2="10"
-        y2="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      ></line>
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <line x1="19" y1="4" x2="10" y2="4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></line>
       <line
         x1="14"
         y1="20"
@@ -564,27 +498,14 @@ function ItalicIcon() {
         strokeLinejoin="round"
         strokeWidth="2"
       ></line>
-      <line
-        x1="15"
-        y1="4"
-        x2="9"
-        y2="20"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      ></line>
+      <line x1="15" y1="4" x2="9" y2="20" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></line>
     </svg>
-  );
+  )
 }
 
 function StrikethroughIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -592,17 +513,12 @@ function StrikethroughIcon() {
         d="M4 12h16M6 6c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2v1M6 18c0 1.1.9 2 2 2h8c1.1 0 2 .9 2 2v-1"
       ></path>
     </svg>
-  );
+  )
 }
 
 function CodeIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <polyline
         points="16 18 22 12 16 6"
         strokeLinecap="round"
@@ -616,17 +532,12 @@ function CodeIcon() {
         strokeWidth="2"
       ></polyline>
     </svg>
-  );
+  )
 }
 
 function H1Icon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -634,17 +545,12 @@ function H1Icon() {
         d="M4 12h8m-8-6v12m8-12v12m5-12v12m0-6h3"
       ></path>
     </svg>
-  );
+  )
 }
 
 function H2Icon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -652,17 +558,12 @@ function H2Icon() {
         d="M4 12h8m-8-6v12m8-12v12m5 4h5l-5-6h5"
       ></path>
     </svg>
-  );
+  )
 }
 
 function H3Icon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -670,80 +571,28 @@ function H3Icon() {
         d="M4 12h8m-8-6v12m8-12v12m6 0h4a2 2 0 0 0 0-4h-4m0 4h4a2 2 0 0 0 0-4"
       ></path>
     </svg>
-  );
+  )
 }
 
 function BulletListIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <line
-        x1="8"
-        y1="6"
-        x2="21"
-        y2="6"
-        strokeLinecap="round"
-        strokeWidth="2"
-      ></line>
-      <line
-        x1="8"
-        y1="12"
-        x2="21"
-        y2="12"
-        strokeLinecap="round"
-        strokeWidth="2"
-      ></line>
-      <line
-        x1="8"
-        y1="18"
-        x2="21"
-        y2="18"
-        strokeLinecap="round"
-        strokeWidth="2"
-      ></line>
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <line x1="8" y1="6" x2="21" y2="6" strokeLinecap="round" strokeWidth="2"></line>
+      <line x1="8" y1="12" x2="21" y2="12" strokeLinecap="round" strokeWidth="2"></line>
+      <line x1="8" y1="18" x2="21" y2="18" strokeLinecap="round" strokeWidth="2"></line>
       <circle cx="3.5" cy="6" r="1" fill="currentColor"></circle>
       <circle cx="3.5" cy="12" r="1" fill="currentColor"></circle>
       <circle cx="3.5" cy="18" r="1" fill="currentColor"></circle>
     </svg>
-  );
+  )
 }
 
 function OrderedListIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <line
-        x1="10"
-        y1="6"
-        x2="21"
-        y2="6"
-        strokeLinecap="round"
-        strokeWidth="2"
-      ></line>
-      <line
-        x1="10"
-        y1="12"
-        x2="21"
-        y2="12"
-        strokeLinecap="round"
-        strokeWidth="2"
-      ></line>
-      <line
-        x1="10"
-        y1="18"
-        x2="21"
-        y2="18"
-        strokeLinecap="round"
-        strokeWidth="2"
-      ></line>
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <line x1="10" y1="6" x2="21" y2="6" strokeLinecap="round" strokeWidth="2"></line>
+      <line x1="10" y1="12" x2="21" y2="12" strokeLinecap="round" strokeWidth="2"></line>
+      <line x1="10" y1="18" x2="21" y2="18" strokeLinecap="round" strokeWidth="2"></line>
       <path
         d="M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"
         strokeLinecap="round"
@@ -751,17 +600,12 @@ function OrderedListIcon() {
         strokeWidth="2"
       ></path>
     </svg>
-  );
+  )
 }
 
 function LinkIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -775,26 +619,13 @@ function LinkIcon() {
         d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
       ></path>
     </svg>
-  );
+  )
 }
 
 function ImageIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <rect
-        x="3"
-        y="3"
-        width="18"
-        height="18"
-        rx="2"
-        ry="2"
-        strokeWidth="2"
-      ></rect>
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeWidth="2"></rect>
       <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
       <polyline
         points="21 15 16 10 5 21"
@@ -803,23 +634,18 @@ function ImageIcon() {
         strokeWidth="2"
       ></polyline>
     </svg>
-  );
+  )
 }
 
 function TableIcon() {
   return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2"></rect>
       <line x1="3" y1="9" x2="21" y2="9" strokeWidth="2"></line>
       <line x1="3" y1="15" x2="21" y2="15" strokeWidth="2"></line>
       <line x1="12" y1="3" x2="12" y2="21" strokeWidth="2"></line>
     </svg>
-  );
+  )
 }
 
 // Collaborative Text Edit Component
@@ -829,62 +655,62 @@ function CollaborativeTextEdit({
   isActive,
   onCursorShow,
 }: {
-  originalText: string;
-  newText: string;
-  isActive: boolean;
-  onCursorShow: (show: boolean) => void;
+  originalText: string
+  newText: string
+  isActive: boolean
+  onCursorShow: (show: boolean) => void
 }) {
-  const [showSelection, setShowSelection] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [displayedText, setDisplayedText] = useState(originalText);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [showSelection, setShowSelection] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const [displayedText, setDisplayedText] = useState(originalText)
+  const [hasStarted, setHasStarted] = useState(false)
 
   useEffect(() => {
     if (!isActive) {
       // Reset when tab is not active
-      setShowSelection(false);
-      setIsTyping(false);
-      setDisplayedText(originalText);
-      setHasStarted(false);
-      onCursorShow(false);
-      return;
+      setShowSelection(false)
+      setIsTyping(false)
+      setDisplayedText(originalText)
+      setHasStarted(false)
+      onCursorShow(false)
+      return
     }
 
     // Start the animation sequence after a delay
     const timer = setTimeout(() => {
-      setHasStarted(true);
-      setShowSelection(true);
-      onCursorShow(true); // Show cursor when selection starts
+      setHasStarted(true)
+      setShowSelection(true)
+      onCursorShow(true) // Show cursor when selection starts
 
       // After selection is shown, start typing
       const typingTimer = setTimeout(() => {
-        setShowSelection(false);
-        setIsTyping(true);
+        setShowSelection(false)
+        setIsTyping(true)
 
         // Type out the new text character by character
-        let currentIndex = 0;
+        let currentIndex = 0
         const typingInterval = setInterval(() => {
           if (currentIndex < newText.length) {
-            setDisplayedText(newText.slice(0, currentIndex + 1));
-            currentIndex++;
+            setDisplayedText(newText.slice(0, currentIndex + 1))
+            currentIndex++
           } else {
-            clearInterval(typingInterval);
-            setIsTyping(false);
+            clearInterval(typingInterval)
+            setIsTyping(false)
             // Keep cursor visible for a moment after typing completes
             setTimeout(() => {
-              onCursorShow(false);
-            }, 500);
+              onCursorShow(false)
+            }, 500)
           }
-        }, 50); // Typing speed: 50ms per character (faster for longer text)
+        }, 50) // Typing speed: 50ms per character (faster for longer text)
 
-        return () => clearInterval(typingInterval);
-      }, 1200); // Show selection for 1.2 seconds
+        return () => clearInterval(typingInterval)
+      }, 1200) // Show selection for 1.2 seconds
 
-      return () => clearTimeout(typingTimer);
-    }, 800); // Initial delay before starting
+      return () => clearTimeout(typingTimer)
+    }, 800) // Initial delay before starting
 
-    return () => clearTimeout(timer);
-  }, [isActive, originalText, newText, onCursorShow]);
+    return () => clearTimeout(timer)
+  }, [isActive, originalText, newText, onCursorShow])
 
   return (
     <span className="relative inline-block">
@@ -904,11 +730,7 @@ function CollaborativeTextEdit({
             </motion.span>
           )}
           {isTyping && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-blue-600"
-            >
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-blue-600">
               {displayedText}
               <motion.span
                 animate={{ opacity: [1, 0, 1] }}
@@ -917,23 +739,16 @@ function CollaborativeTextEdit({
               />
             </motion.span>
           )}
-          {!showSelection && !isTyping && hasStarted && (
-            <span className="text-blue-600">{newText}</span>
-          )}
+          {!showSelection && !isTyping && hasStarted && <span className="text-blue-600">{newText}</span>}
         </>
       )}
     </span>
-  );
+  )
 }
 
 function EditIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -941,17 +756,12 @@ function EditIcon({ className }: { className?: string }) {
         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
       />
     </svg>
-  );
+  )
 }
 
 function UnlinkIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -959,5 +769,5 @@ function UnlinkIcon({ className }: { className?: string }) {
         d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
       />
     </svg>
-  );
+  )
 }

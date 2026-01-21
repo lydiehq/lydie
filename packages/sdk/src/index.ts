@@ -10,10 +10,6 @@ export type {
   TextNode,
   Mark,
   NodeBuilder,
-} from "./core";
+} from "./core"
 
-export {
-  LydieClient,
-  extractTableOfContents,
-  renderWithBuilder,
-} from "./core";
+export { LydieClient, extractTableOfContents, renderWithBuilder } from "./core"

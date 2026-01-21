@@ -1,21 +1,21 @@
-import { DocumentTree } from "./DocumentTree";
-import { useDocumentActions } from "@/hooks/use-document-actions";
-import { Button as RACButton } from "react-aria-components";
-import { Button } from "../generic/Button";
-import { OrganizationMenu } from "./OrganizationMenu";
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { Link } from "@tanstack/react-router";
-import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { cva } from "cva";
-import { UsageStats } from "./UsageStats";
-import { useConnectionState } from "@rocicorp/zero/react";
-import { useZero } from "@/services/zero";
-import { useCallback } from "react";
-import clsx from "clsx";
-import { useOrganization } from "@/context/organization.context";
-import { SidebarIcon } from "./SidebarIcon";
-import { useSetAtom } from "jotai";
-import { commandMenuStateAtom } from "@/stores/command-menu";
+import { DocumentTree } from "./DocumentTree"
+import { useDocumentActions } from "@/hooks/use-document-actions"
+import { Button as RACButton } from "react-aria-components"
+import { Button } from "../generic/Button"
+import { OrganizationMenu } from "./OrganizationMenu"
+import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
+import { Link } from "@tanstack/react-router"
+import { composeTailwindRenderProps, focusRing } from "../generic/utils"
+import { cva } from "cva"
+import { UsageStats } from "./UsageStats"
+import { useConnectionState } from "@rocicorp/zero/react"
+import { useZero } from "@/services/zero"
+import { useCallback } from "react"
+import clsx from "clsx"
+import { useOrganization } from "@/context/organization.context"
+import { SidebarIcon } from "./SidebarIcon"
+import { useSetAtom } from "jotai"
+import { commandMenuStateAtom } from "@/stores/command-menu"
 import {
   SearchIcon,
   HomeIcon,
@@ -27,17 +27,17 @@ import {
   AlertCircleIcon,
   Loader2Icon,
   ShieldAlertIcon,
-} from "@/icons";
-import { Separator } from "../generic/Separator";
-import { Eyebrow } from "../generic/Eyebrow";
-import { useMemo } from "react";
-import { useAuth } from "@/context/auth.context";
-import { isAdmin } from "@/utils/admin";
+} from "@/icons"
+import { Separator } from "../generic/Separator"
+import { Eyebrow } from "../generic/Eyebrow"
+import { useMemo } from "react"
+import { useAuth } from "@/context/auth.context"
+import { isAdmin } from "@/utils/admin"
 
 type Props = {
-  isCollapsed: boolean;
-  onToggle: () => void;
-};
+  isCollapsed: boolean
+  onToggle: () => void
+}
 
 export const sidebarItemStyles = cva({
   base: "group flex items-center h-[28px] rounded-md text-sm font-medium mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
@@ -50,52 +50,47 @@ export const sidebarItemStyles = cva({
   defaultVariants: {
     isCurrent: false,
   },
-});
+})
 
 export const sidebarItemIconStyles = cva({
   base: "text-black/34 group-hover:text-black/44",
-});
+})
 
 export function Sidebar({ isCollapsed, onToggle }: Props) {
-  const { createDocument } = useDocumentActions();
-  const { organization } = useOrganization();
-  const { user } = useAuth();
-  const userIsAdmin = isAdmin(user);
-  const setCommandMenuState = useSetAtom(commandMenuStateAtom);
+  const { createDocument } = useDocumentActions()
+  const { organization } = useOrganization()
+  const { user } = useAuth()
+  const userIsAdmin = isAdmin(user)
+  const setCommandMenuState = useSetAtom(commandMenuStateAtom)
 
   const isFreePlan = useMemo(() => {
     if (!organization) {
-      return true;
+      return true
     }
 
     const hasProAccess =
-      organization.subscriptionPlan === "pro" &&
-      organization.subscriptionStatus === "active";
+      organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active"
 
-    return !hasProAccess;
-  }, [organization]);
+    return !hasProAccess
+  }, [organization])
 
   const handleSearchClick = () => {
     setCommandMenuState({
       isOpen: true,
       initialPage: "search",
-    });
-  };
+    })
+  }
 
   const handleQuickActionClick = () => {
     setCommandMenuState({
       isOpen: true,
       initialPage: undefined,
-    });
-  };
+    })
+  }
 
   return (
     <div className="flex flex-col grow max-h-screen overflow-hidden">
-      <div
-        className={`flex justify-between items-center p-3 ${
-          !isCollapsed ? "-ml-1" : ""
-        }`}
-      >
+      <div className={`flex justify-between items-center p-3 ${!isCollapsed ? "-ml-1" : ""}`}>
         <OrganizationMenu isCollapsed={isCollapsed} />
         {/* <TooltipTrigger delay={500}>
           <RACButton
@@ -115,10 +110,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
 
         <TooltipTrigger delay={500}>
           <RACButton
-            className={composeTailwindRenderProps(
-              focusRing,
-              `group p-1 -m-1 ${isCollapsed ? "hidden" : ""}`
-            )}
+            className={composeTailwindRenderProps(focusRing, `group p-1 -m-1 ${isCollapsed ? "hidden" : ""}`)}
             onPress={onToggle}
             aria-label="Collapse sidebar"
           >
@@ -128,16 +120,14 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div
-        className={`h-full justify-between items-center flex flex-col p-3 ${
-          !isCollapsed ? "hidden" : ""
-        }`}
+        className={`h-full justify-between items-center flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`}
       >
         <div></div>
         <TooltipTrigger delay={500}>
           <RACButton
             className={composeTailwindRenderProps(
               focusRing,
-              "p-1 rounded hover:bg-black/5 text-gray-700 group"
+              "p-1 rounded hover:bg-black/5 text-gray-700 group",
             )}
             onPress={onToggle}
             aria-label="Expand sidebar"
@@ -147,11 +137,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           <Tooltip>Expand sidebar</Tooltip>
         </TooltipTrigger>
       </div>
-      <div
-        className={`flex flex-col gap-y-4 pb-2 ${
-          isCollapsed ? "hidden" : ""
-        } grow min-h-0`}
-      >
+      <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
         <div className="flex gap-x-1 max-w-[300px] px-2">
           <Button
             intent="secondary"
@@ -169,12 +155,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               </kbd>
             </div>
           </Button>
-          <Button
-            intent="secondary"
-            size="sm"
-            onPress={handleSearchClick}
-            aria-label="Search"
-          >
+          <Button intent="secondary" size="sm" onPress={handleSearchClick} aria-label="Search">
             <SearchIcon className="size-[14px] text-gray-600" />
           </Button>
         </div>
@@ -234,9 +215,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <DocumentTree />
           </div>
         </div>
-        <div className="px-2">
-          {isFreePlan && !userIsAdmin && <UsageStats />}
-        </div>
+        <div className="px-2">{isFreePlan && !userIsAdmin && <UsageStats />}</div>
         <BottomBar />
         {/* <div className="flex flex-col">
           <Separator />
@@ -256,29 +235,25 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </div> */}
       </div>
     </div>
-  );
+  )
 }
 
 function BottomBar() {
-  const { user } = useAuth();
-  const userIsAdmin = isAdmin(user);
+  const { user } = useAuth()
+  const userIsAdmin = isAdmin(user)
 
-  return (
-    <div className="flex flex-col gap-y-4 px-2.5 pb-1">
-      {userIsAdmin && <ZeroConnectionStatus />}
-    </div>
-  );
+  return <div className="flex flex-col gap-y-4 px-2.5 pb-1">{userIsAdmin && <ZeroConnectionStatus />}</div>
 }
 
 function ZeroConnectionStatus() {
-  const state = useConnectionState();
-  const zero = useZero();
+  const state = useConnectionState()
+  const zero = useZero()
 
   const handleRetry = useCallback(() => {
     if (zero?.connection) {
-      zero.connection.connect();
+      zero.connection.connect()
     }
-  }, [zero]);
+  }, [zero])
 
   const getStatusConfig = () => {
     switch (state.name) {
@@ -286,40 +261,40 @@ function ZeroConnectionStatus() {
         return {
           icon: Loader2Icon,
           tooltip: state.reason || "Connecting to Zero cache",
-        };
+        }
       case "connected":
         return {
           icon: WifiIcon,
           tooltip: "Connected to Zero cache",
-        };
+        }
       case "disconnected":
         return {
           icon: WifiOffIcon,
           tooltip: state.reason || "Disconnected from Zero cache",
-        };
+        }
       case "error":
         return {
           icon: AlertCircleIcon,
           tooltip: state.reason || "Connection error",
           clickable: true,
-        };
+        }
       case "needs-auth":
         return {
           icon: ShieldAlertIcon,
           tooltip: "Authentication required",
           clickable: true,
-        };
+        }
       default:
         return {
           icon: WifiOffIcon,
           tooltip: "Unknown connection state",
-        };
+        }
     }
-  };
+  }
 
-  const config = getStatusConfig();
-  const Icon = config.icon;
-  const isAnimating = state.name === "connecting";
+  const config = getStatusConfig()
+  const Icon = config.icon
+  const isAnimating = state.name === "connecting"
 
   return (
     <TooltipTrigger>
@@ -328,17 +303,12 @@ function ZeroConnectionStatus() {
         onPress={config.clickable ? handleRetry : undefined}
         aria-label={config.tooltip}
       >
-        <Icon
-          className={clsx(
-            "size-4 shrink-0 text-gray-400",
-            isAnimating && "animate-spin"
-          )}
-        />
+        <Icon className={clsx("size-4 shrink-0 text-gray-400", isAnimating && "animate-spin")} />
       </RACButton>
       <Tooltip placement="right">
         {config.tooltip}
         {config.clickable && " (Click to retry)"}
       </Tooltip>
     </TooltipTrigger>
-  );
+  )
 }

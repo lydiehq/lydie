@@ -4,18 +4,10 @@
   --editor-content-strong-color: var(--color-gray-950);
   --editor-content-link-color: var(--color-gray-950);
   --editor-content-code-color: var(--color-gray-950);
-  --editor-content-marker-color: color-mix(
-    in oklab,
-    var(--color-gray-700) 25%,
-    transparent
-  );
+  --editor-content-marker-color: color-mix(in oklab, var(--color-gray-700) 25%, transparent);
   --editor-content-th-borders: var(--color-gray-300);
   --editor-content-td-borders: var(--color-gray-200);
-  --editor-content-hr-color: color-mix(
-    in oklab,
-    var(--color-gray-950) 5%,
-    transparent
-  );
+  --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
   &:where(.dark, .dark *) {
@@ -24,18 +16,10 @@
     --editor-content-strong-color: var(--color-white);
     --editor-content-link-color: var(--color-white);
     --editor-content-code-color: var(--color-white);
-    --editor-content-marker-color: color-mix(
-      in oklab,
-      var(--color-gray-300) 35%,
-      transparent
-    );
+    --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
     --editor-content-th-borders: var(--color-gray-600);
     --editor-content-td-borders: var(--color-gray-700);
-    --editor-content-hr-color: color-mix(
-      in oklab,
-      var(--color-white) 10%,
-      transparent
-    );
+    --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
     --editor-content-blockquote-border-color: var(--color-gray-600);
   }
   @media (prefers-color-scheme: dark) {
@@ -45,18 +29,10 @@
       --editor-content-strong-color: var(--color-white);
       --editor-content-link-color: var(--color-white);
       --editor-content-code-color: var(--color-white);
-      --editor-content-marker-color: color-mix(
-        in oklab,
-        var(--color-gray-300) 35%,
-        transparent
-      );
+      --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
       --editor-content-th-borders: var(--color-gray-600);
       --editor-content-td-borders: var(--color-gray-700);
-      --editor-content-hr-color: color-mix(
-        in oklab,
-        var(--color-white) 10%,
-        transparent
-      );
+      --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
       --editor-content-blockquote-border-color: var(--color-gray-600);
     }
   }
@@ -362,18 +338,10 @@
   --editor-content-strong-color: var(--color-gray-950);
   --editor-content-link-color: var(--color-gray-950);
   --editor-content-code-color: var(--color-gray-950);
-  --editor-content-marker-color: color-mix(
-    in oklab,
-    var(--color-gray-700) 25%,
-    transparent
-  );
+  --editor-content-marker-color: color-mix(in oklab, var(--color-gray-700) 25%, transparent);
   --editor-content-th-borders: var(--color-gray-300);
   --editor-content-td-borders: var(--color-gray-200);
-  --editor-content-hr-color: color-mix(
-    in oklab,
-    var(--color-gray-950) 5%,
-    transparent
-  );
+  --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
   &:where(.dark, .dark *) {
@@ -382,18 +350,10 @@
     --editor-content-strong-color: var(--color-white);
     --editor-content-link-color: var(--color-white);
     --editor-content-code-color: var(--color-white);
-    --editor-content-marker-color: color-mix(
-      in oklab,
-      var(--color-gray-300) 35%,
-      transparent
-    );
+    --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
     --editor-content-th-borders: var(--color-gray-600);
     --editor-content-td-borders: var(--color-gray-700);
-    --editor-content-hr-color: color-mix(
-      in oklab,
-      var(--color-white) 10%,
-      transparent
-    );
+    --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
     --editor-content-blockquote-border-color: var(--color-gray-600);
   }
 
@@ -404,18 +364,10 @@
       --editor-content-strong-color: var(--color-white);
       --editor-content-link-color: var(--color-white);
       --editor-content-code-color: var(--color-white);
-      --editor-content-marker-color: color-mix(
-        in oklab,
-        var(--color-gray-300) 35%,
-        transparent
-      );
+      --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
       --editor-content-th-borders: var(--color-gray-600);
       --editor-content-td-borders: var(--color-gray-700);
-      --editor-content-hr-color: color-mix(
-        in oklab,
-        var(--color-white) 10%,
-        transparent
-      );
+      --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
       --editor-content-blockquote-border-color: var(--color-gray-600);
     }
   }

@@ -1,39 +1,35 @@
-import { db, sessionsTable } from "@lydie/database";
-import { eq } from "drizzle-orm";
-import { createId } from "@lydie/core/id";
-import type { Page } from "@playwright/test";
+import { db, sessionsTable } from "@lydie/database"
+import { eq } from "drizzle-orm"
+import { createId } from "@lydie/core/id"
+import type { Page } from "@playwright/test"
 
 export async function createExpiredSession(
   userId: string,
-  ttlMs: number = 500
+  ttlMs: number = 500,
 ): Promise<{
-  sessionId: string;
-  token: string;
-  expiresAt: Date;
+  sessionId: string
+  token: string
+  expiresAt: Date
 }> {
-  const sessionId = createId();
-  const token = createId();
-  const expiresAt = new Date(Date.now() + ttlMs);
+  const sessionId = createId()
+  const token = createId()
+  const expiresAt = new Date(Date.now() + ttlMs)
 
   await db.insert(sessionsTable).values({
     id: sessionId,
     userId,
     token,
     expiresAt,
-  });
+  })
 
-  return { sessionId, token, expiresAt };
+  return { sessionId, token, expiresAt }
 }
 
 export async function deleteSessionFromDB(sessionId: string): Promise<void> {
-  await db.delete(sessionsTable).where(eq(sessionsTable.id, sessionId));
+  await db.delete(sessionsTable).where(eq(sessionsTable.id, sessionId))
 }
 
-export async function setSessionCookie(
-  page: Page,
-  token: string,
-  expiresAt: Date
-): Promise<void> {
+export async function setSessionCookie(page: Page, token: string, expiresAt: Date): Promise<void> {
   await page.context().addCookies([
     {
       name: "better-auth.session_token",
@@ -45,5 +41,5 @@ export async function setSessionCookie(
       secure: false,
       sameSite: "Lax",
     },
-  ]);
+  ])
 }

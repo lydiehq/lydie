@@ -5,10 +5,9 @@
 
 @theme {
   --font-sans: Inter Variable, sans-serif;
-  --shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1),
-    0 0 1.5px 0 rgba(0, 0, 0, 0.3);
-  --shadow-legit: 0px 4px 20px 0px rgba(15, 12, 12, 0.08),
-    0px 8px 12px -4px rgba(15, 12, 12, 0.08),
+  --shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1), 0 0 1.5px 0 rgba(0, 0, 0, 0.3);
+  --shadow-legit:
+    0px 4px 20px 0px rgba(15, 12, 12, 0.08), 0px 8px 12px -4px rgba(15, 12, 12, 0.08),
     0px 0px 2px 0px rgba(15, 12, 12, 0.1), 0px 1px 2px 0px rgba(15, 12, 12, 0.1);
 
   /* Use neutral gray colors as default gray */
@@ -109,11 +108,7 @@ body {
 
 .gradient-bg .g1 {
   position: absolute;
-  background: radial-gradient(
-      circle at center,
-      rgba(var(--color1), 0.8) 0,
-      rgba(var(--color1), 0) 50%
-    )
+  background: radial-gradient(circle at center, rgba(var(--color1), 0.8) 0, rgba(var(--color1), 0) 50%)
     no-repeat;
   mix-blend-mode: var(--blending);
   width: var(--circle-size);
@@ -127,11 +122,7 @@ body {
 
 .gradient-bg .g2 {
   position: absolute;
-  background: radial-gradient(
-      circle at center,
-      rgba(var(--color2), 0.8) 0,
-      rgba(var(--color2), 0) 50%
-    )
+  background: radial-gradient(circle at center, rgba(var(--color2), 0.8) 0, rgba(var(--color2), 0) 50%)
     no-repeat;
   mix-blend-mode: var(--blending);
   width: var(--circle-size);
@@ -145,11 +136,7 @@ body {
 
 .gradient-bg .g3 {
   position: absolute;
-  background: radial-gradient(
-      circle at center,
-      rgba(var(--color3), 0.8) 0,
-      rgba(var(--color3), 0) 50%
-    )
+  background: radial-gradient(circle at center, rgba(var(--color3), 0.8) 0, rgba(var(--color3), 0) 50%)
     no-repeat;
   mix-blend-mode: var(--blending);
   width: var(--circle-size);
@@ -163,11 +150,7 @@ body {
 
 .gradient-bg .g4 {
   position: absolute;
-  background: radial-gradient(
-      circle at center,
-      rgba(var(--color4), 0.8) 0,
-      rgba(var(--color4), 0) 50%
-    )
+  background: radial-gradient(circle at center, rgba(var(--color4), 0.8) 0, rgba(var(--color4), 0) 50%)
     no-repeat;
   mix-blend-mode: var(--blending);
   width: var(--circle-size);
@@ -181,11 +164,7 @@ body {
 
 .gradient-bg .g5 {
   position: absolute;
-  background: radial-gradient(
-      circle at center,
-      rgba(var(--color5), 0.8) 0,
-      rgba(var(--color5), 0) 50%
-    )
+  background: radial-gradient(circle at center, rgba(var(--color5), 0.8) 0, rgba(var(--color5), 0) 50%)
     no-repeat;
   mix-blend-mode: var(--blending);
   width: calc(var(--circle-size) * 2);

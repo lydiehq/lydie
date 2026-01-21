@@ -1,44 +1,39 @@
-import {
-  MenuItem,
-  MenuItemLink,
-  MenuSeparator,
-} from "@/components/generic/Menu";
-import { useOrganization } from "@/context/organization.context";
-import { useNavigate, useRouter } from "@tanstack/react-router";
-import { Button as RACButton, MenuTrigger, Menu } from "react-aria-components";
-import { useState } from "react";
-import { OrganizationsDialog } from "./OrganizationsDialog";
-import clsx from "clsx";
-import { authClient } from "@/utils/auth";
-import { clearActiveOrganizationSlug } from "@/lib/active-organization";
-import { useQueryClient } from "@tanstack/react-query";
-import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { Popover } from "../generic/Popover";
-import { OrganizationAvatar } from "./OrganizationAvatar";
-import { ChevronsUpDownIcon } from "@/icons";
-import { useAuth } from "@/context/auth.context";
-import { clearSession } from "@/lib/auth/session";
-import { clearZeroInstance } from "@/lib/zero/instance";
+import { MenuItem, MenuItemLink, MenuSeparator } from "@/components/generic/Menu"
+import { useOrganization } from "@/context/organization.context"
+import { useNavigate, useRouter } from "@tanstack/react-router"
+import { Button as RACButton, MenuTrigger, Menu } from "react-aria-components"
+import { useState } from "react"
+import { OrganizationsDialog } from "./OrganizationsDialog"
+import clsx from "clsx"
+import { authClient } from "@/utils/auth"
+import { clearActiveOrganizationSlug } from "@/lib/active-organization"
+import { useQueryClient } from "@tanstack/react-query"
+import { composeTailwindRenderProps, focusRing } from "../generic/utils"
+import { Popover } from "../generic/Popover"
+import { OrganizationAvatar } from "./OrganizationAvatar"
+import { ChevronsUpDownIcon } from "@/icons"
+import { useAuth } from "@/context/auth.context"
+import { clearSession } from "@/lib/auth/session"
+import { clearZeroInstance } from "@/lib/zero/instance"
 
 type Props = {
-  isCollapsed: boolean;
-};
+  isCollapsed: boolean
+}
 
 export function OrganizationMenu({ isCollapsed }: Props) {
-  const { organization } = useOrganization();
-  const { session } = useAuth();
-  const userId = session?.userId;
-  const queryClient = useQueryClient();
-  const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] =
-    useState(false);
+  const { organization } = useOrganization()
+  const { session } = useAuth()
+  const userId = session?.userId
+  const queryClient = useQueryClient()
+  const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false)
 
   const signOut = async () => {
-    clearActiveOrganizationSlug(userId);
-    await authClient.signOut();
-    await clearSession(queryClient);
-    clearZeroInstance();
-    window.location.href = "https://lydie.co";
-  };
+    clearActiveOrganizationSlug(userId)
+    await authClient.signOut()
+    await clearSession(queryClient)
+    clearZeroInstance()
+    window.location.href = "https://lydie.co"
+  }
 
   return (
     <div>
@@ -48,8 +43,8 @@ export function OrganizationMenu({ isCollapsed }: Props) {
             focusRing,
             clsx(
               "flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-md overflow-hidden aria-expanded:bg-black/3",
-              !isCollapsed && "p-0.5 mx-0.5"
-            )
+              !isCollapsed && "p-0.5 mx-0.5",
+            ),
           )}
         >
           <OrganizationAvatar size={isCollapsed ? "md" : "small"} />
@@ -70,32 +65,22 @@ export function OrganizationMenu({ isCollapsed }: Props) {
                 {organization?.name}
               </div>
               <div className="text-xs text-gray-500">
-                {organization?.subscriptionPlan === "free"
-                  ? "Free Plan"
-                  : "Pro Plan"}
+                {organization?.subscriptionPlan === "free" ? "Free Plan" : "Pro Plan"}
               </div>
             </div>
           </div>
           <Menu className="outline-none max-h-[inherit] overflow-auto p-1 w-full">
             <MenuSeparator />
-            <MenuItemLink
-              to="/w/$organizationSlug/settings/user"
-              from="/w/$organizationSlug"
-            >
+            <MenuItemLink to="/w/$organizationSlug/settings/user" from="/w/$organizationSlug">
               Settings
             </MenuItemLink>
             <MenuSeparator />
-            <MenuItem onAction={() => setIsOrganizationDialogOpen(true)}>
-              Switch workspace
-            </MenuItem>
+            <MenuItem onAction={() => setIsOrganizationDialogOpen(true)}>Switch workspace</MenuItem>
             <MenuItem onAction={signOut}>Sign Out</MenuItem>
           </Menu>
         </Popover>
       </MenuTrigger>
-      <OrganizationsDialog
-        isOpen={isOrganizationDialogOpen}
-        onOpenChange={setIsOrganizationDialogOpen}
-      />
+      <OrganizationsDialog isOpen={isOrganizationDialogOpen} onOpenChange={setIsOrganizationDialogOpen} />
     </div>
-  );
+  )
 }

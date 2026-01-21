@@ -1,12 +1,12 @@
-import { Heading } from "./Heading";
-import type { ReactNode } from "react";
+import { Heading } from "./Heading"
+import type { ReactNode } from "react"
 
 type SectionHeaderProps = {
-  heading: ReactNode;
-  description: ReactNode;
-  level?: 1 | 2 | 3 | 4;
-  descriptionClassName?: string;
-};
+  heading: ReactNode
+  description: ReactNode
+  level?: 1 | 2 | 3 | 4
+  descriptionClassName?: string
+}
 
 export function SectionHeader({
   heading,
@@ -19,6 +19,5 @@ export function SectionHeader({
       <Heading level={level}>{heading}</Heading>
       <p className={descriptionClassName}>{description}</p>
     </div>
-  );
+  )
 }
-

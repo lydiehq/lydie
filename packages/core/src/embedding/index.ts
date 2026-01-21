@@ -8,7 +8,7 @@ export {
   generateEmbedding,
   generateTitleEmbedding,
   generateManyEmbeddings,
-} from "./generation";
+} from "./generation"
 
 // Chunking utilities
 export {
@@ -17,13 +17,13 @@ export {
   generateParagraphChunks,
   type Chunk,
   type ParagraphChunk,
-} from "./chunking";
+} from "./chunking"
 
 // Document processing
-export { processDocumentEmbedding } from "./document-processing";
+export { processDocumentEmbedding } from "./document-processing"
 
 // Title processing
-export { processDocumentTitleEmbedding } from "./title-processing";
+export { processDocumentTitleEmbedding } from "./title-processing"
 
 // Search utilities
 export {
@@ -34,5 +34,4 @@ export {
   findRelatedDocuments,
   findRelatedDocumentsByContent,
   searchDocuments,
-} from "./search";
-
+} from "./search"

@@ -1,8 +1,8 @@
-import { Node } from "@tiptap/core";
-import type { NodeViewRenderer } from "@tiptap/core";
+import { Node } from "@tiptap/core"
+import type { NodeViewRenderer } from "@tiptap/core"
 
 export interface DocumentComponentOptions {
-  addNodeView?: () => NodeViewRenderer;
+  addNodeView?: () => NodeViewRenderer
 }
 
 export const DocumentComponent = Node.create<DocumentComponentOptions>({
@@ -14,7 +14,7 @@ export const DocumentComponent = Node.create<DocumentComponentOptions>({
   addOptions() {
     return {
       addNodeView: undefined,
-    };
+    }
   },
 
   addAttributes() {
@@ -28,7 +28,7 @@ export const DocumentComponent = Node.create<DocumentComponentOptions>({
       schemas: {
         default: {},
       },
-    };
+    }
   },
 
   parseHTML() {
@@ -37,15 +37,11 @@ export const DocumentComponent = Node.create<DocumentComponentOptions>({
         tag: "documentComponent",
         getAttrs: (node) => ({
           name: (node as HTMLElement).getAttribute("data-name"),
-          properties: JSON.parse(
-            (node as HTMLElement).getAttribute("data-properties") || "{}"
-          ),
-          schemas: JSON.parse(
-            (node as HTMLElement).getAttribute("data-schemas") || "{}"
-          ),
+          properties: JSON.parse((node as HTMLElement).getAttribute("data-properties") || "{}"),
+          schemas: JSON.parse((node as HTMLElement).getAttribute("data-schemas") || "{}"),
         }),
       },
-    ];
+    ]
   },
 
   renderHTML({ node }) {
@@ -56,11 +52,10 @@ export const DocumentComponent = Node.create<DocumentComponentOptions>({
         "data-properties": JSON.stringify(node.attrs.properties),
         "data-schemas": JSON.stringify(node.attrs.schemas),
       },
-    ];
+    ]
   },
 
   addNodeView() {
-    return this.options.addNodeView?.();
+    return this.options.addNodeView?.()
   },
-});
-
+})

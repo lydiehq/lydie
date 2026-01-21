@@ -1,52 +1,43 @@
-import { Editor, EditorContent, useEditorState } from "@tiptap/react";
-import { AnimatePresence, motion } from "motion/react";
-import { Button as RACButton, Form } from "react-aria-components";
-import { CircleArrowUpIcon, XIcon, SquareIcon } from "@/icons";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { queries } from "@lydie/zero/queries";
-import { type DocumentEditorHookResult } from "@/lib/editor/document-editor";
-import { applyContentChanges } from "@/utils/document-changes";
-import { ChatMessages } from "@/components/chat/ChatMessages";
-import {
-  useMemo,
-  useState,
-  useImperativeHandle,
-  type ForwardedRef,
-} from "react";
-import { createId } from "@lydie/core/id";
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
-import { useSelectedContent } from "@/context/selected-content.context";
-import { useQuery } from "@rocicorp/zero/react";
-import { useOrganization } from "@/context/organization.context";
-import type { QueryResultType } from "@rocicorp/zero";
-import { useRouter } from "@tanstack/react-router";
-import { ChatAlert, type ChatAlertState } from "./ChatAlert";
-import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler";
-import { useChatComposer } from "@/components/chat/useChatComposer";
+import { Editor, EditorContent, useEditorState } from "@tiptap/react"
+import { AnimatePresence, motion } from "motion/react"
+import { Button as RACButton, Form } from "react-aria-components"
+import { CircleArrowUpIcon, XIcon, SquareIcon } from "@/icons"
+import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
+import { queries } from "@lydie/zero/queries"
+import { type DocumentEditorHookResult } from "@/lib/editor/document-editor"
+import { applyContentChanges } from "@/utils/document-changes"
+import { ChatMessages } from "@/components/chat/ChatMessages"
+import { useMemo, useState, useImperativeHandle, type ForwardedRef } from "react"
+import { createId } from "@lydie/core/id"
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
+import { useSelectedContent } from "@/context/selected-content.context"
+import { useQuery } from "@rocicorp/zero/react"
+import { useOrganization } from "@/context/organization.context"
+import type { QueryResultType } from "@rocicorp/zero"
+import { useRouter } from "@tanstack/react-router"
+import { ChatAlert, type ChatAlertState } from "./ChatAlert"
+import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
+import { useChatComposer } from "@/components/chat/useChatComposer"
 
 export type DocumentChatRef = {
-  focus: () => void;
-};
+  focus: () => void
+}
 
 type Props = {
-  contentEditor: DocumentEditorHookResult;
-  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
-  conversation: NonNullable<
-    QueryResultType<typeof queries.documents.byId>
-  >["conversations"][number];
-  ref: ForwardedRef<DocumentChatRef>;
-};
+  contentEditor: DocumentEditorHookResult
+  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>
+  conversation: NonNullable<QueryResultType<typeof queries.documents.byId>>["conversations"][number]
+  ref: ForwardedRef<DocumentChatRef>
+}
 
 export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
-  const { focusedContent, clearFocusedContent } = useSelectedContent();
-  const { organization } = useOrganization();
-  const router = useRouter();
-  const [alert, setAlert] = useState<ChatAlertState | null>(null);
+  const { focusedContent, clearFocusedContent } = useSelectedContent()
+  const { organization } = useOrganization()
+  const router = useRouter()
+  const [alert, setAlert] = useState<ChatAlertState | null>(null)
 
-  const [documents] = useQuery(
-    queries.documents.byUpdated({ organizationId: organization.id })
-  );
+  const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
 
   const availableDocuments = useMemo(
     () =>
@@ -54,165 +45,157 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
         id: doc.id,
         title: doc.title,
       })),
-    [documents]
-  );
+    [documents],
+  )
 
   const conversationId = useMemo(() => {
-    return conversation?.id || createId();
-  }, [conversation?.id]);
+    return conversation?.id || createId()
+  }, [conversation?.id])
 
   const chatEditor = useChatComposer({
     documents: availableDocuments,
     onEnter: () => {
-      const textContent = chatEditor.getTextContent();
+      const textContent = chatEditor.getTextContent()
       if (textContent.trim()) {
-        handleSubmit();
+        handleSubmit()
       }
     },
-  });
+  })
 
   // Expose focus method via ref
   useImperativeHandle(ref, () => ({
     focus: () => {
       if (chatEditor.editor) {
-        chatEditor.editor.commands.focus();
+        chatEditor.editor.commands.focus()
       }
     },
-  }));
+  }))
 
   const editorState = useEditorState({
     editor: contentEditor.editor,
     selector: (state) => {
       return {
         wordCount: state.editor.storage.characterCount.words(),
-      };
+      }
     },
-  });
+  })
 
-  const { messages, sendMessage, stop, status } =
-    useChat<DocumentChatAgentUIMessage>({
-      experimental_throttle: 100,
-      transport: new DefaultChatTransport({
-        api:
-          import.meta.env.VITE_API_URL.replace(/\/+$/, "") +
-          "/internal/document-chat",
-        credentials: "include",
-        body: {
-          documentId: doc.id,
-          conversationId: conversationId,
-          documentWordCount: editorState.wordCount,
-        },
-        headers: {
-          "X-Organization-Id": doc.organization_id,
-        },
-      }),
-      // @ts-expect-error - TODO: fix this
-      messages: conversation?.messages.map(
-        (
-          msg: NonNullable<
-            QueryResultType<typeof queries.documents.byId>
-          >["conversations"][number]["messages"][number]
-        ) => ({
-          id: msg.id,
-          role: msg.role as "user" | "system" | "assistant",
-          parts: msg.parts,
-          metadata: msg.metadata,
-        })
-      ),
-      onError: (error) => {
-        const { message } = parseChatError(error);
-
-        // Show usage limit errors with upgrade action
-        if (isUsageLimitError(error)) {
-          setAlert({
-            show: true,
-            type: "error",
-            title: "Daily Limit Reached",
-            message,
-            action: {
-              label: "Upgrade to Pro →",
-              onClick: () => {
-                router.navigate({
-                  to: "/w/$organizationSlug/settings/billing",
-                  params: { organizationId: organization.id },
-                });
-              },
-            },
-          });
-        } else {
-          // Show all other errors in the alert drawer
-          setAlert({
-            show: true,
-            type: "error",
-            title: "Error",
-            message,
-          });
-        }
+  const { messages, sendMessage, stop, status } = useChat<DocumentChatAgentUIMessage>({
+    experimental_throttle: 100,
+    transport: new DefaultChatTransport({
+      api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/document-chat",
+      credentials: "include",
+      body: {
+        documentId: doc.id,
+        conversationId: conversationId,
+        documentWordCount: editorState.wordCount,
       },
-    });
+      headers: {
+        "X-Organization-Id": doc.organization_id,
+      },
+    }),
+    // @ts-expect-error - TODO: fix this
+    messages: conversation?.messages.map(
+      (
+        msg: NonNullable<
+          QueryResultType<typeof queries.documents.byId>
+        >["conversations"][number]["messages"][number],
+      ) => ({
+        id: msg.id,
+        role: msg.role as "user" | "system" | "assistant",
+        parts: msg.parts,
+        metadata: msg.metadata,
+      }),
+    ),
+    onError: (error) => {
+      const { message } = parseChatError(error)
+
+      // Show usage limit errors with upgrade action
+      if (isUsageLimitError(error)) {
+        setAlert({
+          show: true,
+          type: "error",
+          title: "Daily Limit Reached",
+          message,
+          action: {
+            label: "Upgrade to Pro →",
+            onClick: () => {
+              router.navigate({
+                to: "/w/$organizationSlug/settings/billing",
+                params: { organizationId: organization.id },
+              })
+            },
+          },
+        })
+      } else {
+        // Show all other errors in the alert drawer
+        setAlert({
+          show: true,
+          type: "error",
+          title: "Error",
+          message,
+        })
+      }
+    },
+  })
 
   const handleSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
-    e?.preventDefault();
-    const textContent = chatEditor.getTextContent();
-    if (!textContent.trim()) return;
+    e?.preventDefault()
+    const textContent = chatEditor.getTextContent()
+    if (!textContent.trim()) return
 
     sendMessage({
       text: textContent,
-    });
-    chatEditor.clearContent();
-    clearFocusedContent();
-    contentEditor.editor?.commands.clearSelection();
-  };
+    })
+    chatEditor.clearContent()
+    clearFocusedContent()
+    contentEditor.editor?.commands.clearSelection()
+  }
 
   const applyContent = async (
     edits: {
       changes?: Array<{
-        search: string;
-        replace: string;
-        overwrite?: boolean;
-      }>;
-      title?: string;
-      message?: string;
+        search: string
+        replace: string
+        overwrite?: boolean
+      }>
+      title?: string
+      message?: string
     },
-    onProgress?: (current: number, total: number, usedLLM: boolean) => void
+    onProgress?: (current: number, total: number, usedLLM: boolean) => void,
   ) => {
     try {
       if (!contentEditor.editor) {
-        throw new Error("Content editor not available for applying changes");
+        throw new Error("Content editor not available for applying changes")
       }
 
       let result: {
-        success: boolean;
-        error?: string;
-        appliedChanges?: number;
-        usedLLMFallback?: boolean;
-      } = { success: true };
+        success: boolean
+        error?: string
+        appliedChanges?: number
+        usedLLMFallback?: boolean
+      } = { success: true }
 
       if (edits.changes && edits.changes.length > 0) {
-        result = await applyContentChanges(
-          contentEditor.editor,
-          edits.changes,
-          organization.id,
-          onProgress
-        );
+        result = await applyContentChanges(contentEditor.editor, edits.changes, organization.id, onProgress)
 
         // Log if LLM fallback was used
         if (result.usedLLMFallback) {
-          console.info("✨ LLM-assisted replacement was used for this change");
+          console.info("✨ LLM-assisted replacement was used for this change")
         }
       }
 
       // Note: Title editing is now handled separately via the title input field
 
       if (!result.success) {
-        throw new Error(result.error || "Failed to apply content changes");
+        throw new Error(result.error || "Failed to apply content changes")
       }
     } catch (error) {
-      console.error("Error applying content:", error);
+      console.error("Error applying content:", error)
     }
-  };
+  }
 
-  const canStop = status === "submitted" || status === "streaming";
+  const canStop = status === "submitted" || status === "streaming"
 
   return (
     <div className="flex flex-col overflow-hidden grow">
@@ -277,24 +260,24 @@ export function DocumentChat({ contentEditor, doc, conversation, ref }: Props) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function Selection({ editor }: { editor: Editor | null }) {
-  const { focusedContent, clearFocusedContent } = useSelectedContent();
+  const { focusedContent, clearFocusedContent } = useSelectedContent()
 
   const handleClearSelection = () => {
     if (editor) {
-      editor.commands.clearSelection();
-      clearFocusedContent();
+      editor.commands.clearSelection()
+      clearFocusedContent()
     }
-  };
+  }
 
   const jumpToSelection = () => {
     if (editor) {
-      editor.commands.jumpToSelection();
+      editor.commands.jumpToSelection()
     }
-  };
+  }
 
   return (
     <div className="flex items-center overflow-hidden bg-gray-50">
@@ -311,5 +294,5 @@ function Selection({ editor }: { editor: Editor | null }) {
         "{focusedContent}"
       </RACButton>
     </div>
-  );
+  )
 }

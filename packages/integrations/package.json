@@ -2,11 +2,11 @@
   "name": "@lydie/integrations",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {},
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*.ts"
   },
+  "scripts": {},
   "dependencies": {
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",

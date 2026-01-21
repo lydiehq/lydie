@@ -1,19 +1,19 @@
-import { useEditor, Editor } from "@tiptap/react";
-import { getChatEditorExtensions } from "@lydie/editor/chat-editor";
-import { useCallback, useMemo } from "react";
+import { useEditor, Editor } from "@tiptap/react"
+import { getChatEditorExtensions } from "@lydie/editor/chat-editor"
+import { useCallback, useMemo } from "react"
 
 export type ChatEditorHookResult = {
-  editor: Editor | null;
-  getTextContent: () => string;
-  getHTMLContent: () => string;
-  clearContent: () => void;
-  setContent: (content: string) => void;
-};
+  editor: Editor | null
+  getTextContent: () => string
+  getHTMLContent: () => string
+  clearContent: () => void
+  setContent: (content: string) => void
+}
 
 export interface UseChatEditorOptions {
-  onEnter?: () => void;
-  placeholder?: string;
-  mentionSuggestion?: any;
+  onEnter?: () => void
+  placeholder?: string
+  mentionSuggestion?: any
 }
 
 export function useChatEditor({
@@ -28,8 +28,8 @@ export function useChatEditor({
         placeholder,
         mentionSuggestion,
       }),
-    [onEnter, placeholder, mentionSuggestion]
-  );
+    [onEnter, placeholder, mentionSuggestion],
+  )
 
   const editor = useEditor({
     autofocus: false,
@@ -41,30 +41,30 @@ export function useChatEditor({
         class: "focus:outline-none text-sm text-gray-700 px-5 py-3.5",
       },
     },
-  });
+  })
 
   const getTextContent = useCallback(() => {
-    if (!editor) return "";
-    return editor.getText();
-  }, [editor]);
+    if (!editor) return ""
+    return editor.getText()
+  }, [editor])
 
   const getHTMLContent = useCallback(() => {
-    if (!editor) return "";
-    return editor.getHTML();
-  }, [editor]);
+    if (!editor) return ""
+    return editor.getHTML()
+  }, [editor])
 
   const clearContent = useCallback(() => {
-    if (!editor) return;
-    editor.commands.clearContent();
-  }, [editor]);
+    if (!editor) return
+    editor.commands.clearContent()
+  }, [editor])
 
   const setContent = useCallback(
     (content: string) => {
-      if (!editor) return;
-      editor.commands.setContent(content);
+      if (!editor) return
+      editor.commands.setContent(content)
     },
-    [editor]
-  );
+    [editor],
+  )
 
-  return { editor, getTextContent, getHTMLContent, clearContent, setContent };
+  return { editor, getTextContent, getHTMLContent, clearContent, setContent }
 }

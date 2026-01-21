@@ -1,14 +1,14 @@
-import { cva, type VariantProps } from "cva";
-import React from "react";
+import { cva, type VariantProps } from "cva"
+import React from "react"
 import {
   Button as RAButton,
   type ButtonProps as ReactAriaButtonProps,
   composeRenderProps,
-} from "react-aria-components";
-import { Loader } from "lucide-react";
-import clsx from "clsx";
-import { AnimatePresence, motion } from "motion/react";
-import { twMerge } from "tailwind-merge";
+} from "react-aria-components"
+import { Loader } from "lucide-react"
+import clsx from "clsx"
+import { AnimatePresence, motion } from "motion/react"
+import { twMerge } from "tailwind-merge"
 
 const focusRing = cva({
   base: "outline outline-blue-600 outline-offset-2",
@@ -18,13 +18,13 @@ const focusRing = cva({
       true: "outline-2",
     },
   },
-});
+})
 
 function composeTailwindRenderProps<T>(
   className: string | ((v: T) => string) | undefined,
-  tw: string
+  tw: string,
 ): string | ((v: T) => string) {
-  return composeRenderProps(className, (className) => twMerge(tw, className));
+  return composeRenderProps(className, (className) => twMerge(tw, className))
 }
 
 const styles = cva({
@@ -54,29 +54,26 @@ const styles = cva({
     intent: "primary",
     size: "md",
   },
-});
+})
 
 type ButtonElementProps = ReactAriaButtonProps & {
-  href?: undefined;
-} & VariantProps<typeof styles>;
+  href?: undefined
+} & VariantProps<typeof styles>
 
 type AnchorProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
-  href: string;
-  isPending?: boolean;
-} & VariantProps<typeof styles>;
+  href: string
+  isPending?: boolean
+} & VariantProps<typeof styles>
 
-export type ButtonProps = ButtonElementProps | AnchorProps;
+export type ButtonProps = ButtonElementProps | AnchorProps
 
 const isAnchor = (props: ButtonProps): props is AnchorProps => {
-  return props.href != undefined;
-};
+  return props.href != undefined
+}
 
-export const Button = React.forwardRef<
-  HTMLButtonElement | HTMLAnchorElement,
-  ButtonProps
->((props, ref) => {
+export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>((props, ref) => {
   if (isAnchor(props)) {
-    const { className, children, ...rest } = props;
+    const { className, children, ...rest } = props
     return (
       <a
         {...rest}
@@ -86,20 +83,16 @@ export const Button = React.forwardRef<
             intent: props.intent,
             size: props.size,
             className,
-          })
+          }),
         )}
         ref={ref as React.Ref<HTMLAnchorElement>}
       >
-        <ButtonChildren
-          children={children}
-          isPending={props.isPending}
-          size={props.size}
-        />
+        <ButtonChildren children={children} isPending={props.isPending} size={props.size} />
       </a>
-    );
+    )
   }
 
-  const { className, children, ...rest } = props;
+  const { className, children, ...rest } = props
 
   return (
     <RAButton
@@ -111,55 +104,51 @@ export const Button = React.forwardRef<
           className,
           intent: props.intent,
           size: props.size,
-        })
+        }),
       )}
     >
-      <ButtonChildren
-        children={children as React.ReactNode}
-        isPending={props.isPending}
-        size={props.size}
-      />
+      <ButtonChildren children={children as React.ReactNode} isPending={props.isPending} size={props.size} />
     </RAButton>
-  );
-});
+  )
+})
 
-Button.displayName = "Button";
+Button.displayName = "Button"
 
 function ButtonChildren({
   children,
   isPending,
   size = "md",
 }: {
-  children: React.ReactNode;
-  isPending?: boolean;
-  size?: VariantProps<typeof styles>["size"];
+  children: React.ReactNode
+  isPending?: boolean
+  size?: VariantProps<typeof styles>["size"]
 }) {
-  const showSpinner = isPending;
+  const showSpinner = isPending
 
   // Map button sizes to loader sizes
   const getLoaderSize = (buttonSize?: VariantProps<typeof styles>["size"]) => {
     switch (buttonSize) {
       case "xs":
-        return { pixels: 12, className: "size-3" }; // 0.75rem = 12px
+        return { pixels: 12, className: "size-3" } // 0.75rem = 12px
       case "sm":
-        return { pixels: 14, className: "size-[14px]" }; // 0.875rem = 14px
+        return { pixels: 14, className: "size-[14px]" } // 0.875rem = 14px
       case "md":
-        return { pixels: 16, className: "size-4" }; // 1rem = 16px
+        return { pixels: 16, className: "size-4" } // 1rem = 16px
       case "lg":
-        return { pixels: 18, className: "size-[18px]" }; // 1.125rem = 18px
+        return { pixels: 18, className: "size-[18px]" } // 1.125rem = 18px
       case "xl":
-        return { pixels: 20, className: "size-5" }; // 1.25rem = 20px
+        return { pixels: 20, className: "size-5" } // 1.25rem = 20px
       case "icon":
-        return { pixels: 18, className: "size-[18px]" }; // 1.125rem = 18px
+        return { pixels: 18, className: "size-[18px]" } // 1.125rem = 18px
       default:
-        return { pixels: 16, className: "size-4" }; // default to md
+        return { pixels: 16, className: "size-4" } // default to md
     }
-  };
+  }
 
-  const loaderSize = getLoaderSize(size);
-  const spinnerSize = loaderSize.pixels;
-  const gapSize = 4; // gap-2 = 0.5rem = 8px
-  const totalWidth = spinnerSize + gapSize;
+  const loaderSize = getLoaderSize(size)
+  const spinnerSize = loaderSize.pixels
+  const gapSize = 4 // gap-2 = 0.5rem = 8px
+  const totalWidth = spinnerSize + gapSize
 
   return (
     <div className={clsx("flex items-center")} role="presentation">
@@ -192,5 +181,5 @@ function ButtonChildren({
       </AnimatePresence>
       {children}
     </div>
-  );
+  )
 }

@@ -1,23 +1,22 @@
-import { IconCalendar } from "@tabler/icons-react";
+import { IconCalendar } from "@tabler/icons-react"
 import {
   DateRangePicker as AriaDateRangePicker,
   type DateRangePickerProps as AriaDateRangePickerProps,
   type DateValue,
   type ValidationResult,
-} from "react-aria-components";
-import { Button } from "./Button";
-import { DateInput } from "./DateField";
-import { Dialog } from "./Dialog";
-import { Description, FieldError, FieldGroup, Label } from "./Field";
-import { Popover } from "./Popover";
-import { RangeCalendar } from "./RangeCalendar";
-import { composeTailwindRenderProps } from "./utils";
+} from "react-aria-components"
+import { Button } from "./Button"
+import { DateInput } from "./DateField"
+import { Dialog } from "./Dialog"
+import { Description, FieldError, FieldGroup, Label } from "./Field"
+import { Popover } from "./Popover"
+import { RangeCalendar } from "./RangeCalendar"
+import { composeTailwindRenderProps } from "./utils"
 
-export interface DateRangePickerProps<T extends DateValue>
-  extends AriaDateRangePickerProps<T> {
-  label?: string;
-  description?: string;
-  errorMessage?: string | ((validation: ValidationResult) => string);
+export interface DateRangePickerProps<T extends DateValue> extends AriaDateRangePickerProps<T> {
+  label?: string
+  description?: string
+  errorMessage?: string | ((validation: ValidationResult) => string)
 }
 
 export function DateRangePicker<T extends DateValue>({
@@ -29,10 +28,7 @@ export function DateRangePicker<T extends DateValue>({
   return (
     <AriaDateRangePicker
       {...props}
-      className={composeTailwindRenderProps(
-        props.className,
-        "group flex flex-col gap-1"
-      )}
+      className={composeTailwindRenderProps(props.className, "group flex flex-col gap-1")}
     >
       {label && <Label>{label}</Label>}
       <FieldGroup className="min-w-[208px] w-auto">
@@ -56,5 +52,5 @@ export function DateRangePicker<T extends DateValue>({
         </Dialog>
       </Popover>
     </AriaDateRangePicker>
-  );
+  )
 }

@@ -1,18 +1,14 @@
-import { Button } from "./Button";
-import { Trash2Icon } from "@/icons";
-import { motion, AnimatePresence } from "motion/react";
+import { Button } from "./Button"
+import { Trash2Icon } from "@/icons"
+import { motion, AnimatePresence } from "motion/react"
 
 interface BottomActionBarProps {
-  open: boolean;
-  selectedCount: number;
-  onDelete: () => void;
+  open: boolean
+  selectedCount: number
+  onDelete: () => void
 }
 
-export function BottomActionBar({
-  open,
-  selectedCount,
-  onDelete,
-}: BottomActionBarProps) {
+export function BottomActionBar({ open, selectedCount, onDelete }: BottomActionBarProps) {
   return (
     <AnimatePresence>
       {open && (
@@ -39,5 +35,5 @@ export function BottomActionBar({
         </motion.div>
       )}
     </AnimatePresence>
-  );
+  )
 }

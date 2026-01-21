@@ -1,30 +1,27 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 import {
   Radio as RACRadio,
   RadioGroup as RACRadioGroup,
   type RadioGroupProps as RACRadioGroupProps,
   type RadioProps,
   type ValidationResult,
-} from "react-aria-components";
-import { Description, FieldError, Label } from "./Field";
-import { composeTailwindRenderProps, focusRing } from "./utils";
-import { cva } from "cva";
+} from "react-aria-components"
+import { Description, FieldError, Label } from "./Field"
+import { composeTailwindRenderProps, focusRing } from "./utils"
+import { cva } from "cva"
 
 export interface RadioGroupProps extends Omit<RACRadioGroupProps, "children"> {
-  label?: string;
-  children?: ReactNode;
-  description?: string;
-  errorMessage?: string | ((validation: ValidationResult) => string);
+  label?: string
+  children?: ReactNode
+  description?: string
+  errorMessage?: string | ((validation: ValidationResult) => string)
 }
 
 export function RadioGroup(props: RadioGroupProps) {
   return (
     <RACRadioGroup
       {...props}
-      className={composeTailwindRenderProps(
-        props.className,
-        "group flex flex-col gap-2"
-      )}
+      className={composeTailwindRenderProps(props.className, "group flex flex-col gap-2")}
     >
       <Label>{props.label}</Label>
       <div className="flex group-orientation-vertical:flex-col gap-2 group-orientation-horizontal:gap-4">
@@ -33,7 +30,7 @@ export function RadioGroup(props: RadioGroupProps) {
       {props.description && <Description>{props.description}</Description>}
       <FieldError>{props.errorMessage}</FieldError>
     </RACRadioGroup>
-  );
+  )
 }
 
 const styles = cva({
@@ -51,7 +48,7 @@ const styles = cva({
       true: "border-gray-200 dark:border-zinc-700 forced-colors:border-[GrayText]!",
     },
   },
-});
+})
 
 export function Radio(props: RadioProps) {
   return (
@@ -59,7 +56,7 @@ export function Radio(props: RadioProps) {
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "flex gap-2 items-center group text-gray-800 disabled:text-gray-300 dark:text-zinc-200 dark:disabled:text-zinc-600 forced-colors:disabled:text-[GrayText] text-sm transition"
+        "flex gap-2 items-center group text-gray-800 disabled:text-gray-300 dark:text-zinc-200 dark:disabled:text-zinc-600 forced-colors:disabled:text-[GrayText] text-sm transition",
       )}
     >
       {(renderProps) => (
@@ -69,5 +66,5 @@ export function Radio(props: RadioProps) {
         </>
       )}
     </RACRadio>
-  );
+  )
 }

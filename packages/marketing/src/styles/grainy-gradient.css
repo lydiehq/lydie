@@ -13,11 +13,8 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(
-      circle at 20% 30%,
-      #1f1f1f 0%,
-      transparent 48%
-    ),
+  background-image:
+    radial-gradient(circle at 20% 30%, #1f1f1f 0%, transparent 48%),
     radial-gradient(circle at 80% 70%, #141414 0%, transparent 48%),
     radial-gradient(circle at 50% 50%, #000000 0%, transparent 58%),
     radial-gradient(circle at 10% 80%, #030303 0%, transparent 38%),

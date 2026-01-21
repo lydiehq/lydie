@@ -1,4 +1,4 @@
-import { Disclosure, DisclosurePanel, Button } from "react-aria-components";
+import { Disclosure, DisclosurePanel, Button } from "react-aria-components"
 import {
   LoaderIcon,
   ListIcon,
@@ -7,84 +7,73 @@ import {
   ClockIcon,
   DocumentIcon,
   ChevronRightIcon,
-} from "@/icons";
-import { Link } from "@tanstack/react-router";
-import { ToolContainer } from "./ToolContainer";
-import { motion, AnimatePresence } from "motion/react";
+} from "@/icons"
+import { Link } from "@tanstack/react-router"
+import { ToolContainer } from "./ToolContainer"
+import { motion, AnimatePresence } from "motion/react"
 
 export interface ListDocumentsToolProps {
   tool: {
-    state: string;
+    state: string
     args?: {
-      limit?: number;
-      sortBy?: "title" | "updated" | "created";
-      sortOrder?: "asc" | "desc";
-      titleFilter?: string;
-      createdAfter?: string;
-      createdBefore?: string;
-      minWords?: number;
-      maxWords?: number;
-    };
+      limit?: number
+      sortBy?: "title" | "updated" | "created"
+      sortOrder?: "asc" | "desc"
+      titleFilter?: string
+      createdAfter?: string
+      createdBefore?: string
+      minWords?: number
+      maxWords?: number
+    }
     output?: {
-      state?: string;
-      message?: string;
+      state?: string
+      message?: string
       documents?: Array<{
-        id: string;
-        title: string;
-        slug: string;
-        createdAt: string;
-        updatedAt: string;
-        contentPreview?: string;
-        contentLength?: number;
-        wordCount?: number;
-      }>;
-      totalFound?: number;
+        id: string
+        title: string
+        slug: string
+        createdAt: string
+        updatedAt: string
+        contentPreview?: string
+        contentLength?: number
+        wordCount?: number
+      }>
+      totalFound?: number
       filters?: {
-        titleFilter?: string | null;
-        createdAfter?: string | null;
-        createdBefore?: string | null;
-        minWords?: number | null;
-        maxWords?: number | null;
-        sortBy: string;
-        sortOrder: string;
-        limit: number;
-      };
-    };
-  };
-  className?: string;
+        titleFilter?: string | null
+        createdAfter?: string | null
+        createdBefore?: string | null
+        minWords?: number | null
+        maxWords?: number | null
+        sortBy: string
+        sortOrder: string
+        limit: number
+      }
+    }
+  }
+  className?: string
 }
 
-export function ListDocumentsTool({
-  tool,
-  className = "",
-}: ListDocumentsToolProps) {
-  const outputState = tool.output?.state;
-  const isToolLoading =
-    tool.state === "call-streaming" ||
-    (outputState && outputState !== "success");
-  const documents = tool.output?.documents || [];
-  const filters = tool.output?.filters;
+export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolProps) {
+  const outputState = tool.output?.state
+  const isToolLoading = tool.state === "call-streaming" || (outputState && outputState !== "success")
+  const documents = tool.output?.documents || []
+  const filters = tool.output?.filters
 
-  let loadingMessage = "Loading documents...";
+  let loadingMessage = "Loading documents..."
   if (outputState === "loading") {
-    loadingMessage = tool.output?.message || "Loading documents...";
+    loadingMessage = tool.output?.message || "Loading documents..."
   }
 
   const message = isToolLoading
     ? loadingMessage
-    : `Found ${documents.length} document${documents.length !== 1 ? "s" : ""}`;
+    : `Found ${documents.length} document${documents.length !== 1 ? "s" : ""}`
 
   return (
     <motion.div className="p-1 bg-gray-100 rounded-[10px] my-2">
       <div className="p-1">
         <motion.div
-          key={
-            isToolLoading
-              ? "loading"
-              : outputState === "success"
-              ? "success"
-              : "found"
-          }
+          key={isToolLoading ? "loading" : outputState === "success" ? "success" : "found"}
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -123,10 +112,7 @@ export function ListDocumentsTool({
                 visible: {
                   opacity: 1,
                   transition: {
-                    staggerChildren: Math.max(
-                      0.02,
-                      Math.min(0.12, 0.12 - (documents.length - 1) * 0.01)
-                    ),
+                    staggerChildren: Math.max(0.02, Math.min(0.12, 0.12 - (documents.length - 1) * 0.01)),
                   },
                 },
               }}
@@ -150,9 +136,7 @@ export function ListDocumentsTool({
                     className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
                     <DocumentIcon className="text-gray-500 shrink-0 size-3.5" />
-                    <span className="truncate flex-1">
-                      {doc.title || "Untitled document"}
-                    </span>
+                    <span className="truncate flex-1">{doc.title || "Untitled document"}</span>
                   </Link>
                 </motion.div>
               ))}
@@ -172,7 +156,7 @@ export function ListDocumentsTool({
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  );
+  )
 
   return (
     <Disclosure className={`group w-full flex flex-col ${className}`}>
@@ -184,9 +168,7 @@ export function ListDocumentsTool({
         <ChevronRightIcon className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">
           Listed {documents.length} document{documents.length !== 1 ? "s" : ""}
-          {filters && filters.titleFilter
-            ? ` matching "${filters.titleFilter}"`
-            : ""}
+          {filters && filters.titleFilter ? ` matching "${filters.titleFilter}"` : ""}
         </span>
       </Button>
       <DisclosurePanel className="overflow-hidden pl-5">
@@ -201,23 +183,15 @@ export function ListDocumentsTool({
                       Sort: {filters?.sortBy} ({filters?.sortOrder})
                     </span>
                     <span>Limit: {filters?.limit}</span>
-                    {filters?.titleFilter && (
-                      <span>Title: "{filters?.titleFilter}"</span>
+                    {filters?.titleFilter && <span>Title: "{filters?.titleFilter}"</span>}
+                    {filters?.createdAfter && <span>Created after: {filters?.createdAfter}</span>}
+                    {filters?.createdBefore && <span>Created before: {filters?.createdBefore}</span>}
+                    {filters?.minWords !== null && filters?.minWords !== undefined && (
+                      <span>Min words: {filters?.minWords}</span>
                     )}
-                    {filters?.createdAfter && (
-                      <span>Created after: {filters?.createdAfter}</span>
+                    {filters?.maxWords !== null && filters?.maxWords !== undefined && (
+                      <span>Max words: {filters?.maxWords}</span>
                     )}
-                    {filters?.createdBefore && (
-                      <span>Created before: {filters?.createdBefore}</span>
-                    )}
-                    {filters?.minWords !== null &&
-                      filters?.minWords !== undefined && (
-                        <span>Min words: {filters?.minWords}</span>
-                      )}
-                    {filters?.maxWords !== null &&
-                      filters?.maxWords !== undefined && (
-                        <span>Max words: {filters?.maxWords}</span>
-                      )}
                   </div>
                 </div>
               )}
@@ -240,9 +214,7 @@ export function ListDocumentsTool({
                           <span className="truncate">{doc.title}</span>
                           <ExternalLinkIcon className="size-3 shrink-0" />
                         </Link>
-                        <div className="text-xs text-gray-500 mt-1">
-                          /{doc.slug}
-                        </div>
+                        <div className="text-xs text-gray-500 mt-1">/{doc.slug}</div>
                       </div>
 
                       <div className="text-xs text-gray-400 shrink-0">
@@ -265,9 +237,7 @@ export function ListDocumentsTool({
                           />
                         </div>
                         {doc.contentLength && (
-                          <div className="text-xs text-gray-400 mt-1">
-                            {doc.contentLength} characters
-                          </div>
+                          <div className="text-xs text-gray-400 mt-1">{doc.contentLength} characters</div>
                         )}
                       </div>
                     )}
@@ -292,11 +262,7 @@ export function ListDocumentsTool({
               {documents.length === 0 && (
                 <div className="text-center text-gray-500 py-4">
                   <p className="text-sm">No documents found</p>
-                  {filters?.titleFilter && (
-                    <p className="text-xs mt-1">
-                      Try adjusting your search filter
-                    </p>
-                  )}
+                  {filters?.titleFilter && <p className="text-xs mt-1">Try adjusting your search filter</p>}
                 </div>
               )}
             </div>
@@ -304,5 +270,5 @@ export function ListDocumentsTool({
         </div>
       </DisclosurePanel>
     </Disclosure>
-  );
+  )
 }

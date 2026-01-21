@@ -1,10 +1,10 @@
-import { tool } from "ai";
-import { z } from "zod";
+import { tool } from "ai"
+import { z } from "zod"
 
 export const replaceInDocument = () =>
   tool({
     onInputDelta: (delta) => {
-      console.log("Input delta:", delta);
+      console.log("Input delta:", delta)
     },
     description: `Replace content in the current document. Use this for ALL document modifications.
 
@@ -42,18 +42,18 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
       search: z
         .string()
         .describe(
-          "Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max—just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string for empty document. Ignored when overwrite is true."
+          "Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max—just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string for empty document. Ignored when overwrite is true.",
         )
         .optional(),
       replace: z
         .string()
         .describe(
-          'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>'
+          'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>',
         ),
       overwrite: z
         .boolean()
         .describe(
-          "If true, replace the entire document content with the replace text. The search parameter is ignored. Use for empty documents or when rewriting entire document. Decide autonomously based on task."
+          "If true, replace the entire document content with the replace text. The search parameter is ignored. Use for empty documents or when rewriting entire document. Decide autonomously based on task.",
         )
         .optional()
         .default(false),
@@ -63,6 +63,6 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
         search: search ?? "",
         replace,
         overwrite: overwrite ?? false,
-      };
+      }
     },
-  });
+  })

@@ -12,17 +12,9 @@ export type {
   NodeBuilder,
   LinkReference,
   LinkResolver,
-} from "@lydie/core/content";
+} from "@lydie/core/content"
 
-export {
-  LydieClient,
-  extractTableOfContents,
-  extractText,
-  renderWithBuilder,
-} from "@lydie/core/content";
-export { serializeToHTML } from "@lydie/core/serialization/html";
-export {
-  serializeToMarkdown,
-  MarkdownBuilder,
-} from "@lydie/core/serialization/markdown";
-export { serializeToPlainText } from "@lydie/core/serialization/text";
+export { LydieClient, extractTableOfContents, extractText, renderWithBuilder } from "@lydie/core/content"
+export { serializeToHTML } from "@lydie/core/serialization/html"
+export { serializeToMarkdown, MarkdownBuilder } from "@lydie/core/serialization/markdown"
+export { serializeToPlainText } from "@lydie/core/serialization/text"

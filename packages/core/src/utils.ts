@@ -4,5 +4,5 @@ export function slugify(text: string): string {
     .trim()
     .replace(/[^\w\s-]/g, "") // Remove non-word chars
     .replace(/[\s_-]+/g, "-") // Replace spaces and _ with -
-    .replace(/^-+|-+$/g, ""); // Remove leading/trailing -
+    .replace(/^-+|-+$/g, "") // Remove leading/trailing -
 }

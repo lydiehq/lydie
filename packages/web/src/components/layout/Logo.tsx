@@ -1,14 +1,10 @@
 type Props = {
-  className?: string;
-};
+  className?: string
+}
 
 export function Logo({ className }: Props) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 256 256"
-      className={className}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className={className}>
       <path
         fill="currentColor"
         fillRule="evenodd"
@@ -16,5 +12,5 @@ export function Logo({ className }: Props) {
         clipRule="evenodd"
       />
     </svg>
-  );
+  )
 }

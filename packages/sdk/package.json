@@ -1,20 +1,20 @@
 {
   "name": "@lydie-app/sdk",
   "version": "0.0.1",
-  "type": "module",
   "private": false,
-  "scripts": {
-    "sdk:publish": "bun publish"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
+  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./react": "./src/react.tsx",
     "./html": "./src/html.ts",
     "./utils": "./src/utils.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "sdk:publish": "bun publish"
   },
   "dependencies": {
     "@lydie/core": "workspace:*",

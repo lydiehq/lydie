@@ -1,5 +1,5 @@
-import { defineConfig, devices } from "@playwright/test";
-import { Resource } from "sst";
+import { defineConfig, devices } from "@playwright/test"
+import { Resource } from "sst"
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -15,10 +15,7 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL:
-      Resource.App.stage === "production"
-        ? "https://lydie.co"
-        : "http://localhost:3000",
+    baseURL: Resource.App.stage === "production" ? "https://lydie.co" : "http://localhost:3000",
     // API URL for backend calls
     extraHTTPHeaders: {
       // Add any default headers here
@@ -38,4 +35,4 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-});
+})

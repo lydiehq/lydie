@@ -1,39 +1,34 @@
-import { useState, useRef, useLayoutEffect } from "react";
-import { Button as AriaButton } from "react-aria-components";
-import { ChevronDownIcon, ChevronUpIcon, Loader2Icon } from "@/icons";
-import { motion } from "motion/react";
-import { StickToBottom } from "use-stick-to-bottom";
-import { Button } from "@/components/generic/Button";
-import { Separator } from "@/components/generic/Separator";
-import { countWords } from "@/utils/text";
-import { useAuth } from "@/context/auth.context";
-import { isAdmin } from "@/utils/admin";
-import { applyContentChanges } from "@/utils/document-changes";
-import type { Editor } from "@tiptap/react";
+import { useState, useRef, useLayoutEffect } from "react"
+import { Button as AriaButton } from "react-aria-components"
+import { ChevronDownIcon, ChevronUpIcon, Loader2Icon } from "@/icons"
+import { motion } from "motion/react"
+import { StickToBottom } from "use-stick-to-bottom"
+import { Button } from "@/components/generic/Button"
+import { Separator } from "@/components/generic/Separator"
+import { countWords } from "@/utils/text"
+import { useAuth } from "@/context/auth.context"
+import { isAdmin } from "@/utils/admin"
+import { applyContentChanges } from "@/utils/document-changes"
+import type { Editor } from "@tiptap/react"
 
 export interface ReplaceInDocumentToolProps {
   tool: {
-    state:
-      | "input-streaming"
-      | "input-available"
-      | "call-streaming"
-      | "output-available"
-      | "output-error";
+    state: "input-streaming" | "input-available" | "call-streaming" | "output-available" | "output-error"
     input?: {
-      search?: string;
-      replace?: string;
-      overwrite?: boolean;
-    };
+      search?: string
+      replace?: string
+      overwrite?: boolean
+    }
     output?: {
-      search?: string;
-      replace?: string;
-      overwrite?: boolean;
-    };
-    errorText?: string;
-  };
-  editor: Editor | null;
-  organizationId: string;
-  className?: string;
+      search?: string
+      replace?: string
+      overwrite?: boolean
+    }
+    errorText?: string
+  }
+  editor: Editor | null
+  organizationId: string
+  className?: string
 }
 
 export function ReplaceInDocumentTool({
@@ -42,45 +37,45 @@ export function ReplaceInDocumentTool({
   organizationId,
   className = "",
 }: ReplaceInDocumentToolProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [hasOverflow, setHasOverflow] = useState(false);
-  const [isApplied, setIsApplied] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
-  const [isUsingLLM, setIsUsingLLM] = useState(false);
-  const [applyStatus, setApplyStatus] = useState<string>("");
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [hasOverflow, setHasOverflow] = useState(false)
+  const [isApplied, setIsApplied] = useState(false)
+  const [isApplying, setIsApplying] = useState(false)
+  const [isUsingLLM, setIsUsingLLM] = useState(false)
+  const [applyStatus, setApplyStatus] = useState<string>("")
+  const contentRef = useRef<HTMLDivElement>(null)
 
-  const { user } = useAuth();
+  const { user } = useAuth()
 
   // Get replace text from input (streaming) or output (completed)
-  const replaceText = tool.input?.replace || tool.output?.replace || "";
-  const isStreaming = tool.state === "input-streaming";
+  const replaceText = tool.input?.replace || tool.output?.replace || ""
+  const isStreaming = tool.state === "input-streaming"
 
   // Get search and overwrite from input or output
-  const searchText = tool.input?.search || tool.output?.search || "";
-  const isOverwrite = tool.input?.overwrite ?? tool.output?.overwrite ?? false;
+  const searchText = tool.input?.search || tool.output?.search || ""
+  const isOverwrite = tool.input?.overwrite ?? tool.output?.overwrite ?? false
 
   useLayoutEffect(() => {
     if (contentRef.current) {
-      const contentHeight = contentRef.current.scrollHeight;
-      setHasOverflow(contentHeight > 140);
+      const contentHeight = contentRef.current.scrollHeight
+      setHasOverflow(contentHeight > 140)
     }
-  }, [replaceText]);
+  }, [replaceText])
 
   // Don't render until we have some content (streaming or complete)
   if (!replaceText && tool.state !== "input-streaming") {
-    return null;
+    return null
   }
 
-  const wordCount = countWords(replaceText);
+  const wordCount = countWords(replaceText)
 
   const handleApply = async () => {
     if (!replaceText || !editor) {
-      return;
+      return
     }
 
-    setIsApplying(true);
-    setApplyStatus("Applying...");
+    setIsApplying(true)
+    setApplyStatus("Applying...")
 
     try {
       const result = await applyContentChanges(
@@ -95,34 +90,34 @@ export function ReplaceInDocumentTool({
         organizationId,
         undefined, // onProgress
         (isUsingLLM) => {
-          setIsUsingLLM(isUsingLLM);
-        }
-      );
+          setIsUsingLLM(isUsingLLM)
+        },
+      )
 
       if (result.success) {
-        setIsApplied(true);
-        setApplyStatus("");
+        setIsApplied(true)
+        setApplyStatus("")
         if (result.usedLLMFallback) {
-          console.info("✨ LLM-assisted replacement was used for this change");
+          console.info("✨ LLM-assisted replacement was used for this change")
         }
       } else {
-        setApplyStatus("Failed to apply");
-        console.error("Failed to apply changes:", result.error);
+        setApplyStatus("Failed to apply")
+        console.error("Failed to apply changes:", result.error)
       }
     } catch (error) {
-      console.error("Failed to apply:", error);
-      setApplyStatus("Failed to apply");
+      console.error("Failed to apply:", error)
+      setApplyStatus("Failed to apply")
     } finally {
-      setIsApplying(false);
-      setIsUsingLLM(false);
+      setIsApplying(false)
+      setIsUsingLLM(false)
     }
-  };
+  }
 
   const handleCopy = async () => {
     if (replaceText) {
-      await navigator.clipboard.writeText(replaceText);
+      await navigator.clipboard.writeText(replaceText)
     }
-  };
+  }
 
   const handleDebug = async () => {
     const debugInfo = {
@@ -134,38 +129,34 @@ export function ReplaceInDocumentTool({
       replaceLength: replaceText.length,
       isStreaming,
       timestamp: new Date().toISOString(),
-    };
+    }
 
-    console.group("🐛 Replace In Document Tool Debug Info");
-    console.log("Tool object:", tool);
-    console.log("Search text:", searchText);
-    console.log("Replace text:", replaceText);
-    console.log("Is streaming:", isStreaming);
-    console.log("Debug summary:", debugInfo);
-    console.groupEnd();
-  };
+    console.group("🐛 Replace In Document Tool Debug Info")
+    console.log("Tool object:", tool)
+    console.log("Search text:", searchText)
+    console.log("Replace text:", replaceText)
+    console.log("Is streaming:", isStreaming)
+    console.log("Debug summary:", debugInfo)
+    console.groupEnd()
+  }
 
-  const isError = tool.state === "output-error";
-  const roundedWordCount = Math.floor(wordCount / 10) * 10;
+  const isError = tool.state === "output-error"
+  const roundedWordCount = Math.floor(wordCount / 10) * 10
 
   const getStatusText = () => {
-    if (isError) return "Failed to modify document";
-    if (isApplied) return "Changes applied";
-    if (isApplying) return "Applying changes";
-    if (isStreaming) return "Generating content";
-    if (isOverwrite) return "Overwrite document";
-    return "Modify document";
-  };
+    if (isError) return "Failed to modify document"
+    if (isApplied) return "Changes applied"
+    if (isApplying) return "Applying changes"
+    if (isStreaming) return "Generating content"
+    if (isOverwrite) return "Overwrite document"
+    return "Modify document"
+  }
 
   return (
-    <motion.div
-      className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}
-    >
+    <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}>
       <div className="p-1">
         <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
-          {isStreaming && (
-            <Loader2Icon className="size-3 animate-spin text-blue-500" />
-          )}
+          {isStreaming && <Loader2Icon className="size-3 animate-spin text-blue-500" />}
           <motion.span
             key={getStatusText()}
             initial={{ opacity: 0 }}
@@ -174,9 +165,7 @@ export function ReplaceInDocumentTool({
           >
             {getStatusText()}
           </motion.span>
-          {wordCount > 0 && (
-            <span className="text-gray-500">{roundedWordCount} words</span>
-          )}
+          {wordCount > 0 && <span className="text-gray-500">{roundedWordCount} words</span>}
         </motion.div>
       </div>
       <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
@@ -188,10 +177,7 @@ export function ReplaceInDocumentTool({
                 height: isExpanded || !hasOverflow ? "auto" : 140,
               }}
             >
-              <StickToBottom
-                className="text-xs text-gray-600 overflow-y-auto"
-                initial="instant"
-              >
+              <StickToBottom className="text-xs text-gray-600 overflow-y-auto" initial="instant">
                 <StickToBottom.Content>
                   <div
                     ref={contentRef}
@@ -252,11 +238,7 @@ export function ReplaceInDocumentTool({
                   isDisabled={isApplied || isApplying || isStreaming || !editor}
                   isPending={isApplying || isUsingLLM}
                 >
-                  {isApplying
-                    ? applyStatus || "Applying..."
-                    : isApplied
-                    ? "Applied"
-                    : "Apply"}
+                  {isApplying ? applyStatus || "Applying..." : isApplied ? "Applied" : "Apply"}
                 </Button>
               </motion.div>
             </>
@@ -264,5 +246,5 @@ export function ReplaceInDocumentTool({
         </div>
       </div>
     </motion.div>
-  );
+  )
 }

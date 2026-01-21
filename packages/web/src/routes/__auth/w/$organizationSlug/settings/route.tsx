@@ -1,5 +1,5 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { Surface } from "@/components/layout/Surface";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router"
+import { Surface } from "@/components/layout/Surface"
 import {
   UserIcon,
   SettingsIcon,
@@ -11,31 +11,28 @@ import {
   ExternalLinkIcon,
   ShieldAlertIcon,
   PuzzleIcon,
-} from "@/icons";
-import {
-  sidebarItemStyles,
-  sidebarItemIconStyles,
-} from "@/components/layout/Sidebar";
-import { Eyebrow } from "@/components/generic/Eyebrow";
-import { useAuth } from "@/context/auth.context";
-import { isAdmin } from "@/utils/admin";
+} from "@/icons"
+import { sidebarItemStyles, sidebarItemIconStyles } from "@/components/layout/Sidebar"
+import { Eyebrow } from "@/components/generic/Eyebrow"
+import { useAuth } from "@/context/auth.context"
+import { isAdmin } from "@/utils/admin"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings")({
   component: RouteComponent,
-});
+})
 
 type SettingsRoute = {
-  path: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  external?: boolean;
-  adminOnly?: boolean;
-};
+  path: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  external?: boolean
+  adminOnly?: boolean
+}
 
 type SettingsSection = {
-  title: string;
-  routes: SettingsRoute[];
-};
+  title: string
+  routes: SettingsRoute[]
+}
 
 const settingsRoutes: SettingsSection[] = [
   {
@@ -107,11 +104,11 @@ const settingsRoutes: SettingsSection[] = [
       },
     ],
   },
-];
+]
 
 function RouteComponent() {
-  const { user } = useAuth();
-  const userIsAdmin = isAdmin(user);
+  const { user } = useAuth()
+  const userIsAdmin = isAdmin(user)
 
   return (
     <div className="p-1 size-full">
@@ -145,9 +142,7 @@ function RouteComponent() {
                                     className: "size-4 shrink-0",
                                   })}
                                 />
-                                <span className="truncate flex-1">
-                                  {route.label}
-                                </span>
+                                <span className="truncate flex-1">{route.label}</span>
                                 {route.adminOnly && (
                                   <span className="text-[10px] font-medium text-muted-foreground/80 bg-muted/50 dark:bg-muted/30 px-1.5 py-0.5 rounded shrink-0">
                                     Admin
@@ -163,7 +158,7 @@ function RouteComponent() {
                               </div>
                             </Link>
                           </li>
-                        );
+                        )
                       })}
                   </ul>
                 </li>
@@ -176,5 +171,5 @@ function RouteComponent() {
         </div>
       </Surface>
     </div>
-  );
+  )
 }

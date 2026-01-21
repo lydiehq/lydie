@@ -2,17 +2,11 @@
   "name": "@lydie/backend",
   "type": "module",
   "sideEffects": false,
-  "scripts": {
-    "dev": "bun run --watch ./src/index.ts"
-  },
   "exports": {
     "./api": "./src/api/index.ts"
   },
-  "devDependencies": {
-    "@types/aws-lambda": "^8.10.160",
-    "@types/node": "^25.0.9",
-    "@types/ws": "^8.18.1",
-    "sst": "catalog:"
+  "scripts": {
+    "dev": "bun run --watch ./src/index.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "catalog:",
@@ -40,5 +34,11 @@
     "ws": "^8.19.0",
     "yjs": "^13.6.29",
     "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.160",
+    "@types/node": "^25.0.9",
+    "@types/ws": "^8.18.1",
+    "sst": "catalog:"
   }
 }

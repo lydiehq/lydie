@@ -1,77 +1,72 @@
-import { useOrganization } from "@/context/organization.context";
-import { useAuth } from "@/context/auth.context";
-import { useQuery } from "@rocicorp/zero/react";
-import { queries } from "@lydie/zero/queries";
-import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
-import { useMemo } from "react";
-import clsx from "clsx";
-import { Tooltip } from "../generic/Tooltip";
-import { TooltipTrigger } from "react-aria-components";
-import { Link } from "../generic/Link";
+import { useOrganization } from "@/context/organization.context"
+import { useAuth } from "@/context/auth.context"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types"
+import { useMemo } from "react"
+import clsx from "clsx"
+import { Tooltip } from "../generic/Tooltip"
+import { TooltipTrigger } from "react-aria-components"
+import { Link } from "../generic/Link"
 
 export function UsageStats() {
-  const { organization } = useOrganization();
-  const { session } = useAuth();
+  const { organization } = useOrganization()
+  const { session } = useAuth()
 
-  const [todayUsage] = useQuery(
-    queries.usage.today({ organizationId: organization.id })
-  );
+  const [todayUsage] = useQuery(queries.usage.today({ organizationId: organization.id }))
 
   const currentPlan = useMemo(() => {
     if (!organization) {
-      return PLAN_TYPES.FREE;
+      return PLAN_TYPES.FREE
     }
 
     const hasProAccess =
-      organization.subscriptionPlan === "pro" &&
-      organization.subscriptionStatus === "active";
+      organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active"
 
-    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE;
-  }, [organization]);
+    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE
+  }, [organization])
 
-  const planInfo = PLAN_LIMITS[currentPlan];
-  const maxMessages = planInfo.maxMessagesPerDay || 0;
+  const planInfo = PLAN_LIMITS[currentPlan]
+  const maxMessages = planInfo.maxMessagesPerDay || 0
 
   const usageStats = useMemo(() => {
     if (!todayUsage) {
       return {
         messagesUsedToday: 0,
-      };
+      }
     }
 
     // Count user messages to track actual message sends
     const messagesUsedToday = todayUsage.filter(
-      (usage: any) =>
-        usage.source === "document" || usage.source === "assistant"
-    ).length;
+      (usage: any) => usage.source === "document" || usage.source === "assistant",
+    ).length
 
     return {
       messagesUsedToday,
-    };
-  }, [todayUsage]);
+    }
+  }, [todayUsage])
 
-  const isAtLimit = usageStats.messagesUsedToday >= maxMessages;
-  const isNearLimit =
-    maxMessages > 0 && usageStats.messagesUsedToday >= maxMessages * 0.8;
+  const isAtLimit = usageStats.messagesUsedToday >= maxMessages
+  const isNearLimit = maxMessages > 0 && usageStats.messagesUsedToday >= maxMessages * 0.8
 
   // Calculate progress percentage
   const progress = useMemo(() => {
-    if (maxMessages === 0) return 0;
-    return Math.min((usageStats.messagesUsedToday / maxMessages) * 100, 100);
-  }, [usageStats.messagesUsedToday, maxMessages]);
+    if (maxMessages === 0) return 0
+    return Math.min((usageStats.messagesUsedToday / maxMessages) * 100, 100)
+  }, [usageStats.messagesUsedToday, maxMessages])
 
   // Get color based on usage state
   const progressColor = useMemo(() => {
-    if (isNearLimit) return "#f59e0b";
-    return "var(--color-gray-900)";
-  }, [isAtLimit, isNearLimit]);
+    if (isNearLimit) return "#f59e0b"
+    return "var(--color-gray-900)"
+  }, [isAtLimit, isNearLimit])
 
   // Circular progress calculations
-  const size = 16;
-  const strokeWidth = 2;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
+  const size = 16
+  const strokeWidth = 2
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (progress / 100) * circumference
 
   return (
     <TooltipTrigger>
@@ -83,8 +78,8 @@ export function UsageStats() {
           isAtLimit
             ? "bg-red-50 border-red-200 hover:border-red-300"
             : isNearLimit
-            ? "bg-amber-50 border-amber-200 hover:border-amber-300"
-            : "bg-gray-50 border-gray-200 hover:border-gray-300"
+              ? "bg-amber-50 border-amber-200 hover:border-amber-300"
+              : "bg-gray-50 border-gray-200 hover:border-gray-300",
         )}
       >
         <div className="flex items-center gap-2 justify-between">
@@ -115,18 +110,14 @@ export function UsageStats() {
                 />
               </svg>
             </div>
-            <span className="text-xs font-medium text-gray-900">
-              Free daily messages
-            </span>
+            <span className="text-xs font-medium text-gray-900">Free daily messages</span>
           </div>
           <span className="text-gray-700 text-xs font-medium">
             {usageStats.messagesUsedToday}/{maxMessages}
           </span>
         </div>
       </Link>
-      <Tooltip placement="right">
-        Upgrade to Pro for unlimited daily messages
-      </Tooltip>
+      <Tooltip placement="right">Upgrade to Pro for unlimited daily messages</Tooltip>
     </TooltipTrigger>
-  );
+  )
 }

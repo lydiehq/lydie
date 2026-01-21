@@ -1,5 +1,5 @@
-import type { PromptStyle } from "@lydie/core/prompts";
-import { getPromptStyleText } from "@lydie/core/prompts";
+import type { PromptStyle } from "@lydie/core/prompts"
+import { getPromptStyleText } from "@lydie/core/prompts"
 
 const assistantBasePrompt = `
 You are a helpful document assistant for a writing workspace. Help users find, create, understand, and work with their documents and content.
@@ -18,21 +18,21 @@ You are a helpful document assistant for a writing workspace. Help users find, c
 - Don't explain tool mechanics or process ("I will read the document first")
 - Don't repeat replaced content—tools display changes automatically
 - Don't quote "before/after" text
-`;
+`
 
 export function buildAssistantSystemPrompt(
   promptStyle?: PromptStyle | null,
-  customPrompt?: string | null
+  customPrompt?: string | null,
 ): string {
-  let styleText = "";
+  let styleText = ""
 
   if (customPrompt && customPrompt.trim()) {
-    styleText = customPrompt.trim();
+    styleText = customPrompt.trim()
   } else {
-    styleText = getPromptStyleText(promptStyle);
+    styleText = getPromptStyleText(promptStyle)
   }
 
   return `${styleText}
 
-${assistantBasePrompt}`;
+${assistantBasePrompt}`
 }

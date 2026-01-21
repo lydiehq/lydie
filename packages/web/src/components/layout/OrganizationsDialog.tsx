@@ -1,37 +1,37 @@
-import { useState } from "react";
-import { Modal } from "../generic/Modal";
-import { Dialog } from "../generic/Dialog";
-import { Heading, Button as RACButton } from "react-aria-components";
-import { Separator } from "../generic/Separator";
-import { Button } from "../generic/Button";
-import { useNavigate, useRouteContext } from "@tanstack/react-router";
-import { ChevronRightIcon } from "@/icons";
-import { useOrganization } from "@/context/organization.context";
-import { OrganizationAvatar } from "./OrganizationAvatar";
+import { useState } from "react"
+import { Modal } from "../generic/Modal"
+import { Dialog } from "../generic/Dialog"
+import { Heading, Button as RACButton } from "react-aria-components"
+import { Separator } from "../generic/Separator"
+import { Button } from "../generic/Button"
+import { useNavigate, useRouteContext } from "@tanstack/react-router"
+import { ChevronRightIcon } from "@/icons"
+import { useOrganization } from "@/context/organization.context"
+import { OrganizationAvatar } from "./OrganizationAvatar"
 
 export function OrganizationsDialog({
   isOpen,
   onOpenChange,
 }: {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
 }) {
-  const { organization } = useOrganization();
-  const { organizations } = useRouteContext({ from: "/__auth" });
+  const { organization } = useOrganization()
+  const { organizations } = useRouteContext({ from: "/__auth" })
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const goToOrganization = async (organizationSlug: string) => {
     if (organization?.slug === organizationSlug) {
-      return;
+      return
     }
 
     navigate({
       to: "/w/$organizationSlug",
       params: { organizationSlug },
-    });
-    onOpenChange(false);
-  };
+    })
+    onOpenChange(false)
+  }
 
   return (
     <>
@@ -57,13 +57,9 @@ export function OrganizationsDialog({
                   <OrganizationAvatar organization={o} size="lg" />
                   <div className="font-medium text-black text-sm">
                     {o.name}
-                    {organization?.slug === o.slug && (
-                      <span className="text-gray-500 ml-1">current</span>
-                    )}
+                    {organization?.slug === o.slug && <span className="text-gray-500 ml-1">current</span>}
                   </div>
-                  <ChevronRightIcon
-                    className="size-[14px] absolute right-2 text-gray-200 top-1/2 -translate-y-1/2 group-hover:text-gray-400"
-                  />
+                  <ChevronRightIcon className="size-[14px] absolute right-2 text-gray-200 top-1/2 -translate-y-1/2 group-hover:text-gray-400" />
                 </RACButton>
               </li>
             ))}
@@ -77,5 +73,5 @@ export function OrganizationsDialog({
         </Dialog>
       </Modal>
     </>
-  );
+  )
 }

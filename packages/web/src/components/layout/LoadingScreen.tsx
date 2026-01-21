@@ -1,4 +1,4 @@
-import { Logo } from "@/components/layout/Logo";
+import { Logo } from "@/components/layout/Logo"
 
 export function LoadingScreen() {
   return (
@@ -7,5 +7,5 @@ export function LoadingScreen() {
         <Logo className="size-8 text-gray-300" />
       </div>
     </div>
-  );
+  )
 }

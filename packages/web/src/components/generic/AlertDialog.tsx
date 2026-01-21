@@ -1,16 +1,16 @@
-import { AlertCircleIcon, InfoIcon } from "@/icons";
-import { chain } from "react-aria";
-import { type DialogProps, Heading } from "react-aria-components";
-import { Button } from "./Button";
-import { Dialog } from "./Dialog";
+import { AlertCircleIcon, InfoIcon } from "@/icons"
+import { chain } from "react-aria"
+import { type DialogProps, Heading } from "react-aria-components"
+import { Button } from "./Button"
+import { Dialog } from "./Dialog"
 
 interface AlertDialogProps extends Omit<DialogProps, "children"> {
-  title: string;
-  children: React.ReactNode;
-  variant?: "info" | "destructive";
-  actionLabel: string;
-  cancelLabel?: string;
-  onAction?: () => void;
+  title: string
+  children: React.ReactNode
+  variant?: "info" | "destructive"
+  actionLabel: string
+  cancelLabel?: string
+  onAction?: () => void
 }
 
 export function AlertDialog({
@@ -26,10 +26,7 @@ export function AlertDialog({
     <Dialog role="alertdialog" {...props}>
       {({ close }) => (
         <>
-          <Heading
-            slot="title"
-            className="text-xl font-semibold leading-6 my-0"
-          >
+          <Heading slot="title" className="text-xl font-semibold leading-6 my-0">
             {title}
           </Heading>
           <div
@@ -37,11 +34,7 @@ export function AlertDialog({
               variant === "destructive" ? "text-red-500" : "text-blue-500"
             }`}
           >
-            {variant === "destructive" ? (
-              <AlertCircleIcon aria-hidden />
-            ) : (
-              <InfoIcon aria-hidden />
-            )}
+            {variant === "destructive" ? <AlertCircleIcon aria-hidden /> : <InfoIcon aria-hidden />}
           </div>
           <p className="mt-3 text-slate-500 dark:text-zinc-400">{children}</p>
           <div className="mt-6 flex justify-end gap-2">
@@ -59,5 +52,5 @@ export function AlertDialog({
         </>
       )}
     </Dialog>
-  );
+  )
 }

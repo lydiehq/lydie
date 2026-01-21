@@ -1,18 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Surface } from "@/components/layout/Surface";
-import { Button } from "@/components/generic/Button";
-import { PuzzleIcon, DocumentIcon, UploadIcon, UsersIcon } from "@/icons";
-import { useAuth } from "@/context/auth.context";
-import { useAssistant } from "@/context/assistant.context";
-import { useCallback } from "react";
-import { AssistantInput } from "@/components/assistant/AssistantInput";
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { Surface } from "@/components/layout/Surface"
+import { Button } from "@/components/generic/Button"
+import { PuzzleIcon, DocumentIcon, UploadIcon, UsersIcon } from "@/icons"
+import { useAuth } from "@/context/auth.context"
+import { useAssistant } from "@/context/assistant.context"
+import { useCallback } from "react"
+import { AssistantInput } from "@/components/assistant/AssistantInput"
 
-export const Route = createFileRoute(
-  "/__auth/w/$organizationSlug/(assistant)/"
-)({
+export const Route = createFileRoute("/__auth/w/$organizationSlug/(assistant)/")({
   component: PageComponent,
   ssr: false,
-});
+})
 
 function PageComponent() {
   const onboardingSections = [
@@ -43,8 +41,7 @@ function PageComponent() {
         {
           id: "create-document",
           title: "Create a new document",
-          description:
-            "Start by creating a document to organize your knowledge.",
+          description: "Start by creating a document to organize your knowledge.",
           action: "Create",
         },
         {
@@ -93,11 +90,11 @@ function PageComponent() {
         },
       ],
     },
-  ];
+  ]
 
-  const { user } = useAuth();
-  const { sendMessage, stop, conversationId } = useAssistant();
-  const navigate = useNavigate();
+  const { user } = useAuth()
+  const { sendMessage, stop, conversationId } = useAssistant()
+  const navigate = useNavigate()
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -106,7 +103,7 @@ function PageComponent() {
         metadata: {
           createdAt: new Date().toISOString(),
         },
-      });
+      })
 
       navigate({
         to: "/w/$organizationSlug/assistant",
@@ -114,19 +111,17 @@ function PageComponent() {
         search: {
           conversationId,
         },
-      });
+      })
     },
-    [sendMessage, navigate, conversationId]
-  );
+    [sendMessage, navigate, conversationId],
+  )
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden size-full">
         <div className="mt-[34svh] max-w-xl mx-auto flex flex-col gap-y-4 items-center w-full">
           <div className="flex flex-col gap-y-4 items-center w-full">
-            <h1 className="text-2xl font-medium text-gray-900">
-              Ask anything about your documents
-            </h1>
+            <h1 className="text-2xl font-medium text-gray-900">Ask anything about your documents</h1>
             <AssistantInput
               onSubmit={handleSubmit}
               onStop={stop}
@@ -136,7 +131,7 @@ function PageComponent() {
         </div>
       </Surface>
     </div>
-  );
+  )
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
@@ -164,25 +159,25 @@ function PageComponent() {
         </div>
       </Surface>
     </div>
-  );
+  )
 }
 
 interface OnboardingSectionProps {
   section: {
-    id: string;
-    icon: React.ComponentType<{ className?: string }>;
-    title: string;
+    id: string
+    icon: React.ComponentType<{ className?: string }>
+    title: string
     tasks: Array<{
-      id: string;
-      title: string;
-      description: string;
-      action: string;
-    }>;
-  };
+      id: string
+      title: string
+      description: string
+      action: string
+    }>
+  }
 }
 
 function OnboardingSection({ section }: OnboardingSectionProps) {
-  const Icon = section.icon;
+  const Icon = section.icon
 
   return (
     <div className="relative">
@@ -210,9 +205,7 @@ function OnboardingSection({ section }: OnboardingSectionProps) {
                   <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
                 </div>
                 <div className="flex-1 flex flex-col gap-y-1">
-                  <h3 className="font-medium text-gray-900 text-sm">
-                    {task.title}
-                  </h3>
+                  <h3 className="font-medium text-gray-900 text-sm">{task.title}</h3>
                   <p className="text-gray-500 text-sm">{task.description}</p>
                 </div>
                 <Button onPress={() => null} size="xs" intent="ghost">
@@ -224,5 +217,5 @@ function OnboardingSection({ section }: OnboardingSectionProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,10 +1,10 @@
-import { defineMutators, defineMutator } from "@rocicorp/zero";
-import { createId } from "@lydie/core/id";
-import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
-import { slugify } from "@lydie/core/utils";
-import { z } from "zod";
-import { isAuthenticated, hasOrganizationAccess } from "./auth";
-import { zql } from "./schema";
+import { defineMutators, defineMutator } from "@rocicorp/zero"
+import { createId } from "@lydie/core/id"
+import { convertJsonToYjs } from "@lydie/core/yjs-to-json"
+import { slugify } from "@lydie/core/utils"
+import { z } from "zod"
+import { isAuthenticated, hasOrganizationAccess } from "./auth"
+import { zql } from "./schema"
 
 export const mutators = defineMutators({
   document: {
@@ -14,22 +14,19 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { documentId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
         const document = await tx.run(
-          zql.documents
-            .where("id", documentId)
-            .where("organization_id", organizationId)
-            .one()
-        );
+          zql.documents.where("id", documentId).where("organization_id", organizationId).one(),
+        )
 
         if (!document) {
-          throw new Error(`Document not found: ${documentId}`);
+          throw new Error(`Document not found: ${documentId}`)
         }
 
         await tx.mutate.documents.update({
           id: documentId,
           published: true,
-        });
+        })
 
         await tx.mutate.document_publications.insert({
           id: createId(),
@@ -37,8 +34,8 @@ export const mutators = defineMutators({
           organization_id: organizationId,
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
     create: defineMutator(
       z.object({
@@ -48,14 +45,10 @@ export const mutators = defineMutators({
         parentId: z.string().optional(),
         integrationLinkId: z.string().optional(),
       }),
-      async ({
-        tx,
-        ctx,
-        args: { id, organizationId, title = "", parentId, integrationLinkId },
-      }) => {
-        hasOrganizationAccess(ctx, organizationId);
+      async ({ tx, ctx, args: { id, organizationId, title = "", parentId, integrationLinkId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
 
-        let finalIntegrationLinkId = integrationLinkId;
+        let finalIntegrationLinkId = integrationLinkId
 
         // If creating as a child page, verify parent document belongs to same organization
         if (parentId) {
@@ -64,16 +57,16 @@ export const mutators = defineMutators({
               .where("id", parentId)
               .where("organization_id", organizationId)
               .where("deleted_at", "IS", null)
-              .one()
-          );
+              .one(),
+          )
 
           if (!parent) {
-            throw new Error(`Parent document not found: ${parentId}`);
+            throw new Error(`Parent document not found: ${parentId}`)
           }
 
           // Inherit integration link from parent
           if (parent.integration_link_id) {
-            finalIntegrationLinkId = parent.integration_link_id;
+            finalIntegrationLinkId = parent.integration_link_id
           }
         }
 
@@ -82,17 +75,14 @@ export const mutators = defineMutators({
           zql.documents
             .where("organization_id", organizationId)
             .where("parent_id", parentId ? "=" : "IS", parentId || null)
-            .where("deleted_at", "IS", null)
-        );
+            .where("deleted_at", "IS", null),
+        )
 
-        const maxSortOrder = siblings.reduce(
-          (max, doc) => Math.max(max, doc.sort_order ?? 0),
-          0
-        );
+        const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0)
 
         // Create empty Yjs state for new document
-        const emptyContent = { type: "doc", content: [] };
-        const yjsState = convertJsonToYjs(emptyContent);
+        const emptyContent = { type: "doc", content: [] }
+        const yjsState = convertJsonToYjs(emptyContent)
 
         await tx.mutate.documents.insert({
           id,
@@ -109,8 +99,8 @@ export const mutators = defineMutators({
           sort_order: maxSortOrder + 1,
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
     update: defineMutator(
       z.object({
@@ -125,17 +115,9 @@ export const mutators = defineMutators({
       async ({
         tx,
         ctx,
-        args: {
-          documentId,
-          title,
-          published,
-          slug,
-          indexStatus,
-          customFields,
-          organizationId,
-        },
+        args: { documentId, title, published, slug, indexStatus, customFields, organizationId },
       }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify document belongs to the organization
         const document = await tx.run(
@@ -143,33 +125,31 @@ export const mutators = defineMutators({
             .where("id", documentId)
             .where("organization_id", organizationId)
             .where("deleted_at", "IS", null)
-            .one()
-        );
+            .one(),
+        )
 
         if (!document) {
-          throw new Error(`Document not found: ${documentId}`);
+          throw new Error(`Document not found: ${documentId}`)
         }
 
         // Block title updates for locked pages
         if (document.is_locked && title !== undefined) {
-          throw new Error(
-            "Cannot edit locked document. This page is managed by an integration."
-          );
+          throw new Error("Cannot edit locked document. This page is managed by an integration.")
         }
 
         const updates: any = {
           id: documentId,
           updated_at: Date.now(),
-        };
+        }
 
-        if (title !== undefined) updates.title = title;
-        if (published !== undefined) updates.published = published;
-        if (slug !== undefined) updates.slug = slug;
-        if (indexStatus !== undefined) updates.index_status = indexStatus;
-        if (customFields !== undefined) updates.custom_fields = customFields;
+        if (title !== undefined) updates.title = title
+        if (published !== undefined) updates.published = published
+        if (slug !== undefined) updates.slug = slug
+        if (indexStatus !== undefined) updates.index_status = indexStatus
+        if (customFields !== undefined) updates.custom_fields = customFields
 
-        await tx.mutate.documents.update(updates);
-      }
+        await tx.mutate.documents.update(updates)
+      },
     ),
     rename: defineMutator(
       z.object({
@@ -178,7 +158,7 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { documentId, title, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify document belongs to the organization
         const document = await tx.run(
@@ -186,26 +166,24 @@ export const mutators = defineMutators({
             .where("id", documentId)
             .where("organization_id", organizationId)
             .where("deleted_at", "IS", null)
-            .one()
-        );
+            .one(),
+        )
 
         if (!document) {
-          throw new Error(`Document not found: ${documentId}`);
+          throw new Error(`Document not found: ${documentId}`)
         }
 
         // Block rename for locked pages
         if (document.is_locked) {
-          throw new Error(
-            "Cannot rename locked document. This page is managed by an integration."
-          );
+          throw new Error("Cannot rename locked document. This page is managed by an integration.")
         }
 
         await tx.mutate.documents.update({
           id: documentId,
           title,
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
     moveToParent: defineMutator(
       z.object({
@@ -214,7 +192,7 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { documentId, parentId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify document belongs to the organization
         const document = await tx.run(
@@ -222,18 +200,18 @@ export const mutators = defineMutators({
             .where("id", documentId)
             .where("organization_id", organizationId)
             .where("deleted_at", "IS", null)
-            .one()
-        );
+            .one(),
+        )
 
         if (!document) {
-          throw new Error(`Document not found: ${documentId}`);
+          throw new Error(`Document not found: ${documentId}`)
         }
 
         // If moving to a parent document, verify parent belongs to same organization
         // and check for circular references
         if (parentId) {
           if (parentId === documentId) {
-            throw new Error("Cannot move document into itself");
+            throw new Error("Cannot move document into itself")
           }
 
           const parent = await tx.run(
@@ -241,28 +219,28 @@ export const mutators = defineMutators({
               .where("id", parentId)
               .where("organization_id", organizationId)
               .where("deleted_at", "IS", null)
-              .one()
-          );
+              .one(),
+          )
 
           if (!parent) {
-            throw new Error(`Parent document not found: ${parentId}`);
+            throw new Error(`Parent document not found: ${parentId}`)
           }
 
           // Check for circular reference - ensure parent is not a descendant of this document
-          let currentParentId: string | null = parent.parent_id;
+          let currentParentId: string | null = parent.parent_id
           while (currentParentId) {
             if (currentParentId === documentId) {
-              throw new Error("Cannot move document into its own descendant");
+              throw new Error("Cannot move document into its own descendant")
             }
             const currentParent = await tx.run(
               zql.documents
                 .where("id", currentParentId)
                 .where("organization_id", organizationId)
                 .where("deleted_at", "IS", null)
-                .one()
-            );
-            if (!currentParent) break;
-            currentParentId = currentParent.parent_id;
+                .one(),
+            )
+            if (!currentParent) break
+            currentParentId = currentParent.parent_id
           }
         }
 
@@ -270,8 +248,8 @@ export const mutators = defineMutators({
           id: documentId,
           parent_id: parentId || null,
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
     reorder: defineMutator(
       z.object({
@@ -279,7 +257,7 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { documentIds, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify all documents belong to the organization
         const documents = await Promise.all(
@@ -289,15 +267,15 @@ export const mutators = defineMutators({
                 .where("id", id)
                 .where("organization_id", organizationId)
                 .where("deleted_at", "IS", null)
-                .one()
-            )
-          )
-        );
+                .one(),
+            ),
+          ),
+        )
 
         // Check if any documents are missing
         for (let i = 0; i < documentIds.length; i++) {
           if (!documents[i]) {
-            throw new Error(`Document not found: ${documentIds[i]}`);
+            throw new Error(`Document not found: ${documentIds[i]}`)
           }
         }
 
@@ -308,10 +286,10 @@ export const mutators = defineMutators({
               id,
               sort_order: index,
               updated_at: Date.now(),
-            })
-          )
-        );
-      }
+            }),
+          ),
+        )
+      },
     ),
     move: defineMutator(
       z.object({
@@ -320,47 +298,40 @@ export const mutators = defineMutators({
         targetIntegrationLinkId: z.string().optional().nullable(),
         organizationId: z.string(),
       }),
-      async ({
-        tx,
-        ctx,
-        args: { documentId, targetParentId, targetIntegrationLinkId, organizationId },
-      }) => {
-        hasOrganizationAccess(ctx, organizationId);
+      async ({ tx, ctx, args: { documentId, targetParentId, targetIntegrationLinkId, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
 
         const updates: any = {
           id: documentId,
           updated_at: Date.now(),
-        };
+        }
 
-        let parentIdQuery = targetParentId || null;
-        let integrationLinkIdQuery = targetIntegrationLinkId || null;
+        let parentIdQuery = targetParentId || null
+        let integrationLinkIdQuery = targetIntegrationLinkId || null
 
         const siblings = await tx.run(
           zql.documents
             .where("organization_id", organizationId)
             .where("parent_id", parentIdQuery ? "=" : "IS", parentIdQuery)
             .where("integration_link_id", integrationLinkIdQuery ? "=" : "IS", integrationLinkIdQuery)
-            .where("deleted_at", "IS", null)
-        );
+            .where("deleted_at", "IS", null),
+        )
 
-        const maxSortOrder = siblings.reduce(
-          (max, doc) => Math.max(max, doc.sort_order ?? 0),
-          0
-        );
-        updates.sort_order = maxSortOrder + 1;
+        const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0)
+        updates.sort_order = maxSortOrder + 1
 
-        if (targetParentId !== undefined) updates.parent_id = targetParentId;
-        if (targetIntegrationLinkId !== undefined) updates.integration_link_id = targetIntegrationLinkId;
+        if (targetParentId !== undefined) updates.parent_id = targetParentId
+        if (targetIntegrationLinkId !== undefined) updates.integration_link_id = targetIntegrationLinkId
 
         // Ensure we clear integration link if we are moving out (targetParentId set but targetIntegrationLinkId not)
         // This logic is a bit implicit in client mutator, but server mutator handles it strictly.
-        // For client optimistic update: if targetParentId is set and targetIntegrationLinkId is NOT set, 
-        // we might want to assume it's moving out? 
+        // For client optimistic update: if targetParentId is set and targetIntegrationLinkId is NOT set,
+        // we might want to assume it's moving out?
         // Or we rely on the caller passing null for targetIntegrationLinkId explicitly if clearing.
         // My use-document-drag-drop implementation will need to be explicit.
 
-        await tx.mutate.documents.update(updates);
-      }
+        await tx.mutate.documents.update(updates)
+      },
     ),
     delete: defineMutator(
       z.object({
@@ -368,47 +339,39 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { documentId, organizationId } }) => {
-        isAuthenticated(ctx);
+        isAuthenticated(ctx)
 
         const document = await tx.run(
-          zql.documents
-            .where("id", documentId)
-            .where("organization_id", organizationId)
-            .one()
-        );
+          zql.documents.where("id", documentId).where("organization_id", organizationId).one(),
+        )
         if (!document) {
-          throw new Error(`Document not found: ${documentId}`);
+          throw new Error(`Document not found: ${documentId}`)
         }
 
         // Recursively find all child documents (including nested children)
-        const findAllChildIds = async (
-          parentId: string,
-          childIds: string[] = []
-        ): Promise<string[]> => {
+        const findAllChildIds = async (parentId: string, childIds: string[] = []): Promise<string[]> => {
           const children = await tx.run(
             zql.documents
               .where("parent_id", parentId)
               .where("organization_id", organizationId)
-              .where("deleted_at", "IS", null)
-          );
+              .where("deleted_at", "IS", null),
+          )
 
           for (const child of children) {
-            childIds.push(child.id);
+            childIds.push(child.id)
             // Recursively get children of this child
-            await findAllChildIds(child.id, childIds);
+            await findAllChildIds(child.id, childIds)
           }
 
-          return childIds;
-        };
+          return childIds
+        }
 
-        const childIds = await findAllChildIds(documentId);
+        const childIds = await findAllChildIds(documentId)
 
         // Soft-delete by setting deleted_at
-        const isIntegrationDocument = Boolean(
-          document.integration_link_id && document.external_id
-        );
+        const isIntegrationDocument = Boolean(document.integration_link_id && document.external_id)
 
-        const now = Date.now();
+        const now = Date.now()
 
         // If document is part of an integration, delete it completely from Lydie on delete
         if (isIntegrationDocument) {
@@ -416,11 +379,11 @@ export const mutators = defineMutators({
           for (const childId of childIds) {
             await tx.mutate.documents.delete({
               id: childId,
-            });
+            })
           }
           await tx.mutate.documents.delete({
             id: documentId,
-          });
+          })
         } else {
           // For regular documents, soft-delete all children first
           for (const childId of childIds) {
@@ -428,16 +391,16 @@ export const mutators = defineMutators({
               id: childId,
               deleted_at: now,
               updated_at: now,
-            });
+            })
           }
           // Then soft-delete the parent
           await tx.mutate.documents.update({
             id: documentId,
             deleted_at: now,
             updated_at: now,
-          });
+          })
         }
-      }
+      },
     ),
   },
   documentComponent: {
@@ -449,7 +412,7 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { id, name, properties, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         await tx.mutate.document_components.insert({
           id,
@@ -458,8 +421,8 @@ export const mutators = defineMutators({
           organization_id: organizationId,
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
   },
   assistantConversation: {
@@ -468,30 +431,26 @@ export const mutators = defineMutators({
         conversationId: z.string(),
       }),
       async ({ tx, ctx, args: { conversationId } }) => {
-        isAuthenticated(ctx);
+        isAuthenticated(ctx)
 
-        const conversation = await tx.run(
-          zql.assistant_conversations.where("id", conversationId).one()
-        );
+        const conversation = await tx.run(zql.assistant_conversations.where("id", conversationId).one())
 
-        if (!conversation) return;
+        if (!conversation) return
 
         if (conversation.user_id !== ctx.userId) {
-          throw new Error("Unauthorized");
+          throw new Error("Unauthorized")
         }
 
         await tx.mutate.assistant_conversations.delete({
           id: conversationId,
-        });
+        })
 
-        const messages = await tx.run(
-          zql.assistant_messages.where("conversation_id", conversationId)
-        );
+        const messages = await tx.run(zql.assistant_messages.where("conversation_id", conversationId))
 
         for (const message of messages) {
-          await tx.mutate.assistant_messages.delete({ id: message.id });
+          await tx.mutate.assistant_messages.delete({ id: message.id })
         }
-      }
+      },
     ),
   },
   apiKey: {
@@ -501,26 +460,23 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { keyId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify API key belongs to the organization
         const apiKey = await tx.run(
-          zql.api_keys
-            .where("id", keyId)
-            .where("organization_id", organizationId)
-            .one()
-        );
+          zql.api_keys.where("id", keyId).where("organization_id", organizationId).one(),
+        )
 
         if (!apiKey) {
-          throw new Error(`API key not found: ${keyId}`);
+          throw new Error(`API key not found: ${keyId}`)
         }
 
         await tx.mutate.api_keys.update({
           id: keyId,
           revoked: true,
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
   },
   userSettings: {
@@ -530,21 +486,15 @@ export const mutators = defineMutators({
         aiPromptStyle: z.string().optional(),
         customPrompt: z.string().nullable().optional(),
       }),
-      async ({
-        tx,
-        ctx,
-        args: { persistDocumentTreeExpansion, aiPromptStyle, customPrompt },
-      }) => {
-        isAuthenticated(ctx);
+      async ({ tx, ctx, args: { persistDocumentTreeExpansion, aiPromptStyle, customPrompt } }) => {
+        isAuthenticated(ctx)
 
         // Get or create the user's settings
-        let settings = await tx.run(
-          zql.user_settings.where("user_id", ctx.userId).one()
-        );
+        let settings = await tx.run(zql.user_settings.where("user_id", ctx.userId).one())
 
         if (!settings) {
           // Create settings if they don't exist
-          const id = createId();
+          const id = createId()
           await tx.mutate.user_settings.insert({
             id,
             user_id: ctx.userId,
@@ -553,34 +503,33 @@ export const mutators = defineMutators({
             custom_prompt: null,
             created_at: Date.now(),
             updated_at: Date.now(),
-          });
-          settings = await tx.run(zql.user_settings.where("id", id).one());
+          })
+          settings = await tx.run(zql.user_settings.where("id", id).one())
         }
 
         if (!settings) {
-          throw new Error("User settings not found");
+          throw new Error("User settings not found")
         }
 
         const updates: any = {
           id: settings.id,
           updated_at: Date.now(),
-        };
+        }
 
         if (persistDocumentTreeExpansion !== undefined) {
-          updates.persist_document_tree_expansion =
-            persistDocumentTreeExpansion;
+          updates.persist_document_tree_expansion = persistDocumentTreeExpansion
         }
 
         if (aiPromptStyle !== undefined) {
-          updates.ai_prompt_style = aiPromptStyle;
+          updates.ai_prompt_style = aiPromptStyle
         }
 
         if (customPrompt !== undefined) {
-          updates.custom_prompt = customPrompt || null;
+          updates.custom_prompt = customPrompt || null
         }
 
-        await tx.mutate.user_settings.update(updates);
-      }
+        await tx.mutate.user_settings.update(updates)
+      },
     ),
   },
   organizationSettings: {
@@ -589,40 +538,34 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Get or create the organization's settings
-        let settings = await tx.run(
-          zql.organization_settings
-            .where("organization_id", organizationId)
-            .one()
-        );
+        let settings = await tx.run(zql.organization_settings.where("organization_id", organizationId).one())
 
         if (!settings) {
           // Create settings if they don't exist
-          const id = createId();
+          const id = createId()
           await tx.mutate.organization_settings.insert({
             id,
             organization_id: organizationId,
             created_at: Date.now(),
             updated_at: Date.now(),
-          });
-          settings = await tx.run(
-            zql.organization_settings.where("id", id).one()
-          );
+          })
+          settings = await tx.run(zql.organization_settings.where("id", id).one())
         }
 
         if (!settings) {
-          throw new Error("Organization settings not found");
+          throw new Error("Organization settings not found")
         }
 
         const updates: any = {
           id: settings.id,
           updated_at: Date.now(),
-        };
+        }
 
-        await tx.mutate.organization_settings.update(updates);
-      }
+        await tx.mutate.organization_settings.update(updates)
+      },
     ),
   },
   organization: {
@@ -635,27 +578,23 @@ export const mutators = defineMutators({
         metadata: z.string().optional(),
       }),
       async ({ tx, ctx, args: { id, name, slug, logo, metadata } }) => {
-        isAuthenticated(ctx);
+        isAuthenticated(ctx)
 
         // Verify slug doesn't already exist and make it unique if needed
-        let finalSlug = slug;
-        let existingOrg = await tx.run(
-          zql.organizations.where("slug", finalSlug).one()
-        );
+        let finalSlug = slug
+        let existingOrg = await tx.run(zql.organizations.where("slug", finalSlug).one())
 
         // If slug exists, try with a longer suffix
         if (existingOrg) {
-          const baseSlug = slugify(name);
-          finalSlug = `${baseSlug}-${createId().slice(0, 8)}`;
-          existingOrg = await tx.run(
-            zql.organizations.where("slug", finalSlug).one()
-          );
+          const baseSlug = slugify(name)
+          finalSlug = `${baseSlug}-${createId().slice(0, 8)}`
+          existingOrg = await tx.run(zql.organizations.where("slug", finalSlug).one())
         }
 
         // If still exists, use organization ID as suffix (guaranteed unique)
         if (existingOrg) {
-          const baseSlug = slugify(name);
-          finalSlug = `${baseSlug}-${id.slice(0, 8)}`;
+          const baseSlug = slugify(name)
+          finalSlug = `${baseSlug}-${id.slice(0, 8)}`
         }
 
         await tx.mutate.organizations.insert({
@@ -669,7 +608,7 @@ export const mutators = defineMutators({
           created_at: Date.now(),
           updated_at: Date.now(),
           polar_subscription_id: null,
-        });
+        })
 
         await tx.mutate.members.insert({
           id: createId(),
@@ -678,7 +617,7 @@ export const mutators = defineMutators({
           role: "owner",
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
+        })
 
         // Create default organization settings
         await tx.mutate.organization_settings.insert({
@@ -686,8 +625,8 @@ export const mutators = defineMutators({
           organization_id: id,
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
     update: defineMutator(
       z.object({
@@ -696,62 +635,54 @@ export const mutators = defineMutators({
         slug: z.string().optional(),
       }),
       async ({ tx, ctx, args: { organizationId, name, slug } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         const updates: any = {
           id: organizationId,
           updated_at: Date.now(),
-        };
+        }
 
         if (name !== undefined) {
-          updates.name = name;
+          updates.name = name
         }
 
         if (slug !== undefined) {
           // Check if slug is already taken by another organization
           const existingOrg = await tx.run(
-            zql.organizations
-              .where("slug", slug)
-              .where("id", "!=", organizationId)
-              .one()
-          );
+            zql.organizations.where("slug", slug).where("id", "!=", organizationId).one(),
+          )
 
           if (existingOrg) {
-            throw new Error("Slug is already taken");
+            throw new Error("Slug is already taken")
           }
 
-          updates.slug = slug;
+          updates.slug = slug
         }
 
-        await tx.mutate.organizations.update(updates);
-      }
+        await tx.mutate.organizations.update(updates)
+      },
     ),
     delete: defineMutator(
       z.object({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify user is an owner before allowing deletion
         const member = await tx.run(
-          zql.members
-            .where("organization_id", organizationId)
-            .where("user_id", ctx.userId)
-            .one()
-        );
+          zql.members.where("organization_id", organizationId).where("user_id", ctx.userId).one(),
+        )
 
-        console.log(member);
+        console.log(member)
 
         if (!member || member.role !== "owner") {
-          throw new Error(
-            "Only organization owners can delete the organization"
-          );
+          throw new Error("Only organization owners can delete the organization")
         }
 
         // Delete the organization - database cascades will handle related records
-        await tx.mutate.organizations.delete({ id: organizationId });
-      }
+        await tx.mutate.organizations.delete({ id: organizationId })
+      },
     ),
   },
   integration: {
@@ -761,33 +692,27 @@ export const mutators = defineMutators({
         deleteDocuments: z.boolean().optional(),
         organizationId: z.string(),
       }),
-      async ({
-        tx,
-        ctx,
-        args: { linkId, deleteDocuments, organizationId },
-      }) => {
-        hasOrganizationAccess(ctx, organizationId);
+      async ({ tx, ctx, args: { linkId, deleteDocuments, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
         const link = await tx.run(
           zql.integration_links
             .where("id", linkId)
             .where("organization_id", organizationId)
             .one()
-            .related("documents")
-        );
+            .related("documents"),
+        )
 
         if (!link) {
-          throw new Error(`Link not found: ${linkId}`);
+          throw new Error(`Link not found: ${linkId}`)
         }
 
         if (deleteDocuments) {
-          const deleteDocumentsPromise = link.documents.map(({ id }) =>
-            tx.mutate.documents.delete({ id })
-          );
-          await Promise.all(deleteDocumentsPromise);
+          const deleteDocumentsPromise = link.documents.map(({ id }) => tx.mutate.documents.delete({ id }))
+          await Promise.all(deleteDocumentsPromise)
         }
 
-        await tx.mutate.integration_links.delete({ id: linkId });
-      }
+        await tx.mutate.integration_links.delete({ id: linkId })
+      },
     ),
     createLink: defineMutator(
       z.object({
@@ -797,24 +722,18 @@ export const mutators = defineMutators({
         config: z.record(z.string(), z.any()),
         organizationId: z.string(),
       }),
-      async ({
-        tx,
-        ctx,
-        args: { id, connectionId, name, config, organizationId },
-      }) => {
-        hasOrganizationAccess(ctx, organizationId);
+      async ({ tx, ctx, args: { id, connectionId, name, config, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
 
         const connection = await tx.run(
           zql.integration_connections
             .where("id", connectionId)
             .where("organization_id", organizationId)
-            .one()
-        );
+            .one(),
+        )
 
         if (!connection) {
-          throw new Error(
-            `Connection not found: ${connectionId} for organization ${organizationId}`
-          );
+          throw new Error(`Connection not found: ${connectionId} for organization ${organizationId}`)
         }
 
         await tx.mutate.integration_links.insert({
@@ -827,8 +746,8 @@ export const mutators = defineMutators({
           name,
           config,
           sync_status: "pulling",
-        });
-      }
+        })
+      },
     ),
   },
   integrationConnection: {
@@ -839,12 +758,8 @@ export const mutators = defineMutators({
         organizationId: z.string(),
         config: z.any(),
       }),
-      async ({
-        tx,
-        ctx,
-        args: { id, integrationType, organizationId, config },
-      }) => {
-        hasOrganizationAccess(ctx, organizationId);
+      async ({ tx, ctx, args: { id, integrationType, organizationId, config } }) => {
+        hasOrganizationAccess(ctx, organizationId)
 
         await tx.mutate.integration_connections.insert({
           id,
@@ -854,8 +769,8 @@ export const mutators = defineMutators({
           config,
           created_at: Date.now(),
           updated_at: Date.now(),
-        });
-      }
+        })
+      },
     ),
     update: defineMutator(
       z.object({
@@ -864,29 +779,29 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { connectionId, config, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify connection belongs to the organization
         const connection = await tx.run(
           zql.integration_connections
             .where("id", connectionId)
             .where("organization_id", organizationId)
-            .one()
-        );
+            .one(),
+        )
 
         if (!connection) {
-          throw new Error(`Connection not found: ${connectionId}`);
+          throw new Error(`Connection not found: ${connectionId}`)
         }
 
         const updates: any = {
           id: connectionId,
           updated_at: Date.now(),
-        };
+        }
 
-        if (config !== undefined) updates.config = config;
+        if (config !== undefined) updates.config = config
 
-        await tx.mutate.integration_connections.update(updates);
-      }
+        await tx.mutate.integration_connections.update(updates)
+      },
     ),
     disconnect: defineMutator(
       z.object({
@@ -894,17 +809,17 @@ export const mutators = defineMutators({
         organizationId: z.string(),
       }),
       async ({ tx, ctx, args: { connectionId, organizationId } }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
         const connection = await tx.run(
           zql.integration_connections
             .where("id", connectionId)
             .where("organization_id", organizationId)
             .one()
-            .related("links")
-        );
+            .related("links"),
+        )
 
         if (!connection) {
-          throw new Error(`Connection not found: ${connectionId}`);
+          throw new Error(`Connection not found: ${connectionId}`)
         }
 
         // Clean up all resources related to this integration connection
@@ -913,27 +828,24 @@ export const mutators = defineMutators({
         // For each integration link, delete all associated documents
         for (const link of connection.links) {
           const linkWithDocuments = await tx.run(
-            zql.integration_links
-              .where("id", link.id)
-              .one()
-              .related("documents")
-          );
+            zql.integration_links.where("id", link.id).one().related("documents"),
+          )
 
           if (linkWithDocuments) {
             // Delete all documents associated with this link
             // This will cascade to embeddings, conversations, publications, etc.
-            const deleteDocumentsPromise = linkWithDocuments.documents.map(
-              ({ id }) => tx.mutate.documents.delete({ id })
-            );
-            await Promise.all(deleteDocumentsPromise);
+            const deleteDocumentsPromise = linkWithDocuments.documents.map(({ id }) =>
+              tx.mutate.documents.delete({ id }),
+            )
+            await Promise.all(deleteDocumentsPromise)
           }
         }
 
         // Delete the connection (this will cascade to links, sync_metadata, and activity_logs)
         await tx.mutate.integration_connections.delete({
           id: connectionId,
-        });
-      }
+        })
+      },
     ),
   },
   syncMetadata: {
@@ -964,18 +876,15 @@ export const mutators = defineMutators({
           organizationId,
         },
       }) => {
-        hasOrganizationAccess(ctx, organizationId);
+        hasOrganizationAccess(ctx, organizationId)
 
         // Verify document belongs to the organization
         const document = await tx.run(
-          zql.documents
-            .where("id", documentId)
-            .where("organization_id", organizationId)
-            .one()
-        );
+          zql.documents.where("id", documentId).where("organization_id", organizationId).one(),
+        )
 
         if (!document) {
-          throw new Error(`Document not found: ${documentId}`);
+          throw new Error(`Document not found: ${documentId}`)
         }
 
         // Verify connection belongs to the organization
@@ -983,20 +892,17 @@ export const mutators = defineMutators({
           zql.integration_connections
             .where("id", connectionId)
             .where("organization_id", organizationId)
-            .one()
-        );
+            .one(),
+        )
 
         if (!connection) {
-          throw new Error(`Connection not found: ${connectionId}`);
+          throw new Error(`Connection not found: ${connectionId}`)
         }
 
         // Check if metadata exists for this document-connection pair
         const existing = await tx.run(
-          zql.sync_metadata
-            .where("document_id", documentId)
-            .where("connection_id", connectionId)
-            .one()
-        );
+          zql.sync_metadata.where("document_id", documentId).where("connection_id", connectionId).one(),
+        )
 
         if (existing) {
           // Update existing
@@ -1005,14 +911,13 @@ export const mutators = defineMutators({
             external_id: externalId,
             sync_status: syncStatus,
             updated_at: Date.now(),
-          };
+          }
 
-          if (lastSyncedAt !== undefined) updates.last_synced_at = lastSyncedAt;
-          if (lastSyncedHash !== undefined)
-            updates.last_synced_hash = lastSyncedHash;
-          if (syncError !== undefined) updates.sync_error = syncError;
+          if (lastSyncedAt !== undefined) updates.last_synced_at = lastSyncedAt
+          if (lastSyncedHash !== undefined) updates.last_synced_hash = lastSyncedHash
+          if (syncError !== undefined) updates.sync_error = syncError
 
-          await tx.mutate.sync_metadata.update(updates);
+          await tx.mutate.sync_metadata.update(updates)
         } else {
           // Insert new
           await tx.mutate.sync_metadata.insert({
@@ -1026,11 +931,11 @@ export const mutators = defineMutators({
             sync_error: syncError || null,
             created_at: Date.now(),
             updated_at: Date.now(),
-          });
+          })
         }
-      }
+      },
     ),
   },
-});
+})
 
-export type Mutators = typeof mutators;
+export type Mutators = typeof mutators
