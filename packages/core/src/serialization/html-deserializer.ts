@@ -1,312 +1,307 @@
-import { parse, HTMLElement, TextNode, Node } from "node-html-parser";
+import { parse, HTMLElement, TextNode, Node } from "node-html-parser"
 
 export interface HTMLDeserializeOptions {}
 
-export function deserializeFromHTML(
-  html: string,
-  options: HTMLDeserializeOptions = {}
-): any {
-  const root = parse(html);
-  const content: any[] = [];
+export function deserializeFromHTML(html: string, options: HTMLDeserializeOptions = {}): any {
+	const root = parse(html)
+	const content: any[] = []
 
-  // Helper to parse individual nodes
-  // isInlineContext indicates whether we're inside inline formatting (e.g., within <p>, <li>)
-  const parseNode = (node: Node, isInlineContext = false): any[] => {
-    if (node instanceof TextNode) {
-      const text = node.text;
-      if (!text) return [];
+	// Helper to parse individual nodes
+	// isInlineContext indicates whether we're inside inline formatting (e.g., within <p>, <li>)
+	const parseNode = (node: Node, isInlineContext = false): any[] => {
+		if (node instanceof TextNode) {
+			const text = node.text
+			if (!text) return []
 
-      // If we're at block level (not inside a paragraph/heading/etc),
-      // skip whitespace-only text nodes (they're just formatting between block elements)
-      if (!isInlineContext && text.trim() === "") {
-        return [];
-      }
+			// If we're at block level (not inside a paragraph/heading/etc),
+			// skip whitespace-only text nodes (they're just formatting between block elements)
+			if (!isInlineContext && text.trim() === "") {
+				return []
+			}
 
-      // Basic text node
-      return [{ type: "text", text }];
-    }
+			// Basic text node
+			return [{ type: "text", text }]
+		}
 
-    if (node instanceof HTMLElement) {
-      const tagName = node.tagName.toLowerCase();
+		if (node instanceof HTMLElement) {
+			const tagName = node.tagName.toLowerCase()
 
-      // Block elements
-      switch (tagName) {
-        case "p":
-        case "div": {
-          const children = node.childNodes.flatMap((n) => parseNode(n, true));
-          if (children.length === 0) {
-            return [];
-          }
-          // Filter out purely whitespace text nodes if they are the only children?
-          // TipTap usually wants at least something or empty paragraph is fine.
-          return [
-            {
-              type: "paragraph",
-              content: children.length > 0 ? children : undefined,
-            },
-          ];
-        }
-        case "h1":
-        case "h2":
-        case "h3":
-        case "h4":
-        case "h5":
-        case "h6": {
-          const level = parseInt(tagName.substring(1), 10);
-          const children = node.childNodes.flatMap((n) => parseNode(n, true));
-          return [
-            {
-              type: "heading",
-              attrs: { level },
-              content: children.length > 0 ? children : undefined,
-            },
-          ];
-        }
-        case "ul": {
-          const children = node.childNodes.flatMap((n) => parseNode(n, false)); // expects listItems
-          // Filter to only listItems (logic handled in li case or filtered here)
-          // node-html-parser might include whitespace text nodes between LIs
-          const listItems = children.filter((c) => c.type === "listItem");
-          return [
-            {
-              type: "bulletList",
-              content: listItems,
-            },
-          ];
-        }
-        case "ol": {
-          // Check for start attribute? node-html-parser attributes are strings
-          const startAttr = node.getAttribute("start");
-          const start = startAttr ? parseInt(startAttr, 10) : undefined;
+			// Block elements
+			switch (tagName) {
+				case "p":
+				case "div": {
+					const children = node.childNodes.flatMap((n) => parseNode(n, true))
+					if (children.length === 0) {
+						return []
+					}
+					// Filter out purely whitespace text nodes if they are the only children?
+					// TipTap usually wants at least something or empty paragraph is fine.
+					return [
+						{
+							type: "paragraph",
+							content: children.length > 0 ? children : undefined,
+						},
+					]
+				}
+				case "h1":
+				case "h2":
+				case "h3":
+				case "h4":
+				case "h5":
+				case "h6": {
+					const level = parseInt(tagName.substring(1), 10)
+					const children = node.childNodes.flatMap((n) => parseNode(n, true))
+					return [
+						{
+							type: "heading",
+							attrs: { level },
+							content: children.length > 0 ? children : undefined,
+						},
+					]
+				}
+				case "ul": {
+					const children = node.childNodes.flatMap((n) => parseNode(n, false)) // expects listItems
+					// Filter to only listItems (logic handled in li case or filtered here)
+					// node-html-parser might include whitespace text nodes between LIs
+					const listItems = children.filter((c) => c.type === "listItem")
+					return [
+						{
+							type: "bulletList",
+							content: listItems,
+						},
+					]
+				}
+				case "ol": {
+					// Check for start attribute? node-html-parser attributes are strings
+					const startAttr = node.getAttribute("start")
+					const start = startAttr ? parseInt(startAttr, 10) : undefined
 
-          const children = node.childNodes.flatMap((n) => parseNode(n, false));
-          const listItems = children.filter((c) => c.type === "listItem");
+					const children = node.childNodes.flatMap((n) => parseNode(n, false))
+					const listItems = children.filter((c) => c.type === "listItem")
 
-          return [
-            {
-              type: "orderedList",
-              attrs: start ? { start } : undefined,
-              content: listItems,
-            },
-          ];
-        }
-        case "li": {
-          const children = node.childNodes.flatMap((n) => parseNode(n, false));
-          // List items in TipTap schema must only contain block-level nodes
-          // (paragraph, heading, bulletList, orderedList, etc.)
-          // Any inline content (text nodes, marks) must be wrapped in paragraphs
+					return [
+						{
+							type: "orderedList",
+							attrs: start ? { start } : undefined,
+							content: listItems,
+						},
+					]
+				}
+				case "li": {
+					const children = node.childNodes.flatMap((n) => parseNode(n, false))
+					// List items in TipTap schema must only contain block-level nodes
+					// (paragraph, heading, bulletList, orderedList, etc.)
+					// Any inline content (text nodes, marks) must be wrapped in paragraphs
 
-          const isInlineNode = (node: any) =>
-            node.type === "text" || node.type === "hardBreak";
-          const isBlockNode = (node: any) =>
-            [
-              "paragraph",
-              "heading",
-              "bulletList",
-              "orderedList",
-              "codeBlock",
-              "horizontalRule",
-            ].includes(node.type);
+					const isInlineNode = (node: any) => node.type === "text" || node.type === "hardBreak"
+					const isBlockNode = (node: any) =>
+						[
+							"paragraph",
+							"heading",
+							"bulletList",
+							"orderedList",
+							"codeBlock",
+							"horizontalRule",
+						].includes(node.type)
 
-          // Group consecutive inline nodes and wrap them in paragraphs
-          const processedContent: any[] = [];
-          let inlineBuffer: any[] = [];
+					// Group consecutive inline nodes and wrap them in paragraphs
+					const processedContent: any[] = []
+					let inlineBuffer: any[] = []
 
-          const flushInlineBuffer = () => {
-            if (inlineBuffer.length > 0) {
-              processedContent.push({
-                type: "paragraph",
-                content: inlineBuffer,
-              });
-              inlineBuffer = [];
-            }
-          };
+					const flushInlineBuffer = () => {
+						if (inlineBuffer.length > 0) {
+							processedContent.push({
+								type: "paragraph",
+								content: inlineBuffer,
+							})
+							inlineBuffer = []
+						}
+					}
 
-          for (const child of children) {
-            if (isInlineNode(child)) {
-              inlineBuffer.push(child);
-            } else if (isBlockNode(child)) {
-              flushInlineBuffer();
-              processedContent.push(child);
-            }
-          }
-          flushInlineBuffer();
+					for (const child of children) {
+						if (isInlineNode(child)) {
+							inlineBuffer.push(child)
+						} else if (isBlockNode(child)) {
+							flushInlineBuffer()
+							processedContent.push(child)
+						}
+					}
+					flushInlineBuffer()
 
-          // Ensure we have at least one paragraph if content is empty
-          if (processedContent.length === 0) {
-            processedContent.push({
-              type: "paragraph",
-              content: undefined,
-            });
-          }
+					// Ensure we have at least one paragraph if content is empty
+					if (processedContent.length === 0) {
+						processedContent.push({
+							type: "paragraph",
+							content: undefined,
+						})
+					}
 
-          return [
-            {
-              type: "listItem",
-              content: processedContent,
-            },
-          ];
-        }
-        case "hr": {
-          return [{ type: "horizontalRule" }];
-        }
-        case "pre": {
-          const codeChild = node.childNodes.find(
-            (n) =>
-              n instanceof HTMLElement && n.tagName.toLowerCase() === "code"
-          );
+					return [
+						{
+							type: "listItem",
+							content: processedContent,
+						},
+					]
+				}
+				case "hr": {
+					return [{ type: "horizontalRule" }]
+				}
+				case "pre": {
+					const codeChild = node.childNodes.find(
+						(n) => n instanceof HTMLElement && n.tagName.toLowerCase() === "code",
+					)
 
-          let text = "";
-          let language: string | undefined;
+					let text = ""
+					let language: string | undefined
 
-          if (codeChild) {
-            // Extract text from the code element.
-            text = codeChild.childNodes
-              .filter((n) => n instanceof TextNode)
-              .map((n) => n.text)
-              .join("");
+					if (codeChild) {
+						// Extract text from the code element.
+						text = codeChild.childNodes
+							.filter((n) => n instanceof TextNode)
+							.map((n) => n.text)
+							.join("")
 
-            if (!text && codeChild.text) {
-              text = codeChild.text;
-            }
+						if (!text && codeChild.text) {
+							text = codeChild.text
+						}
 
-            const className = (codeChild as HTMLElement).getAttribute("class");
-            if (className && className.startsWith("language-")) {
-              language = className.replace("language-", "");
-            }
-          } else {
-            text = node.text;
-          }
+						const className = (codeChild as HTMLElement).getAttribute("class")
+						if (className && className.startsWith("language-")) {
+							language = className.replace("language-", "")
+						}
+					} else {
+						text = node.text
+					}
 
-          return [
-            {
-              type: "codeBlock",
-              attrs: language ? { language } : undefined,
-              content: [
-                {
-                  type: "text",
-                  text,
-                },
-              ],
-            },
-          ];
-        }
-        case "br": {
-          return [{ type: "hardBreak" }];
-        }
-        case "img": {
-          const src = node.getAttribute("src");
-          const alt = node.getAttribute("alt");
-          const title = node.getAttribute("title");
-          if (src) {
-            return [
-              {
-                type: "image",
-                attrs: {
-                  src,
-                  alt,
-                  title,
-                },
-              },
-            ];
-          }
-          return [];
-        }
+					return [
+						{
+							type: "codeBlock",
+							attrs: language ? { language } : undefined,
+							content: [
+								{
+									type: "text",
+									text,
+								},
+							],
+						},
+					]
+				}
+				case "br": {
+					return [{ type: "hardBreak" }]
+				}
+				case "img": {
+					const src = node.getAttribute("src")
+					const alt = node.getAttribute("alt")
+					const title = node.getAttribute("title")
+					if (src) {
+						return [
+							{
+								type: "image",
+								attrs: {
+									src,
+									alt,
+									title,
+								},
+							},
+						]
+					}
+					return []
+				}
 
-        // Inline marks (bold, italic, link, code)
-        // Note: flattening logic above handles merging marks, but recursive logic is trickier.
-        // We need to return text nodes with marks applied.
-        case "strong":
-        case "b":
-        case "em":
-        case "i":
-        case "u":
-        case "code":
-        case "a": {
-          // These are inline wrappers. We parse children, then apply the current mark to all text nodes returned.
-          const children = node.childNodes.flatMap((n) => parseNode(n, true));
+				// Inline marks (bold, italic, link, code)
+				// Note: flattening logic above handles merging marks, but recursive logic is trickier.
+				// We need to return text nodes with marks applied.
+				case "strong":
+				case "b":
+				case "em":
+				case "i":
+				case "u":
+				case "code":
+				case "a": {
+					// These are inline wrappers. We parse children, then apply the current mark to all text nodes returned.
+					const children = node.childNodes.flatMap((n) => parseNode(n, true))
 
-          // Define the mark to apply
-          let mark: any;
-          if (tagName === "strong" || tagName === "b") mark = { type: "bold" };
-          if (tagName === "em" || tagName === "i") mark = { type: "italic" };
-          if (tagName === "u") mark = { type: "underline" }; // formatting?
-          if (tagName === "code") mark = { type: "code" };
-          if (tagName === "a") {
-            mark = {
-              type: "link",
-              attrs: {
-                href: node.getAttribute("href"),
-                target: node.getAttribute("target"),
-              },
-            };
-          }
+					// Define the mark to apply
+					let mark: any
+					if (tagName === "strong" || tagName === "b") mark = { type: "bold" }
+					if (tagName === "em" || tagName === "i") mark = { type: "italic" }
+					if (tagName === "u") mark = { type: "underline" } // formatting?
+					if (tagName === "code") mark = { type: "code" }
+					if (tagName === "a") {
+						mark = {
+							type: "link",
+							attrs: {
+								href: node.getAttribute("href"),
+								target: node.getAttribute("target"),
+							},
+						}
+					}
 
-          if (!mark) return children; // Should not happen based on switch
+					if (!mark) return children // Should not happen based on switch
 
-          // Add mark to all text/image children
-          return children.map((child) => {
-            if (child.type === "text") {
-              return {
-                ...child,
-                marks: [...(child.marks || []), mark],
-              };
-            }
-            // Determine if other inline nodes (image?) support marks. Text supports it.
-            return child;
-          });
-        }
+					// Add mark to all text/image children
+					return children.map((child) => {
+						if (child.type === "text") {
+							return {
+								...child,
+								marks: [...(child.marks || []), mark],
+							}
+						}
+						// Determine if other inline nodes (image?) support marks. Text supports it.
+						return child
+					})
+				}
 
-        default:
-          // Unknown block or inline tag.
-          // Treat as transparent container? Or ignore?
-          // Let's treat as transparent container (unwrap)
-          return node.childNodes.flatMap((n) => parseNode(n, isInlineContext));
-      }
-    }
+				default:
+					// Unknown block or inline tag.
+					// Treat as transparent container? Or ignore?
+					// Let's treat as transparent container (unwrap)
+					return node.childNodes.flatMap((n) => parseNode(n, isInlineContext))
+			}
+		}
 
-    return [];
-  };
+		return []
+	}
 
-  // Process root nodes (at block level)
-  root.childNodes.forEach((node) => {
-    // Check for top-level text nodes (should be wrapped in paragraph?)
-    // or valid top-level blocks.
-    const parsed = parseNode(node, false);
+	// Process root nodes (at block level)
+	root.childNodes.forEach((node) => {
+		// Check for top-level text nodes (should be wrapped in paragraph?)
+		// or valid top-level blocks.
+		const parsed = parseNode(node, false)
 
-    // If parsed nodes are inline (text), they need to be wrapped in a block (paragraph) if at top level
-    // Exception: if we are building a fragment. But type: "doc" expects blocks.
-    // We will check type.
+		// If parsed nodes are inline (text), they need to be wrapped in a block (paragraph) if at top level
+		// Exception: if we are building a fragment. But type: "doc" expects blocks.
+		// We will check type.
 
-    parsed.forEach((p) => {
-      if (p.type === "text" || (p.marks && p.type === "text")) {
-        // It's text. Find or create current paragraph in content?
-        // Or just wrap loosely for now.
-        // Simple strategy: if last element in content is paragraph, append. Else create new.
-        const last = content[content.length - 1];
-        if (last && last.type === "paragraph") {
-          last.content = last.content || [];
-          last.content.push(p);
-        } else {
-          content.push({
-            type: "paragraph",
-            content: [p],
-          });
-        }
-      } else {
-        // Block node
-        content.push(p);
-      }
-    });
-  });
+		parsed.forEach((p) => {
+			if (p.type === "text" || (p.marks && p.type === "text")) {
+				// It's text. Find or create current paragraph in content?
+				// Or just wrap loosely for now.
+				// Simple strategy: if last element in content is paragraph, append. Else create new.
+				const last = content[content.length - 1]
+				if (last && last.type === "paragraph") {
+					last.content = last.content || []
+					last.content.push(p)
+				} else {
+					content.push({
+						type: "paragraph",
+						content: [p],
+					})
+				}
+			} else {
+				// Block node
+				content.push(p)
+			}
+		})
+	})
 
-  // Ensure doc has content
-  if (content.length === 0) {
-    content.push({ type: "paragraph", content: [] });
-  }
+	// Ensure doc has content
+	if (content.length === 0) {
+		content.push({ type: "paragraph", content: [] })
+	}
 
-  return {
-    type: "doc",
-    content,
-  };
+	return {
+		type: "doc",
+		content,
+	}
 }

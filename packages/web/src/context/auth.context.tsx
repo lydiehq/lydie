@@ -1,9 +1,9 @@
-import { useRouteContext } from "@tanstack/react-router";
+import { useRouteContext } from "@tanstack/react-router"
 
 export function useAuth() {
-  const { auth } = useRouteContext({
-    from: "/__auth",
-  });
+	const { auth } = useRouteContext({
+		from: "/__auth",
+	})
 
-  return auth;
+	return auth
 }

@@ -2,8 +2,8 @@
 // Keep instructions concise and efficient. Every word impacts token costs.
 // Prioritize clarity, remove redundancy, group related concepts.
 
-import type { PromptStyle } from "@lydie/core/prompts";
-import { getPromptStyleText } from "@lydie/core/prompts";
+import type { PromptStyle } from "@lydie/core/prompts"
+import { getPromptStyleText } from "@lydie/core/prompts"
 
 export const baseSystemPrompt = `
 # User Intent Priority
@@ -66,21 +66,18 @@ Document-wide changes, positional edits: readCurrentDocument → replaceInDocume
 - Don't repeat replaced content—tools display changes automatically
 - Don't quote "before/after" text
 - Don't relay or explain what you've suggested—the tool call already shows the changes
-`;
+`
 
-export function buildSystemPrompt(
-  promptStyle?: PromptStyle | null,
-  customPrompt?: string | null
-): string {
-  let styleText = "";
+export function buildSystemPrompt(promptStyle?: PromptStyle | null, customPrompt?: string | null): string {
+	let styleText = ""
 
-  if (customPrompt && customPrompt.trim()) {
-    styleText = customPrompt.trim();
-  } else {
-    styleText = getPromptStyleText(promptStyle);
-  }
+	if (customPrompt && customPrompt.trim()) {
+		styleText = customPrompt.trim()
+	} else {
+		styleText = getPromptStyleText(promptStyle)
+	}
 
-  return `${styleText}
+	return `${styleText}
 
-${baseSystemPrompt}`;
+${baseSystemPrompt}`
 }

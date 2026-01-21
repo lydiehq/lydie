@@ -1,127 +1,125 @@
-import type { NodeBuilder } from "../content";
+import type { NodeBuilder } from "../content"
 
 export class HTMLSerializer implements NodeBuilder<string> {
-  private linkPrefix?: string;
+	private linkPrefix?: string
 
-  constructor(options?: { linkPrefix?: string }) {
-    this.linkPrefix = options?.linkPrefix;
-  }
+	constructor(options?: { linkPrefix?: string }) {
+		this.linkPrefix = options?.linkPrefix
+	}
 
-  internalLink(
-    content: string,
-    documentId?: string,
-    documentSlug?: string,
-    documentTitle?: string
-  ): string {
-    // Use slug if available, otherwise fall back to document ID
-    let href = documentSlug || documentId || "#";
-    if (!href.startsWith("/") && !href.startsWith("http")) {
-      href = `/${href}`;
-    }
-    
-    if (this.linkPrefix) {
-      href = `${this.linkPrefix}${href}`;
-    }
+	internalLink(
+		content: string,
+		documentId?: string,
+		documentSlug?: string,
+		documentTitle?: string,
+	): string {
+		// Use slug if available, otherwise fall back to document ID
+		let href = documentSlug || documentId || "#"
+		if (!href.startsWith("/") && !href.startsWith("http")) {
+			href = `/${href}`
+		}
 
-    const titleAttr = documentTitle ? ` title="${this.escape(documentTitle)}"` : "";
-    return `<a href="${this.escape(href)}"${titleAttr}>${content}</a>`;
-  }
+		if (this.linkPrefix) {
+			href = `${this.linkPrefix}${href}`
+		}
 
-  text(content: string): string {
-    return this.escape(content);
-  }
+		const titleAttr = documentTitle ? ` title="${this.escape(documentTitle)}"` : ""
+		return `<a href="${this.escape(href)}"${titleAttr}>${content}</a>`
+	}
 
-  bold(content: string): string {
-    return `<strong>${content}</strong>`;
-  }
+	text(content: string): string {
+		return this.escape(content)
+	}
 
-  italic(content: string): string {
-    return `<em>${content}</em>`;
-  }
+	bold(content: string): string {
+		return `<strong>${content}</strong>`
+	}
 
-  link(content: string, href?: string, rel?: string, target?: string): string {
-    // Apply link prefix if provided and href is a relative path
-    let finalHref = href;
-    if (
-      this.linkPrefix &&
-      href &&
-      !href.startsWith("http") &&
-      !href.startsWith("mailto:") &&
-      !href.startsWith("tel:")
-    ) {
-      // Only prefix relative paths (not absolute URLs or protocols)
-      finalHref = `${this.linkPrefix}${
-        href.startsWith("/") ? href : `/${href}`
-      }`;
-    }
+	italic(content: string): string {
+		return `<em>${content}</em>`
+	}
 
-    const hrefAttr = finalHref ? ` href="${this.escape(finalHref)}"` : "";
-    const relAttr = rel ? ` rel="${this.escape(rel)}"` : "";
-    const targetAttr = target ? ` target="${this.escape(target)}"` : "";
-    return `<a${hrefAttr}${relAttr}${targetAttr}>${content}</a>`;
-  }
+	link(content: string, href?: string, rel?: string, target?: string): string {
+		// Apply link prefix if provided and href is a relative path
+		let finalHref = href
+		if (
+			this.linkPrefix &&
+			href &&
+			!href.startsWith("http") &&
+			!href.startsWith("mailto:") &&
+			!href.startsWith("tel:")
+		) {
+			// Only prefix relative paths (not absolute URLs or protocols)
+			finalHref = `${this.linkPrefix}${href.startsWith("/") ? href : `/${href}`}`
+		}
 
-  doc(children: string[]): string {
-    return `<div>${children.join("")}</div>`;
-  }
+		const hrefAttr = finalHref ? ` href="${this.escape(finalHref)}"` : ""
+		const relAttr = rel ? ` rel="${this.escape(rel)}"` : ""
+		const targetAttr = target ? ` target="${this.escape(target)}"` : ""
+		return `<a${hrefAttr}${relAttr}${targetAttr}>${content}</a>`
+	}
 
-  paragraph(children: string[]): string {
-    return `<p>${children.join("")}</p>`;
-  }
+	doc(children: string[]): string {
+		return `<div>${children.join("")}</div>`
+	}
 
-  heading(level: number, children: string[]): string {
-    const safeLevel = level >= 1 && level <= 6 ? level : 1;
-    return `<h${safeLevel}>${children.join("")}</h${safeLevel}>`;
-  }
+	paragraph(children: string[]): string {
+		return `<p>${children.join("")}</p>`
+	}
 
-  bulletList(children: string[]): string {
-    return `<ul>${children.join("")}</ul>`;
-  }
+	heading(level: number, children: string[]): string {
+		const safeLevel = level >= 1 && level <= 6 ? level : 1
+		return `<h${safeLevel}>${children.join("")}</h${safeLevel}>`
+	}
 
-  orderedList(children: string[], start?: number): string {
-    const startAttr = typeof start === "number" ? ` start="${start}"` : "";
-    return `<ol${startAttr}>${children.join("")}</ol>`;
-  }
+	bulletList(children: string[]): string {
+		return `<ul>${children.join("")}</ul>`
+	}
 
-  listItem(children: string[]): string {
-    return `<li>${children.join("")}</li>`;
-  }
+	orderedList(children: string[], start?: number): string {
+		const startAttr = typeof start === "number" ? ` start="${start}"` : ""
+		return `<ol${startAttr}>${children.join("")}</ol>`
+	}
 
-  horizontalRule(): string {
-    return "<hr>";
-  }
+	listItem(children: string[]): string {
+		return `<li>${children.join("")}</li>`
+	}
 
-  codeBlock(children: string[], language?: string | null): string {
-    const code = children.join("");
-    const langAttr = language ? ` class="language-${this.escape(language)}"` : "";
-    return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`;
-  }
+	horizontalRule(): string {
+		return "<hr>"
+	}
 
-  customBlock(name: string, properties: Record<string, any>): string {
-    return `<div class="custom-block" data-component="${this.escape(
-      name
-    )}" data-properties="${this.escape(
-      JSON.stringify(properties)
-    )}">[Custom Block: ${this.escape(name)}]</div>`;
-  }
+	codeBlock(children: string[], language?: string | null): string {
+		const code = children.join("")
+		const langAttr = language ? ` class="language-${this.escape(language)}"` : ""
+		return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`
+	}
 
-  fragment(children: string[]): string {
-    return children.join("");
-  }
+	customBlock(name: string, properties: Record<string, any>): string {
+		return `<div class="custom-block" data-component="${this.escape(
+			name,
+		)}" data-properties="${this.escape(
+			JSON.stringify(properties),
+		)}">[Custom Block: ${this.escape(name)}]</div>`
+	}
 
-  empty(): string {
-    return "";
-  }
+	fragment(children: string[]): string {
+		return children.join("")
+	}
 
-  escape(text: string): string {
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
+	empty(): string {
+		return ""
+	}
+
+	escape(text: string): string {
+		return text
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;")
+	}
 }
 
 // For backwards compatibility
-export { HTMLSerializer as HTMLBuilder };
+export { HTMLSerializer as HTMLBuilder }

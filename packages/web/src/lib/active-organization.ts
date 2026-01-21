@@ -1,48 +1,39 @@
-import {
-  getUserStorage,
-  setUserStorage,
-  removeUserStorage,
-} from "./user-storage";
+import { getUserStorage, setUserStorage, removeUserStorage } from "./user-storage"
 
-const ACTIVE_ORG_KEY = "lydie:active-organization";
+const ACTIVE_ORG_KEY = "lydie:active-organization"
 
-export function getActiveOrganizationSlug(
-  userId?: string | null
-): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
+export function getActiveOrganizationSlug(userId?: string | null): string | null {
+	if (typeof window === "undefined") {
+		return null
+	}
 
-  try {
-    return getUserStorage(userId, ACTIVE_ORG_KEY);
-  } catch {
-    return null;
-  }
+	try {
+		return getUserStorage(userId, ACTIVE_ORG_KEY)
+	} catch {
+		return null
+	}
 }
 
-export function setActiveOrganizationSlug(
-  organizationSlug: string,
-  userId?: string | null
-): void {
-  if (typeof window === "undefined") {
-    return;
-  }
+export function setActiveOrganizationSlug(organizationSlug: string, userId?: string | null): void {
+	if (typeof window === "undefined") {
+		return
+	}
 
-  try {
-    setUserStorage(userId, ACTIVE_ORG_KEY, organizationSlug);
-  } catch {
-    // Ignore errors
-  }
+	try {
+		setUserStorage(userId, ACTIVE_ORG_KEY, organizationSlug)
+	} catch {
+		// Ignore errors
+	}
 }
 
 export function clearActiveOrganizationSlug(userId?: string | null): void {
-  if (typeof window === "undefined") {
-    return;
-  }
+	if (typeof window === "undefined") {
+		return
+	}
 
-  try {
-    removeUserStorage(userId, ACTIVE_ORG_KEY);
-  } catch {
-    // Ignore errors
-  }
+	try {
+		removeUserStorage(userId, ACTIVE_ORG_KEY)
+	} catch {
+		// Ignore errors
+	}
 }

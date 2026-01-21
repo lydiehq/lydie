@@ -1,344 +1,344 @@
 .embossedLogo {
-  position: absolute;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 240%;
-  pointer-events: none;
-  z-index: 2;
-  color: rgba(0, 0, 0, 0.2);
+	position: absolute;
+	top: 20%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 240%;
+	pointer-events: none;
+	z-index: 2;
+	color: rgba(0, 0, 0, 0.2);
 }
 
 @media (min-width: 768px) {
-  .embossedLogo {
-    width: 140%;
-  }
+	.embossedLogo {
+		width: 140%;
+	}
 }
 
 /* Animation keyframes for hero elements - bottom to top */
 @keyframes hero-fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-    filter: blur(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0px);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+		filter: blur(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+		filter: blur(0px);
+	}
 }
 
 @keyframes hero-image-fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0px);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+		filter: blur(2px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+		filter: blur(0px);
+	}
 }
 
 /* Apply animations to hero elements */
 /* Staggered word animations */
 .heroWord1 {
-  display: inline-block;
-  animation: hero-fade-in-up 0.8s ease-out 0.3s both;
+	display: inline-block;
+	animation: hero-fade-in-up 0.8s ease-out 0.3s both;
 }
 
 .heroWord2 {
-  display: inline-block;
-  animation: hero-fade-in-up 0.8s ease-out 0.42s both;
+	display: inline-block;
+	animation: hero-fade-in-up 0.8s ease-out 0.42s both;
 }
 
 .heroWord3 {
-  display: inline-block;
-  animation: hero-fade-in-up 0.8s ease-out 0.54s both;
+	display: inline-block;
+	animation: hero-fade-in-up 0.8s ease-out 0.54s both;
 }
 
 /* Staggered sentence animations */
 .heroSentence1 {
-  display: inline-block;
-  animation: hero-fade-in-up 0.8s ease-out 0.7s both;
+	display: inline-block;
+	animation: hero-fade-in-up 0.8s ease-out 0.7s both;
 }
 
 .heroSentence2 {
-  display: inline-block;
-  animation: hero-fade-in-up 0.8s ease-out 0.85s both;
+	display: inline-block;
+	animation: hero-fade-in-up 0.8s ease-out 0.85s both;
 }
 
 /* Staggered button animations */
 .heroButton1 {
-  animation: hero-fade-in-up 0.6s ease-out 1s both;
+	animation: hero-fade-in-up 0.6s ease-out 1s both;
 }
 
 .heroButton2 {
-  animation: hero-fade-in-up 0.6s ease-out 1.15s both;
+	animation: hero-fade-in-up 0.6s ease-out 1.15s both;
 }
 
 /* Badge comes in last */
 .heroBadge {
-  animation: hero-fade-in-up 0.6s ease-out 1.3s both;
+	animation: hero-fade-in-up 0.6s ease-out 1.3s both;
 }
 
 .heroImage {
-  animation: hero-image-fade-in-up 1s ease-out 0.8s both;
+	animation: hero-image-fade-in-up 1s ease-out 0.8s both;
 }
 
 /* Shimmer effect for screenshot container */
 .shimmerContainer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 14px;
-  overflow: hidden;
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	border-radius: 14px;
+	overflow: hidden;
 }
 
 .shimmerContainer::before {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 14px;
+	content: "";
+	position: absolute;
+	pointer-events: none;
+	z-index: 0;
+	border-radius: 14px;
 }
 
 .shimmerContainer::before {
-  top: -10%;
-  left: 0;
-  width: 40%;
-  height: 30%;
-  background: radial-gradient(
-    ellipse,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
-  );
-  filter: blur(20px);
-  animation: shimmer-sweep 8s ease-in-out infinite;
+	top: -10%;
+	left: 0;
+	width: 40%;
+	height: 30%;
+	background: radial-gradient(
+		ellipse,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0.15) 50%,
+		transparent 100%
+	);
+	filter: blur(20px);
+	animation: shimmer-sweep 8s ease-in-out infinite;
 }
 
 @keyframes shimmer-sweep {
-  0% {
-    transform: translateX(0);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translateX(calc(100% - 40%));
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 0.4;
-  }
+	0% {
+		transform: translateX(0);
+		opacity: 0.4;
+	}
+	50% {
+		transform: translateX(calc(100% - 40%));
+		opacity: 0.5;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 0.4;
+	}
 }
 
 /* Demo button shimmer and particles */
 .demoButtonContainer {
-  overflow: visible;
+	overflow: visible;
 }
 
 .demoGlow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  pointer-events: none;
-  background: rgba(34, 197, 94, 0.2);
-  animation: demo-glow 3s linear 0s infinite alternate;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	pointer-events: none;
+	background: rgba(34, 197, 94, 0.2);
+	animation: demo-glow 3s linear 0s infinite alternate;
 }
 
 .demoParticles {
-  position: absolute;
-  top: calc(50% - 25px);
-  left: calc(50% - 25px);
-  width: 50px;
-  height: 50px;
-  pointer-events: none;
+	position: absolute;
+	top: calc(50% - 25px);
+	left: calc(50% - 25px);
+	width: 50px;
+	height: 50px;
+	pointer-events: none;
 }
 
 .demoRotate {
-  position: absolute;
-  top: calc(50% - 5px);
-  left: calc(50% - 5px);
-  width: 10px;
-  height: 10px;
-  animation: demo-rotate 20s linear 0s infinite;
+	position: absolute;
+	top: calc(50% - 5px);
+	left: calc(50% - 5px);
+	width: 10px;
+	height: 10px;
+	animation: demo-rotate 20s linear 0s infinite;
 }
 
 .demoAngle {
-  position: absolute;
-  top: 0;
-  left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 .demoSize {
-  position: absolute;
-  top: 0;
-  left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 .demoPosition {
-  position: absolute;
-  top: 0;
-  left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 .demoParticle {
-  position: absolute;
-  top: calc(50% - 2.5px);
-  left: calc(50% - 2.5px);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(34, 197, 94, 0.8);
-  animation: demo-particle-glow 6s linear infinite alternate;
+	position: absolute;
+	top: calc(50% - 2.5px);
+	left: calc(50% - 2.5px);
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: rgba(34, 197, 94, 0.8);
+	animation: demo-particle-glow 6s linear infinite alternate;
 }
 
 @keyframes demo-glow {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-    box-shadow:
-      0 0 30px 10px rgba(34, 197, 94, 0.5),
-      15px 10px 30px 5px rgba(74, 222, 128, 0.4),
-      -5px -15px 20px 3px rgba(134, 239, 172, 0.3);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(5deg);
-    box-shadow:
-      0 0 50px 15px rgba(34, 197, 94, 0.7),
-      25px 15px 40px 8px rgba(74, 222, 128, 0.5),
-      -20px -20px 30px 5px rgba(134, 239, 172, 0.4);
-  }
+	0% {
+		transform: translate(-50%, -50%) rotate(0deg);
+		box-shadow:
+			0 0 30px 10px rgba(34, 197, 94, 0.5),
+			15px 10px 30px 5px rgba(74, 222, 128, 0.4),
+			-5px -15px 20px 3px rgba(134, 239, 172, 0.3);
+	}
+	100% {
+		transform: translate(-50%, -50%) rotate(5deg);
+		box-shadow:
+			0 0 50px 15px rgba(34, 197, 94, 0.7),
+			25px 15px 40px 8px rgba(74, 222, 128, 0.5),
+			-20px -20px 30px 5px rgba(134, 239, 172, 0.4);
+	}
 }
 
 @keyframes demo-rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 @keyframes demo-angle {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 @keyframes demo-size {
-  0% {
-    transform: scale(0.2);
-  }
-  100% {
-    transform: scale(0.6);
-  }
+	0% {
+		transform: scale(0.2);
+	}
+	100% {
+		transform: scale(0.6);
+	}
 }
 
 @keyframes demo-position {
-  0% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate3d(0, -60px, 0);
-    opacity: 0;
-  }
+	0% {
+		transform: translate3d(0, 0, 0);
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.8;
+	}
+	100% {
+		transform: translate3d(0, -60px, 0);
+		opacity: 0;
+	}
 }
 
 @keyframes demo-particle-glow {
-  0% {
-    box-shadow:
-      inset 0 0 10px 10px rgba(34, 197, 94, 0.7),
-      0 0 30px 5px rgba(34, 197, 94, 0.5),
-      inset 0 0 40px 40px rgba(74, 222, 128, 0.6);
-    background: rgba(34, 197, 94, 0.8);
-  }
-  33.33% {
-    box-shadow:
-      inset 0 0 10px 10px rgba(34, 197, 94, 0.7),
-      0 0 80px 5px rgba(34, 197, 94, 0.6),
-      inset 0 0 30px 30px rgba(74, 222, 128, 0.7);
-    background: rgba(34, 197, 94, 0.8);
-  }
-  33.34% {
-    box-shadow:
-      inset 0 0 10px 10px rgba(74, 222, 128, 0.7),
-      0 0 30px 5px rgba(74, 222, 128, 0.5),
-      inset 0 0 40px 40px rgba(134, 239, 172, 0.6);
-    background: rgba(74, 222, 128, 0.8);
-  }
-  66.66% {
-    box-shadow:
-      inset 0 0 10px 10px rgba(74, 222, 128, 0.7),
-      0 0 80px 5px rgba(74, 222, 128, 0.6),
-      inset 0 0 30px 30px rgba(134, 239, 172, 0.7);
-    background: rgba(74, 222, 128, 0.8);
-  }
-  66.67% {
-    box-shadow:
-      inset 0 0 10px 10px rgba(134, 239, 172, 0.7),
-      0 0 30px 5px rgba(134, 239, 172, 0.5),
-      inset 0 0 40px 40px rgba(187, 247, 208, 0.6);
-    background: rgba(134, 239, 172, 0.8);
-  }
-  100% {
-    box-shadow:
-      inset 0 0 10px 10px rgba(134, 239, 172, 0.7),
-      0 0 80px 5px rgba(134, 239, 172, 0.6),
-      inset 0 0 30px 30px rgba(187, 247, 208, 0.7);
-    background: rgba(134, 239, 172, 0.8);
-  }
+	0% {
+		box-shadow:
+			inset 0 0 10px 10px rgba(34, 197, 94, 0.7),
+			0 0 30px 5px rgba(34, 197, 94, 0.5),
+			inset 0 0 40px 40px rgba(74, 222, 128, 0.6);
+		background: rgba(34, 197, 94, 0.8);
+	}
+	33.33% {
+		box-shadow:
+			inset 0 0 10px 10px rgba(34, 197, 94, 0.7),
+			0 0 80px 5px rgba(34, 197, 94, 0.6),
+			inset 0 0 30px 30px rgba(74, 222, 128, 0.7);
+		background: rgba(34, 197, 94, 0.8);
+	}
+	33.34% {
+		box-shadow:
+			inset 0 0 10px 10px rgba(74, 222, 128, 0.7),
+			0 0 30px 5px rgba(74, 222, 128, 0.5),
+			inset 0 0 40px 40px rgba(134, 239, 172, 0.6);
+		background: rgba(74, 222, 128, 0.8);
+	}
+	66.66% {
+		box-shadow:
+			inset 0 0 10px 10px rgba(74, 222, 128, 0.7),
+			0 0 80px 5px rgba(74, 222, 128, 0.6),
+			inset 0 0 30px 30px rgba(134, 239, 172, 0.7);
+		background: rgba(74, 222, 128, 0.8);
+	}
+	66.67% {
+		box-shadow:
+			inset 0 0 10px 10px rgba(134, 239, 172, 0.7),
+			0 0 30px 5px rgba(134, 239, 172, 0.5),
+			inset 0 0 40px 40px rgba(187, 247, 208, 0.6);
+		background: rgba(134, 239, 172, 0.8);
+	}
+	100% {
+		box-shadow:
+			inset 0 0 10px 10px rgba(134, 239, 172, 0.7),
+			0 0 80px 5px rgba(134, 239, 172, 0.6),
+			inset 0 0 30px 30px rgba(187, 247, 208, 0.7);
+		background: rgba(134, 239, 172, 0.8);
+	}
 }
 
 .demoRotate .demoAngle:nth-child(1) {
-  animation: demo-angle 10s steps(5) 0s infinite;
+	animation: demo-angle 10s steps(5) 0s infinite;
 }
 .demoRotate .demoAngle:nth-child(1) .demoSize {
-  animation: demo-size 10s steps(5) 0s infinite;
+	animation: demo-size 10s steps(5) 0s infinite;
 }
 .demoRotate .demoAngle:nth-child(1) .demoParticle {
-  animation: demo-particle-glow 6s linear infinite alternate;
+	animation: demo-particle-glow 6s linear infinite alternate;
 }
 .demoRotate .demoAngle:nth-child(1) .demoPosition {
-  animation: demo-position 2s linear 0s infinite;
+	animation: demo-position 2s linear 0s infinite;
 }
 
 .demoRotate .demoAngle:nth-child(2) {
-  animation: demo-angle 4.95s steps(3) -1.65s infinite;
+	animation: demo-angle 4.95s steps(3) -1.65s infinite;
 }
 .demoRotate .demoAngle:nth-child(2) .demoSize {
-  animation: demo-size 4.95s steps(3) -1.65s infinite alternate;
+	animation: demo-size 4.95s steps(3) -1.65s infinite alternate;
 }
 .demoRotate .demoAngle:nth-child(2) .demoParticle {
-  animation: demo-particle-glow 4.95s linear -3.3s infinite alternate;
+	animation: demo-particle-glow 4.95s linear -3.3s infinite alternate;
 }
 .demoRotate .demoAngle:nth-child(2) .demoPosition {
-  animation: demo-position 1.65s linear 0s infinite;
+	animation: demo-position 1.65s linear 0s infinite;
 }
 
 .demoRotate .demoAngle:nth-child(3) {
-  animation: demo-angle 13.76s steps(8) -6.88s infinite;
+	animation: demo-angle 13.76s steps(8) -6.88s infinite;
 }
 .demoRotate .demoAngle:nth-child(3) .demoSize {
-  animation: demo-size 6.88s steps(4) -5.16s infinite alternate;
+	animation: demo-size 6.88s steps(4) -5.16s infinite alternate;
 }
 .demoRotate .demoAngle:nth-child(3) .demoParticle {
-  animation: demo-particle-glow 5.16s linear -1.72s infinite alternate;
+	animation: demo-particle-glow 5.16s linear -1.72s infinite alternate;
 }
 .demoRotate .demoAngle:nth-child(3) .demoPosition {
-  animation: demo-position 1.72s linear 0s infinite;
+	animation: demo-position 1.72s linear 0s infinite;
 }

@@ -12,68 +12,67 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-surface: #fcfcfc;
-  --font-sans: Inter Variable, sans-serif;
-  --text-sm: 0.8125rem;
-  --shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1),
-    0 0 1.5px 0 rgba(0, 0, 0, 0.2);
+	--color-surface: #fcfcfc;
+	--font-sans: Inter Variable, sans-serif;
+	--text-sm: 0.8125rem;
+	--shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1), 0 0 1.5px 0 rgba(0, 0, 0, 0.2);
 
-  /* Use neutral gray colors as default gray */
-  --color-gray-50: oklch(98.5% 0 0);
-  --color-gray-100: oklch(97% 0 0);
-  --color-gray-200: oklch(92.2% 0 0);
-  --color-gray-300: oklch(87% 0 0);
-  --color-gray-400: oklch(70.8% 0 0);
-  --color-gray-500: oklch(55.6% 0 0);
-  --color-gray-600: oklch(43.9% 0 0);
-  --color-gray-700: oklch(37.1% 0 0);
-  --color-gray-800: oklch(26.9% 0 0);
-  --color-gray-900: oklch(20.5% 0 0);
-  --color-gray-950: oklch(14.5% 0 0);
+	/* Use neutral gray colors as default gray */
+	--color-gray-50: oklch(98.5% 0 0);
+	--color-gray-100: oklch(97% 0 0);
+	--color-gray-200: oklch(92.2% 0 0);
+	--color-gray-300: oklch(87% 0 0);
+	--color-gray-400: oklch(70.8% 0 0);
+	--color-gray-500: oklch(55.6% 0 0);
+	--color-gray-600: oklch(43.9% 0 0);
+	--color-gray-700: oklch(37.1% 0 0);
+	--color-gray-800: oklch(26.9% 0 0);
+	--color-gray-900: oklch(20.5% 0 0);
+	--color-gray-950: oklch(14.5% 0 0);
 
-  --animate-float-up-down: float-up-down 2s ease-in-out infinite;
+	--animate-float-up-down: float-up-down 2s ease-in-out infinite;
 }
 
 @keyframes float-up-down {
-  0% {
-    transform: translateY(0px);
-  }
-  30% {
-    transform: translateY(-3px);
-  }
-  60% {
-    transform: translateY(0px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+	0% {
+		transform: translateY(0px);
+	}
+	30% {
+		transform: translateY(-3px);
+	}
+	60% {
+		transform: translateY(0px);
+	}
+	100% {
+		transform: translateY(0px);
+	}
 }
 
 body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+	font-variant-numeric: tabular-nums;
 }
 
 /* TipTap Placeholder extension styling */
 .ProseMirror p.is-empty::before,
 .ProseMirror h1.is-empty::before {
-  color: #adb5bd;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-  font-size: var(--font-size-sm);
+	color: #adb5bd;
+	content: attr(data-placeholder);
+	float: left;
+	height: 0;
+	pointer-events: none;
+	font-size: var(--font-size-sm);
 }
 
 .react-aria-DropIndicator {
-  &[data-drop-target] {
-    outline: 1px solid var(--color-blue-500);
-  }
+	&[data-drop-target] {
+		outline: 1px solid var(--color-blue-500);
+	}
 
-  @supports not selector(:has(.foo)) {
-    /* Undo gap in browsers that don't support :has */
-    margin-bottom: -2px;
-  }
+	@supports not selector(:has(.foo)) {
+		/* Undo gap in browsers that don't support :has */
+		margin-bottom: -2px;
+	}
 }

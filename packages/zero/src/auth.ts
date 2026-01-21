@@ -1,26 +1,24 @@
-import type { Session } from "better-auth";
+import type { Session } from "better-auth"
 
 export type Context = Session & {
-  organizations?: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    [key: string]: any;
-  }>;
-};
-
-declare module "@rocicorp/zero" {
-  interface DefaultTypes {
-    context: Context;
-  }
+	organizations?: Array<{
+		id: string
+		name: string
+		slug: string
+		[key: string]: any
+	}>
 }
 
-export function isAuthenticated(
-  session: Context | undefined
-): asserts session is Context {
-  if (!session || !session.userId) {
-    throw new Error("Session expired");
-  }
+declare module "@rocicorp/zero" {
+	interface DefaultTypes {
+		context: Context
+	}
+}
+
+export function isAuthenticated(session: Context | undefined): asserts session is Context {
+	if (!session || !session.userId) {
+		throw new Error("Session expired")
+	}
 }
 
 /**
@@ -29,24 +27,20 @@ export function isAuthenticated(
  * to avoid additional database lookups for performance
  */
 export function hasOrganizationAccess(
-  session: Context | undefined,
-  organizationId: string
+	session: Context | undefined,
+	organizationId: string,
 ): asserts session is Context & { userId: string } {
-  isAuthenticated(session);
+	isAuthenticated(session)
 
-  if (!session.organizations || session.organizations.length === 0) {
-    throw new Error("No organization access");
-  }
+	if (!session.organizations || session.organizations.length === 0) {
+		throw new Error("No organization access")
+	}
 
-  const hasAccess = session.organizations.some(
-    (org) => org.id === organizationId
-  );
+	const hasAccess = session.organizations.some((org) => org.id === organizationId)
 
-  if (!hasAccess) {
-    throw new Error(
-      `Access denied: You do not have permission to access this workspace`
-    );
-  }
+	if (!hasAccess) {
+		throw new Error(`Access denied: You do not have permission to access this workspace`)
+	}
 }
 
 /**
@@ -55,24 +49,20 @@ export function hasOrganizationAccess(
  * to avoid additional database lookups for performance
  */
 export function hasOrganizationAccessBySlug(
-  session: Context | undefined,
-  organizationSlug: string
+	session: Context | undefined,
+	organizationSlug: string,
 ): asserts session is Context & { userId: string } {
-  isAuthenticated(session);
+	isAuthenticated(session)
 
-  if (!session.organizations || session.organizations.length === 0) {
-    throw new Error("No workspace access");
-  }
+	if (!session.organizations || session.organizations.length === 0) {
+		throw new Error("No workspace access")
+	}
 
-  const hasAccess = session.organizations.some(
-    (org) => org.slug === organizationSlug
-  );
+	const hasAccess = session.organizations.some((org) => org.slug === organizationSlug)
 
-  if (!hasAccess) {
-    throw new Error(
-      `Access denied: You do not have permission to access this workspace`
-    );
-  }
+	if (!hasAccess) {
+		throw new Error(`Access denied: You do not have permission to access this workspace`)
+	}
 }
 
 /**
@@ -80,9 +70,9 @@ export function hasOrganizationAccessBySlug(
  * Useful for inline checks where you need both values
  */
 export function requireOrganizationAccess(
-  session: Context | undefined,
-  organizationId: string
+	session: Context | undefined,
+	organizationId: string,
 ): { userId: string; organizationId: string } {
-  hasOrganizationAccess(session, organizationId);
-  return { userId: session.userId, organizationId };
+	hasOrganizationAccess(session, organizationId)
+	return { userId: session.userId, organizationId }
 }
