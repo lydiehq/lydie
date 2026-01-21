@@ -95,12 +95,6 @@ async function pushToIntegration(documentId: string, integrationLinkId: string |
       `[Push] Pushing document ${documentId} to ${link.connection.integrationType} link: ${link.name}`,
     )
 
-    // Use Yjs as source of truth
-    if (!document.yjsState) {
-      console.error(`[Push] Document ${documentId} has no content (yjsState is missing)`)
-      return
-    }
-
     const jsonContent = convertYjsToJson(document.yjsState)
 
     // Call integration's push method

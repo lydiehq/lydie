@@ -56,15 +56,6 @@ Use this tool BEFORE making any edits with replaceInDocument to understand what 
       // Add fake delay to see loading state (remove in production)
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Use Yjs as source of truth
-      if (!document.yjsState) {
-        yield {
-          state: "error",
-          error: "Document has no content (yjsState is missing)",
-        }
-        return
-      }
-
       const jsonContent = convertYjsToJson(document.yjsState)
 
       // Convert jsonContent to HTML using our custom renderer

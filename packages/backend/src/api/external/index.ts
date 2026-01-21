@@ -74,18 +74,7 @@ export const ExternalApi = new Hono()
       fullPath: `/${slug}`,
     }
 
-    if (!document.yjsState) {
-      throw new HTTPException(404, {
-        message: "Document has no content",
-      })
-    }
-
     const json = convertYjsToJson(document.yjsState)
-    if (!json) {
-      throw new HTTPException(500, {
-        message: "Failed to convert document content",
-      })
-    }
 
     const transformedContent = await transformDocumentLinksToInternalLinkMarks(json, organizationId)
 
