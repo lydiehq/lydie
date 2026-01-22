@@ -49,11 +49,14 @@ export function UserMessage({
             return null
           })}
         </div>
-        {message.metadata?.createdAt && (
-          <span className="text-xs text-gray-400 mt-1">
-            {format(new Date(message.metadata.createdAt), "HH:mm")}
-          </span>
-        )}
+        <div className="flex flex-col items-end gap-y-1 mt-1">
+          <MessageContext message={message} align="right" />
+          {message.metadata?.createdAt && (
+            <span className="text-xs text-gray-400">
+              {format(new Date(message.metadata.createdAt), "HH:mm")}
+            </span>
+          )}
+        </div>
       </div>
     </motion.div>
   )
@@ -99,8 +102,15 @@ export function AssistantMessage({
             return null
           })}
         </div>
-        {shouldShowMetadata && message.metadata?.createdAt && (
-          <span className="text-xs text-gray-400">{/* {format(new Date(message.metadata), "HH:mm")} */}</span>
+        {shouldShowMetadata && (
+          <div className="flex flex-col gap-y-1">
+            <MessageContext message={message} align="left" />
+            {message.metadata?.createdAt && (
+              <span className="text-xs text-gray-400">
+                {format(new Date(message.metadata.createdAt), "HH:mm")}
+              </span>
+            )}
+          </div>
         )}
       </div>
     </motion.div>
@@ -167,5 +177,81 @@ function DocumentReferencePill({ documentId }: { documentId: string }) {
     >
       <span className="max-w-[150px] truncate text-[0.875rem] relative">@{title}</span>
     </Link>
+  )
+}
+
+/**
+ * Displays context documents used for a message as a list
+ */
+function MessageContext({
+  message,
+  align = "left",
+}: {
+  message: DocumentChatAgentUIMessage
+  align?: "left" | "right"
+}) {
+  const { organization } = useOrganization()
+  const metadata = message.metadata as any
+
+  // Get context documents from metadata
+  const contextDocuments = metadata?.contextDocuments || []
+  const currentDocument = metadata?.currentDocument
+
+  // Combine current document and context documents, removing duplicates
+  const allContextDocs = useMemo(() => {
+    const docs: Array<{ id: string; title: string }> = []
+    const seenIds = new Set<string>()
+
+    if (currentDocument && !seenIds.has(currentDocument.id)) {
+      docs.push(currentDocument)
+      seenIds.add(currentDocument.id)
+    }
+
+    for (const doc of contextDocuments) {
+      if (!seenIds.has(doc.id)) {
+        docs.push(doc)
+        seenIds.add(doc.id)
+      }
+    }
+
+    return docs
+  }, [currentDocument, contextDocuments])
+
+  if (allContextDocs.length === 0) {
+    return null
+  }
+
+  return (
+    <div
+      className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}
+    >
+      <div className="text-[10px] text-gray-500 font-medium mb-0.5">Context documents:</div>
+      <ul className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}>
+        {allContextDocs.map((doc) => (
+          <li key={doc.id}>
+            <Link
+              to={`/w/${organization.id}/${doc.id}`}
+              className="inline-flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 hover:underline transition-colors"
+              title={`Open document: ${doc.title}`}
+            >
+              <svg
+                className="size-3 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="max-w-[200px] truncate">{doc.title}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }

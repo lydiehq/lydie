@@ -76,7 +76,7 @@ export function CreateDocumentTool({ tool }: Props) {
         />
         <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
           <div className="p-2">
-            <StickToBottom className="text-xs text-gray-600 h-56 overflow-y-auto" initial="instant">
+            <StickToBottom className="text-xs text-gray-600 h-56 overflow-y-auto" initial={{ damping: 1, stiffness: 1 }}>
               <StickToBottom.Content>
                 <div className="editor-content-sm" dangerouslySetInnerHTML={{ __html: fullContent }} />
               </StickToBottom.Content>
