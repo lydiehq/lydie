@@ -6,16 +6,15 @@ import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
 import { useZero } from "@/services/zero"
 import { toast } from "sonner"
-import { RadioGroup, Radio } from "@/components/generic/RadioGroup"
 import { useOrganization } from "@/context/organization.context"
-import { PROMPT_STYLES } from "@lydie/core/prompts"
-import { useMemo, useState, useEffect } from "react"
-import { TextArea } from "react-aria-components"
+import { useMemo, useState } from "react"
+import { TextArea, Input } from "react-aria-components"
 import { Button } from "@/components/generic/Button"
 import { Label } from "@/components/generic/Field"
 import { Link } from "@/components/generic/Link"
 import { mutators } from "@lydie/zero/mutators"
 import { Card } from "@/components/layout/Card"
+import { DeleteRegular, EditRegular } from "@fluentui/react-icons"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")({
   component: RouteComponent,
@@ -24,82 +23,103 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")(
 function RouteComponent() {
   const { organization } = useOrganization()
   const z = useZero()
-  const [customPromptInput, setCustomPromptInput] = useState("")
 
-  const [userSettings] = useQuery(queries.settings.user({}))
+  const [agents] = useQuery(queries.agents.byUser({ organizationId: organization.id }))
+  const [isCreating, setIsCreating] = useState(false)
+  const [editingAgentId, setEditingAgentId] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    systemPrompt: "",
+  })
 
   const isPro = useMemo(() => {
     if (!organization) return false
     return organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active"
   }, [organization])
 
-  const currentStyle = userSettings?.ai_prompt_style || "default"
-  const hasCustomPrompt = !!userSettings?.custom_prompt
-
-  // Initialize custom prompt input when settings load
-  useEffect(() => {
-    if (userSettings?.custom_prompt && customPromptInput === "") {
-      setCustomPromptInput(userSettings.custom_prompt)
+  const handleCreateAgent = async () => {
+    if (!formData.name.trim() || !formData.systemPrompt.trim()) {
+      toast.error("Name and system prompt are required")
+      return
     }
-  }, [userSettings?.custom_prompt, customPromptInput])
 
-  const handleStyleChange = async (value: string) => {
     try {
-      z.mutate(
-        mutators.userSettings.update({
-          aiPromptStyle: value,
-          customPrompt: null,
+      await z.mutate(
+        mutators.agents.create({
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          systemPrompt: formData.systemPrompt.trim(),
+          organizationId: organization.id,
         }),
       )
-      setCustomPromptInput("")
-      toast.success("AI writing style updated")
-    } catch (error) {
-      toast.error("Failed to update AI writing style")
-      console.error("Settings update error:", error)
+      toast.success("Agent created successfully")
+      setIsCreating(false)
+      setFormData({ name: "", description: "", systemPrompt: "" })
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create agent")
+      console.error("Agent creation error:", error)
     }
   }
 
-  const handleUseCustomPrompt = () => {
+  const handleUpdateAgent = async (agentId: string) => {
+    if (!formData.name.trim() || !formData.systemPrompt.trim()) {
+      toast.error("Name and system prompt are required")
+      return
+    }
+
     try {
-      z.mutate(
-        mutators.userSettings.update({
-          aiPromptStyle: "default", // Reset to default when using custom
-          customPrompt: customPromptInput.trim() || null,
+      await z.mutate(
+        mutators.agents.update({
+          agentId,
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          systemPrompt: formData.systemPrompt.trim(),
+          organizationId: organization.id,
         }),
       )
-      toast.success("Using custom prompt")
-    } catch (error) {
-      toast.error("Failed to use custom prompt")
-      console.error("Settings update error:", error)
+      toast.success("Agent updated successfully")
+      setEditingAgentId(null)
+      setFormData({ name: "", description: "", systemPrompt: "" })
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update agent")
+      console.error("Agent update error:", error)
     }
   }
 
-  const handleClearCustomPrompt = async () => {
+  const handleDeleteAgent = async (agentId: string) => {
+    if (!confirm("Are you sure you want to delete this agent?")) {
+      return
+    }
+
     try {
-      z.mutate(
-        mutators.userSettings.update({
-          customPrompt: null,
+      await z.mutate(
+        mutators.agents.delete({
+          agentId,
+          organizationId: organization.id,
         }),
       )
-      setCustomPromptInput("")
-      toast.success("Custom prompt cleared")
-    } catch (error) {
-      toast.error("Failed to clear custom prompt")
-      console.error("Settings update error:", error)
+      toast.success("Agent deleted successfully")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete agent")
+      console.error("Agent deletion error:", error)
     }
   }
 
-  // Handle loading state - userSettings will be undefined while loading
-  if (userSettings === undefined) {
-    return (
-      <div className="flex flex-col gap-y-6">
-        <div>
-          <Heading level={1}>AI Settings</Heading>
-        </div>
-        <Separator />
-        <div className="text-sm text-gray-500">Loading settings...</div>
-      </div>
-    )
+  const handleStartEdit = (agent: any) => {
+    setEditingAgentId(agent.id)
+    setFormData({
+      name: agent.name,
+      description: agent.description || "",
+      systemPrompt: agent.system_prompt,
+    })
+    setIsCreating(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingAgentId(null)
+    setIsCreating(false)
+    setFormData({ name: "", description: "", systemPrompt: "" })
   }
 
   return (
@@ -109,94 +129,176 @@ function RouteComponent() {
       </div>
       <Separator />
 
-      {/* AI Writing Style Section */}
+      {/* Custom Agents Section */}
       <div className="flex flex-col gap-y-6">
         <SectionHeader
-          heading="Writing Style"
-          description="Choose the writing style that the AI will use when helping you with your documents."
+          heading="Custom Agents"
+          description="Create custom AI agents with specific personalities and writing styles for different tasks. All users can use the default agents (Default, SEO Writer, Essay Writer, Work Assistant)."
           descriptionClassName="text-sm/relaxed text-gray-700"
         />
 
-        <Card className="p-6 space-y-4">
-          <RadioGroup
-            label="AI Writing Style"
-            value={currentStyle}
-            onChange={handleStyleChange}
-            orientation="vertical"
-          >
-            {PROMPT_STYLES.map((style) => (
-              <Radio key={style.value} value={style.value}>
-                <div className="flex flex-col gap-y-2 w-full">
-                  <div className="flex flex-col gap-y-0.5">
-                    <span className="font-medium">{style.label}</span>
-                    <span className="text-xs text-gray-500">{style.description}</span>
-                  </div>
-                  <div className="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <p className="text-xs text-gray-600 leading-relaxed">{style.prompt}</p>
-                  </div>
+        {isPro ? (
+          <>
+            {/* List of custom agents */}
+            {agents && agents.length > 0 && (
+              <Card className="p-6 space-y-4">
+                <h3 className="text-sm font-medium text-gray-900">Your Custom Agents</h3>
+                <div className="space-y-3">
+                  {agents.map((agent) => (
+                    <div
+                      key={agent.id}
+                      className="p-4 border border-gray-200 rounded-lg space-y-2"
+                    >
+                      {editingAgentId === agent.id ? (
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-sm font-medium">Name</Label>
+                            <Input
+                              value={formData.name}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setFormData({ ...formData, name: e.target.value })
+                              }
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">Description</Label>
+                            <Input
+                              value={formData.description}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setFormData({ ...formData, description: e.target.value })
+                              }
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">System Prompt</Label>
+                            <TextArea
+                              value={formData.systemPrompt}
+                              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                                setFormData({ ...formData, systemPrompt: e.target.value })
+                              }
+                              rows={4}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 resize-y"
+                            />
+                          </div>
+                          <div className="flex gap-x-2">
+                            <Button size="sm" onPress={() => handleUpdateAgent(agent.id)}>
+                              Save
+                            </Button>
+                            <Button size="sm" intent="secondary" onPress={handleCancelEdit}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-medium text-sm">{agent.name}</h4>
+                              {agent.description && (
+                                <p className="text-xs text-gray-600 mt-1">{agent.description}</p>
+                              )}
+                            </div>
+                            <div className="flex gap-x-1">
+                              <Button
+                                size="sm"
+                                intent="ghost"
+                                onPress={() => handleStartEdit(agent)}
+                                aria-label="Edit agent"
+                              >
+                                <EditRegular className="size-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                intent="ghost"
+                                onPress={() => handleDeleteAgent(agent.id)}
+                                aria-label="Delete agent"
+                              >
+                                <DeleteRegular className="size-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                            <p className="text-xs text-gray-600 leading-relaxed">{agent.system_prompt}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              </Radio>
-            ))}
-          </RadioGroup>
-        </Card>
+              </Card>
+            )}
 
-        {/* Custom Prompt Section (PRO only) */}
-        {isPro && (
-          <div className="flex flex-col gap-y-6">
-            <SectionHeader
-              heading="Custom Prompt"
-              description="Create your own custom AI personality. This will override the selected writing style above."
-              descriptionClassName="text-sm/relaxed text-gray-700"
-            />
-
-            <Card className="p-6 space-y-4">
-              {hasCustomPrompt && (
-                <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
-                  <p className="text-xs text-blue-800 font-medium mb-1">Using custom prompt</p>
-                  <p className="text-xs text-blue-700 leading-relaxed">{userSettings.custom_prompt}</p>
+            {/* Create new agent form */}
+            {isCreating ? (
+              <Card className="p-6 space-y-4">
+                <h3 className="text-sm font-medium text-gray-900">Create New Agent</h3>
+                <div>
+                  <Label className="text-sm font-medium">Name</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="e.g., Technical Writer"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
                 </div>
-              )}
-
-              <div className="flex flex-col gap-y-2">
-                <Label className="text-sm font-medium text-gray-900">Custom AI Personality</Label>
-                <TextArea
-                  value={customPromptInput}
-                  onChange={(e) => setCustomPromptInput(e.target.value)}
-                  placeholder="You are a..."
-                  rows={6}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-y"
-                />
-                <p className="text-xs text-gray-500">
-                  Describe how you want the AI to behave and write. This will replace the standard writing
-                  style prompts.
-                </p>
-              </div>
-
-              <div className="flex gap-x-2">
-                <Button size="sm" onPress={handleUseCustomPrompt} isDisabled={!customPromptInput.trim()}>
-                  {hasCustomPrompt ? "Update Custom Prompt" : "Use Custom Prompt"}
-                </Button>
-                {hasCustomPrompt && (
-                  <Button size="sm" intent="secondary" onPress={handleClearCustomPrompt}>
-                    Clear Custom Prompt
+                <div>
+                  <Label className="text-sm font-medium">Description (optional)</Label>
+                  <Input
+                    value={formData.description}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    placeholder="Brief description of this agent's purpose"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">System Prompt</Label>
+                  <TextArea
+                    value={formData.systemPrompt}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setFormData({ ...formData, systemPrompt: e.target.value })
+                    }
+                    placeholder="You are a..."
+                    rows={6}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 resize-y"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Define how this agent should behave and write. Be specific about tone, style, and approach.
+                  </p>
+                </div>
+                <div className="flex gap-x-2">
+                  <Button size="sm" onPress={handleCreateAgent}>
+                    Create Agent
                   </Button>
-                )}
+                  <Button size="sm" intent="secondary" onPress={handleCancelEdit}>
+                    Cancel
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <div>
+                <Button size="sm" onPress={() => setIsCreating(true)}>
+                  Create New Agent
+                </Button>
               </div>
-            </Card>
-          </div>
-        )}
-
-        {/* PRO Upgrade Prompt */}
-        {!isPro && (
+            )}
+          </>
+        ) : (
           <Card className="p-6">
             <div className="flex flex-col gap-y-3">
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-1">Unlock Custom Prompts</h3>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">Unlock Custom Agents</h3>
                 <p className="text-xs text-gray-600">
-                  Upgrade to Pro to create custom AI personalities tailored to your specific writing needs.
+                  Upgrade to Pro to create unlimited custom AI agents tailored to your specific needs. Premium users
+                  can create agents for any writing task, from technical documentation to creative content.
                 </p>
               </div>
-              <Link to="/w/$organizationSlug/settings/billing" params={{ organizationId: organization.id }}>
+              <Link to="/w/$organizationSlug/settings/billing" params={{ organizationSlug: organization.slug }}>
                 <Button size="sm">Upgrade to Pro</Button>
               </Link>
             </div>

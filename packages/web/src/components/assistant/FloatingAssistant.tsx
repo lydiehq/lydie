@@ -25,6 +25,7 @@ import { Tooltip } from "@/components/generic/Tooltip"
 import { AssistantInput } from "@/components/assistant/AssistantInput"
 
 const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id"
+const FLOATING_ASSISTANT_AGENT_KEY = "floating-assistant-agent-id"
 
 export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: string | null }) {
   const { isOpen, close, toggle, isDocked, dock, undock } = useFloatingAssistant()
@@ -38,6 +39,16 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       }
     }
     return createId()
+  })
+
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(FLOATING_ASSISTANT_AGENT_KEY)
+      if (saved) {
+        return saved
+      }
+    }
+    return null
   })
 
   const [currentConversation] = useQuery(
@@ -80,6 +91,16 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       localStorage.setItem(FLOATING_ASSISTANT_CONVERSATION_KEY, conversationId)
     }
   }, [conversationId])
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && selectedAgentId) {
+      localStorage.setItem(FLOATING_ASSISTANT_AGENT_KEY, selectedAgentId)
+    }
+  }, [selectedAgentId])
+
+  const handleSelectAgent = useCallback((agentId: string) => {
+    setSelectedAgentId(agentId)
+  }, [])
 
   const handleNewChat = useCallback(() => {
     const newId = createId()
@@ -159,10 +180,12 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       }
     >
       <div className="flex items-center justify-between p-1.5 border-b border-gray-200">
-        <ConversationDropdown
-          conversationId={conversationId}
-          onSelectConversation={handleSelectConversation}
-        />
+        <div className="flex items-center gap-x-2">
+          <ConversationDropdown
+            conversationId={conversationId}
+            onSelectConversation={handleSelectConversation}
+          />
+        </div>
         <div className="flex items-center gap-x-0.5">
           {headerButtons.map((button) => {
             const Icon = button.icon
@@ -189,6 +212,8 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
           sendMessage={sendMessage}
           stop={stop}
           status={status}
+          selectedAgentId={selectedAgentId}
+          onSelectAgent={handleSelectAgent}
         />
       </div>
     </motion.div>
@@ -204,13 +229,17 @@ function FloatingAssistantChatContent({
   sendMessage,
   stop,
   status,
+  selectedAgentId,
+  onSelectAgent,
 }: {
   organizationId: string
   currentDocumentId: string | null
   messages: any[]
-  sendMessage: (options: { text: string; metadata?: any }) => void
+  sendMessage: (options: { text: string; metadata?: any; agentId?: string | null }) => void
   stop: () => void
   status: string
+  selectedAgentId: string | null
+  onSelectAgent: (agentId: string) => void
 }) {
   const { _pendingMessage, _clearPendingMessage } = useFloatingAssistant() as any
   const [pendingContent, setPendingContent] = useState<string | undefined>(undefined)
@@ -231,10 +260,11 @@ function FloatingAssistantChatContent({
           contextDocumentIds,
           currentDocumentId: currentDocumentId || undefined,
         },
+        agentId: selectedAgentId,
       })
       setPendingContent(undefined)
     },
-    [sendMessage, currentDocumentId],
+    [sendMessage, currentDocumentId, selectedAgentId],
   )
 
   const canStop = status === "submitted" || status === "streaming"
@@ -282,9 +312,10 @@ function FloatingAssistantChatContent({
           contextDocumentIds: currentDocumentId ? [currentDocumentId] : [],
           currentDocumentId: currentDocumentId || undefined,
         },
+        agentId: selectedAgentId,
       })
     },
-    [sendMessage, currentDocumentId],
+    [sendMessage, currentDocumentId, selectedAgentId],
   )
 
   const isChatEmpty = messages.length === 0
@@ -327,6 +358,8 @@ function FloatingAssistantChatContent({
           variant="flat"
           editorClassName="focus:outline-none min-h-[80px] max-h-[200px] overflow-y-auto text-sm text-gray-700"
           content={pendingContent}
+          selectedAgentId={selectedAgentId}
+          onSelectAgent={onSelectAgent}
         />
       </div>
     </div>

@@ -1,6 +1,3 @@
-import type { PromptStyle } from "@lydie/core/prompts"
-import { getPromptStyleText } from "@lydie/core/prompts"
-
 const assistantBasePrompt = `
 You are a helpful assistant for a writing workspace. Help users find, create, understand, and work with their documents and content.
 
@@ -83,19 +80,8 @@ Document-wide changes, positional edits: **Read document first** → replaceInDo
 - Don't relay or explain what you've suggested—the tool call already shows the changes
 `
 
-export function buildAssistantSystemPrompt(
-  promptStyle?: PromptStyle | null,
-  customPrompt?: string | null,
-): string {
-  let styleText = ""
-
-  if (customPrompt && customPrompt.trim()) {
-    styleText = customPrompt.trim()
-  } else {
-    styleText = getPromptStyleText(promptStyle)
-  }
-
-  return `${styleText}
+export function buildAssistantSystemPrompt(agentSystemPrompt: string): string {
+  return `${agentSystemPrompt}
 
 ${assistantBasePrompt}
 
