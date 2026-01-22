@@ -1,16 +1,12 @@
 import { motion, AnimatePresence } from "motion/react"
-import { useCallback, useState, useMemo, useRef, useEffect } from "react"
+import { useCallback, useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { EditorContent } from "@tiptap/react"
 import {
   Form,
   Button as RACButton,
   Button,
-  useFilter,
-  Autocomplete,
-  ListBox,
-  SelectValue,
-  Select as AriaSelect,
+  TooltipTrigger,
 } from "react-aria-components"
 import {
   CircleArrowUpIcon,
@@ -23,30 +19,23 @@ import {
   DocumentsIcon,
   CreateIcon,
   HelpCircleIcon,
-  ChevronDownIcon,
-  MessageCircleIcon,
+  PlusIcon,
 } from "@/icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
-import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
+import { ChatContextList } from "@/components/chat/ChatContextList"
 import { ChatAlert } from "@/components/editor/ChatAlert"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
 import { useOrganization } from "@/context/organization.context"
-import { useChatComposer } from "@/components/chat/useChatComposer"
+import { useChatComposer } from "@/hooks/use-chat-composer"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
-import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport } from "ai"
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
+import { useDocumentContext } from "@/hooks/use-document-context"
 import { createId } from "@lydie/core/id"
-import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
 import type { ChatAlertState } from "@/components/editor/ChatAlert"
-import { trackEvent } from "@/lib/posthog"
-import { formatDistanceToNow } from "date-fns"
-import { SelectItem, SelectSection } from "@/components/generic/Select"
-import { SearchField } from "@/components/generic/SearchField"
-import { Popover } from "@/components/generic/Popover"
-import { useNavigate } from "@tanstack/react-router"
+import { useAssistantChat } from "@/hooks/use-assistant-chat"
+import { ConversationDropdown } from "@/components/assistant/ConversationDropdown"
+import { Tooltip } from "@/components/generic/Tooltip"
 
 const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id"
 
@@ -64,9 +53,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     return createId()
   })
 
-  const [alert, setAlert] = useState<ChatAlertState | null>(null)
-  const messageStartTimeRef = useRef<number>(0)
-
   const [currentConversation] = useQuery(
     conversationId
       ? queries.assistant.byId({
@@ -78,58 +64,21 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
 
   const {
     messages,
-    sendMessage: originalSendMessage,
+    sendMessage,
     stop,
     status,
+    alert,
+    setAlert,
     setMessages,
-  } = useChat<DocumentChatAgentUIMessage>({
-    id: conversationId,
-    messages:
+  } = useAssistantChat({
+    conversationId,
+    initialMessages:
       currentConversation?.messages?.map((msg: any) => ({
         id: msg.id,
         role: msg.role as "user" | "system" | "assistant",
         parts: msg.parts,
         metadata: msg.metadata,
       })) || [],
-    transport: new DefaultChatTransport({
-      api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
-      credentials: "include",
-      body: {
-        conversationId,
-      },
-      headers: {
-        "X-Organization-Id": organization.id,
-      },
-    }),
-    onError: (error) => {
-      console.error("Assistant chat error:", error)
-      const { message } = parseChatError(error)
-
-      if (isUsageLimitError(error)) {
-        setAlert({
-          show: true,
-          type: "error",
-          title: "Daily Limit Reached",
-          message,
-        })
-      } else {
-        setAlert({
-          show: true,
-          type: "error",
-          title: "Something went wrong",
-          message,
-        })
-      }
-    },
-    onFinish: () => {
-      const responseTime = messageStartTimeRef.current ? Date.now() - messageStartTimeRef.current : undefined
-
-      trackEvent("assistant_response_received", {
-        conversationId,
-        organizationId: organization.id,
-        responseTimeMs: responseTime,
-      })
-    },
   })
 
   useEffect(() => {
@@ -166,21 +115,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     [],
   )
 
-  const sendMessage = useCallback(
-    (options: { text: string; metadata?: any }) => {
-      messageStartTimeRef.current = Date.now()
-
-      trackEvent("assistant_message_sent", {
-        conversationId,
-        organizationId: organization.id,
-        messageLength: options.text.length,
-      })
-
-      return originalSendMessage(options)
-    },
-    [originalSendMessage, conversationId, organization.id],
-  )
-
   const floatingContainer = typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
   const dockedContainer = typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
 
@@ -209,6 +143,34 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   const targetContainer = isDocked ? dockedContainer : floatingContainer
   if (!targetContainer) return null
 
+  const headerButtons = useMemo(() => {
+    const buttons = [
+      {
+        onPress: isDocked ? undock : dock,
+        ariaLabel: isDocked ? "Undock assistant" : "Dock assistant",
+        tooltip: isDocked ? "Undock assistant" : "Dock assistant",
+        icon: isDocked ? ArrowShrinkIcon : ArrowExpandIcon,
+        show: true,
+      },
+      {
+        onPress: handleNewChat,
+        ariaLabel: "New chat",
+        tooltip: "New chat",
+        icon: PlusIcon,
+        show: !isDocked,
+      },
+      {
+        onPress: close,
+        ariaLabel: "Close assistant",
+        tooltip: "Close assistant",
+        icon: MinusIcon,
+        show: !isDocked,
+      },
+    ]
+
+    return buttons.filter((button) => button.show)
+  }, [isDocked, dock, undock, handleNewChat, close])
+
   const content = (
     <motion.div
       layoutId="assistant"
@@ -220,7 +182,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       className={
         isDocked
           ? "w-full h-full bg-white flex flex-col overflow-hidden"
-          : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/8 shadow-lg flex flex-col overflow-hidden z-30"
+          : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/6 shadow-lg flex flex-col overflow-hidden z-30"
       }
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
@@ -230,26 +192,21 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
           onSelectConversation={handleSelectConversation}
         />
         <div className="flex items-center gap-1">
-          <Button
-            onPress={isDocked ? undock : dock}
-            className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-            aria-label={isDocked ? "Undock assistant" : "Dock assistant"}
-          >
-            {isDocked ? (
-              <ArrowShrinkIcon className="size-4 text-gray-600" aria-hidden="true" />
-            ) : (
-              <ArrowExpandIcon className="size-4 text-gray-600" aria-hidden="true" />
-            )}
-          </Button>
-          {!isDocked && (
-            <Button
-              onPress={close}
-              aria-label="Close assistant"
-              className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-            >
-              <MinusIcon className="size-4 text-gray-600" aria-hidden="true" />
-            </Button>
-          )}
+          {headerButtons.map((button) => {
+            const Icon = button.icon
+            return (
+              <TooltipTrigger key={button.ariaLabel} delay={500}>
+                <Button
+                  onPress={button.onPress}
+                  className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+                  aria-label={button.ariaLabel}
+                >
+                  <Icon className="size-4 text-gray-600" aria-hidden="true" />
+                </Button>
+                <Tooltip placement="top">{button.tooltip}</Tooltip>
+              </TooltipTrigger>
+            )
+          })}
         </div>
       </div>
       <div className="flex-1 min-h-0">
@@ -270,197 +227,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   )
 
   return createPortal(content, targetContainer)
-}
-
-type ConversationGroup = {
-  title: string
-  conversations: any[]
-}
-
-const MAX_CONVERSATIONS_TO_SHOW = 15
-
-function ConversationDropdown({
-  conversationId,
-  onNewChat,
-  onSelectConversation,
-}: {
-  conversationId: string
-  onNewChat: () => void
-  onSelectConversation: (id: string) => void
-}) {
-  const { organization } = useOrganization()
-  const navigate = useNavigate()
-  const { contains } = useFilter({ sensitivity: "base" })
-  const [conversations] = useQuery(
-    queries.assistant.conversationsByUser({
-      organizationSlug: organization.slug,
-    }),
-  )
-
-  const currentConversation = useMemo(() => {
-    return conversations?.find((c) => c.id === conversationId)
-  }, [conversations, conversationId])
-
-  const displayTitle = useMemo(() => {
-    if (currentConversation) {
-      return currentConversation.title || "New conversation"
-    }
-    return "New Chat"
-  }, [currentConversation])
-
-  const getConversationTitle = useCallback((conversation: any) => {
-    return conversation.title || "New conversation"
-  }, [])
-
-  const groupConversations = useCallback((convs: typeof conversations) => {
-    if (!convs || convs.length === 0) return []
-
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    const sevenDaysAgo = new Date(today)
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-    const thirtyDaysAgo = new Date(today)
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-    const groups: ConversationGroup[] = [
-      { title: "Today", conversations: [] },
-      { title: "Yesterday", conversations: [] },
-      { title: "Previous 7 days", conversations: [] },
-      { title: "Previous 30 days", conversations: [] },
-      { title: "Older", conversations: [] },
-    ]
-
-    for (const conversation of convs) {
-      const updatedAt = new Date(conversation.updated_at)
-      if (updatedAt >= today) {
-        groups[0].conversations.push(conversation)
-      } else if (updatedAt >= yesterday) {
-        groups[1].conversations.push(conversation)
-      } else if (updatedAt >= sevenDaysAgo) {
-        groups[2].conversations.push(conversation)
-      } else if (updatedAt >= thirtyDaysAgo) {
-        groups[3].conversations.push(conversation)
-      } else {
-        groups[4].conversations.push(conversation)
-      }
-    }
-
-    return groups.filter((group) => group.conversations.length > 0)
-  }, [])
-
-  const limitedConversations = useMemo(() => {
-    if (!conversations) return []
-    return conversations.slice(0, MAX_CONVERSATIONS_TO_SHOW)
-  }, [conversations])
-
-  const hasMoreConversations = useMemo(() => {
-    return (conversations?.length || 0) > MAX_CONVERSATIONS_TO_SHOW
-  }, [conversations])
-
-  const groupedConversations = useMemo(() => {
-    return groupConversations(limitedConversations)
-  }, [limitedConversations, groupConversations])
-
-  const handleSeeAllConversations = useCallback(() => {
-    navigate({
-      to: "/w/$organizationSlug/assistant",
-      params: { organizationSlug: organization.slug },
-    })
-  }, [navigate, organization.slug])
-
-  return (
-    <AriaSelect
-      value={conversationId || null}
-      onChange={(key) => {
-        if (key === "new") {
-          onNewChat()
-        } else if (key && typeof key === "string") {
-          onSelectConversation(key)
-        }
-      }}
-      className="group flex flex-col gap-1 min-w-[200px]"
-    >
-      <RACButton className="flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 border-0 bg-transparent min-w-0">
-        <MessageCircleIcon className="size-4 text-gray-600 shrink-0" aria-hidden="true" />
-        <SelectValue className="max-w-[200px] truncate text-sm">
-          {({ selectedText }) => selectedText || displayTitle}
-        </SelectValue>
-        <ChevronDownIcon className="size-3.5 text-gray-500 shrink-0" aria-hidden="true" />
-      </RACButton>
-      <Popover className="min-w-[300px] max-h-[500px] flex flex-col p-0" placement="bottom start">
-        <Autocomplete filter={contains}>
-          <div className="p-2 border-b border-gray-200">
-            <SearchField
-              placeholder="Search conversations..."
-              aria-label="Search conversations"
-              className="w-full"
-            />
-          </div>
-          <ListBox
-            items={groupedConversations}
-            className="outline-none max-h-[400px] overflow-auto"
-            selectionMode="single"
-          >
-            {(group: ConversationGroup) => (
-              <SelectSection key={group.title} id={group.title} title={group.title} items={group.conversations}>
-                {(conversation: any) => {
-                  if (!conversation?.id) {
-                    return <SelectItem id={`empty-${Math.random()}`} textValue="" />
-                  }
-                  const title = getConversationTitle(conversation)
-                  const isSelected = conversation.id === conversationId
-
-                  return (
-                    <SelectItem
-                      id={conversation.id}
-                      textValue={title}
-                      className={isSelected ? "bg-blue-50" : ""}
-                    >
-                      <div className="flex flex-col items-start gap-1 w-full">
-                        <div className="flex items-center gap-2 w-full">
-                          <MessageCircleIcon
-                            className={`size-4 shrink-0 ${isSelected ? "text-blue-600" : "text-gray-400"}`}
-                            aria-hidden="true"
-                          />
-                          <span className={`text-sm flex-1 truncate ${isSelected ? "font-semibold" : ""}`}>
-                            {title.length > 40 ? title.substring(0, 40) + "..." : title}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500 ml-6">
-                          {formatDistanceToNow(new Date(conversation.updated_at), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  )
-                }}
-              </SelectSection>
-            )}
-          </ListBox>
-        </Autocomplete>
-        <div className="border-t border-gray-200 p-1 flex flex-col gap-1">
-          <RACButton
-            onPress={onNewChat}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          >
-            <CreateIcon className="size-4 text-gray-500" aria-hidden="true" />
-            <span>New Chat</span>
-          </RACButton>
-          {hasMoreConversations && (
-            <RACButton
-              onPress={handleSeeAllConversations}
-              className="flex items-center justify-center w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            >
-              <span>See all conversations</span>
-            </RACButton>
-          )}
-        </div>
-      </Popover>
-    </AriaSelect>
-  )
 }
 
 function FloatingAssistantChatContent({
@@ -486,33 +252,20 @@ function FloatingAssistantChatContent({
   alert: ChatAlertState | null
   setAlert: (alert: ChatAlertState | null) => void
 }) {
-  const { organization } = useOrganization()
   const [hasUsedInitialPrompt, setHasUsedInitialPrompt] = useState(false)
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
-  const [isCurrentDocumentDismissed, setIsCurrentDocumentDismissed] = useState(false)
 
-  const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
-  const [currentDocument] = useQuery(
-    currentDocumentId
-      ? queries.documents.byId({
-        organizationId: organization.id,
-        documentId: currentDocumentId,
-      })
-      : null,
-  )
-
-  const availableDocuments = useMemo(
-    () =>
-      (documents ?? []).map((doc) => ({
-        id: doc.id,
-        title: doc.title,
-      })),
-    [documents],
-  )
-
-  const documentTitleById = useMemo(() => {
-    return new Map(availableDocuments.map((doc) => [doc.id, doc.title || "Untitled document"]))
-  }, [availableDocuments])
+  const {
+    availableDocuments,
+    currentDocument,
+    contextItems,
+    contextDocumentIds,
+    handleRemoveContext,
+    resetDismissal,
+  } = useDocumentContext({
+    currentDocumentId,
+    mentionedDocumentIds,
+  })
 
   const chatEditor = useChatComposer({
     documents: availableDocuments,
@@ -530,43 +283,6 @@ function FloatingAssistantChatContent({
     autoFocus: true,
     initialContent: initialPrompt && !hasUsedInitialPrompt ? initialPrompt : "",
   })
-
-  const contextItems = useMemo(() => {
-    const items: ChatContextItem[] = []
-
-    if (currentDocument && !isCurrentDocumentDismissed) {
-      items.push({
-        id: currentDocument.id,
-        type: "document",
-        label: currentDocument.title || "Untitled document",
-        source: "current",
-        removable: true,
-      })
-    }
-
-    for (const documentId of mentionedDocumentIds) {
-      if (documentId === currentDocument?.id) continue
-      items.push({
-        id: documentId,
-        type: "document",
-        label: documentTitleById.get(documentId) || "Untitled document",
-        source: "mention",
-      })
-    }
-
-    return items
-  }, [currentDocument, documentTitleById, isCurrentDocumentDismissed, mentionedDocumentIds])
-
-  const contextDocumentIds = useMemo(() => {
-    const ids = new Set<string>()
-    if (currentDocument && !isCurrentDocumentDismissed) {
-      ids.add(currentDocument.id)
-    }
-    for (const id of mentionedDocumentIds) {
-      ids.add(id)
-    }
-    return Array.from(ids)
-  }, [currentDocument, isCurrentDocumentDismissed, mentionedDocumentIds])
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
@@ -590,7 +306,7 @@ function FloatingAssistantChatContent({
       })
 
       chatEditor.clearContent()
-      setIsCurrentDocumentDismissed(false)
+      resetDismissal()
 
       if (initialPrompt && !hasUsedInitialPrompt) {
         setHasUsedInitialPrompt(true)
@@ -606,6 +322,7 @@ function FloatingAssistantChatContent({
       contextDocumentIds,
       currentDocument,
       currentDocumentId,
+      resetDismissal,
     ],
   )
 
@@ -666,7 +383,7 @@ function FloatingAssistantChatContent({
       })
 
       chatEditor.clearContent()
-      setIsCurrentDocumentDismissed(false)
+      resetDismissal()
 
       if (initialPrompt && !hasUsedInitialPrompt) {
         setHasUsedInitialPrompt(true)
@@ -682,6 +399,7 @@ function FloatingAssistantChatContent({
       contextDocumentIds,
       currentDocument,
       currentDocumentId,
+      resetDismissal,
     ],
   )
 
@@ -735,11 +453,7 @@ function FloatingAssistantChatContent({
             <Form className="relative flex flex-col" onSubmit={handleSubmit}>
               <ChatContextList
                 items={contextItems}
-                onRemove={(item) => {
-                  if (item.source === "current") {
-                    setIsCurrentDocumentDismissed(true)
-                  }
-                }}
+                onRemove={handleRemoveContext}
               />
               <EditorContent editor={chatEditor.editor} />
               <RACButton

@@ -1,0 +1,219 @@
+import { useCallback, useMemo } from "react"
+import {
+  Button as RACButton,
+  useFilter,
+  Autocomplete,
+  ListBox,
+  SelectValue,
+  Select as AriaSelect,
+} from "react-aria-components"
+import {
+  CreateIcon,
+  ChevronDownIcon,
+  MessageCircleIcon,
+} from "@/icons"
+import { useOrganization } from "@/context/organization.context"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { formatDistanceToNow } from "date-fns"
+import { SelectItem, SelectSection } from "@/components/generic/Select"
+import { SearchField } from "@/components/generic/SearchField"
+import { Popover } from "@/components/generic/Popover"
+import { useNavigate } from "@tanstack/react-router"
+
+type ConversationGroup = {
+  title: string
+  conversations: any[]
+}
+
+const MAX_CONVERSATIONS_TO_SHOW = 15
+
+interface ConversationDropdownProps {
+  conversationId: string
+  onNewChat: () => void
+  onSelectConversation: (id: string) => void
+}
+
+/**
+ * Conversation dropdown component for selecting and managing assistant conversations
+ * Features conversation grouping by date, search, and navigation
+ */
+export function ConversationDropdown({
+  conversationId,
+  onNewChat,
+  onSelectConversation,
+}: ConversationDropdownProps) {
+  const { organization } = useOrganization()
+  const navigate = useNavigate()
+  const { contains } = useFilter({ sensitivity: "base" })
+  const [conversations] = useQuery(
+    queries.assistant.conversationsByUser({
+      organizationSlug: organization.slug,
+    }),
+  )
+
+  const currentConversation = useMemo(() => {
+    return conversations?.find((c) => c.id === conversationId)
+  }, [conversations, conversationId])
+
+  const displayTitle = useMemo(() => {
+    if (currentConversation) {
+      return currentConversation.title || "New conversation"
+    }
+    return "New Chat"
+  }, [currentConversation])
+
+  const getConversationTitle = useCallback((conversation: any) => {
+    return conversation.title || "New conversation"
+  }, [])
+
+  const groupConversations = useCallback((convs: typeof conversations) => {
+    if (!convs || convs.length === 0) return []
+
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const sevenDaysAgo = new Date(today)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const thirtyDaysAgo = new Date(today)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const groups: ConversationGroup[] = [
+      { title: "Today", conversations: [] },
+      { title: "Yesterday", conversations: [] },
+      { title: "Previous 7 days", conversations: [] },
+      { title: "Previous 30 days", conversations: [] },
+      { title: "Older", conversations: [] },
+    ]
+
+    for (const conversation of convs) {
+      const updatedAt = new Date(conversation.updated_at)
+      if (updatedAt >= today) {
+        groups[0].conversations.push(conversation)
+      } else if (updatedAt >= yesterday) {
+        groups[1].conversations.push(conversation)
+      } else if (updatedAt >= sevenDaysAgo) {
+        groups[2].conversations.push(conversation)
+      } else if (updatedAt >= thirtyDaysAgo) {
+        groups[3].conversations.push(conversation)
+      } else {
+        groups[4].conversations.push(conversation)
+      }
+    }
+
+    return groups.filter((group) => group.conversations.length > 0)
+  }, [])
+
+  const limitedConversations = useMemo(() => {
+    if (!conversations) return []
+    return conversations.slice(0, MAX_CONVERSATIONS_TO_SHOW)
+  }, [conversations])
+
+  const hasMoreConversations = useMemo(() => {
+    return (conversations?.length || 0) > MAX_CONVERSATIONS_TO_SHOW
+  }, [conversations])
+
+  const groupedConversations = useMemo(() => {
+    return groupConversations(limitedConversations)
+  }, [limitedConversations, groupConversations])
+
+  const handleSeeAllConversations = useCallback(() => {
+    navigate({
+      to: "/w/$organizationSlug/assistant",
+      params: { organizationSlug: organization.slug },
+    })
+  }, [navigate, organization.slug])
+
+  return (
+    <AriaSelect
+      value={conversationId || null}
+      onChange={(key) => {
+        if (key === "new") {
+          onNewChat()
+        } else if (key && typeof key === "string") {
+          onSelectConversation(key)
+        }
+      }}
+      className="group flex flex-col gap-1 min-w-[200px]"
+    >
+      <RACButton className="flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 border-0 bg-transparent min-w-0">
+        <MessageCircleIcon className="size-4 text-gray-600 shrink-0" aria-hidden="true" />
+        <SelectValue className="max-w-[200px] truncate text-sm">
+          {({ selectedText }) => selectedText || displayTitle}
+        </SelectValue>
+        <ChevronDownIcon className="size-3.5 text-gray-500 shrink-0" aria-hidden="true" />
+      </RACButton>
+      <Popover className="min-w-[300px] max-h-[500px] flex flex-col p-0" placement="bottom start">
+        <Autocomplete filter={contains}>
+          <div className="p-2 border-b border-gray-200">
+            <SearchField
+              placeholder="Search conversations..."
+              aria-label="Search conversations"
+              className="w-full"
+            />
+          </div>
+          <ListBox
+            items={groupedConversations}
+            className="outline-none max-h-[400px] overflow-auto"
+            selectionMode="single"
+          >
+            {(group: ConversationGroup) => (
+              <SelectSection key={group.title} id={group.title} title={group.title} items={group.conversations}>
+                {(conversation: any) => {
+                  if (!conversation?.id) {
+                    return <SelectItem id={`empty-${Math.random()}`} textValue="" />
+                  }
+                  const title = getConversationTitle(conversation)
+                  const isSelected = conversation.id === conversationId
+
+                  return (
+                    <SelectItem
+                      id={conversation.id}
+                      textValue={title}
+                      className={isSelected ? "bg-blue-50" : ""}
+                    >
+                      <div className="flex flex-col items-start gap-1 w-full">
+                        <div className="flex items-center gap-2 w-full">
+                          <MessageCircleIcon
+                            className={`size-4 shrink-0 ${isSelected ? "text-blue-600" : "text-gray-400"}`}
+                            aria-hidden="true"
+                          />
+                          <span className={`text-sm flex-1 truncate ${isSelected ? "font-semibold" : ""}`}>
+                            {title.length > 40 ? title.substring(0, 40) + "..." : title}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 ml-6">
+                          {formatDistanceToNow(new Date(conversation.updated_at), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  )
+                }}
+              </SelectSection>
+            )}
+          </ListBox>
+        </Autocomplete>
+        <div className="border-t border-gray-200 p-1 flex flex-col gap-1">
+          <RACButton
+            onPress={onNewChat}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            <CreateIcon className="size-4 text-gray-500" aria-hidden="true" />
+            <span>New Chat</span>
+          </RACButton>
+          {hasMoreConversations && (
+            <RACButton
+              onPress={handleSeeAllConversations}
+              className="flex items-center justify-center w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            >
+              <span>See all conversations</span>
+            </RACButton>
+          )}
+        </div>
+      </Popover>
+    </AriaSelect>
+  )
+}
