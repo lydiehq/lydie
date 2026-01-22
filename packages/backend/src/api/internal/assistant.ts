@@ -27,20 +27,28 @@ import { readCurrentDocument } from "@lydie/core/ai/tools/read-current-document"
 import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document"
 import { openai } from "@ai-sdk/openai"
 
-export const messageMetadataSchema = z.object({
-  usage: z.number().optional(),
-  createdAt: z.string().optional(),
-  model: z.string().optional(),
-  duration: z.number().optional(),
-  contextDocuments: z.array(z.object({
-    id: z.string(),
-    title: z.string(),
-  })).optional(),
-  currentDocument: z.object({
-    id: z.string(),
-    title: z.string(),
-  }).optional(),
-}).passthrough()
+export const messageMetadataSchema = z
+  .object({
+    usage: z.number().optional(),
+    createdAt: z.string().optional(),
+    model: z.string().optional(),
+    duration: z.number().optional(),
+    contextDocuments: z
+      .array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+        }),
+      )
+      .optional(),
+    currentDocument: z
+      .object({
+        id: z.string(),
+        title: z.string(),
+      })
+      .optional(),
+  })
+  .passthrough()
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>
 
@@ -203,9 +211,9 @@ export const AssistantRoute = new Hono<{
         })),
         currentDocument: currentDocument
           ? {
-            id: currentDocument.id,
-            title: currentDocument.title || "Untitled document",
-          }
+              id: currentDocument.id,
+              title: currentDocument.title || "Untitled document",
+            }
           : undefined,
       },
     })
@@ -273,8 +281,6 @@ export const AssistantRoute = new Hono<{
       instructions: systemPrompt,
       // TODO: fix - this is just an arbitrary number to stop the agent from running forever
       stopWhen: stepCountIs(50),
-      // @ts-expect-error - experimental_transform is not typed
-      experimental_transform: smoothStream({ chunking: "word" }),
       tools,
     })
 
@@ -293,9 +299,9 @@ export const AssistantRoute = new Hono<{
             })),
             currentDocument: currentDocument
               ? {
-                id: currentDocument.id,
-                title: currentDocument.title || "Untitled document",
-              }
+                  id: currentDocument.id,
+                  title: currentDocument.title || "Untitled document",
+                }
               : undefined,
           }
         }
@@ -309,7 +315,7 @@ export const AssistantRoute = new Hono<{
       },
       onFinish: async ({ messages: finalMessages }) => {
         const assistantMessage = finalMessages[finalMessages.length - 1]
-        
+
         // Ensure the final saved metadata includes all context information
         const enhancedMetadata = {
           ...(assistantMessage.metadata as MessageMetadata),
@@ -319,12 +325,12 @@ export const AssistantRoute = new Hono<{
           })),
           currentDocument: currentDocument
             ? {
-              id: currentDocument.id,
-              title: currentDocument.title || "Untitled document",
-            }
+                id: currentDocument.id,
+                title: currentDocument.title || "Untitled document",
+              }
             : undefined,
         }
-        
+
         const savedMessage = await saveMessage({
           conversationId,
           parts: assistantMessage.parts,

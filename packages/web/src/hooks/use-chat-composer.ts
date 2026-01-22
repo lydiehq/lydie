@@ -30,11 +30,6 @@ export interface ChatComposerHandle {
   setContent: (content: string) => void
 }
 
-/**
- * Unified chat composer hook for TipTap editor with mention support
- * Handles @ mentions for documents and provides a consistent interface
- * for all chat inputs across the application
- */
 export function useChatComposer({
   documents,
   onEnter,
@@ -73,6 +68,7 @@ export function useChatComposer({
   const extensions = useMemo(() => {
     return [
       StarterKit,
+      enterExtension,
       Placeholder.configure({
         placeholder,
       }),
@@ -85,7 +81,6 @@ export function useChatComposer({
         },
         suggestion: mentionSuggestion,
       }),
-      enterExtension,
     ]
   }, [placeholder, mentionSuggestion, enterExtension])
 
@@ -139,6 +134,24 @@ function createMentionSuggestion(items: Array<{ id: string; label: string }>) {
     char: "@",
     items: ({ query }: { query: string }) => {
       return items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())).slice(0, 10)
+    },
+    command: ({ editor, range, props }: { editor: any; range: any; props: any }) => {
+      // Delete the range (@Marke) and insert the mention
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent([
+          {
+            type: "mention",
+            attrs: props,
+          },
+          {
+            type: "text",
+            text: " ",
+          },
+        ])
+        .run()
     },
     render() {
       let component: MentionList | null = null

@@ -19,6 +19,12 @@ export class MentionList {
     this.render()
   }
 
+  selectItem(item: any) {
+    if (item) {
+      this.command(item)
+    }
+  }
+
   render() {
     this.element.innerHTML = ""
 
@@ -29,7 +35,7 @@ export class MentionList {
       }`
       itemElement.textContent = item.label
       itemElement.addEventListener("click", () => {
-        this.command(item)
+        this.selectItem(item)
       })
       this.element.appendChild(itemElement)
     })
@@ -37,6 +43,7 @@ export class MentionList {
 
   updateProps(props: any) {
     this.items = props.items
+    this.command = props.command
     this.selectedIndex = 0
     this.render()
   }
@@ -55,7 +62,7 @@ export class MentionList {
     }
 
     if (event.key === "Enter") {
-      this.command(this.items[this.selectedIndex])
+      this.selectItem(this.items[this.selectedIndex])
       return true
     }
 

@@ -35,6 +35,7 @@
     "@tanstack/router-plugin": "^1.154.7",
     "@tiptap/core": "^3.16.0",
     "@tiptap/extension-mention": "^3.16.0",
+    "@tiptap/extension-placeholder": "^3.16.0",
     "@tiptap/pm": "^3.16.0",
     "@tiptap/react": "^3.16.0",
     "ai": "catalog:",

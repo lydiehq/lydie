@@ -22,7 +22,7 @@ import {
   PlusIcon,
 } from "@/icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
-import { ChatContextList } from "@/components/chat/ChatContextList"
+import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
 import { ChatAlert } from "@/components/editor/ChatAlert"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
 import { useOrganization } from "@/context/organization.context"
@@ -36,6 +36,7 @@ import type { ChatAlertState } from "@/components/editor/ChatAlert"
 import { useAssistantChat } from "@/hooks/use-assistant-chat"
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown"
 import { Tooltip } from "@/components/generic/Tooltip"
+import { PlusCircle } from "lucide-react"
 
 const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id"
 
@@ -115,34 +116,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     [],
   )
 
-  const floatingContainer = typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
-  const dockedContainer = typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
-
-  if (!isDocked && !isOpen) {
-    return (
-      <motion.div
-        layoutId="assistant"
-        className="fixed right-4 bottom-4 z-30"
-        initial={false}
-        transition={{ type: "spring", stiffness: 450, damping: 35 }}
-      >
-        <RACButton
-          onPress={toggle}
-          aria-label="Open AI Assistant"
-          className="bg-white shadow-surface rounded-full size-10 justify-center items-center flex hover:bg-gray-50 transition-colors"
-        >
-          <AsteriskIcon className="size-4 text-gray-600" aria-hidden="true" />
-        </RACButton>
-      </motion.div>
-    )
-  }
-
-  const shouldShow = isDocked || isOpen
-  if (!shouldShow) return null
-
-  const targetContainer = isDocked ? dockedContainer : floatingContainer
-  if (!targetContainer) return null
-
   const headerButtons = useMemo(() => {
     const buttons = [
       {
@@ -170,6 +143,35 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
 
     return buttons.filter((button) => button.show)
   }, [isDocked, dock, undock, handleNewChat, close])
+
+  // All hooks must be called before any conditional returns
+  const floatingContainer = typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
+  const dockedContainer = typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
+
+  if (!isDocked && !isOpen) {
+    return (
+      <motion.div
+        layoutId="assistant"
+        className="fixed right-4 bottom-4 z-30"
+        initial={false}
+        transition={{ type: "spring", stiffness: 450, damping: 35 }}
+      >
+        <RACButton
+          onPress={toggle}
+          aria-label="Open AI Assistant"
+          className="bg-white shadow-surface rounded-full size-10 justify-center items-center flex hover:bg-gray-50 transition-colors"
+        >
+          <AsteriskIcon className="size-4 text-gray-600" aria-hidden="true" />
+        </RACButton>
+      </motion.div>
+    )
+  }
+
+  const shouldShow = isDocked || isOpen
+  if (!shouldShow) return null
+
+  const targetContainer = isDocked ? dockedContainer : floatingContainer
+  if (!targetContainer) return null
 
   const content = (
     <motion.div
@@ -227,6 +229,68 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   )
 
   return createPortal(content, targetContainer)
+}
+
+function ChatInputArea({
+  onSubmit,
+  contextItems,
+  onRemoveContext,
+  editor,
+  canStop,
+  stop,
+}: {
+  onSubmit: (e?: React.FormEvent<HTMLFormElement>) => void
+  contextItems: ChatContextItem[]
+  onRemoveContext: (item: ChatContextItem) => void
+  editor: any
+  canStop: boolean
+  stop: () => void
+  alert: ChatAlertState | null
+  onDismissAlert: () => void
+}) {
+  return (
+    <div className="rounded-lg flex flex-col p-1 z-10 relative bg-gray-100">
+      {/* <AnimatePresence mode="sync">
+        {alert && (
+          <motion.div
+            className=""
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              duration: 0.4,
+              ease: [0.175, 0.885, 0.32, 1.1],
+            }}
+          >
+            <ChatAlert alert={alert} onDismiss={onDismissAlert} />
+          </motion.div>
+        )}
+      </AnimatePresence> */}
+      <div className="flex p-1.5">
+        <RACButton>
+          <PlusCircle className="size-4 text-gray-500" />
+        </RACButton>
+        <ChatContextList items={contextItems} onRemove={onRemoveContext} />
+      </div>
+      <div className="flex flex-col bg-white ring ring-black/8 rounded-[6px] p-2">
+        <Form className="relative flex flex-col" onSubmit={onSubmit}>
+          <EditorContent editor={editor} />
+          <RACButton
+            type={canStop ? "button" : "submit"}
+            onPress={canStop ? stop : undefined}
+            className="p-1 hover:bg-gray-50 rounded-md bottom-0 right-0 absolute"
+            isDisabled={false}
+          >
+            {canStop ? (
+              <SquareIcon className="size-4 text-gray-900 fill-gray-900" />
+            ) : (
+              <CircleArrowUpIcon className="size-4.5 text-gray-500" />
+            )}
+          </RACButton>
+        </Form>
+      </div>
+    </div>
+  )
 }
 
 function FloatingAssistantChatContent({
@@ -415,62 +479,36 @@ function FloatingAssistantChatContent({
       />
       <div className="p-1.5 relative">
         {isChatEmpty && (
-          <div className="flex flex-col gap-y-1">
-            {suggestions.map((suggestion) => {
+          <div className="flex flex-col gap-y-1 pb-3">
+            {suggestions.map((suggestion, index) => {
               const Icon = suggestion.icon
               return (
-                <RACButton
-                  key={suggestion.text}
-                  onPress={() => handleSuggestionClick(suggestion.text)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Icon className="size-3.5 text-gray-500" aria-hidden="true" />
-                  <span>{suggestion.text}</span>
-                </RACButton>
+                <>
+                  <RACButton
+                    key={suggestion.text}
+                    onPress={() => handleSuggestionClick(suggestion.text)}
+                    className="flex items-center gap-x-2 p-1.5 bg-white rounded-lg hover:bg-gray-50 transition-colors duration-75"
+                  >
+                    <Icon className="size-4 text-gray-400" aria-hidden="true" />
+                    <span className="text-gray-500 text-xs">{suggestion.text}</span>
+                  </RACButton>
+                  {index < suggestions.length - 1 && <div className="h-px bg-black/6 ml-8" />}
+                </>
+
               )
             })}
           </div>
         )}
-        <div className="rounded-lg p-2 flex flex-col gap-y-2 z-10 relative bg-gray-100 ring ring-black/8">
-          <AnimatePresence mode="sync">
-            {alert && (
-              <motion.div
-                className=""
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{
-                  duration: 0.4,
-                  ease: [0.175, 0.885, 0.32, 1.1],
-                }}
-              >
-                <ChatAlert alert={alert} onDismiss={() => setAlert(null)} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="flex flex-col">
-            <Form className="relative flex flex-col" onSubmit={handleSubmit}>
-              <ChatContextList
-                items={contextItems}
-                onRemove={handleRemoveContext}
-              />
-              <EditorContent editor={chatEditor.editor} />
-              <RACButton
-                type={canStop ? "button" : "submit"}
-                onPress={canStop ? stop : undefined}
-                className="p-1 hover:bg-gray-50 rounded-md bottom-0 right-0 absolute"
-                isDisabled={false}
-              >
-                {canStop ? (
-                  <SquareIcon className="size-4 text-gray-900 fill-gray-900" />
-                ) : (
-                  <CircleArrowUpIcon className="size-4.5 text-gray-500" />
-                )}
-              </RACButton>
-            </Form>
-          </div>
-        </div>
+        <ChatInputArea
+          onSubmit={handleSubmit}
+          contextItems={contextItems}
+          onRemoveContext={handleRemoveContext}
+          editor={chatEditor.editor}
+          canStop={canStop}
+          stop={stop}
+          alert={alert}
+          onDismissAlert={() => setAlert(null)}
+        />
       </div>
     </div>
   )
