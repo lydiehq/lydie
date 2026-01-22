@@ -36,7 +36,7 @@ new sst.aws.StaticSite("Marketing", {
     output: "dist",
   },
   environment: {
-    PUBLIC_VITE_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
+    PUBLIC_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
     LYDIE_API_KEY: secret.lydieApiKey.value,
   },
   ...($dev ? {} : { domain: "lydie.co" }),

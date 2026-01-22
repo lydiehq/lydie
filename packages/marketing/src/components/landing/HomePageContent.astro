@@ -8,30 +8,11 @@ import UseCasesSection from "./UseCasesSection.astro";
 import EditorFeaturesSection from "./EditorFeaturesSection.astro";
 import { Hero } from "./Hero";
 import { CTASection } from "./CTASection";
-import { Search, Globe, ChevronRight, Share2 } from "lucide-react";
+import { Search, Globe, Share2 } from "lucide-react";
 import { Container } from "../Container";
-import screenshotChat from "../../../public/screenshot_document_chat.png";
 import screenshotNew from "../../../public/screenshot_new.png";
-import { Button } from "../generic/Button";
 import { Logo } from "../Logo";
 
-const chatWidths = [400, 640, 980, 1280, 1920];
-const chatOptimizedImages = await Promise.all(
-  chatWidths.map((width) =>
-    getImage({
-      src: screenshotChat,
-      width,
-      format: "webp",
-      quality: 100,
-    })
-  )
-);
-const chatSrcset = chatOptimizedImages
-  .map((img) => `${img.src} ${img.options.width}w`)
-  .join(", ");
-const chatDefaultImage = chatOptimizedImages[chatOptimizedImages.length - 1];
-
-// Optimize hero screenshot with responsive sizes
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920];
 const heroOptimizedImages = await Promise.all(
   heroWidths.map((width) =>
@@ -39,9 +20,9 @@ const heroOptimizedImages = await Promise.all(
       src: screenshotNew,
       width,
       format: "webp",
-      quality: 90,
-    })
-  )
+      quality: 100,
+    }),
+  ),
 );
 const heroSrcset = heroOptimizedImages
   .map((img) => `${img.src} ${img.options.width}w`)
