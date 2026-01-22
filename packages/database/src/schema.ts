@@ -262,6 +262,31 @@ export const documentTitleEmbeddingsTable = pgTable(
   ],
 )
 
+export const assistantAgentsTable = pgTable(
+  "assistant_agents",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    name: text("name").notNull(),
+    description: text("description"),
+    systemPrompt: text("system_prompt").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
+    organizationId: text("organization_id").references(() => organizationsTable.id, {
+      onDelete: "cascade",
+    }),
+    userId: text("user_id").references(() => usersTable.id, {
+      onDelete: "cascade",
+    }),
+    ...timestamps,
+  },
+  (table) => [
+    index("assistant_agents_organization_id_idx").on(table.organizationId),
+    index("assistant_agents_user_id_idx").on(table.userId),
+  ],
+)
+
 export const assistantConversationsTable = pgTable(
   "assistant_conversations",
   {
@@ -276,6 +301,9 @@ export const assistantConversationsTable = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    agentId: text("agent_id").references(() => assistantAgentsTable.id, {
+      onDelete: "set null",
+    }),
     ...timestamps,
   },
   (table) => [index("assistant_conversations_organization_id_idx").on(table.organizationId)],
@@ -369,8 +397,6 @@ export const userSettingsTable = pgTable("user_settings", {
     .unique()
     .references(() => usersTable.id, { onDelete: "cascade" }),
   persistDocumentTreeExpansion: boolean("persist_document_tree_expansion").notNull().default(true),
-  aiPromptStyle: text("ai_prompt_style").default("default"),
-  customPrompt: text("custom_prompt"),
   ...timestamps,
 })
 

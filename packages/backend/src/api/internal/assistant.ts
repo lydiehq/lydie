@@ -5,8 +5,8 @@ import {
   db,
   assistantConversationsTable,
   assistantMessagesTable,
+  assistantAgentsTable,
   llmUsageTable,
-  userSettingsTable,
   documentsTable,
 } from "@lydie/database"
 import { eq, and, sql, inArray } from "drizzle-orm"
@@ -21,7 +21,6 @@ import { readDocument } from "@lydie/core/ai/tools/read-document"
 import { listDocuments } from "@lydie/core/ai/tools/list-documents"
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents"
 import { createDocument } from "@lydie/core/ai/tools/create-document"
-import type { PromptStyle } from "@lydie/core/prompts"
 import { searchInDocument } from "@lydie/core/ai/tools/search-in-document"
 import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document"
 import { openai } from "@ai-sdk/openai"
@@ -56,7 +55,7 @@ export const AssistantRoute = new Hono<{
   }
 }>().post("/", async (c) => {
   try {
-    const { messages, conversationId: providedConversationId } = await c.req.json()
+    const { messages, conversationId: providedConversationId, agentId } = await c.req.json()
     const userId = c.get("user").id
     const organizationId = c.get("organizationId")
 
@@ -92,6 +91,7 @@ export const AssistantRoute = new Hono<{
         id: providedConversationId,
         userId,
         organizationId,
+        agentId: agentId || null,
         title,
       })
     }
@@ -199,17 +199,42 @@ export const AssistantRoute = new Hono<{
       },
     })
 
-    // Fetch user settings for prompt style
-    const [userSettings] = await db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.userId, userId))
-      .limit(1)
+    // Fetch agent for system prompt
+    const effectiveAgentId = agentId || conversation?.agentId
+    let agentSystemPrompt: string
 
-    const promptStyle = (userSettings?.aiPromptStyle as PromptStyle) || "default"
-    const customPrompt = userSettings?.customPrompt || null
+    if (effectiveAgentId) {
+      const [agent] = await db
+        .select()
+        .from(assistantAgentsTable)
+        .where(eq(assistantAgentsTable.id, effectiveAgentId))
+        .limit(1)
 
-    const systemPrompt = buildAssistantSystemPrompt(promptStyle, customPrompt)
+      if (!agent) {
+        throw new HTTPException(404, {
+          message: "Agent not found",
+        })
+      }
+
+      agentSystemPrompt = agent.systemPrompt
+    } else {
+      // Use default agent if no agent specified
+      const [defaultAgent] = await db
+        .select()
+        .from(assistantAgentsTable)
+        .where(and(eq(assistantAgentsTable.isDefault, true), eq(assistantAgentsTable.name, "Default")))
+        .limit(1)
+
+      if (!defaultAgent) {
+        throw new HTTPException(500, {
+          message: "Default agent not found. Please run the seed script.",
+        })
+      }
+
+      agentSystemPrompt = defaultAgent.systemPrompt
+    }
+
+    const systemPrompt = buildAssistantSystemPrompt(agentSystemPrompt)
 
     const startTime = Date.now()
 

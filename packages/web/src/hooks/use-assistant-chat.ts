@@ -74,7 +74,7 @@ export function useAssistantChat({
   })
 
   const sendMessage = useCallback(
-    (options: { text: string; metadata?: any }) => {
+    (options: { text: string; metadata?: any; agentId?: string | null }) => {
       messageStartTimeRef.current = Date.now()
 
       trackEvent("assistant_message_sent", {
@@ -83,7 +83,20 @@ export function useAssistantChat({
         messageLength: options.text.length,
       })
 
-      return originalSendMessage(options)
+      // Pass agentId in the body
+      const transport = new DefaultChatTransport({
+        api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
+        credentials: "include",
+        body: {
+          conversationId,
+          agentId: options.agentId || null,
+        },
+        headers: {
+          "X-Organization-Id": organization.id,
+        },
+      })
+
+      return originalSendMessage({ ...options, transport })
     },
     [originalSendMessage, conversationId, organization.id],
   )

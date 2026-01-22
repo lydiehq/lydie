@@ -105,12 +105,26 @@ const documentPublicationsRelations = relationships(documentPublications, ({ one
   }),
 }))
 
+const assistantAgents = table("assistant_agents")
+  .columns({
+    id: string(),
+    name: string(),
+    description: string().optional(),
+    system_prompt: string(),
+    is_default: boolean(),
+    organization_id: string().optional(),
+    user_id: string().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id")
+
 const assistantConversations = table("assistant_conversations")
   .columns({
     id: string(),
     title: string().optional(),
     user_id: string(),
     organization_id: string(),
+    agent_id: string().optional(),
     ...timestamps,
   })
   .primaryKey("id")
@@ -171,8 +185,6 @@ const userSettings = table("user_settings")
     id: string(),
     user_id: string(),
     persist_document_tree_expansion: boolean(),
-    ai_prompt_style: string(),
-    custom_prompt: string().optional(),
     ...timestamps,
   })
   .primaryKey("id")
@@ -280,6 +292,11 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     destField: ["organization_id"],
     destSchema: assistantConversations,
   }),
+  assistantAgents: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: assistantAgents,
+  }),
   apiKeys: many({
     sourceField: ["id"],
     destField: ["organization_id"],
@@ -339,6 +356,11 @@ const usersRelations = relationships(users, ({ many, one }) => ({
     destField: ["user_id"],
     destSchema: documents,
   }),
+  assistantAgents: many({
+    sourceField: ["id"],
+    destField: ["user_id"],
+    destSchema: assistantAgents,
+  }),
   settings: one({
     sourceField: ["id"],
     destField: ["user_id"],
@@ -362,6 +384,24 @@ const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
   }),
 }))
 
+const assistantAgentsRelations = relationships(assistantAgents, ({ one, many }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  conversations: many({
+    sourceField: ["id"],
+    destField: ["agent_id"],
+    destSchema: assistantConversations,
+  }),
+}))
+
 const assistantConversationsRelations = relationships(assistantConversations, ({ one, many }) => ({
   user: one({
     sourceField: ["user_id"],
@@ -372,6 +412,11 @@ const assistantConversationsRelations = relationships(assistantConversations, ({
     sourceField: ["organization_id"],
     destField: ["id"],
     destSchema: organizations,
+  }),
+  agent: one({
+    sourceField: ["agent_id"],
+    destField: ["id"],
+    destSchema: assistantAgents,
   }),
   messages: many({
     sourceField: ["id"],
@@ -523,6 +568,7 @@ export const schema = createSchema({
     members,
     invitations,
     documentComponents,
+    assistantAgents,
     assistantConversations,
     assistantMessages,
     apiKeys,
@@ -542,6 +588,7 @@ export const schema = createSchema({
     invitationsRelations,
     usersRelations,
     documentComponentsRelations,
+    assistantAgentsRelations,
     assistantConversationsRelations,
     assistantMessagesRelations,
     apiKeysRelations,

@@ -1,12 +1,13 @@
 import { EditorContent } from "@tiptap/react"
 import { Button, Form } from "react-aria-components"
 import { motion } from "motion/react"
-import { ChevronUpRegular, SquareRegular, ArrowCircleUpRegular } from "@fluentui/react-icons"
+import { ChevronUpRegular, SquareFilled, ArrowCircleUpRegular } from "@fluentui/react-icons"
 import { useChatComposer } from "@/hooks/use-chat-composer"
 import { useCallback, useRef, useEffect, useState } from "react"
 import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
 import { useDocumentContext } from "@/hooks/use-document-context"
+import { AgentSelector } from "@/components/assistant/AgentSelector"
 
 export interface AssistantInputProps {
   onSubmit: (text: string, contextDocumentIds: string[]) => void
@@ -19,6 +20,8 @@ export interface AssistantInputProps {
   editorClassName?: string
   variant?: "rounded" | "flat"
   content?: string
+  selectedAgentId?: string | null
+  onSelectAgent?: (agentId: string) => void
 }
 
 export function AssistantInput({
@@ -32,6 +35,8 @@ export function AssistantInput({
   editorClassName = "focus:outline-none text-sm text-gray-700 px-5 py-3.5",
   variant = "rounded",
   content,
+  selectedAgentId,
+  onSelectAgent,
 }: AssistantInputProps) {
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
 
@@ -106,12 +111,12 @@ export function AssistantInput({
   const buttonClassName =
     variant === "rounded"
       ? "size-9 justify-center items-center flex bottom-1.5 right-1.5 absolute rounded-full border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 hover:before:bg-white/6 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 bg-gray-800 text-white after:mix-blend-overlay"
-      : "p-1 hover:bg-gray-50 rounded-md bottom-0 right-0 absolute"
+      : "p-1 hover:bg-gray-50 rounded-md"
 
   const editorWrapperClassName =
     variant === "rounded"
       ? "text-sm text-start"
-      : "flex flex-col bg-white ring ring-black/8 rounded-[6px] p-2"
+      : "flex flex-col bg-white ring ring-black/8 rounded-[6px] p-2 relative"
 
   return (
     <motion.div
@@ -132,26 +137,38 @@ export function AssistantInput({
             editor={chatEditor.editor}
             className={variant === "rounded" ? "text-sm text-start" : ""}
           />
-          <Button
-            type={canStop ? "button" : "submit"}
-            onPress={canStop ? onStop : undefined}
-            className={buttonClassName}
-            isDisabled={false}
-          >
-            {canStop ? (
-              <SquareRegular
-                className={
-                  variant === "rounded"
-                    ? "size-3 text-white fill-white"
-                    : "size-4 text-gray-900 fill-gray-900"
-                }
-              />
-            ) : variant === "rounded" ? (
-              <ChevronUpRegular className="size-4 text-white" />
-            ) : (
-              <ArrowCircleUpRegular className="size-4.5 text-gray-500" />
-            )}
-          </Button>
+          {variant === "flat" ? (
+            <div className="flex items-center justify-end gap-x-1 mt-2">
+              {selectedAgentId !== undefined && onSelectAgent && (
+                <AgentSelector selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} />
+              )}
+              <Button
+                type={canStop ? "button" : "submit"}
+                onPress={canStop ? onStop : undefined}
+                className={buttonClassName}
+                isDisabled={false}
+              >
+                {canStop ? (
+                  <SquareFilled className="size-4 text-gray-900 fill-gray-900" />
+                ) : (
+                  <ArrowCircleUpRegular className="size-4.5 text-gray-500" />
+                )}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type={canStop ? "button" : "submit"}
+              onPress={canStop ? onStop : undefined}
+              className={buttonClassName}
+              isDisabled={false}
+            >
+              {canStop ? (
+                <SquareRegular className="size-3 text-white fill-white" />
+              ) : (
+                <ChevronUpRegular className="size-4 text-white" />
+              )}
+            </Button>
+          )}
         </Form>
       </div>
     </motion.div>

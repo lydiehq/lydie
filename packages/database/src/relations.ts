@@ -32,6 +32,18 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.documentsTable.id,
     }),
   },
+  assistantAgentsTable: {
+    user: r.one.usersTable({
+      from: r.assistantAgentsTable.userId,
+      to: r.usersTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.assistantAgentsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    conversations: r.many.assistantConversationsTable(),
+  },
+
   assistantConversationsTable: {
     user: r.one.usersTable({
       from: r.assistantConversationsTable.userId,
@@ -40,6 +52,10 @@ export const relations = defineRelations(schema, (r) => ({
     organization: r.one.organizationsTable({
       from: r.assistantConversationsTable.organizationId,
       to: r.organizationsTable.id,
+    }),
+    agent: r.one.assistantAgentsTable({
+      from: r.assistantConversationsTable.agentId,
+      to: r.assistantAgentsTable.id,
     }),
     messages: r.many.assistantMessagesTable(),
     llmUsage: r.many.llmUsageTable({
@@ -64,6 +80,7 @@ export const relations = defineRelations(schema, (r) => ({
     invitations: r.many.invitationsTable(),
     documents: r.many.documentsTable(),
     assistantConversations: r.many.assistantConversationsTable(),
+    assistantAgents: r.many.assistantAgentsTable(),
     apiKeys: r.many.apiKeysTable(),
     documentComponents: r.many.documentComponentsTable(),
     llmUsage: r.many.llmUsageTable(),
@@ -142,6 +159,7 @@ export const relations = defineRelations(schema, (r) => ({
   usersTable: {
     documents: r.many.documentsTable(),
     assistantConversations: r.many.assistantConversationsTable(),
+    assistantAgents: r.many.assistantAgentsTable(),
     members: r.many.membersTable(),
     invitationsSent: r.many.invitationsTable(),
     sessions: r.many.sessionsTable(),
