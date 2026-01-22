@@ -1,11 +1,8 @@
 import { EditorContent } from "@tiptap/react"
 import { useZero } from "@/services/zero"
-import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
-import { EditorSidebar } from "./editor/EditorSidebar"
+import { Panel, PanelGroup } from "react-resizable-panels"
 import { useRef, useState, useCallback, useEffect } from "react"
 import { EditorToolbar } from "./editor/EditorToolbar"
-import { PanelResizer } from "./panels/PanelResizer"
-import { BottomBar } from "./editor/BottomBar"
 import { useTitleEditor } from "@/lib/editor/title-editor"
 import { SelectedContentProvider, useSelectedContent } from "@/context/selected-content.context"
 import { LinkPopover } from "./editor/LinkPopover"
@@ -13,7 +10,6 @@ import { BubbleMenu } from "./editor/BubbleMenu"
 import type { QueryResultType } from "@rocicorp/zero"
 import { queries } from "@lydie/zero/queries"
 import { Surface } from "./layout/Surface"
-import type { DocumentChatRef } from "./editor/DocumentChat"
 import { mutators } from "@lydie/zero/mutators"
 import { useDocumentEditor } from "@/lib/editor/document-editor"
 import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs"
@@ -32,20 +28,11 @@ export function Editor({ doc }: Props) {
 
 function EditorContainer({ doc }: Props) {
   const z = useZero()
-  const [sidebarSize, setSidebarSize] = useState(25)
   const [title, setTitle] = useState(doc.title || "")
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
   const { setFocusedContent } = useSelectedContent()
   const openLinkDialogRef = useRef<(() => void) | null>(null)
-  const sidebarRef = useRef<DocumentChatRef>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isLocked = doc.is_locked ?? false
-
-  const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current
-    if (!panel) return
-    panel.isCollapsed() ? panel.expand() : panel.collapse()
-  }
 
   const handleTitleUpdate = (newTitle: string) => {
     const finalTitle = newTitle.trim()
@@ -64,9 +51,6 @@ function EditorContainer({ doc }: Props) {
 
   const selectText = (selectedText: string) => {
     setFocusedContent(selectedText)
-    if (sidebarRef.current) {
-      sidebarRef.current.focus()
-    }
   }
 
   const contentEditor = useDocumentEditor({
@@ -145,24 +129,6 @@ function EditorContainer({ doc }: Props) {
             </div>
             <BottomBar editor={contentEditor.editor} lastSaved={new Date(doc.updated_at)} />
           </Panel>
-          {/* <PanelResizer />
-          <Panel
-            ref={sidebarPanelRef}
-            id="editor-sidebar"
-            collapsible={true}
-            collapsedSize={COLLAPSED_SIZE}
-            minSize={12}
-            defaultSize={25}
-            onResize={setSidebarSize}
-          >
-            <EditorSidebar
-              ref={sidebarRef}
-              contentEditor={contentEditor}
-              doc={doc}
-              isCollapsed={sidebarSize === COLLAPSED_SIZE}
-              onToggle={toggleSidebar}
-            />
-          </Panel> */}
         </PanelGroup>
       </Surface>
     </div>

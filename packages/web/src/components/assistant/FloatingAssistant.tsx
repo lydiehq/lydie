@@ -247,12 +247,7 @@ function FloatingAssistantChatContent({
         metadata: {
           createdAt: new Date().toISOString(),
           contextDocumentIds,
-          currentDocument: currentDocumentId
-            ? {
-              id: currentDocumentId,
-              wordCount: 0,
-            }
-            : undefined,
+          currentDocumentId: currentDocumentId || undefined,
         },
       })
       setPendingContent(undefined)
@@ -306,12 +301,7 @@ function FloatingAssistantChatContent({
         metadata: {
           createdAt: new Date().toISOString(),
           contextDocumentIds: currentDocumentId ? [currentDocumentId] : [],
-          currentDocument: currentDocumentId
-            ? {
-              id: currentDocumentId,
-              wordCount: 0,
-            }
-            : undefined,
+          currentDocumentId: currentDocumentId || undefined,
         },
       })
     },

@@ -197,7 +197,7 @@ export function ReplaceInDocumentTool({
           </motion.span>
           {wordCount > 0 && <span className="text-gray-500">{roundedWordCount} words</span>}
         </motion.div>
-        {targetDocument && !isCurrentDocument && (
+        {targetDocument && (
           <motion.div 
             className="text-[11px] text-gray-600 flex items-center gap-1 mt-1"
             initial={{ opacity: 0, y: -5 }}

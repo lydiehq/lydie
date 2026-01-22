@@ -192,17 +192,22 @@ function MessageContext({
   const metadata = message.metadata as any
 
   const contextDocuments = metadata?.contextDocuments || []
-  const currentDocument = metadata?.currentDocument
+  const currentDocumentId = metadata?.currentDocumentId
 
   const allContextDocs = useMemo(() => {
     const docs: Array<{ id: string; title: string }> = []
     const seenIds = new Set<string>()
 
-    if (currentDocument && !seenIds.has(currentDocument.id)) {
-      docs.push(currentDocument)
-      seenIds.add(currentDocument.id)
+    // Add current document from contextDocuments if it exists
+    if (currentDocumentId) {
+      const currentDoc = contextDocuments.find((doc: { id: string }) => doc.id === currentDocumentId)
+      if (currentDoc && !seenIds.has(currentDoc.id)) {
+        docs.push(currentDoc)
+        seenIds.add(currentDoc.id)
+      }
     }
 
+    // Add all other context documents
     for (const doc of contextDocuments) {
       if (!seenIds.has(doc.id)) {
         docs.push(doc)
@@ -211,7 +216,7 @@ function MessageContext({
     }
 
     return docs
-  }, [currentDocument, contextDocuments])
+  }, [currentDocumentId, contextDocuments])
 
   if (allContextDocs.length === 0) {
     return null
@@ -226,7 +231,8 @@ function MessageContext({
         {allContextDocs.map((doc) => (
           <li key={doc.id}>
             <Link
-              to={`/w/${organization.id}/${doc.id}`}
+              to="/w/$organizationSlug/$id"
+              params={{ organizationSlug: organization.slug, id: doc.id }}
               className="inline-flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 hover:underline transition-colors"
               title={`Open document: ${doc.title}`}
             >
