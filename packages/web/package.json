@@ -11,7 +11,7 @@
     "test:e2e": "bun sst shell playwright test -- --ui"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.48",
+    "@ai-sdk/react": "^3.0.50",
     "@floating-ui/dom": "^1.7.4",
     "@floating-ui/react": "^0.27.16",
     "@fontsource-variable/dm-sans": "^5.2.8",
@@ -49,7 +49,7 @@
     "jszip": "^3.10.1",
     "marked": "^17.0.1",
     "motion": "^12.29.0",
-    "posthog-js": "^1.334.0",
+    "posthog-js": "^1.334.1",
     "react": "^19.2.3",
     "react-aria": "^3.45.0",
     "react-aria-components": "^1.14.0",
@@ -65,7 +65,7 @@
     "use-stick-to-bottom": "^1.1.1",
     "usehooks-ts": "^3.1.1",
     "yjs": "^13.6.29",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@better-auth/utils": "^0.3.0",
