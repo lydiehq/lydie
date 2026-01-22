@@ -351,7 +351,6 @@ function MessageContextCompact({ message }: { message: DocumentChatAgentUIMessag
   const contextDocuments = metadata?.contextDocuments || []
   const currentDocument = metadata?.currentDocument
 
-  console.log({ contextDocuments })
   const allContextDocs = useMemo(() => {
     const docs: Array<{ id: string; title: string }> = []
     const seenIds = new Set<string>()
