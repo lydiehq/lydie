@@ -1,16 +1,16 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router"
 import { Surface } from "@/components/layout/Surface"
 import {
-  PersonRegular,
-  SettingsRegular,
-  SparkleRegular,
-  PaymentRegular,
-  CubeRegular,
-  ArrowUploadRegular,
+  PersonFilled,
+  SettingsFilled,
+  SparkleFilled,
+  PaymentFilled,
+  CubeFilled,
+  ArrowUploadFilled,
   DocumentFilled,
-  OpenRegular,
-  ShieldErrorRegular,
-  PuzzlePieceRegular,
+  OpenFilled,
+  ShieldErrorFilled,
+  PuzzlePieceFilled,
 } from "@fluentui/react-icons"
 import { sidebarItemStyles, sidebarItemIconStyles } from "@/components/layout/Sidebar"
 import { Eyebrow } from "@/components/generic/Eyebrow"
@@ -41,17 +41,17 @@ const settingsRoutes: SettingsSection[] = [
       {
         path: "/w/$organizationSlug/settings/profile",
         label: "Profile",
-        icon: PersonRegular,
+        icon: PersonFilled,
       },
       {
         path: "/w/$organizationSlug/settings/user",
         label: "Preferences",
-        icon: PersonRegular,
+        icon: PersonFilled,
       },
       {
         path: "/w/$organizationSlug/settings/ai",
         label: "AI Settings",
-        icon: SparkleRegular,
+        icon: SparkleFilled,
       },
     ],
   },
@@ -61,34 +61,34 @@ const settingsRoutes: SettingsSection[] = [
       {
         path: "/w/$organizationSlug/settings",
         label: "General",
-        icon: SettingsRegular,
+        icon: SettingsFilled,
       },
       {
         path: "/w/$organizationSlug/settings/admin",
         label: "Admin",
-        icon: ShieldErrorRegular,
+        icon: ShieldErrorFilled,
         adminOnly: true,
       },
       {
         path: "/w/$organizationSlug/settings/billing",
         label: "Billing & Usage",
-        icon: PaymentRegular,
+        icon: PaymentFilled,
       },
       {
         path: "/w/$organizationSlug/settings/components",
         label: "Components",
-        icon: CubeRegular,
+        icon: CubeFilled,
         adminOnly: true,
       },
       {
         path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
-        icon: PuzzlePieceRegular,
+        icon: PuzzlePieceFilled,
       },
       {
         path: "/w/$organizationSlug/settings/import",
         label: "Import",
-        icon: ArrowUploadRegular,
+        icon: ArrowUploadFilled,
         adminOnly: true,
       },
     ],
@@ -149,7 +149,7 @@ function RouteComponent() {
                                   </span>
                                 )}
                                 {route.external && (
-                                  <OpenRegular
+                                  <OpenFilled
                                     className={sidebarItemIconStyles({
                                       className: "size-3 shrink-0",
                                     })}

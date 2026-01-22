@@ -24,6 +24,7 @@ function RouteComponent() {
   const { organization } = useOrganization()
   const z = useZero()
 
+  const [allAgents] = useQuery(queries.agents.available({ organizationId: organization.id }))
   const [agents] = useQuery(queries.agents.byUser({ organizationId: organization.id }))
   const [isCreating, setIsCreating] = useState(false)
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null)
@@ -37,6 +38,10 @@ function RouteComponent() {
     if (!organization) return false
     return organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active"
   }, [organization])
+
+  const defaultAgents = useMemo(() => {
+    return allAgents?.filter((agent) => agent.is_default) || []
+  }, [allAgents])
 
   const handleCreateAgent = async () => {
     if (!formData.name.trim() || !formData.systemPrompt.trim()) {
@@ -129,11 +134,51 @@ function RouteComponent() {
       </div>
       <Separator />
 
+      {/* Default Agents Section */}
+      <div className="flex flex-col gap-y-6">
+        <SectionHeader
+          heading="Default Agents"
+          description="These are the default AI agents available to all users. Each agent has a unique personality and writing style optimized for different tasks."
+          descriptionClassName="text-sm/relaxed text-gray-700"
+        />
+
+        {defaultAgents.length > 0 && (
+          <Card className="p-6 space-y-4">
+            <h3 className="text-sm font-medium text-gray-900">Available Default Agents</h3>
+            <div className="space-y-3">
+              {defaultAgents.map((agent) => (
+                <div
+                  key={agent.id}
+                  className="p-4 border border-gray-200 rounded-lg space-y-2"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-sm">{agent.name}</h4>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Default</span>
+                      </div>
+                      {agent.description && (
+                        <p className="text-xs text-gray-600 mt-1">{agent.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <p className="text-xs text-gray-600 leading-relaxed">{agent.system_prompt}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
+
+      <Separator />
+
       {/* Custom Agents Section */}
       <div className="flex flex-col gap-y-6">
         <SectionHeader
           heading="Custom Agents"
-          description="Create custom AI agents with specific personalities and writing styles for different tasks. All users can use the default agents (Default, SEO Writer, Essay Writer, Work Assistant)."
+          description="Create custom AI agents with specific personalities and writing styles for different tasks. All users can use the default agents above."
           descriptionClassName="text-sm/relaxed text-gray-700"
         />
 
