@@ -5,7 +5,7 @@ import { ChatAlert } from "@/components/editor/ChatAlert"
 import { AssistantInput } from "@/components/assistant/AssistantInput"
 import type { ChatAlertState } from "@/components/editor/ChatAlert"
 
-interface AssistantChatUIProps {
+interface AssistantChatProps {
   organizationId: string
   initialPrompt?: string
   onPromptUsed?: () => void
@@ -19,7 +19,7 @@ interface AssistantChatUIProps {
   conversationId: string
 }
 
-export function AssistantChatUI({
+export function AssistantChat({
   organizationId,
   initialPrompt,
   onPromptUsed,
@@ -31,7 +31,7 @@ export function AssistantChatUI({
   alert,
   setAlert,
   conversationId,
-}: AssistantChatUIProps) {
+}: AssistantChatProps) {
   const navigate = useNavigate()
   const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(initialPrompt)
 
