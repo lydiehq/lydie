@@ -35,7 +35,6 @@ export function AssistantChat({
   const navigate = useNavigate()
   const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(initialPrompt)
 
-  // Clear prompt after it's been used
   useEffect(() => {
     if (currentInitialPrompt && initialPrompt !== currentInitialPrompt) {
       setCurrentInitialPrompt(initialPrompt)
@@ -58,7 +57,6 @@ export function AssistantChat({
         replace: true,
       })
 
-      // Clear the initial prompt after first submission
       if (currentInitialPrompt) {
         setCurrentInitialPrompt(undefined)
         onPromptUsed?.()

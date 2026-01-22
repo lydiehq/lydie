@@ -211,7 +211,6 @@ export function AssistantInput({
     }
   }, [chatEditor.editor, chatEditor.getTextContent])
 
-  // Set initial prompt if provided (only once when component mounts or prompt changes)
   useEffect(() => {
     if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
       chatEditor.setContent(initialPrompt)
@@ -239,7 +238,6 @@ export function AssistantInput({
     [chatEditor, onSubmit, contextItems],
   )
 
-  // Assign to ref so it can be called from onEnter callback
   handleSubmitRef.current = handleSubmit
 
   return (

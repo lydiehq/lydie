@@ -341,6 +341,9 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
       </Toolbar>
 
       <div className="flex gap-x-1 items-center">
+        <Button onPress={doc.published ? handleUnpublish : handlePublish} intent="secondary" size="sm">
+          {doc.published ? "Unpublish" : "Publish"}
+        </Button>
         <MenuTrigger>
           <RACButton aria-label="Document Options" className="p-1.5 rounded hover:bg-gray-100">
             <MoreVerticalIcon className="size-3.5 text-gray-600" />
@@ -350,9 +353,6 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
             <MenuItem onAction={() => deleteDocument(doc.id, true)}>Delete</MenuItem>
           </Menu>
         </MenuTrigger>
-        <Button onPress={doc.published ? handleUnpublish : handlePublish} intent="secondary" size="sm">
-          {doc.published ? "Unpublish" : "Publish"}
-        </Button>
         <DocumentSettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} doc={doc} />
       </div>
     </div>

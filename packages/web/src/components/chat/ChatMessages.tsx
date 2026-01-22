@@ -36,7 +36,6 @@ export function ChatMessages({ messages, status, editor = null, organizationId, 
   const lastMessage = messages[messages.length - 1]
   const isSubmitting = status === "submitted" && messages.length > 0 && lastMessage?.role === "user"
 
-  // Show loading indicator until text actually appears in the assistant message
   const shouldShowLoading =
     isSubmitting ||
     (status === "streaming" &&
@@ -345,19 +344,14 @@ function MessagePart({
   return null
 }
 
-/**
- * Displays context documents used for a message as a list (compact version for ChatMessages)
- */
 function MessageContextCompact({ message }: { message: DocumentChatAgentUIMessage }) {
   const { organization } = useOrganization()
   const metadata = message.metadata as any
 
-  // Get context documents from metadata
   const contextDocuments = metadata?.contextDocuments || []
   const currentDocument = metadata?.currentDocument
 
   console.log({ contextDocuments })
-  // Combine current document and context documents, removing duplicates
   const allContextDocs = useMemo(() => {
     const docs: Array<{ id: string; title: string }> = []
     const seenIds = new Set<string>()
