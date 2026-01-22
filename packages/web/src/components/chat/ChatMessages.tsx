@@ -17,6 +17,9 @@ import { UserMessage } from "./Message"
 import { Streamdown } from "streamdown"
 import type { Editor } from "@tiptap/react"
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
+import { Link } from "@tanstack/react-router"
+import { useOrganization } from "@/context/organization.context"
+import { useMemo } from "react"
 
 type Props = {
   messages: DocumentChatAgentUIMessage[]
@@ -44,7 +47,7 @@ export function ChatMessages({ messages, status, editor = null, organizationId, 
     <StickToBottom
       className="flex-1 overflow-hidden scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-300 scrollbar-track-gray-50"
       resize="smooth"
-      initial="instant"
+      initial={{ damping: 1, stiffness: 1 }}
     >
       <StickToBottom.Content className="flex flex-col gap-y-2 p-3">
         <AnimatePresence initial={false}>
@@ -219,6 +222,7 @@ function AssistantMessageWithTools({
       {shouldShowMetadata && (
         <div className="flex justify-between items-center">
           <div className="flex flex-col gap-y-1">
+            <MessageContextCompact message={message} />
             {message.metadata?.createdAt && (
               <span className="text-gray-400 text-[11px]">
                 {format(new Date(message.metadata.createdAt), "HH:mm")}
@@ -339,4 +343,73 @@ function MessagePart({
   }
 
   return null
+}
+
+/**
+ * Displays context documents used for a message as a list (compact version for ChatMessages)
+ */
+function MessageContextCompact({ message }: { message: DocumentChatAgentUIMessage }) {
+  const { organization } = useOrganization()
+  const metadata = message.metadata as any
+
+  // Get context documents from metadata
+  const contextDocuments = metadata?.contextDocuments || []
+  const currentDocument = metadata?.currentDocument
+
+  console.log({ contextDocuments })
+  // Combine current document and context documents, removing duplicates
+  const allContextDocs = useMemo(() => {
+    const docs: Array<{ id: string; title: string }> = []
+    const seenIds = new Set<string>()
+
+    if (currentDocument && !seenIds.has(currentDocument.id)) {
+      docs.push(currentDocument)
+      seenIds.add(currentDocument.id)
+    }
+
+    for (const doc of contextDocuments) {
+      if (!seenIds.has(doc.id)) {
+        docs.push(doc)
+        seenIds.add(doc.id)
+      }
+    }
+
+    return docs
+  }, [currentDocument, contextDocuments])
+
+  if (allContextDocs.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="text-[10px] text-gray-500 font-medium">Context documents:</div>
+      <ul className="flex flex-col gap-0.5">
+        {allContextDocs.map((doc) => (
+          <li key={doc.id}>
+            <Link
+              to={`/w/${organization.slug}/${doc.id}`}
+              className="inline-flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 hover:underline transition-colors"
+              title={`Open document: ${doc.title}`}
+            >
+              <svg
+                className="size-3 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="max-w-[200px] truncate">{doc.title}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 }

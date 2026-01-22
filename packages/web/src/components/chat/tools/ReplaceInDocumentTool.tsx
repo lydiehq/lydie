@@ -177,7 +177,7 @@ export function ReplaceInDocumentTool({
                 height: isExpanded || !hasOverflow ? "auto" : 140,
               }}
             >
-              <StickToBottom className="text-xs text-gray-600 overflow-y-auto" initial="instant">
+              <StickToBottom className="text-xs text-gray-600 overflow-y-auto" initial={{ damping: 1, stiffness: 1 }}>
                 <StickToBottom.Content>
                   <div
                     ref={contentRef}

@@ -32,6 +32,14 @@ export const messageMetadataSchema = z.object({
   createdAt: z.string().optional(),
   model: z.string().optional(),
   duration: z.number().optional(),
+  contextDocuments: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+  })).optional(),
+  currentDocument: z.object({
+    id: z.string(),
+    title: z.string(),
+  }).optional(),
 }).passthrough()
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>
@@ -134,14 +142,7 @@ export const AssistantRoute = new Hono<{
       }
     }
 
-    // Save the user message after limit check passes
-    await saveMessage({
-      conversationId,
-      parts: latestMessage.parts,
-      role: "user",
-      metadata: latestMessage.metadata,
-    })
-
+    // Fetch current document first
     let currentDocument: { id: string; title: string; organizationId: string } | null = null
 
     if (currentDocumentId) {
@@ -170,6 +171,7 @@ export const AssistantRoute = new Hono<{
       currentDocument = document
     }
 
+    // Resolve context document IDs to full document info
     const uniqueContextDocumentIds = Array.from(new Set(contextDocumentIds.filter(Boolean)))
     const contextDocuments =
       uniqueContextDocumentIds.length > 0
@@ -187,6 +189,26 @@ export const AssistantRoute = new Hono<{
               ),
             )
         : []
+
+    // Save the user message after limit check passes with enhanced metadata
+    await saveMessage({
+      conversationId,
+      parts: latestMessage.parts,
+      role: "user",
+      metadata: {
+        ...latestMessage.metadata,
+        contextDocuments: contextDocuments.map((doc) => ({
+          id: doc.id,
+          title: doc.title || "Untitled document",
+        })),
+        currentDocument: currentDocument
+          ? {
+            id: currentDocument.id,
+            title: currentDocument.title || "Untitled document",
+          }
+          : undefined,
+      },
+    })
 
     // Fetch user settings for prompt style
     const [userSettings] = await db
@@ -265,6 +287,16 @@ export const AssistantRoute = new Hono<{
         if (part.type === "start") {
           return {
             createdAt: new Date().toISOString(),
+            contextDocuments: contextDocuments.map((doc) => ({
+              id: doc.id,
+              title: doc.title || "Untitled document",
+            })),
+            currentDocument: currentDocument
+              ? {
+                id: currentDocument.id,
+                title: currentDocument.title || "Untitled document",
+              }
+              : undefined,
           }
         }
         if (part.type === "finish") {
@@ -277,16 +309,31 @@ export const AssistantRoute = new Hono<{
       },
       onFinish: async ({ messages: finalMessages }) => {
         const assistantMessage = finalMessages[finalMessages.length - 1]
+        
+        // Ensure the final saved metadata includes all context information
+        const enhancedMetadata = {
+          ...(assistantMessage.metadata as MessageMetadata),
+          contextDocuments: contextDocuments.map((doc) => ({
+            id: doc.id,
+            title: doc.title || "Untitled document",
+          })),
+          currentDocument: currentDocument
+            ? {
+              id: currentDocument.id,
+              title: currentDocument.title || "Untitled document",
+            }
+            : undefined,
+        }
+        
         const savedMessage = await saveMessage({
           conversationId,
           parts: assistantMessage.parts,
-          metadata: assistantMessage.metadata as MessageMetadata,
+          metadata: enhancedMetadata,
           role: "assistant",
         })
 
         // Extract usage data from metadata
-        const metadata = assistantMessage.metadata as MessageMetadata
-        const totalTokens = metadata?.usage || 0
+        const totalTokens = enhancedMetadata?.usage || 0
 
         // Save LLM usage data to the usage table
         if (totalTokens > 0) {
