@@ -41,12 +41,9 @@ export const messageMetadataSchema = z
         }),
       )
       .optional(),
-    currentDocument: z
-      .object({
-        id: z.string(),
-        title: z.string(),
-      })
-      .optional(),
+    currentDocumentId: z.string().optional(),
+    contextDocumentIds: z.array(z.string()).optional(),
+    documentWordCount: z.number().optional(),
   })
   .passthrough()
 
@@ -60,12 +57,7 @@ export const AssistantRoute = new Hono<{
   }
 }>().post("/", async (c) => {
   try {
-    const {
-      messages,
-      conversationId: providedConversationId,
-      currentDocument: providedCurrentDocument,
-      contextDocumentIds: providedContextDocumentIds,
-    } = await c.req.json()
+    const { messages, conversationId: providedConversationId } = await c.req.json()
     const userId = c.get("user").id
     const organizationId = c.get("organizationId")
 
@@ -109,17 +101,11 @@ export const AssistantRoute = new Hono<{
     const user = c.get("user")
 
     const messageMetadata = latestMessage?.metadata ?? {}
-    const currentDocumentId =
-      providedCurrentDocument?.id ?? messageMetadata.currentDocument?.id ?? messageMetadata.currentDocumentId
-    const documentWordCount =
-      providedCurrentDocument?.wordCount ??
-      messageMetadata.currentDocument?.wordCount ??
-      messageMetadata.documentWordCount
-    const contextDocumentIds = Array.isArray(providedContextDocumentIds)
-      ? providedContextDocumentIds
-      : Array.isArray(messageMetadata.contextDocumentIds)
-        ? messageMetadata.contextDocumentIds
-        : []
+    const currentDocumentId = messageMetadata.currentDocumentId as string | undefined
+    const documentWordCount = messageMetadata.documentWordCount as number | undefined
+    const contextDocumentIdsRaw = Array.isArray(messageMetadata.contextDocumentIds)
+      ? messageMetadata.contextDocumentIds
+      : []
 
     // Check daily message limit BEFORE saving to prevent exceeding the limit
     // Skip limit check for admin users
@@ -180,7 +166,10 @@ export const AssistantRoute = new Hono<{
     }
 
     // Resolve context document IDs to full document info
-    const uniqueContextDocumentIds = Array.from(new Set(contextDocumentIds.filter(Boolean)))
+    const contextDocumentIds: string[] = Array.isArray(contextDocumentIdsRaw)
+      ? contextDocumentIdsRaw.filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
+      : []
+    const uniqueContextDocumentIds = Array.from(new Set(contextDocumentIds))
     const contextDocuments =
       uniqueContextDocumentIds.length > 0
         ? await db
@@ -209,12 +198,7 @@ export const AssistantRoute = new Hono<{
           id: doc.id,
           title: doc.title || "Untitled document",
         })),
-        currentDocument: currentDocument
-          ? {
-              id: currentDocument.id,
-              title: currentDocument.title || "Untitled document",
-            }
-          : undefined,
+        currentDocumentId: currentDocument?.id,
       },
     })
 
@@ -275,7 +259,7 @@ export const AssistantRoute = new Hono<{
 
     const agent = new ToolLoopAgent({
       providerOptions: {
-        openai: { reasoningEffort: currentDocument ? "medium" : "low" },
+        openai: { reasoningEffort: "low" },
       },
       model: chatModel,
       instructions: systemPrompt,
@@ -297,12 +281,7 @@ export const AssistantRoute = new Hono<{
               id: doc.id,
               title: doc.title || "Untitled document",
             })),
-            currentDocument: currentDocument
-              ? {
-                  id: currentDocument.id,
-                  title: currentDocument.title || "Untitled document",
-                }
-              : undefined,
+            currentDocumentId: currentDocument?.id,
           }
         }
         if (part.type === "finish") {
@@ -323,12 +302,7 @@ export const AssistantRoute = new Hono<{
             id: doc.id,
             title: doc.title || "Untitled document",
           })),
-          currentDocument: currentDocument
-            ? {
-                id: currentDocument.id,
-                title: currentDocument.title || "Untitled document",
-              }
-            : undefined,
+          currentDocumentId: currentDocument?.id,
         }
 
         const savedMessage = await saveMessage({
@@ -389,27 +363,35 @@ function createContextInfo({
   let context = `<additional_data>
 Below are some potentially helpful pieces of information for responding to the user's request:`
 
+  // Filter out current document from context documents to avoid duplication
+  const otherContextDocuments = contextDocuments.filter(
+    (doc) => !currentDocument || doc.id !== currentDocument.id,
+  )
+
   if (currentDocument) {
     context += `
 
-Current Document:
+Primary Document (when user says "this document", they refer to this):
 - Title: ${currentDocument.title || "Untitled document"}
-- ID: ${currentDocument.id}`
+- ID: ${currentDocument.id}
+- IMPORTANT: If the user asks to make changes to "this document" or similar, you should read this document first using read_document or read_current_document before making modifications.`
   }
 
   if (typeof documentWordCount === "number") {
     context += `
 
-Current Document Word Count: ${documentWordCount}`
+Primary Document Word Count: ${documentWordCount}`
   }
 
   if (contextDocuments.length > 0) {
     context += `
 
-Context Documents:`
+Context Documents (available for reading and reference):
+IMPORTANT: These documents are provided as context. If the user asks to modify a document or make changes, you should read the relevant document(s) first using read_document before making modifications.`
     for (const doc of contextDocuments) {
+      const isPrimary = currentDocument && doc.id === currentDocument.id
       context += `
-- ${doc.title || "Untitled document"} (ID: ${doc.id})`
+- ${doc.title || "Untitled document"} (ID: ${doc.id})${isPrimary ? " [Primary Document]" : ""}`
     }
   }
 

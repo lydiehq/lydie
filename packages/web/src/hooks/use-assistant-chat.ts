@@ -1,7 +1,7 @@
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useOrganization } from "@/context/organization.context"
 import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
 import type { ChatAlertState } from "@/components/editor/ChatAlert"
@@ -9,21 +9,12 @@ import { trackEvent } from "@/lib/posthog"
 
 interface UseAssistantChatOptions {
   conversationId: string
-  currentDocument?: {
-    id: string
-    organizationId: string
-  }
   initialMessages?: DocumentChatAgentUIMessage[]
   experimental_throttle?: number
 }
 
-/**
- * Unified assistant chat hook that consolidates all useChat setup logic
- * Handles transport configuration, error handling, alerts, and analytics tracking
- */
 export function useAssistantChat({
   conversationId,
-  currentDocument,
   initialMessages = [],
   experimental_throttle,
 }: UseAssistantChatOptions) {
@@ -46,7 +37,6 @@ export function useAssistantChat({
       credentials: "include",
       body: {
         conversationId,
-        ...(currentDocument && { currentDocument }),
       },
       headers: {
         "X-Organization-Id": organization.id,
