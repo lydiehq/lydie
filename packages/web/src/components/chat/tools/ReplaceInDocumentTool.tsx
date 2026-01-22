@@ -107,7 +107,16 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
         }
       }
     }
-  }, [pendingChange, pendingChangeStatus, targetDocumentId, params.id, searchText, replaceText, isApplying, applyStatus])
+  }, [
+    pendingChange,
+    pendingChangeStatus,
+    targetDocumentId,
+    params.id,
+    searchText,
+    replaceText,
+    isApplying,
+    applyStatus,
+  ])
 
   const [targetDocument] = useQuery(
     targetDocumentId

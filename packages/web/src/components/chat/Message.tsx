@@ -165,7 +165,7 @@ function DocumentReferencePill({ documentId }: { documentId: string }) {
   )
 
   const title = document?.title || "Untitled"
-  const href = `/w/${organization.id}/${documentId}`
+  const href = `/w/${organization.slug}/${documentId}`
 
   return (
     <Link
@@ -178,9 +178,6 @@ function DocumentReferencePill({ documentId }: { documentId: string }) {
   )
 }
 
-/**
- * Displays context documents used for a message as a list
- */
 function MessageContext({
   message,
   align = "left",
