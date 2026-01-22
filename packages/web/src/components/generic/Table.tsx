@@ -1,4 +1,4 @@
-import { ArrowUpIcon } from "@/icons"
+import { ArrowUpRegular } from "@fluentui/react-icons"
 import {
   Cell as AriaCell,
   Column as AriaColumn,
@@ -64,7 +64,7 @@ export function Column(props: ColumnProps) {
                 }`}
               >
                 {sortDirection && (
-                  <ArrowUpIcon
+                  <ArrowUpRegular
                     aria-hidden
                     className="w-4 h-4 text-gray-500 dark:text-zinc-400 forced-colors:text-[ButtonText]"
                   />

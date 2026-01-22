@@ -1,4 +1,4 @@
-import { AlertCircleIcon, InfoIcon } from "@/icons"
+import { ErrorCircleRegular, InfoRegular } from "@fluentui/react-icons"
 import { chain } from "react-aria"
 import { type DialogProps, Heading } from "react-aria-components"
 import { Button } from "./Button"
@@ -34,7 +34,7 @@ export function AlertDialog({
               variant === "destructive" ? "text-red-500" : "text-blue-500"
             }`}
           >
-            {variant === "destructive" ? <AlertCircleIcon aria-hidden /> : <InfoIcon aria-hidden />}
+            {variant === "destructive" ? <ErrorCircleRegular aria-hidden /> : <InfoRegular aria-hidden />}
           </div>
           <p className="mt-3 text-slate-500 dark:text-zinc-400">{children}</p>
           <div className="mt-6 flex justify-end gap-2">

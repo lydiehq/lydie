@@ -1,5 +1,5 @@
 import { Disclosure, DisclosurePanel, Button } from "react-aria-components"
-import { LoaderIcon, SearchIcon, ChevronRightIcon } from "@/icons"
+import { ArrowClockwiseRegular, SearchFilled, ChevronRightRegular } from "@fluentui/react-icons"
 import { ToolContainer } from "./ToolContainer"
 
 interface SearchResult {
@@ -52,7 +52,7 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
 
     return (
       <div className={`flex items-center gap-x-2 text-gray-500 ${className}`}>
-        <LoaderIcon className="size-3 animate-spin" />
+        <ArrowClockwiseRegular className="size-3 animate-spin" />
         <span className="text-[13px]">{message}...</span>
       </div>
     )
@@ -74,7 +74,7 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
       // No results found
       return (
         <div className={`flex items-center gap-x-2 text-gray-500 ${className}`}>
-          <SearchIcon className="size-3" />
+          <SearchFilled className="size-3" />
           <span className="text-[13px]">Section not found</span>
         </div>
       )
@@ -93,7 +93,7 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
         slot="trigger"
       >
         <SearchIcon className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
-        <ChevronRightIcon className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
+        <ChevronRightRegular className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">Read {topResult?.heading ? `"${topResult.heading}"` : "section"}</span>
       </Button>
       <DisclosurePanel className="overflow-hidden pl-5">

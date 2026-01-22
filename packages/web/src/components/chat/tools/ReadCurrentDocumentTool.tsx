@@ -1,5 +1,5 @@
 import React from "react"
-import { CheckIcon, LoaderIcon } from "@/icons"
+import { CheckmarkRegular, ArrowClockwiseRegular } from "@fluentui/react-icons"
 
 export interface ReadCurrentDocumentToolProps {
   tool: {
@@ -40,7 +40,7 @@ export function ReadCurrentDocumentTool({ tool }: ReadCurrentDocumentToolProps) 
   if (isToolLoading) {
     content = (
       <div className="flex items-center gap-x-2 text-gray-500 truncate">
-        <LoaderIcon className="size-3 animate-spin" />
+        <ArrowClockwiseRegular className="size-3 animate-spin" />
         <span className="text-[13px] whitespace-nowrap">{loadingMessage}...</span>
       </div>
     )
@@ -54,7 +54,7 @@ export function ReadCurrentDocumentTool({ tool }: ReadCurrentDocumentToolProps) 
   } else if (outputState === "success" && tool.output?.title) {
     content = (
       <div className="flex items-center gap-x-1 truncate text-gray-500">
-        <CheckIcon className="size-2.5" />
+        <CheckmarkRegular className="size-2.5" />
         <span className="text-[13px] whitespace-nowrap">Read current document: "{tool.output.title}"</span>
       </div>
     )

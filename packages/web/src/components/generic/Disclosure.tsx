@@ -12,7 +12,7 @@ import {
   DisclosureStateContext,
 } from "react-aria-components"
 import { cva } from "cva"
-import { ChevronRightIcon } from "@/icons"
+import { ChevronRightRegular } from "@fluentui/react-icons"
 import { composeTailwindRenderProps } from "./utils"
 import { DisclosureGroupStateContext } from "react-aria-components"
 
@@ -80,7 +80,7 @@ export function DisclosureHeader({ children, className }: DisclosureHeaderProps)
       <Button slot="trigger" className={(renderProps) => disclosureButton({ ...renderProps, isInGroup })}>
         {({ isDisabled }) => (
           <>
-            <ChevronRightIcon aria-hidden className={chevron({ isExpanded, isDisabled })} />
+            <ChevronRightRegular aria-hidden className={chevron({ isExpanded, isDisabled })} />
             {children}
           </>
         )}

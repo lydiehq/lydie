@@ -1,17 +1,19 @@
 import { TreeItem, TreeItemContent, Button, MenuTrigger } from "react-aria-components"
 import { useParams, useNavigate } from "@tanstack/react-router"
 import { Collection } from "react-aria-components"
-import { type ReactElement, useRef } from "react"
+import { type ReactElement, useRef, useState } from "react"
 import {
-  FolderSyncIcon,
-  MoreVerticalIcon,
-  MoveIcon,
-  BlocksIcon,
-  LoaderIcon,
-  ArrowRightBIcon,
-  DocumentIcon,
-  DocumentsIcon,
-} from "@/icons"
+  FolderSyncRegular,
+  ReOrderRegular,
+  CubeRegular,
+  ArrowClockwiseRegular,
+  ArrowRightRegular,
+  DocumentTextFilled,
+  DocumentCopyFilled,
+  ChevronRightFilled,
+  MoreHorizontalFilled,
+  MoreHorizontalRegular,
+} from "@fluentui/react-icons"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar"
 import { DocumentMenu } from "../home-file-explorer/DocumentMenu"
@@ -119,7 +121,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                 }}
                 aria-label={`Drag ${item.name}`}
               >
-                <MoveIcon className="size-3" />
+                <ReOrderRegular className="size-3" />
               </Button>
             )}
 
@@ -154,7 +156,6 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               </span>
             </div>
 
-            {/* Context menu */}
             <div className="items-center gap-1 relative -mr-1">
               <ItemContextMenu
                 type={item.type}
@@ -201,25 +202,23 @@ function IntegrationGroupChevron({
             alt={`${name} icon`}
             className="size-3.5 rounded-[2px] group-hover/chevron:hidden"
           />
-          <ArrowRightBIcon
+          <ArrowRightRegular
             className={sidebarItemIconStyles({
-              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
-                isExpanded ? "rotate-90" : ""
-              }`,
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${isExpanded ? "rotate-90" : ""
+                }`,
             })}
           />
         </>
       ) : (
         <>
-          <BlocksIcon
+          <CubeRegular
             className={sidebarItemIconStyles({
               className: "size-3.5 group-hover/chevron:hidden",
             })}
           />
-          <ArrowRightBIcon
-            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
-              isExpanded ? "rotate-90" : ""
-            }`}
+          <ArrowRightRegular
+            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${isExpanded ? "rotate-90" : ""
+              }`}
           />
         </>
       )}
@@ -246,23 +245,22 @@ function IntegrationLinkChevron({
       slot="chevron"
     >
       {syncStatus === "pulling" ? (
-        <LoaderIcon
+        <ArrowClockwiseRegular
           className={sidebarItemIconStyles({
             className: "size-3.5 animate-spin",
           })}
         />
       ) : (
         <>
-          <FolderSyncIcon
+          <FolderSyncRegular
             className={sidebarItemIconStyles({
               className: "size-3.5 group-hover/chevron:hidden",
             })}
           />
-          <ArrowRightBIcon
+          <ArrowRightRegular
             className={sidebarItemIconStyles({
-              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
-                isExpanded ? "rotate-90" : ""
-              }`,
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : ""
+                }`,
             })}
           />
         </>
@@ -280,7 +278,7 @@ function DocumentTreeItemIcon({
   chevronRef: React.RefObject<HTMLButtonElement | null>
   hasChildren: boolean
 }) {
-  const IconComponent = hasChildren ? DocumentsIcon : DocumentIcon
+  const IconComponent = hasChildren ? DocumentCopyFilled : DocumentTextFilled
 
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
@@ -288,7 +286,7 @@ function DocumentTreeItemIcon({
       <div className="text-gray-500 p-1 -ml-1">
         <IconComponent
           className={sidebarItemIconStyles({
-            className: "size-4 shrink-0",
+            className: "size-4.5 shrink-0",
           })}
         />
       </div>
@@ -304,35 +302,41 @@ function DocumentTreeItemIcon({
     >
       <IconComponent
         className={sidebarItemIconStyles({
-          className: "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+          className: "size-4.5 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
         })}
       />
-      <ArrowRightBIcon
+      <ChevronRightFilled
         className={sidebarItemIconStyles({
-          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
-            isExpanded ? "rotate-90" : ""
-          }`,
+          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${isExpanded ? "rotate-90" : ""
+            }`,
         })}
       />
     </Button>
   )
 }
 
-function VerticalMenuButton({ "aria-label": ariaLabel }: { "aria-label": string }) {
+function VerticalMenuButton({
+  "aria-label": ariaLabel,
+  isOpen = false,
+}: {
+  "aria-label": string
+  isOpen?: boolean
+}) {
   return (
-    <Button className="p-1 text-black hover:text-black/60 group/options" aria-label={ariaLabel}>
-      <MoreVerticalIcon
+    <Button
+      className={`p-1 text-black hover:text-black/60 group/options transition-opacity ${isOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+      aria-label={ariaLabel}
+    >
+      <MoreHorizontalRegular
         className={sidebarItemIconStyles({
-          className: "size-3 group-hover/options:text-black/60 hover:",
+          className: "size-4.5 group-hover/options:text-black/60",
         })}
       />
     </Button>
   )
 }
 
-/**
- * Context Menu for different item types
- */
 function ItemContextMenu({
   type,
   itemId,
@@ -348,6 +352,7 @@ function ItemContextMenu({
 }) {
   const navigate = useNavigate()
   const { createDocument } = useDocumentActions()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   if (type === "integration-group") {
     return null
@@ -355,8 +360,8 @@ function ItemContextMenu({
 
   if (type === "integration-link") {
     return (
-      <MenuTrigger>
-        <VerticalMenuButton aria-label="Integration link options" />
+      <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <VerticalMenuButton aria-label="Integration link options" isOpen={isMenuOpen} />
         <Menu>
           <MenuItem
             onAction={() => {
@@ -386,8 +391,8 @@ function ItemContextMenu({
   }
 
   return (
-    <MenuTrigger>
-      <VerticalMenuButton aria-label="Document options" />
+    <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
+      <VerticalMenuButton aria-label="Document options" isOpen={isMenuOpen} />
       <DocumentMenu documentId={itemId} documentName={itemName} />
     </MenuTrigger>
   )

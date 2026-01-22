@@ -1,4 +1,4 @@
-import { DocumentIcon, SearchIcon, PlusIcon } from "@/icons"
+import { DocumentFilled, SearchFilled, AddRegular } from "@fluentui/react-icons"
 import { Checkbox } from "@/components/generic/Checkbox"
 import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
 import { useAtom } from "jotai"
@@ -17,7 +17,7 @@ export function OnboardingStepDocuments() {
     <div className="flex flex-col gap-y-6">
       <div className="flex items-center gap-x-3">
         <div className="p-2 bg-gray-50 rounded-lg">
-          <DocumentIcon className="size-4 text-gray-500" />
+          <DocumentFilled className="size-4 text-gray-500" />
         </div>
         <span className="text-lg font-medium text-gray-900">Documents</span>
       </div>
@@ -34,7 +34,7 @@ export function OnboardingStepDocuments() {
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-              <SearchIcon className="size-4 text-gray-600" />
+              <SearchFilled className="size-4 text-gray-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Open the command menu</p>
@@ -54,7 +54,7 @@ export function OnboardingStepDocuments() {
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-              <PlusIcon className="size-4 text-gray-600" />
+              <AddRegular className="size-4 text-gray-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Use the Import Demo Content menu item</p>
@@ -72,7 +72,7 @@ export function OnboardingStepDocuments() {
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-              <DocumentIcon className="size-4 text-gray-600" />
+              <DocumentFilled className="size-4 text-gray-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Explore the editor</p>

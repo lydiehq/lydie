@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react"
 import { Button as RACButton } from "react-aria-components"
-import { XIcon, AlertCircleIcon, SparklesIcon, ZapIcon } from "@/icons"
+import { DismissRegular, ErrorCircleRegular, SparkleRegular, FlashRegular } from "@fluentui/react-icons"
 import { useRouter } from "@tanstack/react-router"
 import { useOrganization } from "@/context/organization.context"
 import clsx from "clsx"
@@ -39,9 +39,9 @@ export function ChatAlert({ alert, onDismiss }: ChatAlertProps) {
         <Container type={alert.type}>
           <div className="flex justify-between items-start p-2 border-b border-black/5">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {alert.type === "error" && <AlertCircleIcon className="size-4 text-red-500 shrink-0" />}
-              {alert.type === "warning" && <ZapIcon className="size-4 text-amber-500 shrink-0" />}
-              {alert.type === "info" && <SparklesIcon className="size-4 text-blue-500 shrink-0" />}
+              {alert.type === "error" && <ErrorCircleRegular className="size-4 text-red-500 shrink-0" />}
+              {alert.type === "warning" && <FlashRegular className="size-4 text-amber-500 shrink-0" />}
+              {alert.type === "info" && <SparkleRegular className="size-4 text-blue-500 shrink-0" />}
               <span
                 className={clsx(
                   "text-sm font-medium truncate",
@@ -54,7 +54,7 @@ export function ChatAlert({ alert, onDismiss }: ChatAlertProps) {
               </span>
             </div>
             <RACButton onPress={onDismiss} className="text-gray-500 hover:text-gray-700 ml-2">
-              <XIcon className="size-4" />
+              <DismissRegular className="size-4" />
             </RACButton>
           </div>
           <div className="p-2">

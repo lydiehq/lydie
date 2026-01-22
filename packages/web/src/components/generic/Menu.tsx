@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronRightIcon } from "@/icons"
+import { CheckmarkRegular, ChevronRightRegular } from "@fluentui/react-icons"
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
@@ -37,13 +37,13 @@ export function MenuItem(props: MenuItemProps) {
         <>
           {selectionMode !== "none" && (
             <span className="flex items-center w-4">
-              {isSelected && <CheckIcon aria-hidden className="w-4 h-4" />}
+              {isSelected && <CheckmarkRegular aria-hidden className="w-4 h-4" />}
             </span>
           )}
           <span className="flex items-center flex-1 truncate group-selected:font-semibold text-sm font-normal text-gray-800">
             {children}
           </span>
-          {hasSubmenu && <ChevronRightIcon aria-hidden className="absolute w-4 h-4 right-2" />}
+          {hasSubmenu && <ChevronRightRegular aria-hidden className="absolute w-4 h-4 right-2" />}
         </>
       ))}
     </AriaMenuItem>

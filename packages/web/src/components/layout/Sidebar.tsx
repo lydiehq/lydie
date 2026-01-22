@@ -8,35 +8,32 @@ import { Link } from "@tanstack/react-router"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { cva } from "cva"
 import { UsageStats } from "./UsageStats"
-import { useConnectionState, useQuery } from "@rocicorp/zero/react"
+import { useConnectionState } from "@rocicorp/zero/react"
 import { useZero } from "@/services/zero"
 import { useCallback } from "react"
 import clsx from "clsx"
-import { queries } from "@lydie/zero/queries"
 import { useOrganization } from "@/context/organization.context"
 import { SidebarIcon } from "./SidebarIcon"
 import { useSetAtom } from "jotai"
 import { commandMenuStateAtom } from "@/stores/command-menu"
 import { FeedbackWidget } from "../feedback/FeedbackWidget"
 import {
-  SearchIcon,
-  HomeIcon,
-  MessageCircleIcon,
-  PuzzleIcon,
-  CreateIcon,
-  WifiIcon,
-  WifiOffIcon,
-  AlertCircleIcon,
-  Loader2Icon,
-  ShieldAlertIcon,
-} from "@/icons"
+  SearchFilled,
+  Home24Filled as HomeFilled,
+  Wifi4Regular,
+  WifiOffRegular,
+  ErrorCircleRegular,
+  ArrowClockwiseRegular,
+  ShieldErrorRegular,
+  TabDesktopMultipleFilled,
+  PersonChatFilled,
+  DocumentAddFilled,
+} from "@fluentui/react-icons"
 import { Separator } from "../generic/Separator"
 import { Eyebrow } from "../generic/Eyebrow"
 import { useMemo } from "react"
 import { useAuth } from "@/context/auth.context"
 import { isAdmin } from "@/utils/admin"
-import { CircularProgress } from "../generic/CircularProgress"
-import type { OnboardingStatus } from "@lydie/core/onboarding-status"
 
 type Props = {
   isCollapsed: boolean
@@ -91,36 +88,6 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
       initialPage: undefined,
     })
   }
-
-  const [settings] = useQuery(queries.settings.organization({ organizationId: organization.id }))
-
-  // Calculate onboarding progress based on checked items and completed steps
-  const onboardingProgress = useMemo(() => {
-    const onboardingStatus = settings?.onboarding_status as OnboardingStatus | null
-
-    if (!onboardingStatus) {
-      return 0
-    }
-
-    // If onboarding is completed, return 100%
-    if (onboardingStatus.isCompleted) {
-      return 100
-    }
-
-    // Define total items to track (6 checklist items + 3 steps)
-    const totalChecklistItems = 6 // All possible checklist items
-    const totalSteps = 3 // documents, assistant, integrations
-
-    // Calculate progress from checked items (weight: 70%)
-    const checkedItems = onboardingStatus.checkedItems?.length || 0
-    const checklistProgress = (checkedItems / totalChecklistItems) * 70
-
-    // Calculate progress from completed steps (weight: 30%)
-    const completedSteps = onboardingStatus.completedSteps?.length || 0
-    const stepsProgress = (completedSteps / totalSteps) * 30
-
-    return Math.round(checklistProgress + stepsProgress)
-  }, [settings])
 
   return (
     <div className="flex flex-col grow max-h-screen overflow-hidden">
@@ -190,7 +157,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Button>
           <Button intent="secondary" size="sm" onPress={handleSearchClick} aria-label="Search">
-            <SearchIcon className="size-[14px] text-gray-600" />
+            <SearchFilled className="size-[14px] text-gray-600" />
           </Button>
         </div>
         <div className="flex flex-col px-2">
@@ -200,21 +167,9 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             activeOptions={{ exact: true }}
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
-            <div className="flex items-center w-full justify-between">
-              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                <HomeIcon className={sidebarItemIconStyles()} />
-                <span className="truncate flex-1">Home</span>
-              </div>
-              <TooltipTrigger delay={500}>
-                <div className="flex items-center">
-                  <CircularProgress progress={onboardingProgress} size={12} strokeWidth={1.5} />
-                </div>
-                <Tooltip placement="right">
-                  {onboardingProgress === 100
-                    ? "Onboarding complete! 🎉"
-                    : `Onboarding progress: ${onboardingProgress}%`}
-                </Tooltip>
-              </TooltipTrigger>
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <HomeFilled className={sidebarItemIconStyles({ className: "size-4.5" })} />
+              <span className="truncate flex-1">Home</span>
             </div>
           </Link>
           <Link
@@ -224,7 +179,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <MessageCircleIcon className={sidebarItemIconStyles()} />
+              <PersonChatFilled className={sidebarItemIconStyles({ className: "size-4.5" })} />
               <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
@@ -235,7 +190,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <PuzzleIcon className={sidebarItemIconStyles()} />
+              <TabDesktopMultipleFilled className={sidebarItemIconStyles({ className: "size-4.5" })} />
               <span className="truncate flex-1">Integrations</span>
             </div>
           </Link>
@@ -247,11 +202,11 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <div className="flex gap-x-1">
               <TooltipTrigger delay={500}>
                 <RACButton
-                  className="p-1 rounded hover:bg-black/5 text-gray-600 "
+                  className="p-1 rounded hover:bg-black/5 text-gray-600 flex"
                   onPress={() => createDocument()}
                   aria-label="Create new document"
                 >
-                  <CreateIcon className="size-4 text-gray-400 stroke-2" />
+                  <DocumentAddFilled className="size-4.5 text-gray-400 stroke-2" />
                 </RACButton>
                 <Tooltip>Add document</Tooltip>
               </TooltipTrigger>
@@ -310,34 +265,34 @@ function ZeroConnectionStatus() {
     switch (state.name) {
       case "connecting":
         return {
-          icon: Loader2Icon,
+          icon: ArrowClockwiseRegular,
           tooltip: state.reason || "Connecting to Zero cache",
         }
       case "connected":
         return {
-          icon: WifiIcon,
+          icon: Wifi4Regular,
           tooltip: "Connected to Zero cache",
         }
       case "disconnected":
         return {
-          icon: WifiOffIcon,
+          icon: WifiOffRegular,
           tooltip: state.reason || "Disconnected from Zero cache",
         }
       case "error":
         return {
-          icon: AlertCircleIcon,
+          icon: ErrorCircleRegular,
           tooltip: state.reason || "Connection error",
           clickable: true,
         }
       case "needs-auth":
         return {
-          icon: ShieldAlertIcon,
+          icon: ShieldErrorRegular,
           tooltip: "Authentication required",
           clickable: true,
         }
       default:
         return {
-          icon: WifiOffIcon,
+          icon: WifiOffRegular,
           tooltip: "Unknown connection state",
         }
     }

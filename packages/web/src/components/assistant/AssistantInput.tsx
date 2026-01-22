@@ -1,9 +1,9 @@
 import { EditorContent } from "@tiptap/react"
 import { Button, Form } from "react-aria-components"
 import { motion } from "motion/react"
-import { ChevronUpIcon, SquareIcon, CircleArrowUpIcon } from "@/icons"
+import { ChevronUpRegular, SquareRegular, ArrowCircleUpRegular } from "@fluentui/react-icons"
 import { useChatComposer } from "@/hooks/use-chat-composer"
-import { useCallback, useRef, useMemo, useEffect, useState } from "react"
+import { useCallback, useRef, useEffect, useState } from "react"
 import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
 import { useDocumentContext } from "@/hooks/use-document-context"
@@ -128,7 +128,10 @@ export function AssistantInput({
       <div className={variant === "flat" ? editorWrapperClassName : ""}>
         <Form className={formClassName} onSubmit={handleSubmit}>
           {variant === "rounded" && <ChatContextList items={contextItems} onRemove={handleRemoveContext} />}
-          <EditorContent editor={chatEditor.editor} className={variant === "rounded" ? "text-sm text-start" : ""} />
+          <EditorContent
+            editor={chatEditor.editor}
+            className={variant === "rounded" ? "text-sm text-start" : ""}
+          />
           <Button
             type={canStop ? "button" : "submit"}
             onPress={canStop ? onStop : undefined}
@@ -136,11 +139,17 @@ export function AssistantInput({
             isDisabled={false}
           >
             {canStop ? (
-              <SquareIcon className={variant === "rounded" ? "size-3 text-white fill-white" : "size-4 text-gray-900 fill-gray-900"} />
+              <SquareRegular
+                className={
+                  variant === "rounded"
+                    ? "size-3 text-white fill-white"
+                    : "size-4 text-gray-900 fill-gray-900"
+                }
+              />
             ) : variant === "rounded" ? (
-              <ChevronUpIcon className="size-4 text-white" />
+              <ChevronUpRegular className="size-4 text-white" />
             ) : (
-              <CircleArrowUpIcon className="size-4.5 text-gray-500" />
+              <ArrowCircleUpRegular className="size-4.5 text-gray-500" />
             )}
           </Button>
         </Form>

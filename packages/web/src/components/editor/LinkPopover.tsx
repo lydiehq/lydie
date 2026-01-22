@@ -26,7 +26,7 @@ import {
   type ButtonProps,
   TooltipTrigger,
 } from "react-aria-components"
-import { EditIcon, ExternalLinkIcon, DocumentIcon, UnlinkIcon } from "@/icons"
+import { EditFilled, OpenRegular, DocumentFilled, LinkDismissRegular } from "@fluentui/react-icons"
 import type { ComponentType, SVGProps } from "react"
 import { useQuery } from "@rocicorp/zero/react"
 import { useAuth } from "@/context/auth.context"
@@ -229,7 +229,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
               link.classList.contains("ProseMirror-selectednode") ||
               (editor.view.coordsAtPos(editor.state.selection.from).top >= link.getBoundingClientRect().top &&
                 editor.view.coordsAtPos(editor.state.selection.from).top <=
-                  link.getBoundingClientRect().bottom),
+                link.getBoundingClientRect().bottom),
           ) as HTMLElement
 
           linkElementRef.current = activeLink || null
@@ -441,7 +441,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
                       className="flex items-center gap-2 w-full p-1.5 text-left text-sm rounded hover:bg-gray-100 cursor-pointer data-[focused]:bg-gray-100"
                       onAction={() => handleDocumentSelect(doc.id)}
                     >
-                      <DocumentIcon className="size-3.5 text-gray-500 shrink-0" />
+                      <DocumentFilled className="size-3.5 text-gray-500 shrink-0" />
                       <span className="truncate">{doc.title || "Untitled document"}</span>
                     </MenuItem>
                   ))}
@@ -452,7 +452,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
             <div className="flex gap-x-1 items-center max-w-[300px]">
               <div className="flex gap-x-2 overflow-hidden text-ellipsis whitespace-nowrap px-1 items-center">
                 {isInternal ? (
-                  <DocumentIcon className="size-3.5 text-gray-500 shrink-0" />
+                  <DocumentFilled className="size-3.5 text-gray-500 shrink-0" />
                 ) : domain ? (
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
@@ -471,17 +471,17 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
               <div className="flex gap-x-0.5">
                 <LinkPopoverButton
                   title={isInternal ? "Open document" : "Open link in new tab"}
-                  icon={isInternal ? DocumentIcon : ExternalLinkIcon}
+                  icon={isInternal ? DocumentFilled : OpenRegular}
                   onPress={handleOpenLink}
                 >
                   {isInternal ? "Open document" : "Open in new tab"}
                 </LinkPopoverButton>
-                <LinkPopoverButton title="Edit link" icon={EditIcon} onPress={() => setIsEditing(true)}>
+                <LinkPopoverButton title="Edit link" icon={EditFilled} onPress={() => setIsEditing(true)}>
                   Edit link
                 </LinkPopoverButton>
                 <LinkPopoverButton
                   title="Remove link"
-                  icon={UnlinkIcon}
+                  icon={LinkDismissRegular}
                   onPress={() => editor.chain().focus().unsetLink().run()}
                 >
                   Remove link
@@ -501,15 +501,14 @@ type LinkPopoverButtonProps = ButtonProps & {
 }
 
 function LinkPopoverButton(props: LinkPopoverButtonProps) {
-  const { className, isDisabled, ...rest } = props
-  const defaultClassName = `p-1 rounded hover:bg-gray-100 ${
-    isDisabled ? "opacity-50 cursor-not-allowed" : ""
-  }`
+  const { className: _className, isDisabled, ...rest } = props
+  const defaultClassName = `p-1 flex rounded hover:bg-gray-100 ${isDisabled ? "opacity-50 cursor-not-allowed" : ""
+    }`
 
   return (
     <TooltipTrigger delay={500}>
       <Button {...rest} className={defaultClassName} isDisabled={isDisabled}>
-        <props.icon className="size-3.5 text-gray-700" />
+        <props.icon className="size-4 text-gray-400" />
       </Button>
       <Tooltip>{props.title}</Tooltip>
     </TooltipTrigger>

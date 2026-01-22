@@ -1,13 +1,13 @@
 import { Disclosure, DisclosurePanel, Button } from "react-aria-components"
 import {
-  LoaderIcon,
-  ListIcon,
-  ExternalLinkIcon,
-  CalendarIcon,
-  ClockIcon,
-  DocumentIcon,
-  ChevronRightIcon,
-} from "@/icons"
+  ArrowClockwiseRegular,
+  ListRegular,
+  OpenRegular,
+  CalendarRegular,
+  ClockRegular,
+  DocumentFilled,
+  ChevronRightRegular,
+} from "@fluentui/react-icons"
 import { Link } from "@tanstack/react-router"
 import { ToolContainer } from "./ToolContainer"
 import { motion, AnimatePresence } from "motion/react"
@@ -100,7 +100,7 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <LoaderIcon className="size-4 animate-spin text-gray-400" />
+              <ArrowClockwiseRegular className="size-4 animate-spin text-gray-400" />
             </motion.div>
           ) : outputState === "success" && documents.length > 0 ? (
             <motion.ul
@@ -135,7 +135,7 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
                     params={{ id: doc.id }}
                     className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
-                    <DocumentIcon className="text-gray-500 shrink-0 size-3.5" />
+                    <DocumentFilled className="text-gray-500 shrink-0 size-3.5" />
                     <span className="truncate flex-1">{doc.title || "Untitled document"}</span>
                   </Link>
                 </motion.div>
@@ -164,8 +164,8 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
         className="group flex items-center gap-x-2 truncate relative text-gray-500 hover:text-gray-700"
         slot="trigger"
       >
-        <ListIcon className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
-        <ChevronRightIcon className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
+        <ListRegular className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
+        <ChevronRightRegular className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">
           Listed {documents.length} document{documents.length !== 1 ? "s" : ""}
           {filters && filters.titleFilter ? ` matching "${filters.titleFilter}"` : ""}
@@ -212,14 +212,14 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
                           className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 text-sm"
                         >
                           <span className="truncate">{doc.title}</span>
-                          <ExternalLinkIcon className="size-3 shrink-0" />
+                          <OpenRegular className="size-3 shrink-0" />
                         </Link>
                         <div className="text-xs text-gray-500 mt-1">/{doc.slug}</div>
                       </div>
 
                       <div className="text-xs text-gray-400 shrink-0">
                         <div className="flex items-center gap-1">
-                          <ClockIcon className="size-3" />
+                          <ClockRegular className="size-3" />
                           {new Date(doc.updatedAt).toLocaleDateString()}
                         </div>
                       </div>
@@ -245,12 +245,12 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
                     {/* Metadata */}
                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
                       <div className="flex items-center gap-1">
-                        <CalendarIcon className="size-3" />
+                        <CalendarRegular className="size-3" />
                         Created: {new Date(doc.createdAt).toLocaleDateString()}
                       </div>
                       {doc.wordCount !== undefined && (
                         <div className="flex items-center gap-1">
-                          <DocumentIcon className="size-3" />
+                          <DocumentFilled className="size-3" />
                           {doc.wordCount} words
                         </div>
                       )}

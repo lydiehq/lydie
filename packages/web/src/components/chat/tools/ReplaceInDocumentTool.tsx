@@ -1,6 +1,11 @@
 import { useState, useRef, useLayoutEffect } from "react"
 import { Button as AriaButton } from "react-aria-components"
-import { ChevronDownIcon, ChevronUpIcon, Loader2Icon, DocumentIcon } from "@/icons"
+import {
+  ChevronDownRegular,
+  ChevronUpRegular,
+  ArrowClockwiseRegular,
+  DocumentFilled,
+} from "@fluentui/react-icons"
 import { motion } from "motion/react"
 import { StickToBottom } from "use-stick-to-bottom"
 import { Button } from "@/components/generic/Button"
@@ -183,7 +188,7 @@ export function ReplaceInDocumentTool({
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}>
       <div className="p-1">
         <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
-          {isStreaming && <Loader2Icon className="size-3 animate-spin text-blue-500" />}
+          {isStreaming && <ArrowClockwiseRegular className="size-3 animate-spin text-blue-500" />}
           <motion.span
             key={getStatusText()}
             initial={{ opacity: 0 }}
@@ -201,7 +206,7 @@ export function ReplaceInDocumentTool({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <DocumentIcon className="size-3" />
+            <DocumentFilled className="size-3" />
             <span>Target: {targetDocument.title || "Untitled document"}</span>
           </motion.div>
         )}
@@ -236,12 +241,12 @@ export function ReplaceInDocumentTool({
             >
               {isExpanded ? (
                 <div className="flex items-center gap-1">
-                  <ChevronUpIcon className="size-3" />
+                  <ChevronUpRegular className="size-3" />
                   <span>Show less</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
-                  <ChevronDownIcon className="size-3" />
+                  <ChevronDownRegular className="size-3" />
                   <span>Show more</span>
                 </div>
               )}

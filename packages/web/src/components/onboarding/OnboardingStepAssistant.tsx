@@ -5,7 +5,7 @@ import { useOrganization } from "@/context/organization.context"
 import { useNavigate } from "@tanstack/react-router"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
-import { BotIcon, FolderIcon, FileTextIcon, SparklesIcon } from "@/icons"
+import { BotRegular, FolderRegular, DocumentTextFilled, SparkleRegular } from "@fluentui/react-icons"
 
 export function OnboardingStepAssistant() {
   const { open: openAssistant } = useFloatingAssistant()
@@ -52,7 +52,7 @@ export function OnboardingStepAssistant() {
     <div className="flex flex-col gap-y-6">
       <div className="flex items-center gap-x-3">
         <div className="p-2 bg-gray-50 rounded-lg">
-          <BotIcon className="size-4 text-gray-500" />
+          <BotRegular className="size-4 text-gray-500" />
         </div>
         <span className="text-lg font-medium text-gray-900">Assistant</span>
       </div>
@@ -72,7 +72,7 @@ export function OnboardingStepAssistant() {
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-              <FolderIcon className="size-4 text-gray-600" />
+              <FolderRegular className="size-4 text-gray-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Organize documents</p>
@@ -94,7 +94,7 @@ export function OnboardingStepAssistant() {
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-              <FileTextIcon className="size-4 text-gray-600" />
+              <DocumentTextFilled className="size-4 text-gray-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Create a new document</p>
@@ -117,7 +117,7 @@ export function OnboardingStepAssistant() {
         >
           <div className="flex items-start gap-x-3">
             <div className="p-1.5 bg-gray-50 rounded mt-0.5">
-              <SparklesIcon className="size-4 text-gray-600" />
+              <SparkleRegular className="size-4 text-gray-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Improve a document</p>

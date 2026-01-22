@@ -1,4 +1,4 @@
-import { AlertTriangleIcon } from "@/icons"
+import { WarningRegular } from "@fluentui/react-icons"
 import React from "react"
 import { Meter as AriaMeter, MeterProps as AriaMeterProps } from "react-aria-components"
 import { Label } from "./Field"
@@ -19,7 +19,7 @@ export function Meter({ label, ...props }: MeterProps) {
               className={`text-sm ${percentage >= 80 ? "text-red-600 dark:text-red-500" : "text-gray-600 dark:text-zinc-400"}`}
             >
               {percentage >= 80 && (
-                <AlertTriangleIcon aria-label="Alert" className="inline-block w-4 h-4 align-text-bottom" />
+                <WarningRegular aria-label="Alert" className="inline-block w-4 h-4 align-text-bottom" />
               )}
               {" " + valueText}
             </span>

@@ -1,9 +1,9 @@
 import { Tabs, TabList, Tab, TabPanels, TabPanel, Button } from "react-aria-components"
 import { useState } from "react"
 import { CustomFieldsEditor } from "./CustomFieldsEditor"
-import { ArrowDownBIcon, PlusIcon } from "@/icons"
+import { ArrowDownRegular, AddRegular } from "@fluentui/react-icons"
 import { useDocumentActions } from "@/hooks/use-document-actions"
-import { DocumentIcon, AddIcon } from "@/icons"
+import { DocumentFilled } from "@fluentui/react-icons"
 import { Button as GenericButton } from "@/components/generic/Button"
 import { Link } from "../generic/Link"
 import type { QueryResultType } from "@rocicorp/zero"
@@ -33,7 +33,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
           onPress={handleCreateChildPage}
           className="text-gray-600 hover:text-gray-900"
         >
-          <AddIcon className="size-4 mr-1" />
+          <AddRegular className="size-4 mr-1" />
           Add document
         </GenericButton>
       </div>
@@ -48,7 +48,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
         onPress={handleCreateChildPage}
         className="text-gray-600 hover:text-gray-900"
       >
-        <Plus className="size-4 mr-1" />
+        <AddRegular className="size-4 mr-1" />
         Add page
       </GenericButton>
       <div className="">
@@ -60,7 +60,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
             className="px-2 py-1.5 rounded-md hover:bg-black/5 transition-all duration-75 flex justify-between"
           >
             <div className="flex gap-x-1.5 items-center">
-              <DocumentIcon className="size-3.5 text-gray-400" />
+              <DocumentFilled className="size-3.5 text-gray-400" />
               <span className="truncate text-sm font-medium text-gray-600">
                 {child.title || "Untitled document"}
               </span>
@@ -116,7 +116,7 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
               transition: "transform 0.2s",
             }}
           >
-            <ArrowDownBIcon className="size-3.5 text-black/34 hover:text-black/44" />
+            <ArrowDownRegular className="size-3.5 text-black/34 hover:text-black/44" />
           </div>
         </Button>
       </div>

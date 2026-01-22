@@ -3,7 +3,7 @@ import { useZero } from "@/services/zero"
 import { mutators } from "@lydie/zero/mutators"
 import { useDebounceCallback } from "usehooks-ts"
 import { useMemo } from "react"
-import { XIcon, GripVerticalIcon, CalendarIcon, ListIcon } from "@/icons"
+import { DismissRegular, ReOrderVerticalRegular, CalendarRegular, ListRegular } from "@fluentui/react-icons"
 
 type CustomField = {
   key: string
@@ -63,12 +63,12 @@ export function CustomFieldsEditor({ documentId, organizationId, initialFields =
   const getFieldIcon = (key: string) => {
     const lowerKey = key.toLowerCase()
     if (lowerKey.includes("date") || lowerKey.includes("time")) {
-      return CalendarIcon
+      return CalendarRegular
     }
     if (lowerKey.includes("class") || lowerKey.includes("tag") || lowerKey.includes("category")) {
-      return ListIcon
+      return ListRegular
     }
-    return GripVerticalIcon
+    return ReOrderVerticalRegular
   }
 
   return (
@@ -150,7 +150,7 @@ export function CustomFieldsEditor({ documentId, organizationId, initialFields =
                         className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-all shrink-0"
                         aria-label="Remove property"
                       >
-                        <XIcon className="w-4 h-4" />
+                        <DismissRegular className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import { AlertCircleIcon, RefreshCwIcon, HomeIcon } from "@/icons"
+import { ErrorCircleRegular, ArrowClockwiseRegular, HomeFilled } from "@fluentui/react-icons"
 import { Button } from "@/components/generic/Button"
 import { Logo } from "@/components/layout/Logo"
 import { useNavigate, useRouter } from "@tanstack/react-router"
@@ -54,7 +54,7 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
       <div className="flex flex-col gap-y-4 items-center max-w-md text-center">
         <div className="flex items-center gap-3">
           <Logo className="size-8 text-gray-400" />
-          <AlertCircleIcon className="size-8 text-red-500" />
+          <ErrorCircleRegular className="size-8 text-red-500" />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -79,7 +79,7 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
 
         <div className="flex gap-3 mt-4">
           <Button intent="primary" onPress={handleReload}>
-            <RefreshCwIcon className="size-4 mr-2" />
+            <ArrowClockwiseRegular className="size-4 mr-2" />
             Reload page
           </Button>
           <Button intent="secondary" onPress={signOut}>

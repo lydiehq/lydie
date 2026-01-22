@@ -7,11 +7,7 @@ import {
   SelectValue,
   Select as AriaSelect,
 } from "react-aria-components"
-import {
-  CreateIcon,
-  ChevronDownIcon,
-  MessageCircleIcon,
-} from "@/icons"
+import { ChevronDownRegular, ChatRegular, AddSquareFilled } from "@fluentui/react-icons"
 import { useOrganization } from "@/context/organization.context"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
@@ -34,10 +30,6 @@ interface ConversationDropdownProps {
   onSelectConversation: (id: string) => void
 }
 
-/**
- * Conversation dropdown component for selecting and managing assistant conversations
- * Features conversation grouping by date, search, and navigation
- */
 export function ConversationDropdown({
   conversationId,
   onNewChat,
@@ -138,11 +130,11 @@ export function ConversationDropdown({
       className="group flex flex-col gap-1 min-w-[200px]"
     >
       <RACButton className="flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 border-0 bg-transparent min-w-0">
-        <MessageCircleIcon className="size-4 text-gray-600 shrink-0" aria-hidden="true" />
+        <ChatRegular className="size-4 text-gray-600 shrink-0" aria-hidden="true" />
         <SelectValue className="max-w-[200px] truncate text-sm">
           {({ selectedText }) => selectedText || displayTitle}
         </SelectValue>
-        <ChevronDownIcon className="size-3.5 text-gray-500 shrink-0" aria-hidden="true" />
+        <ChevronDownRegular className="size-3.5 text-gray-500 shrink-0" aria-hidden="true" />
       </RACButton>
       <Popover className="min-w-[300px] max-h-[500px] flex flex-col p-0" placement="bottom start">
         <Autocomplete filter={contains}>
@@ -159,7 +151,12 @@ export function ConversationDropdown({
             selectionMode="single"
           >
             {(group: ConversationGroup) => (
-              <SelectSection key={group.title} id={group.title} title={group.title} items={group.conversations}>
+              <SelectSection
+                key={group.title}
+                id={group.title}
+                title={group.title}
+                items={group.conversations}
+              >
                 {(conversation: any) => {
                   if (!conversation?.id) {
                     return <SelectItem id={`empty-${Math.random()}`} textValue="" />
@@ -175,10 +172,6 @@ export function ConversationDropdown({
                     >
                       <div className="flex flex-col items-start gap-1 w-full">
                         <div className="flex items-center gap-2 w-full">
-                          <MessageCircleIcon
-                            className={`size-4 shrink-0 ${isSelected ? "text-blue-600" : "text-gray-400"}`}
-                            aria-hidden="true"
-                          />
                           <span className={`text-sm flex-1 truncate ${isSelected ? "font-semibold" : ""}`}>
                             {title.length > 40 ? title.substring(0, 40) + "..." : title}
                           </span>
@@ -201,7 +194,7 @@ export function ConversationDropdown({
             onPress={onNewChat}
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
-            <CreateIcon className="size-4 text-gray-500" aria-hidden="true" />
+            <AddSquareFilled className="size-4 text-gray-500" aria-hidden="true" />
             <span>New Chat</span>
           </RACButton>
           {hasMoreConversations && (

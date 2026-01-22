@@ -1,22 +1,18 @@
 import { motion } from "motion/react"
 import { useCallback, useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
+import { Button as RACButton, Button, TooltipTrigger } from "react-aria-components"
 import {
-  Button as RACButton,
-  Button,
-  TooltipTrigger,
-} from "react-aria-components"
-import {
-  AsteriskIcon,
-  MinusIcon,
-  ArrowShrinkIcon,
-  ArrowExpandIcon,
-  DocumentIcon,
-  DocumentsIcon,
-  CreateIcon,
-  HelpCircleIcon,
-  PlusIcon,
-} from "@/icons"
+  TextAsteriskRegular,
+  SubtractRegular,
+  ArrowMinimizeRegular,
+  ArrowMaximizeRegular,
+  DocumentFilled,
+  DocumentCopyFilled,
+  EditRegular,
+  QuestionCircleRegular,
+  AddRegular,
+} from "@fluentui/react-icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
 import { useOrganization } from "@/context/organization.context"
@@ -47,19 +43,13 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   const [currentConversation] = useQuery(
     conversationId
       ? queries.assistant.byId({
-        organizationId: organization.id,
-        conversationId,
-      })
+          organizationId: organization.id,
+          conversationId,
+        })
       : null,
   )
 
-  const {
-    messages,
-    sendMessage,
-    stop,
-    status,
-    setMessages,
-  } = useAssistantChat({
+  const { messages, sendMessage, stop, status, setMessages } = useAssistantChat({
     conversationId,
     initialMessages:
       currentConversation?.messages?.map((msg: any) => ({
@@ -97,12 +87,9 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     setMessages([])
   }, [setMessages])
 
-  const handleSelectConversation = useCallback(
-    (id: string) => {
-      setConversationId(id)
-    },
-    [],
-  )
+  const handleSelectConversation = useCallback((id: string) => {
+    setConversationId(id)
+  }, [])
 
   const headerButtons = useMemo(() => {
     const buttons = [
@@ -110,21 +97,21 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         onPress: isDocked ? undock : dock,
         ariaLabel: isDocked ? "Undock assistant" : "Dock assistant",
         tooltip: isDocked ? "Undock assistant" : "Dock assistant",
-        icon: isDocked ? ArrowShrinkIcon : ArrowExpandIcon,
+        icon: isDocked ? ArrowMinimizeRegular : ArrowMaximizeRegular,
         show: true,
       },
       {
         onPress: handleNewChat,
         ariaLabel: "New chat",
         tooltip: "New chat",
-        icon: PlusIcon,
+        icon: AddRegular,
         show: !isDocked,
       },
       {
         onPress: close,
         ariaLabel: "Close assistant",
         tooltip: "Close assistant",
-        icon: MinusIcon,
+        icon: SubtractRegular,
         show: !isDocked,
       },
     ]
@@ -132,8 +119,10 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     return buttons.filter((button) => button.show)
   }, [isDocked, dock, undock, handleNewChat, close])
 
-  const floatingContainer = typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
-  const dockedContainer = typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
+  const floatingContainer =
+    typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
+  const dockedContainer =
+    typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
 
   if (!isDocked && !isOpen) {
     return (
@@ -148,7 +137,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
           aria-label="Open AI Assistant"
           className="bg-white shadow-surface rounded-full size-10 justify-center items-center flex hover:bg-gray-50 transition-colors"
         >
-          <AsteriskIcon className="size-4 text-gray-600" aria-hidden="true" />
+          <TextAsteriskRegular className="size-4 text-gray-600" aria-hidden="true" />
         </RACButton>
       </motion.div>
     )
@@ -187,7 +176,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
               <TooltipTrigger key={button.ariaLabel} delay={500}>
                 <Button
                   onPress={button.onPress}
-                  className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+                  className="p-1 hover:bg-black/4 rounded-md transition-colors duration-75 flex"
                   aria-label={button.ariaLabel}
                 >
                   <Icon className="size-4 text-gray-600" aria-hidden="true" />
@@ -213,7 +202,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
 
   return createPortal(content, targetContainer)
 }
-
 
 function FloatingAssistantChatContent({
   organizationId,
@@ -257,42 +245,39 @@ function FloatingAssistantChatContent({
 
   const canStop = status === "submitted" || status === "streaming"
 
-  const suggestions = useMemo(
-    () => {
-      if (currentDocumentId) {
-        return [
-          {
-            text: "Summarize this document",
-            icon: DocumentIcon,
-          },
-          {
-            text: "Help me write a draft",
-            icon: CreateIcon,
-          },
-          {
-            text: "Explain this in simpler terms",
-            icon: HelpCircleIcon,
-          },
-        ]
-      } else {
-        return [
-          {
-            text: "Summarize my 3 last documents",
-            icon: DocumentsIcon,
-          },
-          {
-            text: "Help me write a draft",
-            icon: CreateIcon,
-          },
-          {
-            text: "What can you help me with?",
-            icon: HelpCircleIcon,
-          },
-        ]
-      }
-    },
-    [currentDocumentId],
-  )
+  const suggestions = useMemo(() => {
+    if (currentDocumentId) {
+      return [
+        {
+          text: "Summarize this document",
+          icon: DocumentFilled,
+        },
+        {
+          text: "Help me write a draft",
+          icon: EditRegular,
+        },
+        {
+          text: "Explain this in simpler terms",
+          icon: QuestionCircleRegular,
+        },
+      ]
+    } else {
+      return [
+        {
+          text: "Summarize my 3 last documents",
+          icon: DocumentCopyFilled,
+        },
+        {
+          text: "Help me write a draft",
+          icon: EditRegular,
+        },
+        {
+          text: "What can you help me with?",
+          icon: QuestionCircleRegular,
+        },
+      ]
+    }
+  }, [currentDocumentId])
 
   const handleSuggestionClick = useCallback(
     (suggestionText: string) => {
@@ -335,7 +320,6 @@ function FloatingAssistantChatContent({
                   </RACButton>
                   {index < suggestions.length - 1 && <div className="h-px bg-black/6 ml-8" />}
                 </>
-
               )
             })}
           </div>

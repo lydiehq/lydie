@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { useZero } from "@/services/zero"
 import { useQuery } from "@rocicorp/zero/react"
-import { SearchIcon, DocumentIcon } from "@/icons"
+import { SearchFilled, DocumentFilled } from "@fluentui/react-icons"
 import { Input } from "react-aria-components"
 import type { Document } from "@lydie/zero/schema"
 import { useOrganization } from "@/context/organization.context"
@@ -48,7 +48,7 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
   return (
     <div className="p-2 min-w-80 max-w-96">
       <div className="flex items-center gap-2 mb-3">
-        <SearchIcon className="size-4 text-gray-400" />
+        <SearchFilled className="size-4 text-gray-400" />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -72,7 +72,7 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
                 onClick={() => onSelectDocument(doc)}
                 className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3 transition-colors"
               >
-                <DocumentIcon className="size-4 text-gray-400 flex-shrink-0" />
+                <DocumentFilled className="size-4 text-gray-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm text-gray-900 truncate">{doc.title || "Untitled"}</div>
                   <div className="text-xs text-gray-500 truncate">{doc.slug}</div>

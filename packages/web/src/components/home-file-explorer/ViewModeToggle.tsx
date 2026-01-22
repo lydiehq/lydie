@@ -1,4 +1,4 @@
-import { Grid3x3Icon, ListIcon } from "@/icons"
+import { GridRegular, ListRegular } from "@fluentui/react-icons"
 import { Button } from "react-aria-components"
 import { cva } from "cva"
 
@@ -27,7 +27,7 @@ export function ViewModeToggle({ viewMode, onViewModeChange }: Props) {
         })}
         aria-label="Grid view"
       >
-        <Grid3x3Icon className="size-3.5 text-inherit" />
+        <GridRegular className="size-3.5 text-inherit" />
       </Button>
       <Button
         onPress={() => onViewModeChange("list")}
@@ -36,7 +36,7 @@ export function ViewModeToggle({ viewMode, onViewModeChange }: Props) {
         })}
         aria-label="List view"
       >
-        <ListIcon className="size-3.5 text-inherit" />
+        <ListRegular className="size-3.5 text-inherit" />
       </Button>
     </div>
   )

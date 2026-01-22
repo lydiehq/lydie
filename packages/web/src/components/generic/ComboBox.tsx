@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from "@/icons"
+import { ChevronDownRegular } from "@fluentui/react-icons"
 import React from "react"
 import {
   ComboBox as AriaComboBox,
@@ -37,7 +37,7 @@ export function ComboBox<T extends object>({
       <FieldGroup>
         <Input />
         <Button variant="icon" className="w-6 mr-1 rounded-xs outline-offset-0 ">
-          <ChevronDownIcon aria-hidden className="w-4 h-4" />
+          <ChevronDownRegular aria-hidden className="w-4 h-4" />
         </Button>
       </FieldGroup>
       {description && <Description>{description}</Description>}

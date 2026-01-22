@@ -1,7 +1,7 @@
 import type { queries } from "@lydie/zero/queries"
 import { Card } from "../layout/Card"
 import type { QueryResultType } from "@rocicorp/zero"
-import { AlertCircleIcon, CheckCircle2Icon, XIcon } from "@/icons"
+import { ErrorCircleRegular, CheckmarkCircleRegular, DismissRegular } from "@fluentui/react-icons"
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow"
 
 type Props = {

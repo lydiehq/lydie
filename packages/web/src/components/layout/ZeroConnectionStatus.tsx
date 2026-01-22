@@ -3,7 +3,13 @@ import { useZero } from "@/services/zero"
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
 import { useCallback } from "react"
 import clsx from "clsx"
-import { WifiIcon, WifiOffIcon, AlertCircleIcon, Loader2Icon, ShieldAlertIcon } from "@/icons"
+import {
+  Wifi4Regular,
+  WifiOffRegular,
+  ErrorCircleRegular,
+  ArrowClockwiseRegular,
+  ShieldErrorRegular,
+} from "@fluentui/react-icons"
 
 export function ZeroConnectionStatus() {
   const state = useConnectionState()
@@ -19,7 +25,7 @@ export function ZeroConnectionStatus() {
     switch (state.name) {
       case "connecting":
         return {
-          icon: Loader2Icon,
+          icon: ArrowClockwiseRegular,
           label: "Connecting...",
           color: "text-amber-600",
           bgColor: "bg-amber-50",
@@ -28,7 +34,7 @@ export function ZeroConnectionStatus() {
         }
       case "connected":
         return {
-          icon: WifiIcon,
+          icon: Wifi4Regular,
           label: "Connected",
           color: "text-green-600",
           bgColor: "bg-green-50",
@@ -37,7 +43,7 @@ export function ZeroConnectionStatus() {
         }
       case "disconnected":
         return {
-          icon: WifiOffIcon,
+          icon: WifiOffRegular,
           label: "Offline",
           color: "text-gray-600",
           bgColor: "bg-gray-50",
@@ -46,7 +52,7 @@ export function ZeroConnectionStatus() {
         }
       case "error":
         return {
-          icon: AlertCircleIcon,
+          icon: ErrorCircleRegular,
           label: "Error",
           color: "text-red-600",
           bgColor: "bg-red-50",
@@ -56,7 +62,7 @@ export function ZeroConnectionStatus() {
         }
       case "needs-auth":
         return {
-          icon: ShieldAlertIcon,
+          icon: ShieldErrorRegular,
           label: "Auth Required",
           color: "text-orange-600",
           bgColor: "bg-orange-50",
@@ -66,7 +72,7 @@ export function ZeroConnectionStatus() {
         }
       default:
         return {
-          icon: WifiOffIcon,
+          icon: WifiOffRegular,
           label: "Unknown",
           color: "text-gray-600",
           bgColor: "bg-gray-50",

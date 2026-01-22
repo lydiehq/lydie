@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { formatDistanceToNow } from "date-fns"
 import { DocumentMenu } from "./DocumentMenu"
-import { DocumentIcon, MoreVerticalIcon } from "@/icons"
+import { DocumentFilled, MoreVerticalRegular } from "@fluentui/react-icons"
 
 type DocumentItemProps = {
   id: string
@@ -33,8 +33,7 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
         onAction={handleNavigate}
         className={composeTailwindRenderProps(focusRing, "flex items-center gap-3 p-3 hover:bg-gray-50")}
       >
-        {/* <ChecIconkbox slot="selection" /> */}
-        <DocumentIcon className="size-3.5 text-gray-400" />
+        <DocumentFilled className="size-3.5 text-gray-400" />
         <span className="text-sm font-medium text-gray-900 flex-1 text-left">{name}</span>
         {updated_at && (
           <span className="text-xs text-gray-500">
@@ -43,7 +42,7 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
         )}
         <MenuTrigger>
           <RACButton className="p-1 rounded hover:bg-gray-200" aria-label="Document options">
-            <MoreVerticalIcon className="size-4" />
+            <MoreVerticalRegular className="size-4" />
           </RACButton>
           <DocumentMenu documentId={id} documentName={name} />
         </MenuTrigger>

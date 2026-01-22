@@ -5,7 +5,7 @@ import { useOrganization } from "@/context/organization.context"
 import { toast } from "sonner"
 import { Form } from "react-aria-components"
 import { useState, useRef, useCallback } from "react"
-import { AlertCircleIcon, CheckCircle2Icon, DocumentIcon, FolderIcon, UploadIcon } from "@/icons"
+import { ErrorCircleRegular, CheckmarkCircleRegular, DocumentFilled, FolderRegular, ArrowUploadRegular } from "@fluentui/react-icons"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/import")({
   component: RouteComponent,
@@ -308,9 +308,8 @@ function RouteComponent() {
           console.error(`Error importing ${file.name}:`, error)
           const result: ImportResult = {
             success: false,
-            error: `${file.name}: Failed to import - ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            error: `${file.name}: Failed to import - ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           }
           toast.error(`Failed to import: ${file.name}`)
           return result
@@ -411,7 +410,7 @@ function RouteComponent() {
         onDragOver={handleDragOver}
       >
         <div className="text-center space-y-4">
-          <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <ArrowUploadRegular className="mx-auto h-12 w-12 text-gray-400" />
           <div>
             <h3 className="text-lg font-medium text-gray-900">Select MDX Files</h3>
             <p className="text-gray-500">
@@ -447,9 +446,9 @@ function RouteComponent() {
                   {selectedFiles.map((fileWithPath, index) => (
                     <li key={index} className="flex items-center space-x-2 py-1">
                       {fileWithPath.folderPath ? (
-                        <FolderIcon className="h-4 w-4 text-blue-500" />
+                        <FolderRegular className="h-4 w-4 text-blue-500" />
                       ) : (
-                        <DocumentIcon className="h-4 w-4" />
+                        <DocumentFilled className="h-4 w-4" />
                       )}
                       <span className="flex-1 truncate">
                         {fileWithPath.folderPath && (
@@ -515,15 +514,14 @@ function RouteComponent() {
             {uploadResults.map((result, index) => (
               <div
                 key={index}
-                className={`p-4 rounded-lg border ${
-                  result.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-                }`}
+                className={`p-4 rounded-lg border ${result.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                  }`}
               >
                 <div className="flex items-start space-x-3">
                   {result.success ? (
-                    <CheckCircle2Icon className="h-5 w-5 text-green-500 mt-0.5" />
+                    <CheckmarkCircleRegular className="h-5 w-5 text-green-500 mt-0.5" />
                   ) : (
-                    <AlertCircleIcon className="h-5 w-5 text-red-500 mt-0.5" />
+                    <ErrorCircleRegular className="h-5 w-5 text-red-500 mt-0.5" />
                   )}
 
                   <div className="flex-1">

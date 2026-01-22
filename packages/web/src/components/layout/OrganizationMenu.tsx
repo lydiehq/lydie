@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { Popover } from "../generic/Popover"
 import { OrganizationAvatar } from "./OrganizationAvatar"
-import { ChevronsUpDownIcon } from "@/icons"
+import { ChevronUpDownRegular } from "@fluentui/react-icons"
 import { useAuth } from "@/context/auth.context"
 import { clearSession } from "@/lib/auth/session"
 import { clearZeroInstance } from "@/lib/zero/instance"
@@ -53,7 +53,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">
                 {organization?.name}
               </div>
-              <ChevronsUpDownIcon className="size-3.5 text-gray-500" />
+              <ChevronUpDownRegular className="size-3.5 text-gray-500" />
             </>
           )}
         </RACButton>

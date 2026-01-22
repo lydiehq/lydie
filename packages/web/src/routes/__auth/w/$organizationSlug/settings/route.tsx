@@ -1,17 +1,17 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router"
 import { Surface } from "@/components/layout/Surface"
 import {
-  UserIcon,
-  SettingsIcon,
-  SparklesIcon,
-  CreditCardIcon,
-  BlocksIcon,
-  UploadIcon,
-  DocumentIcon,
-  ExternalLinkIcon,
-  ShieldAlertIcon,
-  PuzzleIcon,
-} from "@/icons"
+  PersonRegular,
+  SettingsRegular,
+  SparkleRegular,
+  PaymentRegular,
+  CubeRegular,
+  ArrowUploadRegular,
+  DocumentFilled,
+  OpenRegular,
+  ShieldErrorRegular,
+  PuzzlePieceRegular,
+} from "@fluentui/react-icons"
 import { sidebarItemStyles, sidebarItemIconStyles } from "@/components/layout/Sidebar"
 import { Eyebrow } from "@/components/generic/Eyebrow"
 import { useAuth } from "@/context/auth.context"
@@ -41,17 +41,17 @@ const settingsRoutes: SettingsSection[] = [
       {
         path: "/w/$organizationSlug/settings/profile",
         label: "Profile",
-        icon: UserIcon,
+        icon: PersonRegular,
       },
       {
         path: "/w/$organizationSlug/settings/user",
         label: "Preferences",
-        icon: UserIcon,
+        icon: PersonRegular,
       },
       {
         path: "/w/$organizationSlug/settings/ai",
         label: "AI Settings",
-        icon: SparklesIcon,
+        icon: SparkleRegular,
       },
     ],
   },
@@ -61,34 +61,34 @@ const settingsRoutes: SettingsSection[] = [
       {
         path: "/w/$organizationSlug/settings",
         label: "General",
-        icon: SettingsIcon,
+        icon: SettingsRegular,
       },
       {
         path: "/w/$organizationSlug/settings/admin",
         label: "Admin",
-        icon: ShieldAlertIcon,
+        icon: ShieldErrorRegular,
         adminOnly: true,
       },
       {
         path: "/w/$organizationSlug/settings/billing",
         label: "Billing & Usage",
-        icon: CreditCardIcon,
+        icon: PaymentRegular,
       },
       {
         path: "/w/$organizationSlug/settings/components",
         label: "Components",
-        icon: BlocksIcon,
+        icon: CubeRegular,
         adminOnly: true,
       },
       {
         path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
-        icon: PuzzleIcon,
+        icon: PuzzlePieceRegular,
       },
       {
         path: "/w/$organizationSlug/settings/import",
         label: "Import",
-        icon: UploadIcon,
+        icon: ArrowUploadRegular,
         adminOnly: true,
       },
     ],
@@ -100,7 +100,7 @@ const settingsRoutes: SettingsSection[] = [
         path: "https://lydie.co/documentation",
         external: true,
         label: "Docs",
-        icon: DocumentIcon,
+        icon: DocumentFilled,
       },
     ],
   },
@@ -149,7 +149,7 @@ function RouteComponent() {
                                   </span>
                                 )}
                                 {route.external && (
-                                  <ExternalLinkIcon
+                                  <OpenRegular
                                     className={sidebarItemIconStyles({
                                       className: "size-3 shrink-0",
                                     })}

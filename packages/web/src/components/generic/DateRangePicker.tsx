@@ -1,4 +1,4 @@
-import { IconCalendar } from "@tabler/icons-react"
+import { CalendarRegular } from "@fluentui/react-icons"
 import {
   DateRangePicker as AriaDateRangePicker,
   type DateRangePickerProps as AriaDateRangePickerProps,
@@ -41,7 +41,7 @@ export function DateRangePicker<T extends DateValue>({
         </span>
         <DateInput slot="end" className="flex-1 px-2 py-1.5 text-sm" />
         <Button className="w-6 mr-1 rounded-xs outline-offset-0">
-          <IconCalendar aria-hidden className="w-4 h-4" />
+          <CalendarRegular aria-hidden className="w-4 h-4" />
         </Button>
       </FieldGroup>
       {description && <Description>{description}</Description>}

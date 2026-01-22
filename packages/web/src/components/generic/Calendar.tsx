@@ -1,4 +1,4 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@/icons"
+import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons"
 import React from "react"
 import {
   Calendar as AriaCalendar,
@@ -59,11 +59,11 @@ export function CalendarHeader() {
   return (
     <header className="flex items-center gap-1 pb-4 px-1 w-full">
       <Button variant="icon" slot="previous">
-        {direction === "rtl" ? <ChevronRightIcon aria-hidden /> : <ChevronLeftIcon aria-hidden />}
+        {direction === "rtl" ? <ChevronRightRegular aria-hidden /> : <ChevronLeftRegular aria-hidden />}
       </Button>
       <Heading className="flex-1 font-semibold text-xl text-center mx-2 text-zinc-900 dark:text-zinc-200" />
       <Button variant="icon" slot="next">
-        {direction === "rtl" ? <ChevronLeftIcon aria-hidden /> : <ChevronRightIcon aria-hidden />}
+        {direction === "rtl" ? <ChevronLeftRegular aria-hidden /> : <ChevronRightRegular aria-hidden />}
       </Button>
     </header>
   )
