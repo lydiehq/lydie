@@ -1,14 +1,12 @@
 import { EditorContent } from "@tiptap/react"
 import { Button, Form } from "react-aria-components"
 import { motion } from "motion/react"
-import { ChevronUpIcon, SquareIcon } from "@/icons"
+import { ChevronUpIcon, SquareIcon, CircleArrowUpIcon } from "@/icons"
 import { useChatComposer } from "@/hooks/use-chat-composer"
 import { useCallback, useRef, useMemo, useEffect, useState } from "react"
-import { useOrganization } from "@/context/organization.context"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
 import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
+import { useDocumentContext } from "@/hooks/use-document-context"
 
 export interface AssistantInputProps {
   onSubmit: (text: string, contextDocumentIds: string[]) => void
@@ -16,6 +14,11 @@ export interface AssistantInputProps {
   placeholder?: string
   canStop?: boolean
   initialPrompt?: string
+  currentDocumentId?: string | null
+  onRemoveContext?: (item: ChatContextItem) => void
+  editorClassName?: string
+  variant?: "rounded" | "flat"
+  content?: string
 }
 
 export function AssistantInput({
@@ -24,30 +27,35 @@ export function AssistantInput({
   placeholder = "Ask anything. Use @ to refer to documents",
   canStop = false,
   initialPrompt,
+  currentDocumentId,
+  onRemoveContext,
+  editorClassName = "focus:outline-none text-sm text-gray-700 px-5 py-3.5",
+  variant = "rounded",
+  content,
 }: AssistantInputProps) {
-  const { organization } = useOrganization()
-  const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
 
-  const availableDocuments = useMemo(
-    () =>
-      (documents ?? []).map((doc) => ({
-        id: doc.id,
-        title: doc.title,
-      })),
-    [documents],
-  )
-
-  const documentTitleById = useMemo(() => {
-    return new Map(availableDocuments.map((doc) => [doc.id, doc.title || "Untitled document"]))
-  }, [availableDocuments])
+  const {
+    availableDocuments,
+    contextItems,
+    contextDocumentIds,
+    handleRemoveContext: defaultHandleRemoveContext,
+    resetDismissal,
+  } = useDocumentContext({
+    currentDocumentId,
+    mentionedDocumentIds,
+  })
 
   const handleSubmitRef = useRef<() => void>(() => {})
 
   const chatEditor = useChatComposer({
     documents: availableDocuments,
     placeholder,
-    editorClassName: "focus:outline-none text-sm text-gray-700 px-5 py-3.5",
+    editorClassName,
+    onChange: (editor) => {
+      const textContent = editor.getText()
+      setMentionedDocumentIds(getReferenceDocumentIds(textContent))
+    },
     onEnter: () => {
       const textContent = chatEditor.getTextContent()
       if (textContent.trim()) {
@@ -57,36 +65,21 @@ export function AssistantInput({
   })
 
   useEffect(() => {
-    const editor = chatEditor.editor
-    if (!editor) return
-
-    const updateMentions = () => {
-      const textContent = chatEditor.getTextContent()
-      setMentionedDocumentIds(getReferenceDocumentIds(textContent))
-    }
-
-    updateMentions()
-    editor.on("update", updateMentions)
-
-    return () => {
-      editor.off("update", updateMentions)
-    }
-  }, [chatEditor.editor, chatEditor.getTextContent])
-
-  useEffect(() => {
     if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
       chatEditor.setContent(initialPrompt)
     }
   }, [initialPrompt, chatEditor])
 
-  const contextItems = useMemo(() => {
-    return Array.from(new Set(mentionedDocumentIds)).map<ChatContextItem>((documentId) => ({
-      id: documentId,
-      type: "document",
-      label: documentTitleById.get(documentId) || "Untitled document",
-      source: "mention",
-    }))
-  }, [documentTitleById, mentionedDocumentIds])
+  useEffect(() => {
+    if (content !== undefined && content !== null && chatEditor.editor) {
+      const currentContent = chatEditor.getTextContent()
+      if (content !== currentContent) {
+        chatEditor.setContent(content)
+      }
+    }
+  }, [content, chatEditor])
+
+  const handleRemoveContext = onRemoveContext || defaultHandleRemoveContext
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
@@ -94,37 +87,64 @@ export function AssistantInput({
       const textContent = chatEditor.getTextContent()
       if (!textContent.trim()) return
 
-      onSubmit(textContent, contextItems.map((item) => item.id))
+      onSubmit(textContent, contextDocumentIds)
       chatEditor.clearContent()
+      resetDismissal()
     },
-    [chatEditor, onSubmit, contextItems],
+    [chatEditor, onSubmit, contextDocumentIds, resetDismissal],
   )
 
   handleSubmitRef.current = handleSubmit
 
+  const containerClassName =
+    variant === "rounded"
+      ? "rounded-full bg-white text-sm shadow-surface flex flex-col gap-y-2 relative w-full"
+      : "rounded-lg flex flex-col p-1 z-10 relative bg-gray-100"
+
+  const formClassName = variant === "rounded" ? "relative flex flex-col" : "relative flex flex-col"
+
+  const buttonClassName =
+    variant === "rounded"
+      ? "size-9 justify-center items-center flex bottom-1.5 right-1.5 absolute rounded-full border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 hover:before:bg-white/6 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 bg-gray-800 text-white after:mix-blend-overlay"
+      : "p-1 hover:bg-gray-50 rounded-md bottom-0 right-0 absolute"
+
+  const editorWrapperClassName =
+    variant === "rounded"
+      ? "text-sm text-start"
+      : "flex flex-col bg-white ring ring-black/8 rounded-[6px] p-2"
+
   return (
     <motion.div
-      layoutId="assistant-input"
-      className="rounded-full bg-white text-sm shadow-surface flex flex-col gap-y-2 relative w-full"
+      layoutId={variant === "rounded" ? "assistant-input" : undefined}
+      className={containerClassName}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       initial={false}
     >
-      <Form className="relative flex flex-col" onSubmit={handleSubmit}>
-        <ChatContextList items={contextItems} />
-        <EditorContent editor={chatEditor.editor} className="text-sm text-start" />
-        <Button
-          type={canStop ? "button" : "submit"}
-          onPress={canStop ? onStop : undefined}
-          className="size-9 justify-center items-center flex bottom-1.5 right-1.5 absolute rounded-full border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 hover:before:bg-white/6 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 bg-gray-800 text-white after:mix-blend-overlay"
-          isDisabled={false}
-        >
-          {canStop ? (
-            <SquareIcon className="size-3 text-white fill-white" />
-          ) : (
-            <ChevronUpIcon className="size-4 text-white" />
-          )}
-        </Button>
-      </Form>
+      {variant === "flat" && (
+        <div className="flex p-1.5">
+          <ChatContextList items={contextItems} onRemove={handleRemoveContext} />
+        </div>
+      )}
+      <div className={variant === "flat" ? editorWrapperClassName : ""}>
+        <Form className={formClassName} onSubmit={handleSubmit}>
+          {variant === "rounded" && <ChatContextList items={contextItems} onRemove={handleRemoveContext} />}
+          <EditorContent editor={chatEditor.editor} className={variant === "rounded" ? "text-sm text-start" : ""} />
+          <Button
+            type={canStop ? "button" : "submit"}
+            onPress={canStop ? onStop : undefined}
+            className={buttonClassName}
+            isDisabled={false}
+          >
+            {canStop ? (
+              <SquareIcon className={variant === "rounded" ? "size-3 text-white fill-white" : "size-4 text-gray-900 fill-gray-900"} />
+            ) : variant === "rounded" ? (
+              <ChevronUpIcon className="size-4 text-white" />
+            ) : (
+              <CircleArrowUpIcon className="size-4.5 text-gray-500" />
+            )}
+          </Button>
+        </Form>
+      </div>
     </motion.div>
   )
 }

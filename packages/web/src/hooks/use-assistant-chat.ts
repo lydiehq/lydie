@@ -14,7 +14,6 @@ interface UseAssistantChatOptions {
     organizationId: string
   }
   initialMessages?: DocumentChatAgentUIMessage[]
-  onConversationLoad?: (messages: DocumentChatAgentUIMessage[]) => void
   experimental_throttle?: number
 }
 
@@ -26,7 +25,6 @@ export function useAssistantChat({
   conversationId,
   currentDocument,
   initialMessages = [],
-  onConversationLoad,
   experimental_throttle,
 }: UseAssistantChatOptions) {
   const { organization } = useOrganization()
@@ -84,13 +82,6 @@ export function useAssistantChat({
       })
     },
   })
-
-  // Call onConversationLoad when messages are loaded
-  useEffect(() => {
-    if (onConversationLoad && messages.length > 0) {
-      onConversationLoad(messages)
-    }
-  }, [messages.length, onConversationLoad])
 
   const sendMessage = useCallback(
     (options: { text: string; metadata?: any }) => {
