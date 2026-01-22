@@ -1,18 +1,9 @@
 {
   "name": "@lydie/scripts",
   "scripts": {
-    "db:delete-user": "sst shell bun run src/delete-user.ts",
-    "db:upgrade-user": "sst shell bun run src/upgrade-user.ts",
-    "db:embed-all-documents": "sst shell bun run src/embed-all-documents.ts",
     "copy-integration-assets": "bun run src/copy-integration-assets.ts"
   },
-  "dependencies": {
-    "@lydie/core": "workspace:*",
-    "@lydie/database": "workspace:*",
-    "ai": "catalog:",
-    "drizzle-orm": "catalog:",
-    "sst": "catalog:"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^25.0.10"
   }

@@ -6,7 +6,8 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
-    "dev": "zero-cache"
+    "dev": "zero-cache",
+    "generate-demo-embeddings": "bun run src/scripts/generate-demo-embeddings.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.972.0",

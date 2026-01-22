@@ -1,4 +1,4 @@
-import { demoContent } from "../../zero/src/demo-content"
+import { demoContent } from "../demo-content"
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json"
 import { convertYjsToJson } from "@lydie/core/yjs-to-json"
 import { generateParagraphChunks, generateSimpleChunks } from "@lydie/core/embedding/chunking"
@@ -6,8 +6,12 @@ import { generateManyEmbeddings, generateTitleEmbedding } from "@lydie/core/embe
 import { serializeToPlainText } from "@lydie/core/serialization/text"
 import { extractSections } from "@lydie/core/embedding/section-hashing"
 import { writeFileSync } from "node:fs"
-import { join } from "node:path"
+import { join, dirname } from "node:path"
+import { fileURLToPath } from "url"
 import type { ContentNode } from "@lydie/core/content"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 /**
  * Normalize content by converting taskList/taskItem to bulletList/listItem
@@ -63,7 +67,7 @@ interface EmbeddingData {
 }
 
 async function generateEmbeddingsForDemoContent() {
-  console.log("Generating embeddings for demo content...")
+  console.log("🚀 Generating embeddings for demo content...\n")
   const embeddings: Record<string, EmbeddingData> = {}
 
   for (const doc of demoContent) {
@@ -136,15 +140,14 @@ async function generateEmbeddingsForDemoContent() {
         titleEmbedding,
       }
 
-      console.log(`✓ Generated ${contentEmbeddings.length} embeddings for ${doc.title}`)
+      console.log(`✅ Generated ${contentEmbeddings.length} embeddings for ${doc.title}`)
     } catch (error) {
-      console.error(`Failed to generate embeddings for ${doc.title}:`, error)
+      console.error(`❌ Failed to generate embeddings for ${doc.title}:`, error)
     }
   }
 
-  // Write to file
-  // Calculate path relative to packages/scripts
-  const outputPath = join(__dirname, "../../zero/src/demo-content-embeddings.ts")
+  // Write to file - path relative to zero package src directory
+  const outputPath = join(__dirname, "../demo-content-embeddings.ts")
 
   const fileContent = `/**
  * Pre-computed embeddings for demo content.
@@ -173,8 +176,8 @@ export const demoContentEmbeddings: DemoContentEmbeddings = ${JSON.stringify(emb
 `
 
   writeFileSync(outputPath, fileContent, "utf-8")
-  console.log(`\n✓ Embeddings written to ${outputPath}`)
-  console.log(`✓ Generated embeddings for ${Object.keys(embeddings).length} documents`)
+  console.log(`\n✅ Embeddings written to ${outputPath}`)
+  console.log(`✅ Generated embeddings for ${Object.keys(embeddings).length} documents`)
 }
 
 generateEmbeddingsForDemoContent().catch((error) => {
