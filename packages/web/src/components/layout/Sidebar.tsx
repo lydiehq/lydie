@@ -92,24 +92,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
 
   return (
     <div className="flex flex-col grow max-h-screen overflow-hidden">
-      <div className={`flex justify-between items-center p-3 ${!isCollapsed ? "-ml-1" : ""}`}>
+      <div className={`flex justify-between items-center px-4 py-3 ${!isCollapsed ? "-ml-1" : ""}`}>
         <OrganizationMenu isCollapsed={isCollapsed} />
-        {/* <TooltipTrigger delay={500}>
-          <RACButton
-            className={composeTailwindRenderProps(
-              focusRing,
-              `p-1 rounded hover:bg-black/5 text-gray-700 group ${
-                isCollapsed ? "hidden" : ""
-              }`
-            )}
-            onPress={onToggle}
-            aria-label="Collapse sidebar"
-          >
-            <SidebarIcon direction="left" collapsed={false} />
-          </RACButton>
-          <Tooltip>Collapse sidebar</Tooltip>
-        </TooltipTrigger> */}
-
         <TooltipTrigger delay={500}>
           <RACButton
             className={composeTailwindRenderProps(focusRing, `group p-1 -m-1 ${isCollapsed ? "hidden" : ""}`)}
@@ -140,7 +124,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
-        <div className="flex gap-x-1 px-2">
+        <div className="flex gap-x-1 px-4">
           <Button
             intent="secondary"
             size="sm"
@@ -202,13 +186,14 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <Eyebrow>Documents</Eyebrow>
             <div className="flex gap-x-1">
               <TooltipTrigger delay={500}>
-                <RACButton
-                  className="p-1 rounded hover:bg-black/5 text-gray-600 flex bg-white shadow-surface"
+                <Button
+                  intent="secondary"
+                  size="sm"
                   onPress={() => createDocument()}
                   aria-label="Create new document"
                 >
-                  <TextBulletListSquareEditRegular className="size-4.5 text-gray-500" />
-                </RACButton>
+                  <TextBulletListSquareEditRegular className="size-[14px] text-gray-600" />
+                </Button>
                 <Tooltip>Add document</Tooltip>
               </TooltipTrigger>
             </div>
