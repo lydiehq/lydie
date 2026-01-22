@@ -15,7 +15,6 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
   const router = useRouter()
   const isDev = import.meta.env.DEV
 
-  // Log error in development
   if (isDev) {
     console.error("Route Error:", error)
     console.error("Error details:", {

@@ -79,7 +79,6 @@ function EditorContainer({ doc }: Props) {
     initialTitle: doc.title || "",
     onUpdate: handleTitleUpdate,
     onEnter: () => {
-      // Focus the content editor when Enter is pressed in title
       if (contentEditor.editor) {
         contentEditor.editor.commands.focus(0)
       }
@@ -87,7 +86,6 @@ function EditorContainer({ doc }: Props) {
     editable: !isLocked,
   })
 
-  // Handle blur event for title editor
   useEffect(() => {
     if (!titleEditor.editor) return
 

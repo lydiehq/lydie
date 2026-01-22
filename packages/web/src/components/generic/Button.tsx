@@ -112,7 +112,6 @@ function ButtonChildren({
 }) {
   const showSpinner = isPending
 
-  // Map button sizes to loader sizes
   const getLoaderSize = (buttonSize?: VariantProps<typeof styles>["size"]) => {
     switch (buttonSize) {
       case "xs":

@@ -70,7 +70,6 @@ export function CommandMenu() {
       }),
   )
 
-  // Search documents using Zero - only when on search page
   const [searchData] = useQuery(
     currentPage === "search"
       ? queries.organizations.searchDocuments({
@@ -85,7 +84,6 @@ export function CommandMenu() {
 
   const searchDocuments = searchData?.documents || []
 
-  // Load integration links to show appropriate icons
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byOrganization({
       organizationId: organization.id,
@@ -97,10 +95,8 @@ export function CommandMenu() {
   const { setChecked } = useOnboardingChecklist()
   const { currentStep } = useOnboardingSteps()
 
-  // Handle menu open/close state changes
   const handleOpenChange = useCallback((newIsOpen: boolean) => {
     if (newIsOpen && !isOpen) {
-      // Opening the menu
       if (commandMenuState.initialPage) {
         setPages([commandMenuState.initialPage])
         setCommandMenuState({
@@ -109,7 +105,6 @@ export function CommandMenu() {
         })
       }
     } else if (!newIsOpen && isOpen) {
-      // Closing the menu
       setPages([])
       setSearch("")
     }
@@ -117,7 +112,6 @@ export function CommandMenu() {
     setOpen(newIsOpen)
   }, [isOpen, commandMenuState, setCommandMenuState, setOpen])
 
-  // Keyboard shortcut handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -128,7 +122,6 @@ export function CommandMenu() {
         e.preventDefault()
         const willOpen = !isOpen
 
-        // Mark onboarding item as checked when opening during onboarding
         if (willOpen && currentStep === "documents" && !checkedItemsRef.current.has("documents:open-command-menu")) {
           checkedItemsRef.current.add("documents:open-command-menu")
           setChecked("documents:open-command-menu", true)
@@ -147,14 +140,12 @@ export function CommandMenu() {
     handleOpenChange(false)
   }, [handleOpenChange])
 
-  // Use dynamic integration route for all integrations
   const getIntegrationRoute = (integrationType: string) =>
     `/w/$organizationSlug/settings/integrations/${integrationType}`
 
   const menuSections = useMemo<MenuSection[]>(() => {
     const onboardingItems: MenuItem[] = []
 
-    // Add special onboarding item to import demo content during documents onboarding step
     if (currentStep === "documents") {
       onboardingItems.push({
         id: "import-demo-content",
@@ -163,18 +154,15 @@ export function CommandMenu() {
         icon: PlusIcon,
         action: async () => {
           try {
-            // Import demo content to current workspace
             const result = await z.mutate(
               mutators.document.importDemoContent({
                 organizationId: organization.id,
               }),
             )
 
-            // Mark checklist items as complete
             await setChecked("documents:import-demo-content", true)
             await setChecked("documents:explore-editor", true)
 
-            // Navigate to the Welcome document
             if (result?.client) {
               const clientResult = await result.client
               if (clientResult.type === "success") {
@@ -191,7 +179,6 @@ export function CommandMenu() {
               }
             }
 
-            // Close the command menu
             handleOpenChange(false)
           } catch (error) {
             console.error("Failed to import demo content:", error)

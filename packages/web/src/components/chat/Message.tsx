@@ -122,7 +122,6 @@ export function AssistantMessage({
  * Optimized to only parse when references are detected
  */
 export function TextWithReferences({ text, className = "" }: { text: string; className?: string }) {
-  // Parse text into segments (memoized for performance)
   const segments = useMemo(() => parseReferences(text), [text])
 
   return (
@@ -149,7 +148,6 @@ function ReferenceSegment({ reference }: { reference: ParsedTextSegment["referen
     return <DocumentReferencePill documentId={reference.id} />
   }
 
-  // Fallback for unknown reference types
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 font-medium">
       {reference.type}
@@ -193,11 +191,9 @@ function MessageContext({
   const { organization } = useOrganization()
   const metadata = message.metadata as any
 
-  // Get context documents from metadata
   const contextDocuments = metadata?.contextDocuments || []
   const currentDocument = metadata?.currentDocument
 
-  // Combine current document and context documents, removing duplicates
   const allContextDocs = useMemo(() => {
     const docs: Array<{ id: string; title: string }> = []
     const seenIds = new Set<string>()

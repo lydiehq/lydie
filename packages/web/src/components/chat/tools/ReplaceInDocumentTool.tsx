@@ -54,10 +54,8 @@ export function ReplaceInDocumentTool({
   const navigate = useNavigate()
   const params = useParams({ strict: false })
 
-  // Get the target document ID from the tool
   const targetDocumentId = tool.input?.documentId || tool.output?.documentId
 
-  // Fetch the target document info
   const [targetDocument] = useQuery(
     targetDocumentId
       ? queries.documents.byId({
@@ -67,11 +65,9 @@ export function ReplaceInDocumentTool({
       : null,
   )
 
-  // Get replace text from input (streaming) or output (completed)
   const replaceText = tool.input?.replace || tool.output?.replace || ""
   const isStreaming = tool.state === "input-streaming"
 
-  // Get search and overwrite from input or output
   const searchText = tool.input?.search || tool.output?.search || ""
   const isOverwrite = tool.input?.overwrite ?? tool.output?.overwrite ?? false
 
@@ -82,7 +78,6 @@ export function ReplaceInDocumentTool({
     }
   }, [replaceText])
 
-  // Don't render until we have some content (streaming or complete)
   if (!replaceText && tool.state !== "input-streaming") {
     return null
   }
@@ -98,7 +93,6 @@ export function ReplaceInDocumentTool({
     setApplyStatus("Applying...")
 
     try {
-      // If we need to navigate to a different document, do so first
       if (targetDocumentId && targetDocumentId !== params.id) {
         setApplyStatus("Navigating to document...")
         navigate({
@@ -109,7 +103,6 @@ export function ReplaceInDocumentTool({
           },
         })
         
-        // Wait a bit for navigation and editor to update
         await new Promise((resolve) => setTimeout(resolve, 500))
       }
 
