@@ -30,6 +30,7 @@ import {
   LinkIcon,
   ImageIcon,
   TableIcon,
+  TaskListIcon,
 } from "./wysiwyg-icons"
 
 type Props = {
@@ -150,6 +151,12 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
               onPress={() => editor.chain().focus().toggleOrderedList().run()}
               title="Ordered List"
               icon={TextNumberListLtrFilled}
+              editor={editor}
+            />
+            <ToolbarButton
+              onPress={() => editor.chain().focus().toggleTaskList().run()}
+              title="Task List"
+              icon={TaskListIcon}
               editor={editor}
             />
           </Group>

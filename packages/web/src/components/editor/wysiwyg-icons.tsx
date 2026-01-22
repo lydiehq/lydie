@@ -1,19 +1,8 @@
 import type { SVGProps } from "react"
 
-/**
- * Custom WYSIWYG editor toolbar icons
- * Icons from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE
- */
-
 export function H1Icon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -28,13 +17,7 @@ export function H1Icon(props: SVGProps<SVGSVGElement>) {
 
 export function H2Icon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -49,13 +32,7 @@ export function H2Icon(props: SVGProps<SVGSVGElement>) {
 
 export function H3Icon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -70,13 +47,7 @@ export function H3Icon(props: SVGProps<SVGSVGElement>) {
 
 export function ItalicIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -91,13 +62,7 @@ export function ItalicIcon(props: SVGProps<SVGSVGElement>) {
 
 export function BoldIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -112,13 +77,7 @@ export function BoldIcon(props: SVGProps<SVGSVGElement>) {
 
 export function TableIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -133,13 +92,7 @@ export function TableIcon(props: SVGProps<SVGSVGElement>) {
 
 export function CodeIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -154,13 +107,7 @@ export function CodeIcon(props: SVGProps<SVGSVGElement>) {
 
 export function LinkIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
@@ -174,22 +121,27 @@ export function LinkIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 export function ImageIcon(props: SVGProps<SVGSVGElement>) {
-  // Note: Using the provided SVG (appears to be link icon, but using as requested)
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
+      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+        <circle cx="9" cy="9" r="2" />
+        <path d="m21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+      </g>
+    </svg>
+  )
+}
+
+export function TaskListIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
       <path
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
-        d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"
+        d="M13 5h8m-8 7h8m-8 7h8M3 17l2 2l4-4M3 7l2 2l4-4"
       />
     </svg>
   )
