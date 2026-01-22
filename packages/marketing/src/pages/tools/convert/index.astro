@@ -1,0 +1,113 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { Container } from "../../../components/Container";
+import { conversionConfigs } from "../../../data/conversions";
+
+// Group by input format
+const groupedConfigs = conversionConfigs.reduce((acc, config) => {
+  if (!acc[config.fromFormat]) {
+    acc[config.fromFormat] = [];
+  }
+  acc[config.fromFormat].push(config);
+  return acc;
+}, {} as Record<string, typeof conversionConfigs>);
+---
+
+<Layout
+  title="Free Online Document Converter | Convert Markdown, HTML, DOCX, and More"
+  description="Free universal document converter. Convert between Markdown, PDF, Word (DOCX), HTML, and more. No sign-up required, no watermarks."
+>
+  <Container className="py-12">
+    <div class="space-y-12">
+      <!-- Hero section -->
+      <div class="text-center space-y-4 max-w-3xl mx-auto">
+        <h1 class="text-4xl md:text-5xl font-heading font-bold text-gray-900">
+          Universal Document Converter
+        </h1>
+        <p class="text-lg text-gray-600">
+          Convert between Markdown, PDF, Word, HTML, and many other formats.
+          Powered by Pandoc, the industry-standard conversion tool.
+        </p>
+      </div>
+
+      <!-- Features -->
+      <div class="grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
+        <div class="p-6 bg-blue-50 rounded-lg">
+          <h3 class="font-semibold text-blue-900 mb-2">Always Free</h3>
+          <p class="text-sm text-blue-800">
+            No hidden costs, no watermarks, no sign-up required.
+          </p>
+        </div>
+        <div class="p-6 bg-green-50 rounded-lg">
+          <h3 class="font-semibold text-green-900 mb-2">High Quality</h3>
+          <p class="text-sm text-green-800">
+            Powered by Pandoc for professional-grade conversions.
+          </p>
+        </div>
+        <div class="p-6 bg-purple-50 rounded-lg">
+          <h3 class="font-semibold text-purple-900 mb-2">Secure & Private</h3>
+          <p class="text-sm text-purple-800">
+            Files are processed server-side and deleted immediately.
+          </p>
+        </div>
+      </div>
+
+      <!-- Converters by format -->
+      {Object.entries(groupedConfigs).map(([fromFormat, configs]) => (
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold text-gray-900">
+            Convert {fromFormat} to...
+          </h2>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {configs.map((config) => (
+              <a
+                href={`/tools/convert/${config.slug}`}
+                class="block p-6 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all"
+              >
+                <div class="space-y-2">
+                  <h3 class="text-lg font-semibold text-gray-900">
+                    {fromFormat} → {config.toFormat}
+                  </h3>
+                  <p class="text-sm text-gray-600">{config.description}</p>
+                  <div class="pt-2">
+                    <span class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      Convert now →
+                    </span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <!-- SEO content -->
+      <div class="prose max-w-3xl mx-auto">
+        <h2>About Our Document Converter</h2>
+        <p>
+          Our free online document converter supports a wide range of formats including
+          Markdown, HTML, PDF, Word (DOCX), and many more. We use Pandoc, the most
+          powerful and reliable document conversion tool available, to ensure your
+          documents are converted with the highest quality.
+        </p>
+        
+        <h3>Why Choose Our Converter?</h3>
+        <ul>
+          <li><strong>No Sign-Up Required:</strong> Start converting immediately</li>
+          <li><strong>No Watermarks:</strong> Your documents stay clean and professional</li>
+          <li><strong>Fast Processing:</strong> Server-side conversion for speed</li>
+          <li><strong>Privacy First:</strong> Files are deleted immediately after conversion</li>
+          <li><strong>High Quality:</strong> Preserves formatting, structure, and styling</li>
+        </ul>
+
+        <h3>Popular Conversions</h3>
+        <p>
+          The most popular conversions on our platform include Markdown to PDF,
+          Markdown to Word (DOCX), HTML to Markdown, and Markdown to HTML. These
+          conversions are essential for content creators, technical writers, developers,
+          and anyone working with documentation.
+        </p>
+      </div>
+    </div>
+  </Container>
+</Layout>

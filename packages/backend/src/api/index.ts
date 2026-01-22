@@ -1,6 +1,7 @@
 import { logger } from "hono/logger"
 import { ExternalApi } from "./external"
 import { InternalApi } from "./internal"
+import { PublicApi } from "./public"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { hocuspocus } from "../hocuspocus-server"
@@ -9,7 +10,7 @@ import { createNodeWebSocket } from "@hono/node-ws"
 export const app = new Hono()
   .use(
     cors({
-      origin: ["https://app.lydie.co", "https://lydie.co", "http://localhost:3000"],
+      origin: ["https://app.lydie.co", "https://lydie.co", "http://localhost:3000", "http://localhost:4321"],
       credentials: true,
     }),
   )
@@ -19,6 +20,7 @@ export const app = new Hono()
   })
   .route("/internal", InternalApi)
   .route("/v1/:idOrSlug", ExternalApi)
+  .route("/public", PublicApi)
 
 export const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
   app,

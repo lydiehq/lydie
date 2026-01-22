@@ -7,7 +7,7 @@ import { IntegrationsRoute } from "./integrations"
 import { ImagesRoute } from "./images"
 import { VisibleError } from "@lydie/core/error"
 import { authClient } from "@lydie/core/auth"
-import { authenticatedWithOrganization } from "./middleware"
+import { authenticatedWithOrganization, internalRateLimit } from "./middleware"
 import { HTTPException } from "hono/http-exception"
 import { ZeroRoute } from "./zero"
 
@@ -22,6 +22,7 @@ const organizationScopedRouter = new Hono<{
     organizationId: string
   }
 }>()
+  .use("*", internalRateLimit)
   .use("*", authenticatedWithOrganization)
   .route("/organization", OrganizationRoute)
   .route("/assistant", AssistantRoute)
