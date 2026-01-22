@@ -185,8 +185,7 @@ function AssistantMessageWithTools({
       .map((tool: any) => {
         const search = tool.input?.search || tool.output?.search || ""
         const replace = tool.input?.replace || tool.output?.replace || ""
-        const overwrite = tool.input?.overwrite ?? tool.output?.overwrite ?? false
-        return { search, replace, overwrite }
+        return { search, replace }
       })
       .filter((change) => change.replace !== undefined)
 

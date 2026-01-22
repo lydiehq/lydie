@@ -21,13 +21,11 @@ export interface ReplaceInDocumentToolProps {
       documentId?: string
       search?: string
       replace?: string
-      overwrite?: boolean
     }
     output?: {
       documentId?: string
       search?: string
       replace?: string
-      overwrite?: boolean
     }
     errorText?: string
   }
@@ -69,7 +67,7 @@ export function ReplaceInDocumentTool({
   const isStreaming = tool.state === "input-streaming"
 
   const searchText = tool.input?.search || tool.output?.search || ""
-  const isOverwrite = tool.input?.overwrite ?? tool.output?.overwrite ?? false
+  const isOverwrite = searchText === ""
 
   useLayoutEffect(() => {
     if (contentRef.current) {
@@ -112,7 +110,6 @@ export function ReplaceInDocumentTool({
           {
             search: searchText,
             replace: replaceText,
-            overwrite: isOverwrite,
           },
         ],
         organizationId,

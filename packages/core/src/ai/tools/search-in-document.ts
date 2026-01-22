@@ -18,7 +18,7 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
 - Working with large documents (>5000 words)
 - User references specific topics, headings, or concepts
 
-**When NOT to use (use readCurrentDocument instead):**
+**When NOT to use (use read_document instead):**
 - Structural operations: "Make all headings italic", "Reorder sections"
 - Document-wide changes: "Add conclusion at the end", "Insert after introduction"
 - When you need to see the full document structure
@@ -131,7 +131,7 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
 
       if (results.length === 0) {
         yield {
-          message: `No relevant content found in "${document.title}" for query: "${query}". Try using different search terms or use readCurrentDocument to see the full document.`,
+          message: `No relevant content found in "${document.title}" for query: "${query}". Try using different search terms or use read_document to see the full document.`,
           documentTitle: document.title,
           documentId: targetDocumentId,
           results: [],
