@@ -10,7 +10,10 @@
     "db:push": "bun sst shell drizzle-kit push",
     "db:studio": "bun sst shell bunx drizzle-kit studio",
     "db:seed:agents": "bun sst shell bun run src/seed-agents.ts",
-    "db:sync-zero-publication": "bun sst shell bun run src/sync-zero-publication.ts"
+    "db:sync-zero-publication": "bun sst shell bun run src/sync-zero-publication.ts",
+    "db:delete-user": "sst shell bun run src/scripts/delete-user.ts",
+    "db:upgrade-user": "sst shell bun run src/scripts/upgrade-user.ts",
+    "db:embed-all-documents": "sst shell bun run src/scripts/embed-all-documents.ts"
   },
   "dependencies": {
     "@lydie/core": "workspace:*",

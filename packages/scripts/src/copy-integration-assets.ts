@@ -28,7 +28,7 @@ async function copyDirectory(src: string, dest: string) {
 }
 
 async function copyIntegrationAssets() {
-  console.log("Copying integration assets...")
+  console.log("🚀 Copying integration assets...\n")
 
   try {
     // Ensure the destination directories exist
@@ -54,11 +54,11 @@ async function copyIntegrationAssets() {
       try {
         const stats = await stat(assetsSrc)
         if (!stats.isDirectory()) {
-          console.log(`  ⚠ Skipping ${integrationId} (no assets folder)`)
+          console.log(`  ⚠️  Skipping ${integrationId} (no assets folder)`)
           continue
         }
       } catch {
-        console.log(`  ⚠ Skipping ${integrationId} (no assets folder)`)
+        console.log(`  ⚠️  Skipping ${integrationId} (no assets folder)`)
         continue
       }
 
@@ -84,7 +84,7 @@ async function copyIntegrationAssets() {
       const fileCount = await countFiles(webAssetsDest)
       webCopiedCount += fileCount
       marketingCopiedCount += fileCount
-      console.log(`  ✓ Copied ${integrationId} to web and marketing (${fileCount} file(s) each)`)
+      console.log(`  ✅ Copied ${integrationId} to web and marketing (${fileCount} file(s) each)`)
     }
 
     console.log(`\n✅ Successfully copied ${webCopiedCount} asset file(s) to ${WEB_PUBLIC}`)
