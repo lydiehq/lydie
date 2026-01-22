@@ -13,6 +13,10 @@ import { Surface } from "./layout/Surface"
 import { mutators } from "@lydie/zero/mutators"
 import { useDocumentEditor } from "@/lib/editor/document-editor"
 import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs"
+import { useSetAtom, useAtom } from "jotai"
+import { documentEditorAtom, titleEditorAtom, pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
+import { applyContentChanges } from "@/utils/document-changes"
+import { toast } from "sonner"
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>
@@ -33,6 +37,12 @@ function EditorContainer({ doc }: Props) {
   const openLinkDialogRef = useRef<(() => void) | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isLocked = doc.is_locked ?? false
+  
+  // Store editor instances in Jotai atoms for global access
+  const setDocumentEditor = useSetAtom(documentEditorAtom)
+  const setTitleEditor = useSetAtom(titleEditorAtom)
+  const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom)
+  const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom)
 
   const handleTitleUpdate = (newTitle: string) => {
     const finalTitle = newTitle.trim()
@@ -70,6 +80,22 @@ function EditorContainer({ doc }: Props) {
     editable: !isLocked,
   })
 
+  // Sync document editor to global atom
+  useEffect(() => {
+    setDocumentEditor(contentEditor.editor)
+    return () => {
+      setDocumentEditor(null)
+    }
+  }, [contentEditor.editor, setDocumentEditor])
+
+  // Sync title editor to global atom
+  useEffect(() => {
+    setTitleEditor(titleEditor.editor)
+    return () => {
+      setTitleEditor(null)
+    }
+  }, [titleEditor.editor, setTitleEditor])
+
   useEffect(() => {
     if (!titleEditor.editor) return
 
@@ -92,6 +118,63 @@ function EditorContainer({ doc }: Props) {
       editorElement.removeEventListener("blur", handleBlur)
     }
   }, [titleEditor.editor, title, z, doc.id, doc.organization_id])
+
+  // Apply pending changes after navigation
+  useEffect(() => {
+    if (!pendingChange || !contentEditor.editor) return
+    
+    // Check if this is the target document
+    if (pendingChange.documentId !== doc.id) return
+
+    const applyPendingChange = async () => {
+      setPendingChangeStatus("applying")
+      toast.info("Applying changes...")
+      
+      try {
+        const result = await applyContentChanges(
+          contentEditor.editor!,
+          [
+            {
+              search: pendingChange.search,
+              replace: pendingChange.replace,
+            },
+          ],
+          pendingChange.organizationId,
+        )
+
+        if (result.success) {
+          setPendingChangeStatus("applied")
+          toast.success("Changes applied successfully")
+          if (result.usedLLMFallback) {
+            console.info("✨ LLM-assisted replacement was used for this change")
+          }
+        } else {
+          setPendingChangeStatus("failed")
+          toast.error("Failed to apply changes")
+          console.error("Failed to apply changes:", result.error)
+        }
+      } catch (error) {
+        setPendingChangeStatus("failed")
+        console.error("Failed to apply pending change:", error)
+        toast.error("Failed to apply changes")
+      } finally {
+        // Clear the pending change after a short delay to allow UI to update
+        setTimeout(() => {
+          setPendingChange(null)
+          setPendingChangeStatus(null)
+        }, 1000)
+      }
+    }
+
+    // Small delay to ensure editor is fully ready
+    const timeoutId = setTimeout(() => {
+      applyPendingChange()
+    }, 100)
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [contentEditor.editor, doc.id, pendingChange, setPendingChange])
 
   if (!contentEditor.editor || !titleEditor.editor) {
     return null

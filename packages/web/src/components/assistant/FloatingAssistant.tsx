@@ -347,7 +347,6 @@ function FloatingAssistantChatContent({
       <ChatMessages
         messages={messages}
         status={status as "submitted" | "streaming" | "ready" | "error"}
-        editor={null}
         organizationId={organizationId}
       />
       <div className="p-1.5 relative">

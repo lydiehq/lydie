@@ -85,7 +85,6 @@ export function AssistantChat({
             <ChatMessages
               messages={messages}
               status={status as "submitted" | "streaming" | "ready" | "error"}
-              editor={null}
               organizationId={organizationId}
             />
             <div className="p-3 relative shrink-0">
