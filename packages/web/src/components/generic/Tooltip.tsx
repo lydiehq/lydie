@@ -15,7 +15,7 @@ export interface TooltipProps extends Omit<AriaTooltipProps, "children"> {
 }
 
 const styles = cva({
-  base: "group bg-black/60 text-white text-[12px] rounded-sm will-change-transform px-2 py-0.5",
+  base: "group bg-black/85 text-white text-[12px] rounded-sm will-change-transform px-2 py-0.5",
   variants: {
     isEntering: {
       true: "animate-in fade-in placement-bottom:slide-in-from-top-1 placement-top:slide-in-from-bottom-1 placement-left:slide-in-from-right-1 placement-right:slide-in-from-left-1 ease-out duration-75",
@@ -37,7 +37,7 @@ export function Tooltip({ children, hotkeys, ...props }: TooltipProps) {
           width={8}
           height={8}
           viewBox="0 0 8 8"
-          className="fill-black/60 forced-colors:fill-[Canvas] group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90"
+          className="fill-black/85 forced-colors:fill-[Canvas] group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90"
         >
           <path d="M0 0 L4 4 L8 0" />
         </svg>

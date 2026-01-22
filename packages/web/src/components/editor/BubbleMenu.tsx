@@ -2,13 +2,8 @@ import type { Editor } from "@tiptap/core"
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus"
 import { ToolbarButton } from "./toolbar/ToolbarButton"
 import { Separator } from "../generic/Separator"
-import {
-  TextFontRegular,
-  TextStrikethroughFilled,
-  CodeRegular,
-  SparkleRegular,
-  LinkRegular,
-} from "@fluentui/react-icons"
+import { TextStrikethroughFilled, SparkleRegular } from "@fluentui/react-icons"
+import { BoldIcon, ItalicIcon, CodeIcon, LinkIcon } from "./wysiwyg-icons"
 
 type Props = {
   editor: Editor
@@ -28,13 +23,13 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleBold().run()}
         title="Bold"
-        icon={TextFontRegular}
+        icon={BoldIcon}
         editor={editor}
       />
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleItalic().run()}
         title="Italic"
-        icon={TextFontRegular}
+        icon={ItalicIcon}
         editor={editor}
       />
       <ToolbarButton
@@ -46,7 +41,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleCode().run()}
         title="Code"
-        icon={CodeRegular}
+        icon={CodeIcon}
         editor={editor}
       />
 
@@ -60,14 +55,13 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
           }
         }}
         title="Add Link"
-        icon={LinkRegular}
+        icon={LinkIcon}
         editor={editor}
         isDisabled={editor.state.selection.empty}
       />
 
       <Separator orientation="vertical" className="h-4 mx-1" />
 
-      {/* Selection capture button - connects to TextSelectionExtension */}
       <ToolbarButton
         onPress={() => {
           editor.commands.captureAndMarkSelection()
@@ -75,7 +69,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
         title="Add to context"
         icon={SparkleRegular}
         editor={editor}
-        className="p-1.5 rounded hover:bg-gray-100"
+        className="flex p-1.5 rounded hover:bg-gray-100"
       />
     </TiptapBubbleMenu>
   )
