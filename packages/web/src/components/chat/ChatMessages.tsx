@@ -220,7 +220,6 @@ function AssistantMessageWithTools({
       {shouldShowMetadata && (
         <div className="flex justify-between items-center">
           <div className="flex flex-col gap-y-1">
-            <MessageContextCompact message={message} />
             {message.metadata?.createdAt && (
               <span className="text-gray-400 text-[11px]">
                 {format(new Date(message.metadata.createdAt), "HH:mm")}

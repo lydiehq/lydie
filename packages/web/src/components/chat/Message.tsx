@@ -104,7 +104,7 @@ export function AssistantMessage({
         </div>
         {shouldShowMetadata && (
           <div className="flex flex-col gap-y-1">
-            <MessageContext message={message} align="left" />
+            {message.role === "user" && <MessageContext message={message} align="left" />}
             {message.metadata?.createdAt && (
               <span className="text-xs text-gray-400">
                 {format(new Date(message.metadata.createdAt), "HH:mm")}

@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, Outlet, useRouterState } from "@tanstack/react-router"
 import { Sidebar } from "@/components/layout/Sidebar"
-import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from "react-resizable-panels"
+import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
 import { PanelResizer } from "@/components/panels/PanelResizer"
 import { useRef, useState, useMemo } from "react"
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu"
