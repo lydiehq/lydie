@@ -107,7 +107,6 @@ function PageComponent() {
     setMessages([])
   }, [setMessages])
 
-  // Track assistant opened
   useTrackOnMount("assistant_opened", {
     organizationId: organization.id,
   })

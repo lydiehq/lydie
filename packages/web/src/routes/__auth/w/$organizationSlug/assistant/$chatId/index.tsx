@@ -54,7 +54,6 @@ function PageComponent() {
   const [alert, setAlert] = useState<ChatAlertState | null>(null)
   const messageStartTimeRef = useRef<number>(0)
 
-  // Also query the conversation reactively
   const [conv, status] = useQuery(
     queries.assistant.byId({
       organizationId: organization.id,
@@ -138,7 +137,6 @@ function PageComponent() {
     setMessages([])
   }, [setMessages])
 
-  // Update messages when conversation changes
   useEffect(() => {
     if (conv?.messages) {
       const formattedMessages = conv.messages.map((msg: any) => ({
@@ -151,7 +149,6 @@ function PageComponent() {
     }
   }, [conv, setMessages])
 
-  // Track assistant opened
   useTrackOnMount("assistant_opened", {
     organizationId: organization.id,
     conversationId: chatId,
@@ -163,7 +160,6 @@ function PageComponent() {
     panel.isCollapsed() ? panel.expand() : panel.collapse()
   }
 
-  // Handle conversation not found
   if (!conv && status.type === "complete") {
     return (
       <div className="h-screen py-1 pr-1 flex flex-col pl-1">
