@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "motion/react"
+import { motion } from "motion/react"
 import { useCallback, useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { EditorContent } from "@tiptap/react"
@@ -23,7 +23,6 @@ import {
 } from "@/icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
 import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
-import { ChatAlert } from "@/components/editor/ChatAlert"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
 import { useOrganization } from "@/context/organization.context"
 import { useChatComposer } from "@/hooks/use-chat-composer"
@@ -32,7 +31,6 @@ import { queries } from "@lydie/zero/queries"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
 import { useDocumentContext } from "@/hooks/use-document-context"
 import { createId } from "@lydie/core/id"
-import type { ChatAlertState } from "@/components/editor/ChatAlert"
 import { useAssistantChat } from "@/hooks/use-assistant-chat"
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown"
 import { Tooltip } from "@/components/generic/Tooltip"
@@ -41,7 +39,7 @@ import { PlusCircle } from "lucide-react"
 const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id"
 
 export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: string | null }) {
-  const { isOpen, close, toggle, isDocked, dock, undock, initialPrompt, clearPrompt } = useFloatingAssistant()
+  const { isOpen, close, toggle, isDocked, dock, undock } = useFloatingAssistant()
   const { organization } = useOrganization()
 
   const [conversationId, setConversationId] = useState(() => {
@@ -68,8 +66,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     sendMessage,
     stop,
     status,
-    alert,
-    setAlert,
     setMessages,
   } = useAssistantChat({
     conversationId,
@@ -144,7 +140,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     return buttons.filter((button) => button.show)
   }, [isDocked, dock, undock, handleNewChat, close])
 
-  // All hooks must be called before any conditional returns
   const floatingContainer = typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
   const dockedContainer = typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
 
@@ -215,14 +210,10 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         <FloatingAssistantChatContent
           organizationId={organization.id}
           currentDocumentId={currentDocumentId}
-          initialPrompt={initialPrompt}
-          onPromptUsed={clearPrompt}
           messages={messages}
           sendMessage={sendMessage}
           stop={stop}
           status={status}
-          alert={alert}
-          setAlert={setAlert}
         />
       </div>
     </motion.div>
@@ -245,8 +236,6 @@ function ChatInputArea({
   editor: any
   canStop: boolean
   stop: () => void
-  alert: ChatAlertState | null
-  onDismissAlert: () => void
 }) {
   return (
     <div className="rounded-lg flex flex-col p-1 z-10 relative bg-gray-100">
@@ -296,27 +285,19 @@ function ChatInputArea({
 function FloatingAssistantChatContent({
   organizationId,
   currentDocumentId,
-  initialPrompt,
-  onPromptUsed,
   messages,
   sendMessage,
   stop,
   status,
-  alert,
-  setAlert,
 }: {
   organizationId: string
   currentDocumentId: string | null
-  initialPrompt?: string
-  onPromptUsed?: () => void
   messages: any[]
   sendMessage: (options: { text: string; metadata?: any }) => void
   stop: () => void
   status: string
-  alert: ChatAlertState | null
-  setAlert: (alert: ChatAlertState | null) => void
 }) {
-  const [hasUsedInitialPrompt, setHasUsedInitialPrompt] = useState(false)
+  const { _pendingMessage, _clearPendingMessage } = useFloatingAssistant() as any
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
 
   const {
@@ -345,8 +326,14 @@ function FloatingAssistantChatContent({
     },
     placeholder: "Ask anything. Use @ to refer to documents",
     autoFocus: true,
-    initialContent: initialPrompt && !hasUsedInitialPrompt ? initialPrompt : "",
   })
+
+  useEffect(() => {
+    if (_pendingMessage && chatEditor.editor) {
+      chatEditor.setContent(_pendingMessage)
+      _clearPendingMessage()
+    }
+  }, [_pendingMessage, chatEditor, _clearPendingMessage])
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
@@ -371,18 +358,10 @@ function FloatingAssistantChatContent({
 
       chatEditor.clearContent()
       resetDismissal()
-
-      if (initialPrompt && !hasUsedInitialPrompt) {
-        setHasUsedInitialPrompt(true)
-        onPromptUsed?.()
-      }
     },
     [
       sendMessage,
       chatEditor,
-      initialPrompt,
-      hasUsedInitialPrompt,
-      onPromptUsed,
       contextDocumentIds,
       currentDocument,
       currentDocumentId,
@@ -448,18 +427,10 @@ function FloatingAssistantChatContent({
 
       chatEditor.clearContent()
       resetDismissal()
-
-      if (initialPrompt && !hasUsedInitialPrompt) {
-        setHasUsedInitialPrompt(true)
-        onPromptUsed?.()
-      }
     },
     [
       sendMessage,
       chatEditor,
-      initialPrompt,
-      hasUsedInitialPrompt,
-      onPromptUsed,
       contextDocumentIds,
       currentDocument,
       currentDocumentId,
@@ -506,8 +477,6 @@ function FloatingAssistantChatContent({
           editor={chatEditor.editor}
           canStop={canStop}
           stop={stop}
-          alert={alert}
-          onDismissAlert={() => setAlert(null)}
         />
       </div>
     </div>

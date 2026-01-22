@@ -13,7 +13,6 @@ export function OnboardingStepAssistant() {
   const { organization } = useOrganization()
   const navigate = useNavigate()
 
-  // Query documents to find one to use for step 3
   const [documents] = useQuery(
     queries.documents.byUpdated({
       organizationId: organization.id,
@@ -25,10 +24,8 @@ export function OnboardingStepAssistant() {
     prompt: string,
     documentId?: string,
   ) => {
-    // Mark checklist item as complete immediately
     await setChecked(checklistItem, true)
 
-    // For step 3, navigate to a document first
     if (documentId) {
       navigate({
         to: "/w/$organizationSlug/$id",
@@ -39,11 +36,9 @@ export function OnboardingStepAssistant() {
       })
     }
 
-    // Open assistant with pre-filled prompt
-    openAssistant({ prompt })
+    openAssistant({ message: prompt })
   }
 
-  // Find a document to use for step 3 - prefer Project Apollo Kickoff or any onboarding doc
   const documentForStep3 = documents?.find(
     (doc) =>
       doc.title === "Project Apollo - Kickoff Notes" ||

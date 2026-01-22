@@ -51,7 +51,6 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
   const { uploadImage } = useImageUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Detect platform for keyboard shortcuts
   const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0
   const mod = isMac ? "⌘" : "Ctrl"
 
@@ -198,7 +197,6 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
                   console.error("Failed to upload image:", error)
                   alert("Failed to upload image. Please try again.")
                 } finally {
-                  // Reset input so the same file can be selected again
                   if (fileInputRef.current) {
                     fileInputRef.current.value = ""
                   }

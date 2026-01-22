@@ -6,10 +6,8 @@ import { queries } from "@lydie/zero/queries"
 import { type DocumentEditorHookResult } from "@/lib/editor/document-editor"
 import { applyContentChanges } from "@/utils/document-changes"
 import { ChatMessages } from "@/components/chat/ChatMessages"
-import { useMemo, useState, useImperativeHandle, type ForwardedRef, useEffect } from "react"
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
+import { useState, useImperativeHandle, type ForwardedRef, useEffect } from "react"
 import { useSelectedContent } from "@/context/selected-content.context"
-import { useQuery } from "@rocicorp/zero/react"
 import { useOrganization } from "@/context/organization.context"
 import type { QueryResultType } from "@rocicorp/zero"
 import { useRouter } from "@tanstack/react-router"
@@ -74,7 +72,6 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
     }
   }, [chatEditor.editor, chatEditor.getTextContent])
 
-  // Expose focus method via ref
   useImperativeHandle(ref, () => ({
     focus: () => {
       if (chatEditor.editor) {
@@ -111,7 +108,7 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
           onClick: () => {
             router.navigate({
               to: "/w/$organizationSlug/settings/billing",
-              params: { organizationId: organization.id },
+              params: (prev) => ({ ...prev, organizationSlug: organization.slug }),
             })
           },
         },
@@ -131,14 +128,13 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
         focusedContent,
         contextDocumentIds: Array.from(
           new Set([
-            ...(isCurrentDocumentDismissed ? [] : [doc.id]),
             ...mentionedDocumentIds,
           ]),
         ),
         currentDocument: {
           id: doc.id,
           organizationId: doc.organization_id,
-          wordCount: editorState.wordCount,
+          wordCount: editorState?.wordCount,
         },
       },
     })
@@ -175,13 +171,10 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
       if (edits.changes && edits.changes.length > 0) {
         result = await applyContentChanges(contentEditor.editor, edits.changes, organization.id, onProgress)
 
-        // Log if LLM fallback was used
         if (result.usedLLMFallback) {
           console.info("✨ LLM-assisted replacement was used for this change")
         }
       }
-
-      // Note: Title editing is now handled separately via the title input field
 
       if (!result.success) {
         throw new Error(result.error || "Failed to apply content changes")

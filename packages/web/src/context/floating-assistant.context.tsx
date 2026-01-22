@@ -42,8 +42,7 @@ function setOpenState(value: boolean): void {
 }
 
 interface OpenOptions {
-  prompt?: string
-  documentId?: string
+  message?: string
 }
 
 interface FloatingAssistantContextValue {
@@ -51,8 +50,6 @@ interface FloatingAssistantContextValue {
   open: (options?: OpenOptions) => void
   close: () => void
   toggle: () => void
-  initialPrompt?: string
-  clearPrompt: () => void
   isDocked: boolean
   dock: () => void
   undock: () => void
@@ -73,106 +70,63 @@ interface FloatingAssistantProviderProps {
 }
 
 export function FloatingAssistantProvider({ children }: FloatingAssistantProviderProps) {
-  // Initialize state from localStorage
-  const initialIsDocked = getDockedState()
-  const initialIsOpen = initialIsDocked ? true : getOpenState() // If docked, always open
-  
-  const [isOpen, setIsOpen] = useState(initialIsOpen)
-  const [initialPrompt, setInitialPrompt] = useState<string | undefined>()
-  const [isDocked, setIsDocked] = useState(initialIsDocked)
+  const [isOpen, setIsOpen] = useState(() => {
+    const docked = getDockedState()
+    return docked ? true : getOpenState()
+  })
+  const [isDocked, setIsDocked] = useState(getDockedState)
+  const [pendingMessage, setPendingMessage] = useState<string | undefined>()
 
   const open = useCallback((options?: OpenOptions) => {
     setIsOpen(true)
-    // Only persist open state when undocked (when docked, it's always open)
-    if (!isDocked) {
-      setOpenState(true)
+    setOpenState(true)
+    if (options?.message) {
+      setPendingMessage(options.message)
     }
-    if (options?.prompt) {
-      setInitialPrompt(options.prompt)
-    }
-    // Note: documentId navigation is handled by the caller before opening
-    // This keeps the context simple and stateless
-  }, [isDocked])
+  }, [])
 
   const close = useCallback(() => {
     setIsOpen(false)
-    // Only persist open state when undocked
-    if (!isDocked) {
-      setOpenState(false)
-    }
-  }, [isDocked])
+    setOpenState(false)
+  }, [])
 
   const toggle = useCallback(() => {
     setIsOpen((prev) => {
       const newValue = !prev
-      // Only persist open state when undocked
-      if (!isDocked) {
-        setOpenState(newValue)
-      }
+      setOpenState(newValue)
       return newValue
     })
-  }, [isDocked])
-
-  const clearPrompt = useCallback(() => {
-    setInitialPrompt(undefined)
   }, [])
 
   const dock = useCallback(() => {
     setIsDocked(true)
     setDockedState(true)
-    setIsOpen(true) // Automatically open when docking
-    // Don't persist open state when docked (it's always open)
+    setIsOpen(true)
+    setOpenState(true)
   }, [])
 
   const undock = useCallback(() => {
     setIsDocked(false)
     setDockedState(false)
-    // Restore the previous open state from localStorage when undocking
     const savedOpenState = getOpenState()
     setIsOpen(savedOpenState)
   }, [])
 
-  // Keep isOpen in sync with isDocked (when docked, always open)
-  useEffect(() => {
-    if (isDocked && !isOpen) {
-      setIsOpen(true)
-    }
-  }, [isDocked, isOpen])
-
-  // Persist isOpen state when it changes (only when undocked)
-  useEffect(() => {
-    if (!isDocked) {
-      setOpenState(isOpen)
-    }
-  }, [isOpen, isDocked])
-
-  // Sync localStorage when state changes externally (e.g., from another tab)
+  // Sync state from other tabs
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === ASSISTANT_DOCKED_KEY && e.newValue !== null) {
-        const newValue = e.newValue === "true"
-        if (newValue !== isDocked) {
-          setIsDocked(newValue)
-          if (newValue) {
-            setIsOpen(true) // Auto-open when docked
-          } else {
-            // When undocked, restore saved open state
-            const savedOpenState = getOpenState()
-            setIsOpen(savedOpenState)
-          }
-        }
-      } else if (e.key === ASSISTANT_OPEN_KEY && e.newValue !== null && !isDocked) {
-        // Only sync open state when undocked
-        const newValue = e.newValue === "true"
-        if (newValue !== isOpen) {
-          setIsOpen(newValue)
-        }
+        const newDocked = e.newValue === "true"
+        setIsDocked(newDocked)
+        setIsOpen(newDocked || getOpenState())
+      } else if (e.key === ASSISTANT_OPEN_KEY && e.newValue !== null) {
+        setIsOpen(e.newValue === "true" || isDocked)
       }
     }
 
     window.addEventListener("storage", handleStorageChange)
     return () => window.removeEventListener("storage", handleStorageChange)
-  }, [isDocked, isOpen])
+  }, [isDocked])
 
   const value = useMemo(
     () => ({
@@ -180,14 +134,14 @@ export function FloatingAssistantProvider({ children }: FloatingAssistantProvide
       open,
       close,
       toggle,
-      initialPrompt,
-      clearPrompt,
       isDocked,
       dock,
       undock,
+      _pendingMessage: pendingMessage,
+      _clearPendingMessage: () => setPendingMessage(undefined),
     }),
-    [isOpen, open, close, toggle, initialPrompt, clearPrompt, isDocked, dock, undock],
+    [isOpen, open, close, toggle, isDocked, dock, undock, pendingMessage],
   )
 
-  return <FloatingAssistantContext.Provider value={value}>{children}</FloatingAssistantContext.Provider>
+  return <FloatingAssistantContext.Provider value={value as FloatingAssistantContextValue}>{children}</FloatingAssistantContext.Provider>
 }
