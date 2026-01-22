@@ -5,20 +5,14 @@ import { Button, DialogTrigger } from "react-aria-components"
 import { MoreVerticalRegular } from "@fluentui/react-icons"
 import { Popover } from "../generic/Popover"
 import { ReplaceInDocumentTool } from "./tools/ReplaceInDocumentTool"
-import { SearchDocumentsTool } from "./tools/SearchDocumentsTool"
-import { SearchInDocumentTool } from "./tools/SearchInDocumentTool"
-import { ReadDocumentTool } from "./tools/ReadDocumentTool"
-import { ReadCurrentDocumentTool } from "./tools/ReadCurrentDocumentTool"
-import { ListDocumentsTool } from "./tools/ListDocumentsTool"
 import { CreateDocumentTool } from "./tools/CreateDocumentTool"
 import { MoveDocumentsTool } from "./tools/MoveDocumentsTool"
-import { WebSearchTool } from "./tools/WebSearchTool"
+import { ShowDocumentsTool } from "./tools/ShowDocumentsTool"
+import { ResearchGroup, groupMessageParts, extractActionFromToolPart } from "./tools/ResearchGroup"
 import { UserMessage } from "./Message"
 import { Streamdown } from "streamdown"
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
-import { Link } from "@tanstack/react-router"
-import { useOrganization } from "@/context/organization.context"
-import { useMemo } from "react"
+
 
 type Props = {
   messages: DocumentChatAgentUIMessage[]
@@ -179,15 +173,24 @@ function AssistantMessageWithTools({
       exit={{ opacity: 0, y: -10 }}
     >
       <div className="flex flex-col">
-        {message.parts.map((part: any, index: number) => (
-          <MessagePart
-            key={index}
-            part={part}
-            status={status}
-            isLastMessage={isLastMessage}
-            organizationId={organizationId}
-          />
-        ))}
+        {groupMessageParts(message.parts).map((group, index) => {
+          if (group.type === "research-group") {
+            const actions = group.parts
+              .map(extractActionFromToolPart)
+              .filter((a): a is NonNullable<typeof a> => a !== null)
+            const isLoading = actions.some((a) => a.status === "loading")
+            return <ResearchGroup key={index} actions={actions} isLoading={isLoading} />
+          }
+          return (
+            <MessagePart
+              key={index}
+              part={group.part}
+              status={status}
+              isLastMessage={isLastMessage}
+              organizationId={organizationId}
+            />
+          )
+        })}
       </div>
       {shouldShowMetadata && (
         <div className="flex justify-between items-center">
@@ -261,26 +264,6 @@ function MessagePart({
     return <ReplaceInDocumentTool tool={part} organizationId={organizationId} />
   }
 
-  if (part.type === "tool-search_documents") {
-    return <SearchDocumentsTool tool={part} />
-  }
-
-  if (part.type === "tool-search_in_document") {
-    return <SearchInDocumentTool tool={part} />
-  }
-
-  if (part.type === "tool-read_document") {
-    return <ReadDocumentTool tool={part} />
-  }
-
-  if (part.type === "tool-read_current_document") {
-    return <ReadCurrentDocumentTool tool={part} />
-  }
-
-  if (part.type === "tool-list_documents") {
-    return <ListDocumentsTool tool={part} />
-  }
-
   if (part.type === "tool-create_document") {
     return <CreateDocumentTool tool={part} />
   }
@@ -289,8 +272,8 @@ function MessagePart({
     return <MoveDocumentsTool tool={part} />
   }
 
-  if (part.type === "tool-web_search") {
-    return <WebSearchTool tool={part} />
+  if (part.type === "tool-show_documents") {
+    return <ShowDocumentsTool tool={part} />
   }
 
   if (part.type?.startsWith("tool-") && import.meta.env.DEV) {
