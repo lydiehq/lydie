@@ -158,7 +158,25 @@ export function ReplaceInDocumentTool({
 
   const handleCopy = async () => {
     if (replaceText) {
-      await navigator.clipboard.writeText(replaceText)
+      try {
+        // Extract plain text from HTML for fallback
+        const tempDiv = document.createElement("div")
+        tempDiv.innerHTML = replaceText
+        const plainText = tempDiv.textContent || tempDiv.innerText || ""
+
+        // Create a ClipboardItem with both HTML and plain text formats
+        // This allows Word and other applications to preserve formatting
+        const clipboardItem = new ClipboardItem({
+          "text/html": new Blob([replaceText], { type: "text/html" }),
+          "text/plain": new Blob([plainText], { type: "text/plain" }),
+        })
+
+        await navigator.clipboard.write([clipboardItem])
+      } catch (error) {
+        // Fallback to plain text if ClipboardItem API is not supported
+        console.warn("Rich text copy failed, falling back to plain text:", error)
+        await navigator.clipboard.writeText(replaceText)
+      }
     }
   }
 
