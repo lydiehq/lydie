@@ -271,11 +271,6 @@ export const AssistantRoute = new Hono<{
         if (part.type === "start") {
           return {
             createdAt: new Date().toISOString(),
-            contextDocuments: contextDocuments.map((doc) => ({
-              id: doc.id,
-              title: doc.title || "Untitled document",
-            })),
-            currentDocumentId: currentDocument?.id,
           }
         }
         if (part.type === "finish") {
@@ -289,25 +284,16 @@ export const AssistantRoute = new Hono<{
       onFinish: async ({ messages: finalMessages }) => {
         const assistantMessage = finalMessages[finalMessages.length - 1]
 
-        // Ensure the final saved metadata includes all context information
-        const enhancedMetadata = {
-          ...(assistantMessage.metadata as MessageMetadata),
-          contextDocuments: contextDocuments.map((doc) => ({
-            id: doc.id,
-            title: doc.title || "Untitled document",
-          })),
-          currentDocumentId: currentDocument?.id,
-        }
-
+        // Save assistant message without context information (context only applies to user messages)
         const savedMessage = await saveMessage({
           conversationId,
           parts: assistantMessage.parts,
-          metadata: enhancedMetadata,
+          metadata: assistantMessage.metadata as MessageMetadata,
           role: "assistant",
         })
 
         // Extract usage data from metadata
-        const totalTokens = enhancedMetadata?.usage || 0
+        const totalTokens = (assistantMessage.metadata as MessageMetadata)?.usage || 0
 
         // Save LLM usage data to the usage table
         if (totalTokens > 0) {

@@ -5,23 +5,13 @@ import { Button as RACButton, Button, TooltipTrigger } from "react-aria-componen
 import {
   TextAsteriskRegular,
   SubtractFilled,
-  ArrowMinimizeRegular,
-  ArrowMaximizeRegular,
   DocumentFilled,
   DocumentCopyFilled,
   EditRegular,
   QuestionCircleRegular,
-  AddRegular,
-  LayoutColumnOneThirdRightFilled,
-  LayoutColumnOneThirdRightHintFilled,
-  ChannelAddFilled,
-  ChannelAddRegular,
-  ChannelAdd24Regular,
-  ChannelAdd16Regular,
   TextBulletListSquareEditRegular,
-  ExpandUpRightFilled,
-  ExpandUpRight16Filled,
   LayoutColumnTwoFocusRightFilled,
+  PictureInPictureEnterRegular,
 } from "@fluentui/react-icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
@@ -113,7 +103,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         onPress: isDocked ? undock : dock,
         ariaLabel: isDocked ? "Undock assistant" : "Dock assistant",
         tooltip: isDocked ? "Undock assistant" : "Dock assistant",
-        icon: isDocked ? LayoutColumnOneThirdRightFilled : LayoutColumnTwoFocusRightFilled,
+        icon: isDocked ? PictureInPictureEnterRegular : LayoutColumnTwoFocusRightFilled,
       },
       {
         onPress: close,
@@ -335,7 +325,7 @@ function FloatingAssistantChatContent({
           canStop={canStop}
           currentDocumentId={currentDocumentId}
           variant="flat"
-          editorClassName="focus:outline-none min-h-[100px] max-h-[200px] overflow-y-auto text-sm text-gray-700"
+          editorClassName="focus:outline-none min-h-[80px] max-h-[200px] overflow-y-auto text-sm text-gray-700"
           content={pendingContent}
         />
       </div>

@@ -83,15 +83,15 @@ export const comparisons: Comparison[] = [
     sections: [
       {
         id: "opensource",
-        title: "Open-source alternative to Notion",
+        title: "Open-source Notion AI alternative",
         description:
-          "Notion locks you into their platform with no way to self-host or customize. Lydie is fully open-source, giving you complete control over your data and the ability to customize it to your needs. No vendor lock-in, no data silos - just the freedom to run your workspace your way.",
+          "Notion locks you into their platform with no way to self-host or customize. As an open-source Notion AI alternative, Lydie gives you complete control over your data and the ability to customize it to your needs. No vendor lock-in, no data silos - just the freedom to run your workspace your way.",
       },
       {
         id: "ai",
-        title: "AI built-in, not a paid add-on",
+        title: "The best Notion AI alternative with built-in AI",
         description:
-          "Notion charges extra for AI features on paid plans. With Lydie, AI assistance is built directly into the editor and available to everyone. Get writing help, generate content, and chat with your documents without paying premium prices for AI capabilities.",
+          "Notion charges extra for AI features on paid plans. As a true Notion AI alternative, Lydie includes AI assistance built directly into the editor and available to everyone. Get writing help, generate content, and chat with your documents without paying premium prices for AI capabilities.",
       },
       {
         id: "performance",
