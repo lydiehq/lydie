@@ -19,6 +19,7 @@ import { checkDailyMessageLimit } from "../utils/usage-limits"
 import { searchDocuments } from "@lydie/core/ai/tools/search-documents"
 import { readDocument } from "@lydie/core/ai/tools/read-document"
 import { listDocuments } from "@lydie/core/ai/tools/list-documents"
+import { showDocuments } from "@lydie/core/ai/tools/show-documents"
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents"
 import { createDocument } from "@lydie/core/ai/tools/create-document"
 import { searchInDocument } from "@lydie/core/ai/tools/search-in-document"
@@ -269,6 +270,7 @@ export const AssistantRoute = new Hono<{
       search_documents: searchDocuments(userId, organizationId, currentDocument?.id),
       read_document: readDocument(userId, organizationId),
       list_documents: listDocuments(userId, organizationId, currentDocument?.id),
+      show_documents: showDocuments(userId, organizationId, currentDocument?.id),
       move_documents: moveDocuments(userId, organizationId),
       create_document: createDocument(userId, organizationId),
     }
