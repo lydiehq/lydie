@@ -134,7 +134,7 @@ export function Hero({
               </div>
               <div className={styles.heroButton2}>
                 <Button
-                  href="https://github.com/lydiqhq/lydie"
+                  href="https://github.com/lydiehq/lydie"
                   size="lg"
                   target="_blank"
                   intent="ghost"
