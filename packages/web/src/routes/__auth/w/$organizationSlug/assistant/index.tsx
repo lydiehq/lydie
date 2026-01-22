@@ -7,7 +7,7 @@ import { PanelResizer } from "@/components/panels/PanelResizer"
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar"
 import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { z } from "zod"
-import { AssistantChatUI } from "@/components/assistant/AssistantChatUI"
+import { AssistantChat } from "@/components/assistant/AssistantChat"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
@@ -124,7 +124,7 @@ function PageComponent() {
         <PanelGroup autoSaveId="assistant-panel-group" direction="horizontal">
           <Panel minSize={20} defaultSize={75} className="flex flex-col grow">
             <div className="flex flex-col h-full mx-auto w-full max-w-xl">
-              <AssistantChatUI
+              <AssistantChat
                 organizationId={organization.id}
                 initialPrompt={initialPrompt}
                 showEmptyState={true}

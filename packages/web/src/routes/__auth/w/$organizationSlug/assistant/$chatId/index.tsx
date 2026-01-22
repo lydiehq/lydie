@@ -8,7 +8,7 @@ import { AssistantSidebar } from "@/components/assistant/AssistantSidebar"
 import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { queries } from "@lydie/zero/queries"
 import { z } from "zod"
-import { AssistantChatUI } from "@/components/assistant/AssistantChatUI"
+import { AssistantChat } from "@/components/assistant/AssistantChat"
 import { Button } from "@/components/generic/Button"
 import { useQuery } from "@rocicorp/zero/react"
 import { useChat } from "@ai-sdk/react"
@@ -47,7 +47,6 @@ const COLLAPSED_SIZE = 3.5
 function PageComponent() {
   const { chatId } = Route.useParams()
   const { organization } = useOrganization()
-  const { conversation } = Route.useLoaderData()
   const [sidebarSize, setSidebarSize] = useState(25)
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
   const search = useSearch({ from: "/__auth/w/$organizationSlug/assistant/$chatId/" })
@@ -189,7 +188,7 @@ function PageComponent() {
         <PanelGroup autoSaveId="assistant-panel-group" direction="horizontal">
           <Panel minSize={20} defaultSize={75} className="flex flex-col grow">
             <div className="flex flex-col h-full mx-auto w-full max-w-xl">
-              <AssistantChatUI
+              <AssistantChat
                 organizationId={organization.id}
                 initialPrompt={initialPrompt}
                 showEmptyState={true}
