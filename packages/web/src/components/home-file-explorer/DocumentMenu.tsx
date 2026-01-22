@@ -31,7 +31,7 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false)
   const [renameValue, setRenameValue] = useState(documentName)
   const z = useZero()
-  const { deleteDocument, createDocument, publishDocument } = useDocumentActions()
+  const { deleteDocument, publishDocument } = useDocumentActions()
   const { id: currentDocId } = useParams({ strict: false })
   const { organization } = useOrganization()
 
@@ -95,7 +95,6 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
       <Menu placement={placement}>
         <MenuItem onAction={() => setIsInfoDialogOpen(true)}>Info</MenuItem>
         <MenuItem onAction={() => setIsRenameDialogOpen(true)}>Rename</MenuItem>
-        <MenuItem onAction={() => createDocument(documentId)}>Add sub document</MenuItem>
         {document?.integration_link_id && !document?.published && (
           <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
         )}
