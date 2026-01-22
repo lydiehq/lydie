@@ -114,127 +114,125 @@ function Onboarding() {
   }
 
   return (
-    <div className="flex p-8 bg-white shadow-surface rounded-xl gap-x-16 items-center size-full justify-center">
-      <div className="">
-        <div className="flex flex-col gap-y-6 max-w-lg">
+    <div className="flex items-center size-full justify-center">
+      <div className="flex flex-col gap-y-6 max-w-lg">
+        <div className="flex items-center gap-x-2">
+          <CircularProgress progress={progress} size={20} progressColor="#9c9c9c" />
+          <span className="text-xs text-gray-500">
+            Step {getCurrentStepIndex() + 1} of {getTotalSteps()}
+          </span>
+        </div>
+        <div className="min-h-[280px] relative">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={currentStep}
+              initial={{
+                opacity: 0,
+                x: direction === "forward" ? 20 : -20,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              exit={{
+                opacity: 0,
+                x: direction === "forward" ? -20 : 20,
+              }}
+              transition={{
+                duration: 0.3,
+                ease: [0.4, 0, 0.2, 1],
+              }}
+            >
+              {renderStepContent()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between gap-x-2">
           <div className="flex items-center gap-x-2">
-            <CircularProgress progress={progress} size={20} progressColor="#9c9c9c" />
-            <span className="text-xs text-gray-500">
-              Step {getCurrentStepIndex() + 1} of {getTotalSteps()}
-            </span>
-          </div>
-          <div className="min-h-[280px] relative">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={currentStep}
-                initial={{
-                  opacity: 0,
-                  x: direction === "forward" ? 20 : -20,
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  x: direction === "forward" ? -20 : 20,
-                }}
-                transition={{
-                  duration: 0.3,
-                  ease: [0.4, 0, 0.2, 1],
-                }}
-              >
-                {renderStepContent()}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between gap-x-2">
-            <div className="flex items-center gap-x-2">
-              {!isFirstStep && (
-                <Button onPress={previousStep} intent="secondary" size="sm">
-                  <span className="flex items-center gap-x-1">
-                    <ChevronLeftIcon className="size-4" />
-                    Previous
-                  </span>
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center justify-between">
-              <Button onPress={handleSkip} intent="secondary" size="sm">
-                Skip
-              </Button>
-              <Button onPress={handleNext} intent="primary" size="sm">
+            {!isFirstStep && (
+              <Button onPress={previousStep} intent="secondary" size="sm">
                 <span className="flex items-center gap-x-1">
-                  {isLastStep ? "Get started" : "Next"}
-                  {!isLastStep && <ChevronRightIcon className="size-4" />}
+                  <ChevronLeftIcon className="size-4" />
+                  Previous
                 </span>
               </Button>
-            </div>
-          </div>
-          <div className="flex items-center gap-x-4">
-            <RACButton
-              onPress={() => setIsQuitDialogOpen(true)}
-              className="text-xs font-medium text-gray-600 hover:text-gray-900"
-            >
-              Quit intro
-            </RACButton>
-            {import.meta.env.DEV && (
-              <RACButton
-                onPress={async () => {
-                  try {
-                    await z.mutate(
-                      mutators.organizationSettings.resetOnboarding({
-                        organizationId: organization.id,
-                      }),
-                    )
-                    toast.success("Onboarding reset successfully")
-                  } catch (error) {
-                    console.error("Failed to reset onboarding:", error)
-                    toast.error("Failed to reset onboarding")
-                  }
-                }}
-                className="text-xs font-medium text-orange-600 hover:text-orange-900"
-              >
-                [DEV] Reset Onboarding
-              </RACButton>
             )}
           </div>
-
-          <DialogTrigger
-            isOpen={isQuitDialogOpen}
-            onOpenChange={(isOpen) => {
-              setIsQuitDialogOpen(isOpen)
-              if (!isOpen) {
-                setDeleteDemoContent(true) // Reset to default when dialog closes
-              }
-            }}
-          >
-            <Modal isDismissable size="md">
-              <Dialog role="alertdialog">
-                <div className="p-4 flex flex-col gap-y-4">
-                  <Heading slot="title" className="text-lg font-medium text-gray-900">
-                    Quit intro
-                  </Heading>
-                  <p className="text-sm text-slate-600">Are you sure you want to quit the intro?</p>
-                  <div className="flex items-center">
-                    <Checkbox isSelected={deleteDemoContent} onChange={setDeleteDemoContent}>
-                      Delete demo content
-                    </Checkbox>
-                  </div>
-                  <div className="flex gap-x-2 justify-end mt-2">
-                    <Button intent="secondary" onPress={() => setIsQuitDialogOpen(false)} size="sm">
-                      Cancel
-                    </Button>
-                    <Button intent="primary" onPress={handleQuitIntro} size="sm">
-                      Quit intro
-                    </Button>
-                  </div>
-                </div>
-              </Dialog>
-            </Modal>
-          </DialogTrigger>
+          <div className="flex items-center justify-between">
+            <Button onPress={handleSkip} intent="secondary" size="sm">
+              Skip
+            </Button>
+            <Button onPress={handleNext} intent="primary" size="sm">
+              <span className="flex items-center gap-x-1">
+                {isLastStep ? "Get started" : "Next"}
+                {!isLastStep && <ChevronRightIcon className="size-4" />}
+              </span>
+            </Button>
+          </div>
         </div>
+        <div className="flex items-center gap-x-4">
+          <RACButton
+            onPress={() => setIsQuitDialogOpen(true)}
+            className="text-xs font-medium text-gray-600 hover:text-gray-900"
+          >
+            Quit intro
+          </RACButton>
+          {import.meta.env.DEV && (
+            <RACButton
+              onPress={async () => {
+                try {
+                  await z.mutate(
+                    mutators.organizationSettings.resetOnboarding({
+                      organizationId: organization.id,
+                    }),
+                  )
+                  toast.success("Onboarding reset successfully")
+                } catch (error) {
+                  console.error("Failed to reset onboarding:", error)
+                  toast.error("Failed to reset onboarding")
+                }
+              }}
+              className="text-xs font-medium text-orange-600 hover:text-orange-900"
+            >
+              [DEV] Reset Onboarding
+            </RACButton>
+          )}
+        </div>
+
+        <DialogTrigger
+          isOpen={isQuitDialogOpen}
+          onOpenChange={(isOpen) => {
+            setIsQuitDialogOpen(isOpen)
+            if (!isOpen) {
+              setDeleteDemoContent(true) // Reset to default when dialog closes
+            }
+          }}
+        >
+          <Modal isDismissable size="md">
+            <Dialog role="alertdialog">
+              <div className="p-4 flex flex-col gap-y-4">
+                <Heading slot="title" className="text-lg font-medium text-gray-900">
+                  Quit intro
+                </Heading>
+                <p className="text-sm text-slate-600">Are you sure you want to quit the intro?</p>
+                <div className="flex items-center">
+                  <Checkbox isSelected={deleteDemoContent} onChange={setDeleteDemoContent}>
+                    Delete demo content
+                  </Checkbox>
+                </div>
+                <div className="flex gap-x-2 justify-end mt-2">
+                  <Button intent="secondary" onPress={() => setIsQuitDialogOpen(false)} size="sm">
+                    Cancel
+                  </Button>
+                  <Button intent="primary" onPress={handleQuitIntro} size="sm">
+                    Quit intro
+                  </Button>
+                </div>
+              </div>
+            </Dialog>
+          </Modal>
+        </DialogTrigger>
       </div>
     </div>
   )
