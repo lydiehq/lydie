@@ -37,9 +37,9 @@ interface FAQItemProps {
   isLast?: boolean
 }
 
-function FAQItem({ question, answer, isLast }: FAQItemProps) {
+function FAQItem({ question, answer }: FAQItemProps) {
   return (
-    <Disclosure className="border-b border-gray-200 last:border-b-0" defaultExpanded={false}>
+    <Disclosure className="border-b border-gray-200 last:border-b-0" defaultExpanded={true}>
       <Heading>
         <Button slot="trigger" className="w-full flex items-center justify-between gap-4 py-6 text-left">
           <span className="text-lg font-semibold text-gray-900 pr-4">{question}</span>
@@ -55,9 +55,8 @@ function ChevronIcon() {
   const { isExpanded } = useContext(DisclosureStateContext)!
   return (
     <ChevronRight
-      className={`w-5 h-5 text-gray-600 shrink-0 transition-transform duration-200 ${
-        isExpanded ? "rotate-90" : ""
-      }`}
+      className={`w-5 h-5 text-gray-600 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""
+        }`}
       aria-hidden="true"
     />
   )

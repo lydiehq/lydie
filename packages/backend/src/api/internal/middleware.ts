@@ -2,6 +2,7 @@ import { MiddlewareHandler } from "hono"
 import { HTTPException } from "hono/http-exception"
 import { authClient } from "@lydie/core/auth"
 import { db } from "@lydie/database"
+import { rateLimiter } from "hono-rate-limiter"
 
 interface SessionAuthEnv {
   Variables: {
@@ -10,6 +11,29 @@ interface SessionAuthEnv {
     organizationId: string
   }
 }
+
+/**
+ * Rate limiting middleware for internal API
+ * Limits requests per authenticated user: 1000 requests per 15 minutes
+ * More lenient than public API since users are authenticated
+ */
+export const internalRateLimit = rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 1000, // 1000 requests per 15 minutes per user
+  keyGenerator: (c) => {
+    // Use user ID if available (after authentication), otherwise fall back to IP
+    const user = c.get("user")
+    if (user?.id) {
+      return `user:${user.id}`
+    }
+    // Fallback to IP for unauthenticated requests (shouldn't happen in practice)
+    return c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown"
+  },
+  message: {
+    error: "Rate limit exceeded",
+    message: "Too many requests. Please try again later.",
+  },
+})
 
 /**
  * BetterAuth session middleware that validates user sessions and sets user/session in context

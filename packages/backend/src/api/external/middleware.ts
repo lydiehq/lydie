@@ -3,12 +3,37 @@ import { HTTPException } from "hono/http-exception"
 import { db, apiKeysTable } from "@lydie/database"
 import { createHash } from "crypto"
 import { eq } from "drizzle-orm"
+import { rateLimiter } from "hono-rate-limiter"
 
 interface ApiAuthEnv {
   Variables: {
     organizationId: string
+    apiKeyId: string
   }
 }
+
+/**
+ * Rate limiting middleware for external API
+ * Limits requests per API key: 1000 requests per 15 minutes
+ * Should be applied after apiKeyAuth middleware
+ */
+export const externalRateLimit = rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 1000, // 1000 requests per 15 minutes per API key
+  keyGenerator: (c) => {
+    // Use API key ID from context (set by apiKeyAuth middleware)
+    const apiKeyId = c.get("apiKeyId")
+    if (apiKeyId) {
+      return `apikey:${apiKeyId}`
+    }
+    // Fallback to IP if API key not yet authenticated (shouldn't happen in practice)
+    return c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown"
+  },
+  message: {
+    error: "Rate limit exceeded",
+    message: "Too many requests. Please try again later.",
+  },
+})
 
 export const apiKeyAuth: MiddlewareHandler<ApiAuthEnv> = async (c, next) => {
   const authHeader = c.req.header("Authorization")
@@ -67,5 +92,6 @@ export const apiKeyAuth: MiddlewareHandler<ApiAuthEnv> = async (c, next) => {
   await db.update(apiKeysTable).set({ lastUsedAt: new Date() }).where(eq(apiKeysTable.id, apiKey.id))
 
   c.set("organizationId", apiKey.organizationId)
+  c.set("apiKeyId", apiKey.id)
   await next()
 }

@@ -1,5 +1,14 @@
 FROM mirror.gcr.io/oven/bun:1.3.4
 
+RUN apt-get update && apt-get install -y \
+    pandoc \
+    texlive-latex-base \
+    texlive-latex-recommended \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-latex-extra \
+    && rm -rf /var/lib/apt/lists/*
+
 ADD ./package.json .
 ADD ./bun.lock .
 ADD ./packages/core/package.json ./packages/core/package.json

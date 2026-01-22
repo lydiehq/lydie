@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { HTTPException } from "hono/http-exception"
-import { apiKeyAuth } from "./middleware"
+import { apiKeyAuth, externalRateLimit } from "./middleware"
 import { extractTableOfContents } from "../../utils/toc"
 import { db, documentsTable } from "@lydie/database"
 import { eq, and, isNull, desc } from "drizzle-orm"
@@ -10,6 +10,7 @@ import { convertYjsToJson } from "@lydie/core/yjs-to-json"
 
 export const ExternalApi = new Hono()
   .use(apiKeyAuth)
+  .use(externalRateLimit)
   .get("/documents", async (c) => {
     const organizationId = c.get("organizationId")
     const documents = await db
