@@ -164,7 +164,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       aria-labelledby="assistant-title"
       className={
         isDocked
-          ? "w-full h-full bg-white flex flex-col overflow-hidden"
+          ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
           : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/6 shadow-lg flex flex-col overflow-hidden z-30"
       }
     >

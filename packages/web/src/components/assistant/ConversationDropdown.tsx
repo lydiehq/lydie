@@ -16,6 +16,7 @@ import { SelectItem, SelectSection } from "@/components/generic/Select"
 import { SearchField } from "@/components/generic/SearchField"
 import { Popover } from "@/components/generic/Popover"
 import { useNavigate } from "@tanstack/react-router"
+import { Button } from "../generic/Button"
 
 type ConversationGroup = {
   title: string
@@ -122,12 +123,12 @@ export function ConversationDropdown({ conversationId, onSelectConversation }: C
       }}
       className="group flex flex-col gap-1 min-w-[200px]"
     >
-      <RACButton className="flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 border-0 bg-transparent min-w-0">
+      <Button intent="ghost" size="sm">
         <SelectValue className="max-w-[200px] truncate text-sm">
           {({ selectedText }) => selectedText || displayTitle}
         </SelectValue>
         <ChevronDownRegular className="size-3.5 text-gray-500 shrink-0" aria-hidden="true" />
-      </RACButton>
+      </Button>
       <Popover className="min-w-[300px] max-h-[500px] flex flex-col p-0" placement="bottom start">
         <Autocomplete filter={contains}>
           <div className="p-2 border-b border-gray-200">

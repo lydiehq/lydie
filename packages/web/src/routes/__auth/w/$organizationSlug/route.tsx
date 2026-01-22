@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, Outlet, useRouterState } from "@tanstack/react-router"
 import { Sidebar } from "@/components/layout/Sidebar"
-import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
+import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from "react-resizable-panels"
 import { PanelResizer } from "@/components/panels/PanelResizer"
 import { useRef, useState, useMemo } from "react"
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu"
@@ -93,14 +93,8 @@ function RouteLayout() {
         {shouldShowDockedPanel && (
           <>
             <PanelResizer />
-            <Panel
-              ref={assistantPanelRef}
-              id="assistant-panel"
-              defaultSize={30}
-              minSize={20}
-              maxSize={50}
-            >
-              <div id="docked-assistant-container" className="h-full" />
+            <Panel ref={assistantPanelRef} id="assistant-panel" defaultSize={30} minSize={20} maxSize={50}>
+              <div id="docked-assistant-container" className="h-full pr-1 py-1 pl-px" />
             </Panel>
           </>
         )}
