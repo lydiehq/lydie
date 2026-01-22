@@ -1,5 +1,6 @@
 import { Checkbox } from "@/components/generic/Checkbox"
-import { useFloatingAssistant } from "@/context/floating-assistant.context"
+import { useSetAtom } from "jotai"
+import { openAssistantAtom } from "@/stores/floating-assistant"
 import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
 import { useOrganization } from "@/context/organization.context"
 import { useNavigate } from "@tanstack/react-router"
@@ -8,7 +9,7 @@ import { queries } from "@lydie/zero/queries"
 import { BotRegular, FolderRegular, DocumentTextFilled, SparkleRegular } from "@fluentui/react-icons"
 
 export function OnboardingStepAssistant() {
-  const { open: openAssistant } = useFloatingAssistant()
+  const openAssistant = useSetAtom(openAssistantAtom)
   const { isChecked, setChecked } = useOnboardingChecklist()
   const { organization } = useOrganization()
   const navigate = useNavigate()
@@ -36,7 +37,7 @@ export function OnboardingStepAssistant() {
       })
     }
 
-    openAssistant({ message: prompt })
+    openAssistant(prompt)
   }
 
   const documentForStep3 = documents?.find(

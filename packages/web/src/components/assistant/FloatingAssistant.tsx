@@ -14,7 +14,17 @@ import {
   PersonChatFilled,
 } from "@fluentui/react-icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
-import { useFloatingAssistant } from "@/context/floating-assistant.context"
+import { useAtomValue, useSetAtom } from "jotai"
+import {
+  isDockedAtom,
+  isMinimizedAtom,
+  closeAssistantAtom,
+  toggleAssistantAtom,
+  dockAssistantAtom,
+  undockAssistantAtom,
+  pendingMessageAtom,
+  clearPendingMessageAtom,
+} from "@/stores/floating-assistant"
 import { useOrganization } from "@/context/organization.context"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
@@ -28,7 +38,12 @@ const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id"
 const FLOATING_ASSISTANT_AGENT_KEY = "floating-assistant-agent-id"
 
 export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: string | null }) {
-  const { isOpen, close, toggle, isDocked, dock, undock } = useFloatingAssistant()
+  const isDocked = useAtomValue(isDockedAtom)
+  const isMinimized = useAtomValue(isMinimizedAtom)
+  const close = useSetAtom(closeAssistantAtom)
+  const toggle = useSetAtom(toggleAssistantAtom)
+  const dock = useSetAtom(dockAssistantAtom)
+  const undock = useSetAtom(undockAssistantAtom)
   const { organization } = useOrganization()
 
   const [conversationId, setConversationId] = useState(() => {
@@ -144,7 +159,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   const dockedContainer =
     typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
 
-  const isMinimized = !isDocked && !isOpen
   const targetContainer = isMinimized ? null : isDocked ? dockedContainer : floatingContainer
 
   const content = (
@@ -257,15 +271,16 @@ function FloatingAssistantChatContent({
   selectedAgentId: string | null
   onSelectAgent: (agentId: string) => void
 }) {
-  const { _pendingMessage, _clearPendingMessage } = useFloatingAssistant() as any
+  const pendingMessage = useAtomValue(pendingMessageAtom)
+  const clearPendingMessage = useSetAtom(clearPendingMessageAtom)
   const [pendingContent, setPendingContent] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    if (_pendingMessage) {
-      setPendingContent(_pendingMessage)
-      _clearPendingMessage()
+    if (pendingMessage) {
+      setPendingContent(pendingMessage)
+      clearPendingMessage()
     }
-  }, [_pendingMessage, _clearPendingMessage])
+  }, [pendingMessage, clearPendingMessage])
 
   const handleSubmit = useCallback(
     (text: string, contextDocumentIds: string[]) => {

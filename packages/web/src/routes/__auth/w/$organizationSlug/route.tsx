@@ -6,7 +6,8 @@ import { useRef, useState, useMemo } from "react"
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu"
 import { setActiveOrganizationSlug } from "@/lib/active-organization"
 import { loadOrganization } from "@/lib/organization/loadOrganization"
-import { FloatingAssistantProvider, useFloatingAssistant } from "@/context/floating-assistant.context"
+import { useAtomValue } from "jotai"
+import { isDockedAtom } from "@/stores/floating-assistant"
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
@@ -34,11 +35,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
 const COLLAPSED_SIZE = 3
 
 function RouteComponent() {
-  return (
-    <FloatingAssistantProvider>
-      <RouteLayout />
-    </FloatingAssistantProvider>
-  )
+  return <RouteLayout />
 }
 
 function RouteLayout() {
@@ -46,7 +43,7 @@ function RouteLayout() {
   const assistantPanelRef = useRef<ImperativePanelHandle>(null)
   const [size, setSize] = useState(25)
   const routerState = useRouterState()
-  const { isDocked } = useFloatingAssistant()
+  const isDocked = useAtomValue(isDockedAtom)
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current
