@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect } from "react"
 import { Button as AriaButton } from "react-aria-components"
-import { ChevronDownIcon, ChevronUpIcon, Loader2Icon } from "@/icons"
+import { ChevronDownIcon, ChevronUpIcon, Loader2Icon, DocumentIcon } from "@/icons"
 import { motion } from "motion/react"
 import { StickToBottom } from "use-stick-to-bottom"
 import { Button } from "@/components/generic/Button"
@@ -10,16 +10,21 @@ import { useAuth } from "@/context/auth.context"
 import { isAdmin } from "@/utils/admin"
 import { applyContentChanges } from "@/utils/document-changes"
 import type { Editor } from "@tiptap/react"
+import { useQuery } from "@rocicorp/zero/react"
+import { queries } from "@lydie/zero/queries"
+import { useNavigate, useParams } from "@tanstack/react-router"
 
 export interface ReplaceInDocumentToolProps {
   tool: {
     state: "input-streaming" | "input-available" | "call-streaming" | "output-available" | "output-error"
     input?: {
+      documentId?: string
       search?: string
       replace?: string
       overwrite?: boolean
     }
     output?: {
+      documentId?: string
       search?: string
       replace?: string
       overwrite?: boolean
@@ -46,6 +51,21 @@ export function ReplaceInDocumentTool({
   const contentRef = useRef<HTMLDivElement>(null)
 
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const params = useParams({ strict: false })
+
+  // Get the target document ID from the tool
+  const targetDocumentId = tool.input?.documentId || tool.output?.documentId
+
+  // Fetch the target document info
+  const [targetDocument] = useQuery(
+    targetDocumentId
+      ? queries.documents.byId({
+          organizationId,
+          documentId: targetDocumentId,
+        })
+      : null,
+  )
 
   // Get replace text from input (streaming) or output (completed)
   const replaceText = tool.input?.replace || tool.output?.replace || ""
@@ -78,6 +98,21 @@ export function ReplaceInDocumentTool({
     setApplyStatus("Applying...")
 
     try {
+      // If we need to navigate to a different document, do so first
+      if (targetDocumentId && targetDocumentId !== params.id) {
+        setApplyStatus("Navigating to document...")
+        navigate({
+          to: "/w/$organizationSlug/$id",
+          params: { 
+            organizationSlug: params.organizationSlug as string, 
+            id: targetDocumentId 
+          },
+        })
+        
+        // Wait a bit for navigation and editor to update
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+
       const result = await applyContentChanges(
         editor,
         [
@@ -152,6 +187,8 @@ export function ReplaceInDocumentTool({
     return "Modify document"
   }
 
+  const isCurrentDocument = !targetDocumentId || targetDocumentId === params.id
+
   return (
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}>
       <div className="p-1">
@@ -167,6 +204,17 @@ export function ReplaceInDocumentTool({
           </motion.span>
           {wordCount > 0 && <span className="text-gray-500">{roundedWordCount} words</span>}
         </motion.div>
+        {targetDocument && !isCurrentDocument && (
+          <motion.div 
+            className="text-[11px] text-gray-600 flex items-center gap-1 mt-1"
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <DocumentIcon className="size-3" />
+            <span>Target: {targetDocument.title || "Untitled document"}</span>
+          </motion.div>
+        )}
       </div>
       <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
         <div className="p-2">
