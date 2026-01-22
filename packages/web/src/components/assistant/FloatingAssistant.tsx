@@ -1,4 +1,4 @@
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { useCallback, useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Button as RACButton, Button, TooltipTrigger } from "react-aria-components"
@@ -12,6 +12,7 @@ import {
   TextBulletListSquareEditRegular,
   LayoutColumnTwoFocusRightFilled,
   PictureInPictureEnterRegular,
+  PersonChatFilled,
 } from "@fluentui/react-icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
@@ -149,30 +150,8 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   const dockedContainer =
     typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
 
-  if (!isDocked && !isOpen) {
-    return (
-      <motion.div
-        layoutId="assistant"
-        className="fixed right-4 bottom-4 z-30"
-        initial={false}
-        transition={{ type: "spring", stiffness: 450, damping: 35 }}
-      >
-        <RACButton
-          onPress={toggle}
-          aria-label="Open AI Assistant"
-          className="bg-white shadow-surface rounded-full size-10 justify-center items-center flex hover:bg-gray-50 transition-colors"
-        >
-          <TextAsteriskRegular className="size-4 text-gray-600" aria-hidden="true" />
-        </RACButton>
-      </motion.div>
-    )
-  }
-
-  const shouldShow = isDocked || isOpen
-  if (!shouldShow) return null
-
-  const targetContainer = isDocked ? dockedContainer : floatingContainer
-  if (!targetContainer) return null
+  const isMinimized = !isDocked && !isOpen
+  const targetContainer = isMinimized ? null : isDocked ? dockedContainer : floatingContainer
 
   const content = (
     <motion.div
@@ -183,51 +162,85 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       aria-label="AI Assistant"
       aria-labelledby="assistant-title"
       className={
-        isDocked
-          ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
-          : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/6 shadow-lg flex flex-col overflow-hidden z-30"
+        isMinimized
+          ? "fixed right-4 bottom-4 z-30 bg-white shadow-surface rounded-full size-10"
+          : isDocked
+            ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
+            : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/6 shadow-lg flex flex-col overflow-hidden z-30"
       }
     >
-      <div className="flex items-center justify-between p-1.5 border-b border-gray-200">
-        <div className="flex items-center gap-x-2">
-          <ConversationDropdown
-            conversationId={conversationId}
-            onSelectConversation={handleSelectConversation}
-          />
-        </div>
-        <div className="flex items-center gap-x-0.5">
-          {headerButtons.map((button) => {
-            const Icon = button.icon
-            return (
-              <TooltipTrigger key={button.ariaLabel} delay={500}>
-                <Button
-                  onPress={button.onPress}
-                  className="size-6 justify-center items-center hover:bg-black/4 rounded-md transition-colors duration-75 flex"
-                  aria-label={button.ariaLabel}
-                >
-                  <Icon className="size-4.5 text-gray-500" aria-hidden="true" />
-                </Button>
-                <Tooltip placement="top">{button.tooltip}</Tooltip>
-              </TooltipTrigger>
-            )
-          })}
-        </div>
-      </div>
-      <div className="flex-1 min-h-0">
-        <FloatingAssistantChatContent
-          organizationId={organization.id}
-          currentDocumentId={currentDocumentId}
-          messages={messages}
-          sendMessage={sendMessage}
-          stop={stop}
-          status={status}
-          selectedAgentId={selectedAgentId}
-          onSelectAgent={handleSelectAgent}
-        />
-      </div>
+      <AnimatePresence initial={false}>
+        {isMinimized ? (
+          <motion.div
+            key="minimized"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15, delay: 2 }}
+            className="flex justify-center items-center size-full"
+          >
+            <RACButton
+              onPress={toggle}
+              aria-label="Open AI Assistant"
+              className="size-full justify-center items-center flex hover:bg-gray-50 transition-colors rounded-full"
+            >
+              <PersonChatFilled className="size-5 text-gray-500" aria-hidden="true" />
+            </RACButton>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="expanded"
+            initial={{ opacity: 0, filter: "blur(4px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(4px)" }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col h-full"
+          >
+            <div className="flex items-center justify-between p-1.5 border-b border-gray-200">
+              <div className="flex items-center gap-x-2">
+                <ConversationDropdown
+                  conversationId={conversationId}
+                  onSelectConversation={handleSelectConversation}
+                />
+              </div>
+              <div className="flex items-center gap-x-0.5">
+                {headerButtons.map((button) => {
+                  const Icon = button.icon
+                  return (
+                    <TooltipTrigger key={button.ariaLabel} delay={500}>
+                      <Button
+                        onPress={button.onPress}
+                        className="size-6 justify-center items-center hover:bg-black/4 rounded-md transition-colors duration-75 flex"
+                        aria-label={button.ariaLabel}
+                      >
+                        <Icon className="size-4.5 text-gray-500" aria-hidden="true" />
+                      </Button>
+                      <Tooltip placement="top">{button.tooltip}</Tooltip>
+                    </TooltipTrigger>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="flex-1 min-h-0">
+              <FloatingAssistantChatContent
+                organizationId={organization.id}
+                currentDocumentId={currentDocumentId}
+                messages={messages}
+                sendMessage={sendMessage}
+                stop={stop}
+                status={status}
+                selectedAgentId={selectedAgentId}
+                onSelectAgent={handleSelectAgent}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 
+  if (isMinimized) return content
+  if (!targetContainer) return null
   return createPortal(content, targetContainer)
 }
 
