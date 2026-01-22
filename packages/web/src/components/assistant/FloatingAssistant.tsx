@@ -163,10 +163,9 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
           : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/6 shadow-lg flex flex-col overflow-hidden z-30"
       }
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+      <div className="flex items-center justify-between p-1.5 border-b border-gray-200">
         <ConversationDropdown
           conversationId={conversationId}
-          onNewChat={handleNewChat}
           onSelectConversation={handleSelectConversation}
         />
         <div className="flex items-center gap-1">

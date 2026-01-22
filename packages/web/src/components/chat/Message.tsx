@@ -173,7 +173,7 @@ function DocumentReferencePill({ documentId }: { documentId: string }) {
       className="inline-flex px-0.5 rounded-sm items-center gap-x-1 relative before:bg-white/40 hover:before:bg-white/80 before:absolute before:inset-x-0 before:inset-y-px before:rounded-sm"
       title={`Open document: ${title}`}
     >
-      <span className="max-w-[150px] truncate text-[0.875rem] relative">@{title}</span>
+      <span className="max-w-[150px] truncate text-sm relative">@{title}</span>
     </Link>
   )
 }

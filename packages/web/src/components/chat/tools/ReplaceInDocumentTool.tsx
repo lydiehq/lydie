@@ -72,7 +72,7 @@ export function ReplaceInDocumentTool({
   const isStreaming = tool.state === "input-streaming"
 
   const searchText = tool.input?.search || tool.output?.search || ""
-  const isOverwrite = searchText === ""
+  const isFullReplacement = searchText === ""
 
   useLayoutEffect(() => {
     if (contentRef.current) {
@@ -88,7 +88,33 @@ export function ReplaceInDocumentTool({
   const wordCount = countWords(replaceText)
 
   const handleApply = async () => {
-    if (!replaceText || !editor) {
+    if (!replaceText) {
+      return
+    }
+
+    // If we're applying to a different document, navigate there first
+    if (targetDocumentId && targetDocumentId !== params.id) {
+      setIsApplying(true)
+      setApplyStatus("Navigating to document...")
+
+      // Use setTimeout to ensure state updates are visible before navigation
+      setTimeout(() => {
+        navigate({
+          to: "/w/$organizationSlug/$id",
+          params: {
+            organizationSlug: params.organizationSlug as string,
+            id: targetDocumentId,
+          },
+        })
+      }, 100)
+
+      // Note: After navigation, the component will remount in the new document context
+      // The user will need to click Apply again once the document loads
+      return
+    }
+
+    // For current document, we need the editor
+    if (!editor) {
       return
     }
 
@@ -96,19 +122,6 @@ export function ReplaceInDocumentTool({
     setApplyStatus("Applying...")
 
     try {
-      if (targetDocumentId && targetDocumentId !== params.id) {
-        setApplyStatus("Navigating to document...")
-        navigate({
-          to: "/w/$organizationSlug/$id",
-          params: { 
-            organizationSlug: params.organizationSlug as string, 
-            id: targetDocumentId 
-          },
-        })
-        
-        await new Promise((resolve) => setTimeout(resolve, 500))
-      }
-
       const result = await applyContentChanges(
         editor,
         [
@@ -178,7 +191,7 @@ export function ReplaceInDocumentTool({
     if (isApplied) return "Changes applied"
     if (isApplying) return "Applying changes"
     if (isStreaming) return "Generating content"
-    if (isOverwrite) return "Overwrite document"
+    if (isFullReplacement) return "Replace entire document"
     return "Modify document"
   }
 
@@ -200,7 +213,7 @@ export function ReplaceInDocumentTool({
           {wordCount > 0 && <span className="text-gray-500">{roundedWordCount} words</span>}
         </motion.div>
         {targetDocument && (
-          <motion.div 
+          <motion.div
             className="text-[11px] text-gray-600 flex items-center gap-1 mt-1"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -220,7 +233,10 @@ export function ReplaceInDocumentTool({
                 height: isExpanded || !hasOverflow ? "auto" : 140,
               }}
             >
-              <StickToBottom className="text-xs text-gray-600 overflow-y-auto" initial={{ damping: 1, stiffness: 1 }}>
+              <StickToBottom
+                className="text-xs text-gray-600 overflow-y-auto"
+                initial={{ damping: 1, stiffness: 1 }}
+              >
                 <StickToBottom.Content>
                   <div
                     ref={contentRef}
@@ -266,19 +282,14 @@ export function ReplaceInDocumentTool({
                     Debug
                   </Button>
                 )}
-                <Button
-                  intent="secondary"
-                  size="xs"
-                  onPress={handleCopy}
-                  isDisabled={isApplying || isStreaming}
-                >
+                <Button intent="secondary" size="xs" onPress={handleCopy}>
                   Copy
                 </Button>
                 <Button
                   intent="secondary"
                   size="xs"
                   onPress={handleApply}
-                  isDisabled={isApplied || isApplying || isStreaming || !editor}
+                  isDisabled={isApplied || isApplying || isStreaming}
                   isPending={isApplying || isUsingLLM}
                 >
                   {isApplying ? applyStatus || "Applying..." : isApplied ? "Applied" : "Apply"}
