@@ -329,7 +329,6 @@ export async function applyContentChanges(
   changes: Array<{
     search: string
     replace: string
-    overwrite?: boolean
   }>,
   organizationId: string,
   onProgress?: (current: number, total: number, usedLLM: boolean) => void,
@@ -351,10 +350,10 @@ export async function applyContentChanges(
 
     for (let i = 0; i < changes.length; i++) {
       const change = changes[i]
-      const { search, replace, overwrite } = change
+      const { search, replace } = change
 
-      // Handle overwrite mode
-      if (overwrite) {
+      // Handle overwrite mode (empty search means replace entire document)
+      if (search === "") {
         editor.commands.setContent(replace)
 
         console.debug("Successfully applied overwrite change:", {
@@ -366,31 +365,6 @@ export async function applyContentChanges(
         continue
       }
 
-      // Handle empty document case
-      if (search === "" && editor.isEmpty) {
-        editor.commands.setContent(replace)
-
-        console.debug("Successfully applied change to empty document:", {
-          replaceText: replace,
-        })
-
-        appliedChanges++
-        onProgress?.(appliedChanges, changes.length, false)
-        continue
-      }
-
-      // Reject empty search strings when document is not empty
-      // This prevents duplicate insertions since empty string matches anywhere
-      if (search === "" && !editor.isEmpty) {
-        console.warn(
-          "Cannot apply empty search string to non-empty document. This change was likely already applied.",
-          {
-            replaceText: replace,
-          },
-        )
-        // Skip this change but don't treat it as an error
-        continue
-      }
 
       // Try existing strategies first
       const found = findAndReplaceInDocument(editor, search, replace)

@@ -1,6 +1,5 @@
 import { InferAgentUIMessage, LanguageModel, smoothStream, stepCountIs, ToolLoopAgent } from "ai"
 import { searchInDocument } from "../../tools/search-in-document"
-import { readCurrentDocument } from "../../tools/read-current-document"
 import { replaceInDocument } from "../../tools/replace-in-document"
 import { searchDocuments } from "../../tools/search-documents"
 import { readDocument } from "../../tools/read-document"
@@ -37,7 +36,6 @@ function buildDocumentAgent(params: BuildDocumentAgentParams) {
     tools: {
       // google_search: google.tools.googleSearch({}),
       search_in_document: searchInDocument(documentId, userId, currentDocument.organizationId),
-      read_current_document: readCurrentDocument(documentId),
       replace_in_document: replaceInDocument(),
       search_documents: searchDocuments(userId, currentDocument.organizationId, currentDocument.id),
       read_document: readDocument(userId, currentDocument.organizationId),

@@ -23,7 +23,6 @@ import { moveDocuments } from "@lydie/core/ai/tools/move-documents"
 import { createDocument } from "@lydie/core/ai/tools/create-document"
 import type { PromptStyle } from "@lydie/core/prompts"
 import { searchInDocument } from "@lydie/core/ai/tools/search-in-document"
-import { readCurrentDocument } from "@lydie/core/ai/tools/read-current-document"
 import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document"
 import { openai } from "@ai-sdk/openai"
 
@@ -107,8 +106,6 @@ export const AssistantRoute = new Hono<{
       ? messageMetadata.contextDocumentIds
       : []
 
-    // Check daily message limit BEFORE saving to prevent exceeding the limit
-    // Skip limit check for admin users
     const organization = await db.query.organizationsTable.findFirst({
       where: { id: organizationId },
     })
@@ -253,7 +250,6 @@ export const AssistantRoute = new Hono<{
 
     if (currentDocument?.id) {
       tools.search_in_document = searchInDocument(currentDocument.id, userId, currentDocument.organizationId)
-      tools.read_current_document = readCurrentDocument(currentDocument.id)
       tools.replace_in_document = replaceInDocument()
     }
 
@@ -263,8 +259,6 @@ export const AssistantRoute = new Hono<{
       },
       model: chatModel,
       instructions: systemPrompt,
-      // TODO: fix - this is just an arbitrary number to stop the agent from running forever
-      stopWhen: stepCountIs(50),
       tools,
     })
 

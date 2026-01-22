@@ -14,17 +14,18 @@ export const replaceInDocument = () =>
 
 **CRITICAL: The \`replace\` parameter must be HTML, not Markdown. Use HTML tags like <p>, <h2>, etc.**
 
-**Mode Selection (choose autonomously):**
-- **Overwrite mode** (\`overwrite: true\`): Replace entire document. Use for empty documents (wordCount = 0) or when task requires rewriting entire document. Most efficient.
-- **Targeted replace** (\`overwrite: false\`): Find specific content and replace it. Use for modifications to existing content.
+**How to Use:**
+- **To replace entire document**: Use empty string for search (search: ""). This will replace all content in the document. Use for empty documents (wordCount = 0) or when task requires rewriting entire document.
+- **To modify specific content**: Provide search text to find the content you want to replace. Use targeted search strings to identify the exact location.
 
-**Search Text Rules (when overwrite is false):**
-- Empty document (wordCount = 0): search ""
-- Non-empty document (wordCount > 0): NEVER use search "" - either read document first or search for specific content
-- PREFER closing tags only: "distinctive content.</p>" not "<p>distinctive content.</p>"
-- Use MINIMAL text (10-30 words) that uniquely identifies location
-- Good: "economic growth and sustainability.</p>" | Bad: "</p>"
-- Examples: "Chapter Title</h2>", "last item.</li>", "link text</a>"
+**Search Text Rules:**
+- Empty document (wordCount = 0): Use search "" to replace entire document
+- Non-empty document (wordCount > 0): 
+  - To replace entire document: Use search ""
+  - To modify specific content: Provide search text (10-30 words) that uniquely identifies the location
+  - PREFER closing tags only: "distinctive content.</p>" not "<p>distinctive content.</p>"
+  - Good: "economic growth and sustainability.</p>" | Bad: "</p>"
+  - Examples: "Chapter Title</h2>", "last item.</li>", "link text</a>"
 
 **Appending Content:**
 - Search for ONLY the last sentence/tag from existing content
@@ -37,8 +38,8 @@ Format: <a href="internal://DOCUMENT_ID">Link Text</a>
 Use internal:// protocol (not external URLs) to link other workspace documents. Get DOCUMENT_ID from searchDocuments tool.
 
 **Special Cases:**
-- Empty document (wordCount = 0): search "" OR use overwrite: true
-- Delete content: replace ""
+- Empty document (wordCount = 0): Use search "" to replace entire document
+- Delete content: Use search to find content, replace with empty string ""
 - Document is minified HTML (no spaces between tags)`,
     inputSchema: z.object({
       documentId: z
@@ -49,7 +50,7 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
       search: z
         .string()
         .describe(
-          "Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max—just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string for empty document. Ignored when overwrite is true.",
+          "Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max—just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string to replace entire document.",
         )
         .optional(),
       replace: z
@@ -57,20 +58,12 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
         .describe(
           'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>',
         ),
-      overwrite: z
-        .boolean()
-        .describe(
-          "If true, replace the entire document content with the replace text. The search parameter is ignored. Use for empty documents or when rewriting entire document. Decide autonomously based on task.",
-        )
-        .optional()
-        .default(false),
     }),
-    execute: async function ({ documentId, search, replace, overwrite }) {
+    execute: async function ({ documentId, search, replace }) {
       return {
         documentId,
         search: search ?? "",
         replace,
-        overwrite: overwrite ?? false,
       }
     },
   })
