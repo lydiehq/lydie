@@ -96,6 +96,15 @@ export function useDocumentActions() {
     )
   }
 
+  const unpublishDocument = (documentId: string) => {
+    z.mutate(
+      mutators.document.unpublish({
+        documentId,
+        organizationId: organization.id,
+      }),
+    )
+  }
+
   const updateDocument = (documentId: string, data: any) => {
     z.mutate(
       mutators.document.update({
@@ -110,6 +119,7 @@ export function useDocumentActions() {
     createDocument,
     deleteDocument,
     publishDocument,
+    unpublishDocument,
     updateDocument,
   }
 }

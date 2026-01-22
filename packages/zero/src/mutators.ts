@@ -37,6 +37,28 @@ export const mutators = defineMutators({
         })
       },
     ),
+    unpublish: defineMutator(
+      z.object({
+        documentId: z.string(),
+        organizationId: z.string(),
+      }),
+      async ({ tx, ctx, args: { documentId, organizationId } }) => {
+        hasOrganizationAccess(ctx, organizationId)
+        const document = await tx.run(
+          zql.documents.where("id", documentId).where("organization_id", organizationId).one(),
+        )
+
+        if (!document) {
+          throw new Error(`Document not found: ${documentId}`)
+        }
+
+        // Set published to false (publication history is preserved)
+        await tx.mutate.documents.update({
+          id: documentId,
+          published: false,
+        })
+      },
+    ),
     create: defineMutator(
       z.object({
         id: z.string(),
@@ -1290,8 +1312,6 @@ export const mutators = defineMutators({
           created_at: Date.now(),
           updated_at: Date.now(),
         })
-
-        return id
       },
     ),
     update: defineMutator(

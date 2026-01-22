@@ -1,11 +1,5 @@
 import { Editor } from "@tiptap/react"
-import {
-  Button as RACButton,
-  Toolbar,
-  Group,
-  Separator,
-  MenuTrigger,
-} from "react-aria-components"
+import { Button as RACButton, Toolbar, Group, Separator, MenuTrigger } from "react-aria-components"
 import { useState, useRef } from "react"
 import { useImageUpload } from "@/hooks/use-image-upload"
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog"
@@ -23,7 +17,7 @@ import {
   ListFilled,
   TextNumberListLtrFilled,
   ColumnRegular,
-  RowChildFilled
+  RowChildFilled,
 } from "@fluentui/react-icons"
 import { Button } from "../generic/Button"
 import {
@@ -35,7 +29,7 @@ import {
   CodeIcon,
   LinkIcon,
   ImageIcon,
-  TableIcon
+  TableIcon,
 } from "./wysiwyg-icons"
 
 type Props = {
@@ -46,7 +40,7 @@ type Props = {
 
 export function EditorToolbar({ editor, doc, onAddLink }: Props) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const { deleteDocument, publishDocument, updateDocument } = useDocumentActions()
+  const { deleteDocument, publishDocument, unpublishDocument } = useDocumentActions()
   const { uploadImage } = useImageUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -58,7 +52,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
   }
 
   const handleUnpublish = async () => {
-    updateDocument(doc.id, { published: false })
+    unpublishDocument(doc.id)
   }
 
   return (
@@ -342,7 +336,10 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
           {doc.published ? "Unpublish" : "Publish"}
         </Button>
         <MenuTrigger>
-          <RACButton aria-label="Document Options" className="size-6 flex items-center justify-center rounded hover:bg-gray-100">
+          <RACButton
+            aria-label="Document Options"
+            className="size-6 flex items-center justify-center rounded hover:bg-gray-100"
+          >
             <MoreVerticalRegular className="size-3.5 text-gray-600" />
           </RACButton>
           <Menu>
