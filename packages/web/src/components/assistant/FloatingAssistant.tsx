@@ -112,6 +112,15 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     setConversationId(id)
   }, [])
 
+  const handleClose = useCallback(() => {
+    if (isDocked) {
+      undock()
+      close()
+    } else {
+      close()
+    }
+  }, [isDocked, undock, close])
+
   const headerButtons = useMemo(() => {
     return [
       {
@@ -127,13 +136,13 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         icon: isDocked ? PictureInPictureEnterRegular : LayoutColumnTwoFocusRightFilled,
       },
       {
-        onPress: close,
+        onPress: handleClose,
         ariaLabel: "Close assistant",
         tooltip: "Close assistant",
         icon: SubtractFilled,
       },
     ]
-  }, [isDocked, dock, undock, handleNewChat, close])
+  }, [isDocked, dock, undock, handleNewChat, handleClose])
 
   const floatingContainer =
     typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
