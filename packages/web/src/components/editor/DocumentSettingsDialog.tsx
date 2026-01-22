@@ -40,20 +40,18 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
 
   const handlePublish = async () => {
     z.mutate(
-      mutators.document.update({
+      mutators.document.publish({
         documentId: doc.id,
         organizationId: organization.id,
-        published: true,
       }),
     )
   }
 
   const handleUnpublish = async () => {
     z.mutate(
-      mutators.document.update({
+      mutators.document.unpublish({
         documentId: doc.id,
         organizationId: organization.id,
-        published: false,
       }),
     )
   }
