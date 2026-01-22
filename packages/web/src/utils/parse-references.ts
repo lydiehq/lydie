@@ -1,8 +1,3 @@
-/**
- * Parses text content for reference patterns and extracts them
- * Supports: [reference_document:id:xyz], [reference_landmark:...] (extensible)
- */
-
 export type ReferenceType = "document" | "landmark"
 
 export interface Reference {
@@ -23,10 +18,6 @@ export interface ParsedTextSegment {
 // Pattern: [reference_{type}:id:{value}]
 const REFERENCE_PATTERN = /\[reference_(\w+):id:([^\]]+)\]/g
 
-/**
- * Parses text and returns an array of segments (text and references)
- * This is performant as it only does a single pass through the text
- */
 export function parseReferences(text: string): ParsedTextSegment[] {
   const segments: ParsedTextSegment[] = []
   let lastIndex = 0
@@ -81,10 +72,7 @@ export function parseReferences(text: string): ParsedTextSegment[] {
   return segments
 }
 
-/**
- * Quick check if text contains any references
- * Useful for optimization - skip parsing if no references exist
- */
+// Quick check if text contains any references (used for optimization)
 export function hasReferences(text: string): boolean {
   return REFERENCE_PATTERN.test(text)
 }

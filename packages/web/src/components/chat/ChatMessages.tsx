@@ -15,7 +15,6 @@ import { MoveDocumentsTool } from "./tools/MoveDocumentsTool"
 import { WebSearchTool } from "./tools/WebSearchTool"
 import { UserMessage } from "./Message"
 import { Streamdown } from "streamdown"
-import type { Editor } from "@tiptap/react"
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
 import { Link } from "@tanstack/react-router"
 import { useOrganization } from "@/context/organization.context"
@@ -24,7 +23,6 @@ import { useMemo } from "react"
 type Props = {
   messages: DocumentChatAgentUIMessage[]
   status: "submitted" | "streaming" | "ready" | "error"
-  editor?: Editor | null
   organizationId: string
   onApplyContent?: (
     edits: any,
@@ -32,7 +30,7 @@ type Props = {
   ) => void
 }
 
-export function ChatMessages({ messages, status, editor = null, organizationId, onApplyContent }: Props) {
+export function ChatMessages({ messages, status, organizationId, onApplyContent }: Props) {
   const lastMessage = messages[messages.length - 1]
   const isSubmitting = status === "submitted" && messages.length > 0 && lastMessage?.role === "user"
 
@@ -60,7 +58,6 @@ export function ChatMessages({ messages, status, editor = null, organizationId, 
                   onApplyContent={onApplyContent}
                   status={status}
                   isLastMessage={index === messages.length - 1}
-                  editor={editor}
                   organizationId={organizationId}
                 />
               )}
@@ -84,6 +81,7 @@ function ThinkingIndicator() {
     >
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1 text-gray-600 text-sm">
+          <ThinkingAnimation />
           <span>Thinking</span>
           <span className="inline-flex gap-0.5">
             <motion.span
@@ -128,7 +126,6 @@ function AssistantMessageWithTools({
   onApplyContent,
   status,
   isLastMessage,
-  editor,
   organizationId,
 }: {
   message: DocumentChatAgentUIMessage
@@ -138,7 +135,6 @@ function AssistantMessageWithTools({
   ) => void
   status: "submitted" | "streaming" | "ready" | "error"
   isLastMessage: boolean
-  editor: Editor | null
   organizationId: string
 }) {
   const formatDuration = (duration?: number) => {
@@ -189,7 +185,6 @@ function AssistantMessageWithTools({
             part={part}
             status={status}
             isLastMessage={isLastMessage}
-            editor={editor}
             organizationId={organizationId}
           />
         ))}
@@ -240,13 +235,11 @@ function MessagePart({
   part,
   status,
   isLastMessage,
-  editor,
   organizationId,
 }: {
   part: any
   status: "submitted" | "streaming" | "ready" | "error"
   isLastMessage: boolean
-  editor: Editor | null
   organizationId: string
 }) {
   if (part.type === "text") {
@@ -265,7 +258,7 @@ function MessagePart({
   }
 
   if (part.type === "tool-replace_in_document") {
-    return <ReplaceInDocumentTool tool={part} editor={editor} organizationId={organizationId} />
+    return <ReplaceInDocumentTool tool={part} organizationId={organizationId} />
   }
 
   if (part.type === "tool-search_documents") {
@@ -319,71 +312,75 @@ function MessagePart({
   return null
 }
 
-function MessageContextCompact({ message }: { message: DocumentChatAgentUIMessage }) {
-  const { organization } = useOrganization()
-  const metadata = message.metadata as any
-
-  const contextDocuments = metadata?.contextDocuments || []
-  const currentDocumentId = metadata?.currentDocumentId
-
-  const allContextDocs = useMemo(() => {
-    const docs: Array<{ id: string; title: string }> = []
-    const seenIds = new Set<string>()
-
-    // Add current document from contextDocuments if it exists
-    if (currentDocumentId) {
-      const currentDoc = contextDocuments.find((doc: { id: string }) => doc.id === currentDocumentId)
-      if (currentDoc && !seenIds.has(currentDoc.id)) {
-        docs.push(currentDoc)
-        seenIds.add(currentDoc.id)
-      }
-    }
-
-    // Add all other context documents
-    for (const doc of contextDocuments) {
-      if (!seenIds.has(doc.id)) {
-        docs.push(doc)
-        seenIds.add(doc.id)
-      }
-    }
-
-    return docs
-  }, [currentDocumentId, contextDocuments])
-
-  if (allContextDocs.length === 0) {
-    return null
-  }
-
+function ThinkingAnimation() {
   return (
-    <div className="flex flex-col gap-0.5">
-      <div className="text-[10px] text-gray-500 font-medium">Context documents:</div>
-      <ul className="flex flex-col gap-0.5">
-        {allContextDocs.map((doc) => (
-          <li key={doc.id}>
-            <Link
-              to="/w/$organizationSlug/$id"
-              params={{ organizationSlug: organization.slug, id: doc.id }}
-              className="inline-flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 hover:underline transition-colors"
-              title={`Open document: ${doc.title}`}
-            >
-              <svg
-                className="size-3 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <span className="max-w-[200px] truncate">{doc.title}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      className="size-4 text-gray-400"
+    >
+      <rect width="7.33" height="7.33" x="1" y="1" fill="currentColor">
+        <animate id="SVGzjrPLenI" attributeName="x" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="1;4;1" />
+        <animate attributeName="y" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="1;4;1" />
+        <animate attributeName="width" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="8.33" y="1" fill="currentColor">
+        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="8.33;11.33;8.33" />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.1s" dur="0.6s" values="1;4;1" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="1" y="8.33" fill="currentColor">
+        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="1;4;1" />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="8.33;11.33;8.33" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="15.66" y="1" fill="currentColor">
+        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="15.66;18.66;15.66" />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="1;4;1" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="8.33" y="8.33" fill="currentColor">
+        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="8.33;11.33;8.33" />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.2s" dur="0.6s" values="8.33;11.33;8.33" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="1" y="15.66" fill="currentColor">
+        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.2s" dur="0.6s" values="1;4;1" />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="15.66;18.66;15.66" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="15.66" y="8.33" fill="currentColor">
+        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="15.66;18.66;15.66" />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.3s" dur="0.6s" values="8.33;11.33;8.33" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="8.33" y="15.66" fill="currentColor">
+        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="8.33;11.33;8.33" />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.3s" dur="0.6s" values="15.66;18.66;15.66" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+      <rect width="7.33" height="7.33" x="15.66" y="15.66" fill="currentColor">
+        <animate
+          id="SVGXAURnSRI"
+          attributeName="x"
+          begin="SVGzjrPLenI.begin+0.4s"
+          dur="1s"
+          values="15.66;18.66;15.66"
+        />
+        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.4s" dur="1s" values="15.66;18.66;15.66" />
+        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.4s" dur="1s" values="7.33;1.33;7.33" />
+        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.4s" dur="1s" values="7.33;1.33;7.33" />
+      </rect>
+    </svg>
   )
 }

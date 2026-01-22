@@ -14,10 +14,13 @@ import { countWords } from "@/utils/text"
 import { useAuth } from "@/context/auth.context"
 import { isAdmin } from "@/utils/admin"
 import { applyContentChanges } from "@/utils/document-changes"
-import type { Editor } from "@tiptap/react"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
 import { useNavigate, useParams } from "@tanstack/react-router"
+import { useDocumentEditor } from "@/hooks/useEditor"
+import { useSetAtom, useAtomValue } from "jotai"
+import { pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
+import { useEffect } from "react"
 
 export interface ReplaceInDocumentToolProps {
   tool: {
@@ -34,17 +37,11 @@ export interface ReplaceInDocumentToolProps {
     }
     errorText?: string
   }
-  editor: Editor | null
   organizationId: string
   className?: string
 }
 
-export function ReplaceInDocumentTool({
-  tool,
-  editor,
-  organizationId,
-  className = "",
-}: ReplaceInDocumentToolProps) {
+export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: ReplaceInDocumentToolProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [hasOverflow, setHasOverflow] = useState(false)
   const [isApplied, setIsApplied] = useState(false)
@@ -57,7 +54,60 @@ export function ReplaceInDocumentTool({
   const navigate = useNavigate()
   const params = useParams({ strict: false })
 
+  // Access the editor from global state - only this component will re-render when editor changes
+  const editor = useDocumentEditor()
+  const setPendingChange = useSetAtom(pendingEditorChangeAtom)
+  const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom)
+  const pendingChange = useAtomValue(pendingEditorChangeAtom)
+  const pendingChangeStatus = useAtomValue(pendingChangeStatusAtom)
+
   const targetDocumentId = tool.input?.documentId || tool.output?.documentId
+  const replaceText = tool.input?.replace || tool.output?.replace || ""
+  const searchText = tool.input?.search || tool.output?.search || ""
+
+  // Sync state with pending change status
+  useEffect(() => {
+    // Check if there's a pending change that matches this tool
+    const isMatchingPendingChange =
+      pendingChange &&
+      pendingChange.documentId === (targetDocumentId || params.id) &&
+      pendingChange.search === searchText &&
+      pendingChange.replace === replaceText
+
+    if (isMatchingPendingChange) {
+      // Sync with the pending change status
+      if (pendingChangeStatus === "applying") {
+        setIsApplying(true)
+        setIsUsingLLM(false) // Will be set by the apply function if needed
+        setApplyStatus("Applying...")
+      } else if (pendingChangeStatus === "applied") {
+        setIsApplied(true)
+        setIsApplying(false)
+        setIsUsingLLM(false)
+        setApplyStatus("")
+      } else if (pendingChangeStatus === "failed") {
+        setIsApplied(false)
+        setIsApplying(false)
+        setIsUsingLLM(false)
+        setApplyStatus("Failed to apply")
+      } else if (pendingChangeStatus === "pending") {
+        setIsApplying(true)
+        setApplyStatus("Navigating to document...")
+      }
+    } else if (!pendingChange && pendingChangeStatus === null) {
+      // If there's no pending change and no status, and we were navigating/applying,
+      // it means the change was applied and cleared
+      if (isApplying && (applyStatus === "Navigating to document..." || applyStatus === "Applying...")) {
+        // Check if we're on the target document (meaning navigation completed)
+        if (targetDocumentId === params.id || !targetDocumentId) {
+          setIsApplied(true)
+          setIsApplying(false)
+          setIsUsingLLM(false)
+          setApplyStatus("")
+        }
+      }
+    }
+  }, [pendingChange, pendingChangeStatus, targetDocumentId, params.id, searchText, replaceText, isApplying, applyStatus])
 
   const [targetDocument] = useQuery(
     targetDocumentId
@@ -68,10 +118,7 @@ export function ReplaceInDocumentTool({
       : null,
   )
 
-  const replaceText = tool.input?.replace || tool.output?.replace || ""
   const isStreaming = tool.state === "input-streaming"
-
-  const searchText = tool.input?.search || tool.output?.search || ""
   const isFullReplacement = searchText === ""
 
   useLayoutEffect(() => {
@@ -92,12 +139,21 @@ export function ReplaceInDocumentTool({
       return
     }
 
-    // If we're applying to a different document, navigate there first
+    // If we're applying to a different document, set pending change and navigate
     if (targetDocumentId && targetDocumentId !== params.id) {
       setIsApplying(true)
       setApplyStatus("Navigating to document...")
 
-      // Use setTimeout to ensure state updates are visible before navigation
+      // Store the pending change and set status
+      setPendingChange({
+        documentId: targetDocumentId,
+        search: searchText,
+        replace: replaceText,
+        organizationId,
+      })
+      setPendingChangeStatus("pending")
+
+      // Navigate - the Editor component will apply changes when ready
       setTimeout(() => {
         navigate({
           to: "/w/$organizationSlug/$id",
@@ -108,8 +164,6 @@ export function ReplaceInDocumentTool({
         })
       }, 100)
 
-      // Note: After navigation, the component will remount in the new document context
-      // The user will need to click Apply again once the document loads
       return
     }
 
@@ -212,8 +266,6 @@ export function ReplaceInDocumentTool({
     if (isFullReplacement) return "Replace entire document"
     return "Modify document"
   }
-
-  const isCurrentDocument = !targetDocumentId || targetDocumentId === params.id
 
   return (
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}>

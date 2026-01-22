@@ -123,7 +123,7 @@ export function ConversationDropdown({ conversationId, onSelectConversation }: C
       }}
       className="group flex flex-col gap-1 min-w-[200px]"
     >
-      <Button intent="ghost" size="sm" className="text-start">
+      <Button intent="ghost" size="sm" className="justify-start">
         <SelectValue className="max-w-[200px] truncate text-sm">
           {({ selectedText }) => selectedText || displayTitle}
         </SelectValue>
