@@ -7,7 +7,7 @@ import {
   SelectValue,
   Select as AriaSelect,
 } from "react-aria-components"
-import { ChevronDownRegular, ChatRegular, AddSquareFilled } from "@fluentui/react-icons"
+import { ChevronDownRegular } from "@fluentui/react-icons"
 import { useOrganization } from "@/context/organization.context"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
@@ -123,7 +123,6 @@ export function ConversationDropdown({ conversationId, onSelectConversation }: C
       className="group flex flex-col gap-1 min-w-[200px]"
     >
       <RACButton className="flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 border-0 bg-transparent min-w-0">
-        <ChatRegular className="size-4 text-gray-600 shrink-0" aria-hidden="true" />
         <SelectValue className="max-w-[200px] truncate text-sm">
           {({ selectedText }) => selectedText || displayTitle}
         </SelectValue>

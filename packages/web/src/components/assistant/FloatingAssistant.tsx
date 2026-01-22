@@ -4,7 +4,7 @@ import { createPortal } from "react-dom"
 import { Button as RACButton, Button, TooltipTrigger } from "react-aria-components"
 import {
   TextAsteriskRegular,
-  SubtractRegular,
+  SubtractFilled,
   ArrowMinimizeRegular,
   ArrowMaximizeRegular,
   DocumentFilled,
@@ -12,6 +12,16 @@ import {
   EditRegular,
   QuestionCircleRegular,
   AddRegular,
+  LayoutColumnOneThirdRightFilled,
+  LayoutColumnOneThirdRightHintFilled,
+  ChannelAddFilled,
+  ChannelAddRegular,
+  ChannelAdd24Regular,
+  ChannelAdd16Regular,
+  TextBulletListSquareEditRegular,
+  ExpandUpRightFilled,
+  ExpandUpRight16Filled,
+  LayoutColumnTwoFocusRightFilled,
 } from "@fluentui/react-icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
 import { useFloatingAssistant } from "@/context/floating-assistant.context"
@@ -92,31 +102,26 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   }, [])
 
   const headerButtons = useMemo(() => {
-    const buttons = [
-      {
-        onPress: isDocked ? undock : dock,
-        ariaLabel: isDocked ? "Undock assistant" : "Dock assistant",
-        tooltip: isDocked ? "Undock assistant" : "Dock assistant",
-        icon: isDocked ? ArrowMinimizeRegular : ArrowMaximizeRegular,
-        show: true,
-      },
+    return [
       {
         onPress: handleNewChat,
         ariaLabel: "New chat",
         tooltip: "New chat",
-        icon: AddRegular,
-        show: !isDocked,
+        icon: TextBulletListSquareEditRegular,
+      },
+      {
+        onPress: isDocked ? undock : dock,
+        ariaLabel: isDocked ? "Undock assistant" : "Dock assistant",
+        tooltip: isDocked ? "Undock assistant" : "Dock assistant",
+        icon: isDocked ? LayoutColumnOneThirdRightFilled : LayoutColumnTwoFocusRightFilled,
       },
       {
         onPress: close,
         ariaLabel: "Close assistant",
         tooltip: "Close assistant",
-        icon: SubtractRegular,
-        show: !isDocked,
+        icon: SubtractFilled,
       },
     ]
-
-    return buttons.filter((button) => button.show)
   }, [isDocked, dock, undock, handleNewChat, close])
 
   const floatingContainer =
@@ -168,17 +173,17 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
           conversationId={conversationId}
           onSelectConversation={handleSelectConversation}
         />
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-x-0.5">
           {headerButtons.map((button) => {
             const Icon = button.icon
             return (
               <TooltipTrigger key={button.ariaLabel} delay={500}>
                 <Button
                   onPress={button.onPress}
-                  className="p-1 hover:bg-black/4 rounded-md transition-colors duration-75 flex"
+                  className="size-6 justify-center items-center hover:bg-black/4 rounded-md transition-colors duration-75 flex"
                   aria-label={button.ariaLabel}
                 >
-                  <Icon className="size-4 text-gray-600" aria-hidden="true" />
+                  <Icon className="size-4.5 text-gray-500" aria-hidden="true" />
                 </Button>
                 <Tooltip placement="top">{button.tooltip}</Tooltip>
               </TooltipTrigger>

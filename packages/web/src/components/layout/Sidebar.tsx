@@ -28,6 +28,7 @@ import {
   TabDesktopMultipleFilled,
   PersonChatFilled,
   DocumentAddFilled,
+  TextBulletListSquareEditRegular,
 } from "@fluentui/react-icons"
 import { Separator } from "../generic/Separator"
 import { Eyebrow } from "../generic/Eyebrow"
@@ -202,11 +203,11 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <div className="flex gap-x-1">
               <TooltipTrigger delay={500}>
                 <RACButton
-                  className="p-1 rounded hover:bg-black/5 text-gray-600 flex"
+                  className="p-1 rounded hover:bg-black/5 text-gray-600 flex bg-white shadow-surface"
                   onPress={() => createDocument()}
                   aria-label="Create new document"
                 >
-                  <DocumentAddFilled className="size-4.5 text-gray-400 stroke-2" />
+                  <TextBulletListSquareEditRegular className="size-4.5 text-gray-500" />
                 </RACButton>
                 <Tooltip>Add document</Tooltip>
               </TooltipTrigger>
@@ -230,7 +231,7 @@ function BottomBar() {
   return (
     <div className="flex flex-col gap-y-4 px-2.5 pb-1">
       <FeedbackWidget />
-      {userIsAdmin && <ZeroConnectionStatus />}
+      {/* {userIsAdmin && <ZeroConnectionStatus />} */}
     </div>
   )
 }
