@@ -77,7 +77,7 @@ export const ExternalApi = new Hono()
 
     const json = convertYjsToJson(document.yjsState)
 
-    const transformedContent = await transformDocumentLinksToInternalLinkMarks(json, organizationId)
+    const transformedContent = await transformDocumentLinksToInternalLinkMarks(json)
 
     let related: Awaited<ReturnType<typeof findRelatedDocuments>> = []
     if (includeRelated) {
@@ -103,7 +103,7 @@ export const ExternalApi = new Hono()
 
     // Add optional fields to the already-transformed document
     // Remove yjsState from response - we don't want to expose the binary state
-    const { yjsState, ...documentWithoutYjs } = document
+    const { yjsState: _, ...documentWithoutYjs } = document
     const response = {
       ...documentWithoutYjs,
       jsonContent: transformedContent,

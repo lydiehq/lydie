@@ -127,94 +127,92 @@ export function UniversalConverter({ config }: Props) {
   const charPercentage = (charCount / charLimit) * 100
 
   return (
-    <Container>
-      <div className="space-y-8 py-12">
-        <ToolHeader title={config.h1} description={config.introText} />
+    <div className="flex flex-col gap-y-4">
+      <ToolHeader title={config.h1} description={config.introText} />
 
-        <div className="space-y-4">
-          {/* Input area */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-900">
-                Input ({config.fromFormat})
-              </label>
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  onChange={handleFileUpload}
-                  accept={`.${config.pandocFrom},.txt`}
-                  className="hidden"
-                />
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Upload className="w-4 h-4" />
-                  Upload File
-                </span>
-              </label>
-            </div>
-
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={`Paste your ${config.fromFormat} content here...`}
-              className="w-full min-h-[400px] p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
-            />
-
-            {/* Character count */}
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>
-                {charCount.toLocaleString()} / {charLimit.toLocaleString()} characters
+      <div className="space-y-4">
+        {/* Input area */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-gray-900">
+              Input ({config.fromFormat})
+            </label>
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                onChange={handleFileUpload}
+                accept={`.${config.pandocFrom},.txt`}
+                className="hidden"
+              />
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <Upload className="w-4 h-4" />
+                Upload File
               </span>
-              {charPercentage > 80 && (
-                <span className="text-orange-600 font-medium">{Math.round(charPercentage)}% of limit</span>
-              )}
-            </div>
+            </label>
           </div>
 
-          {/* Convert button */}
-          <Button
-            onPress={handleConvert}
-            intent="primary"
-            size="lg"
-            className="w-full flex items-center justify-center gap-2"
-            isDisabled={!input.trim() || isConverting}
-          >
-            {isConverting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Converting...
-              </>
-            ) : (
-              <>
-                <Download className="w-5 h-5" />
-                Convert to {config.toFormat}
-              </>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={`Paste your ${config.fromFormat} content here...`}
+            className="w-full min-h-[320px] p-4 ring ring-black/4 rounded-lg text-sm resize-y shadow-surface"
+          />
+
+          {/* Character count */}
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>
+              {charCount.toLocaleString()} / {charLimit.toLocaleString()} characters
+            </span>
+            {charPercentage > 80 && (
+              <span className="text-orange-600 font-medium">{Math.round(charPercentage)}% of limit</span>
             )}
-          </Button>
+          </div>
+        </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
+        {/* Convert button */}
+        <Button
+          onPress={handleConvert}
+          intent="primary"
+          size="lg"
+          className="w-full flex items-center justify-center gap-2"
+          isDisabled={!input.trim() || isConverting}
+        >
+          {isConverting ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Converting...
+            </>
+          ) : (
+            <>
+              <Download className="w-5 h-5" />
+              Convert to {config.toFormat}
+            </>
           )}
+        </Button>
 
-          {/* Info box */}
-          <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-blue-900">How it works</h3>
-                <p className="text-sm text-blue-800">
-                  Paste or upload your {config.fromFormat} content above. Click the convert button to generate your{" "}
-                  {config.toFormat} file, which will download automatically. All conversions are processed securely
-                  and your files are never stored.
-                </p>
-              </div>
+        {/* Error message */}
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Info box */}
+        <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-blue-900">How it works</h3>
+              <p className="text-sm text-blue-800">
+                Paste or upload your {config.fromFormat} content above. Click the convert button to generate your{" "}
+                {config.toFormat} file, which will download automatically. All conversions are processed securely
+                and your files are never stored.
+              </p>
             </div>
           </div>
         </div>
       </div>
-    </Container>
+    </div>
   )
 }

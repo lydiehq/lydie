@@ -5,6 +5,7 @@ import { HowToSection } from "../../../components/tools/HowToSection";
 import { FAQSection } from "../../../components/tools/FAQSection";
 import { RelatedConverters } from "../../../components/tools/RelatedConverters";
 import { conversionConfigs } from "../../../data/conversions";
+import { Container } from "../../../components/Container";
 
 export function getStaticPaths() {
   return conversionConfigs.map((config) => ({
@@ -15,7 +16,13 @@ export function getStaticPaths() {
 
 const { config } = Astro.props;
 
-// Structured data for SEO
+const breadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "Tools", href: "/tools" },
+  { label: "Convert", href: "/tools/convert" },
+  { label: config.h1, href: null }, // null means it's the current page
+];
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -23,16 +30,6 @@ const structuredData = {
   description: config.description,
   applicationCategory: "UtilityApplication",
   operatingSystem: "Web Browser",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "1250",
-  },
   featureList: [
     "Free to use",
     "No sign-up required",
@@ -42,7 +39,6 @@ const structuredData = {
   ],
 };
 
-// Breadcrumb structured data
 const breadcrumbData = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -74,7 +70,6 @@ const breadcrumbData = {
   ],
 };
 
-// FAQ structured data
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -90,7 +85,6 @@ const faqData = {
 ---
 
 <Layout title={config.title} description={config.description}>
-  <!-- Structured Data -->
   <script
     type="application/ld+json"
     set:html={JSON.stringify(structuredData)}
@@ -100,43 +94,52 @@ const faqData = {
     set:html={JSON.stringify(breadcrumbData)}
   />
   <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
-
-  <!-- Breadcrumbs -->
-  <div class="max-w-7xl mx-auto px-4 py-4">
-    <nav class="flex text-sm text-gray-600" aria-label="Breadcrumb">
-      <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-          <a href="/" class="hover:text-gray-900">Home</a>
-        </li>
-        <li>
-          <div class="flex items-center">
-            <span class="mx-2">/</span>
-            <a href="/tools" class="hover:text-gray-900">Tools</a>
-          </div>
-        </li>
-        <li>
-          <div class="flex items-center">
-            <span class="mx-2">/</span>
-            <a href="/tools/convert" class="hover:text-gray-900">Convert</a>
-          </div>
-        </li>
-        <li aria-current="page">
-          <div class="flex items-center">
-            <span class="mx-2">/</span>
-            <span class="text-gray-900 font-medium">{config.h1}</span>
-          </div>
-        </li>
-      </ol>
-    </nav>
-  </div>
-
-  <UniversalConverter config={config} client:load />
-
-  <!-- How-to section -->
-  <div class="max-w-4xl mx-auto px-4 py-12 space-y-12">
+  <Container className="py-12">
+    <div class="class flex flex-col gap-y-4">
+      <nav class="flex text-[13px] text-gray-600" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center gap-x-1.5">
+          {
+            breadcrumbs.map((crumb, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              const isFirst = index === 0;
+              return (
+                <li
+                  class={isFirst ? "inline-flex items-center" : ""}
+                  aria-current={isLast ? "page" : undefined}
+                >
+                  <div class="flex items-center gap-x-1.5">
+                    {!isFirst && (
+                      <svg
+                        class="size-4 text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    )}
+                    {crumb.href ? (
+                      <a href={crumb.href} class="hover:text-gray-900">
+                        {crumb.label}
+                      </a>
+                    ) : (
+                      <span class="text-gray-900">{crumb.label}</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })
+          }
+        </ol>
+      </nav>
+      <UniversalConverter config={config} client:load />
+    </div>
     <HowToSection steps={config.howToSteps} />
 
-    <!-- SEO content -->
     <div class="prose max-w-none">
       <h2>About {config.h1}</h2>
       <p>
@@ -165,11 +168,7 @@ const faqData = {
         <li>Archiving content in different formats</li>
       </ul>
     </div>
-
-    <!-- FAQs -->
     <FAQSection faqs={config.faqs} />
-
-    <!-- Related converters -->
     <RelatedConverters slugs={config.relatedSlugs} />
-  </div>
+  </Container>
 </Layout>

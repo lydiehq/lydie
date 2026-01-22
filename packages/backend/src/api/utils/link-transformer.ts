@@ -1,6 +1,6 @@
-import type { ContentNode, TextNode, Mark } from "./types"
+import type { ContentNode, TextNode } from "./types"
 import { db } from "@lydie/database"
-import { eq, inArray } from "drizzle-orm"
+import { inArray } from "drizzle-orm"
 import { documentsTable } from "@lydie/database/schema"
 
 /**
@@ -25,9 +25,7 @@ interface LinkMetadata {
   exists?: boolean
 }
 
-/**
- * Extracts all internal:// links from document content
- */
+// Extracts all internal:// links from document content
 export function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
   const internalLinks = new Set<string>()
 
@@ -54,13 +52,8 @@ export function extractInternalLinks(content: ContentNode | TextNode): Set<strin
   return internalLinks
 }
 
-/**
- * Fetches metadata for multiple document IDs
- */
-export async function fetchDocumentMetadata(
-  documentIds: string[],
-  organizationId: string,
-): Promise<Map<string, LinkMetadata>> {
+// Fetches metadata for multiple document IDs
+export async function fetchDocumentMetadata(documentIds: string[]): Promise<Map<string, LinkMetadata>> {
   if (documentIds.length === 0) {
     return new Map()
   }
@@ -104,13 +97,10 @@ export async function fetchDocumentMetadata(
   }
 }
 
-/**
- * Transforms all internal:// links in document content to internal-link marks
- */
+// Transforms all internal:// links in document content to internal-link marks
 function transformContentLinks(
   content: ContentNode | TextNode,
   metadataMap: Map<string, LinkMetadata>,
-  options: LinkTransformOptions,
 ): ContentNode | TextNode {
   // Deep clone to avoid mutations
   const clone = JSON.parse(JSON.stringify(content)) as ContentNode | TextNode
@@ -158,7 +148,6 @@ function transformContentLinks(
 // Transforms internal:// links to internal-link marks (always fetches metadata)
 export async function transformDocumentLinksToInternalLinkMarks(
   jsonContent: ContentNode,
-  organizationId: string,
 ): Promise<ContentNode> {
   // Extract all internal links
   const internalLinkIds = extractInternalLinks(jsonContent)
@@ -169,10 +158,8 @@ export async function transformDocumentLinksToInternalLinkMarks(
   }
 
   // Always fetch metadata for all linked documents
-  const metadataMap = await fetchDocumentMetadata(Array.from(internalLinkIds), organizationId)
+  const metadataMap = await fetchDocumentMetadata(Array.from(internalLinkIds))
 
   // Transform all links in the content to internal-link marks
-  return transformContentLinks(jsonContent, metadataMap, {
-    organizationId,
-  }) as ContentNode
+  return transformContentLinks(jsonContent, metadataMap) as ContentNode
 }
