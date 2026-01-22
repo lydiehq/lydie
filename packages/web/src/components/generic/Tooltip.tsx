@@ -15,13 +15,10 @@ export interface TooltipProps extends Omit<AriaTooltipProps, "children"> {
 }
 
 const styles = cva({
-  base: "group bg-white ring-1 ring-black/12 text-gray-600 text-[12px] shadow rounded-sm will-change-transform px-2 py-0.5",
+  base: "group bg-black/60 text-white text-[12px] rounded-sm will-change-transform px-2 py-0.5",
   variants: {
     isEntering: {
       true: "animate-in fade-in placement-bottom:slide-in-from-top-1 placement-top:slide-in-from-bottom-1 placement-left:slide-in-from-right-1 placement-right:slide-in-from-left-1 ease-out duration-75",
-    },
-    isExiting: {
-      true: "animate-out fade-out placement-bottom:slide-out-to-top-1 placement-top:slide-out-to-bottom-1 placement-left:slide-out-to-right-1 placement-right:slide-out-to-left-1 ease-in duration-75",
     },
   },
 })
@@ -40,7 +37,7 @@ export function Tooltip({ children, hotkeys, ...props }: TooltipProps) {
           width={8}
           height={8}
           viewBox="0 0 8 8"
-          className="fill-white dark:fill-slate-600 forced-colors:fill-[Canvas] stroke-black/12 dark:stroke-white/10 group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90"
+          className="fill-black/60 forced-colors:fill-[Canvas] group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90"
         >
           <path d="M0 0 L4 4 L8 0" />
         </svg>
@@ -52,7 +49,7 @@ export function Tooltip({ children, hotkeys, ...props }: TooltipProps) {
             {hotkeys.map((key, index) => (
               <kbd
                 key={index}
-                className="px-1 text-[10px] font-medium text-gray-500 border border-gray-200 rounded"
+                className="px-1 text-[10px] font-medium text-white/80 border border-white/20 rounded"
               >
                 {key}
               </kbd>

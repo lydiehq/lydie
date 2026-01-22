@@ -2,8 +2,6 @@ import { Editor, EditorContent, useEditorState } from "@tiptap/react"
 import { AnimatePresence, motion } from "motion/react"
 import { Button as RACButton, Form } from "react-aria-components"
 import { CircleArrowUpIcon, XIcon, SquareIcon } from "@/icons"
-import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport } from "ai"
 import { queries } from "@lydie/zero/queries"
 import { type DocumentEditorHookResult } from "@/lib/editor/document-editor"
 import { applyContentChanges } from "@/utils/document-changes"
@@ -15,10 +13,11 @@ import { useQuery } from "@rocicorp/zero/react"
 import { useOrganization } from "@/context/organization.context"
 import type { QueryResultType } from "@rocicorp/zero"
 import { useRouter } from "@tanstack/react-router"
-import { ChatAlert, type ChatAlertState } from "./ChatAlert"
-import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
-import { useChatComposer } from "@/components/chat/useChatComposer"
-import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
+import { ChatAlert } from "./ChatAlert"
+import { useAssistantChat } from "@/hooks/use-assistant-chat"
+import { useChatComposer } from "@/hooks/use-chat-composer"
+import { useDocumentContext } from "@/hooks/use-document-context"
+import { ChatContextList } from "@/components/chat/ChatContextList"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
 
 export type DocumentChatRef = {
@@ -36,24 +35,17 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
   const { focusedContent, clearFocusedContent } = useSelectedContent()
   const { organization } = useOrganization()
   const router = useRouter()
-  const [alert, setAlert] = useState<ChatAlertState | null>(null)
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
-  const [isCurrentDocumentDismissed, setIsCurrentDocumentDismissed] = useState(false)
 
-  const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
-
-  const availableDocuments = useMemo(
-    () =>
-      (documents ?? []).map((doc) => ({
-        id: doc.id,
-        title: doc.title,
-      })),
-    [documents],
-  )
-
-  const documentTitleById = useMemo(() => {
-    return new Map(availableDocuments.map((doc) => [doc.id, doc.title || "Untitled document"]))
-  }, [availableDocuments])
+  const {
+    availableDocuments,
+    contextItems,
+    handleRemoveContext,
+    resetDismissal,
+  } = useDocumentContext({
+    currentDocumentId: doc.id,
+    mentionedDocumentIds,
+  })
 
   const chatEditor = useChatComposer({
     documents: availableDocuments,
@@ -100,53 +92,32 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
     },
   })
 
-  const { messages, sendMessage, stop, status } = useChat<DocumentChatAgentUIMessage>({
-    experimental_throttle: 100,
-    transport: new DefaultChatTransport({
-      api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
-      credentials: "include",
-      body: {
-        conversationId: conversationId,
-        currentDocument: {
-          id: doc.id,
-          organizationId: doc.organization_id,
-        },
-      },
-      headers: {
-        "X-Organization-Id": doc.organization_id,
-      },
-    }),
-    onError: (error) => {
-      const { message } = parseChatError(error)
-
-      // Show usage limit errors with upgrade action
-      if (isUsageLimitError(error)) {
-        setAlert({
-          show: true,
-          type: "error",
-          title: "Daily Limit Reached",
-          message,
-          action: {
-            label: "Upgrade to Pro →",
-            onClick: () => {
-              router.navigate({
-                to: "/w/$organizationSlug/settings/billing",
-                params: { organizationId: organization.id },
-              })
-            },
-          },
-        })
-      } else {
-        // Show all other errors in the alert drawer
-        setAlert({
-          show: true,
-          type: "error",
-          title: "Error",
-          message,
-        })
-      }
+  const { messages, sendMessage, stop, status, alert, setAlert } = useAssistantChat({
+    conversationId,
+    currentDocument: {
+      id: doc.id,
+      organizationId: doc.organization_id,
     },
+    experimental_throttle: 100,
   })
+
+  // Add upgrade action for usage limit errors
+  useEffect(() => {
+    if (alert && alert.message.includes("Daily message limit")) {
+      setAlert({
+        ...alert,
+        action: {
+          label: "Upgrade to Pro →",
+          onClick: () => {
+            router.navigate({
+              to: "/w/$organizationSlug/settings/billing",
+              params: { organizationId: organization.id },
+            })
+          },
+        },
+      })
+    }
+  }, [alert, router, organization.id, setAlert])
 
   const handleSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault()
@@ -174,34 +145,8 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
     chatEditor.clearContent()
     clearFocusedContent()
     contentEditor.editor?.commands.clearSelection()
-    setIsCurrentDocumentDismissed(false)
+    resetDismissal()
   }
-
-  const contextItems = useMemo(() => {
-    const items: ChatContextItem[] = []
-
-    if (!isCurrentDocumentDismissed) {
-      items.push({
-        id: doc.id,
-        type: "document",
-        label: doc.title || "Untitled document",
-        source: "current",
-        removable: true,
-      })
-    }
-
-    for (const documentId of mentionedDocumentIds) {
-      if (documentId === doc.id) continue
-      items.push({
-        id: documentId,
-        type: "document",
-        label: documentTitleById.get(documentId) || "Untitled document",
-        source: "mention",
-      })
-    }
-
-    return items
-  }, [doc.id, doc.title, documentTitleById, isCurrentDocumentDismissed, mentionedDocumentIds])
 
   const applyContent = async (
     edits: {
@@ -295,11 +240,7 @@ export function DocumentChat({ contentEditor, doc, conversationId, ref }: Props)
             <Form className="relative flex flex-col" onSubmit={handleSubmit}>
               <ChatContextList
                 items={contextItems}
-                onRemove={(item) => {
-                  if (item.source === "current") {
-                    setIsCurrentDocumentDismissed(true)
-                  }
-                }}
+                onRemove={handleRemoveContext}
               />
               <EditorContent editor={chatEditor.editor} />
               <RACButton

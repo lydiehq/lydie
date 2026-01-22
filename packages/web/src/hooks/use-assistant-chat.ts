@@ -1,60 +1,119 @@
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
-import type { UIMessage } from "ai"
-import { useMemo } from "react"
-import { createId } from "@lydie/core/id"
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useOrganization } from "@/context/organization.context"
+import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
+import type { ChatAlertState } from "@/components/editor/ChatAlert"
+import { trackEvent } from "@/lib/posthog"
 
-type MessageMetadata = {
-  timestamp?: string
-  model?: string
-  duration?: number
+interface UseAssistantChatOptions {
+  conversationId: string
+  currentDocument?: {
+    id: string
+    organizationId: string
+  }
+  initialMessages?: DocumentChatAgentUIMessage[]
+  onConversationLoad?: (messages: DocumentChatAgentUIMessage[]) => void
+  experimental_throttle?: number
 }
 
-type MessageWithMetadata = UIMessage<MessageMetadata>
-
-interface UseAssistantChatProps {
-  conversationId?: string
-  initialMessages?: MessageWithMetadata[]
-}
-
+/**
+ * Unified assistant chat hook that consolidates all useChat setup logic
+ * Handles transport configuration, error handling, alerts, and analytics tracking
+ */
 export function useAssistantChat({
-  conversationId: providedConversationId,
+  conversationId,
+  currentDocument,
   initialMessages = [],
-}: UseAssistantChatProps = {}) {
-  const conversationId = useMemo(() => {
-    return providedConversationId || createId()
-  }, [providedConversationId])
-
+  onConversationLoad,
+  experimental_throttle,
+}: UseAssistantChatOptions) {
   const { organization } = useOrganization()
+  const [alert, setAlert] = useState<ChatAlertState | null>(null)
+  const messageStartTimeRef = useRef<number>(0)
 
-  const { messages, sendMessage, status } = useChat<MessageWithMetadata>({
+  const {
+    messages,
+    sendMessage: originalSendMessage,
+    stop,
+    status,
+    setMessages,
+  } = useChat<DocumentChatAgentUIMessage>({
+    id: conversationId,
+    messages: initialMessages,
+    experimental_throttle,
     transport: new DefaultChatTransport({
       api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
       credentials: "include",
       body: {
-        conversationId: conversationId,
+        conversationId,
+        ...(currentDocument && { currentDocument }),
       },
       headers: {
         "X-Organization-Id": organization.id,
       },
     }),
-    messages: initialMessages,
+    onError: (error) => {
+      console.error("Assistant chat error:", error)
+      const { message } = parseChatError(error)
+
+      if (isUsageLimitError(error)) {
+        setAlert({
+          show: true,
+          type: "error",
+          title: "Daily Limit Reached",
+          message,
+        })
+      } else {
+        setAlert({
+          show: true,
+          type: "error",
+          title: "Something went wrong",
+          message,
+        })
+      }
+    },
+    onFinish: () => {
+      const responseTime = messageStartTimeRef.current ? Date.now() - messageStartTimeRef.current : undefined
+
+      trackEvent("assistant_response_received", {
+        conversationId,
+        organizationId: organization.id,
+        responseTimeMs: responseTime,
+      })
+    },
   })
 
-  const sendAssistantMessage = (content: string) => {
-    sendMessage({
-      text: content,
-      metadata: {
-        timestamp: new Date().toISOString(),
-      },
-    })
-  }
+  // Call onConversationLoad when messages are loaded
+  useEffect(() => {
+    if (onConversationLoad && messages.length > 0) {
+      onConversationLoad(messages)
+    }
+  }, [messages.length, onConversationLoad])
+
+  const sendMessage = useCallback(
+    (options: { text: string; metadata?: any }) => {
+      messageStartTimeRef.current = Date.now()
+
+      trackEvent("assistant_message_sent", {
+        conversationId,
+        organizationId: organization.id,
+        messageLength: options.text.length,
+      })
+
+      return originalSendMessage(options)
+    },
+    [originalSendMessage, conversationId, organization.id],
+  )
 
   return {
     messages,
-    sendMessage: sendAssistantMessage,
+    sendMessage,
+    stop,
     status,
-    conversationId,
+    alert,
+    setAlert,
+    setMessages,
   }
 }
