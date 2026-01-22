@@ -26,15 +26,10 @@ const MAX_CONVERSATIONS_TO_SHOW = 15
 
 interface ConversationDropdownProps {
   conversationId: string
-  onNewChat: () => void
   onSelectConversation: (id: string) => void
 }
 
-export function ConversationDropdown({
-  conversationId,
-  onNewChat,
-  onSelectConversation,
-}: ConversationDropdownProps) {
+export function ConversationDropdown({ conversationId, onSelectConversation }: ConversationDropdownProps) {
   const { organization } = useOrganization()
   const navigate = useNavigate()
   const { contains } = useFilter({ sensitivity: "base" })
@@ -121,9 +116,7 @@ export function ConversationDropdown({
     <AriaSelect
       value={conversationId || null}
       onChange={(key) => {
-        if (key === "new") {
-          onNewChat()
-        } else if (key && typeof key === "string") {
+        if (key && typeof key === "string") {
           onSelectConversation(key)
         }
       }}
@@ -190,13 +183,6 @@ export function ConversationDropdown({
           </ListBox>
         </Autocomplete>
         <div className="border-t border-gray-200 p-1 flex flex-col gap-1">
-          <RACButton
-            onPress={onNewChat}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          >
-            <AddSquareFilled className="size-4 text-gray-500" aria-hidden="true" />
-            <span>New Chat</span>
-          </RACButton>
           {hasMoreConversations && (
             <RACButton
               onPress={handleSeeAllConversations}

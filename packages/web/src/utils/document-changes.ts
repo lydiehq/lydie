@@ -352,11 +352,11 @@ export async function applyContentChanges(
       const change = changes[i]
       const { search, replace } = change
 
-      // Handle overwrite mode (empty search means replace entire document)
+      // Handle full document replacement (empty search means replace entire document)
       if (search === "") {
         editor.commands.setContent(replace)
 
-        console.debug("Successfully applied overwrite change:", {
+        console.debug("Successfully replaced entire document:", {
           replaceText: replace,
         })
 
@@ -364,7 +364,6 @@ export async function applyContentChanges(
         onProgress?.(appliedChanges, changes.length, false)
         continue
       }
-
 
       // Try existing strategies first
       const found = findAndReplaceInDocument(editor, search, replace)
