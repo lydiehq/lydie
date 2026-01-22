@@ -3,7 +3,6 @@ import { useCallback, useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Button as RACButton, Button, TooltipTrigger } from "react-aria-components"
 import {
-  TextAsteriskRegular,
   SubtractFilled,
   DocumentFilled,
   DocumentCopyFilled,
@@ -114,13 +113,8 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   }, [])
 
   const handleClose = useCallback(() => {
-    if (isDocked) {
-      undock()
-      close()
-    } else {
-      close()
-    }
-  }, [isDocked, undock, close])
+    close()
+  }, [close])
 
   const headerButtons = useMemo(() => {
     return [
