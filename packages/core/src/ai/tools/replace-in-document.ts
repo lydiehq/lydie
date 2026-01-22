@@ -6,7 +6,9 @@ export const replaceInDocument = () =>
     onInputDelta: (delta) => {
       console.log("Input delta:", delta)
     },
-    description: `Replace content in the current document. Use this for ALL document modifications.
+    description: `Replace content in a document. Use this for ALL document modifications.
+
+**CRITICAL: You MUST specify the documentId parameter. Use the "Current Document" ID from the context information provided to you. If you need to modify a different document, use its ID instead.**
 
 **CRITICAL: Changes require user approval. When you use this tool, the changes are NOT immediately applied to the document. They are presented to the user for review, and the user must manually accept them before they appear in the document. Never claim the content has been "added" or "placed" in the document—it's only prepared for review.**
 
@@ -39,6 +41,11 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
 - Delete content: replace ""
 - Document is minified HTML (no spaces between tags)`,
     inputSchema: z.object({
+      documentId: z
+        .string()
+        .describe(
+          "ID of the document to modify. This is the document where the replacement will be applied.",
+        ),
       search: z
         .string()
         .describe(
@@ -58,8 +65,9 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
         .optional()
         .default(false),
     }),
-    execute: async function ({ search, replace, overwrite }) {
+    execute: async function ({ documentId, search, replace, overwrite }) {
       return {
+        documentId,
         search: search ?? "",
         replace,
         overwrite: overwrite ?? false,
