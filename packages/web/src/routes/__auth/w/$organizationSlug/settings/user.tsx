@@ -16,7 +16,7 @@ import { Card } from "@/components/layout/Card"
 import { authClient } from "@/utils/auth"
 import { Button } from "@/components/generic/Button"
 import { formatDistanceToNow } from "date-fns"
-import { CheckIcon, XIcon, Building2Icon, UserIcon, ClockIcon } from "@/icons"
+import { CheckmarkRegular, DismissRegular, BuildingRegular, PersonRegular, ClockRegular } from "@fluentui/react-icons"
 import { useAuth } from "@/context/auth.context"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user")({
@@ -179,26 +179,26 @@ function RouteComponent() {
                 <div className="flex items-start justify-between">
                   <div className="flex flex-col gap-y-2 flex-1">
                     <div className="flex items-center gap-2">
-                      <Building2Icon className="size-4 text-gray-500" />
+                      <BuildingRegular className="size-4 text-gray-500" />
                       <span className="font-medium text-gray-900">
                         {invitation.organization?.name || "Unknown Organization"}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-1.5">
-                        <UserIcon className="size-3.5" />
+                        <PersonRegular className="size-3.5" />
                         <span>
                           Role: <span className="capitalize font-medium">{invitation.role || "member"}</span>
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <UserIcon className="size-3.5" />
+                        <PersonRegular className="size-3.5" />
                         <span>
                           Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <ClockIcon className="size-3.5" />
+                        <ClockRegular className="size-3.5" />
                         <span>
                           Expires{" "}
                           {formatDistanceToNow(invitation.expires_at, {
@@ -215,7 +215,7 @@ function RouteComponent() {
                         handleAcceptInvitation(invitation.id, invitation.organization?.slug || "")
                       }
                     >
-                      <CheckIcon className="size-3.5 mr-1" />
+                      <CheckmarkRegular className="size-3.5 mr-1" />
                       Accept
                     </Button>
                     <Button
@@ -223,7 +223,7 @@ function RouteComponent() {
                       size="sm"
                       onPress={() => handleRejectInvitation(invitation.id)}
                     >
-                      <XIcon className="size-3.5 mr-1" />
+                      <DismissRegular className="size-3.5 mr-1" />
                       Decline
                     </Button>
                   </div>

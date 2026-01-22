@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { Button as RACButton } from "react-aria-components"
-import { CheckIcon, XIcon } from "@/icons"
+import { CheckmarkRegular, DismissRegular } from "@fluentui/react-icons"
 import { Diff } from "./Diff"
 
 type DiffPreviewProps = {
@@ -58,14 +58,14 @@ export function DiffPreview({ changes, originalContent, onAccept, onReject }: Di
             onPress={onReject}
             className="text-xs font-medium px-3 py-1 rounded-md text-gray-600 hover:bg-gray-100 flex items-center gap-1"
           >
-            <XIcon className="size-3" />
+            <DismissRegular className="size-3" />
             Reject
           </RACButton>
           <RACButton
             onPress={onAccept}
             className="text-xs font-medium px-3 py-1 rounded-md text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-1"
           >
-            <CheckIcon className="size-3" />
+            <CheckmarkRegular className="size-3" />
             Accept
           </RACButton>
         </div>

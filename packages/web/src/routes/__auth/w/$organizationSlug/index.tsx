@@ -7,7 +7,7 @@ import { useOnboardingSteps } from "@/hooks/use-onboarding-steps"
 import { OnboardingStepDocuments } from "@/components/onboarding/OnboardingStepDocuments"
 import { OnboardingStepAssistant } from "@/components/onboarding/OnboardingStepAssistant"
 import { OnboardingStepIntegrations } from "@/components/onboarding/OnboardingStepIntegrations"
-import { ChevronLeftIcon, ChevronRightIcon } from "@/icons"
+import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons"
 import { useOrganization } from "@/context/organization.context"
 import { useState } from "react"
 import { useZero } from "@/services/zero"
@@ -153,7 +153,7 @@ function Onboarding() {
             {!isFirstStep && (
               <Button onPress={previousStep} intent="secondary" size="sm">
                 <span className="flex items-center gap-x-1">
-                  <ChevronLeftIcon className="size-4" />
+                  <ChevronLeftRegular className="size-4" />
                   Previous
                 </span>
               </Button>
@@ -166,7 +166,7 @@ function Onboarding() {
             <Button onPress={handleNext} intent="primary" size="sm">
               <span className="flex items-center gap-x-1">
                 {isLastStep ? "Get started" : "Next"}
-                {!isLastStep && <ChevronRightIcon className="size-4" />}
+                {!isLastStep && <ChevronRightRegular className="size-4" />}
               </span>
             </Button>
           </div>

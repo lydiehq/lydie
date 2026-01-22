@@ -1,5 +1,5 @@
-import { XIcon } from "lucide-react"
-import { DocumentIcon } from "@/icons"
+import { DismissFilled } from "@fluentui/react-icons"
+import { DocumentFilled } from "@fluentui/react-icons"
 
 export type ChatContextItem = {
   id: string
@@ -38,7 +38,7 @@ function ContextChip({
 
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-white/80 text-xs text-gray-700 px-2 py-1 ring ring-black/8">
-      <DocumentIcon className="size-3 text-gray-500" />
+      <DocumentFilled className="size-3 text-gray-500" />
       <span className="max-w-[180px] truncate">{item.label}</span>
       <span className="text-[10px] text-gray-500">{sourceLabel}</span>
       {canRemove && (
@@ -48,7 +48,7 @@ function ContextChip({
           className="ml-0.5 rounded-full hover:bg-gray-200 p-0.5"
           aria-label={`Remove ${item.label} from context`}
         >
-          <XIcon className="size-3 text-gray-500" />
+          <DismissFilled className="size-3 text-gray-500" />
         </button>
       )}
     </div>

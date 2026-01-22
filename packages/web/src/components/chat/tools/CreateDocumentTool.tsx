@@ -1,4 +1,4 @@
-import { Loader2Icon } from "@/icons"
+import { ArrowClockwiseRegular } from "@fluentui/react-icons"
 import { motion } from "motion/react"
 import { countWords } from "@/utils/text"
 import { useOrganization } from "@/context/organization.context"

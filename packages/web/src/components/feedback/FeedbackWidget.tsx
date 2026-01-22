@@ -4,7 +4,7 @@ import { Button } from "../generic/Button"
 import { Dialog } from "../generic/Dialog"
 import { Modal } from "../generic/Modal"
 import { RadioGroup, Radio } from "../generic/RadioGroup"
-import { MessageCircleIcon, LifeBuoyIcon, XIcon } from "@/icons"
+import { ChatRegular, QuestionCircleRegular, DismissRegular, DismissFilled } from "@fluentui/react-icons"
 import { useZero } from "@/services/zero"
 import { createId } from "@lydie/core/id"
 import { useOrganization } from "@/context/organization.context"
@@ -69,7 +69,7 @@ export function FeedbackWidget() {
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
       <RACButton className="w-full flex items-center justify-start gap-x-2 p-1 rounded-md hover:bg-gray-100 text-sm text-gray-700 transition-colors">
-        <MessageCircleIcon className="size-4" />
+        <ChatRegular className="size-4" />
         <span>Send Feedback</span>
       </RACButton>
       <Modal isDismissable>
@@ -85,7 +85,7 @@ export function FeedbackWidget() {
                   aria-label="Close"
                   className="p-1 text-gray-500 hover:text-gray-900"
                 >
-                  <XIcon className="size-4" />
+                  <DismissFilled className="size-4" />
                 </Button>
               </div>
 
@@ -108,13 +108,13 @@ export function FeedbackWidget() {
                     >
                       <Radio value="feedback">
                         <div className="flex items-center gap-1.5">
-                          <MessageCircleIcon className="size-4 text-gray-600" />
+                          <ChatRegular className="size-4 text-gray-600" />
                           <span>Feedback</span>
                         </div>
                       </Radio>
                       <Radio value="help">
                         <div className="flex items-center gap-1.5">
-                          <LifeBuoyIcon className="size-4 text-gray-600" />
+                          <QuestionCircleRegular className="size-4 text-gray-600" />
                           <span>Help Request</span>
                         </div>
                       </Radio>

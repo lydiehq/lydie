@@ -1,5 +1,5 @@
 import React from "react"
-import { CheckIcon, LoaderIcon } from "@/icons"
+import { CheckmarkRegular, ArrowClockwiseRegular } from "@fluentui/react-icons"
 import { motion, AnimatePresence } from "motion/react"
 
 export interface MoveDocumentsToolProps {
@@ -89,7 +89,7 @@ export function MoveDocumentsTool({ tool, className = "" }: MoveDocumentsToolPro
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <LoaderIcon className="size-4 animate-spin text-gray-400" />
+              <ArrowClockwiseRegular className="size-4 animate-spin text-gray-400" />
             </motion.div>
           ) : outputState === "error" || tool.output?.error ? (
             <motion.div
@@ -115,7 +115,7 @@ export function MoveDocumentsTool({ tool, className = "" }: MoveDocumentsToolPro
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
               <div className="flex items-center gap-x-1 text-gray-500 mb-2">
-                <CheckIcon className="size-3" />
+                <CheckmarkRegular className="size-3" />
                 <span className="text-[13px]">
                   Successfully moved {totalMoved} document
                   {totalMoved === 1 ? "" : "s"}

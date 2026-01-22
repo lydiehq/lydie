@@ -1,5 +1,5 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { AddIcon, Trash2Icon } from "@/icons"
+import { AddRegular, DeleteRegular } from "@fluentui/react-icons"
 import { Button } from "./generic/Button"
 import { TextField as AriaTextField, NumberField as AriaNumberField } from "react-aria-components"
 import { Input, Label } from "./generic/Field"
@@ -103,7 +103,7 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
                         className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-red-500 hover:border-red-200 opacity-0 group-hover:opacity-100 transition-all z-10"
                         title="Remove item"
                       >
-                        <Trash2Icon className="size-3" />
+                        <DeleteRegular className="size-3" />
                       </button>
 
                       <div className="grid grid-cols-2 gap-3">
@@ -160,7 +160,7 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
                   size="xs"
                   className="w-full justify-center border-dashed"
                 >
-                  <AddIcon className="size-3 mr-1.5" />
+                  <AddRegular className="size-3 mr-1.5" />
                   Add Item
                 </Button>
               </div>

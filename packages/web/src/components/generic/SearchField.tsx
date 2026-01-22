@@ -1,4 +1,4 @@
-import { SearchIcon, XIcon } from "@/icons"
+import { SearchFilled, DismissRegular } from "@fluentui/react-icons"
 import {
   SearchField as AriaSearchField,
   Button,
@@ -34,14 +34,14 @@ export function SearchField({
     >
       {label && <Label>{label}</Label>}
       <Group className="flex items-center bg-gray-100 rounded-lg ">
-        <SearchIcon aria-hidden className="size-4 ml-2 text-gray-500 " />
+        <SearchFilled aria-hidden className="size-4 ml-2 text-gray-500 " />
         <Input
           ref={inputRef}
           placeholder={placeholder}
           className="[&::-webkit-search-cancel-button]:hidden focus:outline-none grow px-2 py-2 text-sm text-gray-700"
         />
         <Button className="mr-1 w-6 group-empty:invisible">
-          <XIcon aria-hidden className="w-4 h-4" />
+          <DismissRegular aria-hidden className="w-4 h-4" />
         </Button>
       </Group>
     </AriaSearchField>

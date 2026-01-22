@@ -15,15 +15,14 @@ type Props = ButtonProps & {
 export function ToolbarButton(props: Props) {
   const { className, isDisabled, hotkeys, ...rest } = props
   const isActive = props.editor.isActive(props.title.toLowerCase())
-  const defaultClassName = `p-1.5 rounded hover:bg-gray-100 ${
-    isActive ? "bg-gray-200" : ""
-  } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`
+  const defaultClassName = `p-1.5 flex rounded hover:bg-gray-100 ${isActive ? "bg-gray-200" : ""
+    } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`
 
   const computedClassName =
     typeof className === "function"
       ? className({
-          isSelected: isActive,
-        })
+        isSelected: isActive,
+      })
       : className || defaultClassName
 
   return (

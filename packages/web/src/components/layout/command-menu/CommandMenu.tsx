@@ -13,16 +13,15 @@ import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
 import { useOnboardingSteps } from "@/hooks/use-onboarding-steps"
 import { mutators } from "@lydie/zero/mutators"
 import {
-  SearchIcon,
-  AddIcon,
-  HomeIcon,
-  BotIcon,
-  SettingsIcon,
-  CreditCardIcon,
-  UploadIcon,
-  PlugIcon,
-  PlusIcon,
-} from "@/icons"
+  SearchFilled,
+  AddRegular,
+  HomeFilled,
+  BotRegular,
+  SettingsRegular,
+  PaymentRegular,
+  ArrowUploadRegular,
+  PlugConnectedRegular,
+} from "@fluentui/react-icons"
 import { ModalOverlay, Modal } from "react-aria-components"
 import { overlayStyles } from "../../generic/Modal"
 import { Dialog } from "../../generic/Dialog"
@@ -151,7 +150,7 @@ export function CommandMenu() {
         id: "import-demo-content",
         label: "Import Demo Content",
         description: "Quickly add sample documents to get started",
-        icon: PlusIcon,
+        icon: AddRegular,
         action: async () => {
           try {
             const result = await z.mutate(
@@ -194,7 +193,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "create-document",
         label: "Create new document…",
-        icon: PlusIcon,
+        icon: AddRegular,
         action: async () => {
           createDocument()
         },
@@ -204,7 +203,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "publish",
         label: "Publish document",
-        icon: AddIcon,
+        icon: AddRegular,
         action: () => {
           if (currentDocument) {
             publishDocument(currentDocument.id)
@@ -214,7 +213,7 @@ export function CommandMenu() {
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
-        icon: AddIcon,
+        icon: AddRegular,
         action: () => {
           if (currentDocumentId) {
             const documentTitle = currentDocument.title || "Untitled Document"
@@ -234,7 +233,7 @@ export function CommandMenu() {
       {
         id: "search",
         label: "Search documents…",
-        icon: SearchIcon,
+        icon: SearchFilled,
         action: () => {
           setPages([...pages, "search"])
           setSearch("") // Clear search when entering search page
@@ -243,7 +242,7 @@ export function CommandMenu() {
       {
         id: "go-home",
         label: "Go home",
-        icon: HomeIcon,
+        icon: HomeFilled,
         action: () => {
           navigate({
             to: "/w/$organizationSlug",
@@ -261,7 +260,7 @@ export function CommandMenu() {
       {
         id: "go-assistant",
         label: "Go to assistant",
-        icon: BotIcon,
+        icon: BotRegular,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/assistant",
@@ -274,7 +273,7 @@ export function CommandMenu() {
       {
         id: "organization-settings",
         label: "Go to organization settings",
-        icon: SettingsIcon,
+        icon: SettingsRegular,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings",
@@ -287,7 +286,7 @@ export function CommandMenu() {
       {
         id: "billing",
         label: "Go to billing settings",
-        icon: CreditCardIcon,
+        icon: PaymentRegular,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings/billing",
@@ -300,7 +299,7 @@ export function CommandMenu() {
       {
         id: "mdx-import",
         label: "Go to import settings",
-        icon: UploadIcon,
+        icon: ArrowUploadRegular,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings/import",
@@ -313,7 +312,7 @@ export function CommandMenu() {
       {
         id: "integrations",
         label: "Go to integrations",
-        icon: PlugIcon,
+        icon: PlugConnectedRegular,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings/integrations",
@@ -341,7 +340,7 @@ export function CommandMenu() {
       {
         id: "create-organization",
         label: "Create new organization",
-        icon: AddIcon,
+        icon: AddRegular,
         action: () => {
           navigate({
             to: "/new",
@@ -405,7 +404,7 @@ export function CommandMenu() {
             }}
           >
             <div className="flex items-center border-b border-gray-100 px-3">
-              <SearchIcon className="size-4 text-gray-400 mr-2" />
+              <SearchFilled className="size-4 text-gray-400 mr-2" />
               <Command.Input
                 value={search}
                 onValueChange={setSearch}

@@ -41,7 +41,7 @@ export function UserMessage({
       exit={{ opacity: 0, y: -10 }}
     >
       <div className="flex flex-col items-end max-w-[80%]">
-        <div className="bg-black/8 text-gray-700 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
+        <div className="bg-black/4 text-gray-700 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
           {message.parts?.map((part: any, index: number) => {
             if (part.type === "text") {
               return <TextWithReferences key={index} text={part.text} className="text-sm/relaxed" />
@@ -223,9 +223,7 @@ function MessageContext({
   }
 
   return (
-    <div
-      className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}
-    >
+    <div className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}>
       <div className="text-[10px] text-gray-500 font-medium mb-0.5">Context documents:</div>
       <ul className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}>
         {allContextDocs.map((doc) => (

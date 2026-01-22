@@ -1,5 +1,5 @@
 import { Command } from "cmdk"
-import { DocumentIcon, PlugIcon } from "@/icons"
+import { DocumentFilled, PlugConnectedRegular } from "@fluentui/react-icons"
 
 function getIntegrationIcon(integrationType: string | null | undefined) {
   if (!integrationType) return null
@@ -8,7 +8,7 @@ function getIntegrationIcon(integrationType: string | null | undefined) {
     case "github":
     case "shopify":
     default:
-      return PlugIcon // Return Plug icon as default
+      return PlugConnectedRegular
   }
 }
 
@@ -51,7 +51,7 @@ export function SearchResults({
             className="relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800"
           >
             <div className="flex items-center gap-1 mr-2">
-              <DocumentIcon className="size-4 text-gray-400" />
+              <DocumentFilled className="size-4.5 text-gray-400" />
               {IntegrationIcon && <IntegrationIcon className="size-3 text-blue-500" />}
             </div>
             <span className="truncate">{doc.title || "Untitled Document"}</span>

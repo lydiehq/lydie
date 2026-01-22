@@ -14,18 +14,18 @@ import { Dialog } from "@/components/generic/Dialog"
 import { AlertDialog } from "@/components/generic/AlertDialog"
 import { Menu, MenuItem } from "@/components/generic/Menu"
 import {
-  CopyIcon,
-  EyeIcon,
-  EyeOffIcon,
-  AddIcon,
-  MoreHorizontalIcon,
-  XIcon,
-  UserIcon,
-  MailIcon,
-  ShieldIcon,
-  ClockIcon,
-  KeyIcon,
-} from "@/icons"
+  CopyRegular,
+  EyeRegular,
+  EyeOffRegular,
+  AddRegular,
+  MoreHorizontalRegular,
+  DismissRegular,
+  PersonRegular,
+  MailRegular,
+  ShieldRegular,
+  ClockRegular,
+  KeyRegular,
+} from "@fluentui/react-icons"
 import { useZero } from "@/services/zero"
 import { queries } from "@lydie/zero/queries"
 import { confirmDialog } from "@/stores/confirm-dialog"
@@ -334,7 +334,7 @@ function RouteComponent() {
             description="Manage who has access to this workspace."
           />
           <Button onPress={() => setIsInviteDialogOpen(true)} size="sm" intent="secondary">
-            <AddIcon className="size-3.5 mr-1" />
+            <AddRegular className="size-3.5 mr-1" />
             Invite Member
           </Button>
         </div>
@@ -349,22 +349,22 @@ function RouteComponent() {
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-y-2 flex-1">
                       <div className="flex items-center gap-2">
-                        <UserIcon className="size-4 text-gray-500" />
+                        <PersonRegular className="size-4 text-gray-500" />
                         <span className="font-medium text-gray-900">{member.user?.name || "Unknown"}</span>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5">
-                          <MailIcon className="size-3.5" />
+                          <MailRegular className="size-3.5" />
                           <span>{member.user?.email || "Unknown"}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <ShieldIcon className="size-3.5" />
+                          <ShieldRegular className="size-3.5" />
                           <span>
                             Role: <span className="capitalize font-medium">{member.role}</span>
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <ClockIcon className="size-3.5" />
+                          <ClockRegular className="size-3.5" />
                           <span>
                             Joined{" "}
                             {formatDistanceToNow(member.created_at, {
@@ -377,7 +377,7 @@ function RouteComponent() {
                     <div className="ml-4">
                       <MenuTrigger>
                         <RACButton>
-                          <MoreHorizontalIcon className="size-4 text-gray-500" />
+                          <MoreHorizontalRegular className="size-4 text-gray-500" />
                         </RACButton>
                         <Menu>
                           <MenuItem
@@ -416,20 +416,20 @@ function RouteComponent() {
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5">
-                          <ShieldIcon className="size-3.5" />
+                          <ShieldRegular className="size-3.5" />
                           <span>
                             Role:{" "}
                             <span className="capitalize font-medium">{invitation.role || "member"}</span>
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <UserIcon className="size-3.5" />
+                          <PersonRegular className="size-3.5" />
                           <span>
                             Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <ClockIcon className="size-3.5" />
+                          <ClockRegular className="size-3.5" />
                           <span>
                             Expires{" "}
                             {formatDistanceToNow(invitation.expires_at, {
@@ -445,7 +445,7 @@ function RouteComponent() {
                         size="sm"
                         onPress={() => handleCancelInvitation(invitation.id, invitation.email)}
                       >
-                        <XIcon className="size-3.5 mr-1" />
+                        <DismissRegular className="size-3.5 mr-1" />
                         Cancel
                       </Button>
                     </div>
@@ -482,7 +482,7 @@ function RouteComponent() {
             size="sm"
             intent="secondary"
           >
-            <AddIcon className="size-3.5 mr-1" />
+            <AddRegular className="size-3.5 mr-1" />
             Create API Key
           </Button>
         </div>
@@ -494,12 +494,12 @@ function RouteComponent() {
                 <div className="flex items-start justify-between">
                   <div className="flex flex-col gap-y-2 flex-1">
                     <div className="flex items-center gap-2">
-                      <KeyIcon className="size-4 text-gray-500" />
+                      <KeyRegular className="size-4 text-gray-500" />
                       <span className="font-medium text-gray-900">{key.name}</span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-1.5">
-                        <ClockIcon className="size-3.5" />
+                        <ClockRegular className="size-3.5" />
                         <span>
                           Created{" "}
                           {formatDistanceToNow(key.created_at, {
@@ -508,18 +508,18 @@ function RouteComponent() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <ClockIcon className="size-3.5" />
+                        <ClockRegular className="size-3.5" />
                         <span>
                           Last used:{" "}
                           {key.last_used_at
                             ? formatDistanceToNow(key.last_used_at, {
-                                addSuffix: true,
-                              })
+                              addSuffix: true,
+                            })
                             : "Never"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <KeyIcon className="size-3.5" />
+                        <KeyRegular className="size-3.5" />
                         <code className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
                           {key.partial_key}
                         </code>
@@ -529,7 +529,7 @@ function RouteComponent() {
                   <div className="ml-4">
                     <MenuTrigger>
                       <RACButton>
-                        <MoreHorizontalIcon className="size-4 text-gray-500" />
+                        <MoreHorizontalRegular className="size-4 text-gray-500" />
                       </RACButton>
                       <Menu>
                         <MenuItem
@@ -716,7 +716,7 @@ function ApiKeyDialog({
                         onPress={() => onShowKeyChange(!showKey)}
                         className="px-2"
                       >
-                        {showKey ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                        {showKey ? <EyeOffRegular className="size-4" /> : <EyeRegular className="size-4" />}
                       </Button>
                       <Button
                         intent="secondary"
@@ -724,7 +724,7 @@ function ApiKeyDialog({
                         onPress={() => onCopyKey(newApiKey)}
                         className="px-2"
                       >
-                        <CopyIcon className="size-4" />
+                        <CopyRegular className="size-4" />
                       </Button>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronUpIcon } from "@/icons"
+import { ChevronDownRegular, ChevronUpRegular } from "@fluentui/react-icons"
 import React from "react"
 import {
   NumberField as AriaNumberField,
@@ -34,11 +34,11 @@ export function NumberField({ label, description, errorMessage, ...props }: Numb
               })}
             >
               <StepperButton slot="increment">
-                <ChevronUpIcon aria-hidden className="w-4 h-4" />
+                <ChevronUpRegular aria-hidden className="w-4 h-4" />
               </StepperButton>
               <div className={fieldBorderStyles({ ...renderProps, class: "border-b-2" })} />
               <StepperButton slot="decrement">
-                <ChevronDownIcon aria-hidden className="w-4 h-4" />
+                <ChevronDownRegular aria-hidden className="w-4 h-4" />
               </StepperButton>
             </div>
           </>

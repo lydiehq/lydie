@@ -1,5 +1,5 @@
 import { Button } from "react-aria-components"
-import { CreateIcon, MessageCircleIcon } from "@/icons"
+import { EditRegular, ChatRegular } from "@fluentui/react-icons"
 import { SidebarIcon } from "../layout/SidebarIcon"
 import { useCallback } from "react"
 import clsx from "clsx"
@@ -62,7 +62,7 @@ export function AssistantSidebar({ isCollapsed, onToggle, conversationId, onNewC
               )}
               onPress={handleNewConversation}
             >
-              <CreateIcon className="size-3.5" />
+              <EditRegular className="size-3.5" />
             </Button>
             <Tooltip placement={isCollapsed ? "left" : undefined}>New Conversation</Tooltip>
           </TooltipTrigger>
@@ -105,7 +105,7 @@ export function AssistantSidebar({ isCollapsed, onToggle, conversationId, onNewC
                     )}
                   >
                     <div className="flex items-start gap-2">
-                      <MessageCircleIcon className="size-4 text-gray-400 shrink-0 mt-0.5" />
+                      <ChatRegular className="size-4 text-gray-400 shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900 line-clamp-2 break-words">{preview}</p>
                         <p className="text-xs text-gray-500 mt-1">
@@ -121,7 +121,7 @@ export function AssistantSidebar({ isCollapsed, onToggle, conversationId, onNewC
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-              <MessageCircleIcon className="size-8 text-gray-300 mb-2" />
+              <ChatRegular className="size-8 text-gray-300 mb-2" />
               <p className="text-sm text-gray-500">No conversations yet</p>
             </div>
           )}

@@ -1,6 +1,6 @@
 import { Menu, MenuItem } from "@/components/generic/Menu"
 import { Button as RACButton, Heading as RACHeading, MenuTrigger, DialogTrigger } from "react-aria-components"
-import { MoreHorizontalIcon, LinkIcon, LoaderIcon } from "@/icons"
+import { MoreHorizontalRegular, LinkRegular, ArrowClockwiseRegular } from "@fluentui/react-icons"
 import { useZero } from "@rocicorp/zero/react"
 import { mutators } from "@lydie/zero/mutators"
 import { useOrganization } from "@/context/organization.context"

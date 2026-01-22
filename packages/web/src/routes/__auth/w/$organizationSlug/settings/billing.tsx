@@ -6,14 +6,14 @@ import { Heading } from "@/components/generic/Heading"
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types"
 import { useMemo, useState } from "react"
 import {
-  TrendingUpIcon,
-  CalendarIcon,
-  ZapIcon,
-  AlertCircleIcon,
-  CheckIcon,
-  ArrowRightIcon,
-  SparklesIcon,
-} from "@/icons"
+  ArrowTrendingRegular,
+  CalendarRegular,
+  FlashRegular,
+  ErrorCircleRegular,
+  CheckmarkRegular,
+  ArrowRightRegular,
+  SparkleRegular,
+} from "@fluentui/react-icons"
 import { DialogTrigger } from "react-aria-components"
 import { Modal } from "@/components/generic/Modal"
 import { Dialog } from "@/components/generic/Dialog"
@@ -123,14 +123,14 @@ function RouteComponent() {
       {/* Free Plan Upgrade Section */}
       {currentPlan === PLAN_TYPES.FREE && (
         <Card className="p-8 text-center">
-          <AlertCircleIcon className="size-12 mx-auto text-gray-400 mb-4" />
+          <ErrorCircleRegular className="size-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Plan</h3>
           <p className="text-sm text-gray-600 mb-6">
             You're currently on the free plan. Upgrade to Pro to unlock unlimited AI features.
           </p>
           <DialogTrigger>
             <Button>
-              <SparklesIcon className="size-4 mr-2" />
+              <SparkleRegular className="size-4 mr-2" />
               Upgrade to Pro
             </Button>
             <Modal isDismissable>
@@ -156,19 +156,19 @@ function RouteComponent() {
 
                       <ul className="space-y-2 mb-4">
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Unlimited tokens</span>
                         </li>
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Unlimited requests</span>
                         </li>
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Background processing</span>
                         </li>
                         <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckIcon className="size-4 text-green-600 mt-0.5 shrink-0" />
+                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
                           <span>Priority support</span>
                         </li>
                       </ul>
@@ -186,7 +186,7 @@ function RouteComponent() {
                         ) : (
                           <>
                             Upgrade to Pro
-                            <ArrowRightIcon className="size-4 ml-2" />
+                            <ArrowRightRegular className="size-4 ml-2" />
                           </>
                         )}
                       </Button>
@@ -235,11 +235,10 @@ function RouteComponent() {
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-gray-900">{planInfo.name} Plan</h2>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    billingData?.subscription_status === "active"
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${billingData?.subscription_status === "active"
                       ? "bg-green-100 text-green-700"
                       : "bg-gray-100 text-gray-700"
-                  }`}
+                    }`}
                 >
                   {billingData?.subscription_status || "active"}
                 </span>
@@ -257,7 +256,7 @@ function RouteComponent() {
               </Button>
               <DialogTrigger>
                 <Button intent="secondary" size="sm">
-                  <SparklesIcon className="size-4 mr-2" />
+                  <SparkleRegular className="size-4 mr-2" />
                   Change Plan
                 </Button>
                 <Modal isDismissable>
@@ -293,14 +292,14 @@ function RouteComponent() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <CalendarIcon className="size-5 text-gray-500" />
+              <CalendarRegular className="size-5 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Plan Status</p>
                 <p className="text-sm font-medium text-gray-900">Active</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <ZapIcon className="size-5 text-gray-500" />
+              <FlashRegular className="size-5 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Total Requests</p>
                 <p className="text-sm font-medium text-gray-900">
@@ -313,7 +312,7 @@ function RouteComponent() {
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <TrendingUpIcon className="size-5 text-gray-500" />
+              <ArrowTrendingRegular className="size-5 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Total Tokens</p>
                 <p className="text-sm font-medium text-gray-900">
@@ -362,7 +361,7 @@ function RouteComponent() {
 
       <Card className="p-6">
         <div className="flex items-start gap-3">
-          <AlertCircleIcon className="size-5 text-amber-600 mt-0.5 shrink-0" />
+          <ErrorCircleRegular className="size-5 text-amber-600 mt-0.5 shrink-0" />
           <div>
             <h3 className="text-sm font-semibold text-amber-800 mb-1">Early Alpha Disclaimer</h3>
             <p className="text-sm text-amber-700">

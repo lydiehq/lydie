@@ -5,29 +5,7 @@ import {
   Group,
   Separator,
   MenuTrigger,
-  TooltipTrigger,
 } from "react-aria-components"
-import {
-  List,
-  ListOrdered,
-  Undo,
-  Redo,
-  Table,
-  Plus,
-  Minus,
-  Trash2,
-  Columns,
-  Rows,
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  Heading1,
-  Heading2,
-  Heading3,
-  Link,
-  Image as ImageIcon,
-} from "lucide-react"
 import { useState, useRef } from "react"
 import { useImageUpload } from "@/hooks/use-image-upload"
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog"
@@ -36,8 +14,29 @@ import { useDocumentActions } from "@/hooks/use-document-actions"
 import { ToolbarButton } from "./toolbar/ToolbarButton"
 import type { QueryResultType } from "@rocicorp/zero"
 import { queries } from "@lydie/zero/queries"
-import { MoreVerticalIcon } from "@/icons"
+import {
+  MoreVerticalRegular,
+  TextStrikethroughFilled,
+  DeleteFilled,
+  SubtractFilled,
+  AddFilled,
+  ListFilled,
+  TextNumberListLtrFilled,
+  ColumnRegular,
+  RowChildFilled
+} from "@fluentui/react-icons"
 import { Button } from "../generic/Button"
+import {
+  H1Icon,
+  H2Icon,
+  H3Icon,
+  BoldIcon,
+  ItalicIcon,
+  CodeIcon,
+  LinkIcon,
+  ImageIcon,
+  TableIcon
+} from "./wysiwyg-icons"
 
 type Props = {
   editor: Editor
@@ -65,7 +64,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
   return (
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
       <Toolbar aria-label="Editor formatting" className="flex items-center">
-        <div className="flex">
+        <div className="flex items-center">
           {/* <Group aria-label="History" className="flex gap-1">
             <ToolbarButton
               onPress={() => editor.chain().focus().undo().run()}
@@ -90,32 +89,32 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
             className="mx-1 h-6 w-px bg-gray-200"
           /> */}
 
-          <Group aria-label="Text style" className="flex gap-1">
+          <Group aria-label="Text style" className="flex items-center gap-1">
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleBold().run()}
               title="Bold"
-              icon={Bold}
+              icon={BoldIcon}
               editor={editor}
               hotkeys={[mod, "B"]}
             />
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleItalic().run()}
               title="Italic"
-              icon={Italic}
+              icon={ItalicIcon}
               editor={editor}
               hotkeys={[mod, "I"]}
             />
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleStrike().run()}
               title="Strike"
-              icon={Strikethrough}
+              icon={TextStrikethroughFilled}
               editor={editor}
               hotkeys={[mod, "Shift", "S"]}
             />
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleCode().run()}
               title="Code"
-              icon={Code}
+              icon={CodeIcon}
               editor={editor}
               hotkeys={[mod, "E"]}
             />
@@ -123,47 +122,47 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
-          <Group aria-label="Heading level" className="flex gap-1">
+          <Group aria-label="Heading level" className="flex items-center gap-1">
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
               title="Heading 1"
-              icon={Heading1}
+              icon={H1Icon}
               editor={editor}
             />
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
               title="Heading 2"
-              icon={Heading2}
+              icon={H2Icon}
               editor={editor}
             />
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
               title="Heading 3"
-              icon={Heading3}
+              icon={H3Icon}
               editor={editor}
             />
           </Group>
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
-          <Group aria-label="List format" className="flex gap-1">
+          <Group aria-label="List format" className="flex items-center gap-1">
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleBulletList().run()}
               title="Bullet List"
-              icon={List}
+              icon={ListFilled}
               editor={editor}
             />
             <ToolbarButton
               onPress={() => editor.chain().focus().toggleOrderedList().run()}
               title="Ordered List"
-              icon={ListOrdered}
+              icon={TextNumberListLtrFilled}
               editor={editor}
             />
           </Group>
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
-          <Group aria-label="Link" className="flex gap-1">
+          <Group aria-label="Link" className="flex items-center gap-1">
             <ToolbarButton
               onPress={() => {
                 if (onAddLink) {
@@ -171,7 +170,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
                 }
               }}
               title="Add Link"
-              icon={Link}
+              icon={LinkIcon}
               editor={editor}
               isDisabled={editor.state.selection.empty}
             />
@@ -221,7 +220,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
                 editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
               }
               title="Insert Table"
-              icon={Table}
+              icon={TableIcon}
               editor={editor}
             />
 
@@ -235,7 +234,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
                     className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100"
                     aria-label="Table Columns"
                   >
-                    <Columns className="size-4" />
+                    <ColumnRegular className="size-4" />
                   </RACButton>
                   <Menu>
                     <MenuItem onAction={() => editor.chain().focus().addColumnBefore().run()}>
@@ -258,7 +257,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
                     className="flex items-center gap-1 p-1.5 rounded hover:bg-gray-100"
                     aria-label="Table Rows"
                   >
-                    <Rows className="size-4" />
+                    <RowChildFilled className="size-4" />
                   </RACButton>
                   <Menu>
                     <MenuItem onAction={() => editor.chain().focus().addRowBefore().run()}>
@@ -277,19 +276,19 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
                 <ToolbarButton
                   onPress={() => editor.chain().focus().mergeCells().run()}
                   title="Merge Cells"
-                  icon={Plus}
+                  icon={AddFilled}
                   editor={editor}
                 />
                 <ToolbarButton
                   onPress={() => editor.chain().focus().splitCell().run()}
                   title="Split Cell"
-                  icon={Minus}
+                  icon={SubtractFilled}
                   editor={editor}
                 />
                 <ToolbarButton
                   onPress={() => editor.chain().focus().deleteTable().run()}
                   title="Delete Table"
-                  icon={Trash2}
+                  icon={DeleteFilled}
                   editor={editor}
                 />
               </>
@@ -343,8 +342,8 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
           {doc.published ? "Unpublish" : "Publish"}
         </Button>
         <MenuTrigger>
-          <RACButton aria-label="Document Options" className="p-1.5 rounded hover:bg-gray-100">
-            <MoreVerticalIcon className="size-3.5 text-gray-600" />
+          <RACButton aria-label="Document Options" className="size-6 flex items-center justify-center rounded hover:bg-gray-100">
+            <MoreVerticalRegular className="size-3.5 text-gray-600" />
           </RACButton>
           <Menu>
             <MenuItem onAction={() => setIsSettingsOpen(true)}>Settings</MenuItem>

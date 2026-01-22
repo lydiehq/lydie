@@ -6,7 +6,7 @@ import { Link } from "@/components/generic/Link"
 import { cardStyles } from "@/components/layout/Card"
 import { useOrganization } from "@/context/organization.context"
 import { Eyebrow } from "../generic/Eyebrow"
-import { CheckCircle2Icon } from "@/icons"
+import { CheckmarkCircleRegular } from "@fluentui/react-icons"
 
 export function IntegrationsList() {
   const { organization } = useOrganization()

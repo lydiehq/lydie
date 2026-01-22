@@ -1,4 +1,4 @@
-import { CheckIcon } from "@/icons"
+import { CheckmarkRegular } from "@fluentui/react-icons"
 import {
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
@@ -50,7 +50,7 @@ export function ListBoxItem(props: ListBoxItemProps) {
         <>
           {selectionMode !== "none" && (
             <span className="flex items-center w-4">
-              {isSelected && <CheckIcon aria-hidden className="w-4 h-4" />}
+              {isSelected && <CheckmarkRegular aria-hidden className="w-4 h-4" />}
             </span>
           )}
           <span className="flex items-center flex-1 truncate group-selected:font-semibold text-sm font-normal text-gray-800">
@@ -83,7 +83,7 @@ export function DropdownItem(props: ListBoxItemProps) {
         <>
           {selectionMode !== "none" && (
             <span className="flex items-center w-4">
-              {isSelected && <CheckIcon aria-hidden className="w-4 h-4" />}
+              {isSelected && <CheckmarkRegular aria-hidden className="w-4 h-4" />}
             </span>
           )}
           <span className="flex items-center flex-1 truncate group-selected:font-semibold text-sm font-normal text-gray-800">

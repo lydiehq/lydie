@@ -9,7 +9,7 @@ import {
   Label,
   useFilter,
 } from "react-aria-components"
-import { ChevronDownIcon } from "@/icons"
+import { ChevronDownRegular } from "@fluentui/react-icons"
 import { useMemo, useState, useEffect, type Key } from "react"
 import { ListBox, ListBoxItem } from "./generic/ListBox"
 
@@ -34,7 +34,7 @@ function LanguageSelect({
       <Label className="sr-only">Category</Label>
       <Button className="group-hover:opacity-100 opacity-100 transition-opacity duration-200 flex items-center gap-x-1.5">
         <SelectValue className="font-medium text-gray-700 text-sm" />
-        <ChevronDownIcon className="size-4 text-gray-500" />
+        <ChevronDownRegular className="size-4 text-gray-500" />
       </Button>
       <Popover style={{ display: "flex", flexDirection: "column" }}>
         <Autocomplete filter={contains}>
