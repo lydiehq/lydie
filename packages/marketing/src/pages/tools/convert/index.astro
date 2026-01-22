@@ -3,7 +3,6 @@ import Layout from "../../../layouts/Layout.astro";
 import { Container } from "../../../components/Container";
 import { conversionConfigs } from "../../../data/conversions";
 
-// Group by input format
 const groupedConfigs = conversionConfigs.reduce(
   (acc, config) => {
     if (!acc[config.fromFormat]) {
@@ -31,30 +30,6 @@ const groupedConfigs = conversionConfigs.reduce(
           Convert between Markdown, PDF, Word, HTML, and many other formats.
         </p>
       </div>
-
-      <!-- Features -->
-      <div class="grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
-        <div class="p-6 bg-blue-50 rounded-lg">
-          <h3 class="font-semibold text-blue-900 mb-2">Always Free</h3>
-          <p class="text-sm text-blue-800">
-            No hidden costs, no watermarks, no sign-up required.
-          </p>
-        </div>
-        <div class="p-6 bg-green-50 rounded-lg">
-          <h3 class="font-semibold text-green-900 mb-2">High Quality</h3>
-          <p class="text-sm text-green-800">
-            Powered by Pandoc for professional-grade conversions.
-          </p>
-        </div>
-        <div class="p-6 bg-purple-50 rounded-lg">
-          <h3 class="font-semibold text-purple-900 mb-2">Secure & Private</h3>
-          <p class="text-sm text-purple-800">
-            Files are processed server-side and deleted immediately.
-          </p>
-        </div>
-      </div>
-
-      <!-- Converters by format -->
       {
         Object.entries(groupedConfigs).map(([fromFormat, configs]) => (
           <div class="space-y-4">
@@ -85,7 +60,6 @@ const groupedConfigs = conversionConfigs.reduce(
         ))
       }
 
-      <!-- SEO content -->
       <div class="prose max-w-3xl mx-auto">
         <h2>About Our Document Converter</h2>
         <p>
