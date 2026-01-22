@@ -11,13 +11,14 @@ import {
   DocumentTextFilled,
   DocumentCopyFilled,
   ChevronRightFilled,
-  MoreHorizontalFilled,
   MoreHorizontalRegular,
+  AddRegular,
 } from "@fluentui/react-icons"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar"
 import { DocumentMenu } from "../home-file-explorer/DocumentMenu"
 import { Menu, MenuItem } from "../generic/Menu"
+import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
 import type { QueryResultType } from "@rocicorp/zero"
 import { queries } from "@lydie/zero/queries"
 import { getIntegrationIconUrl } from "@/utils/integration-icons"
@@ -204,8 +205,9 @@ function IntegrationGroupChevron({
           />
           <ArrowRightRegular
             className={sidebarItemIconStyles({
-              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${isExpanded ? "rotate-90" : ""
-                }`,
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+                isExpanded ? "rotate-90" : ""
+              }`,
             })}
           />
         </>
@@ -217,8 +219,9 @@ function IntegrationGroupChevron({
             })}
           />
           <ArrowRightRegular
-            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${isExpanded ? "rotate-90" : ""
-              }`}
+            className={`size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+              isExpanded ? "rotate-90" : ""
+            }`}
           />
         </>
       )}
@@ -259,8 +262,9 @@ function IntegrationLinkChevron({
           />
           <ArrowRightRegular
             className={sidebarItemIconStyles({
-              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : ""
-                }`,
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+                isExpanded ? "rotate-90" : ""
+              }`,
             })}
           />
         </>
@@ -307,8 +311,9 @@ function DocumentTreeItemIcon({
       />
       <ChevronRightFilled
         className={sidebarItemIconStyles({
-          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${isExpanded ? "rotate-90" : ""
-            }`,
+          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+            isExpanded ? "rotate-90" : ""
+          }`,
         })}
       />
     </Button>
@@ -318,14 +323,17 @@ function DocumentTreeItemIcon({
 function VerticalMenuButton({
   "aria-label": ariaLabel,
   isOpen = false,
+  tooltip,
 }: {
   "aria-label": string
   isOpen?: boolean
+  tooltip?: string
 }) {
-  return (
+  const button = (
     <Button
-      className={`p-1 text-black hover:text-black/60 group/options transition-opacity ${isOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        }`}
+      className={`p-1 text-black hover:text-black/60 group/options transition-opacity ${
+        isOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+      }`}
       aria-label={ariaLabel}
     >
       <MoreHorizontalRegular
@@ -335,6 +343,17 @@ function VerticalMenuButton({
       />
     </Button>
   )
+
+  if (tooltip) {
+    return (
+      <TooltipTrigger delay={500}>
+        {button}
+        <Tooltip placement="top">{tooltip}</Tooltip>
+      </TooltipTrigger>
+    )
+  }
+
+  return button
 }
 
 function ItemContextMenu({
@@ -360,40 +379,80 @@ function ItemContextMenu({
 
   if (type === "integration-link") {
     return (
-      <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
-        <VerticalMenuButton aria-label="Integration link options" isOpen={isMenuOpen} />
-        <Menu>
-          <MenuItem
-            onAction={() => {
-              if (integrationLinkId && integrationType) {
-                navigate({
-                  to: "/w/$organizationSlug/settings/integrations/$integrationType",
-                  params: { integrationType },
-                  from: "/w/$organizationSlug",
-                })
-              }
-            }}
-          >
-            Integration settings
-          </MenuItem>
-          <MenuItem
-            onAction={() => {
+      <div className="flex items-center gap-1">
+        <TooltipTrigger delay={500}>
+          <Button
+            className="p-1 text-black hover:text-black/60 group/add transition-opacity opacity-0 group-hover:opacity-100"
+            aria-label="Add document"
+            onPress={() => {
               if (integrationLinkId) {
                 createDocument(undefined, integrationLinkId)
               }
             }}
           >
-            New document
-          </MenuItem>
-        </Menu>
-      </MenuTrigger>
+            <AddRegular
+              className={sidebarItemIconStyles({
+                className: "size-4.5 group-hover/add:text-black/60",
+              })}
+            />
+          </Button>
+          <Tooltip placement="top">Add document</Tooltip>
+        </TooltipTrigger>
+        <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <VerticalMenuButton
+            aria-label="Integration link options"
+            isOpen={isMenuOpen}
+            tooltip="Integration link options"
+          />
+          <Menu>
+            <MenuItem
+              onAction={() => {
+                if (integrationLinkId && integrationType) {
+                  navigate({
+                    to: "/w/$organizationSlug/settings/integrations/$integrationType",
+                    params: { integrationType },
+                    from: "/w/$organizationSlug",
+                  })
+                }
+              }}
+            >
+              Integration settings
+            </MenuItem>
+            <MenuItem
+              onAction={() => {
+                if (integrationLinkId) {
+                  createDocument(undefined, integrationLinkId)
+                }
+              }}
+            >
+              New document
+            </MenuItem>
+          </Menu>
+        </MenuTrigger>
+      </div>
     )
   }
 
   return (
-    <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
-      <VerticalMenuButton aria-label="Document options" isOpen={isMenuOpen} />
-      <DocumentMenu documentId={itemId} documentName={itemName} />
-    </MenuTrigger>
+    <div className="flex items-center gap-1">
+      <TooltipTrigger delay={500}>
+        <Button
+          className="p-1 text-black hover:text-black/60 group/add transition-opacity opacity-0 group-hover:opacity-100"
+          aria-label="Add sub document"
+          onPress={() => createDocument(itemId)}
+        >
+          <AddRegular
+            className={sidebarItemIconStyles({
+              className: "size-4.5 group-hover/add:text-black/60",
+            })}
+          />
+        </Button>
+        <Tooltip placement="top">Add sub document</Tooltip>
+      </TooltipTrigger>
+      <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <VerticalMenuButton aria-label="Document options" isOpen={isMenuOpen} tooltip="Document options" />
+        <DocumentMenu documentId={itemId} documentName={itemName} />
+      </MenuTrigger>
+    </div>
   )
 }
