@@ -22,12 +22,17 @@ const styles = cva({
       danger: "bg-red-600 text-white hover:bg-red-700 border-red-600",
     },
     size: {
-      xs: "h-5 px-2 text-[0.6875rem] [--button-radius:theme(radius.sm)]",
-      sm: "h-6 px-2 text-xs [--button-radius:theme(radius.md)]",
-      md: "h-7 px-3 text-sm/0 [--button-radius:theme(radius.md)]",
-      lg: "h-8 px-4 py-1.5 text-sm/0 [--button-radius:theme(radius.md)]",
-      xl: "h-11 px-8 text-sm [--button-radius:theme(radius.xl)]",
-      icon: "h-10 w-10 text-sm",
+      xs: "h-5 px-2 text-[0.6875rem] gap-1 [--button-radius:theme(radius.sm)]",
+      sm: "h-6 px-2 text-xs gap-1.5 [--button-radius:theme(radius.md)]",
+      md: "h-7 px-3 text-sm/0 gap-2 [--button-radius:theme(radius.md)]",
+      lg: "h-8 px-4 py-1.5 text-sm/0 gap-2 [--button-radius:theme(radius.md)]",
+      xl: "h-11 px-8 text-sm gap-2.5 [--button-radius:theme(radius.xl)]",
+      icon: "size-10 [--button-radius:theme(radius.md)]",
+      "icon-xs": "size-5 [--button-radius:theme(radius.sm)]",
+      "icon-sm": "size-6 [--button-radius:theme(radius.md)]",
+      "icon-md": "size-7 [--button-radius:theme(radius.md)]",
+      "icon-lg": "size-8 [--button-radius:theme(radius.md)]",
+      "icon-xl": "size-11 [--button-radius:theme(radius.xl)]",
     },
     rounded: {
       true: "rounded-full [--button-radius:9999px] before:rounded-full after:rounded-full",
@@ -41,14 +46,16 @@ const styles = cva({
   },
 })
 
+export type ButtonVariants = VariantProps<typeof styles>
+
 type ButtonElementProps = ReactAriaButtonProps & {
   href?: undefined
-} & VariantProps<typeof styles>
+} & ButtonVariants
 
 type AnchorProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string
   isPending?: boolean
-} & VariantProps<typeof styles>
+} & ButtonVariants
 
 export type ButtonProps =
   | (ButtonElementProps & { ref?: React.Ref<HTMLButtonElement> })
@@ -115,14 +122,19 @@ function ButtonChildren({
   const getLoaderSize = (buttonSize?: VariantProps<typeof styles>["size"]) => {
     switch (buttonSize) {
       case "xs":
+      case "icon-xs":
         return { pixels: 12, className: "size-3" } // 0.75rem = 12px
       case "sm":
+      case "icon-sm":
         return { pixels: 14, className: "size-[14px]" } // 0.875rem = 14px
       case "md":
+      case "icon-md":
         return { pixels: 16, className: "size-4" } // 1rem = 16px
       case "lg":
+      case "icon-lg":
         return { pixels: 18, className: "size-[18px]" } // 1.125rem = 18px
       case "xl":
+      case "icon-xl":
         return { pixels: 20, className: "size-5" } // 1.25rem = 20px
       case "icon":
         return { pixels: 18, className: "size-[18px]" } // 1.125rem = 18px

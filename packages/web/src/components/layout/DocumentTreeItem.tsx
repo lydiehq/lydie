@@ -8,11 +8,12 @@ import {
   CubeRegular,
   ArrowClockwiseRegular,
   ArrowRightRegular,
-  DocumentTextFilled,
+  DocumentFilled,
   DocumentCopyFilled,
   ChevronRightFilled,
   MoreHorizontalRegular,
   AddRegular,
+  Add12Regular,
 } from "@fluentui/react-icons"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar"
@@ -282,7 +283,7 @@ function DocumentTreeItemIcon({
   chevronRef: React.RefObject<HTMLButtonElement | null>
   hasChildren: boolean
 }) {
-  const IconComponent = hasChildren ? DocumentCopyFilled : DocumentTextFilled
+  const IconComponent = hasChildren ? DocumentCopyFilled : DocumentFilled
 
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
@@ -290,7 +291,7 @@ function DocumentTreeItemIcon({
       <div className="text-gray-500 p-1 -ml-1">
         <IconComponent
           className={sidebarItemIconStyles({
-            className: "size-4.5 shrink-0",
+            className: "size-4 shrink-0",
           })}
         />
       </div>
@@ -306,7 +307,7 @@ function DocumentTreeItemIcon({
     >
       <IconComponent
         className={sidebarItemIconStyles({
-          className: "size-4.5 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+          className: "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
         })}
       />
       <ChevronRightFilled
@@ -338,7 +339,7 @@ function VerticalMenuButton({
     >
       <MoreHorizontalRegular
         className={sidebarItemIconStyles({
-          className: "size-4.5 group-hover/options:text-black/60",
+          className: "size-4 group-hover/options:text-black/60",
         })}
       />
     </Button>
@@ -441,9 +442,9 @@ function ItemContextMenu({
           aria-label="Add sub document"
           onPress={() => createDocument(itemId)}
         >
-          <AddRegular
+          <Add12Regular
             className={sidebarItemIconStyles({
-              className: "size-4.5 group-hover/add:text-black/60",
+              className: "size-4 icon-muted",
             })}
           />
         </Button>

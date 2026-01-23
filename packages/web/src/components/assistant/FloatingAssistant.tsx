@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "motion/react"
 import { useCallback, useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { Button as RACButton, Button, TooltipTrigger } from "react-aria-components"
+import { Button as RACButton, TooltipTrigger } from "react-aria-components"
+import { Button } from "@/components/generic/Button"
 import {
   SubtractFilled,
   DocumentFilled,
@@ -9,9 +10,9 @@ import {
   EditRegular,
   QuestionCircleRegular,
   TextBulletListSquareEditRegular,
-  LayoutColumnTwoFocusRightFilled,
   PictureInPictureEnterRegular,
   PersonChatFilled,
+  ExpandUpRight16Filled,
 } from "@fluentui/react-icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -143,7 +144,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         onPress: isDocked ? undock : dock,
         ariaLabel: isDocked ? "Undock assistant" : "Dock assistant",
         tooltip: isDocked ? "Undock assistant" : "Dock assistant",
-        icon: isDocked ? PictureInPictureEnterRegular : LayoutColumnTwoFocusRightFilled,
+        icon: isDocked ? PictureInPictureEnterRegular : ExpandUpRight16Filled,
       },
       {
         onPress: handleClose,
@@ -190,9 +191,9 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
             <RACButton
               onPress={toggle}
               aria-label="Open AI Assistant"
-              className="size-full justify-center items-center flex hover:bg-gray-50 transition-colors rounded-full"
+              className="size-full justify-center items-center flex hover:bg-gray-50 transition-colors rounded-full group"
             >
-              <PersonChatFilled className="size-5 text-gray-500" aria-hidden="true" />
+              <PersonChatFilled className="size-4.5 icon-muted" aria-hidden="true" />
             </RACButton>
           </motion.div>
         ) : (
@@ -218,10 +219,11 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
                     <TooltipTrigger key={button.ariaLabel} delay={500}>
                       <Button
                         onPress={button.onPress}
-                        className="size-6 justify-center items-center hover:bg-black/4 rounded-md transition-colors duration-75 flex"
+                        size="icon-sm"
+                        intent="ghost"
                         aria-label={button.ariaLabel}
                       >
-                        <Icon className="size-4.5 text-gray-500" aria-hidden="true" />
+                        <Icon className="size-4 icon-muted" aria-hidden="true" />
                       </Button>
                       <Tooltip placement="top">{button.tooltip}</Tooltip>
                     </TooltipTrigger>
@@ -368,9 +370,9 @@ function FloatingAssistantChatContent({
                   <RACButton
                     key={suggestion.text}
                     onPress={() => handleSuggestionClick(suggestion.text)}
-                    className="flex items-center gap-x-2 p-1.5 bg-white rounded-lg hover:bg-gray-50 transition-colors duration-75"
+                    className="flex items-center gap-x-2 p-1.5 bg-white rounded-lg hover:bg-gray-50 transition-colors duration-75 group"
                   >
-                    <Icon className="size-4 text-gray-400" aria-hidden="true" />
+                    <Icon className="size-4 icon-muted" aria-hidden="true" />
                     <span className="text-gray-500 text-xs">{suggestion.text}</span>
                   </RACButton>
                   {index < suggestions.length - 1 && <div className="h-px bg-black/6 ml-8" />}
