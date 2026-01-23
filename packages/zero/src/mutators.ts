@@ -539,16 +539,11 @@ export const mutators = defineMutators({
       async ({ tx, ctx, args: { organizationId } }) => {
         hasOrganizationAccess(ctx, organizationId)
 
-        // Import demo content to existing organization
         const { demoContent, createIntroDocument } = await import("./demo-content")
-
-        // Step 1: Generate all document IDs first
         const documentIdMap = new Map<string, string>()
         for (const doc of demoContent) {
           documentIdMap.set(doc.title, createId())
         }
-
-        // Step 2: Create intro document first (with proper internal links)
         const introDoc = createIntroDocument(documentIdMap)
         const introDocId = createId()
         documentIdMap.set(introDoc.title, introDocId)
@@ -826,9 +821,8 @@ export const mutators = defineMutators({
         logo: z.string().optional(),
         metadata: z.string().optional(),
         color: z.string().optional(),
-        importDemoContent: z.boolean().optional(),
       }),
-      async ({ tx, ctx, args: { id, name, slug, logo, metadata, color, importDemoContent } }) => {
+      async ({ tx, ctx, args: { id, name, slug, logo, metadata, color } }) => {
         isAuthenticated(ctx)
 
         // Verify slug doesn't already exist and make it unique if needed
@@ -885,66 +879,6 @@ export const mutators = defineMutators({
           created_at: Date.now(),
           updated_at: Date.now(),
         })
-
-        // Create seeded onboarding documents
-        if (importDemoContent !== false) {
-          const { demoContent, createIntroDocument } = await import("./demo-content")
-
-          // Step 1: Generate all document IDs first
-          const documentIdMap = new Map<string, string>()
-          for (const doc of demoContent) {
-            documentIdMap.set(doc.title, createId())
-          }
-
-          // Step 2: Create intro document first (with proper internal links)
-          const introDoc = createIntroDocument(documentIdMap)
-          const introDocId = createId()
-          documentIdMap.set(introDoc.title, introDocId)
-          const introYjsState = convertJsonToYjs(introDoc.content)
-
-          await tx.mutate.documents.insert({
-            id: introDocId,
-            slug: `${slugify(introDoc.title)}-${createId().slice(0, 6)}`,
-            title: introDoc.title,
-            yjs_state: introYjsState,
-            user_id: ctx.userId,
-            organization_id: id,
-            index_status: "pending",
-            integration_link_id: null,
-            is_locked: false,
-            published: false,
-            parent_id: null,
-            sort_order: 0,
-            custom_fields: introDoc.customFields || { isOnboarding: "true" },
-            created_at: Date.now(),
-            updated_at: Date.now(),
-          })
-
-          // Step 3: Create all other demo documents
-          for (let i = 0; i < demoContent.length; i++) {
-            const doc = demoContent[i]
-            const docId = documentIdMap.get(doc.title)!
-            const yjsState = convertJsonToYjs(doc.content)
-
-            await tx.mutate.documents.insert({
-              id: docId,
-              slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
-              title: doc.title,
-              yjs_state: yjsState,
-              user_id: ctx.userId,
-              organization_id: id,
-              index_status: "pending",
-              integration_link_id: null,
-              is_locked: false,
-              published: false,
-              parent_id: null,
-              sort_order: i + 1, // Intro is 0, others start at 1
-              custom_fields: { isOnboarding: "true" },
-              created_at: Date.now(),
-              updated_at: Date.now(),
-            })
-          }
-        }
       },
     ),
     update: defineMutator(

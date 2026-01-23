@@ -15,7 +15,6 @@ import { queries } from "@lydie/zero/queries"
 import { revalidateSession } from "@/lib/auth/session"
 import { mutators } from "@lydie/zero/mutators"
 import { clearZeroInstance } from "@/lib/zero/instance"
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { trackEvent } from "@/lib/posthog"
 import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors"
 
@@ -29,9 +28,6 @@ function RouteComponent() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { auth } = Route.useRouteContext()
-
-  // Track onboarding started
-  useTrackOnMount("onboarding_started")
 
   const defaultName = auth?.user?.name ? `${auth.user.name.split(" ")[0]}'s Workspace` : "My Workspace"
 
@@ -51,7 +47,6 @@ function RouteComponent() {
             name: values.value.name,
             slug,
             color: getRandomWorkspaceColor(),
-            importDemoContent: true, // Always import demo content
           }),
         )
 
@@ -62,13 +57,12 @@ function RouteComponent() {
         clearZeroInstance()
         await router.invalidate()
 
-        // Track organization created and onboarding completed
+        // Track organization created
         trackEvent("organization_created", {
           organizationId: id,
           organizationSlug: slug,
           organizationName: values.value.name,
         })
-        trackEvent("onboarding_completed")
 
         navigate({
           to: "/w/$organizationSlug",

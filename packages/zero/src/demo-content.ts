@@ -1,7 +1,3 @@
-/**
- * Creates an introductory document that showcases editor features
- * @param documentIdMap - Map of document titles to their IDs for internal linking
- */
 export function createIntroDocument(documentIdMap: Map<string, string>) {
   const apolloKickoffId = documentIdMap.get("Project Apollo - Kickoff Notes") || ""
   const apolloArchitectureId = documentIdMap.get("Project Apollo - Architecture") || ""

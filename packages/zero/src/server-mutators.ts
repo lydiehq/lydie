@@ -7,7 +7,6 @@ import { deleteDocumentMutation } from "./server-mutators/documents/delete"
 import { disconnectIntegrationMutation } from "./server-mutators/integrations/disconnect"
 import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link"
 import { createFeedbackMutation } from "./server-mutators/feedback/create"
-import { createOrganizationMutation } from "./server-mutators/organizations/create"
 
 export interface MutatorContext {
   asyncTasks: Array<() => Promise<void>>
