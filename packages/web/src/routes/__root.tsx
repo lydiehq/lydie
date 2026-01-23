@@ -39,6 +39,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           name: "description",
           content: "A minimal, powerful writing environment supercharged with AI.",
         },
+        { name: "robots", content: "noindex, nofollow" },
         { property: "og:type", content: "website" },
         { property: "og:title", content: "Lydie" },
         {
