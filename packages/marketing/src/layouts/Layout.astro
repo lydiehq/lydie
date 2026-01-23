@@ -62,8 +62,8 @@ const linkGroups = [
     title: "Resources",
     links: [
       {
-        label: "Privacy",
-        href: "/privacy",
+        label: "Templates",
+        href: "/templates",
       },
       {
         label: "Compare",
@@ -77,6 +77,11 @@ const linkGroups = [
         label: "GitHub",
         href: "https://github.com/lydiehq/lydie",
         target: "_blank",
+      },
+
+      {
+        label: "Privacy",
+        href: "/privacy",
       },
     ],
   },
@@ -103,9 +108,7 @@ const linkGroups = [
         <slot />
       </main>
       <div class="relative">
-        <footer
-          class="border-t border-black/5 bg-white backdrop-blur-sm pt-32 md:pt-40"
-        >
+        <footer class="border-t border-black/5 bg-white backdrop-blur-sm">
           <Container className="flex justify-between py-12">
             <Logo className="text-gray-200 size-6" />
             <nav

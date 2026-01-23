@@ -1,0 +1,111 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { Button } from "../../components/generic/Button";
+import { FAQSection } from "../../components/tools/FAQSection";
+import CategoryThumbnail from "../../components/templates/CategoryThumbnail.astro";
+import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
+import { getMostPopularCategories } from "../../data/categories";
+
+const popularCategories = getMostPopularCategories(10);
+---
+
+<Layout
+  title="Templates - Lydie"
+  description="Browse our collection of templates to find the perfect one for your needs."
+>
+  <div class="py-8">
+    <Container className="flex flex-col gap-y-8">
+      <div class="flex flex-col gap-y-8">
+        <a href="/templates" class="text-sm text-gray-500 hover:text-gray-900"
+          >Back to templates</a
+        >
+        <header class="flex flex-col gap-y-4">
+          <div class="max-w-lg flex flex-col gap-y-3">
+            <h1 class="text-4xl font-medium text-gray-900">Templates</h1>
+            <span class="text-base/relaxed text-gray-600 text-balance"
+              >Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut vel
+              quia officia nemo at ex sed deserunt qui eos molestiae.</span
+            >
+          </div>
+          <div class="flex gap-x-1">
+            <Button
+              className="self-start"
+              size="lg"
+              href="https://app.lydie.co/auth">Start using Lydie</Button
+            >
+          </div>
+        </header>
+      </div>
+      <div class="flex flex-col gap-y-12">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="max-w-lg flex flex-col gap-y-3">
+            <h2 class="text-2xl font-medium text-gray-900">Categories</h2>
+            <span class="text-base/relaxed text-gray-600 text-balance"
+              >Browse our most popular template categories to find exactly what
+              you need.</span
+            >
+            <a
+              href="/templates/categories"
+              class="text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              View all categories →
+            </a>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 grow">
+            {
+              popularCategories.map((category) => (
+                <CategoryThumbnail category={category} />
+              ))
+            }
+          </div>
+        </div>
+        <hr class="my-4 border-gray-100" />
+        <div class="max-w-lg flex flex-col gap-y-3">
+          <h2 class="text-2xl font-medium text-gray-900">Featured templates</h2>
+          <span class="text-base/relaxed text-gray-600 text-balance"
+            >Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut vel
+            quia officia nemo at ex sed deserunt qui eos molestiae.</span
+          >
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {
+            [...Array(10)].map((_, index) => (
+              <TemplateThumbnail
+                name={`Template ${index + 1}`}
+                index={index}
+                href="/templates/resume"
+              />
+            ))
+          }
+        </div>
+      </div>
+
+      <FAQSection
+        client:load
+        faqs={[
+          {
+            q: "What templates are available?",
+            a: "We offer a wide variety of templates for different use cases including blog posts, documentation, technical writing, and more. All templates are designed to help you get started quickly with Lydie.",
+          },
+          {
+            q: "Are templates free to use?",
+            a: "Yes, all templates are completely free to use. You can customize them to fit your needs and start writing immediately.",
+          },
+          {
+            q: "Can I customize the templates?",
+            a: "Absolutely! All templates are fully customizable. You can modify the structure, add your own content, and adapt them to your specific requirements.",
+          },
+          {
+            q: "Do I need to sign up to use templates?",
+            a: "No sign-up is required. You can browse and use templates immediately. However, signing up allows you to save your customized templates for future use.",
+          },
+          {
+            q: "How do I get started with a template?",
+            a: "Simply browse our template collection, select one that fits your needs, and click to start using it. You'll be able to edit and customize it right away.",
+          },
+        ]}
+      />
+    </Container>
+  </div>
+</Layout>
