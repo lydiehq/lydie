@@ -39,6 +39,7 @@ function RouteComponent() {
     onSubmit: async (values) => {
       try {
         const id = createId()
+        const onboardingDocId = createId()
         const slug = values.value.slug || slugify(values.value.name)
 
         const write = z.mutate(
@@ -47,6 +48,7 @@ function RouteComponent() {
             name: values.value.name,
             slug,
             color: getRandomWorkspaceColor(),
+            onboardingDocId,
           }),
         )
 
@@ -64,14 +66,15 @@ function RouteComponent() {
           organizationName: values.value.name,
         })
 
+        // Navigate to the onboarding document
         navigate({
-          to: "/w/$organizationSlug",
-          params: { organizationSlug: slug },
+          to: "/w/$organizationSlug/$id",
+          params: { organizationSlug: slug, id: onboardingDocId },
         })
 
         toast.success("Workspace created successfully")
-      } catch (error) {
-        console.error("Failed to create workspace:", error)
+      } catch (err) {
+        console.error("Failed to create workspace:", err)
         toast.error("Failed to create workspace")
       }
     },
@@ -91,7 +94,7 @@ function RouteComponent() {
       // Often accepting invitation sets active organization, but we should redirect.
       // We can fetch user orgs and redirect to the new one.
       navigate({ to: "/" })
-    } catch (error) {
+    } catch {
       toast.error("Failed to accept invitation")
     }
   }
@@ -184,14 +187,14 @@ function RouteComponent() {
                     )}
                   />
 
-                  <Button
-                    intent="primary"
-                    type="submit"
-                    isPending={form.state.isSubmitting}
-                    className="w-full"
-                  >
-                    {form.state.isSubmitting ? "Creating workspace..." : "Create Workspace"}
-                  </Button>
+                  <form.Subscribe
+                    selector={(state) => state.isSubmitting}
+                    children={(isSubmitting) => (
+                      <Button intent="primary" type="submit" isPending={isSubmitting} className="w-full">
+                        {isSubmitting ? "Creating workspace..." : "Create Workspace"}
+                      </Button>
+                    )}
+                  />
                 </div>
               </Form>
 

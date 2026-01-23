@@ -10,7 +10,7 @@ const avatarStyles = cva({
     size: {
       sm: "size-6 text-[12px] rounded-md",
       md: "size-7 text-[14px] rounded-lg",
-      lg: "size-8 text-sm",
+      lg: "size-8 text-sm rounded-lg",
     },
   },
   defaultVariants: {

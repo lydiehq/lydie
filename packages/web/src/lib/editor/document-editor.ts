@@ -3,6 +3,8 @@ import { ReactNodeViewRenderer } from "@tiptap/react"
 import { getDocumentEditorExtensions } from "@lydie/editor/document-editor"
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent"
 import { CodeBlockComponent } from "@/components/CodeBlockComponent"
+import { OnboardingStepView } from "@/components/editor/OnboardingStepView"
+import { OnboardingCalloutView } from "@/components/editor/OnboardingCalloutView"
 import { useCallback, useMemo } from "react"
 import * as Y from "yjs"
 import { HocuspocusProvider } from "@hocuspocus/provider"
@@ -102,6 +104,12 @@ export function useDocumentEditor({
       },
       codeBlock: {
         addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
+      },
+      onboardingStep: {
+        addNodeView: () => ReactNodeViewRenderer(OnboardingStepView),
+      },
+      onboardingCallout: {
+        addNodeView: () => ReactNodeViewRenderer(OnboardingCalloutView),
       },
       collaboration: { document: ydoc },
       collaborationCaret: { provider, user: userInfo },

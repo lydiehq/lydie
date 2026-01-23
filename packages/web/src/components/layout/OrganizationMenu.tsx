@@ -32,7 +32,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
     await authClient.signOut()
     await clearSession(queryClient)
     clearZeroInstance()
-    window.location.href = "https://lydie.co"
+    window.location.href = import.meta.env.DEV ? "http://localhost:3000" : "https://lydie.co"
   }
 
   return (

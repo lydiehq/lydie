@@ -14,3 +14,9 @@ export type { DocumentComponentOptions } from "./document-component"
 
 export { CodeBlock } from "./code-block"
 export type { CodeBlockOptions } from "./code-block"
+
+export { OnboardingStep } from "./onboarding-step"
+export type { OnboardingStepOptions, OnboardingStepTask } from "./onboarding-step"
+
+export { OnboardingCallout } from "./onboarding-callout"
+export type { OnboardingCalloutOptions } from "./onboarding-callout"
