@@ -39,6 +39,8 @@ import { useAuth } from "@/context/auth.context"
 import { clearActiveOrganizationSlug } from "@/lib/active-organization"
 import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors"
 import { Popover } from "@/components/generic/Popover"
+import { revalidateSession } from "@/lib/auth/session"
+import { useQueryClient } from "@tanstack/react-query"
 
 type ApiKeyDialogStep = "create" | "success"
 
@@ -52,6 +54,7 @@ function RouteComponent() {
   const z = useZero()
   const navigate = useNavigate()
   const { session } = useAuth()
+  const queryClient = useQueryClient()
   const userId = session?.userId
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
   const [apiKeyDialogStep, setApiKeyDialogStep] = useState<ApiKeyDialogStep>("create")
@@ -96,6 +99,7 @@ function RouteComponent() {
       }
 
       const slugChanged = slugified !== organization.slug
+      let mutationSucceeded = false
 
       try {
         const write = z.mutate(
@@ -108,24 +112,54 @@ function RouteComponent() {
         )
 
         // Wait for the server to confirm the mutation
+        // This will throw if the mutation fails on the server
         await write.server
 
+        // Mark as succeeded only after server confirms
+        mutationSucceeded = true
+
+        // Only proceed with success actions if we reach here (mutation succeeded)
         toast.success("Workspace updated successfully")
 
-        // Navigate to the new slug if it changed
-        if (slugChanged) {
+        // If slug changed, refresh session to update the cached organization data
+        if (slugChanged && mutationSucceeded) {
+          try {
+            await revalidateSession(queryClient)
+          } catch (sessionError) {
+            // If session refresh fails, log but don't block navigation
+            console.error("Failed to refresh session:", sessionError)
+          }
+
           navigate({
             to: "/w/$organizationSlug/settings",
             params: { organizationSlug: slugified },
           })
         }
       } catch (error: any) {
-        const errorMessage =
-          error?.message === "Slug is already taken"
-            ? "This slug is already taken. Please choose a different one."
-            : "Failed to update workspace"
+        // Extract error message - could be from Zero mutation or network error
+        let errorMessage = "Failed to update workspace"
+
+        // TODO: fix this shit and create proper e2e tests for cases where slug
+        // is taken etc.
+
+        if (error?.message) {
+          if (error.message === "Slug is already taken") {
+            errorMessage = "This slug is already taken. Please choose a different one."
+          } else if (error.message.includes("Access denied")) {
+            errorMessage = "You don't have permission to update this workspace."
+          } else {
+            errorMessage = error.message
+          }
+        } else if (error?.toString) {
+          errorMessage = error.toString()
+        }
+
         toast.error(errorMessage)
         console.error("Workspace update error:", error)
+
+        // Ensure we don't navigate on error - mutation failed
+        mutationSucceeded = false
+        return
       }
     },
   })
