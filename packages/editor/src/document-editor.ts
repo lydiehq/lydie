@@ -1,7 +1,7 @@
 import { StarterKit, type StarterKitOptions } from "@tiptap/starter-kit"
 import { CharacterCount } from "@tiptap/extension-character-count"
 import { TableKit } from "@tiptap/extension-table"
-import { TaskList } from "@tiptap/extension-list"
+import { TaskList, TaskItem } from "@tiptap/extension-list"
 import { Collaboration, type CollaborationOptions } from "@tiptap/extension-collaboration"
 import CollaborationCaret, { type CollaborationCaretOptions } from "@tiptap/extension-collaboration-caret"
 
@@ -32,6 +32,7 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     }),
     TableKit,
     TaskList,
+    TaskItem,
     CharacterCount,
     E.TextSelectionExtension.configure(options?.textSelection),
     E.KeyboardShortcutExtension.configure(options?.keyboardShortcuts),
