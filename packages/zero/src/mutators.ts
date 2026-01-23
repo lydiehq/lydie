@@ -204,12 +204,13 @@ export const mutators = defineMutators({
         slug: z.string().optional(),
         indexStatus: z.string().optional(),
         customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+        coverImage: z.string().optional(),
         organizationId: z.string(),
       }),
       async ({
         tx,
         ctx,
-        args: { documentId, title, published, slug, indexStatus, customFields, organizationId },
+        args: { documentId, title, published, slug, indexStatus, customFields, coverImage, organizationId },
       }) => {
         hasOrganizationAccess(ctx, organizationId)
 
@@ -241,6 +242,7 @@ export const mutators = defineMutators({
         if (slug !== undefined) updates.slug = slug
         if (indexStatus !== undefined) updates.index_status = indexStatus
         if (customFields !== undefined) updates.custom_fields = customFields
+        if (coverImage !== undefined) updates.cover_image = coverImage
 
         await tx.mutate.documents.update(updates)
       },

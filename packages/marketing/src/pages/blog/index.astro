@@ -47,7 +47,7 @@ const remainingPosts = sortedPosts.slice(1);
                 <div class="flex gap-x-4 items-center">
                   <div
                     class="rounded-lg shadow-surface h-60 aspect-video bg-center bg-cover bg-no-repeat"
-                    style="background-image: url(/blog.png)"
+                    style={`background-image: url(${featuredPost.coverImage || '/blog.png'})`}
                   />
                   <div class="flex flex-col gap-y-2 p-6">
                     <h2 class="text-xl font-medium text-gray-900">
@@ -81,24 +81,31 @@ const remainingPosts = sortedPosts.slice(1);
                     class="flex flex-col gap-y-3 group"
                   >
                     <div class="flex gap-x-4 items-center">
-                      <div class="p-2 rounded-lg ring ring-black/8 text-gray-300">
-                        <svg
-                          class="size-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="32"
-                          height="32"
-                          viewBox="0 0 512 512"
-                        >
-                          <path
-                            fill="currentColor"
-                            d="M428 224H288a48 48 0 0 1-48-48V36a4 4 0 0 0-4-4h-92a64 64 0 0 0-64 64v320a64 64 0 0 0 64 64h224a64 64 0 0 0 64-64V228a4 4 0 0 0-4-4m-92 160H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32m0-80H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32"
-                          />
-                          <path
-                            fill="currentColor"
-                            d="M419.22 188.59L275.41 44.78a2 2 0 0 0-3.41 1.41V176a16 16 0 0 0 16 16h129.81a2 2 0 0 0 1.41-3.41"
-                          />
-                        </svg>
-                      </div>
+                      {post.coverImage ? (
+                        <div
+                          class="rounded-lg shadow-surface w-16 h-16 bg-center bg-cover bg-no-repeat shrink-0"
+                          style={`background-image: url(${post.coverImage})`}
+                        />
+                      ) : (
+                        <div class="p-2 rounded-lg ring ring-black/8 text-gray-300">
+                          <svg
+                            class="size-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="32"
+                            height="32"
+                            viewBox="0 0 512 512"
+                          >
+                            <path
+                              fill="currentColor"
+                              d="M428 224H288a48 48 0 0 1-48-48V36a4 4 0 0 0-4-4h-92a64 64 0 0 0-64 64v320a64 64 0 0 0 64 64h224a64 64 0 0 0 64-64V228a4 4 0 0 0-4-4m-92 160H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32m0-80H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32"
+                            />
+                            <path
+                              fill="currentColor"
+                              d="M419.22 188.59L275.41 44.78a2 2 0 0 0-3.41 1.41V176a16 16 0 0 0 16 16h129.81a2 2 0 0 0 1.41-3.41"
+                            />
+                          </svg>
+                        </div>
+                      )}
                       <div class="flex flex-col">
                         <h3 class="text-bsae font-medium text-gray-900">
                           {post.title}

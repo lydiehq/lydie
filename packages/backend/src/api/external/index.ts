@@ -20,6 +20,7 @@ export const ExternalApi = new Hono()
         slug: documentsTable.slug,
         published: documentsTable.published,
         customFields: documentsTable.customFields,
+        coverImage: documentsTable.coverImage,
         createdAt: documentsTable.createdAt,
         updatedAt: documentsTable.updatedAt,
       })

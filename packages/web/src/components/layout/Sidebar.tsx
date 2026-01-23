@@ -28,6 +28,7 @@ import {
   PersonChat16Filled,
   CollectionsFilled,
   TabDesktopMultiple16Filled,
+  AddSquare16Filled,
 } from "@fluentui/react-icons"
 import { Separator } from "../generic/Separator"
 import { Eyebrow } from "../generic/Eyebrow"
@@ -197,7 +198,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
                 aria-label="Create new document"
                 className="-mr-1.5"
               >
-                <CollectionsFilled className={sidebarItemIconStyles({ className: "size-4" })} />
+                <AddSquare16Filled className={sidebarItemIconStyles({ className: "size-4.5" })} />
               </Button>
               <Tooltip>Add document</Tooltip>
             </TooltipTrigger>

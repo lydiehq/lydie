@@ -9,7 +9,6 @@ import {
   ArrowClockwiseRegular,
   ArrowRightRegular,
   DocumentFilled,
-  DocumentCopyFilled,
   ChevronRightFilled,
   MoreHorizontalRegular,
   AddRegular,
@@ -376,7 +375,7 @@ function ItemContextMenu({
 
   if (type === "integration-link") {
     return (
-      <div className="hidden group-hover:flex items-center gap-1">
+      <div className={`hidden group-hover:flex items-center gap-1 ${isMenuOpen ? "flex!" : ""}`}>
         <TooltipTrigger delay={500}>
           <Button
             className="p-1 text-black hover:text-black/60 group/add"
@@ -431,7 +430,7 @@ function ItemContextMenu({
   }
 
   return (
-    <div className="hidden group-hover:flex items-center gap-1">
+    <div className={`hidden group-hover:flex items-center gap-1 ${isMenuOpen ? "flex" : ""}`}>
       <TooltipTrigger delay={500}>
         <Button
           className="p-1 text-black hover:text-black/60 group/add"
