@@ -10,7 +10,7 @@ import {
   useFilter,
 } from "react-aria-components"
 import { ChevronDownRegular } from "@fluentui/react-icons"
-import { useMemo, useState, useEffect, type Key } from "react"
+import { useMemo, useState, useEffect, useCallback, type Key } from "react"
 import { ListBox, ListBoxItem } from "./generic/ListBox"
 
 type LanguageItem = {
@@ -49,8 +49,11 @@ function LanguageSelect({
 export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewProps) {
   const defaultLanguage = node.attrs?.language || "null"
 
-  const codeBlockExtension = editor.extensionManager.extensions.find((ext) => ext.name === "codeBlock")
-  const lowlight = codeBlockExtension?.options.lowlight
+  // Memoize lowlight lookup - editor instance is stable, so this only runs once
+  const lowlight = useMemo(() => {
+    const codeBlockExtension = editor.extensionManager.extensions.find((ext) => ext.name === "codeBlock")
+    return codeBlockExtension?.options.lowlight
+  }, [editor])
 
   // Prepare items for the ComboBox
   const items = useMemo(() => {
@@ -66,12 +69,17 @@ export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewP
     if (currentLanguage !== selectedKey) {
       setSelectedKey(currentLanguage)
     }
-  }, [node.attrs?.language, selectedKey])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node.attrs?.language])
 
-  const handleSelectionChange = (key: string | null) => {
-    setSelectedKey(key)
-    updateAttributes({ language: key === "null" ? null : key })
-  }
+  const handleSelectionChange = useCallback(
+    (key: Key | null) => {
+      const keyString = key === null ? null : String(key)
+      setSelectedKey(keyString)
+      updateAttributes({ language: keyString === "null" ? null : keyString })
+    },
+    [updateAttributes],
+  )
 
   return (
     <NodeViewWrapper className="relative group">

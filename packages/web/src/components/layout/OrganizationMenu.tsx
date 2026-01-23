@@ -47,7 +47,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
             ),
           )}
         >
-          <OrganizationAvatar size={isCollapsed ? "md" : "sm"} />
+          <OrganizationAvatar size="md" />
           {!isCollapsed && (
             <>
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">

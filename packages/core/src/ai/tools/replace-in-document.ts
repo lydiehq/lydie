@@ -3,9 +3,6 @@ import { z } from "zod"
 
 export const replaceInDocument = () =>
   tool({
-    onInputDelta: (delta) => {
-      console.log("Input delta:", delta)
-    },
     description: `Replace content in a document. Use this for ALL document modifications.
 
 **CRITICAL: You MUST specify the documentId parameter. Use the "Current Document" ID from the context information provided to you. If you need to modify a different document, use its ID instead.**
@@ -14,9 +11,16 @@ export const replaceInDocument = () =>
 
 **CRITICAL: The \`replace\` parameter must be HTML, not Markdown. Use HTML tags like <p>, <h2>, etc.**
 
+**Title and Content Separation:**
+- Documents have a SEPARATE title field and content field (similar to Notion)
+- **DO NOT include H1 headings in the content** - use the \`title\` parameter instead
+- If you want to set or change the document title, use the optional \`title\` parameter
+- The content should start with H2 headings or paragraphs, never H1
+
 **How to Use:**
 - **To replace entire document**: Use empty string for search (search: ""). This will replace all content in the document. Use for empty documents (wordCount = 0) or when task requires rewriting entire document.
 - **To modify specific content**: Provide search text to find the content you want to replace. Use targeted search strings to identify the exact location.
+- **To change the title**: Provide the \`title\` parameter with the new title (plain text, no HTML)
 
 **Search Text Rules:**
 - Empty document (wordCount = 0): Use search "" to replace entire document
@@ -47,6 +51,12 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
         .describe(
           "ID of the document to modify. This is the document where the replacement will be applied.",
         ),
+      title: z
+        .string()
+        .optional()
+        .describe(
+          "New title for the document (plain text, no HTML). Leave empty to keep existing title. Do NOT include H1 in content—use this field instead.",
+        ),
       search: z
         .string()
         .describe(
@@ -56,12 +66,13 @@ Use internal:// protocol (not external URLs) to link other workspace documents. 
       replace: z
         .string()
         .describe(
-          'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>',
+          'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>. Do NOT include H1 headings—start with H2 or paragraphs.',
         ),
     }),
-    execute: async function ({ documentId, search, replace }) {
+    execute: async function ({ documentId, title, search, replace }) {
       return {
         documentId,
+        title: title ?? undefined,
         search: search ?? "",
         replace,
       }

@@ -17,21 +17,25 @@ import { applyContentChanges } from "@/utils/document-changes"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
 import { useNavigate, useParams } from "@tanstack/react-router"
-import { useDocumentEditor } from "@/hooks/useEditor"
+import { useDocumentEditor, useTitleEditor } from "@/hooks/useEditor"
 import { useSetAtom, useAtomValue } from "jotai"
 import { pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
 import { useEffect } from "react"
+import { applyTitleChange } from "@/utils/title-changes"
+import { useZero } from "@/services/zero"
 
 export interface ReplaceInDocumentToolProps {
   tool: {
     state: "input-streaming" | "input-available" | "call-streaming" | "output-available" | "output-error"
     input?: {
       documentId?: string
+      title?: string
       search?: string
       replace?: string
     }
     output?: {
       documentId?: string
+      title?: string
       search?: string
       replace?: string
     }
@@ -53,15 +57,18 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
   const { user } = useAuth()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
+  const z = useZero()
 
-  // Access the editor from global state - only this component will re-render when editor changes
+  // Access the editors from global state - only this component will re-render when editors change
   const editor = useDocumentEditor()
+  const titleEditor = useTitleEditor()
   const setPendingChange = useSetAtom(pendingEditorChangeAtom)
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom)
   const pendingChange = useAtomValue(pendingEditorChangeAtom)
   const pendingChangeStatus = useAtomValue(pendingChangeStatusAtom)
 
   const targetDocumentId = tool.input?.documentId || tool.output?.documentId
+  const newTitle = tool.input?.title || tool.output?.title
   const replaceText = tool.input?.replace || tool.output?.replace || ""
   const searchText = tool.input?.search || tool.output?.search || ""
 
@@ -72,7 +79,8 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       pendingChange &&
       pendingChange.documentId === (targetDocumentId || params.id) &&
       pendingChange.search === searchText &&
-      pendingChange.replace === replaceText
+      pendingChange.replace === replaceText &&
+      pendingChange.title === newTitle
 
     if (isMatchingPendingChange) {
       // Sync with the pending change status
@@ -114,6 +122,7 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
     params.id,
     searchText,
     replaceText,
+    newTitle,
     isApplying,
     applyStatus,
   ])
@@ -137,14 +146,14 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
     }
   }, [replaceText])
 
-  if (!replaceText && tool.state !== "input-streaming") {
+  if (!replaceText && !newTitle && tool.state !== "input-streaming") {
     return null
   }
 
   const wordCount = countWords(replaceText)
 
   const handleApply = async () => {
-    if (!replaceText) {
+    if (!replaceText && !newTitle) {
       return
     }
 
@@ -156,6 +165,7 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       // Store the pending change and set status
       setPendingChange({
         documentId: targetDocumentId,
+        title: newTitle,
         search: searchText,
         replace: replaceText,
         organizationId,
@@ -176,8 +186,9 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       return
     }
 
-    // For current document, we need the editor
-    if (!editor) {
+    // For current document, we need the editors
+    const currentDocId = targetDocumentId || params.id
+    if (!currentDocId || (!editor && !titleEditor)) {
       return
     }
 
@@ -185,30 +196,56 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
     setApplyStatus("Applying...")
 
     try {
-      const result = await applyContentChanges(
-        editor,
-        [
-          {
-            search: searchText,
-            replace: replaceText,
-          },
-        ],
-        organizationId,
-        undefined, // onProgress
-        (isUsingLLM) => {
-          setIsUsingLLM(isUsingLLM)
-        },
-      )
+      let contentSuccess = true
+      let titleSuccess = true
 
-      if (result.success) {
+      // Apply title change if provided
+      if (newTitle && titleEditor) {
+        const titleResult = await applyTitleChange(
+          titleEditor,
+          newTitle,
+          currentDocId,
+          organizationId,
+          z as any,
+        )
+        titleSuccess = titleResult.success
+        if (!titleSuccess) {
+          console.error("Failed to apply title change:", titleResult.error)
+        }
+      }
+
+      // Apply content changes if provided
+      if (replaceText && editor) {
+        const result = await applyContentChanges(
+          editor,
+          [
+            {
+              search: searchText,
+              replace: replaceText,
+            },
+          ],
+          organizationId,
+          undefined, // onProgress
+          (isUsingLLM) => {
+            setIsUsingLLM(isUsingLLM)
+          },
+        )
+
+        contentSuccess = result.success
+        if (result.success) {
+          if (result.usedLLMFallback) {
+            console.info("✨ LLM-assisted replacement was used for this change")
+          }
+        } else {
+          console.error("Failed to apply content changes:", result.error)
+        }
+      }
+
+      if (contentSuccess && titleSuccess) {
         setIsApplied(true)
         setApplyStatus("")
-        if (result.usedLLMFallback) {
-          console.info("✨ LLM-assisted replacement was used for this change")
-        }
       } else {
         setApplyStatus("Failed to apply")
-        console.error("Failed to apply changes:", result.error)
       }
     } catch (error) {
       console.error("Failed to apply:", error)
@@ -305,6 +342,14 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       </div>
       <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
         <div className="p-2">
+          {newTitle && (
+            <div className="mb-3 pb-3 border-b border-gray-200">
+              <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Title
+              </div>
+              <div className="text-lg font-semibold text-gray-900">{newTitle}</div>
+            </div>
+          )}
           {replaceText && (
             <div
               className="overflow-hidden relative"
@@ -312,6 +357,11 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
                 height: isExpanded || !hasOverflow ? "auto" : 140,
               }}
             >
+              {newTitle && (
+                <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                  Content
+                </div>
+              )}
               <StickToBottom
                 className="text-xs text-gray-600 overflow-y-auto"
                 initial={{ damping: 1, stiffness: 1 }}
@@ -347,7 +397,7 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
               )}
             </AriaButton>
           )}
-          {(replaceText || isApplied) && (
+          {(replaceText || newTitle || isApplied) && (
             <>
               <Separator className="my-2" />
               <motion.div
@@ -361,9 +411,11 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
                     Debug
                   </Button>
                 )}
-                <Button intent="secondary" size="xs" onPress={handleCopy}>
-                  Copy
-                </Button>
+                {replaceText && (
+                  <Button intent="secondary" size="xs" onPress={handleCopy}>
+                    Copy
+                  </Button>
+                )}
                 <Button
                   intent="secondary"
                   size="xs"

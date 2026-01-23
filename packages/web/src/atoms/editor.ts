@@ -18,6 +18,7 @@ export const titleEditorAtom = atom<Editor | null>(null)
  */
 export type PendingEditorChange = {
   documentId: string
+  title?: string
   search: string
   replace: string
   organizationId: string
