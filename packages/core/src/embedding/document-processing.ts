@@ -10,7 +10,6 @@ import {
   extractSections,
   sectionsToHashMap,
   findChangedSections,
-  sectionToJsonDoc,
   type SectionHashes,
 } from "./section-hashing"
 

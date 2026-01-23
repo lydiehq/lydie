@@ -76,6 +76,7 @@ const linkGroups = [
       {
         label: "GitHub",
         href: "https://github.com/lydiehq/lydie",
+        target: "_blank",
       },
     ],
   },
@@ -125,6 +126,7 @@ const linkGroups = [
                             <a
                               href={link.href}
                               class="text-[0.8125rem]/0 text-gray-700 hover:text-gray-800 py-1.5"
+                              target={link.target || undefined}
                             >
                               {link.label}
                             </a>
