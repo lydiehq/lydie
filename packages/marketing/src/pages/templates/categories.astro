@@ -1,0 +1,40 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { Button } from "../../components/generic/Button";
+import CategoryThumbnail from "../../components/templates/CategoryThumbnail.astro";
+import { categories } from "../../data/categories";
+---
+
+<Layout
+  title="Template Categories - Lydie"
+  description="Browse all template categories to find the perfect template for your needs."
+>
+  <div class="py-8">
+    <Container className="flex flex-col gap-y-8">
+      <div class="flex flex-col gap-y-8">
+        <a href="/templates" class="text-sm text-gray-500 hover:text-gray-900"
+          >Back to templates</a
+        >
+        <header class="">
+          <div class="max-w-lg flex flex-col gap-y-3">
+            <h1 class="text-4xl font-medium text-gray-900">All Categories</h1>
+            <span class="text-base/relaxed text-gray-600"
+              >Explore all {categories.length} template categories to find the perfect
+              template for your project.</span
+            >
+          </div>
+        </header>
+      </div>
+      <div class="flex flex-col gap-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {
+            categories.map((category) => (
+              <CategoryThumbnail category={category} />
+            ))
+          }
+        </div>
+      </div>
+    </Container>
+  </div>
+</Layout>
