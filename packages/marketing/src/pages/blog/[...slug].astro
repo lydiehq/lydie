@@ -43,7 +43,9 @@ const blogPostProps = {
 };
 
 const articleUrl = new URL(`/blog/${document.slug}`, Astro.site);
-const imageUrl = new URL("/blog.png", Astro.site);
+const imageUrl = document.coverImage 
+  ? new URL(document.coverImage, Astro.site) 
+  : new URL("/blog.png", Astro.site);
 const excerpt = (document as any).customFields?.excerpt || "";
 
 const structuredData = {
@@ -92,7 +94,7 @@ const structuredData = {
     </header>
     <div
       class="rounded-lg bg-black/2 bg-center bg-cover bg-no-repeat h-80 ring ring-black/5 overflow-hidden"
-      style="background-image: url(/blog.png)"
+      style={`background-image: url(${document.coverImage || '/blog.png'})`}
     >
     </div>
     <div class="prose">
@@ -120,12 +122,13 @@ const structuredData = {
           document.related?.map((post: any) => (
             <a
               href={`/blog/${post.slug}`}
-              class="rounded-lg bg-black/2 p-4 flex md:h-32 flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline"
+              class="rounded-lg bg-black/2 p-4 flex md:h-32 flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline bg-center bg-cover bg-no-repeat"
+              style={post.coverImage ? `background-image: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(${post.coverImage})` : ''}
             >
-              <span class="text-base font-medium text-gray-900 text-ellipsis overflow-hidden whitespace-nowrap">
+              <span class="text-base font-medium text-ellipsis overflow-hidden whitespace-nowrap" class:list={[post.coverImage ? 'text-white' : 'text-gray-900']}>
                 {post.title}
               </span>
-              <p class="text-gray-500 text-sm">
+              <p class="text-sm" class:list={[post.coverImage ? 'text-white/80' : 'text-gray-500']}>
                 <FormattedDate date={new Date(post.createdAt)} />
               </p>
             </a>

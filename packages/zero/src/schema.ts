@@ -76,6 +76,7 @@ const documents = table("documents")
     integration_link_id: string().optional(),
     external_id: string().optional(),
     custom_fields: json().optional(),
+    cover_image: string().optional(),
     published: boolean(),
     deleted_at: number().optional(),
     is_locked: boolean(),

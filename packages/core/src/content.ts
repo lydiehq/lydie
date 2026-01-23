@@ -31,6 +31,7 @@ export interface Document {
   lastIndexedTitle: string | null
   lastIndexedContentHash: string | null
   customFields: Record<string, string | number> | null
+  coverImage: string | null
   createdAt: string
   updatedAt: string
   path: string
@@ -57,6 +58,7 @@ export interface DocumentListItem {
   fullPath: string
   published: boolean
   customFields: Record<string, string | number> | null
+  coverImage: string | null
   createdAt: string
   updatedAt: string
 }

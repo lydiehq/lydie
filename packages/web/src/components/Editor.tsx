@@ -13,6 +13,7 @@ import { Surface } from "./layout/Surface"
 import { mutators } from "@lydie/zero/mutators"
 import { useDocumentEditor } from "@/lib/editor/document-editor"
 import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs"
+import { CoverImageEditor } from "./editor/CoverImageEditor"
 import { useSetAtom, useAtom } from "jotai"
 import { documentEditorAtom, titleEditorAtom, pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
 import { applyContentChanges } from "@/utils/document-changes"
@@ -196,6 +197,11 @@ function EditorContainer({ doc }: Props) {
               className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"
             >
               <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
+                <CoverImageEditor
+                  documentId={doc.id}
+                  organizationId={doc.organization_id}
+                  coverImage={doc.cover_image}
+                />
                 <EditorContent editor={titleEditor.editor} aria-label="Document title" className="mb-6" />
                 <DocumentMetadataTabs
                   doc={doc}
