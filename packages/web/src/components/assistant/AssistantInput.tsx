@@ -1,7 +1,8 @@
 import { EditorContent } from "@tiptap/react"
-import { Button, Form } from "react-aria-components"
+import { Form } from "react-aria-components"
 import { motion } from "motion/react"
 import { ChevronUpRegular, SquareFilled, ArrowCircleUpRegular } from "@fluentui/react-icons"
+import { Button } from "@/components/generic/Button"
 import { useChatComposer } from "@/hooks/use-chat-composer"
 import { useCallback, useRef, useEffect, useState } from "react"
 import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
@@ -108,11 +109,6 @@ export function AssistantInput({
 
   const formClassName = variant === "rounded" ? "relative flex flex-col" : "relative flex flex-col"
 
-  const buttonClassName =
-    variant === "rounded"
-      ? "size-9 justify-center items-center flex bottom-1.5 right-1.5 absolute rounded-full border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 hover:before:bg-white/6 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 bg-gray-800 text-white after:mix-blend-overlay"
-      : "p-1 hover:bg-gray-50 rounded-md"
-
   const editorWrapperClassName =
     variant === "rounded"
       ? "text-sm text-start"
@@ -145,8 +141,8 @@ export function AssistantInput({
               <Button
                 type={canStop ? "button" : "submit"}
                 onPress={canStop ? onStop : undefined}
-                className={buttonClassName}
-                isDisabled={false}
+                intent="ghost"
+                size="icon-sm"
               >
                 {canStop ? (
                   <SquareFilled className="size-4 text-gray-900 fill-gray-900" />
@@ -159,11 +155,13 @@ export function AssistantInput({
             <Button
               type={canStop ? "button" : "submit"}
               onPress={canStop ? onStop : undefined}
-              className={buttonClassName}
-              isDisabled={false}
+              intent="primary"
+              size="icon-lg"
+              rounded
+              className="bottom-1.5 right-1.5 absolute"
             >
               {canStop ? (
-                <SquareRegular className="size-3 text-white fill-white" />
+                <SquareFilled className="size-3 text-white fill-white" />
               ) : (
                 <ChevronUpRegular className="size-4 text-white" />
               )}

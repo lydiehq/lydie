@@ -26,9 +26,9 @@ import {
   ArrowClockwiseRegular,
   ShieldErrorRegular,
   TabDesktopMultipleFilled,
+  TableSimpleExclude16Filled,
   PersonChatFilled,
-  DocumentAddFilled,
-  TextBulletListSquareEditRegular,
+  CollectionsFilled,
 } from "@fluentui/react-icons"
 import { Separator } from "../generic/Separator"
 import { Eyebrow } from "../generic/Eyebrow"
@@ -55,7 +55,7 @@ export const sidebarItemStyles = cva({
 })
 
 export const sidebarItemIconStyles = cva({
-  base: "text-black/34 group-hover:text-black/44",
+  base: "icon-muted",
 })
 
 export function Sidebar({ isCollapsed, onToggle }: Props) {
@@ -141,8 +141,14 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               </kbd>
             </div>
           </Button>
-          <Button intent="secondary" size="sm" onPress={handleSearchClick} aria-label="Search">
-            <SearchFilled className="size-[14px] text-gray-600" />
+          <Button
+            intent="secondary"
+            size="sm"
+            onPress={handleSearchClick}
+            aria-label="Search"
+            className="group"
+          >
+            <SearchFilled className="size-[14px] icon-muted" />
           </Button>
         </div>
         <div className="flex flex-col px-2">
@@ -153,7 +159,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <HomeFilled className={sidebarItemIconStyles({ className: "size-4.5" })} />
+              <HomeFilled className={sidebarItemIconStyles({ className: "size-4" })} />
               <span className="truncate flex-1">Home</span>
             </div>
           </Link>
@@ -164,7 +170,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <PersonChatFilled className={sidebarItemIconStyles({ className: "size-4.5" })} />
+              <PersonChatFilled className={sidebarItemIconStyles({ className: "size-4" })} />
               <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
@@ -175,7 +181,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <TabDesktopMultipleFilled className={sidebarItemIconStyles({ className: "size-4.5" })} />
+              <TableSimpleExclude16Filled className={sidebarItemIconStyles({ className: "size-4" })} />
               <span className="truncate flex-1">Integrations</span>
             </div>
           </Link>
@@ -184,19 +190,18 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         <div className="flex flex-col grow min-h-0">
           <div className="flex items-center justify-between shrink-0 px-4">
             <Eyebrow>Documents</Eyebrow>
-            <div className="flex gap-x-1">
-              <TooltipTrigger delay={500}>
-                <Button
-                  intent="secondary"
-                  size="sm"
-                  onPress={() => createDocument()}
-                  aria-label="Create new document"
-                >
-                  <TextBulletListSquareEditRegular className="size-[14px] text-gray-600" />
-                </Button>
-                <Tooltip>Add document</Tooltip>
-              </TooltipTrigger>
-            </div>
+            <TooltipTrigger delay={500}>
+              <Button
+                intent="ghost"
+                size="icon-md"
+                onPress={() => createDocument()}
+                aria-label="Create new document"
+                className="-mr-1.5"
+              >
+                <CollectionsFilled className={sidebarItemIconStyles({ className: "size-4" })} />
+              </Button>
+              <Tooltip>Add document</Tooltip>
+            </TooltipTrigger>
           </div>
           <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
             <DocumentTree />
