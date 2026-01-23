@@ -11,8 +11,8 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
-    "@aws-sdk/client-s3": "^3.972.0",
-    "@aws-sdk/s3-request-presigner": "^3.972.0",
+    "@aws-sdk/client-s3": "^3.974.0",
+    "@aws-sdk/s3-request-presigner": "^3.974.0",
     "@hocuspocus/extension-database": "^3.4.3",
     "@hocuspocus/extension-logger": "^3.4.3",
     "@hocuspocus/server": "^3.4.3",
