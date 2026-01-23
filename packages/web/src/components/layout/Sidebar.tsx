@@ -19,16 +19,15 @@ import { commandMenuStateAtom } from "@/stores/command-menu"
 import { FeedbackWidget } from "../feedback/FeedbackWidget"
 import {
   SearchFilled,
-  Home24Filled as HomeFilled,
+  Home16Filled,
   Wifi4Regular,
   WifiOffRegular,
   ErrorCircleRegular,
   ArrowClockwiseRegular,
   ShieldErrorRegular,
-  TabDesktopMultipleFilled,
-  TableSimpleExclude16Filled,
-  PersonChatFilled,
+  PersonChat16Filled,
   CollectionsFilled,
+  TabDesktopMultiple16Filled,
 } from "@fluentui/react-icons"
 import { Separator } from "../generic/Separator"
 import { Eyebrow } from "../generic/Eyebrow"
@@ -159,7 +158,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <HomeFilled className={sidebarItemIconStyles({ className: "size-4" })} />
+              <Home16Filled className={sidebarItemIconStyles({ className: "size-4" })} />
               <span className="truncate flex-1">Home</span>
             </div>
           </Link>
@@ -170,7 +169,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <PersonChatFilled className={sidebarItemIconStyles({ className: "size-4" })} />
+              <PersonChat16Filled className={sidebarItemIconStyles({ className: "size-4" })} />
               <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
@@ -181,7 +180,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <TableSimpleExclude16Filled className={sidebarItemIconStyles({ className: "size-4" })} />
+              <TabDesktopMultiple16Filled className={sidebarItemIconStyles({ className: "size-4" })} />
               <span className="truncate flex-1">Integrations</span>
             </div>
           </Link>

@@ -47,6 +47,17 @@
 
   p {
     font-size: 0.875rem;
+    line-height: 1.8;
+  }
+
+  /* Paragraphs inside other elements should use 1.6 line-height */
+  blockquote p,
+  ul li p,
+  ol li p,
+  td p,
+  th p,
+  ul[data-type="taskList"] li > div p {
+    line-height: 1.6;
   }
 
   h1 {
