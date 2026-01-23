@@ -4,7 +4,7 @@ import { motion } from "motion/react"
 import { ChevronUpRegular, SquareFilled, ArrowCircleUpRegular } from "@fluentui/react-icons"
 import { Button } from "@/components/generic/Button"
 import { useChatComposer } from "@/hooks/use-chat-composer"
-import { useCallback, useRef, useEffect, useState } from "react"
+import { useCallback, useRef, useEffect, useState, useMemo } from "react"
 import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
 import { getReferenceDocumentIds } from "@/utils/parse-references"
 import { useDocumentContext } from "@/hooks/use-document-context"
@@ -40,16 +40,21 @@ export function AssistantInput({
   onSelectAgent,
 }: AssistantInputProps) {
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
+  const [manuallySelectedDocumentIds, setManuallySelectedDocumentIds] = useState<string[]>([])
+
+  const allReferencedDocumentIds = useMemo(() => {
+    return Array.from(new Set([...mentionedDocumentIds, ...manuallySelectedDocumentIds]))
+  }, [mentionedDocumentIds, manuallySelectedDocumentIds])
 
   const {
     availableDocuments,
-    contextItems,
+    contextItems: baseContextItems,
     contextDocumentIds,
     handleRemoveContext: defaultHandleRemoveContext,
     resetDismissal,
   } = useDocumentContext({
     currentDocumentId,
-    mentionedDocumentIds,
+    mentionedDocumentIds: allReferencedDocumentIds,
   })
 
   const handleSubmitRef = useRef<() => void>(() => {})
@@ -85,7 +90,39 @@ export function AssistantInput({
     }
   }, [content, chatEditor])
 
-  const handleRemoveContext = onRemoveContext || defaultHandleRemoveContext
+  // Enhance context items to mark manually selected documents
+  const contextItems = useMemo(() => {
+    return baseContextItems.map((item) => {
+      if (item.source === "mention" && manuallySelectedDocumentIds.includes(item.id)) {
+        return {
+          ...item,
+          source: "manual" as const,
+          removable: true,
+        }
+      }
+      return item
+    })
+  }, [baseContextItems, manuallySelectedDocumentIds])
+
+  const handleAddDocument = useCallback((documentId: string) => {
+    setManuallySelectedDocumentIds((prev) => [...prev, documentId])
+  }, [])
+
+  const handleRemoveContext = useCallback(
+    (item: ChatContextItem) => {
+      // If it's a manually selected document, remove it from manual selection
+      if (manuallySelectedDocumentIds.includes(item.id)) {
+        setManuallySelectedDocumentIds((prev) => prev.filter((id) => id !== item.id))
+      }
+      // Also call the default or custom handler
+      if (onRemoveContext) {
+        onRemoveContext(item)
+      } else {
+        defaultHandleRemoveContext(item)
+      }
+    },
+    [manuallySelectedDocumentIds, onRemoveContext, defaultHandleRemoveContext],
+  )
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
@@ -96,6 +133,7 @@ export function AssistantInput({
       onSubmit(textContent, contextDocumentIds)
       chatEditor.clearContent()
       resetDismissal()
+      setManuallySelectedDocumentIds([])
     },
     [chatEditor, onSubmit, contextDocumentIds, resetDismissal],
   )
@@ -105,14 +143,14 @@ export function AssistantInput({
   const containerClassName =
     variant === "rounded"
       ? "rounded-full bg-white text-sm shadow-surface flex flex-col gap-y-2 relative w-full"
-      : "rounded-lg flex flex-col p-1 z-10 relative bg-gray-100"
+      : "rounded-lg flex flex-col z-10 relative bg-gray-100 shadow-inner p-0.5 border border-black/8"
 
   const formClassName = variant === "rounded" ? "relative flex flex-col" : "relative flex flex-col"
 
   const editorWrapperClassName =
     variant === "rounded"
       ? "text-sm text-start"
-      : "flex flex-col bg-white ring ring-black/8 rounded-[6px] p-2 relative"
+      : "flex flex-col bg-white rounded-[6px] p-2 relative shadow-surface"
 
   return (
     <motion.div
@@ -122,19 +160,29 @@ export function AssistantInput({
       initial={false}
     >
       {variant === "flat" && (
-        <div className="flex p-1.5">
-          <ChatContextList items={contextItems} onRemove={handleRemoveContext} />
-        </div>
+        <ChatContextList
+          items={contextItems}
+          onRemove={handleRemoveContext}
+          availableDocuments={availableDocuments}
+          onAddDocument={handleAddDocument}
+        />
       )}
       <div className={variant === "flat" ? editorWrapperClassName : ""}>
         <Form className={formClassName} onSubmit={handleSubmit}>
-          {variant === "rounded" && <ChatContextList items={contextItems} onRemove={handleRemoveContext} />}
+          {variant === "rounded" && (
+            <ChatContextList
+              items={contextItems}
+              onRemove={handleRemoveContext}
+              availableDocuments={availableDocuments}
+              onAddDocument={handleAddDocument}
+            />
+          )}
           <EditorContent
             editor={chatEditor.editor}
             className={variant === "rounded" ? "text-sm text-start" : ""}
           />
           {variant === "flat" ? (
-            <div className="flex items-center justify-end gap-x-1 mt-2">
+            <div className="flex items-center justify-between">
               {selectedAgentId !== undefined && onSelectAgent && (
                 <AgentSelector selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} />
               )}

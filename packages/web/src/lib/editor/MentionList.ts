@@ -6,6 +6,7 @@ export class MentionList {
   items: any[]
   command: any
   element: HTMLElement
+  listContainer: HTMLElement
   selectedIndex: number
 
   constructor({ items, command }: { items: any[]; command: any }) {
@@ -15,7 +16,12 @@ export class MentionList {
 
     this.element = document.createElement("div")
     this.element.className =
-      "bg-white border border-gray-200 rounded-lg shadow-lg p-1 max-h-60 overflow-y-auto z-50"
+      "bg-white shadow-2xl rounded-lg bg-clip-padding border border-black/10 text-slate-700 z-50"
+    
+    const listContainer = document.createElement("div")
+    listContainer.className = "outline-none max-h-60 overflow-auto p-1 bg-white"
+    this.element.appendChild(listContainer)
+    this.listContainer = listContainer
     this.render()
   }
 
@@ -26,18 +32,24 @@ export class MentionList {
   }
 
   render() {
-    this.element.innerHTML = ""
+    this.listContainer.innerHTML = ""
 
     this.items.forEach((item, index) => {
       const itemElement = document.createElement("div")
-      itemElement.className = `px-3 py-2 cursor-pointer rounded text-sm ${
-        index === this.selectedIndex ? "bg-blue-100 text-blue-800" : "text-gray-700 hover:bg-gray-100"
+      const isSelected = index === this.selectedIndex
+      itemElement.className = `group flex items-center gap-4 cursor-default select-none py-1 pl-2 pr-1 rounded-md outline-none text-sm forced-color-adjust-none ${
+        isSelected ? "bg-gray-100" : "text-gray-900 hover:bg-gray-100"
       }`
-      itemElement.textContent = item.label
+      
+      const textSpan = document.createElement("span")
+      textSpan.className = "flex items-center flex-1 truncate text-sm font-normal text-gray-800"
+      textSpan.textContent = item.label
+      itemElement.appendChild(textSpan)
+      
       itemElement.addEventListener("click", () => {
         this.selectItem(item)
       })
-      this.element.appendChild(itemElement)
+      this.listContainer.appendChild(itemElement)
     })
   }
 
