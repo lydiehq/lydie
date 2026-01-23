@@ -18,7 +18,6 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
     }),
     async ({ tx, ctx, args }) => {
       await sharedMutators.document.update.fn({ tx, ctx, args })
-      console.log("args", args)
 
       const { documentId, title } = args
 

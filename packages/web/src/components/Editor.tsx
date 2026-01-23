@@ -17,6 +17,7 @@ import { CoverImageEditor } from "./editor/CoverImageEditor"
 import { useSetAtom, useAtom } from "jotai"
 import { documentEditorAtom, titleEditorAtom, pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
 import { applyContentChanges } from "@/utils/document-changes"
+import { applyTitleChange } from "@/utils/title-changes"
 import { toast } from "sonner"
 
 type Props = {
@@ -122,7 +123,8 @@ function EditorContainer({ doc }: Props) {
 
   // Apply pending changes after navigation
   useEffect(() => {
-    if (!pendingChange || !contentEditor.editor) return
+    if (!pendingChange) return
+    if (!contentEditor.editor && !titleEditor.editor) return
     
     // Check if this is the target document
     if (pendingChange.documentId !== doc.id) return
@@ -132,27 +134,53 @@ function EditorContainer({ doc }: Props) {
       toast.info("Applying changes...")
       
       try {
-        const result = await applyContentChanges(
-          contentEditor.editor!,
-          [
-            {
-              search: pendingChange.search,
-              replace: pendingChange.replace,
-            },
-          ],
-          pendingChange.organizationId,
-        )
+        let contentSuccess = true
+        let titleSuccess = true
 
-        if (result.success) {
+        // Apply title change if provided
+        if (pendingChange.title && titleEditor.editor) {
+          const titleResult = await applyTitleChange(
+            titleEditor.editor,
+            pendingChange.title,
+            doc.id,
+            pendingChange.organizationId,
+            z,
+          )
+          titleSuccess = titleResult.success
+          if (!titleSuccess) {
+            console.error("Failed to apply title change:", titleResult.error)
+          }
+        }
+
+        // Apply content changes if provided
+        if (pendingChange.replace && contentEditor.editor) {
+          const result = await applyContentChanges(
+            contentEditor.editor,
+            [
+              {
+                search: pendingChange.search,
+                replace: pendingChange.replace,
+              },
+            ],
+            pendingChange.organizationId,
+          )
+
+          contentSuccess = result.success
+          if (result.success) {
+            if (result.usedLLMFallback) {
+              console.info("✨ LLM-assisted replacement was used for this change")
+            }
+          } else {
+            console.error("Failed to apply content changes:", result.error)
+          }
+        }
+
+        if (contentSuccess && titleSuccess) {
           setPendingChangeStatus("applied")
           toast.success("Changes applied successfully")
-          if (result.usedLLMFallback) {
-            console.info("✨ LLM-assisted replacement was used for this change")
-          }
         } else {
           setPendingChangeStatus("failed")
           toast.error("Failed to apply changes")
-          console.error("Failed to apply changes:", result.error)
         }
       } catch (error) {
         setPendingChangeStatus("failed")
@@ -167,7 +195,7 @@ function EditorContainer({ doc }: Props) {
       }
     }
 
-    // Small delay to ensure editor is fully ready
+    // Small delay to ensure editors are fully ready
     const timeoutId = setTimeout(() => {
       applyPendingChange()
     }, 100)
@@ -175,7 +203,7 @@ function EditorContainer({ doc }: Props) {
     return () => {
       clearTimeout(timeoutId)
     }
-  }, [contentEditor.editor, doc.id, pendingChange, setPendingChange])
+  }, [contentEditor.editor, titleEditor.editor, doc.id, pendingChange, setPendingChange, setPendingChangeStatus, z])
 
   if (!contentEditor.editor || !titleEditor.editor) {
     return null
