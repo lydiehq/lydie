@@ -103,6 +103,7 @@ export const organizationsTable = pgTable("organizations", {
   slug: text("slug").unique().notNull(),
   logo: text("logo"),
   metadata: text("metadata"),
+  color: text("color"),
   // Subscription info synced from Polar via webhooks
   subscriptionStatus: text("subscription_status").default("free"), // 'free', 'active', 'canceled', 'past_due'
   subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'pro'

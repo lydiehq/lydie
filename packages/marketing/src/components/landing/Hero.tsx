@@ -91,14 +91,7 @@ function DemoButton() {
   )
 }
 
-export function Hero({
-  imageSrc,
-  imageSrcSet,
-  imageSizes,
-  imageAlt,
-  imageWidth,
-  imageHeight,
-}: HeroProps) {
+export function Hero({ imageSrc, imageSrcSet, imageSizes, imageAlt, imageWidth, imageHeight }: HeroProps) {
   return (
     <div className="md:px-4">
       <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4">
@@ -129,7 +122,7 @@ export function Hero({
             <div className="flex items-center justify-center gap-x-1.5 mt-4">
               <div className={`${styles.heroButton1} ring ring-white/1 p-0.5 bg-black/4 rounded-[8px]`}>
                 <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
-                  <span>Start Lydie free</span>
+                  <span>Start writing for free</span>
                 </Button>
               </div>
               <div className={styles.heroButton2}>

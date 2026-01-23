@@ -31,6 +31,7 @@ const organizations = table("organizations")
     slug: string(),
     logo: string().optional(),
     metadata: string().optional(),
+    color: string().optional(),
     // Subscription info synced from Polar via webhooks
     subscription_status: string(),
     subscription_plan: string(),
