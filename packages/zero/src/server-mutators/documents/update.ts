@@ -14,20 +14,13 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
       indexStatus: z.string().optional(),
       customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
       organizationId: z.string(),
+      coverImage: z.string().nullable().optional(),
     }),
-    async ({ tx, ctx, args: { documentId, title, slug, indexStatus, customFields, organizationId } }) => {
-      await sharedMutators.document.update.fn({
-        tx,
-        ctx,
-        args: {
-          documentId,
-          organizationId,
-          title,
-          slug,
-          indexStatus,
-          customFields,
-        },
-      })
+    async ({ tx, ctx, args }) => {
+      await sharedMutators.document.update.fn({ tx, ctx, args })
+      console.log("args", args)
+
+      const { documentId, title } = args
 
       // If title was updated, trigger async title embedding generation
       // Skip if title is empty or too short (minimum 3 chars for meaningful embeddings)

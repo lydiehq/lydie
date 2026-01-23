@@ -204,7 +204,7 @@ export const mutators = defineMutators({
         slug: z.string().optional(),
         indexStatus: z.string().optional(),
         customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
-        coverImage: z.string().optional(),
+        coverImage: z.string().nullable().optional(),
         organizationId: z.string(),
       }),
       async ({
