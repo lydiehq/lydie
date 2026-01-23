@@ -14,6 +14,7 @@ import {
   MoreHorizontalRegular,
   AddRegular,
   Add12Regular,
+  CollectionsEmpty16Filled,
 } from "@fluentui/react-icons"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar"
@@ -283,7 +284,7 @@ function DocumentTreeItemIcon({
   chevronRef: React.RefObject<HTMLButtonElement | null>
   hasChildren: boolean
 }) {
-  const IconComponent = hasChildren ? DocumentCopyFilled : DocumentFilled
+  const IconComponent = hasChildren ? CollectionsEmpty16Filled : DocumentFilled
 
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
