@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { Popover } from "../generic/Popover"
 import { OrganizationAvatar } from "./OrganizationAvatar"
-import { ChevronUpDownRegular } from "@fluentui/react-icons"
+import { ChevronDown12Regular, ChevronUpDownRegular } from "@fluentui/react-icons"
 import { useAuth } from "@/context/auth.context"
 import { clearSession } from "@/lib/auth/session"
 import { clearZeroInstance } from "@/lib/zero/instance"
@@ -43,17 +43,17 @@ export function OrganizationMenu({ isCollapsed }: Props) {
             focusRing,
             clsx(
               "flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-md overflow-hidden aria-expanded:bg-black/3",
-              !isCollapsed && "p-0.5 mx-0.5",
+              !isCollapsed && "px-1.5 py-0.5 -mx-1.5",
             ),
           )}
         >
-          <OrganizationAvatar size={isCollapsed ? "md" : "small"} />
+          <OrganizationAvatar size={isCollapsed ? "md" : "sm"} />
           {!isCollapsed && (
             <>
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">
                 {organization?.name}
               </div>
-              <ChevronUpDownRegular className="size-3.5 text-gray-500" />
+              <ChevronDown12Regular className="size-3 text-gray-500" />
             </>
           )}
         </RACButton>

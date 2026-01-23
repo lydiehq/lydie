@@ -7,7 +7,7 @@ import { Separator } from "@/components/generic/Separator"
 import { Heading } from "@/components/generic/Heading"
 import { SectionHeader } from "@/components/generic/SectionHeader"
 import { useQuery } from "@rocicorp/zero/react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { DialogTrigger, Form, MenuTrigger, Button as RACButton } from "react-aria-components"
 import { Modal } from "@/components/generic/Modal"
 import { Dialog } from "@/components/generic/Dialog"
@@ -37,6 +37,8 @@ import { slugify } from "@lydie/core/utils"
 import { authClient } from "@/utils/auth"
 import { useAuth } from "@/context/auth.context"
 import { clearActiveOrganizationSlug } from "@/lib/active-organization"
+import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors"
+import { Popover } from "@/components/generic/Popover"
 
 type ApiKeyDialogStep = "create" | "success"
 
@@ -59,7 +61,9 @@ function RouteComponent() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
 
-  // Workspace name form
+  const [selectedColor, setSelectedColor] = useState<string>(organization.color || WORKSPACE_COLORS[0])
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
+
   const workspaceForm = useAppForm({
     defaultValues: {
       name: organization.name,
@@ -82,21 +86,39 @@ function RouteComponent() {
         return
       }
 
-      const hasChanges = values.value.name.trim() !== organization.name || slugified !== organization.slug
+      const hasChanges =
+        values.value.name.trim() !== organization.name ||
+        slugified !== organization.slug ||
+        selectedColor !== organization.color
 
       if (!hasChanges) {
         return
       }
 
+      const slugChanged = slugified !== organization.slug
+
       try {
-        z.mutate(
+        const write = z.mutate(
           mutators.organization.update({
             organizationId: organization.id,
             name: values.value.name.trim(),
             slug: slugified,
+            color: selectedColor,
           }),
         )
+
+        // Wait for the server to confirm the mutation
+        await write.server
+
         toast.success("Workspace updated successfully")
+
+        // Navigate to the new slug if it changed
+        if (slugChanged) {
+          navigate({
+            to: "/w/$organizationSlug/settings",
+            params: { organizationSlug: slugified },
+          })
+        }
       } catch (error: any) {
         const errorMessage =
           error?.message === "Slug is already taken"
@@ -314,8 +336,48 @@ function RouteComponent() {
               />
             )}
           />
+          <div className="flex flex-col gap-y-1">
+            <label className="text-sm font-medium text-gray-900">Workspace Color</label>
+            <div className="flex items-center gap-x-2">
+              <MenuTrigger isOpen={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+                <RACButton
+                  className="relative h-10 w-20 rounded-md border border-gray-300 shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  style={{
+                    backgroundColor: selectedColor,
+                  }}
+                />
+                <Popover placement="bottom start" className="p-3">
+                  <div className="grid grid-cols-6 gap-2">
+                    {WORKSPACE_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => {
+                          setSelectedColor(color)
+                          setIsColorPickerOpen(false)
+                        }}
+                        className="size-8 rounded-md border-2 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        style={{
+                          backgroundColor: color,
+                          borderColor: selectedColor === color ? "#000" : "#d1d5db",
+                        }}
+                        aria-label={`Select color ${color}`}
+                      />
+                    ))}
+                  </div>
+                </Popover>
+              </MenuTrigger>
+              <span className="text-sm text-gray-600">{selectedColor}</span>
+            </div>
+          </div>
           <div className="flex justify-end gap-x-1">
-            <Button intent="secondary" size="sm" onPress={() => workspaceForm.reset()}>
+            <Button
+              intent="secondary"
+              size="sm"
+              onPress={() => {
+                workspaceForm.reset()
+                setSelectedColor(organization.color || WORKSPACE_COLORS[0])
+              }}
+            >
               Cancel
             </Button>
             <Button size="sm" type="submit" isPending={workspaceForm.state.isSubmitting}>
@@ -513,8 +575,8 @@ function RouteComponent() {
                           Last used:{" "}
                           {key.last_used_at
                             ? formatDistanceToNow(key.last_used_at, {
-                              addSuffix: true,
-                            })
+                                addSuffix: true,
+                              })
                             : "Never"}
                         </span>
                       </div>

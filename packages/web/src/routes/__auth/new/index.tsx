@@ -17,6 +17,7 @@ import { mutators } from "@lydie/zero/mutators"
 import { clearZeroInstance } from "@/lib/zero/instance"
 import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { trackEvent } from "@/lib/posthog"
+import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors"
 
 export const Route = createFileRoute("/__auth/new/")({
   component: RouteComponent,
@@ -49,6 +50,7 @@ function RouteComponent() {
             id,
             name: values.value.name,
             slug,
+            color: getRandomWorkspaceColor(),
             importDemoContent: true, // Always import demo content
           }),
         )

@@ -91,7 +91,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
 
   return (
     <div className="flex flex-col grow max-h-screen overflow-hidden">
-      <div className={`flex justify-between items-center px-4 py-3 ${!isCollapsed ? "-ml-1" : ""}`}>
+      <div className="flex justify-between items-center p-3">
         <OrganizationMenu isCollapsed={isCollapsed} />
         <TooltipTrigger delay={500}>
           <RACButton
@@ -123,7 +123,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
-        <div className="flex gap-x-1 px-4">
+        <div className="flex gap-x-1 px-3">
           <Button
             intent="secondary"
             size="sm"
@@ -187,7 +187,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </div>
         <Separator className="mx-2" />
         <div className="flex flex-col grow min-h-0">
-          <div className="flex items-center justify-between shrink-0 px-4">
+          <div className="flex items-center justify-between shrink-0 px-3">
             <Eyebrow>Documents</Eyebrow>
             <TooltipTrigger delay={500}>
               <Button

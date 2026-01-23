@@ -823,8 +823,10 @@ export const mutators = defineMutators({
         slug: z.string(),
         logo: z.string().optional(),
         metadata: z.string().optional(),
+        color: z.string().optional(),
+        importDemoContent: z.boolean().optional(),
       }),
-      async ({ tx, ctx, args: { id, name, slug, logo, metadata, importDemoContent } }) => {
+      async ({ tx, ctx, args: { id, name, slug, logo, metadata, color, importDemoContent } }) => {
         isAuthenticated(ctx)
 
         // Verify slug doesn't already exist and make it unique if needed
@@ -850,6 +852,7 @@ export const mutators = defineMutators({
           slug: finalSlug,
           logo: logo || null,
           metadata: metadata || null,
+          color: color || null,
           subscription_status: "free",
           subscription_plan: "free",
           created_at: Date.now(),
@@ -947,8 +950,9 @@ export const mutators = defineMutators({
         organizationId: z.string(),
         name: z.string().optional(),
         slug: z.string().optional(),
+        color: z.string().optional(),
       }),
-      async ({ tx, ctx, args: { organizationId, name, slug } }) => {
+      async ({ tx, ctx, args: { organizationId, name, slug, color } }) => {
         hasOrganizationAccess(ctx, organizationId)
 
         const updates: any = {
@@ -971,6 +975,10 @@ export const mutators = defineMutators({
           }
 
           updates.slug = slug
+        }
+
+        if (color !== undefined) {
+          updates.color = color
         }
 
         await tx.mutate.organizations.update(updates)

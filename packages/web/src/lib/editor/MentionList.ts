@@ -1,7 +1,3 @@
-/**
- * MentionList - Reusable mention suggestion list for TipTap editors
- * Used for @ mentions in chat inputs
- */
 export class MentionList {
   items: any[]
   command: any
@@ -17,7 +13,7 @@ export class MentionList {
     this.element = document.createElement("div")
     this.element.className =
       "bg-white shadow-2xl rounded-lg bg-clip-padding border border-black/10 text-slate-700 z-50"
-    
+
     const listContainer = document.createElement("div")
     listContainer.className = "outline-none max-h-60 overflow-auto p-1 bg-white"
     this.element.appendChild(listContainer)
@@ -40,12 +36,12 @@ export class MentionList {
       itemElement.className = `group flex items-center gap-4 cursor-default select-none py-1 pl-2 pr-1 rounded-md outline-none text-sm forced-color-adjust-none ${
         isSelected ? "bg-gray-100" : "text-gray-900 hover:bg-gray-100"
       }`
-      
+
       const textSpan = document.createElement("span")
       textSpan.className = "flex items-center flex-1 truncate text-sm font-normal text-gray-800"
       textSpan.textContent = item.label
       itemElement.appendChild(textSpan)
-      
+
       itemElement.addEventListener("click", () => {
         this.selectItem(item)
       })
