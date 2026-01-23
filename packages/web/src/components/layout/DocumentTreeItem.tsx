@@ -323,7 +323,7 @@ function DocumentTreeItemIcon({
 
 function VerticalMenuButton({
   "aria-label": ariaLabel,
-  isOpen = false,
+  isOpen: _isOpen = false,
   tooltip,
 }: {
   "aria-label": string
@@ -331,12 +331,7 @@ function VerticalMenuButton({
   tooltip?: string
 }) {
   const button = (
-    <Button
-      className={`p-1 text-black hover:text-black/60 group/options transition-opacity ${
-        isOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-      }`}
-      aria-label={ariaLabel}
-    >
+    <Button className="p-1 text-black hover:text-black/60 group/options" aria-label={ariaLabel}>
       <MoreHorizontalRegular
         className={sidebarItemIconStyles({
           className: "size-4 group-hover/options:text-black/60",
@@ -380,10 +375,10 @@ function ItemContextMenu({
 
   if (type === "integration-link") {
     return (
-      <div className="flex items-center gap-1">
+      <div className="hidden group-hover:flex items-center gap-1">
         <TooltipTrigger delay={500}>
           <Button
-            className="p-1 text-black hover:text-black/60 group/add transition-opacity opacity-0 group-hover:opacity-100"
+            className="p-1 text-black hover:text-black/60 group/add"
             aria-label="Add document"
             onPress={() => {
               if (integrationLinkId) {
@@ -435,10 +430,10 @@ function ItemContextMenu({
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="hidden group-hover:flex items-center gap-1">
       <TooltipTrigger delay={500}>
         <Button
-          className="p-1 text-black hover:text-black/60 group/add transition-opacity opacity-0 group-hover:opacity-100"
+          className="p-1 text-black hover:text-black/60 group/add"
           aria-label="Add sub document"
           onPress={() => createDocument(itemId)}
         >
