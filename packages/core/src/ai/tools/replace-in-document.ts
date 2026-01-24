@@ -41,6 +41,13 @@ export const replaceInDocument = () =>
 Format: <a href="internal://DOCUMENT_ID">Link Text</a>
 Use internal:// protocol (not external URLs) to link other workspace documents. Get DOCUMENT_ID from searchDocuments tool.
 
+**Task Lists:**
+Format: <ul data-type="taskList"><li data-type="taskItem" data-checked="true">Completed task</li><li data-type="taskItem" data-checked="false">Pending task</li></ul>
+- Use data-type="taskList" on the <ul> element
+- Use data-type="taskItem" on each <li> element
+- Set data-checked="true" for completed tasks, data-checked="false" for pending tasks
+- Wrap task text in <div><p>Task text</p></div> inside each <li>
+
 **Special Cases:**
 - Empty document (wordCount = 0): Use search "" to replace entire document
 - Delete content: Use search to find content, replace with empty string ""
