@@ -7,7 +7,7 @@ export const feedbackMutators = {
   create: defineMutator(
     z.object({
       id: z.string(),
-      type: z.enum(["feedback", "help"]),
+      type: z.enum(["feedback", "help"]).optional(),
       message: z.string().min(1),
       metadata: z.any().optional(),
       organizationId: z.string(),
@@ -20,7 +20,7 @@ export const feedbackMutators = {
           id,
           user_id: ctx.userId,
           organization_id: organizationId,
-          type,
+          type: type || "feedback",
           message,
           metadata: metadata || null,
         }),

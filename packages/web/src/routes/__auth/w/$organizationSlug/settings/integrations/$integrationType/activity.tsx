@@ -1,4 +1,4 @@
-import { IntegrationActivityLog } from "@/components/integrations/IntegrationActivityLog"
+import { IntegrationActivityLog } from "@/components/settings/integrations/IntegrationActivityLog"
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"

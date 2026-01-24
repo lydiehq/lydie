@@ -1,7 +1,7 @@
 import { Heading } from "@/components/generic/Heading"
 import { Separator } from "@/components/generic/Separator"
 import { createFileRoute } from "@tanstack/react-router"
-import { IntegrationsList } from "@/components/integrations/IntegrationsList"
+import { IntegrationsList } from "@/components/settings/integrations/IntegrationsList"
 import { queries } from "@lydie/zero/queries"
 import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { useOrganization } from "@/context/organization.context"

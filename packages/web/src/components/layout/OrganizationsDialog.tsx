@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Modal } from "../generic/Modal"
 import { Dialog } from "../generic/Dialog"
 import { Heading, Button as RACButton } from "react-aria-components"
@@ -31,7 +30,6 @@ export function OrganizationsDialog({
       organizationId: targetOrg.id,
     })
 
-    // Navigate immediately without awaiting
     navigate({
       to: "/w/$organizationSlug",
       params: { organizationSlug: targetOrg.slug },

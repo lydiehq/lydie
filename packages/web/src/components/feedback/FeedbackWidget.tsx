@@ -1,15 +1,16 @@
 import { useState } from "react"
-import { DialogTrigger, Form, Button as RACButton } from "react-aria-components"
+import { DialogTrigger, Form, Heading, Button as RACButton } from "react-aria-components"
 import { Button } from "../generic/Button"
 import { Dialog } from "../generic/Dialog"
 import { Modal } from "../generic/Modal"
-import { RadioGroup, Radio } from "../generic/RadioGroup"
-import { ChatRegular, QuestionCircleRegular, DismissRegular, DismissFilled } from "@fluentui/react-icons"
+import { Separator } from "../generic/Separator"
+import { ChatFilled } from "@fluentui/react-icons"
 import { useZero } from "@/services/zero"
 import { createId } from "@lydie/core/id"
 import { useOrganization } from "@/context/organization.context"
 import { useAppForm } from "@/hooks/use-app-form"
 import { mutators } from "@lydie/zero/mutators"
+import { sidebarItemIconStyles, sidebarItemStyles } from "../layout/Sidebar"
 
 export function FeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false)
@@ -20,7 +21,6 @@ export function FeedbackWidget() {
 
   const form = useAppForm({
     defaultValues: {
-      type: "feedback" as "feedback" | "help",
       message: "",
     },
     onSubmit: async ({ value: values }) => {
@@ -32,7 +32,6 @@ export function FeedbackWidget() {
         zero.mutate(
           mutators.feedback.create({
             id: createId(),
-            type: values.type,
             message: values.message.trim(),
             metadata: {
               url: window.location.href,
@@ -56,101 +55,69 @@ export function FeedbackWidget() {
         setSubmitStatus("error")
       }
     },
-    validators: {
-      onChange: ({ value }) => {
-        if (!value.message.trim()) {
-          return "Message is required"
-        }
-        return undefined
-      },
-    },
   })
 
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-      <RACButton className="w-full flex items-center justify-start gap-x-2 p-1 rounded-md hover:bg-gray-100 text-sm text-gray-700 transition-colors">
-        <ChatRegular className="size-4" />
-        <span>Send Feedback</span>
+      <RACButton className={sidebarItemStyles({ className: "px-1.5 inline-block" })}>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <ChatFilled className={sidebarItemIconStyles({ className: "size-4" })} />
+          <span className="truncate text-start flex-1">Send feedback</span>
+        </div>
       </RACButton>
       <Modal isDismissable>
-        <Dialog className="p-4">
+        <Dialog>
           {({ close }) => (
             <>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Send Feedback</h2>
-                <Button
-                  intent="ghost"
-                  size="sm"
-                  onPress={close}
-                  aria-label="Close"
-                  className="p-1 text-gray-500 hover:text-gray-900"
-                >
-                  <DismissFilled className="size-4" />
-                </Button>
+              <div className="p-3">
+                <Heading slot="title" className="text-sm font-medium text-gray-700">
+                  Send Feedback
+                </Heading>
               </div>
-
+              <Separator />
               <Form
                 onSubmit={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   form.handleSubmit()
                 }}
-                className="flex flex-col gap-4"
+                className="flex flex-col"
               >
-                <form.AppField
-                  name="type"
-                  children={(field) => (
-                    <RadioGroup
-                      label="Type"
-                      value={field.state.value}
-                      onChange={(val) => field.handleChange(val as "feedback" | "help")}
-                      orientation="horizontal"
-                    >
-                      <Radio value="feedback">
-                        <div className="flex items-center gap-1.5">
-                          <ChatRegular className="size-4 text-gray-600" />
-                          <span>Feedback</span>
-                        </div>
-                      </Radio>
-                      <Radio value="help">
-                        <div className="flex items-center gap-1.5">
-                          <QuestionCircleRegular className="size-4 text-gray-600" />
-                          <span>Help Request</span>
-                        </div>
-                      </Radio>
-                    </RadioGroup>
+                <div className="flex flex-col gap-4 p-3">
+                  <form.AppField
+                    name="message"
+                    validators={{
+                      onChange: ({ value }) => {
+                        if (!value || !value.trim()) {
+                          return "Message is required"
+                        }
+                        return undefined
+                      },
+                    }}
+                    children={(field) => (
+                      <field.TextField
+                        label="Message"
+                        textarea
+                        autoFocus
+                        placeholder="Tell us what you think or how we can help..."
+                      />
+                    )}
+                  />
+
+                  {submitStatus === "success" && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
+                      Thank you! Your feedback has been submitted.
+                    </div>
                   )}
-                />
 
-                <form.AppField
-                  name="message"
-                  children={(field) => (
-                    <field.TextField
-                      label="Message"
-                      textarea
-                      placeholder={
-                        form.getFieldValue("type") === "feedback"
-                          ? "Tell us what you think..."
-                          : "How can we help you?"
-                      }
-                      className="w-full"
-                    />
+                  {submitStatus === "error" && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
+                      Failed to submit. Please try again.
+                    </div>
                   )}
-                />
-
-                {submitStatus === "success" && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
-                    ✓ Thank you! Your {form.getFieldValue("type")} has been submitted.
-                  </div>
-                )}
-
-                {submitStatus === "error" && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
-                    Failed to submit. Please try again.
-                  </div>
-                )}
-
-                <div className="flex gap-3 justify-end mt-2">
+                </div>
+                <Separator />
+                <div className="flex gap-3 justify-end p-3">
                   <Button intent="secondary" onPress={close} isDisabled={form.state.isSubmitting}>
                     Cancel
                   </Button>

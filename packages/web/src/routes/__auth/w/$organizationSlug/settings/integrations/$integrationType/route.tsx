@@ -16,7 +16,7 @@ import { confirmDialog } from "@/stores/confirm-dialog"
 import { DialogTrigger } from "react-aria-components"
 import { Modal } from "@/components/generic/Modal"
 import { Dialog } from "@/components/generic/Dialog"
-import { WordPressConnectionForm } from "@/components/integrations/forms/wordpress-connection-form"
+import { WordPressConnectionForm } from "@/components/settings/integrations/forms/wordpress-connection-form"
 import { useOrganization } from "@/context/organization.context"
 import { trackEvent } from "@/lib/posthog"
 

@@ -8,7 +8,6 @@ import { loadOrganization } from "@/lib/organization/loadOrganization"
 import { useAtomValue } from "jotai"
 import { isDockedAtom } from "@/stores/floating-assistant"
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant"
-import { authClient } from "@/utils/auth"
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog"
 import { z } from "zod"
 

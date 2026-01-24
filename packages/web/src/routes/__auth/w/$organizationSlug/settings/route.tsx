@@ -10,7 +10,7 @@ import {
   DocumentFilled,
   OpenFilled,
   ShieldErrorFilled,
-  PuzzlePieceFilled,
+  TabDesktopMultiple16Filled,
 } from "@fluentui/react-icons"
 import { sidebarItemStyles, sidebarItemIconStyles } from "@/components/layout/Sidebar"
 import { Eyebrow } from "@/components/generic/Eyebrow"
@@ -83,7 +83,7 @@ const settingsRoutes: SettingsSection[] = [
       {
         path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
-        icon: PuzzlePieceFilled,
+        icon: TabDesktopMultiple16Filled,
       },
       {
         path: "/w/$organizationSlug/settings/import",

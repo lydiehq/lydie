@@ -30,7 +30,7 @@ export function OrganizationAvatar({
 }: OrganizationAvatarProps) {
   const { organization: organizationFromContext } = useOrganization()
   const organization = organizationProp ?? organizationFromContext
-  const color = organization?.color || WORKSPACE_COLORS[0]
+  const color = organization?.color || WORKSPACE_COLORS[0].value
 
   return (
     <div

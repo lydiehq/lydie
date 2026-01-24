@@ -11,6 +11,7 @@ export type Organization = {
   id: string
   name: string
   slug: string
+  color: string | null
   subscriptionStatus: string | null
   subscriptionPlan: string | null
   polarSubscriptionId: string | null
@@ -56,6 +57,5 @@ export async function loadOrganization(
     queryKey: getOrganizationQueryKey(organizationSlug),
     queryFn: () => fetchOrganization(zero, organizationSlug),
     staleTime: STALE_TIME,
-    retry: 2,
   })
 }

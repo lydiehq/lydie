@@ -9,6 +9,8 @@ import {
   Label as RACLabel,
   Text,
   type TextProps,
+  TextArea as RACTextArea,
+  type TextAreaProps,
   composeRenderProps,
 } from "react-aria-components"
 import { twMerge } from "tailwind-merge"
@@ -83,6 +85,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       className={composeTailwindRenderProps(
         props.className,
         "px-3 py-2 flex-1 ring ring-black/8 rounded-md min-w-0 bg-white text-sm text-gray-800 disabled:text-gray-200 focus:ring-black/20",
+      )}
+    />
+  )
+})
+
+export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>((props, ref) => {
+  return (
+    <RACTextArea
+      {...props}
+      ref={ref}
+      className={composeTailwindRenderProps(
+        props.className,
+        "px-3 py-2 w-full ring ring-black/8 rounded-md bg-white text-sm text-gray-800 disabled:text-gray-200 focus:ring-black/20 resize-y",
       )}
     />
   )

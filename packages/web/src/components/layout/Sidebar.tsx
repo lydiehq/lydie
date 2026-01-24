@@ -26,7 +26,6 @@ import {
   ArrowClockwiseRegular,
   ShieldErrorRegular,
   PersonChat16Filled,
-  CollectionsFilled,
   TabDesktopMultiple16Filled,
   AddSquare16Filled,
 } from "@fluentui/react-icons"

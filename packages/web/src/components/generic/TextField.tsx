@@ -1,11 +1,10 @@
 import {
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps,
-  TextArea,
   type ValidationResult,
 } from "react-aria-components"
 import { useFieldContext } from "@/hooks/use-app-form"
-import { Description, FieldError, Input, Label } from "./Field"
+import { Description, FieldError, Input, Label, TextArea } from "./Field"
 import { composeTailwindRenderProps, focusRing } from "./utils"
 
 export interface TextFieldProps extends Omit<AriaTextFieldProps, "name"> {

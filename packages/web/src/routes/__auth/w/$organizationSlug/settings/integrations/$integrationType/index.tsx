@@ -1,4 +1,4 @@
-import { IntegrationLinkList } from "@/components/integrations/IntegrationLinkList"
+import { IntegrationLinkList } from "@/components/settings/integrations/IntegrationLinkList"
 import { createFileRoute } from "@tanstack/react-router"
 import { queries } from "@lydie/zero/queries"
 import { useQuery } from "@rocicorp/zero/react"

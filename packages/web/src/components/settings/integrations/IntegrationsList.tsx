@@ -5,8 +5,7 @@ import { getIntegrationIconUrl } from "@/utils/integration-icons"
 import { Link } from "@/components/generic/Link"
 import { cardStyles } from "@/components/layout/Card"
 import { useOrganization } from "@/context/organization.context"
-import { Eyebrow } from "../generic/Eyebrow"
-import { CheckmarkCircleRegular } from "@fluentui/react-icons"
+import { Eyebrow } from "@/components/generic/Eyebrow"
 
 export function IntegrationsList() {
   const { organization } = useOrganization()
