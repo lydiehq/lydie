@@ -166,8 +166,9 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${document.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                        }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${
+                        document.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                      }`}
                     >
                       {document.published ? "Published" : "Draft"}
                     </span>
@@ -179,10 +180,11 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${document.index_status === "indexed"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-yellow-100 text-yellow-700"
-                        }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${
+                        document.index_status === "indexed"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
                     >
                       {document.index_status === "indexed" ? "Indexed" : "Not Indexed"}
                     </span>

@@ -1,8 +1,8 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
 import { AddRegular, DeleteRegular } from "@fluentui/react-icons"
-import { Button } from "./generic/Button"
+import { Button } from "../generic/Button"
 import { TextField as AriaTextField, NumberField as AriaNumberField } from "react-aria-components"
-import { Input, Label } from "./generic/Field"
+import { Input, Label } from "../generic/Field"
 
 type ObjectArrayField = {
   name: string

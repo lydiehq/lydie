@@ -1,4 +1,4 @@
-import { Editor } from "@/components/Editor"
+import { Editor } from "@/components/editor/Editor"
 import { useQuery } from "@rocicorp/zero/react"
 import { createFileRoute } from "@tanstack/react-router"
 import { queries } from "@lydie/zero/queries"

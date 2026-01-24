@@ -17,7 +17,7 @@ import {
 } from "@fluentui/react-icons"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar"
-import { DocumentMenu } from "../home-file-explorer/DocumentMenu"
+import { DocumentMenu } from "./DocumentMenu"
 import { Menu, MenuItem } from "../generic/Menu"
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
 import type { QueryResultType } from "@rocicorp/zero"

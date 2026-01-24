@@ -11,7 +11,7 @@ import {
 } from "react-aria-components"
 import { ChevronDownRegular } from "@fluentui/react-icons"
 import { useMemo, useState, useEffect, useCallback, type Key } from "react"
-import { ListBox, ListBoxItem } from "./generic/ListBox"
+import { ListBox, ListBoxItem } from "../generic/ListBox"
 
 type LanguageItem = {
   id: string
