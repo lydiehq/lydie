@@ -35,7 +35,7 @@ const FolderIcon = () => (
 type TemplateDocument = {
   id: string
   title: string
-  content: string
+  content: any // TipTap JSON content
   children?: TemplateDocument[]
 }
 
@@ -92,7 +92,7 @@ export function TemplateViewer({ documents, className = "" }: TemplateViewerProp
   // Content editor (read-only)
   const contentEditor = useEditor({
     extensions: [StarterKit],
-    content: selectedDoc?.content || "",
+    content: selectedDoc?.content || { type: "doc", content: [] },
     editable: false,
     immediatelyRender: false,
     editorProps: {

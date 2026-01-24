@@ -7,6 +7,7 @@ import { writeFile, unlink, readFile } from "fs/promises"
 import { randomUUID } from "crypto"
 import path from "path"
 import { publicRateLimit } from "./middleware"
+import TemplateInstallRoute from "./template-install"
 
 const execAsync = promisify(exec)
 
@@ -24,6 +25,7 @@ const convertSchema = z.object({
 
 export const PublicApi = new Hono()
   .use(publicRateLimit)
+  .route("/template-install", TemplateInstallRoute)
   .post("/convert", zValidator("json", convertSchema), async (c) => {
     const { content, from, to, options } = c.req.valid("json")
 

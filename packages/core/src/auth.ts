@@ -153,11 +153,12 @@ export const authClient = betterAuth({
 
       const organizations = members.map((m) => m.organization)
 
-      // Extend the session object with organizations so they're available directly on session
+      // Extend the session object with organizations and user role so they're available directly on session
       return {
         user,
         session: {
           ...session,
+          role: user.role,
           organizations,
         },
       }

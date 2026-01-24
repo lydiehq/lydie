@@ -9,7 +9,7 @@ import { getAllTemplates, getTemplate } from "../../data/templates";
 
 export async function getStaticPaths() {
   try {
-    const templates = getAllTemplates();
+    const templates = await getAllTemplates();
     return templates.map((template) => ({
       params: { slug: template.slug },
       props: { template },
@@ -61,25 +61,36 @@ const categories = template.categories;
             </div>
 
             <h1 class="text-4xl font-medium text-gray-900">{templateName}</h1>
-            <span class="text-base/relaxed text-gray-600"
-              >Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut vel
-              quia officia nemo at ex sed deserunt qui eos molestiae.</span
-            >
-            <div class="flex flex-wrap gap-2">
-              {
-                categories.map((category) => (
-                  <a
-                    href="#"
-                    class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-                  >
-                    {category}
-                  </a>
-                ))
-              }
-            </div>
+            {
+              template.description && (
+                <span class="text-base/relaxed text-gray-600">
+                  {template.description}
+                </span>
+              )
+            }
+            {
+              categories && categories.length > 0 && (
+                <div class="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <a
+                      href="#"
+                      class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                    >
+                      {category}
+                    </a>
+                  ))}
+                </div>
+              )
+            }
 
             <div class="flex gap-x-1">
-              <Button className="self-start" size="lg">Get template</Button>
+              <Button
+                className="self-start"
+                size="lg"
+                href={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/public/template-install?template=${template.slug}`}
+              >
+                Get template
+              </Button>
               Share
             </div>
           </div>

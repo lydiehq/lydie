@@ -29,16 +29,12 @@ new sst.aws.StaticSite("Web", {
   ...($dev ? {} : { domain: "app.lydie.co" }),
 })
 
-new sst.aws.StaticSite("Marketing", {
+new sst.aws.Astro("Marketing", {
   path: "./packages/marketing",
-  build: {
-    command: "bun run build",
-    output: "dist",
-  },
   environment: {
     PUBLIC_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
-    LYDIE_API_KEY: secret.lydieApiKey.value,
   },
+  link: [secret.lydieApiKey, secret.postgresConnectionStringDirect],
   ...($dev ? {} : { domain: "lydie.co" }),
   ...($dev
     ? {}

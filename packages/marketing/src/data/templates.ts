@@ -1,7 +1,7 @@
 export type TemplateDocument = {
   id: string
   title: string
-  content: string
+  content: any // TipTap JSON content
   children?: TemplateDocument[]
 }
 
@@ -14,118 +14,106 @@ export type Template = {
   documents: TemplateDocument[]
 }
 
-// Example template data
-export const templates: Record<string, Template> = {
-  resume: {
-    id: "resume-template",
-    slug: "resume",
-    name: "Developer Resume Template",
-    description: "A professional resume template for developers showcasing skills and experience.",
-    categories: ["Resume", "Professional", "Developer"],
-    documents: [
-      {
-        id: "doc-1",
-        title: "Resume",
-        content: `
-          <h2>John Doe</h2>
-          <p>Senior Software Engineer</p>
-          <p>Email: john@example.com | Phone: (555) 123-4567</p>
-          
-          <h3>Summary</h3>
-          <p>Experienced software engineer with 8+ years building scalable web applications. 
-          Specialized in React, TypeScript, and Node.js.</p>
-          
-          <h3>Experience</h3>
-          <h4>Senior Software Engineer - Tech Corp (2020 - Present)</h4>
-          <ul>
-            <li>Led development of customer-facing dashboard serving 100K+ users</li>
-            <li>Improved application performance by 40% through code optimization</li>
-            <li>Mentored 5 junior developers on best practices and code quality</li>
-          </ul>
-          
-          <h4>Software Engineer - StartupXYZ (2017 - 2020)</h4>
-          <ul>
-            <li>Built REST APIs handling 1M+ requests per day</li>
-            <li>Implemented CI/CD pipeline reducing deployment time by 60%</li>
-            <li>Collaborated with design team on user interface improvements</li>
-          </ul>
-          
-          <h3>Skills</h3>
-          <ul>
-            <li><strong>Languages:</strong> JavaScript, TypeScript, Python, Go</li>
-            <li><strong>Frontend:</strong> React, Next.js, Tailwind CSS</li>
-            <li><strong>Backend:</strong> Node.js, Express, PostgreSQL, Redis</li>
-            <li><strong>Tools:</strong> Git, Docker, AWS, GitHub Actions</li>
-          </ul>
-          
-          <h3>Education</h3>
-          <p><strong>Bachelor of Science in Computer Science</strong><br />
-          University of Technology, 2017</p>
-        `,
-        children: [
-          {
-            id: "doc-2",
-            title: "Cover Letter",
-            content: `
-              <p>Dear Hiring Manager,</p>
-              
-              <p>I am writing to express my strong interest in the Senior Software Engineer position 
-              at your company. With over 8 years of experience building scalable web applications and 
-              a proven track record of delivering high-quality software solutions, I am confident I 
-              would be a valuable addition to your team.</p>
-              
-              <p>In my current role at Tech Corp, I have led the development of a customer-facing 
-              dashboard that serves over 100,000 users daily. Through careful optimization and 
-              architectural improvements, I increased application performance by 40%, resulting in 
-              significantly improved user satisfaction scores.</p>
-              
-              <p>I am particularly excited about this opportunity because of your company's commitment 
-              to innovation and technical excellence. I believe my experience with React, TypeScript, 
-              and modern cloud technologies would allow me to contribute immediately to your team's 
-              success.</p>
-              
-              <p>Thank you for considering my application. I look forward to the opportunity to discuss 
-              how my skills and experience align with your needs.</p>
-              
-              <p>Sincerely,<br />
-              John Doe</p>
-            `,
-          },
-          {
-            id: "doc-3",
-            title: "References",
-            content: `
-              <h3>Professional References</h3>
-              
-              <h4>Jane Smith</h4>
-              <p><strong>Engineering Manager, Tech Corp</strong><br />
-              Email: jane.smith@techcorp.com<br />
-              Phone: (555) 234-5678<br />
-              Relationship: Direct Manager (2020 - Present)</p>
-              
-              <h4>Bob Johnson</h4>
-              <p><strong>CTO, StartupXYZ</strong><br />
-              Email: bob@startupxyz.com<br />
-              Phone: (555) 345-6789<br />
-              Relationship: Former Manager (2017 - 2020)</p>
-              
-              <h4>Alice Chen</h4>
-              <p><strong>Senior Staff Engineer, Tech Corp</strong><br />
-              Email: alice.chen@techcorp.com<br />
-              Phone: (555) 456-7890<br />
-              Relationship: Colleague and Technical Lead</p>
-            `,
-          },
-        ],
-      },
-    ],
-  },
+import { convertYjsToJson } from "@lydie/core/yjs-to-json"
+import { db, templatesTable, templateDocumentsTable } from "@lydie/database"
+import { eq, desc } from "drizzle-orm"
+
+export async function getTemplate(slug: string): Promise<Template | undefined> {
+  try {
+    const [template] = await db.select().from(templatesTable).where(eq(templatesTable.slug, slug)).limit(1)
+
+    if (!template) {
+      return undefined
+    }
+
+    const documents = await db
+      .select()
+      .from(templateDocumentsTable)
+      .where(eq(templateDocumentsTable.templateId, template.id))
+      .orderBy(templateDocumentsTable.sortOrder)
+
+    return transformDbTemplateToTemplate({
+      ...template,
+      documents,
+    })
+  } catch (error) {
+    console.error("Error fetching template:", error)
+    return undefined
+  }
 }
 
-export function getTemplate(slug: string): Template | undefined {
-  return templates[slug]
+export async function getAllTemplates(): Promise<Template[]> {
+  try {
+    const templates = await db.select().from(templatesTable).orderBy(desc(templatesTable.createdAt))
+
+    const templatesWithDocs = await Promise.all(
+      templates.map(async (template) => {
+        const documents = await db
+          .select()
+          .from(templateDocumentsTable)
+          .where(eq(templateDocumentsTable.templateId, template.id))
+          .orderBy(templateDocumentsTable.sortOrder)
+
+        return {
+          ...template,
+          documents,
+        }
+      }),
+    )
+
+    return templatesWithDocs.map(transformDbTemplateToTemplate)
+  } catch (error) {
+    console.error("Error fetching templates:", error)
+    return []
+  }
 }
 
-export function getAllTemplates(): Template[] {
-  return Object.values(templates)
+function transformDbTemplateToTemplate(dbTemplate: any): Template {
+  // Build document tree from flat list
+  const docMap = new Map<string, TemplateDocument>()
+  const rootDocs: TemplateDocument[] = []
+
+  // First pass: create all documents and convert YJS to JSON
+  for (const doc of dbTemplate.documents || []) {
+    // Convert YJS state (base64) to TipTap JSON
+    let content: any = { type: "doc", content: [] }
+    if (doc.content) {
+      try {
+        const jsonContent = convertYjsToJson(doc.content)
+        content = jsonContent || content
+      } catch (error) {
+        console.error(`Failed to convert YJS for document ${doc.id}:`, error)
+      }
+    }
+
+    const templateDoc: TemplateDocument = {
+      id: doc.id,
+      title: doc.title,
+      content,
+      children: [],
+    }
+    docMap.set(doc.id, templateDoc)
+  }
+
+  // Second pass: build hierarchy
+  for (const doc of dbTemplate.documents || []) {
+    const templateDoc = docMap.get(doc.id)!
+    const parentId = doc.parentId || doc.parent_id
+    if (parentId && docMap.has(parentId)) {
+      const parent = docMap.get(parentId)!
+      if (!parent.children) parent.children = []
+      parent.children.push(templateDoc)
+    } else {
+      rootDocs.push(templateDoc)
+    }
+  }
+
+  return {
+    id: dbTemplate.id,
+    slug: dbTemplate.slug,
+    name: dbTemplate.name,
+    description: dbTemplate.description || "",
+    categories: [], // Categories can be added later if needed
+    documents: rootDocs,
+  }
 }

@@ -56,7 +56,7 @@ declare module "sst" {
       "value": string
     }
     "Marketing": {
-      "type": "sst.aws.StaticSite"
+      "type": "sst.aws.Astro"
       "url": string
     }
     "OnboardingEmailProcessorFunction": {

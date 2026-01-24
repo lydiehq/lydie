@@ -20,6 +20,7 @@ const users = table("users")
     name: string(),
     email: string(),
     image: string().optional(),
+    role: string(),
     ...timestamps,
   })
   .primaryKey("id")
@@ -563,6 +564,94 @@ const feedbackSubmissionsRelations = relationships(feedbackSubmissions, ({ one }
   }),
 }))
 
+const templates = table("templates")
+  .columns({
+    id: string(),
+    name: string(),
+    slug: string(),
+    description: string().optional(),
+    preview_data: json().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id")
+
+const templateDocuments = table("template_documents")
+  .columns({
+    id: string(),
+    template_id: string(),
+    title: string(),
+    content: string().optional(),
+    parent_id: string().optional(),
+    sort_order: number(),
+    ...timestamps,
+  })
+  .primaryKey("id")
+
+const templateInstallations = table("template_installations")
+  .columns({
+    id: string(),
+    template_id: string(),
+    organization_id: string(),
+    installed_by_user_id: string(),
+    root_document_id: string(),
+    created_at: number(),
+  })
+  .primaryKey("id")
+
+const templatesRelations = relationships(templates, ({ many }) => ({
+  documents: many({
+    sourceField: ["id"],
+    destField: ["template_id"],
+    destSchema: templateDocuments,
+  }),
+  installations: many({
+    sourceField: ["id"],
+    destField: ["template_id"],
+    destSchema: templateInstallations,
+  }),
+}))
+
+const templateDocumentsRelations = relationships(templateDocuments, ({ one, many }) => ({
+  template: one({
+    sourceField: ["template_id"],
+    destField: ["id"],
+    destSchema: templates,
+  }),
+  parent: one({
+    sourceField: ["parent_id"],
+    destField: ["id"],
+    destSchema: templateDocuments,
+  }),
+  children: many({
+    sourceField: ["id"],
+    destField: ["parent_id"],
+    destSchema: templateDocuments,
+  }),
+}))
+
+const templateInstallationsRelations = relationships(templateInstallations, ({ one }) => ({
+  template: one({
+    sourceField: ["template_id"],
+    destField: ["id"],
+    destSchema: templates,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  installedBy: one({
+    sourceField: ["installed_by_user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  rootDocument: one({
+    sourceField: ["root_document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+}))
+
 export const schema = createSchema({
   tables: [
     users,
@@ -584,6 +673,9 @@ export const schema = createSchema({
     integrationActivityLogs,
     documentPublications,
     feedbackSubmissions,
+    templates,
+    templateDocuments,
+    templateInstallations,
   ],
   relationships: [
     documentsRelations,
@@ -605,6 +697,9 @@ export const schema = createSchema({
     integrationActivityLogsRelations,
     documentPublicationsRelations,
     feedbackSubmissionsRelations,
+    templatesRelations,
+    templateDocumentsRelations,
+    templateInstallationsRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,

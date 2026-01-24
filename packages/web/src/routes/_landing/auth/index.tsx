@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_landing/auth/")({
   component: RouteComponent,
   validateSearch: z.object({
     redirect: z.string().optional(),
+    template: z.string().optional(),
   }),
 })
 
@@ -63,12 +64,20 @@ function RouteComponent() {
 
 function AuthBox() {
   const [isPending, setIsPending] = useState(false)
-  const { redirect } = Route.useSearch()
+  const { redirect, template } = Route.useSearch()
 
   const handleGoogleSignIn = async () => {
     setIsPending(true)
     try {
-      const callbackURL = redirect ? `${window.location.origin}${redirect}` : window.location.origin
+      let callbackURL = window.location.origin
+      
+      // If there's a template, redirect to install-template page
+      if (template) {
+        callbackURL = `${window.location.origin}/install-template?template=${encodeURIComponent(template)}`
+      } else if (redirect) {
+        callbackURL = `${window.location.origin}${redirect}`
+      }
+      
       await authClient.signIn.social({
         provider: "google",
         callbackURL,

@@ -11,6 +11,7 @@ import {
   OpenFilled,
   ShieldErrorFilled,
   PuzzlePieceFilled,
+  AppsFilled,
 } from "@fluentui/react-icons"
 import { sidebarItemStyles, sidebarItemIconStyles } from "@/components/layout/Sidebar"
 import { Eyebrow } from "@/components/generic/Eyebrow"
@@ -78,6 +79,12 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationSlug/settings/components",
         label: "Components",
         icon: CubeFilled,
+        adminOnly: true,
+      },
+      {
+        path: "/w/$organizationSlug/settings/templates",
+        label: "Templates",
+        icon: AppsFilled,
         adminOnly: true,
       },
       {

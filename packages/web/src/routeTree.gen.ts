@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LandingRouteRouteImport } from './routes/_landing/route'
 import { Route as _authRouteRouteImport } from './routes/__auth/route'
 import { Route as _authIndexRouteImport } from './routes/__auth/index'
+import { Route as _authInstallTemplateRouteImport } from './routes/__auth/install-template'
 import { Route as LandingBlogIndexRouteImport } from './routes/_landing/blog/index'
 import { Route as LandingAuthIndexRouteImport } from './routes/_landing/auth/index'
 import { Route as _authNewIndexRouteImport } from './routes/__auth/new/index'
@@ -22,6 +23,7 @@ import { Route as _authWOrganizationSlugSettingsIndexRouteImport } from './route
 import { Route as _authWOrganizationSlugAssistantIndexRouteImport } from './routes/__auth/w/$organizationSlug/assistant/index'
 import { Route as _authWOrganizationSlugIdIndexRouteImport } from './routes/__auth/w/$organizationSlug/$id/index'
 import { Route as _authWOrganizationSlugSettingsUserRouteImport } from './routes/__auth/w/$organizationSlug/settings/user'
+import { Route as _authWOrganizationSlugSettingsTemplatesRouteImport } from './routes/__auth/w/$organizationSlug/settings/templates'
 import { Route as _authWOrganizationSlugSettingsProfileRouteImport } from './routes/__auth/w/$organizationSlug/settings/profile'
 import { Route as _authWOrganizationSlugSettingsImportRouteImport } from './routes/__auth/w/$organizationSlug/settings/import'
 import { Route as _authWOrganizationSlugSettingsComponentsRouteImport } from './routes/__auth/w/$organizationSlug/settings/components'
@@ -45,6 +47,11 @@ const _authRouteRoute = _authRouteRouteImport.update({
 const _authIndexRoute = _authIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => _authRouteRoute,
+} as any)
+const _authInstallTemplateRoute = _authInstallTemplateRouteImport.update({
+  id: '/install-template',
+  path: '/install-template',
   getParentRoute: () => _authRouteRoute,
 } as any)
 const LandingBlogIndexRoute = LandingBlogIndexRouteImport.update({
@@ -102,6 +109,12 @@ const _authWOrganizationSlugSettingsUserRoute =
   _authWOrganizationSlugSettingsUserRouteImport.update({
     id: '/user',
     path: '/user',
+    getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
+  } as any)
+const _authWOrganizationSlugSettingsTemplatesRoute =
+  _authWOrganizationSlugSettingsTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
     getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
 const _authWOrganizationSlugSettingsProfileRoute =
@@ -181,6 +194,7 @@ const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof _authIndexRoute
+  '/install-template': typeof _authInstallTemplateRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugRouteRouteWithChildren
   '/new/': typeof _authNewIndexRoute
   '/auth/': typeof LandingAuthIndexRoute
@@ -193,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
   '/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
   '/w/$organizationSlug/settings/profile': typeof _authWOrganizationSlugSettingsProfileRoute
+  '/w/$organizationSlug/settings/templates': typeof _authWOrganizationSlugSettingsTemplatesRoute
   '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
   '/w/$organizationSlug/$id/': typeof _authWOrganizationSlugIdIndexRoute
   '/w/$organizationSlug/assistant/': typeof _authWOrganizationSlugAssistantIndexRoute
@@ -205,6 +220,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof _authIndexRoute
+  '/install-template': typeof _authInstallTemplateRoute
   '/new': typeof _authNewIndexRoute
   '/auth': typeof LandingAuthIndexRoute
   '/blog': typeof LandingBlogIndexRoute
@@ -215,6 +231,7 @@ export interface FileRoutesByTo {
   '/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
   '/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
   '/w/$organizationSlug/settings/profile': typeof _authWOrganizationSlugSettingsProfileRoute
+  '/w/$organizationSlug/settings/templates': typeof _authWOrganizationSlugSettingsTemplatesRoute
   '/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
   '/w/$organizationSlug/$id': typeof _authWOrganizationSlugIdIndexRoute
   '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantIndexRoute
@@ -228,6 +245,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/__auth': typeof _authRouteRouteWithChildren
   '/_landing': typeof LandingRouteRouteWithChildren
+  '/__auth/install-template': typeof _authInstallTemplateRoute
   '/__auth/': typeof _authIndexRoute
   '/__auth/w/$organizationSlug': typeof _authWOrganizationSlugRouteRouteWithChildren
   '/__auth/new/': typeof _authNewIndexRoute
@@ -241,6 +259,7 @@ export interface FileRoutesById {
   '/__auth/w/$organizationSlug/settings/components': typeof _authWOrganizationSlugSettingsComponentsRoute
   '/__auth/w/$organizationSlug/settings/import': typeof _authWOrganizationSlugSettingsImportRoute
   '/__auth/w/$organizationSlug/settings/profile': typeof _authWOrganizationSlugSettingsProfileRoute
+  '/__auth/w/$organizationSlug/settings/templates': typeof _authWOrganizationSlugSettingsTemplatesRoute
   '/__auth/w/$organizationSlug/settings/user': typeof _authWOrganizationSlugSettingsUserRoute
   '/__auth/w/$organizationSlug/$id/': typeof _authWOrganizationSlugIdIndexRoute
   '/__auth/w/$organizationSlug/assistant/': typeof _authWOrganizationSlugAssistantIndexRoute
@@ -255,6 +274,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/install-template'
     | '/w/$organizationSlug'
     | '/new/'
     | '/auth/'
@@ -267,6 +287,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/settings/components'
     | '/w/$organizationSlug/settings/import'
     | '/w/$organizationSlug/settings/profile'
+    | '/w/$organizationSlug/settings/templates'
     | '/w/$organizationSlug/settings/user'
     | '/w/$organizationSlug/$id/'
     | '/w/$organizationSlug/assistant/'
@@ -279,6 +300,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/install-template'
     | '/new'
     | '/auth'
     | '/blog'
@@ -289,6 +311,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/settings/components'
     | '/w/$organizationSlug/settings/import'
     | '/w/$organizationSlug/settings/profile'
+    | '/w/$organizationSlug/settings/templates'
     | '/w/$organizationSlug/settings/user'
     | '/w/$organizationSlug/$id'
     | '/w/$organizationSlug/assistant'
@@ -301,6 +324,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/__auth'
     | '/_landing'
+    | '/__auth/install-template'
     | '/__auth/'
     | '/__auth/w/$organizationSlug'
     | '/__auth/new/'
@@ -314,6 +338,7 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationSlug/settings/components'
     | '/__auth/w/$organizationSlug/settings/import'
     | '/__auth/w/$organizationSlug/settings/profile'
+    | '/__auth/w/$organizationSlug/settings/templates'
     | '/__auth/w/$organizationSlug/settings/user'
     | '/__auth/w/$organizationSlug/$id/'
     | '/__auth/w/$organizationSlug/assistant/'
@@ -351,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof _authIndexRouteImport
+      parentRoute: typeof _authRouteRoute
+    }
+    '/__auth/install-template': {
+      id: '/__auth/install-template'
+      path: '/install-template'
+      fullPath: '/install-template'
+      preLoaderRoute: typeof _authInstallTemplateRouteImport
       parentRoute: typeof _authRouteRoute
     }
     '/_landing/blog/': {
@@ -421,6 +453,13 @@ declare module '@tanstack/react-router' {
       path: '/user'
       fullPath: '/w/$organizationSlug/settings/user'
       preLoaderRoute: typeof _authWOrganizationSlugSettingsUserRouteImport
+      parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
+    }
+    '/__auth/w/$organizationSlug/settings/templates': {
+      id: '/__auth/w/$organizationSlug/settings/templates'
+      path: '/templates'
+      fullPath: '/w/$organizationSlug/settings/templates'
+      preLoaderRoute: typeof _authWOrganizationSlugSettingsTemplatesRouteImport
       parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
     '/__auth/w/$organizationSlug/settings/profile': {
@@ -528,6 +567,7 @@ interface _authWOrganizationSlugSettingsRouteRouteChildren {
   _authWOrganizationSlugSettingsComponentsRoute: typeof _authWOrganizationSlugSettingsComponentsRoute
   _authWOrganizationSlugSettingsImportRoute: typeof _authWOrganizationSlugSettingsImportRoute
   _authWOrganizationSlugSettingsProfileRoute: typeof _authWOrganizationSlugSettingsProfileRoute
+  _authWOrganizationSlugSettingsTemplatesRoute: typeof _authWOrganizationSlugSettingsTemplatesRoute
   _authWOrganizationSlugSettingsUserRoute: typeof _authWOrganizationSlugSettingsUserRoute
   _authWOrganizationSlugSettingsIndexRoute: typeof _authWOrganizationSlugSettingsIndexRoute
   _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRoute: typeof _authWOrganizationSlugSettingsIntegrationsIntegrationTypeRouteRouteWithChildren
@@ -548,6 +588,8 @@ const _authWOrganizationSlugSettingsRouteRouteChildren: _authWOrganizationSlugSe
       _authWOrganizationSlugSettingsImportRoute,
     _authWOrganizationSlugSettingsProfileRoute:
       _authWOrganizationSlugSettingsProfileRoute,
+    _authWOrganizationSlugSettingsTemplatesRoute:
+      _authWOrganizationSlugSettingsTemplatesRoute,
     _authWOrganizationSlugSettingsUserRoute:
       _authWOrganizationSlugSettingsUserRoute,
     _authWOrganizationSlugSettingsIndexRoute:
@@ -589,12 +631,14 @@ const _authWOrganizationSlugRouteRouteWithChildren =
   )
 
 interface _authRouteRouteChildren {
+  _authInstallTemplateRoute: typeof _authInstallTemplateRoute
   _authIndexRoute: typeof _authIndexRoute
   _authWOrganizationSlugRouteRoute: typeof _authWOrganizationSlugRouteRouteWithChildren
   _authNewIndexRoute: typeof _authNewIndexRoute
 }
 
 const _authRouteRouteChildren: _authRouteRouteChildren = {
+  _authInstallTemplateRoute: _authInstallTemplateRoute,
   _authIndexRoute: _authIndexRoute,
   _authWOrganizationSlugRouteRoute:
     _authWOrganizationSlugRouteRouteWithChildren,
