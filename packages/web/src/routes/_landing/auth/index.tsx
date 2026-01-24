@@ -70,14 +70,14 @@ function AuthBox() {
     setIsPending(true)
     try {
       let callbackURL = window.location.origin
-      
+
       if (template) {
         sessionStorage.setItem("pendingTemplateInstall", template)
         callbackURL = window.location.origin
       } else if (redirect) {
         callbackURL = `${window.location.origin}${redirect}`
       }
-      
+
       await authClient.signIn.social({
         provider: "google",
         callbackURL,
