@@ -10,15 +10,18 @@ import { usePageNavigation } from "@/hooks/use-page-navigation"
 import { useBulkDelete } from "@/hooks/use-bulk-delete"
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop"
 import { AddRegular } from "@fluentui/react-icons"
+
+const AddIcon = AddRegular
 import { GridList } from "react-aria-components"
-import { useState, useMemo, useEffect } from "react"
+import { useMemo, useEffect } from "react"
 import { Heading } from "@/components/generic/Heading"
 import { useListData } from "react-stately"
 import { useOrganization } from "@/context/organization.context"
 import { useSearch } from "@tanstack/react-router"
 import { useAuth } from "@/context/auth.context"
 import { Separator } from "../generic/Separator"
-import { getUserStorage, setUserStorage } from "@/lib/user-storage"
+import { useAtom } from "jotai"
+import { atomWithUserStorage } from "@/lib/user-storage-atom"
 
 interface ItemType {
   id: string
@@ -39,23 +42,12 @@ export function HomeFileExplorer() {
   const organizationSlug = organization?.slug || ""
   const { createDocument } = useDocumentActions()
 
-  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
-    // Initialize from localStorage, defaulting to "grid"
-    if (typeof window !== "undefined") {
-      const stored = getUserStorage(userId, VIEW_MODE_STORAGE_KEY)
-      if (stored === "grid" || stored === "list") {
-        return stored
-      }
-    }
-    return "grid"
-  })
-
-  // Persist view mode changes to localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setUserStorage(userId, VIEW_MODE_STORAGE_KEY, viewMode)
-    }
-  }, [viewMode, userId])
+  // Use Jotai atom with user-scoped localStorage persistence
+  const viewModeAtom = useMemo(
+    () => atomWithUserStorage<"grid" | "list">(userId, VIEW_MODE_STORAGE_KEY, "grid", { enabled: true }),
+    [userId]
+  )
+  const [viewMode, setViewMode] = useAtom(viewModeAtom)
 
   // Search logic
   const { search, setSearch, searchFieldRef, onSearchChange, allDocuments } = useDocumentSearch(
@@ -97,7 +89,8 @@ export function HomeFileExplorer() {
     getKey: (item) => item.id,
   })
 
-  // Sync list data when items change
+  // Sync list data when items change - optimized to only update when IDs actually change
+  const documentItemsKey = useMemo(() => documentItems.map((i) => i.id).join(","), [documentItems])
   useEffect(() => {
     const currentDocIds = new Set(documentList.items.map((item) => item.id))
     const newDocIds = new Set(documentItems.map((item) => item.id))
@@ -109,13 +102,19 @@ export function HomeFileExplorer() {
       }
     })
 
-    // Add new items
+    // Add new items and update existing ones
     documentItems.forEach((item) => {
       if (!currentDocIds.has(item.id)) {
         documentList.append(item)
+      } else {
+        // Update existing item if data changed
+        const existingItem = documentList.items.find((i) => i.id === item.id)
+        if (existingItem && (existingItem.name !== item.name || existingItem.updated_at !== item.updated_at)) {
+          documentList.update(item.id, item)
+        }
       }
     })
-  }, [documentItems.map((i) => i.id).join(",")])
+  }, [documentItemsKey, documentItems, documentList])
 
   // Find current parent page info if we're viewing a child page
   const currentParentPage = tree ? allDocuments.find((d) => d.id === tree) : null
@@ -149,7 +148,8 @@ export function HomeFileExplorer() {
     getKey: (item) => item.id,
   })
 
-  // Sync recently opened list data when items change
+  // Sync recently opened list data when items change - optimized
+  const recentlyOpenedKey = useMemo(() => recentlyOpenedDocuments.map((i) => i.id).join(","), [recentlyOpenedDocuments])
   useEffect(() => {
     const currentIds = new Set(recentlyOpenedList.items.map((item) => item.id))
     const newIds = new Set(recentlyOpenedDocuments.map((item) => item.id))
@@ -161,13 +161,19 @@ export function HomeFileExplorer() {
       }
     })
 
-    // Add new items
+    // Add new items and update existing ones
     recentlyOpenedDocuments.forEach((item) => {
       if (!currentIds.has(item.id)) {
         recentlyOpenedList.append(item)
+      } else {
+        // Update existing item if data changed
+        const existingItem = recentlyOpenedList.items.find((i) => i.id === item.id)
+        if (existingItem && (existingItem.name !== item.name || existingItem.updated_at !== item.updated_at)) {
+          recentlyOpenedList.update(item.id, item)
+        }
       }
     })
-  }, [recentlyOpenedDocuments.map((i) => i.id).join(",")])
+  }, [recentlyOpenedKey, recentlyOpenedDocuments, recentlyOpenedList])
 
   const allSelectedItems = [
     ...recentlyOpenedList.items.filter((item) =>

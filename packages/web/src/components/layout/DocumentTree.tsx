@@ -6,13 +6,12 @@ import { useOrganization } from "@/context/organization.context"
 import { queries } from "@lydie/zero/queries"
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop"
 import { useAtom } from "jotai"
-import { useMemo, useEffect, useState } from "react"
+import { useMemo } from "react"
 import type { Key } from "react-aria-components"
-import { atom } from "jotai"
 import { useParams } from "@tanstack/react-router"
 import type { QueryResultType } from "@rocicorp/zero"
 import { useAuth } from "@/context/auth.context"
-import { getUserStorage, setUserStorage, removeUserStorage } from "@/lib/user-storage"
+import { atomWithUserStorage } from "@/lib/user-storage-atom"
 
 import { getIntegrationMetadata } from "@lydie/integrations/metadata"
 
@@ -28,28 +27,6 @@ type TreeItem = {
 }
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys"
-
-function loadFromStorage(userId: string | null | undefined): string[] {
-  try {
-    const stored = getUserStorage(userId, STORAGE_KEY)
-    if (stored) {
-      return JSON.parse(stored)
-    }
-  } catch (e) {
-    // Ignore errors
-  }
-  return []
-}
-
-function saveToStorage(userId: string | null | undefined, keys: string[]): void {
-  try {
-    setUserStorage(userId, STORAGE_KEY, JSON.stringify(keys))
-  } catch (e) {
-    // Ignore errors
-  }
-}
-
-const documentTreeExpandedKeysAtom = atom<string[]>([])
 
 type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documents>>
 
@@ -83,30 +60,12 @@ export function DocumentTree() {
   const [userSettings] = useQuery(queries.settings.user({}))
   const persistExpansion = userSettings?.persist_document_tree_expansion ?? true
 
-  // Initialize state from localStorage if persistence is enabled
-  const [initialized, setInitialized] = useState(false)
-  const [expandedKeysArray, setExpandedKeysArray] = useAtom(documentTreeExpandedKeysAtom)
-
-  // Load initial state from localStorage if persistence is enabled
-  useEffect(() => {
-    if (!initialized && persistExpansion) {
-      const stored = loadFromStorage(userId)
-      setExpandedKeysArray(stored)
-      setInitialized(true)
-    } else if (!initialized) {
-      setInitialized(true)
-    }
-  }, [initialized, persistExpansion, userId, setExpandedKeysArray])
-
-  // Save to localStorage when state changes (only if persistence is enabled)
-  useEffect(() => {
-    if (initialized && persistExpansion) {
-      saveToStorage(userId, expandedKeysArray)
-    } else if (initialized && !persistExpansion) {
-      // Clear localStorage when persistence is disabled
-      removeUserStorage(userId, STORAGE_KEY)
-    }
-  }, [initialized, persistExpansion, userId, expandedKeysArray])
+  // Use Jotai atom with conditional user-scoped localStorage persistence
+  const expandedKeysAtom = useMemo(
+    () => atomWithUserStorage<string[]>(userId, STORAGE_KEY, [], { enabled: persistExpansion }),
+    [userId, persistExpansion]
+  )
+  const [expandedKeysArray, setExpandedKeysArray] = useAtom(expandedKeysAtom)
 
   // Convert array to Set for React Aria Tree component
   const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray])

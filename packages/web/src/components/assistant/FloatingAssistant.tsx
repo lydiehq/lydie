@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react"
-import { useCallback, useState, useMemo, useEffect } from "react"
+import { useCallback, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Button as RACButton, TooltipTrigger } from "react-aria-components"
 import { Button } from "@/components/generic/Button"
@@ -15,7 +15,7 @@ import {
   ExpandUpRight16Filled,
 } from "@fluentui/react-icons"
 import { ChatMessages } from "@/components/chat/ChatMessages"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom, useAtom } from "jotai"
 import {
   isDockedAtom,
   isMinimizedAtom,
@@ -34,9 +34,8 @@ import { useAssistantChat } from "@/hooks/use-assistant-chat"
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown"
 import { Tooltip } from "@/components/generic/Tooltip"
 import { AssistantInput } from "@/components/assistant/AssistantInput"
-
-const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id"
-const FLOATING_ASSISTANT_AGENT_KEY = "floating-assistant-agent-id"
+import { atomWithUserStorage } from "@/lib/user-storage-atom"
+import { useAuth } from "@/context/auth.context"
 
 export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: string | null }) {
   const isDocked = useAtomValue(isDockedAtom)
@@ -46,26 +45,21 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
   const dock = useSetAtom(dockAssistantAtom)
   const undock = useSetAtom(undockAssistantAtom)
   const { organization } = useOrganization()
+  const { session } = useAuth()
+  const userId = session?.userId
 
-  const [conversationId, setConversationId] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(FLOATING_ASSISTANT_CONVERSATION_KEY)
-      if (saved) {
-        return saved
-      }
-    }
-    return createId()
-  })
+  // Create user-scoped atoms with localStorage persistence
+  const conversationIdAtom = useMemo(
+    () => atomWithUserStorage(userId, "floating-assistant-conversation-id", createId(), { enabled: true }),
+    [userId]
+  )
+  const selectedAgentIdAtom = useMemo(
+    () => atomWithUserStorage<string | null>(userId, "floating-assistant-agent-id", null, { enabled: true }),
+    [userId]
+  )
 
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(FLOATING_ASSISTANT_AGENT_KEY)
-      if (saved) {
-        return saved
-      }
-    }
-    return null
-  })
+  const [conversationId, setConversationId] = useAtom(conversationIdAtom)
+  const [selectedAgentId, setSelectedAgentId] = useAtom(selectedAgentIdAtom)
 
   const [currentConversation] = useQuery(
     conversationId
@@ -76,17 +70,25 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       : null,
   )
 
-  const { messages, sendMessage, stop, status, setMessages } = useAssistantChat({
-    conversationId,
-    initialMessages:
-      currentConversation?.messages?.map((msg: any) => ({
+  // Derive messages from currentConversation instead of syncing with useEffect
+  const initialMessages = useMemo(() => {
+    if (currentConversation?.messages) {
+      return currentConversation.messages.map((msg: any) => ({
         id: msg.id,
         role: msg.role as "user" | "system" | "assistant",
         parts: msg.parts,
         metadata: msg.metadata,
-      })) || [],
+      }))
+    }
+    return []
+  }, [currentConversation?.messages])
+
+  const { messages, sendMessage, stop, status, setMessages } = useAssistantChat({
+    conversationId,
+    initialMessages,
   })
 
+  // Sync messages when conversation changes (still needed because useChat uses initialMessages only on mount)
   useEffect(() => {
     if (currentConversation?.messages) {
       setMessages(
@@ -102,31 +104,19 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     }
   }, [currentConversation?.id, conversationId, setMessages])
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(FLOATING_ASSISTANT_CONVERSATION_KEY, conversationId)
-    }
-  }, [conversationId])
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && selectedAgentId) {
-      localStorage.setItem(FLOATING_ASSISTANT_AGENT_KEY, selectedAgentId)
-    }
-  }, [selectedAgentId])
-
   const handleSelectAgent = useCallback((agentId: string) => {
     setSelectedAgentId(agentId)
-  }, [])
+  }, [setSelectedAgentId])
 
   const handleNewChat = useCallback(() => {
     const newId = createId()
     setConversationId(newId)
     setMessages([])
-  }, [setMessages])
+  }, [setConversationId, setMessages])
 
   const handleSelectConversation = useCallback((id: string) => {
     setConversationId(id)
-  }, [])
+  }, [setConversationId])
 
   const handleClose = useCallback(() => {
     close()
