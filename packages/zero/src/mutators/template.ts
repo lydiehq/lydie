@@ -3,7 +3,7 @@ import { createId } from "@lydie/core/id"
 import { convertJsonToYjs, convertYjsToJson } from "@lydie/core/yjs-to-json"
 import { slugify } from "@lydie/core/utils"
 import { z } from "zod"
-import { isAuthenticated, hasOrganizationAccess } from "../auth"
+import { isAuthenticated, hasOrganizationAccess, requireAdmin } from "../auth"
 import { zql } from "../schema"
 
 export const templateMutators = {
@@ -15,9 +15,8 @@ export const templateMutators = {
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args }) => {
-      hasOrganizationAccess(ctx, args.organizationId)
+      requireAdmin(ctx)
 
-      // Fetch root document
       const rootDocument = await tx.run(
         zql.documents
           .where("id", args.rootDocumentId)
@@ -30,7 +29,6 @@ export const templateMutators = {
         throw new Error("Root document not found")
       }
 
-      // Recursively collect all documents and their children
       const allDocuments: Array<{
         id: string
         title: string
@@ -41,7 +39,6 @@ export const templateMutators = {
 
       const docIdToIndex = new Map<string, number>()
 
-      // Recursive function to collect documents
       const collectDocuments = async (parentId: string) => {
         const children = await tx.run(
           zql.documents
@@ -158,13 +155,7 @@ export const templateMutators = {
       description: z.string().optional(),
     }),
     async ({ tx, ctx, args }) => {
-      isAuthenticated(ctx)
-
-      // Only admins can update templates
-      const userRole = (ctx as any)?.user?.role
-      if (userRole !== "admin") {
-        throw new Error("Only admins can update templates")
-      }
+      requireAdmin(ctx)
 
       const template = await tx.run(zql.templates.where("id", args.templateId).one())
 
@@ -195,13 +186,7 @@ export const templateMutators = {
       templateId: z.string(),
     }),
     async ({ tx, ctx, args }) => {
-      isAuthenticated(ctx)
-
-      // Only admins can delete templates
-      const userRole = (ctx as any)?.user?.role
-      if (userRole !== "admin") {
-        throw new Error("Only admins can delete templates")
-      }
+      requireAdmin(ctx)
 
       const template = await tx.run(zql.templates.where("id", args.templateId).one())
 
