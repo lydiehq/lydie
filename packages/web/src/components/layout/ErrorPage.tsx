@@ -1,9 +1,8 @@
-import { ErrorCircleRegular, ArrowClockwiseRegular, HomeFilled } from "@fluentui/react-icons"
+import { ErrorCircleRegular, ArrowClockwiseRegular } from "@fluentui/react-icons"
 import { Button } from "@/components/generic/Button"
 import { Logo } from "@/components/layout/Logo"
 import { useNavigate, useRouter } from "@tanstack/react-router"
 import { authClient } from "@/utils/auth"
-import { clearActiveOrganizationSlug } from "@/lib/active-organization"
 import { useQueryClient } from "@tanstack/react-query"
 
 interface ErrorPageProps {

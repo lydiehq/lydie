@@ -210,14 +210,20 @@ export const templateMutators = {
       isAuthenticated(ctx)
       hasOrganizationAccess(ctx, args.organizationId)
 
-      // 1. Fetch template
+      // Only run on server - templates are not synced to client cache
+      if (tx.location === "client") {
+        // No optimistic update - wait for server to process
+        return
+      }
+
+      // 1. Fetch template (server-only)
       const template = await tx.run(zql.templates.where("slug", args.templateSlug).one())
 
       if (!template) {
         throw new Error("Template not found")
       }
 
-      // 2. Fetch all template documents
+      // 2. Fetch all template documents (server-only)
       const templateDocs = await tx.run(
         zql.template_documents.where("template_id", template.id).orderBy("sort_order", "asc"),
       )

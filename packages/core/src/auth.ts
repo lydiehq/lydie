@@ -153,6 +153,11 @@ export const authClient = betterAuth({
 
       const organizations = members.map((m) => m.organization)
 
+      // Find the active organization if activeOrganizationId is set
+      const activeOrganization = session.activeOrganizationId
+        ? organizations.find((org) => org.id === session.activeOrganizationId)
+        : undefined
+
       // Extend the session object with organizations and user role so they're available directly on session
       return {
         user,
@@ -160,6 +165,7 @@ export const authClient = betterAuth({
           ...session,
           role: user.role,
           organizations,
+          activeOrganization,
         },
       }
     }),

@@ -18,7 +18,6 @@
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "@lydie/integrations": "workspace:*",
-    "@lydie/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-form": "^1.27.7",
     "@tiptap/core": "^3.16.0",

@@ -71,9 +71,11 @@ function AuthBox() {
     try {
       let callbackURL = window.location.origin
       
-      // If there's a template, redirect to install-template page
+      // If there's a template, store it in sessionStorage and redirect to root
+      // The __auth/index.tsx route will pick it up and redirect appropriately
       if (template) {
-        callbackURL = `${window.location.origin}/install-template?template=${encodeURIComponent(template)}`
+        sessionStorage.setItem("pendingTemplateInstall", template)
+        callbackURL = window.location.origin
       } else if (redirect) {
         callbackURL = `${window.location.origin}${redirect}`
       }
