@@ -570,7 +570,11 @@ const templates = table("templates")
     name: string(),
     slug: string(),
     description: string().optional(),
+    teaser: string().optional(),
+    detailed_description: string().optional(),
     preview_data: json().optional(),
+    // title_embedding is excluded from Zero schema - it's a vector type that Zero cannot sync
+    // It's only used server-side for semantic search
     ...timestamps,
   })
   .primaryKey("id")
@@ -598,6 +602,24 @@ const templateInstallations = table("template_installations")
   })
   .primaryKey("id")
 
+const templateCategories = table("template_categories")
+  .columns({
+    id: string(),
+    name: string(),
+    slug: string(),
+    ...timestamps,
+  })
+  .primaryKey("id")
+
+const templateCategoryAssignments = table("template_category_assignments")
+  .columns({
+    id: string(),
+    template_id: string(),
+    category_id: string(),
+    ...timestamps,
+  })
+  .primaryKey("id")
+
 const templatesRelations = relationships(templates, ({ many }) => ({
   documents: many({
     sourceField: ["id"],
@@ -608,6 +630,11 @@ const templatesRelations = relationships(templates, ({ many }) => ({
     sourceField: ["id"],
     destField: ["template_id"],
     destSchema: templateInstallations,
+  }),
+  categoryAssignments: many({
+    sourceField: ["id"],
+    destField: ["template_id"],
+    destSchema: templateCategoryAssignments,
   }),
 }))
 
@@ -652,6 +679,27 @@ const templateInstallationsRelations = relationships(templateInstallations, ({ o
   }),
 }))
 
+const templateCategoriesRelations = relationships(templateCategories, ({ many }) => ({
+  assignments: many({
+    sourceField: ["id"],
+    destField: ["category_id"],
+    destSchema: templateCategoryAssignments,
+  }),
+}))
+
+const templateCategoryAssignmentsRelations = relationships(templateCategoryAssignments, ({ one }) => ({
+  template: one({
+    sourceField: ["template_id"],
+    destField: ["id"],
+    destSchema: templates,
+  }),
+  category: one({
+    sourceField: ["category_id"],
+    destField: ["id"],
+    destSchema: templateCategories,
+  }),
+}))
+
 export const schema = createSchema({
   tables: [
     users,
@@ -676,6 +724,8 @@ export const schema = createSchema({
     templates,
     templateDocuments,
     templateInstallations,
+    templateCategories,
+    templateCategoryAssignments,
   ],
   relationships: [
     documentsRelations,
@@ -700,6 +750,8 @@ export const schema = createSchema({
     templatesRelations,
     templateDocumentsRelations,
     templateInstallationsRelations,
+    templateCategoriesRelations,
+    templateCategoryAssignmentsRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,

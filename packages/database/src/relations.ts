@@ -232,4 +232,54 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.organizationsTable.id,
     }),
   },
+  templatesTable: {
+    documents: r.many.templateDocumentsTable(),
+    installations: r.many.templateInstallationsTable(),
+    categoryAssignments: r.many.templateCategoryAssignmentsTable(),
+  },
+  templateDocumentsTable: {
+    template: r.one.templatesTable({
+      from: r.templateDocumentsTable.templateId,
+      to: r.templatesTable.id,
+    }),
+    parent: r.one.templateDocumentsTable({
+      from: r.templateDocumentsTable.parentId,
+      to: r.templateDocumentsTable.id,
+    }),
+    children: r.many.templateDocumentsTable({
+      from: r.templateDocumentsTable.id,
+      to: r.templateDocumentsTable.parentId,
+    }),
+  },
+  templateInstallationsTable: {
+    template: r.one.templatesTable({
+      from: r.templateInstallationsTable.templateId,
+      to: r.templatesTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.templateInstallationsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    installedBy: r.one.usersTable({
+      from: r.templateInstallationsTable.installedByUserId,
+      to: r.usersTable.id,
+    }),
+    rootDocument: r.one.documentsTable({
+      from: r.templateInstallationsTable.rootDocumentId,
+      to: r.documentsTable.id,
+    }),
+  },
+  templateCategoriesTable: {
+    assignments: r.many.templateCategoryAssignmentsTable(),
+  },
+  templateCategoryAssignmentsTable: {
+    template: r.one.templatesTable({
+      from: r.templateCategoryAssignmentsTable.templateId,
+      to: r.templatesTable.id,
+    }),
+    category: r.one.templateCategoriesTable({
+      from: r.templateCategoryAssignmentsTable.categoryId,
+      to: r.templateCategoriesTable.id,
+    }),
+  },
 }))

@@ -7,9 +7,9 @@ import type {
   SyncResult,
   ExternalResource,
   DefaultLink,
-} from "@lydie/core/integrations"
-import { createErrorResult } from "@lydie/core/integrations"
-import type { OAuthConfig, OAuthCredentials, OAuthIntegration } from "@lydie/core/integrations"
+} from "@lydie/core/integrations/types"
+import { createErrorResult } from "@lydie/core/integrations/types"
+import type { OAuthConfig, OAuthCredentials, OAuthIntegration } from "@lydie/core/integrations/oauth"
 import { Resource } from "sst"
 import { serializeToHTML, deserializeFromHTML } from "@lydie/core/serialization/html"
 import type { ContentNode } from "@lydie/core/content"

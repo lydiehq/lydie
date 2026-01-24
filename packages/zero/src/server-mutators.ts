@@ -7,6 +7,7 @@ import { deleteDocumentMutation } from "./server-mutators/documents/delete"
 import { disconnectIntegrationMutation } from "./server-mutators/integrations/disconnect"
 import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link"
 import { createFeedbackMutation } from "./server-mutators/feedback/create"
+import { createTemplateMutation } from "./server-mutators/templates/create"
 
 export interface MutatorContext {
   asyncTasks: Array<() => Promise<void>>
@@ -30,6 +31,9 @@ export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
     },
     feedback: {
       create: createFeedbackMutation(context),
+    },
+    template: {
+      create: createTemplateMutation(context),
     },
   })
 }

@@ -3,12 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    "./serialization": "./src/serialization/index.ts",
-    "./integrations": "./src/integrations/index.ts",
-    "./*": [
-      "./src/*.ts",
-      "./src/*/index.ts"
-    ]
+    "./*": "./src/*.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "catalog:",

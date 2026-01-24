@@ -19,12 +19,12 @@ export const Route = createFileRoute("/__auth/")({
     }
 
     // Check if user has an active organization from the session
-    const activeOrganization = (auth?.session as any)?.activeOrganization
+    const activeOrganizationSlug = (auth?.session as any)?.activeOrganizationSlug
 
-    if (activeOrganization) {
+    if (activeOrganizationSlug) {
       throw redirect({
         to: "/w/$organizationSlug",
-        params: { organizationSlug: activeOrganization.slug },
+        params: { organizationSlug: activeOrganizationSlug },
         search: templateSlug ? { installTemplate: templateSlug } : { installTemplate: undefined },
       })
     }
@@ -39,7 +39,6 @@ export const Route = createFileRoute("/__auth/")({
       })
     }
 
-    // No organizations found - redirect to onboarding to create one
     throw redirect({
       to: "/new",
       search: { template: templateSlug || undefined },

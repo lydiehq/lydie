@@ -13,6 +13,7 @@ import { integrationQueries } from "./integration"
 import { integrationLinkQueries } from "./integration-link"
 import { syncMetadataQueries } from "./sync-metadata"
 import { integrationActivityQueries } from "./integration-activity"
+import { templateCategoryQueries } from "./template-category"
 import type { Context } from "../auth"
 
 export type QueryContext = Context
@@ -32,4 +33,5 @@ export const queries = defineQueries({
   integrationLinks: integrationLinkQueries,
   syncMetadata: syncMetadataQueries,
   integrationActivityLogs: integrationActivityQueries,
+  templateCategories: templateCategoryQueries,
 })

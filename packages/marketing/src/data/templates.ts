@@ -1,3 +1,14 @@
+import { convertYjsToJson } from "@lydie/core/yjs-to-json"
+import {
+  db,
+  templatesTable,
+  templateDocumentsTable,
+  templateCategoriesTable,
+  templateCategoryAssignmentsTable,
+} from "@lydie/database"
+import { eq, desc, sql, inArray } from "drizzle-orm"
+import type { Category } from "./categories"
+
 export type TemplateDocument = {
   id: string
   title: string
@@ -10,13 +21,11 @@ export type Template = {
   slug: string
   name: string
   description: string
-  categories: string[]
+  teaser: string
+  detailedDescription: string
+  categories: Category[]
   documents: TemplateDocument[]
 }
-
-import { convertYjsToJson } from "@lydie/core/yjs-to-json"
-import { db, templatesTable, templateDocumentsTable } from "@lydie/database"
-import { eq, desc } from "drizzle-orm"
 
 export async function getTemplate(slug: string): Promise<Template | undefined> {
   try {
@@ -32,9 +41,26 @@ export async function getTemplate(slug: string): Promise<Template | undefined> {
       .where(eq(templateDocumentsTable.templateId, template.id))
       .orderBy(templateDocumentsTable.sortOrder)
 
+    const categoryAssignments = await db
+      .select({
+        categoryId: templateCategoryAssignmentsTable.categoryId,
+      })
+      .from(templateCategoryAssignmentsTable)
+      .where(eq(templateCategoryAssignmentsTable.templateId, template.id))
+
+    const categoryIds = categoryAssignments.map((ca) => ca.categoryId)
+    const categories =
+      categoryIds.length > 0
+        ? await db
+            .select()
+            .from(templateCategoriesTable)
+            .where(inArray(templateCategoriesTable.id, categoryIds))
+        : []
+
     return transformDbTemplateToTemplate({
       ...template,
       documents,
+      categories,
     })
   } catch (error) {
     console.error("Error fetching template:", error)
@@ -54,9 +80,27 @@ export async function getAllTemplates(): Promise<Template[]> {
           .where(eq(templateDocumentsTable.templateId, template.id))
           .orderBy(templateDocumentsTable.sortOrder)
 
+        // Fetch categories
+        const categoryAssignments = await db
+          .select({
+            categoryId: templateCategoryAssignmentsTable.categoryId,
+          })
+          .from(templateCategoryAssignmentsTable)
+          .where(eq(templateCategoryAssignmentsTable.templateId, template.id))
+
+        const categoryIds = categoryAssignments.map((ca) => ca.categoryId)
+        const categories =
+          categoryIds.length > 0
+            ? await db
+                .select()
+                .from(templateCategoriesTable)
+                .where(inArray(templateCategoriesTable.id, categoryIds))
+            : []
+
         return {
           ...template,
           documents,
+          categories,
         }
       }),
     )
@@ -108,12 +152,20 @@ function transformDbTemplateToTemplate(dbTemplate: any): Template {
     }
   }
 
+  const categoryObjects: Category[] = (dbTemplate.categories || []).map((cat: any) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+  }))
+
   return {
     id: dbTemplate.id,
     slug: dbTemplate.slug,
     name: dbTemplate.name,
     description: dbTemplate.description || "",
-    categories: [], // Categories can be added later if needed
+    teaser: dbTemplate.teaser || "",
+    detailedDescription: dbTemplate.detailedDescription || dbTemplate.detailed_description || "",
+    categories: categoryObjects,
     documents: rootDocs,
   }
 }

@@ -11,6 +11,9 @@ export const templateMutators = {
     z.object({
       name: z.string(),
       description: z.string().optional(),
+      teaser: z.string().optional(),
+      detailedDescription: z.string().optional(),
+      categoryIds: z.array(z.string()).optional(),
       rootDocumentId: z.string(),
       organizationId: z.string(),
     }),
@@ -87,21 +90,32 @@ export const templateMutators = {
       const templateId = createId()
       const slug = `${slugify(args.name)}-${createId().slice(0, 6)}`
 
-      // Create template
       await tx.mutate.templates.insert({
         id: templateId,
         name: args.name,
         slug,
         description: args.description || null,
+        teaser: args.teaser || null,
+        detailed_description: args.detailedDescription || null,
         preview_data: null, // Will be updated with document structure
         created_at: Date.now(),
         updated_at: Date.now(),
       })
 
-      // Create template documents and build ID mapping
+      if (args.categoryIds && args.categoryIds.length > 0) {
+        for (const categoryId of args.categoryIds) {
+          await tx.mutate.template_category_assignments.insert({
+            id: createId(),
+            template_id: templateId,
+            category_id: categoryId,
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          })
+        }
+      }
+
       const templateDocIdMap = new Map<number, string>() // Map from index to template document ID
 
-      // First pass: create all template documents and collect their IDs
       for (let i = 0; i < allDocuments.length; i++) {
         const doc = allDocuments[i]
         if (!doc) continue
@@ -126,12 +140,10 @@ export const templateMutators = {
         })
       }
 
-      // Second pass: update parent_id references
       for (let i = 0; i < allDocuments.length; i++) {
         const doc = allDocuments[i]
         if (!doc || !doc.parentId) continue
 
-        // Find the parent's index in our array
         const parentIndex = docIdToIndex.get(doc.parentId)
         if (parentIndex === undefined) continue
 
@@ -145,39 +157,6 @@ export const templateMutators = {
           })
         }
       }
-    },
-  ),
-
-  update: defineMutator(
-    z.object({
-      templateId: z.string(),
-      name: z.string().optional(),
-      description: z.string().optional(),
-    }),
-    async ({ tx, ctx, args }) => {
-      requireAdmin(ctx)
-
-      const template = await tx.run(zql.templates.where("id", args.templateId).one())
-
-      if (!template) {
-        throw new Error("Template not found")
-      }
-
-      const updates: any = {
-        id: args.templateId,
-        updated_at: Date.now(),
-      }
-
-      if (args.name !== undefined) {
-        updates.name = args.name
-        updates.slug = `${slugify(args.name)}-${createId().slice(0, 6)}`
-      }
-
-      if (args.description !== undefined) {
-        updates.description = args.description
-      }
-
-      await tx.mutate.templates.update(updates)
     },
   ),
 

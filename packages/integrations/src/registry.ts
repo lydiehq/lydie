@@ -1,4 +1,4 @@
-import type { Integration } from "@lydie/core/integrations"
+import type { Integration } from "@lydie/core/integrations/types"
 import { githubIntegration } from "./integrations/github"
 import { shopifyIntegration } from "./integrations/shopify"
 import { wordpressIntegration } from "./integrations/wordpress"
