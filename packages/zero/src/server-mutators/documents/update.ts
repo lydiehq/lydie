@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { defineMutator } from "@rocicorp/zero"
-import { mutators as sharedMutators } from "../../mutators"
+import { mutators as sharedMutators } from "../../mutators/index"
 import { db } from "@lydie/database"
 import { processDocumentTitleEmbedding } from "@lydie/core/embedding/title-processing"
 import { MutatorContext } from "../../server-mutators"

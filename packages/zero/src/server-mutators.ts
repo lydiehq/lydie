@@ -1,5 +1,5 @@
 import { defineMutators } from "@rocicorp/zero"
-import { mutators as sharedMutators } from "./mutators"
+import { mutators as sharedMutators } from "./mutators/index"
 import { publishDocumentMutation } from "./server-mutators/documents/publish"
 import { updateDocumentMutation } from "./server-mutators/documents/update"
 import { moveDocumentMutation } from "./server-mutators/documents/move"
