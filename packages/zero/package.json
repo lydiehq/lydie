@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
+    "./mutators": "./src/mutators/index.ts",
+    "./queries": "./src/queries/index.ts",
     "./*": "./src/*.ts"
   },
   "scripts": {

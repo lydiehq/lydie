@@ -2,7 +2,7 @@ import { defineMutator } from "@rocicorp/zero"
 import { z } from "zod"
 import { zql } from "../../schema"
 import { hasOrganizationAccess } from "../../auth"
-import { mutators as sharedMutators } from "../../mutators"
+import { mutators as sharedMutators } from "../../mutators/index"
 
 import { integrationRegistry } from "@lydie/integrations"
 
