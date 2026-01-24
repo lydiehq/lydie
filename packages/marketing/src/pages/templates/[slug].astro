@@ -1,11 +1,12 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
-import FormattedDate from "../../components/FormattedDate.astro";
-import { Logo } from "../../components/Logo";
 import { Button } from "../../components/generic/Button";
 import { TemplateViewer } from "../../components/templates/TemplateViewer";
-import { getAllTemplates, getTemplate } from "../../data/templates";
+import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
+import { getAllTemplates } from "../../data/templates";
+import { findRelatedTemplates } from "@lydie/core/embedding/search";
+import { serializeToHTML } from "@lydie/core/content";
 
 export async function getStaticPaths() {
   try {
@@ -24,6 +25,33 @@ export async function getStaticPaths() {
 const { template } = Astro.props;
 const templateName = template.name;
 const categories = template.categories;
+const teaser = template.teaser || template.description || "";
+
+let relatedTemplates: Array<{
+  id: string;
+  name: string;
+  slug: string;
+  teaser: string | null;
+}> = [];
+try {
+  relatedTemplates = await findRelatedTemplates(template.id, 6);
+} catch (error) {
+  console.error("Failed to fetch related templates:", error);
+}
+
+let detailedDescriptionHTML = "";
+if (template.detailedDescription) {
+  try {
+    const jsonContent =
+      typeof template.detailedDescription === "string"
+        ? JSON.parse(template.detailedDescription)
+        : template.detailedDescription;
+    detailedDescriptionHTML = serializeToHTML(jsonContent);
+  } catch (error) {
+    console.error("Failed to render detailed description:", error);
+    detailedDescriptionHTML = "";
+  }
+}
 ---
 
 <Layout
@@ -62,10 +90,8 @@ const categories = template.categories;
 
             <h1 class="text-4xl font-medium text-gray-900">{templateName}</h1>
             {
-              template.description && (
-                <span class="text-base/relaxed text-gray-600">
-                  {template.description}
-                </span>
+              teaser && (
+                <span class="text-base/relaxed text-gray-600">{teaser}</span>
               )
             }
             {
@@ -73,10 +99,10 @@ const categories = template.categories;
                 <div class="flex flex-wrap gap-2">
                   {categories.map((category) => (
                     <a
-                      href="#"
+                      href={`/templates/categories/${category.slug}`}
                       class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                     >
-                      {category}
+                      {category.name}
                     </a>
                   ))}
                 </div>
@@ -100,65 +126,54 @@ const categories = template.categories;
       <TemplateViewer client:load documents={template.documents} />
 
       <div class="max-w-3xl flex flex-col gap-y-8 mt-12">
-        <section class="prose prose-gray max-w-none">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-4">
-            About This {templateName}
-          </h2>
-          <div class="text-base/relaxed text-gray-700 space-y-4">
-            <p>
-              This professional {templateName.toLowerCase()} is designed to help developers
-              showcase their skills, experience, and achievements in a clear and compelling
-              format. Whether you're a seasoned developer or just starting your career,
-              this template provides a solid foundation for creating a standout resume
-              that gets noticed by recruiters and hiring managers.
-            </p>
-            <p>
-              The template follows industry best practices for resume
-              formatting, ensuring your information is presented in a way that's
-              both visually appealing and easy to scan. With a clean, modern
-              design, your resume will stand out while maintaining a
-              professional appearance that's appropriate for any tech role.
-            </p>
-          </div>
-        </section>
-
-        <section class="prose prose-gray max-w-none">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-4">
-            Key Features
-          </h2>
-          <ul
-            class="text-base/relaxed text-gray-700 space-y-2 list-disc list-inside"
-          >
-            <li>Clean, modern design that's ATS-friendly</li>
-            <li>Well-organized sections for easy navigation</li>
-            <li>Professional typography and spacing</li>
-            <li>Optimized for both print and digital formats</li>
-            <li>Easy to customize and personalize</li>
-          </ul>
-        </section>
-
-        <section class="prose prose-gray max-w-none">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-4">
-            How to Use This Template
-          </h2>
-          <div class="text-base/relaxed text-gray-700 space-y-4">
-            <p>
-              To get started with this template, simply download it and open it
-              in your preferred document editor. Replace the placeholder content
-              with your own information, making sure to highlight your relevant
-              experience, technical skills, and achievements. Be specific about
-              your accomplishments, using metrics and concrete examples wherever
-              possible.
-            </p>
-            <p>
-              Remember to tailor your resume for each job application,
-              emphasizing the skills and experiences that are most relevant to
-              the position you're applying for. Keep your language clear and
-              concise, and proofread carefully to ensure there are no errors.
-            </p>
-          </div>
-        </section>
+        {
+          detailedDescriptionHTML ? (
+            <section class="prose prose-gray max-w-none">
+              <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+                About This {templateName}
+              </h2>
+              <div
+                class="text-base/relaxed text-gray-700 space-y-4"
+                set:html={detailedDescriptionHTML}
+              />
+            </section>
+          ) : (
+            <section class="prose prose-gray max-w-none">
+              <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+                About This {templateName}
+              </h2>
+              <div class="text-base/relaxed text-gray-700 space-y-4">
+                <p>
+                  This professional {templateName.toLowerCase()} is designed to
+                  help you get started quickly with your project. Customize it
+                  to fit your needs and make it your own.
+                </p>
+              </div>
+            </section>
+          )
+        }
       </div>
+
+      {
+        relatedTemplates.length > 0 && (
+          <div class="max-w-3xl flex flex-col gap-y-8 mt-12">
+            <section>
+              <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+                Related Templates
+              </h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {relatedTemplates.map((relatedTemplate) => (
+                  <TemplateThumbnail
+                    name={relatedTemplate.name}
+                    description={relatedTemplate.teaser || undefined}
+                    href={`/templates/${relatedTemplate.slug}`}
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
+        )
+      }
     </Container>
   </div>
 </Layout>

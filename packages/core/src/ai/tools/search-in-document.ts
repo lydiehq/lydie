@@ -2,7 +2,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import { db, documentsTable, documentEmbeddingsTable } from "@lydie/database"
 import { eq, and, sql } from "drizzle-orm"
-import { generateEmbedding } from "../../embedding"
+import { generateEmbedding } from "../../embedding/generation"
 
 export const searchInDocument = (currentDocumentId: string, userId: string, organizationId: string) =>
   tool({

@@ -562,17 +562,26 @@ export const feedbackSubmissionsTable = pgTable(
   ],
 )
 
-export const templatesTable = pgTable("templates", {
-  id: text("id")
-    .primaryKey()
-    .notNull()
-    .$default(() => createId()),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  description: text("description"),
-  previewData: jsonb("preview_data"), // Serialized document tree for preview
-  ...timestamps,
-})
+export const templatesTable = pgTable(
+  "templates",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    description: text("description"),
+    teaser: text("teaser"),
+    detailedDescription: text("detailed_description"),
+    previewData: jsonb("preview_data"), // Serialized document tree for preview
+    titleEmbedding: vector("title_embedding", { dimensions: 1536 }),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_title_embedding_index").using("hnsw", table.titleEmbedding.op("vector_cosine_ops")),
+  ],
+)
 
 export const templateDocumentsTable = pgTable(
   "template_documents",
@@ -624,3 +633,39 @@ export const templateInstallationsTable = pgTable(
     index("template_installations_organization_id_idx").on(table.organizationId),
   ],
 )
+
+export const templateCategoriesTable = pgTable("template_categories", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  ...timestamps,
+})
+
+export const templateCategoryAssignmentsTable = pgTable(
+  "template_category_assignments",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => templateCategoriesTable.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_category_assignments_template_id_idx").on(table.templateId),
+    index("template_category_assignments_category_id_idx").on(table.categoryId),
+    uniqueIndex("template_category_assignments_unique_idx").on(
+      table.templateId,
+      table.categoryId,
+    ),
+  ],
+)
+

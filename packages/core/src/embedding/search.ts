@@ -1,8 +1,10 @@
-/**
- * Document search utilities using semantic embeddings
- */
-
-import { db, documentEmbeddingsTable, documentsTable, documentTitleEmbeddingsTable } from "@lydie/database"
+import {
+  db,
+  documentEmbeddingsTable,
+  documentsTable,
+  documentTitleEmbeddingsTable,
+  templatesTable,
+} from "@lydie/database"
 import { eq, sql, and } from "drizzle-orm"
 import { generateEmbedding, generateTitleEmbedding } from "./generation"
 
@@ -175,7 +177,7 @@ export async function searchDocumentsInSpecificDocument(
 export async function findRelatedDocuments(documentId: string, organizationId: string, limit: number = 5) {
   try {
     // Get the current document's title embedding
-    const titleEmbedding = await db
+    const [titleEmbedding] = await db
       .select({
         embedding: documentTitleEmbeddingsTable.embedding,
       })
@@ -183,12 +185,12 @@ export async function findRelatedDocuments(documentId: string, organizationId: s
       .where(eq(documentTitleEmbeddingsTable.documentId, documentId))
       .limit(1)
 
-    if (titleEmbedding.length === 0) {
+    if (!titleEmbedding) {
       // If no title embedding exists, fall back to content-based similarity
       return await findRelatedDocumentsByContent(documentId, organizationId, limit)
     }
 
-    const queryEmbedding = titleEmbedding[0].embedding
+    const queryEmbedding = titleEmbedding.embedding
 
     // Find similar documents by title, excluding the current document
     const similarity = sql<number>`1 - (${
@@ -237,7 +239,7 @@ export async function findRelatedDocumentsByContent(
 ) {
   try {
     // Get a representative content embedding from the document (we'll use the first one)
-    const contentEmbedding = await db
+    const [contentEmbedding] = await db
       .select({
         embedding: documentEmbeddingsTable.embedding,
       })
@@ -245,11 +247,11 @@ export async function findRelatedDocumentsByContent(
       .where(eq(documentEmbeddingsTable.documentId, documentId))
       .limit(1)
 
-    if (contentEmbedding.length === 0) {
+    if (!contentEmbedding) {
       return []
     }
 
-    const queryEmbedding = contentEmbedding[0].embedding
+    const queryEmbedding = contentEmbedding.embedding
 
     // Find documents with similar content, grouped by document
     const similarity = sql<number>`1 - (${
@@ -359,6 +361,53 @@ export async function searchDocuments(
     return Array.from(documentMap.values()).slice(0, limit)
   } catch (error) {
     console.error("Error in searchDocuments:", error)
+    throw error
+  }
+}
+
+export async function findRelatedTemplates(templateId: string, limit: number = 6) {
+  try {
+    const [template] = await db
+      .select({
+        titleEmbedding: templatesTable.titleEmbedding,
+      })
+      .from(templatesTable)
+      .where(eq(templatesTable.id, templateId))
+      .limit(1)
+
+    if (!template || !template.titleEmbedding) {
+      return []
+    }
+
+    const queryEmbedding = template.titleEmbedding
+
+    const similarity = sql<number>`1 - (${templatesTable.titleEmbedding} <=> ${JSON.stringify(queryEmbedding)}::vector)`
+
+    const results = await db
+      .select({
+        id: templatesTable.id,
+        name: templatesTable.name,
+        slug: templatesTable.slug,
+        teaser: templatesTable.teaser,
+        similarity,
+        createdAt: templatesTable.createdAt,
+        updatedAt: templatesTable.updatedAt,
+      })
+      .from(templatesTable)
+      .where(
+        and(
+          sql`${templatesTable.id} != ${templateId}`,
+          sql`${templatesTable.titleEmbedding} IS NOT NULL`,
+          // Reasonable similarity threshold
+          sql`(${templatesTable.titleEmbedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.8`,
+        ),
+      )
+      .orderBy(sql`${templatesTable.titleEmbedding} <=> ${JSON.stringify(queryEmbedding)}::vector`)
+      .limit(limit)
+
+    return results
+  } catch (error) {
+    console.error("Error in findRelatedTemplates:", error)
     throw error
   }
 }

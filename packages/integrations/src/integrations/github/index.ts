@@ -6,9 +6,9 @@ import type {
   DeleteOptions,
   SyncResult,
   ExternalResource,
-} from "@lydie/core/integrations"
-import { createErrorResult } from "@lydie/core/integrations"
-import type { OAuthConfig, OAuthCredentials, OAuthIntegration } from "@lydie/core/integrations"
+} from "@lydie/core/integrations/types"
+import { createErrorResult } from "@lydie/core/integrations/types"
+import type { OAuthConfig, OAuthCredentials, OAuthIntegration } from "@lydie/core/integrations/oauth"
 import { Resource } from "sst"
 import {
   serializeToMarkdown,

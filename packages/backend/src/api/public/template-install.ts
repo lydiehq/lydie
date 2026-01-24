@@ -36,11 +36,11 @@ app.get("/", async (c) => {
     }
 
     // Check if user has an active organization
-    const activeOrganization = (session.session as any).activeOrganization
+    const activeOrganizationSlug = (session.session as any).activeOrganizationSlug
 
-    if (activeOrganization) {
+    if (activeOrganizationSlug) {
       // User has an active organization - redirect to that organization with install parameter
-      const installUrl = new URL(`/w/${activeOrganization.slug}`, frontendUrl)
+      const installUrl = new URL(`/w/${activeOrganizationSlug}`, frontendUrl)
       installUrl.searchParams.set("installTemplate", templateSlug)
       return c.redirect(installUrl.toString())
     }

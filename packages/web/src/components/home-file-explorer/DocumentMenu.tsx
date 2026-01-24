@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Form, Heading } from "react-aria-components"
 import { Menu, MenuItem } from "@/components/generic/Menu"
 import { Button } from "@/components/generic/Button"
@@ -21,6 +21,9 @@ import { mutators } from "@lydie/zero/mutators"
 import { trackEvent } from "@/lib/posthog"
 import { useAuth } from "@/context/auth.context"
 import { isAdmin } from "@/utils/admin"
+import { useEditor, EditorContent } from "@tiptap/react"
+import { StarterKit } from "@tiptap/starter-kit"
+import { CheckboxGroup, Checkbox } from "@/components/generic/Checkbox"
 
 type DocumentMenuProps = {
   documentId: string
@@ -34,7 +37,20 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
   const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false)
   const [renameValue, setRenameValue] = useState(documentName)
   const [templateName, setTemplateName] = useState("")
-  const [templateDescription, setTemplateDescription] = useState("")
+  const [templateTeaser, setTemplateTeaser] = useState("")
+  const [templateDetailedDescription, setTemplateDetailedDescription] = useState("")
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
+
+  const categories = useQuery(queries.templateCategories.all({})) || []
+
+  const detailedDescriptionEditor = useEditor({
+    extensions: [StarterKit],
+    content: "",
+    onUpdate: ({ editor }) => {
+      setTemplateDetailedDescription(JSON.stringify(editor.getJSON()))
+    },
+    immediatelyRender: false,
+  })
   const z = useZero()
   const { deleteDocument, publishDocument } = useDocumentActions()
   const { id: currentDocId } = useParams({ strict: false })
@@ -49,6 +65,16 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
       setRenameValue(documentName)
     }
   }, [isRenameDialogOpen, documentName])
+
+  useEffect(() => {
+    if (isCreateTemplateDialogOpen) {
+      setTemplateName("")
+      setTemplateTeaser("")
+      setTemplateDetailedDescription("")
+      setSelectedCategoryIds([])
+      detailedDescriptionEditor?.commands.setContent("")
+    }
+  }, [isCreateTemplateDialogOpen, detailedDescriptionEditor])
 
   const handleRename = () => {
     if (!renameValue.trim()) {
@@ -109,10 +135,16 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
     }
 
     try {
+      const detailedDescriptionJson =
+        detailedDescriptionEditor && templateDetailedDescription ? templateDetailedDescription : undefined
+
       const result = await z.mutate(
         mutators.template.create({
           name: templateName.trim(),
-          description: templateDescription.trim() || undefined,
+          description: templateTeaser.trim() || undefined, // Keep for backward compatibility
+          teaser: templateTeaser.trim() || undefined,
+          detailedDescription: detailedDescriptionJson,
+          categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
           rootDocumentId: documentId,
           organizationId: organization.id,
         }),
@@ -125,7 +157,10 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
       toast.success("Template created successfully!")
       setIsCreateTemplateDialogOpen(false)
       setTemplateName("")
-      setTemplateDescription("")
+      setTemplateTeaser("")
+      setTemplateDetailedDescription("")
+      setSelectedCategoryIds([])
+      detailedDescriptionEditor?.commands.setContent("")
     } catch (error) {
       console.error("Failed to create template:", error)
       toast.error("Failed to create template. Please try again.")
@@ -283,17 +318,41 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
                 <Label>Template Name</Label>
                 <Input placeholder="e.g., Developer Resume" />
               </TextField>
-              <TextField value={templateDescription} onChange={setTemplateDescription}>
-                <Label>Description</Label>
-                <Input placeholder="Describe what this template is for..." />
+              <TextField value={templateTeaser} onChange={setTemplateTeaser}>
+                <Label>Teaser (Short Description)</Label>
+                <Input placeholder="A brief description shown in listings..." />
               </TextField>
+              <div className="flex flex-col gap-2">
+                <Label>Detailed Description</Label>
+                {detailedDescriptionEditor && (
+                  <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                    <EditorContent editor={detailedDescriptionEditor} className="min-h-[200px] p-3" />
+                  </div>
+                )}
+              </div>
+              <CheckboxGroup
+                label="Categories"
+                value={selectedCategoryIds}
+                onChange={setSelectedCategoryIds}
+              >
+                <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
+                  {categories.map((category: any) => (
+                    <Checkbox key={category.id} value={category.id}>
+                      {category.name}
+                    </Checkbox>
+                  ))}
+                </div>
+              </CheckboxGroup>
               <div className="flex justify-end gap-2">
                 <Button
                   intent="secondary"
                   onPress={() => {
                     setIsCreateTemplateDialogOpen(false)
                     setTemplateName("")
-                    setTemplateDescription("")
+                    setTemplateTeaser("")
+                    setTemplateDetailedDescription("")
+                    setSelectedCategoryIds([])
+                    detailedDescriptionEditor?.commands.setContent("")
                   }}
                   size="sm"
                   type="button"

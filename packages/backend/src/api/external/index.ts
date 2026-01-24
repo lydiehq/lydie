@@ -5,7 +5,7 @@ import { extractTableOfContents } from "../../utils/toc"
 import { db, documentsTable } from "@lydie/database"
 import { eq, and, isNull, desc } from "drizzle-orm"
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer"
-import { findRelatedDocuments } from "@lydie/core/embedding/index"
+import { findRelatedDocuments } from "@lydie/core/embedding/search"
 import { convertYjsToJson } from "@lydie/core/yjs-to-json"
 
 export const ExternalApi = new Hono()

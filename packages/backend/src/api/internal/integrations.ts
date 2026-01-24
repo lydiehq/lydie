@@ -8,14 +8,16 @@ import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { authenticatedWithOrganization } from "./middleware"
 import {
+  Integration,
+  OAuthIntegration,
+} from "@lydie/core/integrations/types"
+import {
   decodeOAuthState,
   encodeOAuthState,
-  Integration,
-  logIntegrationActivity,
-  OAuthIntegration,
   OAuthState,
-  pullFromIntegrationLink,
-} from "@lydie/core/integrations"
+} from "@lydie/core/integrations/oauth"
+import { logIntegrationActivity } from "@lydie/core/integrations/activity-log"
+import { pullFromIntegrationLink } from "@lydie/core/integrations/pull"
 
 // Helper to check if integration supports OAuth
 function supportsOAuth(integration: Integration): integration is Integration & OAuthIntegration {

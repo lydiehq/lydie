@@ -3,7 +3,7 @@ import { z } from "zod"
 import { zql } from "../../schema"
 import { hasOrganizationAccess } from "../../auth"
 import { db } from "@lydie/database"
-import { logIntegrationActivity } from "@lydie/core/integrations"
+import { logIntegrationActivity } from "@lydie/core/integrations/activity-log"
 import { mutators as sharedMutators } from "../../mutators/index"
 
 import { integrationRegistry } from "@lydie/integrations"

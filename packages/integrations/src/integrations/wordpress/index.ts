@@ -7,8 +7,8 @@ import type {
   SyncResult,
   ExternalResource,
   DefaultLink,
-} from "@lydie/core/integrations"
-import { createErrorResult } from "@lydie/core/integrations"
+} from "@lydie/core/integrations/types"
+import { createErrorResult } from "@lydie/core/integrations/types"
 import { serializeToHTML, deserializeFromHTML } from "@lydie/core/serialization/html"
 import type { ContentNode } from "@lydie/core/content"
 
