@@ -227,6 +227,7 @@
         "@tiptap/extension-placeholder": "^3.16.0",
         "@tiptap/pm": "^3.16.0",
         "@tiptap/react": "^3.16.0",
+        "@tiptap/starter-kit": "^3.16.0",
         "ai": "catalog:",
         "better-auth": "catalog:",
         "clsx": "^2.1.1",

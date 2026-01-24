@@ -34,7 +34,7 @@ new sst.aws.Astro("Marketing", {
   environment: {
     PUBLIC_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
   },
-  link: [secret.lydieApiKey, secret.postgresConnectionStringDirect],
+  link: [secret.lydieApiKey, secret.postgresConnectionStringDirect, secret.openAiApiKey],
   ...($dev ? {} : { domain: "lydie.co" }),
   ...($dev
     ? {}
