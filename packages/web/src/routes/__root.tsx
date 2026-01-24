@@ -16,10 +16,6 @@ import { RouterProvider } from "react-aria-components"
 import { ErrorPage } from "@/components/layout/ErrorPage"
 import { ZeroProvider } from "@rocicorp/zero/react"
 import { getZeroInstance } from "@/lib/zero/instance"
-import { PostHogProvider } from "@/context/posthog.context"
-import { usePageViewTracking } from "@/hooks/use-posthog-tracking"
-import { identifyUser } from "@/lib/posthog"
-import { useEffect } from "react"
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -96,45 +92,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return (
       <>
         <HeadContent />
-        <PostHogProvider>
-          <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
-            <ZeroProvider zero={zero}>
-              <PostHogUserIdentifier />
-              <FontSizeSync />
-              <ConfirmDialog />
-              <Outlet />
-            </ZeroProvider>
-          </RouterProvider>
-        </PostHogProvider>
+        <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
+          <ZeroProvider zero={zero}>
+            <FontSizeSync />
+            <ConfirmDialog />
+            <Outlet />
+          </ZeroProvider>
+        </RouterProvider>
       </>
     )
   },
 })
-
-function PostHogUserIdentifier() {
-  const { auth, organizations } = Route.useRouteContext()
-
-  usePageViewTracking()
-
-  useEffect(() => {
-    if (auth?.user) {
-      const isNewUser = organizations.length === 0
-
-      identifyUser(auth.user.id, {
-        email: auth.user.email,
-        hasOrganizations: organizations.length > 0,
-        organizationCount: organizations.length,
-      })
-
-      // Track signup or login based on whether user has organizations
-      // This runs once when user first authenticates
-      if (isNewUser) {
-        // Will be followed by organization_created in onboarding
-      } else {
-        // User has organizations, this is a login
-      }
-    }
-  }, [auth?.user, organizations])
-
-  return null
-}

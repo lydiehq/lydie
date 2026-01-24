@@ -3,7 +3,6 @@ import { Button } from "@/components/generic/Button"
 import { useAppForm } from "@/hooks/use-app-form"
 import { toast } from "sonner"
 import { authClient } from "@/utils/auth"
-import { trackEvent } from "@/lib/posthog"
 import { ProfilePictureUpload } from "./ProfilePictureUpload"
 import { useState, useRef } from "react"
 import { useImageUpload } from "@/hooks/use-image-upload"
@@ -59,12 +58,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
         }
 
         await authClient.updateUser(updateData)
-
-        // Track profile update
-        trackEvent("profile_updated", {
-          hasImageUpdate: previewImage !== user.image,
-          hasNameUpdate: values.value.name.trim() !== user.name,
-        })
 
         toast.success("Profile updated successfully")
         // The session will be automatically updated by better-auth

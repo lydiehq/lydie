@@ -5,7 +5,6 @@ import { useCallback, useRef, useState } from "react"
 import { useOrganization } from "@/context/organization.context"
 import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
 import type { ChatAlertState } from "@/components/editor/ChatAlert"
-import { trackEvent } from "@/lib/posthog"
 
 interface UseAssistantChatOptions {
   conversationId: string
@@ -63,25 +62,13 @@ export function useAssistantChat({
       }
     },
     onFinish: () => {
-      const responseTime = messageStartTimeRef.current ? Date.now() - messageStartTimeRef.current : undefined
-
-      trackEvent("assistant_response_received", {
-        conversationId,
-        organizationId: organization.id,
-        responseTimeMs: responseTime,
-      })
+      // Response finished
     },
   })
 
   const sendMessage = useCallback(
     (options: { text: string; metadata?: any; agentId?: string | null }) => {
       messageStartTimeRef.current = Date.now()
-
-      trackEvent("assistant_message_sent", {
-        conversationId,
-        organizationId: organization.id,
-        messageLength: options.text.length,
-      })
 
       // Pass agentId in the body
       const transport = new DefaultChatTransport({

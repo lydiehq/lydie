@@ -15,7 +15,6 @@ import { queries } from "@lydie/zero/queries"
 import { revalidateSession } from "@/lib/auth/session"
 import { mutators } from "@lydie/zero/mutators"
 import { clearZeroInstance } from "@/lib/zero/instance"
-import { trackEvent } from "@/lib/posthog"
 import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors"
 
 export const Route = createFileRoute("/__auth/new/")({
@@ -61,12 +60,6 @@ function RouteComponent() {
         await revalidateSession(queryClient)
         clearZeroInstance()
         await router.invalidate()
-
-        trackEvent("organization_created", {
-          organizationId: id,
-          organizationSlug: slug,
-          organizationName: values.value.name,
-        })
 
         navigate({
           to: "/w/$organizationSlug",

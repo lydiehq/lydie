@@ -18,7 +18,6 @@ import { useQuery } from "@rocicorp/zero/react"
 import { queries } from "@lydie/zero/queries"
 import { format } from "date-fns"
 import { mutators } from "@lydie/zero/mutators"
-import { trackEvent } from "@/lib/posthog"
 import { useAuth } from "@/context/auth.context"
 import { isAdmin } from "@/utils/admin"
 import { useEditor, EditorContent } from "@tiptap/react"
@@ -90,11 +89,6 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
           title: renameValue.trim(),
         }),
       )
-
-      trackEvent("document_renamed", {
-        documentId,
-        organizationId: organization.id,
-      })
 
       toast.success("Document renamed")
       setIsRenameDialogOpen(false)

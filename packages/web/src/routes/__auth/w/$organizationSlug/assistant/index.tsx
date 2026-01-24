@@ -5,7 +5,6 @@ import { useOrganization } from "@/context/organization.context"
 import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
 import { PanelResizer } from "@/components/panels/PanelResizer"
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar"
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { z } from "zod"
 import { AssistantChat } from "@/components/assistant/AssistantChat"
 import { createId } from "@lydie/core/id"
@@ -46,10 +45,6 @@ function PageComponent() {
   const resetConversation = useCallback(() => {
     setMessages([])
   }, [setMessages])
-
-  useTrackOnMount("assistant_opened", {
-    organizationId: organization.id,
-  })
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current

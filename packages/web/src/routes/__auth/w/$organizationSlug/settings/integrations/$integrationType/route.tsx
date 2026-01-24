@@ -18,7 +18,6 @@ import { Modal } from "@/components/generic/Modal"
 import { Dialog } from "@/components/generic/Dialog"
 import { WordPressConnectionForm } from "@/components/settings/integrations/forms/wordpress-connection-form"
 import { useOrganization } from "@/context/organization.context"
-import { trackEvent } from "@/lib/posthog"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integrations/$integrationType")({
   component: RouteComponent,
@@ -86,14 +85,6 @@ function RouteComponent() {
 
   const handleConnectionSuccess = () => {
     setIsConnectionDialogOpen(false)
-
-    // Track integration connected
-    trackEvent("integration_connected", {
-      integrationType: integrationDetails.id,
-      integrationName: integrationDetails.name,
-      organizationId: organization.id,
-      authType,
-    })
   }
 
   const disconnect = () => {
@@ -108,13 +99,6 @@ function RouteComponent() {
             organizationId: organization.id,
           }),
         )
-
-        // Track integration disconnected
-        trackEvent("integration_disconnected", {
-          integrationType: integrationDetails.id,
-          integrationName: integrationDetails.name,
-          organizationId: organization.id,
-        })
       },
     })
   }

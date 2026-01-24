@@ -5,7 +5,6 @@ import { queries } from "@lydie/zero/queries"
 import { useOrganization } from "@/context/organization.context"
 import { Surface } from "@/components/layout/Surface"
 import { Button } from "@/components/generic/Button"
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   component: RouteComponent,
@@ -34,11 +33,6 @@ function RouteComponent() {
       documentId: id,
     }),
   )
-
-  useTrackOnMount("document_opened", {
-    documentId: id,
-    organizationId: organization.id,
-  })
 
   if (!doc && status.type === "complete") {
     return (

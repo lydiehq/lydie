@@ -3,7 +3,6 @@ import { Separator } from "@/components/generic/Separator"
 import { createFileRoute } from "@tanstack/react-router"
 import { IntegrationsList } from "@/components/settings/integrations/IntegrationsList"
 import { queries } from "@lydie/zero/queries"
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { useOrganization } from "@/context/organization.context"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integrations/")({
@@ -18,11 +17,6 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integ
 
 function RouteComponent() {
   const { organization } = useOrganization()
-
-  // Track integration page viewed
-  useTrackOnMount("integration_page_viewed", {
-    organizationId: organization.id,
-  })
 
   return (
     <div className="flex flex-col gap-y-6">

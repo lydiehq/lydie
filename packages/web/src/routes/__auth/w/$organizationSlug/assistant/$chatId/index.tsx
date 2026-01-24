@@ -5,7 +5,6 @@ import { useOrganization } from "@/context/organization.context"
 import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
 import { PanelResizer } from "@/components/panels/PanelResizer"
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar"
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
 import { queries } from "@lydie/zero/queries"
 import { z } from "zod"
 import { AssistantChat } from "@/components/assistant/AssistantChat"
@@ -89,11 +88,6 @@ function PageComponent() {
       setMessages(formattedMessages)
     }
   }, [conv, setMessages])
-
-  useTrackOnMount("assistant_opened", {
-    organizationId: organization.id,
-    conversationId: chatId,
-  })
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current

@@ -5,7 +5,6 @@ import { useOrganization } from "@/context/organization.context"
 import { toast } from "sonner"
 import { useRouter } from "@tanstack/react-router"
 import { mutators } from "@lydie/zero/mutators"
-import { trackEvent } from "@/lib/posthog"
 
 export function useDocumentActions() {
   const z = useZero()
@@ -23,14 +22,6 @@ export function useDocumentActions() {
         integrationLinkId,
       }),
     )
-
-    // Track document creation
-    trackEvent("document_created", {
-      documentId: id,
-      organizationId: organization.id,
-      hasParent: !!parentId,
-      fromIntegration: !!integrationLinkId,
-    })
 
     navigate({
       from: "/w/$organizationSlug",
@@ -52,13 +43,6 @@ export function useDocumentActions() {
             organizationId: organization.id,
           }),
         )
-
-        // Track document deletion
-        trackEvent("document_deleted", {
-          documentId,
-          organizationId: organization.id,
-          fromIntegration: !!integrationLinkId,
-        })
 
         toast.success("Document deleted")
 
