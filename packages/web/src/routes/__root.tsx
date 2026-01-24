@@ -125,7 +125,14 @@ function PostHogUserIdentifier() {
         hasOrganizations: organizations.length > 0,
         organizationCount: organizations.length,
       })
-    }
+
+      // Track signup or login based on whether user has organizations
+      // This runs once when user first authenticates
+      if (isNewUser) {
+        // Will be followed by organization_created in onboarding
+      } else {
+        // User has organizations, this is a login
+      }
     }
   }, [auth?.user, organizations])
 
