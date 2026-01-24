@@ -12,21 +12,17 @@ interface SessionAuthEnv {
   }
 }
 
-/**
- * Rate limiting middleware for internal API
- * Limits requests per authenticated user: 1000 requests per 15 minutes
- * More lenient than public API since users are authenticated
- */
+// Rate limiting middleware for internal API
+// Limits requests per authenticated user: 1000 requests per 15 minutes
+// More lenient than public API since users are authenticated
 export const internalRateLimit = rateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 1000, // 1000 requests per 15 minutes per user
+  limit: 1000,
   keyGenerator: (c) => {
-    // Use user ID if available (after authentication), otherwise fall back to IP
     const user = c.get("user")
     if (user?.id) {
       return `user:${user.id}`
     }
-    // Fallback to IP for unauthenticated requests (shouldn't happen in practice)
     return c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown"
   },
   message: {
@@ -35,10 +31,8 @@ export const internalRateLimit = rateLimiter({
   },
 })
 
-/**
- * BetterAuth session middleware that validates user sessions and sets user/session in context
- * Following the BetterAuth Hono integration pattern
- */
+// BetterAuth session middleware that validates user sessions and sets user/session in context
+// Following the BetterAuth Hono integration pattern
 export const sessionAuth: MiddlewareHandler<SessionAuthEnv> = async (c, next) => {
   const session = await authClient.api.getSession({
     headers: c.req.raw.headers,
@@ -66,10 +60,8 @@ export const sessionAuth: MiddlewareHandler<SessionAuthEnv> = async (c, next) =>
   return next()
 }
 
-/**
- * Organization context middleware that validates and sets organization context
- * Requires sessionAuth to be run first
- */
+// Organization context middleware that validates and sets organization context
+// Requires sessionAuth to be run first
 export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, next) => {
   const user = c.get("user")
   if (!user) {
@@ -85,7 +77,6 @@ export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, 
     })
   }
 
-  // Verify user has access to this organization
   const organization = await db.query.organizationsTable.findFirst({
     where: {
       id: organizationId,
@@ -109,10 +100,8 @@ export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, 
   return next()
 }
 
-/**
- * Combined middleware that handles both session auth and organization context
- * This is a convenience middleware that combines sessionAuth + organizationContext
- */
+// Combined middleware that handles both session auth and organization context
+// This is a convenience middleware that combines sessionAuth + organizationContext
 export const authenticatedWithOrganization: MiddlewareHandler<SessionAuthEnv> = async (c, next) => {
   await sessionAuth(c, async () => {
     await organizationContext(c, next)

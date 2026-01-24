@@ -23,16 +23,6 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
 
     return { doc }
   },
-  // head: async ({ loaderData }) => {
-  //   const doc = await loaderData?.doc;
-  //   return {
-  //     meta: [
-  //       {
-  //         title: doc ? `${doc.title} | Lydie` : "Lydie",
-  //       },
-  //     ],
-  //   };
-  // },
 })
 
 function RouteComponent() {
@@ -45,7 +35,6 @@ function RouteComponent() {
     }),
   )
 
-  // Track document opened
   useTrackOnMount("document_opened", {
     documentId: id,
     organizationId: organization.id,

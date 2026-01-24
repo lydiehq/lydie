@@ -40,7 +40,6 @@ function EditorContainer({ doc }: Props) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isLocked = doc.is_locked ?? false
   
-  // Store editor instances in Jotai atoms for global access
   const setDocumentEditor = useSetAtom(documentEditorAtom)
   const setTitleEditor = useSetAtom(titleEditorAtom)
   const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom)
@@ -82,7 +81,6 @@ function EditorContainer({ doc }: Props) {
     editable: !isLocked,
   })
 
-  // Sync document editor to global atom
   useEffect(() => {
     setDocumentEditor(contentEditor.editor)
     return () => {
@@ -90,7 +88,6 @@ function EditorContainer({ doc }: Props) {
     }
   }, [contentEditor.editor, setDocumentEditor])
 
-  // Sync title editor to global atom
   useEffect(() => {
     setTitleEditor(titleEditor.editor)
     return () => {
@@ -121,12 +118,10 @@ function EditorContainer({ doc }: Props) {
     }
   }, [titleEditor.editor, title, z, doc.id, doc.organization_id])
 
-  // Apply pending changes after navigation
   useEffect(() => {
     if (!pendingChange) return
     if (!contentEditor.editor && !titleEditor.editor) return
     
-    // Check if this is the target document
     if (pendingChange.documentId !== doc.id) return
 
     const applyPendingChange = async () => {
@@ -137,7 +132,6 @@ function EditorContainer({ doc }: Props) {
         let contentSuccess = true
         let titleSuccess = true
 
-        // Apply title change if provided
         if (pendingChange.title && titleEditor.editor) {
           const titleResult = await applyTitleChange(
             titleEditor.editor,
@@ -152,7 +146,6 @@ function EditorContainer({ doc }: Props) {
           }
         }
 
-        // Apply content changes if provided
         if (pendingChange.replace && contentEditor.editor) {
           const result = await applyContentChanges(
             contentEditor.editor,
@@ -187,7 +180,6 @@ function EditorContainer({ doc }: Props) {
         console.error("Failed to apply pending change:", error)
         toast.error("Failed to apply changes")
       } finally {
-        // Clear the pending change after a short delay to allow UI to update
         setTimeout(() => {
           setPendingChange(null)
           setPendingChangeStatus(null)
@@ -195,7 +187,6 @@ function EditorContainer({ doc }: Props) {
       }
     }
 
-    // Small delay to ensure editors are fully ready
     const timeoutId = setTimeout(() => {
       applyPendingChange()
     }, 100)
@@ -244,10 +235,6 @@ function EditorContainer({ doc }: Props) {
                 />
               </div>
             </div>
-            {/* <BottomBar
-              editor={contentEditor.editor}
-              lastSaved={new Date(doc.updated_at)}
-            /> */}
           </Panel>
         </PanelGroup>
       </Surface>

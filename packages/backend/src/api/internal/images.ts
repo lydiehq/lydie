@@ -27,7 +27,6 @@ export const ImagesRoute = new Hono<{ Variables: Variables }>().post("/upload-ur
     })
   }
 
-  // Validate content type is an image
   if (!contentType.startsWith("image/")) {
     throw new HTTPException(400, {
       message: "File must be an image",
@@ -57,7 +56,6 @@ export const ImagesRoute = new Hono<{ Variables: Variables }>().post("/upload-ur
     userId,
   })
 
-  // Extract domain from router URL (handles both full URL and domain-only)
   const routerUrl = Resource.AssetsRouter.url
   const assetDomain = routerUrl.startsWith("http") ? new URL(routerUrl).hostname : routerUrl
   const imageUrl = `https://${assetDomain}/${key}`

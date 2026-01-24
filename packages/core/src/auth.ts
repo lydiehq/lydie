@@ -82,18 +82,15 @@ export const authClient = betterAuth({
             html: `<p>New user signed up to Lydie: ${user.email}</p>`,
           })
 
-          // Extract first name from user's full name
           const fullName = user.name || user.email.split("@")[0] || "My"
           const firstName = fullName.split(" ")[0]
 
-          // Send welcome email and schedule follow-up onboarding emails
           await scheduleOnboardingEmails({
             userId: user.id,
             email: user.email,
             fullName: user.name || `${firstName}`,
           })
 
-          // Create default user settings if they don't exist
           const existingSettings = await db
             .select()
             .from(schema.userSettingsTable)
@@ -121,7 +118,6 @@ export const authClient = betterAuth({
         const frontendUrl =
           process.env.FRONTEND_URL ||
           (Resource.App.stage === "production" ? "https://app.lydie.co" : "http://localhost:3000")
-        // Use invitation ID to construct the invitation link
         const invitationUrl = `${frontendUrl}/invitations/${data.invitation.id}`
 
         await sendEmail({
@@ -137,7 +133,6 @@ export const authClient = betterAuth({
       },
     }),
     customSession(async ({ user, session }) => {
-      // Fetch user's organizations with their memberships
       const members = await db
         .select({
           organizationId: schema.membersTable.organizationId,
@@ -153,7 +148,6 @@ export const authClient = betterAuth({
 
       const organizations = members.map((m) => m.organization)
 
-      // Find the active organization slug if activeOrganizationId is set
       const foundOrg = session.activeOrganizationId
         ? organizations.find((org) => org.id === session.activeOrganizationId)
         : undefined
@@ -190,7 +184,6 @@ export const authClient = betterAuth({
           secret: Resource.PolarWebhookSecret?.value || "",
           onSubscriptionActive: async (payload) => {
             console.log("Subscription active:", payload)
-            // Extract organization ID from checkout metadata (referenceId)
             const organizationId = payload.data.metadata?.referenceId
             if (!organizationId || typeof organizationId !== "string") {
               console.warn("No valid organization ID in subscription metadata")

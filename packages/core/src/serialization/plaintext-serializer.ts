@@ -54,7 +54,6 @@ export class PlainTextSerializer implements NodeBuilder<string> {
   }
 
   customBlock(_name: string, _properties: Record<string, any>): string {
-    // Custom blocks are omitted in plain text
     return ""
   }
 

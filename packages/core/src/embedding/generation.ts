@@ -1,6 +1,4 @@
-/**
- * Embedding generation utilities
- */
+// Embedding generation utilities
 
 import { embed, embedMany } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
@@ -24,9 +22,7 @@ export async function generateEmbedding(value: string): Promise<number[]> {
   return embedding
 }
 
-/**
- * Generate an embedding for a document title
- */
+// Generate an embedding for a document title
 export async function generateTitleEmbedding(title: string): Promise<number[]> {
   const { embedding } = await embed({
     model: embeddingModel,
@@ -35,9 +31,7 @@ export async function generateTitleEmbedding(title: string): Promise<number[]> {
   return embedding
 }
 
-/**
- * Generate embeddings for multiple text values
- */
+// Generate embeddings for multiple text values
 export async function generateManyEmbeddings(values: string[]): Promise<number[][]> {
   const { embeddings } = await embedMany({
     model: embeddingModel,

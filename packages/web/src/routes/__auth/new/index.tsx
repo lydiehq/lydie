@@ -56,14 +56,12 @@ function RouteComponent() {
           }),
         )
 
-        // Wait for the server to exist in the database.
         await write.server
 
         await revalidateSession(queryClient)
         clearZeroInstance()
         await router.invalidate()
 
-        // Track organization created
         trackEvent("organization_created", {
           organizationId: id,
           organizationSlug: slug,
@@ -94,9 +92,6 @@ function RouteComponent() {
       await revalidateSession(queryClient)
       await router.invalidate()
       toast.success("Invitation accepted")
-      // Redirect to home or specific workspace logic will be handled by auth state change or manual redirect
-      // Often accepting invitation sets active organization, but we should redirect.
-      // We can fetch user orgs and redirect to the new one.
       navigate({ to: "/" })
     } catch (error) {
       toast.error("Failed to accept invitation")

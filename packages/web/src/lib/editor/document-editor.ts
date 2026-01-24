@@ -35,7 +35,6 @@ function getUserColor(userId: string): string {
     "#8338ec",
   ]
 
-  // Simple hash function to get consistent color for user
   let hash = 0
   for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash)
@@ -134,12 +133,10 @@ export function useDocumentEditor({
 
 function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
   return function (view: EditorView, event: DragEvent, _slice: Slice, moved: boolean): boolean {
-    // Only handle external file drops (not moving content within editor)
     if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
       const file = event.dataTransfer.files[0]
-      const filesize = (file.size / 1024 / 1024).toFixed(4) // Size in MB
+      const filesize = (file.size / 1024 / 1024).toFixed(4)
 
-      // Validate image type and size (allow jpeg, png, webp, gif under 10MB)
       const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]
       if (validImageTypes.includes(file.type) && parseFloat(filesize) < 10) {
         // Check image dimensions
@@ -154,14 +151,11 @@ function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
             return
           }
 
-          // Upload the image
           uploadImage(file)
             .then(function (url) {
-              // Pre-load the image before inserting to avoid delay
               const preloadImg = new Image()
               preloadImg.src = url
               preloadImg.onload = function () {
-                // Insert the image at the drop position
                 const { schema } = view.state
                 const coordinates = view.posAtCoords({
                   left: event.clientX,

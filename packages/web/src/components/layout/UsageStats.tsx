@@ -36,7 +36,6 @@ export function UsageStats() {
       }
     }
 
-    // Count user messages to track actual message sends
     const messagesUsedToday = todayUsage.filter(
       (usage: any) => usage.source === "document" || usage.source === "assistant",
     ).length
@@ -49,13 +48,11 @@ export function UsageStats() {
   const isAtLimit = usageStats.messagesUsedToday >= maxMessages
   const isNearLimit = maxMessages > 0 && usageStats.messagesUsedToday >= maxMessages * 0.8
 
-  // Calculate progress percentage
   const progress = useMemo(() => {
     if (maxMessages === 0) return 0
     return Math.min((usageStats.messagesUsedToday / maxMessages) * 100, 100)
   }, [usageStats.messagesUsedToday, maxMessages])
 
-  // Get color based on usage state
   const progressColor = useMemo(() => {
     if (isNearLimit) return "#f59e0b"
     return "var(--color-gray-900)"

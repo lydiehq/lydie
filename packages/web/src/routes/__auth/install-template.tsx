@@ -54,7 +54,6 @@ function RouteComponent() {
 
       toast.success("Template installed successfully!")
 
-      // Redirect to organization home - the user will see the new documents there
       navigate({
         to: "/w/$organizationSlug",
         params: { organizationSlug },

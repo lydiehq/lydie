@@ -65,19 +65,16 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
     }),
 
     execute: async function* ({ query, documentId, limit = 5 }) {
-      // Yield initial searching state
       yield {
         state: "searching",
         message: `Searching for "${query}" in current document...`,
         query,
       }
 
-      // Add fake delay to see loading state (remove in production)
       await new Promise((resolve) => setTimeout(resolve, 800))
 
       const targetDocumentId = documentId || currentDocumentId
 
-      // Verify document access
       const [document] = await db
         .select({
           id: documentsTable.id,
@@ -102,10 +99,8 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         }
       }
 
-      // Generate query embedding
       const queryEmbedding = await generateEmbedding(query)
 
-      // Search document chunks
       const similarity = sql<number>`1 - (${
         documentEmbeddingsTable.embedding
       } <=> ${JSON.stringify(queryEmbedding)}::vector)`
@@ -139,7 +134,6 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         return
       }
 
-      // Yield final result (this is what will be in tool.output)
       yield {
         message: `Found ${results.length} relevant chunk${
           results.length > 1 ? "s" : ""

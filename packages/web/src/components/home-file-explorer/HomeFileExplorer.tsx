@@ -33,14 +33,12 @@ export function HomeFileExplorer() {
   const { user, session } = useAuth()
   const userId = session?.userId
   const { organization } = useOrganization()
-  // todo: could probably be made non-strict
   const { tree } = useSearch({ strict: false })
   const organizationId = organization.id
   const organizationSlug = organization?.slug || ""
   const { createDocument } = useDocumentActions()
 
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
-    // Initialize from localStorage, defaulting to "grid"
     if (typeof window !== "undefined") {
       const stored = getUserStorage(userId, VIEW_MODE_STORAGE_KEY)
       if (stored === "grid" || stored === "list") {
@@ -50,28 +48,24 @@ export function HomeFileExplorer() {
     return "grid"
   })
 
-  // Persist view mode changes to localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       setUserStorage(userId, VIEW_MODE_STORAGE_KEY, viewMode)
     }
   }, [viewMode, userId])
 
-  // Search logic
   const { search, setSearch, searchFieldRef, onSearchChange, allDocuments } = useDocumentSearch(
     organizationId,
     organizationSlug,
     "/__auth/w/$organizationSlug/",
   )
 
-  // When searching, show all results. Otherwise filter by parent page
   const documents = search.trim()
     ? allDocuments
     : tree
       ? allDocuments.filter((doc) => doc.parent_id === tree)
       : allDocuments.filter((doc) => !doc.parent_id)
 
-  // Create items for documents
   const documentItems: ItemType[] = useMemo(
     () =>
       documents.map((doc) => ({
@@ -83,33 +77,27 @@ export function HomeFileExplorer() {
     [documents],
   )
 
-  // Page navigation (for navigating to parent pages)
   const { handleBackClick } = usePageNavigation(organizationId, setSearch)
 
-  // Unified drag and drop hooks
   const { dragAndDropHooks } = useDocumentDragDrop({
     allDocuments,
   })
 
-  // List state management for documents
   const documentList = useListData<ItemType>({
     initialItems: documentItems,
     getKey: (item) => item.id,
   })
 
-  // Sync list data when items change
   useEffect(() => {
     const currentDocIds = new Set(documentList.items.map((item) => item.id))
     const newDocIds = new Set(documentItems.map((item) => item.id))
 
-    // Remove items that no longer exist
     documentList.items.forEach((item) => {
       if (!newDocIds.has(item.id)) {
         documentList.remove(item.id)
       }
     })
 
-    // Add new items
     documentItems.forEach((item) => {
       if (!currentDocIds.has(item.id)) {
         documentList.append(item)
@@ -117,24 +105,21 @@ export function HomeFileExplorer() {
     })
   }, [documentItems.map((i) => i.id).join(",")])
 
-  // Find current parent page info if we're viewing a child page
   const currentParentPage = tree ? allDocuments.find((d) => d.id === tree) : null
 
-  // Get 4 latest opened documents (sorted by updated_at)
-  // Only show at root level when not searching
   const recentlyOpenedDocuments: ItemType[] = useMemo(() => {
     if (search.trim() || tree) {
       return []
     }
 
     return allDocuments
-      .filter((doc) => doc.updated_at) // Only include documents with updated_at
+      .filter((doc) => doc.updated_at)
       .sort((a, b) => {
         const aTime = typeof a.updated_at === "number" ? a.updated_at : new Date(a.updated_at || 0).getTime()
         const bTime = typeof b.updated_at === "number" ? b.updated_at : new Date(b.updated_at || 0).getTime()
-        return bTime - aTime // Descending order (newest first)
+        return bTime - aTime
       })
-      .slice(0, 4) // Take top 4
+      .slice(0, 4)
       .map((doc) => ({
         id: doc.id,
         name: doc.title || "Untitled document",
@@ -143,25 +128,21 @@ export function HomeFileExplorer() {
       }))
   }, [allDocuments, search, tree])
 
-  // List state management for recently opened documents
   const recentlyOpenedList = useListData<ItemType>({
     initialItems: recentlyOpenedDocuments,
     getKey: (item) => item.id,
   })
 
-  // Sync recently opened list data when items change
   useEffect(() => {
     const currentIds = new Set(recentlyOpenedList.items.map((item) => item.id))
     const newIds = new Set(recentlyOpenedDocuments.map((item) => item.id))
 
-    // Remove items that no longer exist
     recentlyOpenedList.items.forEach((item) => {
       if (!newIds.has(item.id)) {
         recentlyOpenedList.remove(item.id)
       }
     })
 
-    // Add new items
     recentlyOpenedDocuments.forEach((item) => {
       if (!currentIds.has(item.id)) {
         recentlyOpenedList.append(item)

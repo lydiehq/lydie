@@ -13,10 +13,8 @@ import type { ContentNode } from "@lydie/core/content"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-/**
- * Normalize content by converting taskList/taskItem to bulletList/listItem
- * since taskList/taskItem are not in the ProseMirror schema
- */
+// Normalize content by converting taskList/taskItem to bulletList/listItem
+// since taskList/taskItem are not in the ProseMirror schema
 function normalizeContentForYjs(content: any): ContentNode {
   if (!content || typeof content !== "object") {
     return content

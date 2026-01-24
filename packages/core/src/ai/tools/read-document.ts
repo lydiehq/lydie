@@ -42,7 +42,6 @@ Use this tool to access the complete content of any document, including the curr
         return
       }
 
-      // Yield initial searching state
       yield {
         state: "searching",
         message: documentTitle ? `Searching for document "${documentTitle}"...` : "Searching for document...",
@@ -68,7 +67,6 @@ Use this tool to access the complete content of any document, including the curr
         conditions.push(ilike(documentsTable.title, `%${documentTitle}%`))
       }
 
-      // Apply all conditions at once
       query = query.where(and(...conditions))
 
       const documents = await query.limit(1)
@@ -94,7 +92,6 @@ Use this tool to access the complete content of any document, including the curr
         return
       }
 
-      // Yield reading state
       yield {
         state: "reading",
         message: `Reading document "${document.title}"...`,
@@ -103,13 +100,11 @@ Use this tool to access the complete content of any document, including the curr
 
       const jsonContent = convertYjsToJson(document.yjsState)
 
-      // Convert jsonContent to HTML using our custom renderer
       let htmlContent: string
       try {
         htmlContent = serializeToHTML(jsonContent as any)
       } catch (error) {
         console.error("[ReadDocument] Error converting jsonContent to HTML:", error)
-        // Fallback to raw JSON string if conversion fails
         htmlContent = JSON.stringify(jsonContent, null, 2)
       }
 
@@ -125,7 +120,6 @@ Use this tool to access the complete content of any document, including the curr
         result.updatedAt = document.updatedAt.toISOString()
       }
 
-      // Yield final success state with document data
       yield {
         state: "success",
         message: `Successfully retrieved document: "${document.title}"`,

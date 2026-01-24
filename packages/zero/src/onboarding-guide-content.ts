@@ -1,7 +1,5 @@
-/**
- * Onboarding guide document content
- * Contains the template for the interactive onboarding guide documents
- */
+// Onboarding guide document content
+// Contains the template for the interactive onboarding guide documents
 
 export interface OnboardingGuideContent {
   parent: {

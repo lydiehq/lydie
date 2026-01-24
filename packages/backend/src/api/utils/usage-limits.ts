@@ -2,23 +2,18 @@ import { db, assistantMessagesTable, assistantConversationsTable } from "@lydie/
 import { eq, and, gte } from "drizzle-orm"
 import { PLAN_LIMITS, PLAN_TYPES, type PlanType } from "@lydie/database/billing-types"
 
-/**
- * Get the start of today in UTC
- */
+// Get the start of today in UTC
 function getStartOfToday(): Date {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
   return today
 }
 
-/**
- * Count user messages (not LLM usage) sent today for a given organization
- * We count from message tables because usage is only created after completion
- */
+// Count user messages (not LLM usage) sent today for a given organization
+// We count from message tables because usage is only created after completion
 async function getUserMessagesToday(organizationId: string): Promise<number> {
   const startOfDay = getStartOfToday()
 
-  // Count user messages from assistant conversations for this org
   const assistantConvs = await db
     .select({ id: assistantConversationsTable.id })
     .from(assistantConversationsTable)
@@ -43,19 +38,15 @@ async function getUserMessagesToday(organizationId: string): Promise<number> {
   return assistantMessages.filter((msg) => assistantConvIds.includes(msg.conversationId)).length
 }
 
-/**
- * Get the current plan for an organization
- */
+// Get the current plan for an organization
 function getCurrentPlan(subscriptionPlan?: string | null, subscriptionStatus?: string | null): PlanType {
   const hasProAccess = subscriptionPlan === "pro" && subscriptionStatus === "active"
 
   return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE
 }
 
-/**
- * Check if an organization has reached their daily message limit
- * Returns { allowed: boolean, messagesUsed: number, messageLimit: number | null }
- */
+// Check if an organization has reached their daily message limit
+// Returns { allowed: boolean, messagesUsed: number, messageLimit: number | null }
 export async function checkDailyMessageLimit(organization: {
   id: string
   subscriptionPlan?: string | null
@@ -71,7 +62,6 @@ export async function checkDailyMessageLimit(organization: {
   const planLimits = PLAN_LIMITS[currentPlan]
   const messageLimit = planLimits.maxMessagesPerDay
 
-  // Pro plan has unlimited messages
   if (messageLimit === null) {
     return {
       allowed: true,
@@ -81,7 +71,6 @@ export async function checkDailyMessageLimit(organization: {
     }
   }
 
-  // Check usage for free plan - count actual user messages sent today
   const messagesUsed = await getUserMessagesToday(organization.id)
   const allowed = messagesUsed < messageLimit
 

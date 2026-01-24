@@ -106,14 +106,12 @@ export interface Mark {
 }
 
 export interface NodeBuilder<T> {
-  // Text and marks
   text(content: string): T
   bold(content: T): T
   italic(content: T): T
   link(content: T, href?: string, rel?: string, target?: string): T
   internalLink?(content: T, documentId?: string, documentSlug?: string, documentTitle?: string): T
 
-  // Block elements
   doc(children: T[]): T
   paragraph(children: T[]): T
   heading(level: number, children: T[]): T
@@ -124,24 +122,14 @@ export interface NodeBuilder<T> {
   horizontalRule(): T
   codeBlock(children: T[], language?: string | null): T
 
-  // Custom blocks
   customBlock(name: string, properties: Record<string, any>): T
 
-  // Utilities
   fragment(children: T[]): T
   empty(): T
   escape(text: string): string
 }
 
-// ============================================================================
-// Re-export HTML Builder for backwards compatibility
-// ============================================================================
-
 export { HTMLBuilder } from "./serialization/html"
-
-// ============================================================================
-// Core rendering engine
-// ============================================================================
 
 export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<T>): T {
   const renderMarks = (text: string, marks?: Mark[]): T => {
@@ -163,8 +151,6 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
           case "link":
             return builder.link(wrapped, mark.attrs?.href, mark.attrs?.rel, mark.attrs?.target)
           case "internal-link":
-            // Internal links are handled by the builder's internalLink method
-            // If not implemented, fall back to link with document-id
             if (builder.internalLink) {
               return builder.internalLink(
                 wrapped,
@@ -173,7 +159,6 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
                 mark.attrs?.["document-title"],
               )
             }
-            // Fallback: treat as regular link if builder doesn't support internal-link
             return wrapped
           default:
             return wrapped
@@ -187,7 +172,6 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
 
   const renderNode = (node: ContentNode | TextNode): T => {
     try {
-      // Validate node structure
       if (!node || typeof node !== "object" || !node.type) {
         return builder.empty()
       }
@@ -265,17 +249,8 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
   return renderNode(content)
 }
 
-// ============================================================================
-// HTML Rendering (Re-export for backwards compatibility)
-// ============================================================================
-
 export { serializeToHTML } from "./serialization/html"
 
-// ============================================================================
-// API Client
-// ============================================================================
-
-// API Client for server-side operations
 export class LydieClient {
   private apiKey: string
   private apiUrl: string
@@ -486,11 +461,6 @@ export class LydieClient {
   }
 }
 
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-// Utility function to extract TOC from content
 export function extractTableOfContents(content: ContentNode): TocItem[] {
   const headings: TocItem[] = []
   let headingCounter = 0
@@ -517,7 +487,6 @@ export function extractTableOfContents(content: ContentNode): TocItem[] {
   return headings
 }
 
-// Helper function to extract text content from a node
 function extractTextFromNode(node: ContentNode | TextNode): string {
   if (node.type === "text") {
     return (node as TextNode).text
@@ -530,9 +499,7 @@ function extractTextFromNode(node: ContentNode | TextNode): string {
   return ""
 }
 
-/**
- * Extract plain text from content node
- */
+// Extract plain text from content node
 export function extractText(content: ContentNode): string {
   return extractTextFromNode(content)
 }

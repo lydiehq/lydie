@@ -1,8 +1,6 @@
 export interface MarkdownDeserializeOptions {}
 
-/**
- * Deserialize Markdown string to TipTap JSON
- */
+// Deserialize Markdown string to TipTap JSON
 export function deserializeFromMarkdown(markdown: string, options: MarkdownDeserializeOptions = {}): any {
   const lines = markdown.split("\n")
   const content: any[] = []
@@ -23,7 +21,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
 
   const closeParagraph = () => {
     if (currentParagraph) {
-      // Only add non-empty paragraphs
       if (currentParagraph.content.length > 0) {
         content.push(currentParagraph)
       }
@@ -37,21 +34,16 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       return [{ type: "text", text: "" }]
     }
 
-    // Simple approach: split by patterns and process sequentially
-    // Priority: links > bold > italic
-    // Split by links first, then process each segment for bold/italic
     const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g
     let lastIndex = 0
     let match
 
     while ((match = linkPattern.exec(text)) !== null) {
-      // Add text before the link
       if (match.index > lastIndex) {
         const beforeText = text.substring(lastIndex, match.index)
         textNodes.push(...parseBoldItalic(beforeText))
       }
 
-      // Add the link
       textNodes.push({
         type: "text",
         text: match[1],
@@ -61,13 +53,11 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       lastIndex = match.index + match[0].length
     }
 
-    // Add remaining text after last link
     if (lastIndex < text.length) {
       const remainingText = text.substring(lastIndex)
       textNodes.push(...parseBoldItalic(remainingText))
     }
 
-    // Helper to parse bold and italic (bold takes priority)
     function parseBoldItalic(segment: string): any[] {
       if (!segment) return []
 
@@ -77,13 +67,11 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       let boldMatch
 
       while ((boldMatch = boldPattern.exec(segment)) !== null) {
-        // Add text before bold
         if (boldMatch.index > lastIdx) {
           const beforeText = segment.substring(lastIdx, boldMatch.index)
           nodes.push(...parseItalic(beforeText))
         }
 
-        // Add bold text
         nodes.push({
           type: "text",
           text: boldMatch[1],
@@ -93,7 +81,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
         lastIdx = boldMatch.index + boldMatch[0].length
       }
 
-      // Add remaining text
       if (lastIdx < segment.length) {
         const remaining = segment.substring(lastIdx)
         nodes.push(...parseItalic(remaining))
@@ -102,7 +89,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       return nodes.length > 0 ? nodes : [{ type: "text", text: segment }]
     }
 
-    // Helper to parse italic
     function parseItalic(segment: string): any[] {
       if (!segment) return []
 
@@ -112,7 +98,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       let italicMatch
 
       while ((italicMatch = italicPattern.exec(segment)) !== null) {
-        // Add text before italic
         if (italicMatch.index > lastIdx) {
           nodes.push({
             type: "text",
@@ -120,7 +105,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
           })
         }
 
-        // Add italic text
         nodes.push({
           type: "text",
           text: italicMatch[1],
@@ -130,7 +114,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
         lastIdx = italicMatch.index + italicMatch[0].length
       }
 
-      // Add remaining text
       if (lastIdx < segment.length) {
         nodes.push({
           type: "text",
@@ -147,11 +130,9 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
-    // Handle code blocks (```language or ```)
     const codeBlockStartMatch = line.match(/^```([\w-]+)?$/)
     if (codeBlockStartMatch) {
       if (inCodeBlock) {
-        // End of code block
         closeParagraph()
         closeList()
 
@@ -173,7 +154,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
         codeBlockLanguage = null
         codeBlockLines = []
       } else {
-        // Start of code block
         closeParagraph()
         closeList()
         inCodeBlock = true
@@ -183,13 +163,11 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       continue
     }
 
-    // If we're inside a code block, collect lines
     if (inCodeBlock) {
       codeBlockLines.push(line)
       continue
     }
 
-    // Handle headings (# ## ###)
     if (line.trim().startsWith("#")) {
       closeParagraph()
       closeList()
@@ -217,7 +195,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       continue
     }
 
-    // Handle unordered lists (-, *, +)
     const unorderedMatch = line.match(/^(\s*)([-*+])\s+(.+)$/)
     if (unorderedMatch) {
       closeParagraph()
@@ -277,7 +254,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
       continue
     }
 
-    // Handle empty lines
     if (line.trim() === "") {
       closeParagraph()
       closeList()
@@ -298,7 +274,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
     currentParagraph.content.push(...textNodes)
   }
 
-  // Close any remaining open elements
   closeParagraph()
   closeList()
 
@@ -319,7 +294,6 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
     })
   }
 
-  // Ensure we always have at least one content node
   if (content.length === 0) {
     content.push({
       type: "paragraph",

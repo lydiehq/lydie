@@ -2,10 +2,8 @@ import type { Transaction } from "@rocicorp/zero"
 import { zql } from "../schema"
 import { notFoundError } from "./errors"
 
-/**
- * Verifies that a document exists and belongs to the specified organization
- * Throws an error if the document is not found
- */
+// Verifies that a document exists and belongs to the specified organization
+// Throws an error if the document is not found
 export async function verifyDocumentAccess(
   tx: Transaction,
   documentId: string,
@@ -29,10 +27,8 @@ export async function verifyDocumentAccess(
   return document
 }
 
-/**
- * Gets a document by ID and organization ID
- * Returns null if not found (doesn't throw)
- */
+// Gets a document by ID and organization ID
+// Returns null if not found (doesn't throw)
 export async function getDocumentById(
   tx: Transaction,
   documentId: string,
@@ -50,9 +46,7 @@ export async function getDocumentById(
   return await tx.run(query.one())
 }
 
-/**
- * Recursively finds all child documents of a parent document
- */
+// Recursively finds all child documents of a parent document
 export async function findAllChildDocuments(
   tx: Transaction,
   parentId: string,

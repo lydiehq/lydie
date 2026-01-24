@@ -351,7 +351,6 @@ export function CommandMenu() {
 
     const sections: MenuSection[] = []
 
-    // Add onboarding section if it has items
     if (onboardingItems.length > 0) {
       sections.push({
         id: "onboarding",
@@ -395,8 +394,6 @@ export function CommandMenu() {
         <Dialog className="flex flex-col bg-gray-50">
           <Command
             onKeyDown={(e) => {
-              // Escape goes to previous page
-              // Backspace goes to previous page when search is empty
               if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
                 e.preventDefault()
                 setPages((pages) => pages.slice(0, -1))
@@ -427,7 +424,6 @@ export function CommandMenu() {
                       key={section.id}
                       section={section}
                       onSelect={(item) => {
-                        // Don't close dialog for "search" - it navigates to a sub-page
                         if (item.id === "search") {
                           item.action()
                         } else {

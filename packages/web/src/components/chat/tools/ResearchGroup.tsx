@@ -160,9 +160,7 @@ export function ResearchGroup({ actions, isLoading }: ResearchGroupProps) {
   )
 }
 
-/**
- * Extracts a human-readable label from a tool part for display in the research group.
- */
+// Extracts a human-readable label from a tool part for display in the research group.
 export function extractActionFromToolPart(part: any): ResearchAction | null {
   const toolType = part.type?.replace("tool-", "")
 
@@ -237,10 +235,8 @@ export type GroupedPart =
   | { type: "research-group"; parts: any[] }
   | { type: "single"; part: any }
 
-/**
- * Groups consecutive research tool parts together.
- * Non-research parts and text parts break the grouping.
- */
+// Groups consecutive research tool parts together.
+// Non-research parts and text parts break the grouping.
 export function groupMessageParts(parts: any[]): GroupedPart[] {
   const groups: GroupedPart[] = []
   let currentResearchGroup: any[] = []

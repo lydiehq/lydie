@@ -71,7 +71,6 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
       return
     }
 
-    // For integration links, trigger expansion by clicking the chevron button
     if (isIntegrationLink) {
       chevronRef.current?.click()
       return
@@ -230,9 +229,7 @@ function IntegrationGroupChevron({
   )
 }
 
-/**
- * Integration Link Chevron - Shows sync icon with loading state
- */
+// Integration Link Chevron - Shows sync icon with loading state
 function IntegrationLinkChevron({
   syncStatus,
   isExpanded,
@@ -298,7 +295,6 @@ function DocumentTreeItemIcon({
     )
   }
 
-  // If has children, show button with chevron on hover
   return (
     <Button
       ref={chevronRef}

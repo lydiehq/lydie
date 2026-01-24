@@ -10,10 +10,8 @@ interface UseDocumentContextOptions {
   allowDismissCurrent?: boolean
 }
 
-/**
- * Unified document context hook that manages document context for chat inputs
- * Handles querying documents, building context items, and managing dismissal state
- */
+// Unified document context hook that manages document context for chat inputs
+// Handles querying documents, building context items, and managing dismissal state
 export function useDocumentContext({
   currentDocumentId,
   mentionedDocumentIds,

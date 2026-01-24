@@ -1,14 +1,11 @@
 import { rateLimiter } from "hono-rate-limiter"
 
-/**
- * Rate limiting middleware for public API
- * Limits requests per IP address: 100 requests per hour
- */
+// Rate limiting middleware for public API
+// Limits requests per IP address: 100 requests per hour
 export const publicRateLimit = rateLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
-  limit: 100, // 100 requests per hour per IP
+  limit: 100,
   keyGenerator: (c) => {
-    // Use IP address from headers (x-forwarded-for for proxies, x-real-ip as fallback)
     return c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown"
   },
   message: {

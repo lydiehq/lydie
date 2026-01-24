@@ -110,17 +110,12 @@ function RouteComponent() {
           }),
         )
 
-        // Wait for the server to confirm the mutation
-        // This will throw if the mutation fails on the server
         await write.server
 
-        // Mark as succeeded only after server confirms
         mutationSucceeded = true
 
-        // Only proceed with success actions if we reach here (mutation succeeded)
         toast.success("Workspace updated successfully")
 
-        // If slug changed, refresh session to update the cached organization data
         if (slugChanged && mutationSucceeded) {
           try {
             await revalidateSession(queryClient)
@@ -135,11 +130,7 @@ function RouteComponent() {
           })
         }
       } catch (error: any) {
-        // Extract error message - could be from Zero mutation or network error
         let errorMessage = "Failed to update workspace"
-
-        // TODO: fix this shit and create proper e2e tests for cases where slug
-        // is taken etc.
 
         if (error?.message) {
           if (error.message === "Slug is already taken") {
@@ -156,14 +147,12 @@ function RouteComponent() {
         toast.error(errorMessage)
         console.error("Workspace update error:", error)
 
-        // Ensure we don't navigate on error - mutation failed
         mutationSucceeded = false
         return
       }
     },
   })
 
-  // API key creation form
   const apiKeyForm = useAppForm({
     defaultValues: {
       name: "",
@@ -232,7 +221,6 @@ function RouteComponent() {
     try {
       z.mutate(mutators.organization.delete({ organizationId: organization.id }))
       toast.success("Organization deleted successfully")
-      // Navigate to home - the route will redirect appropriately
       navigate({ to: "/" })
     } catch (error) {
       toast.error("Failed to delete organization")
@@ -250,7 +238,6 @@ function RouteComponent() {
     }),
   )
 
-  // Invitation form
   const invitationForm = useAppForm({
     defaultValues: {
       email: "",
@@ -262,7 +249,6 @@ function RouteComponent() {
         return
       }
 
-      // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(values.value.email.trim())) {
         toast.error("Please enter a valid email address")

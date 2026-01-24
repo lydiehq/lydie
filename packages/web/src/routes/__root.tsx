@@ -77,7 +77,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const { auth, organizations } = await loadSession(queryClient)
     const zeroInstance = getZeroInstance(auth)
 
-    // Redirect to new workspace creation if user has no organizations
     if (
       auth?.user &&
       organizations.length === 0 &&
@@ -112,14 +111,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   },
 })
 
-// Component to identify users and track page views
 function PostHogUserIdentifier() {
   const { auth, organizations } = Route.useRouteContext()
 
-  // Track page views automatically
   usePageViewTracking()
 
-  // Identify user when authenticated and track login/signup
   useEffect(() => {
     if (auth?.user) {
       const isNewUser = organizations.length === 0
@@ -129,14 +125,7 @@ function PostHogUserIdentifier() {
         hasOrganizations: organizations.length > 0,
         organizationCount: organizations.length,
       })
-
-      // Track signup or login based on whether user has organizations
-      // This runs once when user first authenticates
-      if (isNewUser) {
-        // Will be followed by organization_created in onboarding
-      } else {
-        // User has organizations, this is a login
-      }
+    }
     }
   }, [auth?.user, organizations])
 

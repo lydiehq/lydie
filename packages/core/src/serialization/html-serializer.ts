@@ -8,7 +8,6 @@ export class HTMLSerializer implements NodeBuilder<string> {
   }
 
   internalLink(content: string, documentId?: string, documentSlug?: string, documentTitle?: string): string {
-    // Use slug if available, otherwise fall back to document ID
     let href = documentSlug || documentId || "#"
     if (!href.startsWith("/") && !href.startsWith("http")) {
       href = `/${href}`
@@ -35,7 +34,6 @@ export class HTMLSerializer implements NodeBuilder<string> {
   }
 
   link(content: string, href?: string, rel?: string, target?: string): string {
-    // Apply link prefix if provided and href is a relative path
     let finalHref = href
     if (
       this.linkPrefix &&
@@ -44,7 +42,6 @@ export class HTMLSerializer implements NodeBuilder<string> {
       !href.startsWith("mailto:") &&
       !href.startsWith("tel:")
     ) {
-      // Only prefix relative paths (not absolute URLs or protocols)
       finalHref = `${this.linkPrefix}${href.startsWith("/") ? href : `/${href}`}`
     }
 

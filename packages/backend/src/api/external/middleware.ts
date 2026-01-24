@@ -12,21 +12,17 @@ interface ApiAuthEnv {
   }
 }
 
-/**
- * Rate limiting middleware for external API
- * Limits requests per API key: 1000 requests per 15 minutes
- * Should be applied after apiKeyAuth middleware
- */
+// Rate limiting middleware for external API
+// Limits requests per API key: 1000 requests per 15 minutes
+// Should be applied after apiKeyAuth middleware
 export const externalRateLimit = rateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 1000, // 1000 requests per 15 minutes per API key
+  limit: 1000,
   keyGenerator: (c) => {
-    // Use API key ID from context (set by apiKeyAuth middleware)
     const apiKeyId = c.get("apiKeyId")
     if (apiKeyId) {
       return `apikey:${apiKeyId}`
     }
-    // Fallback to IP if API key not yet authenticated (shouldn't happen in practice)
     return c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown"
   },
   message: {
@@ -86,9 +82,6 @@ export const apiKeyAuth: MiddlewareHandler<ApiAuthEnv> = async (c, next) => {
     })
   }
 
-  // Update lastUsedAt timestamp (track usage)
-  // This is a lightweight operation - just updating a timestamp field
-  // We update it on every request to ensure accurate tracking
   await db.update(apiKeysTable).set({ lastUsedAt: new Date() }).where(eq(apiKeysTable.id, apiKey.id))
 
   c.set("organizationId", apiKey.organizationId)

@@ -13,7 +13,6 @@ interface CreateOrganizationParams {
 export async function createOrganization(params: CreateOrganizationParams) {
   const organizationId = params.organizationId || createId()
 
-  // Create the organization
   await db.insert(schema.organizationsTable).values({
     id: organizationId,
     name: params.name,
@@ -24,7 +23,6 @@ export async function createOrganization(params: CreateOrganizationParams) {
     subscriptionPlan: "free",
   })
 
-  // Add user as owner
   const memberId = createId()
   await db.insert(schema.membersTable).values({
     id: memberId,
@@ -33,7 +31,6 @@ export async function createOrganization(params: CreateOrganizationParams) {
     role: "owner",
   })
 
-  // Create default organization settings
   const settingsId = createId()
   await db.insert(schema.organizationSettingsTable).values({
     id: settingsId,

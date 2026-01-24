@@ -71,8 +71,6 @@ function AuthBox() {
     try {
       let callbackURL = window.location.origin
       
-      // If there's a template, store it in sessionStorage and redirect to root
-      // The __auth/index.tsx route will pick it up and redirect appropriately
       if (template) {
         sessionStorage.setItem("pendingTemplateInstall", template)
         callbackURL = window.location.origin

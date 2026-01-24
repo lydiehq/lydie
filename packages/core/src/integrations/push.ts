@@ -18,21 +18,18 @@ export interface PushDocumentResult {
   error?: string
 }
 
-/**
- * Push a document to its integration platform
- * This function encapsulates the business logic for:
- * - Fetching the document and its integration link
- * - Validating custom fields against integration schema
- * - Calling integration.push()
- * - Updating document status
- */
+// Push a document to its integration platform
+// This function encapsulates the business logic for:
+// - Fetching the document and its integration link
+// - Validating custom fields against integration schema
+// - Calling integration.push()
+// - Updating document status
 export async function pushDocumentToIntegration(options: PushDocumentOptions): Promise<PushDocumentResult> {
   const { documentId, organizationId, integration: providedIntegration } = options
 
   try {
     console.log(`[Integration Push] Starting push for document ${documentId}`)
 
-    // Fetch document with its integration link and connection
     const document = await db.query.documentsTable.findFirst({
       where: { id: documentId },
       with: {
@@ -51,7 +48,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
       }
     }
 
-    // Check if document is linked to an integration
     if (!document.integrationLinkId || !document.integrationLink) {
       return {
         success: false,
@@ -69,7 +65,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
       }
     }
 
-    // Get integration instance
     const integration = providedIntegration
     if (!integration) {
       return {
@@ -80,7 +75,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
 
     console.log(`[Integration Push] Pushing to ${connection.integrationType}: ${document.title}`)
 
-    // Validate custom fields against integration schema
     const schema = integration.getCustomFieldSchema?.()
     const validation = validateCustomFields(
       document.customFields as Record<string, string | number> | undefined,
@@ -96,7 +90,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
       }
     }
 
-    // Merge connection config with link config for the push
     const mergedConfig = {
       ...(connection.config as Record<string, any>),
       ...(link.config as Record<string, any>),
@@ -104,8 +97,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
 
     const jsonContent = convertYjsToJson(document.yjsState)
 
-    // Compute path segments from parent hierarchy
-    // This ensures the path reflects the current document location, even if externalId is stale
     const parentPathSegments: string[] = []
     if (document.parentId) {
       let currentParentId: string | null = document.parentId
@@ -134,7 +125,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
       }
     }
 
-    // Create sync document
     const syncDocument: SyncDocument = {
       id: document.id,
       title: document.title,
@@ -150,7 +140,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
       customFields: document.customFields as Record<string, string | number> | undefined,
     }
 
-    // Call integration's push method
     const result = await integration.push({
       document: syncDocument,
       connection: {
@@ -164,8 +153,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
     })
 
     if (result.success) {
-      // Update document with external ID from the push result
-      // This ensures externalId reflects the current location, even if the document was moved
       if (result.externalId) {
         await db
           .update(documentsTable)
@@ -176,7 +163,6 @@ export async function pushDocumentToIntegration(options: PushDocumentOptions): P
           .where(eq(documentsTable.id, documentId))
       }
 
-      // Ensure connection status is active on successful push
       if (connection.status !== "active") {
         await db
           .update(integrationConnectionsTable)
