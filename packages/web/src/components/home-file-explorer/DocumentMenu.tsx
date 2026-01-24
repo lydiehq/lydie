@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Form, Heading } from "react-aria-components"
 import { Menu, MenuItem } from "@/components/generic/Menu"
 import { Button } from "@/components/generic/Button"
@@ -40,7 +40,7 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
   const [templateDetailedDescription, setTemplateDetailedDescription] = useState("")
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
 
-  const categories = useQuery(queries.templateCategories.all({})) || []
+  const [categories] = useQuery(queries.templateCategories.all({}))
 
   const detailedDescriptionEditor = useEditor({
     extensions: [StarterKit],
@@ -168,7 +168,7 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
         )}
         {userIsAdmin && (
           <MenuItem onAction={() => setIsCreateTemplateDialogOpen(true)}>
-            Create template (admin only)
+            Create template <span className="text-xs text-gray-500 ml-2">admin</span>
           </MenuItem>
         )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
@@ -239,8 +239,9 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${document.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                        }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${
+                        document.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                      }`}
                     >
                       {document.published ? "Published" : "Draft"}
                     </span>
@@ -252,10 +253,11 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
                   </Label>
                   <div className="mt-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${document.index_status === "indexed"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-yellow-100 text-yellow-700"
-                        }`}
+                      className={`text-xs px-2 py-1 rounded inline-block ${
+                        document.index_status === "indexed"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
                     >
                       {document.index_status === "indexed" ? "Indexed" : "Not Indexed"}
                     </span>
@@ -321,14 +323,10 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
                   </div>
                 )}
               </div>
-              <CheckboxGroup
-                label="Categories"
-                value={selectedCategoryIds}
-                onChange={setSelectedCategoryIds}
-              >
+              <CheckboxGroup label="Categories" value={selectedCategoryIds} onChange={setSelectedCategoryIds}>
                 <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
-                  {categories.map((category: any) => (
-                    <Checkbox key={category.id} value={category.id}>
+                  {categories.map((category) => (
+                    <Checkbox key={category.id} value={category.id} slot="selection">
                       {category.name}
                     </Checkbox>
                   ))}

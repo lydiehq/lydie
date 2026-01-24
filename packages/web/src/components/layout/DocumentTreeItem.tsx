@@ -11,7 +11,6 @@ import {
   DocumentFilled,
   ChevronRightFilled,
   MoreHorizontalRegular,
-  AddRegular,
   Add12Regular,
   CollectionsEmpty16Filled,
 } from "@fluentui/react-icons"
@@ -336,7 +335,7 @@ function VerticalMenuButton({
   tooltip?: string
 }) {
   const button = (
-    <Button className="p-1 text-black hover:text-black/60 group/options" aria-label={ariaLabel}>
+    <Button className="px-0.5 py-1 text-black hover:text-black/60 group/options" aria-label={ariaLabel}>
       <MoreHorizontalRegular
         className={sidebarItemIconStyles({
           className: "size-4 group-hover/options:text-black/60",
@@ -383,10 +382,12 @@ function ItemContextMenu({
 
   if (type === "integration-link") {
     return (
-      <div className={`${isMenuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-1`}>
+      <div
+        className={`flex items-center ${isMenuOpen ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"}`}
+      >
         <TooltipTrigger delay={500}>
           <Button
-            className="p-1 text-black hover:text-black/60 group/add"
+            className="px-0.5 py-1 text-black hover:text-black/60 group/add"
             aria-label="Add document"
             onPress={() => {
               if (integrationLinkId) {
@@ -394,9 +395,9 @@ function ItemContextMenu({
               }
             }}
           >
-            <AddRegular
+            <Add12Regular
               className={sidebarItemIconStyles({
-                className: "size-4.5 group-hover/add:text-black/60",
+                className: "size-4 group-hover/add:text-black/60",
               })}
             />
           </Button>
@@ -438,10 +439,12 @@ function ItemContextMenu({
   }
 
   return (
-    <div className={`${isMenuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-1`}>
+    <div
+      className={`flex items-center ${isMenuOpen ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"}`}
+    >
       <TooltipTrigger delay={500}>
         <Button
-          className="p-1 text-black hover:text-black/60 group/add"
+          className="px-0.5 py-1 text-black hover:text-black/60 group/add"
           aria-label="Add sub document"
           onPress={() => createDocument(itemId)}
         >
