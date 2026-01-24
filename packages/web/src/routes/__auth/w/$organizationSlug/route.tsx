@@ -10,24 +10,25 @@ import { isDockedAtom } from "@/stores/floating-assistant"
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant"
 import { authClient } from "@/utils/auth"
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog"
+import { z } from "zod"
+
+const organizationSearchSchema = z.object({
+  installTemplate: z.string().optional().catch(undefined),
+})
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      installTemplate: (search.installTemplate as string) || undefined,
-    }
-  },
+  validateSearch: (search) => organizationSearchSchema.parse(search),
   beforeLoad: async ({ context, params }) => {
     try {
-      const { zero, auth, queryClient } = context
+      const { zero, queryClient } = context
       const { organizationSlug } = params
 
       const organization = await loadOrganization(queryClient, zero, organizationSlug)
 
-      await authClient.organization.setActive({
-        organizationId: organization.id,
-      })
+      // await authClient.organization.setActive({
+      //   organizationId: organization.id,
+      // })
 
       return { organization }
     } catch (error) {
@@ -56,7 +57,7 @@ function RouteLayout() {
   const navigate = useNavigate()
   const search = Route.useSearch()
   const params = Route.useParams()
-  
+
   // Template installation dialog state
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
 
@@ -69,7 +70,7 @@ function RouteLayout() {
 
   const handleTemplateDialogClose = (isOpen: boolean) => {
     setIsTemplateDialogOpen(isOpen)
-    
+
     if (!isOpen && search.installTemplate) {
       navigate({
         to: "/w/$organizationSlug",
