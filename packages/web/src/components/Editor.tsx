@@ -235,8 +235,8 @@ function EditorContainer({ doc }: Props) {
             <div
               ref={scrollContainerRef}
               className={clsx(
-                "flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative transition-[padding] duration-700 ease-in-out",
-                shouldShiftContent ? "max-2xl:pl-4 max-2xl:pr-[300px]" : "px-4",
+                "flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative transition-[padding] duration-500 ease-in-out",
+                shouldShiftContent ? "max-2xl:pl-4 max-2xl:pr-[160px]" : "px-4",
               )}
             >
               <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
