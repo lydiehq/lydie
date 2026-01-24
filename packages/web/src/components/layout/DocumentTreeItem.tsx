@@ -53,6 +53,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
   const { id: currentDocId } = useParams({ strict: false })
   const navigate = useNavigate()
   const chevronRef = useRef<HTMLButtonElement>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const isCurrentDocument = item.type === "document" && currentDocId === item.id
   const isCurrent = isCurrentDocument
@@ -141,6 +142,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                   syncStatus={item.syncStatus}
                   isExpanded={isExpanded}
                   chevronRef={chevronRef}
+                  isMenuOpen={isMenuOpen}
                 />
               )}
 
@@ -149,6 +151,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                   isExpanded={isExpanded}
                   chevronRef={chevronRef}
                   hasChildren={item.children !== undefined && item.children.length > 0}
+                  isMenuOpen={isMenuOpen}
                 />
               )}
 
@@ -164,6 +167,8 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                 itemName={item.name}
                 integrationLinkId={item.integrationLinkId}
                 integrationType={item.integrationType}
+                isMenuOpen={isMenuOpen}
+                onMenuOpenChange={setIsMenuOpen}
               />
             </div>
           </>
@@ -234,10 +239,12 @@ function IntegrationLinkChevron({
   syncStatus,
   isExpanded,
   chevronRef,
+  isMenuOpen,
 }: {
   syncStatus?: string | null
   isExpanded: boolean
   chevronRef: React.RefObject<HTMLButtonElement | null>
+  isMenuOpen: boolean
 }) {
   return (
     <Button
@@ -255,12 +262,12 @@ function IntegrationLinkChevron({
         <>
           <FolderSyncRegular
             className={sidebarItemIconStyles({
-              className: "size-3.5 group-hover/chevron:hidden",
+              className: `size-3.5 ${isMenuOpen ? "hidden" : "group-hover/chevron:hidden"}`,
             })}
           />
           <ArrowRightRegular
             className={sidebarItemIconStyles({
-              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out ${
+              className: `size-3.5 shrink-0 ${isMenuOpen ? "block" : "hidden group-hover/chevron:block"} transition-transform duration-200 ease-in-out ${
                 isExpanded ? "rotate-90" : ""
               }`,
             })}
@@ -275,10 +282,12 @@ function DocumentTreeItemIcon({
   isExpanded,
   chevronRef,
   hasChildren,
+  isMenuOpen,
 }: {
   isExpanded: boolean
   chevronRef: React.RefObject<HTMLButtonElement | null>
   hasChildren: boolean
+  isMenuOpen: boolean
 }) {
   const IconComponent = hasChildren ? CollectionsEmpty16Filled : DocumentFilled
 
@@ -303,12 +312,12 @@ function DocumentTreeItemIcon({
     >
       <IconComponent
         className={sidebarItemIconStyles({
-          className: "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+          className: `size-4 shrink-0 transition-[opacity_100ms,transform_200ms] ${isMenuOpen ? "opacity-0" : "group-hover:opacity-0"}`,
         })}
       />
       <ChevronRightFilled
         className={sidebarItemIconStyles({
-          className: `size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+          className: `size-3 shrink-0 absolute inset-0 m-auto ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
             isExpanded ? "rotate-90" : ""
           }`,
         })}
@@ -354,16 +363,19 @@ function ItemContextMenu({
   itemName,
   integrationLinkId,
   integrationType,
+  isMenuOpen,
+  onMenuOpenChange,
 }: {
   type: "document" | "integration-link" | "integration-group"
   itemId: string
   itemName: string
   integrationLinkId?: string | null
   integrationType?: string
+  isMenuOpen: boolean
+  onMenuOpenChange: (isOpen: boolean) => void
 }) {
   const navigate = useNavigate()
   const { createDocument } = useDocumentActions()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   if (type === "integration-group") {
     return null
@@ -371,7 +383,7 @@ function ItemContextMenu({
 
   if (type === "integration-link") {
     return (
-      <div className={`hidden group-hover:flex items-center gap-1 ${isMenuOpen ? "flex!" : ""}`}>
+      <div className={`${isMenuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-1`}>
         <TooltipTrigger delay={500}>
           <Button
             className="p-1 text-black hover:text-black/60 group/add"
@@ -390,7 +402,7 @@ function ItemContextMenu({
           </Button>
           <Tooltip placement="top">Add document</Tooltip>
         </TooltipTrigger>
-        <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <MenuTrigger isOpen={isMenuOpen} onOpenChange={onMenuOpenChange}>
           <VerticalMenuButton
             aria-label="Integration link options"
             isOpen={isMenuOpen}
@@ -426,7 +438,7 @@ function ItemContextMenu({
   }
 
   return (
-    <div className={`hidden group-hover:flex items-center gap-1 ${isMenuOpen ? "flex" : ""}`}>
+    <div className={`${isMenuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-1`}>
       <TooltipTrigger delay={500}>
         <Button
           className="p-1 text-black hover:text-black/60 group/add"
@@ -439,9 +451,9 @@ function ItemContextMenu({
             })}
           />
         </Button>
-        <Tooltip placement="top">Add sub document</Tooltip>
+        <Tooltip placement="top">Add page inside</Tooltip>
       </TooltipTrigger>
-      <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
+      <MenuTrigger isOpen={isMenuOpen} onOpenChange={onMenuOpenChange}>
         <VerticalMenuButton aria-label="Document options" isOpen={isMenuOpen} tooltip="Document options" />
         <DocumentMenu documentId={itemId} documentName={itemName} />
       </MenuTrigger>
