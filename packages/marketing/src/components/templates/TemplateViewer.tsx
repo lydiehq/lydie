@@ -1,36 +1,50 @@
-import { useState, useMemo, useEffect } from "react"
-import { Sidebar, Editor, DocumentTree } from "@lydie/ui"
-import type { DocumentTreeItem } from "@lydie/ui"
-import { useEditor } from "@tiptap/react"
+import { useState, useMemo, useEffect, type ReactElement } from "react"
+import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
-import { Button } from "react-aria-components"
+import { Tree, TreeItem, TreeItemContent, Button, Collection, type Key } from "react-aria-components"
 
-// Mock icons - replace with your actual icons
-const DocumentIcon = () => (
-  <svg className="size-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-    <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-  </svg>
-)
-
-const ChevronIcon = ({ isExpanded }: { isExpanded: boolean }) => (
-  <svg
-    className={`size-3 text-gray-500 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-    fill="currentColor"
-    viewBox="0 0 20 20"
-  >
+// SVG Icon Components
+const CollectionsIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" className={className}>
     <path
-      fillRule="evenodd"
-      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-      clipRule="evenodd"
+      fill="currentColor"
+      d="M2.854 2.121a2.5 2.5 0 0 0-1.768 3.062L2.12 9.047A2.5 2.5 0 0 0 5 10.857V8a3 3 0 0 1 3-3h2.354L9.78 2.854a2.5 2.5 0 0 0-3.062-1.768zM6 8a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"
     />
   </svg>
 )
 
-const FolderIcon = () => (
-  <svg className="size-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+const DocumentIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48" className={className}>
+    <path
+      fill="currentColor"
+      d="M24 4H12.25A4.25 4.25 0 0 0 8 8.25v31.5A4.25 4.25 0 0 0 12.25 44h23.5A4.25 4.25 0 0 0 40 39.75V20H28.25A4.25 4.25 0 0 1 24 15.75zm15.626 13.5a4.3 4.3 0 0 0-.87-1.263L27.762 5.245a4.3 4.3 0 0 0-1.263-.871V15.75c0 .966.784 1.75 1.75 1.75z"
+    />
   </svg>
 )
+
+const ChevronRightIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" className={className}>
+    <path
+      fill="currentColor"
+      d="M2.22 4.47a.75.75 0 0 1 1.06 0L6 7.19l2.72-2.72a.75.75 0 0 1 1.06 1.06L6.53 8.78a.75.75 0 0 1-1.06 0L2.22 5.53a.75.75 0 0 1 0-1.06"
+    />
+  </svg>
+)
+
+const sidebarItemStyles = (isCurrent: boolean = false) =>
+  `group flex items-center h-[28px] rounded-md text-[0.8125rem] font-medium mb-0.5 transition-colors duration-75 cursor-pointer ${
+    isCurrent ? "bg-black/5" : "text-gray-600 hover:bg-black/3"
+  }`
+
+const sidebarItemIconStyles = "text-gray-500"
+
+type DocumentTreeItem = {
+  id: string
+  name: string
+  type: "document"
+  children?: DocumentTreeItem[]
+  isLocked?: boolean
+}
 
 type TemplateDocument = {
   id: string
@@ -41,12 +55,10 @@ type TemplateDocument = {
 
 type TemplateViewerProps = {
   documents: TemplateDocument[]
-  className?: string
 }
 
-export function TemplateViewer({ documents, className = "" }: TemplateViewerProps) {
+export function TemplateViewer({ documents }: TemplateViewerProps) {
   const [selectedDocId, setSelectedDocId] = useState<string>(documents[0]?.id || "")
-  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
 
   // Convert template documents to tree items
   const treeItems = useMemo((): DocumentTreeItem[] => {
@@ -60,6 +72,22 @@ export function TemplateViewer({ documents, className = "" }: TemplateViewerProp
 
     return documents.map(convertToTreeItem)
   }, [documents])
+
+  // Collect all item IDs recursively to keep tree fully expanded by default
+  const getAllItemIds = useMemo((): Set<Key> => {
+    const collectIds = (items: DocumentTreeItem[]): Set<string> => {
+      const ids = new Set<string>()
+      for (const item of items) {
+        if (item.children && item.children.length > 0) {
+          ids.add(item.id)
+          const childIds = collectIds(item.children)
+          childIds.forEach((id) => ids.add(id))
+        }
+      }
+      return ids
+    }
+    return collectIds(treeItems) as Set<Key>
+  }, [treeItems])
 
   // Find currently selected document
   const selectedDoc = useMemo(() => {
@@ -89,7 +117,6 @@ export function TemplateViewer({ documents, className = "" }: TemplateViewerProp
     },
   })
 
-  // Content editor (read-only)
   const contentEditor = useEditor({
     extensions: [StarterKit],
     content: selectedDoc?.content || { type: "doc", content: [] },
@@ -119,61 +146,102 @@ export function TemplateViewer({ documents, className = "" }: TemplateViewerProp
     setSelectedDocId(itemId)
   }
 
-  const renderItemIcon = (item: DocumentTreeItem, isExpanded: boolean, hasChildren: boolean) => {
-    if (!hasChildren) {
-      return (
-        <div className="text-gray-500 p-1 -ml-1">
-          <DocumentIcon />
-        </div>
-      )
-    }
+  const renderItem = (item: DocumentTreeItem): ReactElement => {
+    const hasChildren = item.children !== undefined && item.children.length > 0
+    const isCurrentDocument = selectedDocId === item.id
+    const isLocked = item.isLocked ?? false
 
     return (
-      <Button slot="chevron" className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative">
-        <FolderIcon />
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/chevron:opacity-100">
-          <ChevronIcon isExpanded={isExpanded} />
-        </div>
-      </Button>
+      <TreeItem
+        key={item.id}
+        id={item.id}
+        textValue={item.name}
+        onAction={() => handleItemAction(item.id)}
+        className={sidebarItemStyles(isCurrentDocument)}
+        style={{
+          paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
+          paddingRight: "0.5rem",
+        }}
+      >
+        <TreeItemContent>
+          {({ isExpanded }) => (
+            <>
+              <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
+                {/* Document icon with chevron on hover for items with children */}
+                {hasChildren ? (
+                  <Button
+                    slot="chevron"
+                    className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative"
+                  >
+                    <CollectionsIcon
+                      className={`size-4 shrink-0 ${sidebarItemIconStyles} transition-[opacity_100ms,transform_200ms] group-hover:opacity-0`}
+                    />
+                    <ChevronRightIcon
+                      className={`size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+                        isExpanded ? "rotate-90" : ""
+                      }`}
+                    />
+                  </Button>
+                ) : (
+                  <div className="text-gray-500 p-1 -ml-1">
+                    <DocumentIcon className={`size-4 shrink-0 ${sidebarItemIconStyles}`} />
+                  </div>
+                )}
+
+                <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>
+                  {item.name.trim() || "Untitled document"}
+                </span>
+              </div>
+            </>
+          )}
+        </TreeItemContent>
+        {item.children && <Collection items={item.children}>{renderItem}</Collection>}
+      </TreeItem>
     )
   }
 
   return (
-    <div
-      className={`flex gap-x-1 bg-[#f8f8f8] rounded-xl border border-black/8 shadow-inner p-1 ${className}`}
-    >
-      <div className="shrink-0 flex w-[240px]">
-        <Sidebar
-          isCollapsed={false}
-          onToggle={() => {}}
-          documentSection={
-            <div className="flex flex-col grow min-h-0">
-              <div className="flex items-center justify-between shrink-0 px-3">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Documents</span>
-              </div>
-              <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
-                <DocumentTree
-                  items={treeItems}
-                  expandedKeys={expandedKeys}
-                  onExpandedChange={(keys) => setExpandedKeys(keys as Set<string>)}
-                  onItemAction={handleItemAction}
-                  currentDocumentId={selectedDocId}
-                  renderItemIcon={renderItemIcon}
-                />
-              </div>
-            </div>
-          }
-        />
+    <div className="flex gap-x-1 bg-[#f8f8f8] rounded-xl border border-black/10 shadow-inner p-1.5">
+      {/* Sidebar */}
+      <div className="shrink-0 flex w-[240px] flex-col bg-white rounded-lg shadow-surface">
+        <div className="flex flex-col grow min-h-0">
+          <div className="flex items-center justify-between shrink-0 px-3 pt-3">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Documents</span>
+          </div>
+          <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
+            <Tree
+              aria-label="Documents"
+              selectionMode="single"
+              className="flex flex-col focus:outline-none"
+              items={treeItems}
+              defaultExpandedKeys={getAllItemIds}
+            >
+              {renderItem}
+            </Tree>
+          </div>
+        </div>
       </div>
 
       {/* Editor */}
-      <div className="bg-white ring ring-black/6 rounded-lg w-full grow overflow-hidden">
-        <Editor
-          titleEditor={titleEditor}
-          contentEditor={contentEditor}
-          showPanelGroup={false}
-          className="h-full"
-        />
+      <div className="bg-white rounded-lg w-full grow overflow-hidden shadow-surface h-[600px]">
+        <div className="h-full flex flex-col overflow-hidden">
+          <div className="overflow-hidden flex flex-col grow">
+            <div className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4">
+              <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
+                <EditorContent
+                  editor={titleEditor}
+                  aria-label="Document title"
+                  className="mb-6 editor-content prose prose-lg max-w-none focus:outline-none font-semibold text-4xl"
+                />
+                <EditorContent
+                  aria-label="Document content"
+                  editor={contentEditor}
+                  className="block grow editor-content"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

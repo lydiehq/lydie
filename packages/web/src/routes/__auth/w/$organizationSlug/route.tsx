@@ -1,17 +1,23 @@
-import { createFileRoute, notFound, Outlet, useRouterState } from "@tanstack/react-router"
+import { createFileRoute, notFound, Outlet, useRouterState, useNavigate } from "@tanstack/react-router"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
 import { PanelResizer } from "@/components/panels/PanelResizer"
-import { useRef, useState, useMemo } from "react"
+import { useRef, useState, useMemo, useEffect } from "react"
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu"
-import { setActiveOrganizationSlug } from "@/lib/active-organization"
 import { loadOrganization } from "@/lib/organization/loadOrganization"
 import { useAtomValue } from "jotai"
 import { isDockedAtom } from "@/stores/floating-assistant"
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant"
+import { authClient } from "@/utils/auth"
+import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog"
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      installTemplate: (search.installTemplate as string) || undefined,
+    }
+  },
   beforeLoad: async ({ context, params }) => {
     try {
       const { zero, auth, queryClient } = context
@@ -19,7 +25,11 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
 
       const organization = await loadOrganization(queryClient, zero, organizationSlug)
 
-      setActiveOrganizationSlug(params.organizationSlug, auth?.session?.userId)
+      // Set the active organization in better-auth
+      await authClient.organization.setActive({
+        organizationId: organization.id,
+      })
+
       return { organization }
     } catch (error) {
       console.error(error)
@@ -44,6 +54,33 @@ function RouteLayout() {
   const [size, setSize] = useState(25)
   const routerState = useRouterState()
   const isDocked = useAtomValue(isDockedAtom)
+  const navigate = useNavigate()
+  const search = Route.useSearch()
+  const params = Route.useParams()
+  
+  // Template installation dialog state
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+
+  // Open template installation dialog when installTemplate parameter is present
+  useEffect(() => {
+    if (search.installTemplate) {
+      setIsTemplateDialogOpen(true)
+    }
+  }, [search.installTemplate])
+
+  const handleTemplateDialogClose = (isOpen: boolean) => {
+    setIsTemplateDialogOpen(isOpen)
+    
+    // Remove the installTemplate parameter from the URL when dialog closes
+    if (!isOpen && search.installTemplate) {
+      navigate({
+        to: "/w/$organizationSlug",
+        params: { organizationSlug: params.organizationSlug },
+        search: {},
+        replace: true,
+      })
+    }
+  }
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current
@@ -100,6 +137,14 @@ function RouteLayout() {
       <div id="floating-assistant-container" />
       {/* The assistant component (always rendered) */}
       <FloatingAssistant currentDocumentId={currentDocumentId} />
+      {/* Template installation dialog */}
+      {search.installTemplate && (
+        <InstallTemplateDialog
+          isOpen={isTemplateDialogOpen}
+          onOpenChange={handleTemplateDialogClose}
+          templateSlug={search.installTemplate}
+        />
+      )}
     </div>
   )
 }

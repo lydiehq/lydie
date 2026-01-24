@@ -20,6 +20,11 @@ import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors"
 
 export const Route = createFileRoute("/__auth/new/")({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      template: (search.template as string) || undefined,
+    }
+  },
 })
 
 function RouteComponent() {
@@ -28,6 +33,7 @@ function RouteComponent() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { auth } = Route.useRouteContext()
+  const search = Route.useSearch()
 
   const defaultName = auth?.user?.name ? `${auth.user.name.split(" ")[0]}'s Workspace` : "My Workspace"
 
@@ -67,6 +73,7 @@ function RouteComponent() {
         navigate({
           to: "/w/$organizationSlug",
           params: { organizationSlug: slug },
+          search: search.template ? { installTemplate: search.template } : { installTemplate: undefined },
         })
 
         toast.success("Workspace created successfully")

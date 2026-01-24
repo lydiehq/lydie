@@ -87,7 +87,7 @@ const categories = template.categories;
               <Button
                 className="self-start"
                 size="lg"
-                href={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/public/template-install?template=${template.slug}`}
+                href={`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/public/template-install?template=${template.slug}`}
               >
                 Get template
               </Button>
@@ -97,11 +97,7 @@ const categories = template.categories;
         </header>
       </div>
 
-      <TemplateViewer
-        client:load
-        documents={template.documents}
-        className="h-[600px]"
-      />
+      <TemplateViewer client:load documents={template.documents} />
 
       <div class="max-w-3xl flex flex-col gap-y-8 mt-12">
         <section class="prose prose-gray max-w-none">

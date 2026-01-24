@@ -6,7 +6,6 @@ import { useState } from "react"
 import { OrganizationsDialog } from "./OrganizationsDialog"
 import clsx from "clsx"
 import { authClient } from "@/utils/auth"
-import { clearActiveOrganizationSlug } from "@/lib/active-organization"
 import { useQueryClient } from "@tanstack/react-query"
 import { composeTailwindRenderProps, focusRing } from "../generic/utils"
 import { Popover } from "../generic/Popover"
@@ -28,7 +27,6 @@ export function OrganizationMenu({ isCollapsed }: Props) {
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false)
 
   const signOut = async () => {
-    clearActiveOrganizationSlug(userId)
     await authClient.signOut()
     await clearSession(queryClient)
     clearZeroInstance()

@@ -1,34 +1,49 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
-import { listOrganizationsQuery } from "@/utils/auth"
-import { getActiveOrganizationSlug } from "@/lib/active-organization"
 
 export const Route = createFileRoute("/__auth/")({
   component: RouteComponent,
-  beforeLoad: async ({ context: { queryClient, auth } }) => {
-    const userId = auth?.session?.userId
-    const activeOrganizationSlug = getActiveOrganizationSlug(userId)
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      template: (search.template as string) || undefined,
+    }
+  },
+  beforeLoad: async ({ context: { auth, organizations }, search }) => {
+    // Check for template in URL params or sessionStorage (from OAuth callback)
+    let templateSlug = search.template
+    if (!templateSlug && typeof window !== "undefined") {
+      const pendingTemplate = sessionStorage.getItem("pendingTemplateInstall")
+      if (pendingTemplate) {
+        templateSlug = pendingTemplate
+        sessionStorage.removeItem("pendingTemplateInstall")
+      }
+    }
 
-    if (activeOrganizationSlug) {
+    // Check if user has an active organization from the session
+    const activeOrganization = (auth?.session as any)?.activeOrganization
+
+    if (activeOrganization) {
       throw redirect({
         to: "/w/$organizationSlug",
-        params: { organizationSlug: activeOrganizationSlug },
+        params: { organizationSlug: activeOrganization.slug },
+        search: templateSlug ? { installTemplate: templateSlug } : { installTemplate: undefined },
       })
     }
 
-    const organizations = await queryClient.ensureQueryData({
-      ...listOrganizationsQuery,
-    })
-
+    // No active organization - redirect to first organization if available
     if (organizations && organizations.length > 0) {
       const firstOrg = organizations[0]
       throw redirect({
         to: "/w/$organizationSlug",
         params: { organizationSlug: firstOrg.slug },
+        search: templateSlug ? { installTemplate: templateSlug } : { installTemplate: undefined },
       })
     }
 
     // No organizations found - redirect to onboarding to create one
-    throw redirect({ to: "/new" })
+    throw redirect({
+      to: "/new",
+      search: { template: templateSlug || undefined },
+    })
   },
 })
 

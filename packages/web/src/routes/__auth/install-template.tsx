@@ -19,7 +19,7 @@ export const Route = createFileRoute("/__auth/install-template")({
 
 function RouteComponent() {
   const { template } = Route.useSearch()
-  const { organizations } = Route.useRouteContext({ from: "/__auth" })
+  const { organizations } = Route.useRouteContext()
   const navigate = useNavigate()
   const z = useZero()
   const [installing, setInstalling] = useState<string | null>(null)
@@ -53,7 +53,7 @@ function RouteComponent() {
       }
 
       toast.success("Template installed successfully!")
-      
+
       // Redirect to organization home - the user will see the new documents there
       navigate({
         to: "/w/$organizationSlug",
@@ -85,9 +85,7 @@ function RouteComponent() {
               <OrganizationAvatar organization={org} size="lg" />
               <div className="flex-1 text-left">
                 <div className="font-medium text-gray-900">{org.name}</div>
-                {installing === org.id && (
-                  <div className="text-sm text-gray-500">Installing...</div>
-                )}
+                {installing === org.id && <div className="text-sm text-gray-500">Installing...</div>}
               </div>
               <ChevronRightRegular className="size-5 text-gray-400 group-hover:text-gray-600" />
             </button>

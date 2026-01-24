@@ -36,7 +36,6 @@ import { Card } from "@/components/layout/Card"
 import { slugify } from "@lydie/core/utils"
 import { authClient } from "@/utils/auth"
 import { useAuth } from "@/context/auth.context"
-import { clearActiveOrganizationSlug } from "@/lib/active-organization"
 import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors"
 import { Popover } from "@/components/generic/Popover"
 import { revalidateSession } from "@/lib/auth/session"
@@ -232,7 +231,6 @@ function RouteComponent() {
   const handleDeleteOrganization = () => {
     try {
       z.mutate(mutators.organization.delete({ organizationId: organization.id }))
-      clearActiveOrganizationSlug(userId)
       toast.success("Organization deleted successfully")
       // Navigate to home - the route will redirect appropriately
       navigate({ to: "/" })
