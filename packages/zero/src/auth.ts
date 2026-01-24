@@ -72,11 +72,9 @@ export function requireOrganizationAccess(
   return { userId: session.userId, organizationId }
 }
 
-/**
- * Checks if the user has admin role
- * Uses the role from the session (populated by customSession plugin)
- * to avoid additional database lookups for performance
- */
+// Checks if the user has admin role
+// Uses the role from the session (populated by customSession plugin)
+// to avoid additional database lookups for performance
 export function isAdmin(session: Context | undefined): boolean {
   return session?.role === "admin"
 }

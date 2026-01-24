@@ -10,9 +10,7 @@ const openAi = createOpenAI({ apiKey: Resource.OpenAiApiKey.value })
 // Embedding model configuration
 export const embeddingModel = openAi.embedding("text-embedding-ada-002")
 
-/**
- * Generate a single embedding for a text value
- */
+// Generate a single embedding for a text value
 export async function generateEmbedding(value: string): Promise<number[]> {
   const input = value.replaceAll("\\n", " ")
   const { embedding } = await embed({

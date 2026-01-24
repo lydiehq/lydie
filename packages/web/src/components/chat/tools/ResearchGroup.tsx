@@ -216,9 +216,7 @@ function getToolStatus(part: any): ResearchAction["status"] {
   return "loading"
 }
 
-/**
- * Checks if a tool part is a research tool (should be grouped/collapsed).
- */
+// Checks if a tool part is a research tool (should be grouped/collapsed).
 export function isResearchTool(part: any): boolean {
   const researchToolTypes = [
     "tool-read_document",

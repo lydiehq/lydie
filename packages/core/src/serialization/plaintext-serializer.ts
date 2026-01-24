@@ -53,6 +53,22 @@ export class PlainTextSerializer implements NodeBuilder<string> {
     return children.join("")
   }
 
+  table(children: string[]): string {
+    return children.join("\n")
+  }
+
+  tableRow(children: string[]): string {
+    return children.join(" | ")
+  }
+
+  tableHeader(children: string[], _colspan?: number, _rowspan?: number): string {
+    return children.join("")
+  }
+
+  tableCell(children: string[], _colspan?: number, _rowspan?: number): string {
+    return children.join("")
+  }
+
   customBlock(_name: string, _properties: Record<string, any>): string {
     return ""
   }

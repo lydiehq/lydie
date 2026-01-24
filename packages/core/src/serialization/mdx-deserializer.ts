@@ -17,13 +17,14 @@ function parseProps(propString: string): Record<string, any> {
 
   while ((match = PROP_REGEX.exec(propString)) !== null) {
     const [, key, jsValue, stringValue] = match
+    if (!key) continue
     if (jsValue) {
       try {
         props[key] = JSON.parse(jsValue)
       } catch {
         props[key] = jsValue
       }
-    } else {
+    } else if (stringValue !== undefined) {
       props[key] = stringValue
     }
   }
@@ -31,10 +32,8 @@ function parseProps(propString: string): Record<string, any> {
   return props
 }
 
-/**
- * Extract MDX components from content string
- * Returns the list of components and the content with components replaced by placeholders
- */
+// Extract MDX components from content string
+// Returns the list of components and the content with components replaced by placeholders
 export function extractMDXComponents(content: string): {
   components: MDXComponent[]
   cleanContent: string
@@ -46,6 +45,7 @@ export function extractMDXComponents(content: string): {
   while ((match = COMPONENT_REGEX.exec(content)) !== null) {
     const [fullMatch, tagName1, props1, children, tagName2, props2] = match
     const tagName = tagName1 || tagName2
+    if (!tagName) continue
     const propsString = props1 || props2 || ""
 
     const component: MDXComponent = {
@@ -78,6 +78,8 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
   let inCodeBlock = false
   let codeBlockLanguage: string | null = null
   let codeBlockLines: string[] = []
+  let currentTable: any = null
+  let isHeaderRow = false
 
   const closeList = () => {
     if (currentList) {
@@ -94,6 +96,36 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       }
       currentParagraph = null
     }
+  }
+
+  const closeTable = () => {
+    if (currentTable) {
+      if (currentTable.content.length > 0) {
+        content.push(currentTable)
+      }
+      currentTable = null
+      isHeaderRow = false
+    }
+  }
+
+  const parseTableRow = (line: string): string[] => {
+    // Split by | and filter out empty strings at start/end
+    const cells = line
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell.length > 0)
+    return cells
+  }
+
+  const isTableSeparator = (line: string): boolean => {
+    // Check if line is a table separator (e.g., |---|---|)
+    const trimmed = line.trim()
+    if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) {
+      return false
+    }
+    // Check if it contains mostly dashes and pipes
+    const content = trimmed.slice(1, -1)
+    return /^[\s\-:]+$/.test(content)
   }
 
   // Helper function to parse inline markdown (bold, italic, links)
@@ -198,6 +230,7 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
+    if (line === undefined) continue
 
     const codeBlockStartMatch = line.match(/^```([\w-]+)?$/)
     if (codeBlockStartMatch) {
@@ -233,16 +266,18 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
     }
 
     if (inCodeBlock) {
-      codeBlockLines.push(line)
+      if (line !== undefined) {
+        codeBlockLines.push(line)
+      }
       continue
     }
 
-    if (line.trim().startsWith("#")) {
+    if (line && line.trim().startsWith("#")) {
       closeParagraph()
       closeList()
 
       const match = line.match(/^(#+)\s+(.+)$/)
-      if (match) {
+      if (match && match[1] && match[2]) {
         const level = Math.min(match[1].length, 6)
         const text = match[2]
         content.push({
@@ -257,14 +292,65 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
     if (line.trim() === "---" || line.trim() === "***") {
       closeParagraph()
       closeList()
+      closeTable()
       content.push({
         type: "horizontalRule",
       })
       continue
     }
 
-    const unorderedMatch = line.match(/^(\s*)([-*+])\s+(.+)$/)
-    if (unorderedMatch) {
+    // Handle table separator row
+    if (line && isTableSeparator(line)) {
+      if (currentTable) {
+        // Mark that the next row will be data rows (not header)
+        isHeaderRow = false
+      }
+      continue
+    }
+
+    // Handle table rows
+    if (line && line.trim().startsWith("|") && line.trim().endsWith("|")) {
+      closeParagraph()
+      closeList()
+
+      const cells = parseTableRow(line)
+      if (cells.length === 0) {
+        continue
+      }
+
+      if (!currentTable) {
+        currentTable = {
+          type: "table",
+          content: [],
+        }
+        isHeaderRow = true
+      }
+
+      const rowCells: any[] = []
+      for (const cellText of cells) {
+        const cellContent = parseInlineMarkdown(cellText)
+        const cellType = isHeaderRow ? "tableHeader" : "tableCell"
+        rowCells.push({
+          type: cellType,
+          content: [
+            {
+              type: "paragraph",
+              content: cellContent.length > 0 ? cellContent : [],
+            },
+          ],
+        })
+      }
+
+      currentTable.content.push({
+        type: "tableRow",
+        content: rowCells,
+      })
+
+      continue
+    }
+
+    const unorderedMatch = line?.match(/^(\s*)([-*+])\s+(.+)$/)
+    if (unorderedMatch && unorderedMatch[3]) {
       closeParagraph()
 
       const listItemText = unorderedMatch[3]
@@ -291,8 +377,8 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    const orderedMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/)
-    if (orderedMatch) {
+    const orderedMatch = line?.match(/^(\s*)(\d+)\.\s+(.+)$/)
+    if (orderedMatch && orderedMatch[2] && orderedMatch[3]) {
       closeParagraph()
 
       const listItemText = orderedMatch[3]
@@ -321,8 +407,8 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    const componentMatch = line.match(/\[COMPONENT:(\d+)\]/)
-    if (componentMatch) {
+    const componentMatch = line?.match(/\[COMPONENT:(\d+)\]/)
+    if (componentMatch && componentMatch[1]) {
       closeParagraph()
       closeList()
 
@@ -344,9 +430,10 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    if (line.trim() === "") {
+    if (!line || line.trim() === "") {
       closeParagraph()
       closeList()
+      closeTable()
       continue
     }
 
@@ -365,6 +452,7 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
 
   closeParagraph()
   closeList()
+  closeTable()
 
   if (inCodeBlock) {
     const codeText = codeBlockLines.join("\n")

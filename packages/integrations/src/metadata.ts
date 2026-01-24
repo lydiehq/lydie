@@ -37,11 +37,9 @@ import githubMetadata from "./integrations/github/metadata.json"
 import shopifyMetadata from "./integrations/shopify/metadata.json"
 import wordpressMetadata from "./integrations/wordpress/metadata.json"
 
-/**
- * Metadata for all available integrations
- * This is a static list that can be safely imported in client-side code
- * Each integration's metadata is defined in its own metadata.json file
- */
+// Metadata for all available integrations
+// This is a static list that can be safely imported in client-side code
+// Each integration's metadata is defined in its own metadata.json file
 export const integrationMetadata: IntegrationMetadata[] = [githubMetadata, shopifyMetadata, wordpressMetadata]
 
 // Get metadata for a specific integration by ID

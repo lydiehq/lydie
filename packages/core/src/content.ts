@@ -81,6 +81,10 @@ export interface ContentNode {
     tight?: boolean
     name?: string
     properties?: Record<string, any>
+    language?: string
+    colspan?: number
+    rowspan?: number
+    [key: string]: any
   }
   content?: (ContentNode | TextNode)[]
 }
@@ -121,6 +125,11 @@ export interface NodeBuilder<T> {
   blockquote(children: T[]): T
   horizontalRule(): T
   codeBlock(children: T[], language?: string | null): T
+
+  table(children: T[]): T
+  tableRow(children: T[]): T
+  tableHeader(children: T[], colspan?: number, rowspan?: number): T
+  tableCell(children: T[], colspan?: number, rowspan?: number): T
 
   customBlock(name: string, properties: Record<string, any>): T
 
@@ -219,6 +228,24 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
         case "codeBlock": {
           const language = node.attrs?.language
           return builder.codeBlock(renderChildren(node), language)
+        }
+
+        case "table":
+          return builder.table(renderChildren(node))
+
+        case "tableRow":
+          return builder.tableRow(renderChildren(node))
+
+        case "tableHeader": {
+          const colspan = node.attrs?.colspan
+          const rowspan = node.attrs?.rowspan
+          return builder.tableHeader(renderChildren(node), colspan, rowspan)
+        }
+
+        case "tableCell": {
+          const colspan = node.attrs?.colspan
+          const rowspan = node.attrs?.rowspan
+          return builder.tableCell(renderChildren(node), colspan, rowspan)
         }
 
         case "customBlock":

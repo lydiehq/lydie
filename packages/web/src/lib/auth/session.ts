@@ -49,9 +49,7 @@ export async function loadSession(queryClient: QueryClient): Promise<LoadSession
   }
 }
 
-/**
- * Revalidate session data by forcing a fresh fetch from the server
- */
+// Revalidate session data by forcing a fresh fetch from the server
 export async function revalidateSession(queryClient: QueryClient) {
   await queryClient.fetchQuery({
     queryKey: SESSION_QUERY_KEY,

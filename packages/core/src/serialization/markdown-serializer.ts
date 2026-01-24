@@ -73,6 +73,67 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     return `\`\`\`${lang}\n${code}\n\`\`\``
   }
 
+  table(children: string[]): string {
+    if (children.length === 0) {
+      return ""
+    }
+
+    // Markdown tables need a separator row after the header row
+    // We'll add it after the first row
+    const rows = children.filter((row) => row.trim().length > 0)
+    if (rows.length === 0) {
+      return ""
+    }
+
+    // Add separator row after first row (header row)
+    const result: string[] = []
+    const firstRow = rows[0]
+    if (!firstRow) {
+      return ""
+    }
+    result.push(firstRow)
+
+    // Create separator row based on first row's column count
+    const firstRowColumns = (firstRow.match(/\|/g) || []).length - 1 // Subtract 1 for the opening |
+    if (firstRowColumns > 0) {
+      const separator = `|${" --- |".repeat(firstRowColumns)}`
+      result.push(separator)
+    }
+
+    // Add remaining rows
+    result.push(...rows.slice(1))
+
+    return result.join("\n")
+  }
+
+  tableRow(children: string[]): string {
+    return `| ${children.join(" | ")} |`
+  }
+
+  tableHeader(children: string[], colspan?: number, rowspan?: number): string {
+    // For markdown, we'll just render the content
+    // Colspan/rowspan are not well-supported in standard markdown
+    // If colspan > 1, we'll add empty cells to represent it
+    const content = children.join("")
+    if (colspan && colspan > 1) {
+      // Add empty cells for colspan (colspan - 1 empty cells)
+      return content + " | " + " | ".repeat(colspan - 1)
+    }
+    return content
+  }
+
+  tableCell(children: string[], colspan?: number, rowspan?: number): string {
+    // For markdown, we'll just render the content
+    // Colspan/rowspan are not well-supported in standard markdown
+    // If colspan > 1, we'll add empty cells to represent it
+    const content = children.join("")
+    if (colspan && colspan > 1) {
+      // Add empty cells for colspan (colspan - 1 empty cells)
+      return content + " | " + " | ".repeat(colspan - 1)
+    }
+    return content
+  }
+
   customBlock(name: string, properties: Record<string, any>): string {
     const propsString = Object.entries(properties)
       .map(([key, value]) => {

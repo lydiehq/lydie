@@ -61,9 +61,7 @@ export const comparisonSections: Record<string, ComparisonSection> = {
   },
 }
 
-/**
- * Get a section by ID
- */
+// Get a section by ID
 export function getSection(id: string): ComparisonSection | undefined {
   return comparisonSections[id]
 }

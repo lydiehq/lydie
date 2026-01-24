@@ -1,8 +1,6 @@
 import { parse, HTMLElement, TextNode, Node } from "node-html-parser"
 
-export interface HTMLDeserializeOptions {}
-
-export function deserializeFromHTML(html: string, options: HTMLDeserializeOptions = {}): any {
+export function deserializeFromHTML(html: string): any {
   const root = parse(html)
   const content: any[] = []
 
@@ -184,6 +182,92 @@ export function deserializeFromHTML(html: string, options: HTMLDeserializeOption
             ]
           }
           return []
+        }
+
+        case "table": {
+          const children = node.childNodes.flatMap((n) => parseNode(n, false))
+          const tableRows = children.filter((c) => c.type === "tableRow")
+          return [
+            {
+              type: "table",
+              content: tableRows,
+            },
+          ]
+        }
+
+        case "tr": {
+          const children = node.childNodes.flatMap((n) => parseNode(n, false))
+          const cells = children.filter((c) => c.type === "tableHeader" || c.type === "tableCell")
+          return [
+            {
+              type: "tableRow",
+              content: cells,
+            },
+          ]
+        }
+
+        case "th": {
+          const colspan = node.getAttribute("colspan")
+          const rowspan = node.getAttribute("rowspan")
+          const children = node.childNodes.flatMap((n) => parseNode(n, false))
+
+          // Ensure at least one paragraph
+          const hasParagraph = children.some((c) => c.type === "paragraph")
+          const content = hasParagraph ? children : [{ type: "paragraph", content: [] }]
+
+          const attrs: any = {}
+          if (colspan) {
+            const colspanNum = parseInt(colspan, 10)
+            if (!isNaN(colspanNum) && colspanNum > 1) {
+              attrs.colspan = colspanNum
+            }
+          }
+          if (rowspan) {
+            const rowspanNum = parseInt(rowspan, 10)
+            if (!isNaN(rowspanNum) && rowspanNum > 1) {
+              attrs.rowspan = rowspanNum
+            }
+          }
+
+          return [
+            {
+              type: "tableHeader",
+              attrs: Object.keys(attrs).length > 0 ? attrs : undefined,
+              content,
+            },
+          ]
+        }
+
+        case "td": {
+          const colspan = node.getAttribute("colspan")
+          const rowspan = node.getAttribute("rowspan")
+          const children = node.childNodes.flatMap((n) => parseNode(n, false))
+
+          // Ensure at least one paragraph
+          const hasParagraph = children.some((c) => c.type === "paragraph")
+          const content = hasParagraph ? children : [{ type: "paragraph", content: [] }]
+
+          const attrs: any = {}
+          if (colspan) {
+            const colspanNum = parseInt(colspan, 10)
+            if (!isNaN(colspanNum) && colspanNum > 1) {
+              attrs.colspan = colspanNum
+            }
+          }
+          if (rowspan) {
+            const rowspanNum = parseInt(rowspan, 10)
+            if (!isNaN(rowspanNum) && rowspanNum > 1) {
+              attrs.rowspan = rowspanNum
+            }
+          }
+
+          return [
+            {
+              type: "tableCell",
+              attrs: Object.keys(attrs).length > 0 ? attrs : undefined,
+              content,
+            },
+          ]
         }
 
         case "strong":

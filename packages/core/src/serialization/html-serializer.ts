@@ -91,6 +91,26 @@ export class HTMLSerializer implements NodeBuilder<string> {
     return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`
   }
 
+  table(children: string[]): string {
+    return `<table>${children.join("")}</table>`
+  }
+
+  tableRow(children: string[]): string {
+    return `<tr>${children.join("")}</tr>`
+  }
+
+  tableHeader(children: string[], colspan?: number, rowspan?: number): string {
+    const colspanAttr = colspan && colspan > 1 ? ` colspan="${colspan}"` : ""
+    const rowspanAttr = rowspan && rowspan > 1 ? ` rowspan="${rowspan}"` : ""
+    return `<th${colspanAttr}${rowspanAttr}>${children.join("")}</th>`
+  }
+
+  tableCell(children: string[], colspan?: number, rowspan?: number): string {
+    const colspanAttr = colspan && colspan > 1 ? ` colspan="${colspan}"` : ""
+    const rowspanAttr = rowspan && rowspan > 1 ? ` rowspan="${rowspan}"` : ""
+    return `<td${colspanAttr}${rowspanAttr}>${children.join("")}</td>`
+  }
+
   customBlock(name: string, properties: Record<string, any>): string {
     return `<div class="custom-block" data-component="${this.escape(name)}" data-properties="${this.escape(
       JSON.stringify(properties),

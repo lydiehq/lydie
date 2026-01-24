@@ -19,19 +19,13 @@ export interface TextSelectionOptions {
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     textSelection: {
-      /**
-       * Single command to handle both capturing and marking
-       */
+      // Single command to handle both capturing and marking
       captureAndMarkSelection: () => ReturnType
 
-      /**
-       * Keep this to clear selections
-       */
+      // Keep this to clear selections
       clearSelection: () => ReturnType
 
-      /**
-       * Jump to the saved selection
-       */
+      // Jump to the saved selection
       jumpToSelection: () => ReturnType
     }
   }
