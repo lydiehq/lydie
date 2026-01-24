@@ -561,3 +561,66 @@ export const feedbackSubmissionsTable = pgTable(
     index("feedback_submissions_organization_id_idx").on(table.organizationId),
   ],
 )
+
+export const templatesTable = pgTable("templates", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  previewData: jsonb("preview_data"), // Serialized document tree for preview
+  ...timestamps,
+})
+
+export const templateDocumentsTable = pgTable(
+  "template_documents",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content"), // Serialized YJS state
+    parentId: text("parent_id").references((): PgColumn<any> => templateDocumentsTable.id, {
+      onDelete: "set null",
+    }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_documents_template_id_idx").on(table.templateId),
+    index("template_documents_parent_id_idx").on(table.parentId),
+  ],
+)
+
+export const templateInstallationsTable = pgTable(
+  "template_installations",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    installedByUserId: text("installed_by_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    rootDocumentId: text("root_document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("template_installations_template_id_idx").on(table.templateId),
+    index("template_installations_organization_id_idx").on(table.organizationId),
+  ],
+)

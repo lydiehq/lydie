@@ -6,8 +6,10 @@ import { FAQSection } from "../../components/tools/FAQSection";
 import CategoryThumbnail from "../../components/templates/CategoryThumbnail.astro";
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
 import { getMostPopularCategories } from "../../data/categories";
+import { getAllTemplates } from "../../data/templates";
 
 const popularCategories = getMostPopularCategories(10);
+const templates = await getAllTemplates();
 ---
 
 <Layout
@@ -64,21 +66,29 @@ const popularCategories = getMostPopularCategories(10);
         <div class="max-w-lg flex flex-col gap-y-3">
           <h2 class="text-2xl font-medium text-gray-900">Featured templates</h2>
           <span class="text-base/relaxed text-gray-600 text-balance"
-            >Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut vel
-            quia officia nemo at ex sed deserunt qui eos molestiae.</span
+            >Browse our collection of templates to get started quickly with
+            Lydie.</span
           >
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {
-            [...Array(10)].map((_, index) => (
-              <TemplateThumbnail
-                name={`Template ${index + 1}`}
-                index={index}
-                href="/templates/resume"
-              />
-            ))
-          }
-        </div>
+        {
+          templates.length === 0 ? (
+            <div class="text-center py-12">
+              <p class="text-gray-500">
+                No templates available yet. Check back soon!
+              </p>
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {templates.map((template) => (
+                <TemplateThumbnail
+                  name={template.name}
+                  description={template.description}
+                  href={`/templates/${template.slug}`}
+                />
+              ))}
+            </div>
+          )
+        }
       </div>
 
       <FAQSection

@@ -5,6 +5,7 @@ import { slugify } from "@lydie/core/utils"
 import { z } from "zod"
 import { isAuthenticated, hasOrganizationAccess } from "./auth"
 import { zql } from "./schema"
+import { templateMutators } from "./mutators/template"
 
 export const mutators = defineMutators({
   document: {
@@ -1334,6 +1335,7 @@ export const mutators = defineMutators({
       },
     ),
   },
+  template: templateMutators,
 })
 
 export type Mutators = typeof mutators

@@ -1,6 +1,7 @@
 import type { Session } from "better-auth"
 
 export type Context = Session & {
+  role?: string
   organizations?: Array<{
     id: string
     name: string
@@ -75,4 +76,24 @@ export function requireOrganizationAccess(
 ): { userId: string; organizationId: string } {
   hasOrganizationAccess(session, organizationId)
   return { userId: session.userId, organizationId }
+}
+
+/**
+ * Checks if the user has admin role
+ * Uses the role from the session (populated by customSession plugin)
+ * to avoid additional database lookups for performance
+ */
+export function isAdmin(session: Context | undefined): boolean {
+  return session?.role === "admin"
+}
+
+/**
+ * Validates that a user is an admin
+ * Throws an error if the user is not authenticated or not an admin
+ */
+export function requireAdmin(session: Context | undefined): asserts session is Context {
+  isAuthenticated(session)
+  if (!isAdmin(session)) {
+    throw new Error("Access denied: Admin privileges required")
+  }
 }

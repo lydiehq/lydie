@@ -19,6 +19,8 @@ import { queries } from "@lydie/zero/queries"
 import { format } from "date-fns"
 import { mutators } from "@lydie/zero/mutators"
 import { trackEvent } from "@/lib/posthog"
+import { useAuth } from "@/context/auth.context"
+import { isAdmin } from "@/utils/admin"
 
 type DocumentMenuProps = {
   documentId: string
@@ -29,13 +31,18 @@ type DocumentMenuProps = {
 export function DocumentMenu({ documentId, documentName, placement = "bottom end" }: DocumentMenuProps) {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false)
+  const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false)
   const [renameValue, setRenameValue] = useState(documentName)
+  const [templateName, setTemplateName] = useState("")
+  const [templateDescription, setTemplateDescription] = useState("")
   const z = useZero()
   const { deleteDocument, publishDocument } = useDocumentActions()
   const { id: currentDocId } = useParams({ strict: false })
   const { organization } = useOrganization()
+  const { user } = useAuth()
 
   const [document] = useQuery(queries.documents.byId({ organizationId: organization.id, documentId }))
+  const userIsAdmin = isAdmin(user)
 
   useEffect(() => {
     if (isRenameDialogOpen) {
@@ -90,6 +97,41 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
     })
   }
 
+  const handleCreateTemplate = async () => {
+    if (!templateName.trim()) {
+      toast.error("Please enter a template name")
+      return
+    }
+
+    if (!document) {
+      toast.error("Document not found")
+      return
+    }
+
+    try {
+      const result = await z.mutate(
+        mutators.template.create({
+          name: templateName.trim(),
+          description: templateDescription.trim() || undefined,
+          rootDocumentId: documentId,
+          organizationId: organization.id,
+        }),
+      )
+
+      if (result?.client) {
+        await result.client
+      }
+
+      toast.success("Template created successfully!")
+      setIsCreateTemplateDialogOpen(false)
+      setTemplateName("")
+      setTemplateDescription("")
+    } catch (error) {
+      console.error("Failed to create template:", error)
+      toast.error("Failed to create template. Please try again.")
+    }
+  }
+
   return (
     <>
       <Menu placement={placement}>
@@ -97,6 +139,11 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
         <MenuItem onAction={() => setIsRenameDialogOpen(true)}>Rename</MenuItem>
         {document?.integration_link_id && !document?.published && (
           <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
+        )}
+        {userIsAdmin && (
+          <MenuItem onAction={() => setIsCreateTemplateDialogOpen(true)}>
+            Create template (admin only)
+          </MenuItem>
         )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
       </Menu>
@@ -214,6 +261,51 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
               </Button>
             </div>
           </div>
+        </Dialog>
+      </Modal>
+
+      <Modal isOpen={isCreateTemplateDialogOpen} onOpenChange={setIsCreateTemplateDialogOpen} isDismissable>
+        <Dialog>
+          <Form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleCreateTemplate()
+            }}
+          >
+            <div className="p-3">
+              <Heading slot="title" className="text-sm font-medium text-gray-700">
+                Create Template
+              </Heading>
+            </div>
+            <Separator />
+            <div className="p-3 space-y-4">
+              <TextField value={templateName} onChange={setTemplateName} autoFocus>
+                <Label>Template Name</Label>
+                <Input placeholder="e.g., Developer Resume" />
+              </TextField>
+              <TextField value={templateDescription} onChange={setTemplateDescription}>
+                <Label>Description</Label>
+                <Input placeholder="Describe what this template is for..." />
+              </TextField>
+              <div className="flex justify-end gap-2">
+                <Button
+                  intent="secondary"
+                  onPress={() => {
+                    setIsCreateTemplateDialogOpen(false)
+                    setTemplateName("")
+                    setTemplateDescription("")
+                  }}
+                  size="sm"
+                  type="button"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" isDisabled={!templateName.trim()}>
+                  Create Template
+                </Button>
+              </div>
+            </div>
+          </Form>
         </Dialog>
       </Modal>
     </>
