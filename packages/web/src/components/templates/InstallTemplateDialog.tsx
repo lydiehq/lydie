@@ -32,9 +32,7 @@ export function InstallTemplateDialog({
     setInstalling(targetOrg.id)
 
     try {
-      // If switching to a different organization, navigate there first
       if (organization?.id !== targetOrg.id) {
-        // Set active organization and navigate to it, preserving the installTemplate parameter
         await setActiveOrganizationAndNavigate(
           targetOrg.id,
           navigate,
@@ -45,11 +43,9 @@ export function InstallTemplateDialog({
           },
         )
 
-        // Wait a moment for the route to fully load and context to update
         await new Promise((resolve) => setTimeout(resolve, 100))
       }
 
-      // Install the template - show loading while waiting for server-side mutator
       const result = z.mutate(
         mutators.template.install({
           templateSlug,
@@ -57,7 +53,6 @@ export function InstallTemplateDialog({
         }),
       )
 
-      // Wait for server-side mutation to complete
       if (result?.server) {
         await result.server
       }
@@ -69,7 +64,6 @@ export function InstallTemplateDialog({
 
       toast.success("Template installed successfully!")
 
-      // Close the dialog and remove the installTemplate parameter from URL
       onOpenChange(false)
       navigate({
         to: "/w/$organizationSlug",
@@ -80,7 +74,6 @@ export function InstallTemplateDialog({
     } catch (error: any) {
       console.error("Failed to install template:", error)
 
-      // Extract error message for better user feedback
       let errorMessage = "Failed to install template. Please try again."
 
       if (error?.message) {

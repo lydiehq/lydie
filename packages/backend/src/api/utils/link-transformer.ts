@@ -3,18 +3,16 @@ import { db } from "@lydie/database"
 import { inArray } from "drizzle-orm"
 import { documentsTable } from "@lydie/database/schema"
 
-/**
- * Transforms internal:// links in document content to relative paths.
- * By default, converts internal://[ID] to /[SLUG] for better SEO.
- * Can optionally convert to /[ID] instead.
- */
+// Transforms internal:// links in document content to relative paths.
+// By default, converts internal://[ID] to /[SLUG] for better SEO.
+// Can optionally convert to /[ID] instead.
 
 export interface LinkTransformOptions {
-  /** If true, use document IDs instead of slugs (e.g., /abc123 instead of /my-document) */
+  // If true, use document IDs instead of slugs (e.g., /abc123 instead of /my-document)
   useIds?: boolean
-  /** Custom base path for links (e.g., "/docs" -> "/docs/my-document") */
+  // Custom base path for links (e.g., "/docs" -> "/docs/my-document")
   basePath?: string
-  /** Organization ID for looking up document slugs */
+  // Organization ID for looking up document slugs
   organizationId: string
 }
 
@@ -25,12 +23,10 @@ interface LinkMetadata {
   exists?: boolean
 }
 
-// Extracts all internal:// links from document content
 export function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
   const internalLinks = new Set<string>()
 
   function traverse(node: ContentNode | TextNode) {
-    // Check if this is a text node with marks
     if (node.type === "text" && "marks" in node && node.marks) {
       for (const mark of node.marks) {
         if (mark.type === "link" && mark.attrs?.href?.startsWith("internal://")) {
@@ -40,7 +36,6 @@ export function extractInternalLinks(content: ContentNode | TextNode): Set<strin
       }
     }
 
-    // Recursively traverse child nodes
     if ("content" in node && Array.isArray(node.content)) {
       for (const child of node.content) {
         traverse(child)
@@ -52,7 +47,6 @@ export function extractInternalLinks(content: ContentNode | TextNode): Set<strin
   return internalLinks
 }
 
-// Fetches metadata for multiple document IDs
 export async function fetchDocumentMetadata(documentIds: string[]): Promise<Map<string, LinkMetadata>> {
   if (documentIds.length === 0) {
     return new Map()
@@ -79,7 +73,6 @@ export async function fetchDocumentMetadata(documentIds: string[]): Promise<Map<
       })
     }
 
-    // Add entries for documents that don't exist
     for (const id of documentIds) {
       if (!metadataMap.has(id)) {
         metadataMap.set(id, {
@@ -92,23 +85,18 @@ export async function fetchDocumentMetadata(documentIds: string[]): Promise<Map<
     return metadataMap
   } catch (error) {
     console.error("Error fetching document metadata for links:", error)
-    // Return empty map on error - links will use IDs as fallback
     return new Map()
   }
 }
 
-// Transforms all internal:// links in document content to internal-link marks
 function transformContentLinks(
   content: ContentNode | TextNode,
   metadataMap: Map<string, LinkMetadata>,
 ): ContentNode | TextNode {
-  // Deep clone to avoid mutations
   const clone = JSON.parse(JSON.stringify(content)) as ContentNode | TextNode
 
   function transform(node: ContentNode | TextNode) {
-    // Transform links in text node marks
     if (node.type === "text" && "marks" in node && node.marks) {
-      // Check if there's an internal link mark
       const internalLinkMark = node.marks.find(
         (mark) => mark.type === "link" && mark.attrs?.href?.startsWith("internal://"),
       )
@@ -117,7 +105,6 @@ function transformContentLinks(
         const documentId = internalLinkMark.attrs!.href!.replace("internal://", "")
         const metadata = metadataMap.get(documentId)
 
-        // Replace the link mark with internal-link mark, preserve other marks
         node.marks = node.marks.map((mark) => {
           if (mark.type === "link" && mark.attrs?.href?.startsWith("internal://")) {
             return {
@@ -134,7 +121,6 @@ function transformContentLinks(
       }
     }
 
-    // Recursively transform child nodes
     if ("content" in node && Array.isArray(node.content)) {
       node.content = node.content.map((child) => transform(child))
     }
@@ -145,21 +131,16 @@ function transformContentLinks(
   return transform(clone)
 }
 
-// Transforms internal:// links to internal-link marks (always fetches metadata)
 export async function transformDocumentLinksToInternalLinkMarks(
   jsonContent: ContentNode,
 ): Promise<ContentNode> {
-  // Extract all internal links
   const internalLinkIds = extractInternalLinks(jsonContent)
 
-  // If no internal links, return original content
   if (internalLinkIds.size === 0) {
     return jsonContent
   }
 
-  // Always fetch metadata for all linked documents
   const metadataMap = await fetchDocumentMetadata(Array.from(internalLinkIds))
 
-  // Transform all links in the content to internal-link marks
   return transformContentLinks(jsonContent, metadataMap) as ContentNode
 }

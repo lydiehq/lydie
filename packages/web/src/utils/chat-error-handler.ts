@@ -1,16 +1,12 @@
-/**
- * Utilities for handling errors from AI SDK chat endpoints.
- * The AI SDK wraps backend errors as JSON strings in the error message.
- */
+// Utilities for handling errors from AI SDK chat endpoints.
+// The AI SDK wraps backend errors as JSON strings in the error message.
 
 export interface ParsedChatError {
   code?: string
   message: string
 }
 
-/**
- * Parses errors from the AI SDK that may contain JSON-encoded error details
- */
+// Parses errors from the AI SDK that may contain JSON-encoded error details
 export function parseChatError(error: any): ParsedChatError {
   const defaultMessage = "Failed to send message. Please try again."
 
@@ -38,9 +34,7 @@ export function parseChatError(error: any): ParsedChatError {
   }
 }
 
-/**
- * Checks if an error is a usage limit exceeded error
- */
+// Checks if an error is a usage limit exceeded error
 export function isUsageLimitError(error: any): boolean {
   const parsed = parseChatError(error)
   return parsed.code === "usage_limit_exceeded"

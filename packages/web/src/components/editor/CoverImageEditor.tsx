@@ -21,13 +21,11 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
     const file = event.target.files?.[0]
     if (!file) return
 
-    // Validate file is an image
     if (!file.type.startsWith("image/")) {
       window.alert("Please select an image file")
       return
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       window.alert("Image must be less than 10MB")
       return
@@ -48,7 +46,6 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
       window.alert("Failed to upload image. Please try again.")
     } finally {
       setIsUploading(false)
-      // Reset input so the same file can be selected again
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }

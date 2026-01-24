@@ -46,10 +46,6 @@ export const ZeroRoute = new Hono()
 
     const session = sessionData.session
 
-    // We pass in an array of async tasks to the server mutators that will be
-    // executed after the transaction commits in order to not block the mutation
-    // on the client.
-    // https://zero.rocicorp.dev/docs/custom-mutators#notifications-and-async-work
     const asyncTasks: Array<() => Promise<void>> = []
     const mutators = createServerMutators(asyncTasks)
 
@@ -69,9 +65,6 @@ export const ZeroRoute = new Hono()
       c.req.raw,
     )
 
-    // Run all async tasks
-    // If any fail, do not block the response, since the
-    // mutation result has already been written to the database.
     await Promise.allSettled(asyncTasks.map((task) => task()))
     return c.json(result)
   })

@@ -86,7 +86,6 @@ export const ExternalApi = new Hono()
         related = await findRelatedDocuments(document.id as string, organizationId, 5)
       } catch (error) {
         console.error("Error fetching related documents:", error)
-        // Don't fail the whole request if related documents fail
         related = []
       }
     }
@@ -97,13 +96,10 @@ export const ExternalApi = new Hono()
         toc = extractTableOfContents(transformedContent)
       } catch (error) {
         console.error("Error extracting table of contents:", error)
-        // Don't fail the whole request if TOC extraction fails
         toc = []
       }
     }
 
-    // Add optional fields to the already-transformed document
-    // Remove yjsState from response - we don't want to expose the binary state
     const { yjsState: _, ...documentWithoutYjs } = document
     const response = {
       ...documentWithoutYjs,

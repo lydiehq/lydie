@@ -573,8 +573,6 @@ const templates = table("templates")
     teaser: string().optional(),
     detailed_description: string().optional(),
     preview_data: json().optional(),
-    // title_embedding is excluded from Zero schema - it's a vector type that Zero cannot sync
-    // It's only used server-side for semantic search
     ...timestamps,
   })
   .primaryKey("id")

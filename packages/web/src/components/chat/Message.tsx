@@ -73,9 +73,6 @@ export function AssistantMessage({
   isLastMessage: boolean
   className?: string
 }) {
-  // Show metadata when:
-  // 1. Status is "ready" (response complete), OR
-  // 2. This is not the last message (previous messages are always complete)
   const shouldShowMetadata = status === "ready" || !isLastMessage
 
   return (
@@ -117,10 +114,8 @@ export function AssistantMessage({
   )
 }
 
-/**
- * Renders text with inline reference pills
- * Optimized to only parse when references are detected
- */
+// Renders text with inline reference pills
+// Optimized to only parse when references are detected
 export function TextWithReferences({ text, className = "" }: { text: string; className?: string }) {
   const segments = useMemo(() => parseReferences(text), [text])
 
@@ -195,7 +190,6 @@ function MessageContext({
     const docs: Array<{ id: string; title: string }> = []
     const seenIds = new Set<string>()
 
-    // Add current document from contextDocuments if it exists
     if (currentDocumentId) {
       const currentDoc = contextDocuments.find((doc: { id: string }) => doc.id === currentDocumentId)
       if (currentDoc && !seenIds.has(currentDoc.id)) {
@@ -204,7 +198,6 @@ function MessageContext({
       }
     }
 
-    // Add all other context documents
     for (const doc of contextDocuments) {
       if (!seenIds.has(doc.id)) {
         docs.push(doc)

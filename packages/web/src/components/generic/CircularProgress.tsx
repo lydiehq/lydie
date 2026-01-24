@@ -2,19 +2,19 @@ import { useMemo } from "react"
 import clsx from "clsx"
 
 export interface CircularProgressProps {
-  /** Progress value from 0 to 100 */
+  // Progress value from 0 to 100
   progress: number
-  /** Size of the circle in pixels */
+  // Size of the circle in pixels
   size?: number
-  /** Width of the stroke */
+  // Width of the stroke
   strokeWidth?: number
-  /** Color of the background circle */
+  // Color of the background circle
   backgroundColor?: string
-  /** Color of the progress circle */
+  // Color of the progress circle
   progressColor?: string
-  /** Additional className for the SVG element */
+  // Additional className for the SVG element
   className?: string
-  /** Additional className for the progress circle */
+  // Additional className for the progress circle
   progressClassName?: string
 }
 

@@ -67,10 +67,8 @@ function reorderSiblings(
   return reordered.map((item) => item.id)
 }
 
-/**
- * Drag and drop hook for documents using page-hierarchy (parent_id).
- * Works with both GridList and Tree components from react-aria-components.
- */
+// Drag and drop hook for documents using page-hierarchy (parent_id).
+// Works with both GridList and Tree components from react-aria-components.
 export function useDocumentDragDrop({ allDocuments }: UseDocumentDragDropOptions) {
   const z = useZero()
   const { organization } = useOrganization()

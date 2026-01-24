@@ -42,9 +42,7 @@ export const InternalApi = new Hono()
       return c.json({ error: err.message, code: err.code }, err.status as any)
     }
 
-    // Handle HTTPException (including other status codes)
     if (err instanceof HTTPException) {
-      // Add code field for specific status codes
       const response: { error: string; code?: string } = { error: err.message }
 
       if (err.status === 429) {

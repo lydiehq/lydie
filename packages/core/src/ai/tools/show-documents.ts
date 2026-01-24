@@ -3,11 +3,9 @@ import { z } from "zod"
 import { db, documentsTable } from "@lydie/database"
 import { eq, and, desc, asc, ilike, isNull, ne } from "drizzle-orm"
 
-/**
- * User-facing tool for displaying documents in a pretty UI.
- * Use this when the user explicitly asks to SEE their documents.
- * For research/background exploration, use listDocuments instead.
- */
+// User-facing tool for displaying documents in a pretty UI.
+// Use this when the user explicitly asks to SEE their documents.
+// For research/background exploration, use listDocuments instead.
 export const showDocuments = (_userId: string, organizationId: string, currentDocumentId?: string) =>
   tool({
     description: `Show documents to the user in a visually appealing way.
@@ -36,7 +34,6 @@ This will render a nice interactive list that the user can click on.
         .optional(),
     }),
     execute: async function* ({ limit = 5, sortBy = "updated", sortOrder = "desc", titleFilter }) {
-      // Yield initial loading state
       yield {
         state: "loading",
         message: titleFilter
@@ -60,12 +57,10 @@ This will render a nice interactive list that the user can click on.
 
       const conditions = [eq(documentsTable.organizationId, organizationId), isNull(documentsTable.deletedAt)]
 
-      // Exclude current document if provided
       if (currentDocumentId) {
         conditions.push(ne(documentsTable.id, currentDocumentId))
       }
 
-      // Add title filter if provided
       if (titleFilter) {
         conditions.push(ilike(documentsTable.title, `%${titleFilter}%`))
       }
@@ -91,7 +86,6 @@ This will render a nice interactive list that the user can click on.
         updatedAt: doc.updatedAt.toISOString(),
       }))
 
-      // Yield final result
       yield {
         state: "success",
         message:

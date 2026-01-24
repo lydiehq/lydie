@@ -20,16 +20,14 @@ export interface PullFromLinkResult {
   error?: string
 }
 
-/**
- * Pull documents from an integration link
- * This function encapsulates the business logic for:
- * - Fetching the link and connection
- * - Refreshing tokens if needed
- * - Calling integration.pull()
- * - Creating documents from results
- * - Updating link sync timestamp
- * - Updating connection status
- */
+// Pull documents from an integration link
+// This function encapsulates the business logic for:
+// - Fetching the link and connection
+// - Refreshing tokens if needed
+// - Calling integration.pull()
+// - Creating documents from results
+// - Updating link sync timestamp
+// - Updating connection status
 export async function pullFromIntegrationLink(options: PullFromLinkOptions): Promise<PullFromLinkResult> {
   const { linkId, organizationId, userId, integration } = options
 

@@ -6,7 +6,6 @@ import { eq, and } from "drizzle-orm"
 import { authClient } from "@lydie/core/auth"
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing"
 
-// Verify user has access to document
 async function verifyDocumentAccess(documentId: string, userId: string): Promise<boolean> {
   try {
     const [document] = await db
@@ -19,7 +18,6 @@ async function verifyDocumentAccess(documentId: string, userId: string): Promise
       return false
     }
 
-    // Check if user is a member of the organization
     const membership = await db
       .select()
       .from(membersTable)
@@ -55,7 +53,6 @@ export const hocuspocus = new Hocuspocus({
         }
       },
       store: async ({ documentName, state }) => {
-        // Convert Uint8Array to base64 string for storage
         const base64State = Buffer.from(state).toString("base64")
 
         await db
@@ -85,8 +82,6 @@ export const hocuspocus = new Hocuspocus({
     }
 
     try {
-      // Verify the session using better-auth by passing request headers
-      // The headers should contain the cookie with the session token
       const session = await authClient.api.getSession({
         headers: request.headers as any,
       })
@@ -95,14 +90,12 @@ export const hocuspocus = new Hocuspocus({
         throw new Error("Invalid authentication")
       }
 
-      // Verify user has access to the document
       const hasAccess = await verifyDocumentAccess(documentName, session.user.id)
 
       if (!hasAccess) {
         throw new Error("Access denied")
       }
 
-      // Awareness
       return {
         id: session.user.id,
         name: session.user.name,

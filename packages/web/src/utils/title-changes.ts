@@ -1,9 +1,7 @@
 import type { Editor } from "@tiptap/react"
 import { mutators } from "@lydie/zero/mutators"
 
-/**
- * Apply title change to the document
- */
+// Apply title change to the document
 export async function applyTitleChange(
   titleEditor: Editor,
   newTitle: string,
@@ -12,10 +10,8 @@ export async function applyTitleChange(
   z: any, // Use any to avoid complex type constraints with Zero
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Set the title in the editor
     titleEditor.commands.setContent(newTitle)
 
-    // Persist to database
     await z.mutate(
       mutators.document.update({
         documentId,

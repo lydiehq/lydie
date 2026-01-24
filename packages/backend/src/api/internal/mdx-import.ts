@@ -31,8 +31,6 @@ interface MDXFrontmatter {
   [key: string]: any
 }
 
-// mdxToTipTapJSON is now replaced by deserializeFromMDX from @lydie/core/serialization
-
 function parseMDXContent(
   mdxContent: string,
   filename: string | undefined,
@@ -43,15 +41,12 @@ function parseMDXContent(
 
   const lines = contentWithoutFrontmatter.split("\n")
 
-  // Title priority: frontmatter.title > first # heading > filename (without extension) > fallback
   let title = ""
   let contentStartIndex = 0
 
-  // 1. Check frontmatter first
   if (frontmatter.title) {
     title = frontmatter.title
   } else {
-    // 2. Look for first heading
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
       if (line.startsWith("# ")) {
@@ -61,18 +56,15 @@ function parseMDXContent(
       }
     }
 
-    // 3. Use filename if no title found
     if (!title && filename) {
       title = filename.replace(/\.(mdx?|md)$/i, "")
     }
 
-    // 4. Fallback
     if (!title) {
       title = "Imported Document"
     }
   }
 
-  // Slug priority: frontmatter.slug > filename (without extension) > slugified title
   let slug = ""
   if (frontmatter.slug) {
     slug = frontmatter.slug
@@ -85,23 +77,18 @@ function parseMDXContent(
   const contentLines = lines.slice(contentStartIndex)
   const contentString = contentLines.join("\n")
 
-  // Extract components first to get the list for component creation
   const { components } = extractMDXComponents(contentString)
 
-  // Use the core MDX deserializer with component schemas
   const tipTapContent = deserializeFromMDX(contentString, {
     componentSchemas,
   })
 
-  // Convert frontmatter to customFields format (only string and number values)
-  // Exclude title and slug as they're handled separately
   const customFields: Record<string, string | number> = {}
   for (const [key, value] of Object.entries(frontmatter)) {
     if (key !== "title" && key !== "slug") {
       if (typeof value === "string" || typeof value === "number") {
         customFields[key] = value
       } else if (typeof value === "boolean") {
-        // Convert boolean to string
         customFields[key] = String(value)
       }
     }
@@ -124,10 +111,9 @@ async function getOrCreatePageByPath(
   organizationId: string,
 ): Promise<string | undefined> {
   if (!pagePath || pagePath.trim() === "" || pagePath === "/") {
-    return undefined // Root level
+    return undefined
   }
 
-  // Normalize path: remove leading/trailing slashes and split
   const parts = pagePath
     .replace(/^\/+|\/+$/g, "")
     .split("/")
@@ -139,9 +125,7 @@ async function getOrCreatePageByPath(
 
   let currentParentId: string | undefined = undefined
 
-  // Traverse the path, creating pages as needed
   for (const pageName of parts) {
-    // Check if page already exists with this title, parent, and organization
     const whereConditions = [
       eq(documentsTable.title, pageName),
       eq(documentsTable.organizationId, organizationId),
@@ -161,10 +145,8 @@ async function getOrCreatePageByPath(
       .limit(1)
 
     if (existingPage) {
-      // Reuse existing page
       currentParentId = existingPage.id
     } else {
-      // Create new page
       const newPageId = createId()
       const emptyContent = { type: "doc", content: [] }
       const yjsState = convertJsonToYjs(emptyContent)
@@ -218,10 +200,8 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         })
       }
 
-      // Parse MDX content first (without component schemas initially)
       const parsed = parseMDXContent(mdxContent, filename, {})
 
-      // If there are components in the parsed content, fetch only the relevant schemas
       let componentSchemas: Record<string, any> = {}
       if (parsed.components.length > 0) {
         const componentNames = [...new Set(parsed.components.map((c) => c.name))]
@@ -239,24 +219,20 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
           componentSchemas[comp.name] = comp.properties
         }
 
-        // Re-parse with component schemas if we found any
         if (Object.keys(componentSchemas).length > 0) {
           const reparsed = parseMDXContent(mdxContent, filename, componentSchemas)
           parsed.content = reparsed.content
         }
       }
 
-      // Use provided parentId, or get/create page by path if not provided
       let finalParentId: string | undefined = parentId
       if (!finalParentId && pagePath) {
         finalParentId = await getOrCreatePageByPath(pagePath, userId, organizationId)
       }
 
-      // Create document
       const documentId = createId()
       const finalSlug = parsed.slug || documentId
 
-      // Convert TipTap JSON to Yjs format
       const yjsState = convertJsonToYjs(parsed.content)
 
       const insertData = {
@@ -274,7 +250,6 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
 
       await db.insert(documentsTable).values(insertData)
 
-      // Verify the inserted document
       const insertedDocument = await db.query.documentsTable.findFirst({
         where: {
           id: documentId,
@@ -300,19 +275,14 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         })
       }
 
-      // Create document components for any new custom components found
       const createdComponents: string[] = []
       if (parsed.components.length > 0) {
-        // Get unique component names
         const uniqueComponents = Array.from(new Map(parsed.components.map((c) => [c.name, c])).values())
 
-        // Filter out components that already exist in our schema map
         const newComponents = uniqueComponents.filter((c) => !componentSchemas[c.name])
 
-        // Batch create new components
         if (newComponents.length > 0) {
           const componentInserts = newComponents.map((component) => {
-            // Infer property types from the component props
             const properties: Record<string, { type: string }> = {}
             for (const [key, value] of Object.entries(component.props)) {
               if (typeof value === "boolean") {
@@ -334,19 +304,16 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
             }
           })
 
-          // Try to insert all new components at once
           try {
             await db.insert(documentComponentsTable).values(componentInserts)
             createdComponents.push(...componentInserts.map((c) => c.name))
           } catch (error) {
-            // If batch insert fails, fall back to individual inserts with duplicate checking
             console.warn("Batch component insert failed, falling back to individual inserts")
             for (const insert of componentInserts) {
               try {
                 await db.insert(documentComponentsTable).values(insert)
                 createdComponents.push(insert.name)
               } catch (individualError) {
-                // Component might already exist due to race condition, skip it
                 console.log(`Component ${insert.name} already exists, skipping`)
               }
             }

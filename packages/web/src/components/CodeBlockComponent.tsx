@@ -49,13 +49,11 @@ function LanguageSelect({
 export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewProps) {
   const defaultLanguage = node.attrs?.language || "null"
 
-  // Memoize lowlight lookup - editor instance is stable, so this only runs once
   const lowlight = useMemo(() => {
     const codeBlockExtension = editor.extensionManager.extensions.find((ext) => ext.name === "codeBlock")
     return codeBlockExtension?.options.lowlight
   }, [editor])
 
-  // Prepare items for the ComboBox
   const items = useMemo(() => {
     const languages = lowlight?.listLanguages() || []
     return [{ id: "null", name: "auto" }, ...languages.map((lang: string) => ({ id: lang, name: lang }))]
@@ -63,7 +61,6 @@ export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewP
 
   const [selectedKey, setSelectedKey] = useState<string | null>(defaultLanguage)
 
-  // Sync selectedKey with node attributes when they change externally
   useEffect(() => {
     const currentLanguage = node.attrs?.language || "null"
     if (currentLanguage !== selectedKey) {

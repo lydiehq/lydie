@@ -8,17 +8,14 @@ import {
 import { eq, sql, and } from "drizzle-orm"
 import { generateEmbedding, generateTitleEmbedding } from "./generation"
 
-// Store title embedding for a document
 export async function storeTitleEmbedding(documentId: string, title: string) {
   try {
     const embedding = await generateTitleEmbedding(title)
 
-    // First, delete any existing title embedding for this document
     await db
       .delete(documentTitleEmbeddingsTable)
       .where(eq(documentTitleEmbeddingsTable.documentId, documentId))
 
-    // Insert new title embedding
     await db.insert(documentTitleEmbeddingsTable).values({
       documentId,
       title,
@@ -30,7 +27,6 @@ export async function storeTitleEmbedding(documentId: string, title: string) {
   }
 }
 
-// Search documents by title using semantic search
 export async function searchDocumentsByTitle(
   query: string,
   userId: string,
@@ -40,7 +36,6 @@ export async function searchDocumentsByTitle(
   try {
     const queryEmbedding = await generateEmbedding(query)
 
-    // Calculate cosine similarity for titles
     const similarity = sql<number>`1 - (${
       documentTitleEmbeddingsTable.embedding
     } <=> ${JSON.stringify(queryEmbedding)}::vector)`
@@ -60,7 +55,6 @@ export async function searchDocumentsByTitle(
         and(
           eq(documentsTable.organizationId, organizationId),
           sql`${documentsTable.deletedAt} IS NULL`,
-          // More lenient similarity threshold for titles
           sql`(${documentTitleEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding,
           )}::vector) < 0.7`,
@@ -76,7 +70,6 @@ export async function searchDocumentsByTitle(
   }
 }
 
-// Hybrid search: first by title, then by content
 export async function hybridSearchDocuments(
   query: string,
   userId: string,
@@ -88,10 +81,8 @@ export async function hybridSearchDocuments(
     const results: any[] = []
 
     if (searchStrategy === "title_first" || searchStrategy === "both") {
-      // First, search by titles
       const titleResults = await searchDocumentsByTitle(query, userId, organizationId, Math.min(limit, 5))
 
-      // For each matching document, get some content
       for (const titleResult of titleResults) {
         const contentResults = await searchDocumentsInSpecificDocument(
           query,
@@ -111,20 +102,16 @@ export async function hybridSearchDocuments(
     }
 
     if ((searchStrategy === "content_first" || searchStrategy === "both") && results.length < limit) {
-      // Then search content if we need more results
       const contentResults = await searchDocuments(query, userId, organizationId, limit - results.length)
 
       for (const contentResult of contentResults) {
-        // Check if we already have this document from title search
         const existingResult = results.find((r) => r.documentId === contentResult.documentId)
         if (existingResult) {
-          // Merge content chunks from content search
           if (contentResult.contentChunks) {
             existingResult.contentChunks = existingResult.contentChunks || []
             existingResult.contentChunks.push(...contentResult.contentChunks)
           }
         } else {
-          // New document from content search
           results.push(contentResult)
         }
       }
@@ -137,7 +124,6 @@ export async function hybridSearchDocuments(
   }
 }
 
-// Search content within a specific document
 export async function searchDocumentsInSpecificDocument(
   query: string,
   documentId: string,
@@ -173,10 +159,8 @@ export async function searchDocumentsInSpecificDocument(
   }
 }
 
-// Find related documents based on a document's title and content embeddings
 export async function findRelatedDocuments(documentId: string, organizationId: string, limit: number = 5) {
   try {
-    // Get the current document's title embedding
     const [titleEmbedding] = await db
       .select({
         embedding: documentTitleEmbeddingsTable.embedding,
@@ -186,13 +170,11 @@ export async function findRelatedDocuments(documentId: string, organizationId: s
       .limit(1)
 
     if (!titleEmbedding) {
-      // If no title embedding exists, fall back to content-based similarity
       return await findRelatedDocumentsByContent(documentId, organizationId, limit)
     }
 
     const queryEmbedding = titleEmbedding.embedding
 
-    // Find similar documents by title, excluding the current document
     const similarity = sql<number>`1 - (${
       documentTitleEmbeddingsTable.embedding
     } <=> ${JSON.stringify(queryEmbedding)}::vector)`
@@ -213,9 +195,7 @@ export async function findRelatedDocuments(documentId: string, organizationId: s
           eq(documentsTable.organizationId, organizationId),
           eq(documentsTable.published, true),
           sql`${documentsTable.deletedAt} IS NULL`,
-          // Exclude the current document
           sql`${documentsTable.id} != ${documentId}`,
-          // Reasonable similarity threshold
           sql`(${documentTitleEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding,
           )}::vector) < 0.8`,
@@ -231,14 +211,12 @@ export async function findRelatedDocuments(documentId: string, organizationId: s
   }
 }
 
-// Fallback method using content embeddings when title embeddings aren't available
 export async function findRelatedDocumentsByContent(
   documentId: string,
   organizationId: string,
   limit: number = 5,
 ) {
   try {
-    // Get a representative content embedding from the document (we'll use the first one)
     const [contentEmbedding] = await db
       .select({
         embedding: documentEmbeddingsTable.embedding,
@@ -253,7 +231,6 @@ export async function findRelatedDocumentsByContent(
 
     const queryEmbedding = contentEmbedding.embedding
 
-    // Find documents with similar content, grouped by document
     const similarity = sql<number>`1 - (${
       documentEmbeddingsTable.embedding
     } <=> ${JSON.stringify(queryEmbedding)}::vector)`
@@ -274,9 +251,7 @@ export async function findRelatedDocumentsByContent(
           eq(documentsTable.organizationId, organizationId),
           eq(documentsTable.published, true),
           sql`${documentsTable.deletedAt} IS NULL`,
-          // Exclude the current document
           sql`${documentsTable.id} != ${documentId}`,
-          // Reasonable similarity threshold
           sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.6`,
         ),
       )
@@ -297,8 +272,6 @@ export async function findRelatedDocumentsByContent(
   }
 }
 
-// Original semantic search across user's documents (content-only)
-// Returns documents grouped with their matching content chunks
 export async function searchDocuments(
   query: string,
   userId: string,
@@ -308,12 +281,10 @@ export async function searchDocuments(
   try {
     const queryEmbedding = await generateEmbedding(query)
 
-    // Calculate cosine similarity - using the vector <=> operator for cosine distance
     const similarity = sql<number>`1 - (${
       documentEmbeddingsTable.embedding
     } <=> ${JSON.stringify(queryEmbedding)}::vector)`
 
-    // Get more chunks than documents needed so we can group properly
     const chunkResults = await db
       .select({
         content: documentEmbeddingsTable.content,
@@ -329,14 +300,12 @@ export async function searchDocuments(
         and(
           eq(documentsTable.organizationId, organizationId),
           sql`${documentsTable.deletedAt} IS NULL`,
-          // Only return results with reasonable similarity
           sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.5`,
         ),
       )
       .orderBy(sql`${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector`)
-      .limit(limit * 3) // Get more chunks to ensure we have enough documents
+      .limit(limit * 3)
 
-    // Group chunks by document
     const documentMap = new Map<string, any>()
 
     for (const result of chunkResults) {
@@ -357,7 +326,6 @@ export async function searchDocuments(
       })
     }
 
-    // Return only the requested number of documents
     return Array.from(documentMap.values()).slice(0, limit)
   } catch (error) {
     console.error("Error in searchDocuments:", error)
@@ -398,7 +366,6 @@ export async function findRelatedTemplates(templateId: string, limit: number = 6
         and(
           sql`${templatesTable.id} != ${templateId}`,
           sql`${templatesTable.titleEmbedding} IS NOT NULL`,
-          // Reasonable similarity threshold
           sql`(${templatesTable.titleEmbedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.8`,
         ),
       )

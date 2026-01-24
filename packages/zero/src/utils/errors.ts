@@ -1,6 +1,4 @@
-/**
- * Standardized error messages for mutators and queries
- */
+// Standardized error messages for mutators and queries
 
 export function notFoundError(entity: string, id: string): Error {
   return new Error(`${entity} not found: ${id}`)

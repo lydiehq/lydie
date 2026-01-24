@@ -91,7 +91,6 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
         }),
       )
 
-      // Track document rename
       trackEvent("document_renamed", {
         documentId,
         organizationId: organization.id,
@@ -105,8 +104,6 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
   }
 
   const handleDelete = () => {
-    // If document is part of an integration, let deleteDocument handle the confirmation
-    // with strict warning ensuring user knows about external side effects.
     if (document?.integration_link_id) {
       deleteDocument(documentId, currentDocId === documentId, document.integration_link_id)
       return

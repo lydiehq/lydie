@@ -8,7 +8,6 @@ export const Route = createFileRoute("/__auth/")({
     }
   },
   beforeLoad: async ({ context: { auth, organizations }, search }) => {
-    // Check for template in URL params or sessionStorage (from OAuth callback)
     let templateSlug = search.template
     if (!templateSlug && typeof window !== "undefined") {
       const pendingTemplate = sessionStorage.getItem("pendingTemplateInstall")
@@ -18,7 +17,6 @@ export const Route = createFileRoute("/__auth/")({
       }
     }
 
-    // Check if user has an active organization from the session
     const activeOrganizationSlug = (auth?.session as any)?.activeOrganizationSlug
 
     if (activeOrganizationSlug) {
@@ -29,7 +27,6 @@ export const Route = createFileRoute("/__auth/")({
       })
     }
 
-    // No active organization - redirect to first organization if available
     if (organizations && organizations.length > 0) {
       const firstOrg = organizations[0]
       throw redirect({

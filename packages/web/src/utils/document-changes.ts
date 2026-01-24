@@ -1,6 +1,4 @@
-/**
- * Normalize HTML by removing attributes and extra paragraph wrapping to enable fuzzy matching
- */
+// Normalize HTML by removing attributes and extra paragraph wrapping to enable fuzzy matching
 function normalizeHTMLForMatching(html: string): string {
   return (
     html
@@ -17,9 +15,7 @@ function normalizeHTMLForMatching(html: string): string {
   )
 }
 
-/**
- * Try to find and replace content with tolerance for HTML attribute differences
- */
+// Try to find and replace content with tolerance for HTML attribute differences
 function tryWithAttributeTolerance(
   currentHTML: string,
   searchText: string,
@@ -210,9 +206,7 @@ function findAndReplaceInDocument(editor: any, searchText: string, replaceText: 
   return false
 }
 
-/**
- * Create a detailed error report for LLM debugging
- */
+// Create a detailed error report for LLM debugging
 function createApplyErrorReport(
   change: { search: string; replace: string },
   editor: any,
@@ -260,9 +254,7 @@ ${error ? `Error message: ${error.message}\nStack trace: ${error.stack}` : "No s
   `.trim()
 }
 
-/**
- * LLM-assisted fallback for finding exact match in document
- */
+// LLM-assisted fallback for finding exact match in document
 async function llmAssistedReplace(
   editor: any,
   searchText: string,
@@ -320,10 +312,8 @@ async function llmAssistedReplace(
   }
 }
 
-/**
- * Apply content changes to the editor
- * This preserves editor state without any automatic title extraction
- */
+// Apply content changes to the editor
+// This preserves editor state without any automatic title extraction
 export async function applyContentChanges(
   editor: any,
   changes: Array<{

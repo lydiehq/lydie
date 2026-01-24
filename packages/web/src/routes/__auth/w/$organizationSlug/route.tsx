@@ -25,7 +25,6 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
 
       const organization = await loadOrganization(queryClient, zero, organizationSlug)
 
-      // Set the active organization in better-auth
       await authClient.organization.setActive({
         organizationId: organization.id,
       })
@@ -71,7 +70,6 @@ function RouteLayout() {
   const handleTemplateDialogClose = (isOpen: boolean) => {
     setIsTemplateDialogOpen(isOpen)
     
-    // Remove the installTemplate parameter from the URL when dialog closes
     if (!isOpen && search.installTemplate) {
       navigate({
         to: "/w/$organizationSlug",
@@ -88,18 +86,15 @@ function RouteLayout() {
     panel.isCollapsed() ? panel.expand() : panel.collapse()
   }
 
-  // Extract document ID from route params if on a document page
   const currentDocumentId = useMemo(() => {
     const params = routerState.location.pathname.split("/")
     const orgSlugIndex = params.indexOf("w")
     if (orgSlugIndex !== -1 && params[orgSlugIndex + 2]) {
-      // Pattern: /w/{slug}/{documentId}
       return params[orgSlugIndex + 2]
     }
     return null
   }, [routerState.location.pathname])
 
-  // Check if we're on the settings route
   const isSettingsRoute = routerState.location.pathname.includes("/settings")
   const shouldShowDockedPanel = isDocked && !isSettingsRoute
 

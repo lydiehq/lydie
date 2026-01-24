@@ -28,17 +28,13 @@ export type LoadSessionResult = {
   }>
 }
 
-/**
- * Fetch session data from the server
- */
+// Fetch session data from the server
 async function fetchSession() {
   const response = await authClient.getSession()
   return response.data
 }
 
-/**
- * Load session data, using cache when available
- */
+// Load session data, using cache when available
 export async function loadSession(queryClient: QueryClient): Promise<LoadSessionResult> {
   const data = (await queryClient.ensureQueryData({
     queryKey: SESSION_QUERY_KEY,
@@ -64,9 +60,7 @@ export async function revalidateSession(queryClient: QueryClient) {
   })
 }
 
-/**
- * Clear session data (useful for logout)
- */
+// Clear session data (useful for logout)
 export async function clearSession(queryClient: QueryClient) {
   await queryClient.invalidateQueries({
     queryKey: SESSION_QUERY_KEY,

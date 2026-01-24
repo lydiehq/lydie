@@ -6,21 +6,13 @@ import { TextSelection } from "@tiptap/pm/state"
 const selectionMarkKey = new PluginKey("selectionMark")
 
 export interface TextSelectionOptions {
-  /**
-   * The keyboard shortcut to trigger text selection
-   * @default 'Mod-l'
-   */
+  // The keyboard shortcut to trigger text selection (default: 'Mod-l')
   shortcut: string
 
-  /**
-   * Function to call when text is selected
-   */
+  // Function to call when text is selected
   onSelect?: (text: string) => void
 
-  /**
-   * CSS class to apply to marked selections
-   * @default 'text-selection-mark'
-   */
+  // CSS class to apply to marked selections (default: 'text-selection-mark')
   markClass?: string
 }
 
@@ -45,9 +37,7 @@ declare module "@tiptap/core" {
   }
 }
 
-/**
- * Extension that allows capturing text selections with a keyboard shortcut
- */
+// Extension that allows capturing text selections with a keyboard shortcut
 export const TextSelectionExtension = Extension.create<TextSelectionOptions>({
   name: "textSelection",
 

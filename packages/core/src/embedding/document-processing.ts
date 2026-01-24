@@ -90,7 +90,6 @@ export async function processDocumentEmbedding(
 ): Promise<{ skipped: boolean; reason?: string }> {
   const { documentId, yjsState } = params
 
-  // convertYjsToJson handles empty yjsState by returning an empty document
   const jsonContent = convertYjsToJson(yjsState)
 
   const sections = extractSections(jsonContent)

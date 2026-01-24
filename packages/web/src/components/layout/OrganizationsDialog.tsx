@@ -27,7 +27,6 @@ export function OrganizationsDialog({
       return
     }
 
-    // Set active organization in better-auth (non-blocking)
     authClient.organization.setActive({
       organizationId: targetOrg.id,
     })
@@ -38,7 +37,6 @@ export function OrganizationsDialog({
       params: { organizationSlug: targetOrg.slug },
     })
 
-    // Close dialog immediately
     onOpenChange(false)
   }
 

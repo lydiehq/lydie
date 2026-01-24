@@ -7,10 +7,8 @@ export interface ComparisonSection {
   featurePageUrl?: string // Optional link to dedicated feature page
 }
 
-/**
- * Registry of reusable comparison sections
- * These can be referenced across different comparison pages
- */
+// Registry of reusable comparison sections
+// These can be referenced across different comparison pages
 export const comparisonSections: Record<string, ComparisonSection> = {
   opensource: {
     id: "opensource",
@@ -70,19 +68,15 @@ export function getSection(id: string): ComparisonSection | undefined {
   return comparisonSections[id]
 }
 
-/**
- * Section override type for comparisons
- */
+// Section override type for comparisons
 export interface SectionOverride {
   id: string
   title?: string
   description?: string
 }
 
-/**
- * Get multiple sections by IDs or override objects
- * Merges default section data with comparison-specific overrides
- */
+// Get multiple sections by IDs or override objects
+// Merges default section data with comparison-specific overrides
 export function getSections(sections: (string | SectionOverride)[]): ComparisonSection[] {
   return sections
     .map((sectionRef) => {

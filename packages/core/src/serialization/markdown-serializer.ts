@@ -42,7 +42,6 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     const startNum = start ?? 1
     return children
       .map((item, index) => {
-        // Replace the default bullet with the correct number
         return item.replace(/^- /, `${startNum + index}. `)
       })
       .join("\n")
@@ -50,7 +49,6 @@ export class MarkdownSerializer implements NodeBuilder<string> {
 
   listItem(children: string[]): string {
     const content = children.join("\n")
-    // Handle nested lists by indenting
     const lines = content.split("\n")
     const firstLine = lines[0]
     const restLines = lines.slice(1).map((line) => `  ${line}`)
@@ -59,7 +57,6 @@ export class MarkdownSerializer implements NodeBuilder<string> {
 
   blockquote(children: string[]): string {
     const content = children.join("\n")
-    // Prefix each line with > for markdown blockquote
     return content
       .split("\n")
       .map((line) => (line.trim() ? `> ${line}` : ">"))
@@ -77,7 +74,6 @@ export class MarkdownSerializer implements NodeBuilder<string> {
   }
 
   customBlock(name: string, properties: Record<string, any>): string {
-    // Convert custom blocks to JSX-style components for MDX compatibility
     const propsString = Object.entries(properties)
       .map(([key, value]) => {
         if (typeof value === "string") {
@@ -99,11 +95,6 @@ export class MarkdownSerializer implements NodeBuilder<string> {
   }
 
   escape(text: string): string {
-    // Minimal escaping for Markdown - only escape characters that would conflict with syntax
-    // Note: We don't aggressively escape everything because:
-    // 1. The marks (bold/italic/link) provide context that prevents ambiguity
-    // 2. Over-escaping makes the Markdown harder to read
-    // 3. Most markdown parsers handle literal characters well within marked sections
     return text
       .replace(/\\/g, "\\\\") // Backslash must be escaped
       .replace(/\[/g, "\\[") // Opening bracket (for links)

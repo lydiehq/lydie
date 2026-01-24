@@ -3,9 +3,7 @@ import type { OnboardingStatus, OnboardingStep } from "@lydie/core/onboarding-st
 import { db, organizationSettingsTable } from "@lydie/database"
 import { eq } from "drizzle-orm"
 
-/**
- * Navigate to a specific onboarding step
- */
+// Navigate to a specific onboarding step
 export async function navigateToOnboardingStep(page: Page, step: OnboardingStep) {
   const stepMap: Record<OnboardingStep, number> = {
     documents: 0,
@@ -34,9 +32,7 @@ export async function navigateToOnboardingStep(page: Page, step: OnboardingStep)
   }
 }
 
-/**
- * Get onboarding status from database
- */
+// Get onboarding status from database
 export async function getOnboardingStatus(organizationId: string): Promise<OnboardingStatus | null> {
   const [settings] = await db
     .select()
@@ -51,9 +47,7 @@ export async function getOnboardingStatus(organizationId: string): Promise<Onboa
   return settings.onboardingStatus as OnboardingStatus
 }
 
-/**
- * Update onboarding status in database
- */
+// Update onboarding status in database
 export async function updateOnboardingStatus(
   organizationId: string,
   status: Partial<OnboardingStatus>,
@@ -87,9 +81,7 @@ export async function updateOnboardingStatus(
     .where(eq(organizationSettingsTable.id, settings.id))
 }
 
-/**
- * Mark onboarding as completed
- */
+// Mark onboarding as completed
 export async function completeOnboarding(organizationId: string) {
   await updateOnboardingStatus(organizationId, {
     isCompleted: true,
@@ -97,9 +89,7 @@ export async function completeOnboarding(organizationId: string) {
   })
 }
 
-/**
- * Reset onboarding to initial state
- */
+// Reset onboarding to initial state
 export async function resetOnboarding(organizationId: string) {
   await updateOnboardingStatus(organizationId, {
     currentStep: "documents",
@@ -110,9 +100,7 @@ export async function resetOnboarding(organizationId: string) {
   })
 }
 
-/**
- * Check if a specific checklist item is checked
- */
+// Check if a specific checklist item is checked
 export async function isChecklistItemChecked(
   organizationId: string,
   item: string,
@@ -121,9 +109,7 @@ export async function isChecklistItemChecked(
   return status?.checkedItems?.includes(item as any) || false
 }
 
-/**
- * Wait for onboarding state to sync (useful for multi-tab tests)
- */
+// Wait for onboarding state to sync (useful for multi-tab tests)
 export async function waitForOnboardingSync(page: Page, timeoutMs = 2000) {
   await page.waitForTimeout(timeoutMs)
 }

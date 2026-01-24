@@ -34,10 +34,8 @@ export const PublicApi = new Hono()
     const outputPath = path.join("/tmp", `${inputId}.${to}`)
 
     try {
-      // Write input to temp file
       await writeFile(inputPath, content, "utf-8")
 
-      // Build pandoc command
       const args = [`"${inputPath}"`, "-o", `"${outputPath}"`, "-f", from, "-t", to]
 
       if (options?.standalone) args.push("--standalone")
@@ -52,13 +50,10 @@ export const PublicApi = new Hono()
         console.warn("Pandoc warning:", stderr)
       }
 
-      // Read output file
       const outputBuffer = await readFile(outputPath)
 
-      // Cleanup temp files
       await Promise.all([unlink(inputPath).catch(() => {}), unlink(outputPath).catch(() => {})])
 
-      // Determine content type
       const contentTypes: Record<string, string> = {
         html: "text/html",
         pdf: "application/pdf",

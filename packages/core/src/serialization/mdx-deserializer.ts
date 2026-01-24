@@ -8,7 +8,6 @@ export interface MDXDeserializeOptions {
   componentSchemas?: Record<string, any>
 }
 
-// MDX Component regex patterns
 const COMPONENT_REGEX = /<(\w+)([^>]*)>(.*?)<\/\1>|<(\w+)([^>]*?)\/>/gs
 const PROP_REGEX = /(\w+)=(?:{([^}]+)}|"([^"]*)")/g
 
@@ -20,10 +19,8 @@ function parseProps(propString: string): Record<string, any> {
     const [, key, jsValue, stringValue] = match
     if (jsValue) {
       try {
-        // Try to parse as JSON for objects/arrays/booleans/numbers
         props[key] = JSON.parse(jsValue)
       } catch {
-        // If parsing fails, treat as string
         props[key] = jsValue
       }
     } else {
@@ -66,14 +63,11 @@ export function extractMDXComponents(content: string): {
   return { components, cleanContent }
 }
 
-/**
- * Deserialize MDX string to TipTap JSON
- * Handles MDX components, frontmatter, and standard markdown
- */
+// Deserialize MDX string to TipTap JSON
+// Handles MDX components, frontmatter, and standard markdown
 export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOptions = {}): any {
   const { componentSchemas = {} } = options
 
-  // Extract MDX components first
   const { components, cleanContent } = extractMDXComponents(mdxContent)
 
   const lines = cleanContent.split("\n")
@@ -95,7 +89,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
 
   const closeParagraph = () => {
     if (currentParagraph) {
-      // Only add non-empty paragraphs
       if (currentParagraph.content.length > 0) {
         content.push(currentParagraph)
       }
@@ -110,20 +103,16 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       return [{ type: "text", text: "" }]
     }
 
-    // Simple approach: split by patterns and process sequentially
-    // Priority: links > bold > italic
     const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g
     let lastIndex = 0
     let match
 
     while ((match = linkPattern.exec(text)) !== null) {
-      // Add text before the link
       if (match.index > lastIndex) {
         const beforeText = text.substring(lastIndex, match.index)
         textNodes.push(...parseBoldItalic(beforeText))
       }
 
-      // Add the link
       textNodes.push({
         type: "text",
         text: match[1],
@@ -133,13 +122,11 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       lastIndex = match.index + match[0].length
     }
 
-    // Add remaining text after last link
     if (lastIndex < text.length) {
       const remainingText = text.substring(lastIndex)
       textNodes.push(...parseBoldItalic(remainingText))
     }
 
-    // Helper to parse bold and italic (bold takes priority)
     function parseBoldItalic(segment: string): any[] {
       if (!segment) return []
 
@@ -149,13 +136,11 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       let boldMatch
 
       while ((boldMatch = boldPattern.exec(segment)) !== null) {
-        // Add text before bold
         if (boldMatch.index > lastIdx) {
           const beforeText = segment.substring(lastIdx, boldMatch.index)
           nodes.push(...parseItalic(beforeText))
         }
 
-        // Add bold text
         nodes.push({
           type: "text",
           text: boldMatch[1],
@@ -165,7 +150,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
         lastIdx = boldMatch.index + boldMatch[0].length
       }
 
-      // Add remaining text
       if (lastIdx < segment.length) {
         const remaining = segment.substring(lastIdx)
         nodes.push(...parseItalic(remaining))
@@ -174,7 +158,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       return nodes.length > 0 ? nodes : [{ type: "text", text: segment }]
     }
 
-    // Helper to parse italic
     function parseItalic(segment: string): any[] {
       if (!segment) return []
 
@@ -184,7 +167,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       let italicMatch
 
       while ((italicMatch = italicPattern.exec(segment)) !== null) {
-        // Add text before italic
         if (italicMatch.index > lastIdx) {
           nodes.push({
             type: "text",
@@ -192,7 +174,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
           })
         }
 
-        // Add italic text
         nodes.push({
           type: "text",
           text: italicMatch[1],
@@ -202,7 +183,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
         lastIdx = italicMatch.index + italicMatch[0].length
       }
 
-      // Add remaining text
       if (lastIdx < segment.length) {
         nodes.push({
           type: "text",
@@ -219,11 +199,9 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
-    // Handle code blocks (```language or ```)
     const codeBlockStartMatch = line.match(/^```([\w-]+)?$/)
     if (codeBlockStartMatch) {
       if (inCodeBlock) {
-        // End of code block
         closeParagraph()
         closeList()
 
@@ -245,7 +223,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
         codeBlockLanguage = null
         codeBlockLines = []
       } else {
-        // Start of code block
         closeParagraph()
         closeList()
         inCodeBlock = true
@@ -255,13 +232,11 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    // If we're inside a code block, collect lines
     if (inCodeBlock) {
       codeBlockLines.push(line)
       continue
     }
 
-    // Handle headings (# ## ###)
     if (line.trim().startsWith("#")) {
       closeParagraph()
       closeList()
@@ -279,7 +254,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    // Handle horizontal rules (---)
     if (line.trim() === "---" || line.trim() === "***") {
       closeParagraph()
       closeList()
@@ -289,7 +263,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    // Handle unordered lists (-, *, +)
     const unorderedMatch = line.match(/^(\s*)([-*+])\s+(.+)$/)
     if (unorderedMatch) {
       closeParagraph()
@@ -318,7 +291,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    // Handle ordered lists (1., 2., etc.)
     const orderedMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/)
     if (orderedMatch) {
       closeParagraph()
@@ -349,7 +321,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    // Handle component placeholders
     const componentMatch = line.match(/\[COMPONENT:(\d+)\]/)
     if (componentMatch) {
       closeParagraph()
@@ -359,7 +330,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       const component = components[componentIndex]
 
       if (component) {
-        // Get schema for this component
         const schema = componentSchemas[component.name] || {}
 
         content.push({
@@ -374,14 +344,12 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
       continue
     }
 
-    // Handle empty lines
     if (line.trim() === "") {
       closeParagraph()
       closeList()
       continue
     }
 
-    // Handle regular text
     closeList()
 
     if (!currentParagraph) {
@@ -395,11 +363,9 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
     currentParagraph.content.push(...textNodes)
   }
 
-  // Close any remaining open elements
   closeParagraph()
   closeList()
 
-  // Close any remaining code block
   if (inCodeBlock) {
     const codeText = codeBlockLines.join("\n")
     content.push({
@@ -416,7 +382,6 @@ export function deserializeFromMDX(mdxContent: string, options: MDXDeserializeOp
     })
   }
 
-  // Ensure we always have at least one content node
   if (content.length === 0) {
     content.push({
       type: "paragraph",

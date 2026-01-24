@@ -44,7 +44,6 @@ Rules:
 
     const exactMatch = text.trim()
 
-    // Validate that the LLM didn't hallucinate
     if (exactMatch === "NOT_FOUND" || !currentHTML.includes(exactMatch)) {
       return c.json({
         success: false,
@@ -53,7 +52,6 @@ Rules:
       })
     }
 
-    // Return the exact match so the client can do the replacement
     return c.json({
       success: true,
       exactMatch,

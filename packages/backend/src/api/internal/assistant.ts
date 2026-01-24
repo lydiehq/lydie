@@ -70,14 +70,12 @@ export const AssistantRoute = new Hono<{
         .where(eq(assistantConversationsTable.id, conversationId))
 
       if (conversation) {
-        // Verify conversation belongs to the organization from context
         if (conversation.organizationId !== organizationId) {
           throw new HTTPException(403, {
             message: "You are not authorized to access this conversation",
           })
         }
 
-        // Verify conversation belongs to the user
         if (conversation.userId !== userId) {
           throw new HTTPException(403, {
             message: "You are not authorized to access this conversation",
@@ -134,7 +132,6 @@ export const AssistantRoute = new Hono<{
       }
     }
 
-    // Fetch current document first
     let currentDocument: { id: string; title: string; organizationId: string } | null = null
 
     if (currentDocumentId) {
@@ -163,7 +160,6 @@ export const AssistantRoute = new Hono<{
       currentDocument = document
     }
 
-    // Resolve context document IDs to full document info
     const contextDocumentIds: string[] = Array.isArray(contextDocumentIdsRaw)
       ? contextDocumentIdsRaw.filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
       : []
@@ -200,7 +196,6 @@ export const AssistantRoute = new Hono<{
       },
     })
 
-    // Fetch agent for system prompt
     const effectiveAgentId = agentId || conversation?.agentId
     let agentSystemPrompt: string
 
@@ -219,7 +214,6 @@ export const AssistantRoute = new Hono<{
 
       agentSystemPrompt = agent.systemPrompt
     } else {
-      // Use default agent if no agent specified
       const [defaultAgent] = await db
         .select()
         .from(assistantAgentsTable)
@@ -311,7 +305,6 @@ export const AssistantRoute = new Hono<{
       onFinish: async ({ messages: finalMessages }) => {
         const assistantMessage = finalMessages[finalMessages.length - 1]
 
-        // Save assistant message without context information (context only applies to user messages)
         const savedMessage = await saveMessage({
           conversationId,
           parts: assistantMessage.parts,
@@ -319,12 +312,9 @@ export const AssistantRoute = new Hono<{
           role: "assistant",
         })
 
-        // Extract usage data from metadata
         const totalTokens = (assistantMessage.metadata as MessageMetadata)?.usage || 0
 
-        // Save LLM usage data to the usage table
         if (totalTokens > 0) {
-          // Estimate token split (Gemini doesn't always provide detailed breakdown)
           const promptTokens = Math.floor(totalTokens * 0.7)
           const completionTokens = totalTokens - promptTokens
 
@@ -370,7 +360,6 @@ function createContextInfo({
   let context = `<additional_data>
 Below are some potentially helpful pieces of information for responding to the user's request:`
 
-  // Filter out current document from context documents to avoid duplication
   const otherContextDocuments = contextDocuments.filter(
     (doc) => !currentDocument || doc.id !== currentDocument.id,
   )

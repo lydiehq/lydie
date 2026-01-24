@@ -1,5 +1,3 @@
-// Types for document content structure (TipTap JSON format)
-
 export interface Mark {
   type: string
   attrs?: {

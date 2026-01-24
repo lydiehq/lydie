@@ -282,9 +282,7 @@ export class ReactBuilder implements NodeBuilder<React.ReactNode> {
   }
 }
 
-/**
- * Render content to React elements
- */
+// Render content to React elements
 export function renderContentToReact(
   content: ContentNode,
   customComponents?: Record<string, React.ComponentType<CustomBlockProps>>,

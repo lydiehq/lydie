@@ -59,7 +59,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
   const params = useParams({ strict: false })
   const z = useZero()
 
-  // Access the editors from global state - only this component will re-render when editors change
   const editor = useDocumentEditor()
   const titleEditor = useTitleEditor()
   const setPendingChange = useSetAtom(pendingEditorChangeAtom)
@@ -72,9 +71,7 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
   const replaceText = tool.input?.replace || tool.output?.replace || ""
   const searchText = tool.input?.search || tool.output?.search || ""
 
-  // Sync state with pending change status
   useEffect(() => {
-    // Check if there's a pending change that matches this tool
     const isMatchingPendingChange =
       pendingChange &&
       pendingChange.documentId === (targetDocumentId || params.id) &&
@@ -83,7 +80,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       pendingChange.title === newTitle
 
     if (isMatchingPendingChange) {
-      // Sync with the pending change status
       if (pendingChangeStatus === "applying") {
         setIsApplying(true)
         setIsUsingLLM(false) // Will be set by the apply function if needed
@@ -103,10 +99,7 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
         setApplyStatus("Navigating to document...")
       }
     } else if (!pendingChange && pendingChangeStatus === null) {
-      // If there's no pending change and no status, and we were navigating/applying,
-      // it means the change was applied and cleared
       if (isApplying && (applyStatus === "Navigating to document..." || applyStatus === "Applying...")) {
-        // Check if we're on the target document (meaning navigation completed)
         if (targetDocumentId === params.id || !targetDocumentId) {
           setIsApplied(true)
           setIsApplying(false)
@@ -157,7 +150,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       return
     }
 
-    // If we're applying to a different document, set pending change and navigate
     if (targetDocumentId && targetDocumentId !== params.id) {
       setIsApplying(true)
       setApplyStatus("Navigating to document...")
@@ -172,7 +164,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       })
       setPendingChangeStatus("pending")
 
-      // Navigate - the Editor component will apply changes when ready
       setTimeout(() => {
         navigate({
           to: "/w/$organizationSlug/$id",
@@ -186,7 +177,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       return
     }
 
-    // For current document, we need the editors
     const currentDocId = targetDocumentId || params.id
     if (!currentDocId || (!editor && !titleEditor)) {
       return
@@ -199,7 +189,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       let contentSuccess = true
       let titleSuccess = true
 
-      // Apply title change if provided
       if (newTitle && titleEditor) {
         const titleResult = await applyTitleChange(
           titleEditor,
@@ -214,7 +203,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
         }
       }
 
-      // Apply content changes if provided
       if (replaceText && editor) {
         const result = await applyContentChanges(
           editor,
@@ -259,13 +247,10 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
   const handleCopy = async () => {
     if (replaceText) {
       try {
-        // Extract plain text from HTML for fallback
         const tempDiv = document.createElement("div")
         tempDiv.innerHTML = replaceText
         const plainText = tempDiv.textContent || tempDiv.innerText || ""
 
-        // Create a ClipboardItem with both HTML and plain text formats
-        // This allows Word and other applications to preserve formatting
         const clipboardItem = new ClipboardItem({
           "text/html": new Blob([replaceText], { type: "text/html" }),
           "text/plain": new Blob([plainText], { type: "text/plain" }),
@@ -273,7 +258,6 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
 
         await navigator.clipboard.write([clipboardItem])
       } catch (error) {
-        // Fallback to plain text if ClipboardItem API is not supported
         console.warn("Rich text copy failed, falling back to plain text:", error)
         await navigator.clipboard.writeText(replaceText)
       }
