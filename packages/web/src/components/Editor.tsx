@@ -14,11 +14,18 @@ import { mutators } from "@lydie/zero/mutators"
 import { useDocumentEditor } from "@/lib/editor/document-editor"
 import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs"
 import { CoverImageEditor } from "./editor/CoverImageEditor"
-import { useSetAtom, useAtom } from "jotai"
-import { documentEditorAtom, titleEditorAtom, pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
+import { useSetAtom, useAtom, useAtomValue } from "jotai"
+import {
+  documentEditorAtom,
+  titleEditorAtom,
+  pendingEditorChangeAtom,
+  pendingChangeStatusAtom,
+} from "@/atoms/editor"
 import { applyContentChanges } from "@/utils/document-changes"
 import { applyTitleChange } from "@/utils/title-changes"
 import { toast } from "sonner"
+import { isDockedAtom, isOpenAtom } from "@/stores/floating-assistant"
+import clsx from "clsx"
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>
@@ -39,11 +46,17 @@ function EditorContainer({ doc }: Props) {
   const openLinkDialogRef = useRef<(() => void) | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isLocked = doc.is_locked ?? false
-  
+
   const setDocumentEditor = useSetAtom(documentEditorAtom)
   const setTitleEditor = useSetAtom(titleEditorAtom)
   const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom)
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom)
+  const isDocked = useAtomValue(isDockedAtom)
+  const isAssistantOpen = useAtomValue(isOpenAtom)
+
+  // When assistant is undocked and open, shift content left to avoid overlap
+  // Only apply on screens smaller than 2xl (1536px) to avoid unnecessary adjustments on ultrawide monitors
+  const shouldShiftContent = !isDocked && isAssistantOpen
 
   const handleTitleUpdate = (newTitle: string) => {
     const finalTitle = newTitle.trim()
@@ -121,13 +134,13 @@ function EditorContainer({ doc }: Props) {
   useEffect(() => {
     if (!pendingChange) return
     if (!contentEditor.editor && !titleEditor.editor) return
-    
+
     if (pendingChange.documentId !== doc.id) return
 
     const applyPendingChange = async () => {
       setPendingChangeStatus("applying")
       toast.info("Applying changes...")
-      
+
       try {
         let contentSuccess = true
         let titleSuccess = true
@@ -194,7 +207,15 @@ function EditorContainer({ doc }: Props) {
     return () => {
       clearTimeout(timeoutId)
     }
-  }, [contentEditor.editor, titleEditor.editor, doc.id, pendingChange, setPendingChange, setPendingChangeStatus, z])
+  }, [
+    contentEditor.editor,
+    titleEditor.editor,
+    doc.id,
+    pendingChange,
+    setPendingChange,
+    setPendingChangeStatus,
+    z,
+  ])
 
   if (!contentEditor.editor || !titleEditor.editor) {
     return null
@@ -213,7 +234,10 @@ function EditorContainer({ doc }: Props) {
             )}
             <div
               ref={scrollContainerRef}
-              className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"
+              className={clsx(
+                "flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative transition-[padding] duration-700 ease-in-out",
+                shouldShiftContent ? "max-2xl:pl-4 max-2xl:pr-[300px]" : "px-4",
+              )}
             >
               <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
                 <CoverImageEditor
