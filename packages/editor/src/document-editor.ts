@@ -17,6 +17,9 @@ export interface GetDocumentEditorExtensionsOptions {
   codeBlock?: Partial<E.CodeBlockOptions>;
   onboardingStep?: Partial<E.OnboardingStepOptions>;
   onboardingCallout?: Partial<E.OnboardingCalloutOptions>;
+  onboardingTextPractice?: Partial<E.OnboardingTextPracticeOptions>;
+  onboardingAssistantTask?: Partial<E.OnboardingAssistantTaskOptions>;
+  onboardingPlaceholder?: Partial<E.OnboardingPlaceholderOptions>;
   collaboration?: Partial<CollaborationOptions>;
   collaborationCaret?: Partial<CollaborationCaretOptions>;
 }
@@ -44,6 +47,9 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.CodeBlock.configure(options?.codeBlock),
     E.OnboardingStep.configure(options?.onboardingStep),
     E.OnboardingCallout.configure(options?.onboardingCallout),
+    E.OnboardingTextPractice.configure(options?.onboardingTextPractice),
+    E.OnboardingAssistantTask.configure(options?.onboardingAssistantTask),
+    E.OnboardingPlaceholder.configure(options?.onboardingPlaceholder),
     E.IndentHandlerExtension,
     E.ImageUpload,
   ];

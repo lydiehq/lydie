@@ -47,11 +47,18 @@ export function AssistantChat({
 
   const handleSubmit = useCallback(
     (text: string, contextDocumentIds: string[]) => {
+      // Build contextDocuments array with metadata
+      const contextDocuments = contextDocumentIds.map((id) => ({
+        id,
+        title: "", // Will be fetched from database on backend
+        current: false, // No current document in assistant-only context
+      }));
+
       sendMessage({
         text,
         metadata: {
           createdAt: new Date().toISOString(),
-          contextDocumentIds,
+          contextDocuments,
         },
       });
 

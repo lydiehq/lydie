@@ -7,14 +7,6 @@ import { hasOrganizationAccess, isAuthenticated } from "../auth";
 import { zql } from "../schema";
 import { withTimestamps, withUpdatedTimestamp } from "../utils/timestamps";
 
-const DEFAULT_ONBOARDING_STATUS = {
-  currentStep: "documents",
-  isCompleted: false,
-  completedSteps: [],
-  checkedItems: [],
-  createdDemoGuide: false,
-};
-
 export const organizationMutators = {
   create: defineMutator(
     z.object({
@@ -69,12 +61,11 @@ export const organizationMutators = {
         }),
       );
 
-      // Create default organization settings with default onboarding status
+      // Create default organization settings
       await tx.mutate.organization_settings.insert(
         withTimestamps({
           id: createId(),
           organization_id: id,
-          onboarding_status: DEFAULT_ONBOARDING_STATUS,
         }),
       );
 

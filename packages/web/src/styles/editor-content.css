@@ -540,7 +540,6 @@
     margin-top: 0;
   }
 
-  /* Reset link styles */
   a {
     color: inherit;
     text-underline-offset: 0;
@@ -560,7 +559,6 @@
     margin-right: 0;
   }
 
-  /* Reset strong styles */
   strong {
     color: inherit;
     font-weight: inherit;
@@ -1100,7 +1098,6 @@
   }
 }
 
-/* Reset class to negate all editor-content styles - similar to Tailwind's no-prose */
 .editor-content-reset,
 .editor-content .editor-content-reset,
 .editor-content-sm .editor-content-reset {

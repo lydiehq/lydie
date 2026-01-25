@@ -15,13 +15,11 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { Command } from "cmdk";
 import { cva } from "cva";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, ModalOverlay } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
-import { useOnboardingSteps } from "@/hooks/use-onboarding-steps";
 import { useZero } from "@/services/zero";
 import { commandMenuOpenAtom, commandMenuStateAtom } from "@/stores/command-menu";
 import { confirmDialog } from "@/stores/confirm-dialog";
@@ -56,7 +54,6 @@ export function CommandMenu() {
   const [search, setSearch] = useState("");
   const [pages, setPages] = useState<string[]>([]);
   const currentPage = pages[pages.length - 1];
-  const checkedItemsRef = useRef<Set<string>>(new Set());
 
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
@@ -93,8 +90,6 @@ export function CommandMenu() {
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
   const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom);
-  const { setChecked } = useOnboardingChecklist();
-  const { currentStep } = useOnboardingSteps();
 
   const handleOpenChange = useCallback(
     (newIsOpen: boolean) => {
@@ -124,24 +119,13 @@ export function CommandMenu() {
         if (isInEditor) return;
 
         e.preventDefault();
-        const willOpen = !isOpen;
-
-        if (
-          willOpen &&
-          currentStep === "documents" &&
-          !checkedItemsRef.current.has("documents:open-command-menu")
-        ) {
-          checkedItemsRef.current.add("documents:open-command-menu");
-          setChecked("documents:open-command-menu", true);
-        }
-
-        handleOpenChange(willOpen);
+        handleOpenChange(!isOpen);
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, handleOpenChange, currentStep, setChecked]);
+  }, [isOpen, handleOpenChange]);
 
   const handleCommand = useCallback(
     (action: () => void) => {
@@ -342,8 +326,6 @@ export function CommandMenu() {
     organization.slug,
     pages,
     z,
-    currentStep,
-    setChecked,
     handleOpenChange,
     publishDocument,
   ]);

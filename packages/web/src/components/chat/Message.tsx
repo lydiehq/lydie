@@ -193,33 +193,8 @@ function MessageContext({
   const metadata = message.metadata as any;
 
   const contextDocuments = metadata?.contextDocuments || [];
-  const currentDocumentId = metadata?.currentDocumentId;
 
-  const allContextDocs = useMemo(() => {
-    const docs: Array<{ id: string; title: string }> = [];
-    const seenIds = new Set<string>();
-
-    if (currentDocumentId) {
-      const currentDoc = contextDocuments.find(
-        (doc: { id: string }) => doc.id === currentDocumentId,
-      );
-      if (currentDoc && !seenIds.has(currentDoc.id)) {
-        docs.push(currentDoc);
-        seenIds.add(currentDoc.id);
-      }
-    }
-
-    for (const doc of contextDocuments) {
-      if (!seenIds.has(doc.id)) {
-        docs.push(doc);
-        seenIds.add(doc.id);
-      }
-    }
-
-    return docs;
-  }, [currentDocumentId]);
-
-  if (allContextDocs.length === 0) {
+  if (contextDocuments.length === 0) {
     return null;
   }
 
@@ -227,7 +202,7 @@ function MessageContext({
     <div className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}>
       <div className="text-[10px] text-gray-500 font-medium mb-0.5">Context documents:</div>
       <ul className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}>
-        {allContextDocs.map((doc) => (
+        {contextDocuments.map((doc: { id: string; title: string; current?: boolean }) => (
           <li key={doc.id}>
             <Link
               to="/w/$organizationSlug/$id"
@@ -248,7 +223,10 @@ function MessageContext({
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span className="max-w-[200px] truncate">{doc.title}</span>
+              <span className="max-w-[200px] truncate">
+                {doc.title}
+                {doc.current && " (current)"}
+              </span>
             </Link>
           </li>
         ))}

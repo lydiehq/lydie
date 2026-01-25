@@ -38,11 +38,10 @@ export const messageMetadataSchema = z
         z.object({
           id: z.string(),
           title: z.string(),
+          current: z.boolean().optional(),
         }),
       )
       .optional(),
-    currentDocumentId: z.string().optional(),
-    contextDocumentIds: z.array(z.string()).optional(),
     documentWordCount: z.number().optional(),
   })
   .passthrough();
@@ -68,21 +67,13 @@ export const AssistantRoute = new Hono<{
       [conversation] = await db
         .select()
         .from(assistantConversationsTable)
-        .where(eq(assistantConversationsTable.id, conversationId));
-
-      if (conversation) {
-        if (conversation.organizationId !== organizationId) {
-          throw new HTTPException(403, {
-            message: "You are not authorized to access this conversation",
-          });
-        }
-
-        if (conversation.userId !== userId) {
-          throw new HTTPException(403, {
-            message: "You are not authorized to access this conversation",
-          });
-        }
-      }
+        .where(
+          and(
+            eq(assistantConversationsTable.id, conversationId),
+            eq(assistantConversationsTable.organizationId, organizationId),
+            eq(assistantConversationsTable.userId, userId),
+          ),
+        );
     }
 
     if (!conversation) {
@@ -100,10 +91,9 @@ export const AssistantRoute = new Hono<{
     const user = c.get("user");
 
     const messageMetadata = latestMessage?.metadata ?? {};
-    const currentDocumentId = messageMetadata.currentDocumentId as string | undefined;
     const documentWordCount = messageMetadata.documentWordCount as number | undefined;
-    const contextDocumentIdsRaw = Array.isArray(messageMetadata.contextDocumentIds)
-      ? messageMetadata.contextDocumentIds
+    const contextDocumentsFromMetadata = Array.isArray(messageMetadata.contextDocuments)
+      ? messageMetadata.contextDocuments
       : [];
 
     const organization = await db.query.organizationsTable.findFirst({
@@ -133,46 +123,19 @@ export const AssistantRoute = new Hono<{
       }
     }
 
-    let currentDocument: {
-      id: string;
-      title: string;
-      organizationId: string;
-    } | null = null;
+    // Extract document IDs and validate they exist in the database
+    const contextDocumentIds: string[] = Array.from(
+      new Set(
+        contextDocumentsFromMetadata
+          .filter((doc: any): doc is { id: string; current?: boolean } => 
+            typeof doc === "object" && typeof doc.id === "string" && doc.id.length > 0
+          )
+          .map((doc: { id: string; current?: boolean }) => doc.id)
+      )
+    );
 
-    if (currentDocumentId) {
-      const [document] = await db
-        .select({
-          id: documentsTable.id,
-          title: documentsTable.title,
-          organizationId: documentsTable.organizationId,
-        })
-        .from(documentsTable)
-        .where(
-          and(
-            eq(documentsTable.id, currentDocumentId),
-            eq(documentsTable.organizationId, organizationId),
-            sql`${documentsTable.deletedAt} IS NULL`,
-          ),
-        )
-        .limit(1);
-
-      if (!document) {
-        throw new HTTPException(404, {
-          message: "Document not found",
-        });
-      }
-
-      currentDocument = document;
-    }
-
-    const contextDocumentIds: string[] = Array.isArray(contextDocumentIdsRaw)
-      ? contextDocumentIdsRaw.filter(
-          (id: unknown): id is string => typeof id === "string" && id.length > 0,
-        )
-      : [];
-    const uniqueContextDocumentIds = Array.from(new Set(contextDocumentIds));
     const contextDocuments =
-      uniqueContextDocumentIds.length > 0
+      contextDocumentIds.length > 0
         ? await db
             .select({
               id: documentsTable.id,
@@ -182,11 +145,23 @@ export const AssistantRoute = new Hono<{
             .where(
               and(
                 eq(documentsTable.organizationId, organizationId),
-                inArray(documentsTable.id, uniqueContextDocumentIds),
+                inArray(documentsTable.id, contextDocumentIds),
                 sql`${documentsTable.deletedAt} IS NULL`,
               ),
             )
         : [];
+
+    // Merge database info with metadata to preserve the 'current' flag
+    const contextDocumentsWithMetadata = contextDocuments.map((doc) => {
+      const metadataDoc = contextDocumentsFromMetadata.find((d: any) => d.id === doc.id);
+      return {
+        id: doc.id,
+        title: doc.title || "Untitled document",
+        current: metadataDoc?.current === true,
+      };
+    });
+
+    const currentDocument = contextDocumentsWithMetadata.find((doc) => doc.current) || null;
 
     // Save the user message after limit check passes with enhanced metadata
     await saveMessage({
@@ -195,11 +170,7 @@ export const AssistantRoute = new Hono<{
       role: "user",
       metadata: {
         ...latestMessage.metadata,
-        contextDocuments: contextDocuments.map((doc) => ({
-          id: doc.id,
-          title: doc.title || "Untitled document",
-        })),
-        currentDocumentId: currentDocument?.id,
+        contextDocuments: contextDocumentsWithMetadata,
       },
     });
 
@@ -243,8 +214,7 @@ export const AssistantRoute = new Hono<{
     const startTime = Date.now();
 
     const contextInfo = createContextInfo({
-      currentDocument,
-      contextDocuments,
+      contextDocuments: contextDocumentsWithMetadata,
       documentWordCount,
       focusedContent: messageMetadata.focusedContent,
     });
@@ -284,7 +254,7 @@ export const AssistantRoute = new Hono<{
       tools.search_in_document = searchInDocument(
         currentDocument.id,
         userId,
-        currentDocument.organizationId,
+        organizationId,
       );
       tools.replace_in_document = replaceInDocument();
     }
@@ -349,6 +319,7 @@ export const AssistantRoute = new Hono<{
       },
     });
   } catch (e) {
+    console.error(e);
     if (e instanceof VisibleError) {
       throw e;
     }
@@ -361,28 +332,28 @@ export const AssistantRoute = new Hono<{
 });
 
 function createContextInfo({
-  currentDocument,
   contextDocuments,
   documentWordCount,
   focusedContent,
 }: {
-  currentDocument: { id: string; title: string; organizationId: string } | null;
-  contextDocuments: Array<{ id: string; title: string | null }>;
+  contextDocuments: Array<{ id: string; title: string; current?: boolean }>;
   documentWordCount?: number;
   focusedContent?: string;
 }) {
-  if (!currentDocument && contextDocuments.length === 0 && !focusedContent && !documentWordCount) {
+  if (contextDocuments.length === 0 && !focusedContent && !documentWordCount) {
     return "";
   }
 
   let context = `<additional_data>
 Below are some potentially helpful pieces of information for responding to the user's request:`;
 
+  const currentDocument = contextDocuments.find((doc) => doc.current);
+
   if (currentDocument) {
     context += `
 
 Primary Document (when user says "this document", they refer to this):
-- Title: ${currentDocument.title || "Untitled document"}
+- Title: ${currentDocument.title}
 - ID: ${currentDocument.id}
 - IMPORTANT: If the user asks to make changes to "this document" or similar, you should read this document first using read_document or read_current_document before making modifications.`;
   }
@@ -399,9 +370,8 @@ Primary Document Word Count: ${documentWordCount}`;
 Context Documents (available for reading and reference):
 IMPORTANT: These documents are provided as context. If the user asks to modify a document or make changes, you should read the relevant document(s) first using read_document before making modifications.`;
     for (const doc of contextDocuments) {
-      const isPrimary = currentDocument && doc.id === currentDocument.id;
       context += `
-- ${doc.title || "Untitled document"} (ID: ${doc.id})${isPrimary ? " [Primary Document]" : ""}`;
+- ${doc.title} (ID: ${doc.id})${doc.current ? " [Primary Document]" : ""}`;
     }
   }
 

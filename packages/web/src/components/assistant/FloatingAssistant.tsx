@@ -296,12 +296,18 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
 
   const handleSubmit = useCallback(
     (text: string, contextDocumentIds: string[]) => {
+      // Build contextDocuments array with current flag
+      const contextDocuments = contextDocumentIds.map((id) => ({
+        id,
+        title: "", // Will be fetched from database on backend
+        current: id === currentDocumentId,
+      }));
+
       sendMessage({
         text,
         metadata: {
           createdAt: new Date().toISOString(),
-          contextDocumentIds,
-          currentDocumentId: currentDocumentId || undefined,
+          contextDocuments,
         },
         agentId: selectedAgentId,
       });
@@ -348,12 +354,22 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
 
   const handleSuggestionClick = useCallback(
     (suggestionText: string) => {
+      // Build contextDocuments array with current flag
+      const contextDocuments = currentDocumentId
+        ? [
+            {
+              id: currentDocumentId,
+              title: "", // Will be fetched from database on backend
+              current: true,
+            },
+          ]
+        : [];
+
       sendMessage({
         text: suggestionText,
         metadata: {
           createdAt: new Date().toISOString(),
-          contextDocumentIds: currentDocumentId ? [currentDocumentId] : [],
-          currentDocumentId: currentDocumentId || undefined,
+          contextDocuments,
         },
         agentId: selectedAgentId,
       });

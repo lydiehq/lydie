@@ -20,3 +20,12 @@ export type { OnboardingStepOptions, OnboardingStepTask } from "./onboarding-ste
 
 export { OnboardingCallout } from "./onboarding-callout";
 export type { OnboardingCalloutOptions } from "./onboarding-callout";
+
+export { OnboardingTextPractice } from "./onboarding-text-practice";
+export type { OnboardingTextPracticeOptions, OnboardingTextPracticeTask } from "./onboarding-text-practice";
+
+export { OnboardingAssistantTask } from "./onboarding-assistant-task";
+export type { OnboardingAssistantTaskOptions } from "./onboarding-assistant-task";
+
+export { OnboardingPlaceholder } from "./onboarding-placeholder";
+export type { OnboardingPlaceholderOptions } from "./onboarding-placeholder";

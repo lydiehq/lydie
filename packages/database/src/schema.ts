@@ -411,7 +411,6 @@ export const organizationSettingsTable = pgTable("organization_settings", {
     .notNull()
     .unique()
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
-  onboardingStatus: jsonb("onboarding_status"),
   ...timestamps,
 });
 

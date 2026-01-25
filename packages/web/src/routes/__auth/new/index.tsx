@@ -8,7 +8,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
-import { toast } from "sonner";
 import z from "zod";
 
 import { Button } from "@/components/generic/Button";
@@ -76,11 +75,8 @@ function RouteComponent() {
             params: { organizationSlug: slug, id: onboardingDocId },
           });
         }
-
-        toast.success("Workspace created successfully");
       } catch (error) {
         console.error("Failed to create workspace:", error);
-        toast.error("Failed to create workspace");
       }
     },
   });
@@ -96,11 +92,8 @@ function RouteComponent() {
       });
       await revalidateSession(queryClient);
       await router.invalidate();
-      toast.success("Invitation accepted");
       navigate({ to: "/" });
-    } catch {
-      toast.error("Failed to accept invitation");
-    }
+    } catch {}
   };
 
   return (

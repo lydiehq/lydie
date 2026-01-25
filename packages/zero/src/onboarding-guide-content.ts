@@ -31,206 +31,77 @@ export function createOnboardingGuideContent(documentIdMap: Map<string, string>)
         },
       },
       {
-        type: "onboardingStep",
+        type: "onboardingTextPractice",
         attrs: {
-          stepNumber: 1,
-          title: "Explore the Editor",
-          description: "Get familiar with the basics of writing and formatting in the editor.",
           tasks: [
             {
-              id: "try-formatting",
-              label: "Try bold, italic, or other text formatting",
+              id: "bold",
+              label: "Bold some text",
               completed: false,
             },
             {
-              id: "create-heading",
-              label: "Create a heading using # at the start of a line",
+              id: "italic",
+              label: "Italic some text",
               completed: false,
             },
             {
-              id: "create-list",
-              label: "Create a bulleted or numbered list",
+              id: "heading",
+              label: "Create a heading",
               completed: false,
             },
           ],
         },
-      },
-      {
-        type: "paragraph",
         content: [
           {
-            type: "text",
-            text: "Pro tip: You can use Markdown shortcuts like **bold** or *italic* for quick formatting.",
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Try formatting this text! Select text and use ",
+              },
+              {
+                type: "text",
+                text: "Cmd/Ctrl+B",
+                marks: [{ type: "bold" }],
+              },
+              {
+                type: "text",
+                text: " for bold, ",
+              },
+              {
+                type: "text",
+                text: "Cmd/Ctrl+I",
+                marks: [{ type: "bold" }],
+              },
+              {
+                type: "text",
+                text: " for italic, or type ",
+              },
+              {
+                type: "text",
+                text: "#",
+                marks: [{ type: "bold" }],
+              },
+              {
+                type: "text",
+                text: " at the start of a line for a heading.",
+              },
+            ],
           },
         ],
       },
       {
-        type: "onboardingStep",
+        type: "onboardingAssistantTask",
         attrs: {
-          stepNumber: 2,
-          title: "Navigate with the Command Menu",
-          description: "Learn to quickly find and navigate between documents.",
-          tasks: [
-            {
-              id: "open-command-menu",
-              label: "Press ⌘K (Cmd+K) or Ctrl+K to open the command menu",
-              completed: false,
-            },
-            {
-              id: "search-documents",
-              label: "Search for a document using the command menu",
-              completed: false,
-            },
-            {
-              id: "navigate-to-doc",
-              label: "Navigate to a demo document from the sidebar",
-              completed: false,
-            },
-          ],
+          completed: false,
+          prompt: "Please look at all our documents related to project apollo and organize them",
         },
       },
       {
-        type: "onboardingCallout",
+        type: "onboardingPlaceholder",
         attrs: {
-          type: "info",
-          icon: "info",
-          title: "Demo documents",
-          content:
-            "We've created some demo documents as child pages under this onboarding guide. Check the sidebar to see them!",
-        },
-      },
-      {
-        type: "onboardingStep",
-        attrs: {
-          stepNumber: 3,
-          title: "Link Documents Together",
-          description: "Create connections between your documents to build a knowledge graph.",
-          tasks: [
-            {
-              id: "create-internal-link",
-              label: "Select text and press ⌘K to create an internal link",
-              completed: false,
-            },
-            {
-              id: "click-internal-link",
-              label: "Click an internal link to navigate between documents",
-              completed: false,
-            },
-            {
-              id: "view-backlinks",
-              label: "Check the sidebar to see backlinks to this document",
-              completed: false,
-            },
-          ],
-        },
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Try creating a link to the ",
-          },
-          ...(apolloKickoffId
-            ? [
-                {
-                  type: "text",
-                  text: "Project Apollo Kickoff Notes",
-                  marks: [
-                    {
-                      type: "link",
-                      attrs: {
-                        href: `internal://${apolloKickoffId}`,
-                      },
-                    },
-                  ],
-                },
-              ]
-            : [{ type: "text", text: "Project Apollo Kickoff Notes" }]),
-          {
-            type: "text",
-            text: " or browse the ",
-          },
-          ...(apolloArchitectureId
-            ? [
-                {
-                  type: "text",
-                  text: "Architecture Diagram",
-                  marks: [
-                    {
-                      type: "link",
-                      attrs: {
-                        href: `internal://${apolloArchitectureId}`,
-                      },
-                    },
-                  ],
-                },
-              ]
-            : [{ type: "text", text: "Architecture Diagram" }]),
-          {
-            type: "text",
-            text: ".",
-          },
-        ],
-      },
-      {
-        type: "onboardingStep",
-        attrs: {
-          stepNumber: 4,
-          title: "Organize with Properties",
-          description: "Add custom properties to documents to categorize and filter your content.",
-          tasks: [
-            {
-              id: "view-properties",
-              label: "Check the sidebar to see this document's properties",
-              completed: false,
-            },
-            {
-              id: "add-property",
-              label: "Add a custom property to a document",
-              completed: false,
-            },
-            {
-              id: "edit-property",
-              label: "Edit an existing property value",
-              completed: false,
-            },
-          ],
-        },
-      },
-      {
-        type: "onboardingCallout",
-        attrs: {
-          type: "tip",
-          icon: "lightbulb",
-          title: "Custom properties",
-          content:
-            "Properties help you organize documents by status, priority, type, or any custom field you create!",
-        },
-      },
-      {
-        type: "onboardingStep",
-        attrs: {
-          stepNumber: 5,
-          title: "Use the AI Assistant",
-          description: "Get help organizing, improving, and working with your documents.",
-          tasks: [
-            {
-              id: "open-assistant",
-              label: "Click the assistant icon to open the AI chat",
-              completed: false,
-            },
-            {
-              id: "ask-question",
-              label: "Ask the assistant a question about your documents",
-              completed: false,
-            },
-            {
-              id: "try-command",
-              label: "Try asking the assistant to help improve or organize content",
-              completed: false,
-            },
-          ],
+          title: "🚀 More Features Coming Soon",
+          description: "We're adding more onboarding steps to help you learn about linking documents, properties, and more!",
         },
       },
       {

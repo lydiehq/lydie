@@ -15,6 +15,9 @@ import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
 import { OnboardingCalloutView } from "@/components/editor/OnboardingCalloutView";
 import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
+import { OnboardingTextPracticeView } from "@/components/editor/OnboardingTextPracticeView";
+import { OnboardingAssistantTaskView } from "@/components/editor/OnboardingAssistantTaskView";
+import { OnboardingPlaceholderView } from "@/components/editor/OnboardingPlaceholderView";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
 
@@ -113,6 +116,15 @@ export function useDocumentEditor({
       },
       onboardingCallout: {
         addNodeView: () => ReactNodeViewRenderer(OnboardingCalloutView),
+      },
+      onboardingTextPractice: {
+        addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),
+      },
+      onboardingAssistantTask: {
+        addNodeView: () => ReactNodeViewRenderer(OnboardingAssistantTaskView),
+      },
+      onboardingPlaceholder: {
+        addNodeView: () => ReactNodeViewRenderer(OnboardingPlaceholderView),
       },
       collaboration: { document: ydoc },
       collaborationCaret: { provider, user: userInfo },

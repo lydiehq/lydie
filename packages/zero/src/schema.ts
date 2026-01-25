@@ -196,7 +196,6 @@ const organizationSettings = table("organization_settings")
   .columns({
     id: string(),
     organization_id: string(),
-    onboarding_status: json().optional(),
     ...timestamps,
   })
   .primaryKey("id");
