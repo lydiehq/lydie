@@ -1,6 +1,6 @@
 import { CalendarRegular, Dismiss12Filled, NumberSymbolRegular } from "@fluentui/react-icons";
 import { mutators } from "@lydie/zero/mutators";
-import { useMemo, useState } from "react";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { MenuTrigger } from "react-aria-components";
 import { useDebounceCallback } from "usehooks-ts";
 
@@ -23,7 +23,14 @@ type Props = {
   initialFields?: Record<string, string | number>;
 };
 
-export function CustomFieldsEditor({ documentId, organizationId, initialFields = {} }: Props) {
+export type CustomFieldsEditorRef = {
+  addField: () => void;
+};
+
+export const CustomFieldsEditor = forwardRef<CustomFieldsEditorRef, Props>(function CustomFieldsEditor(
+  { documentId, organizationId, initialFields = {} },
+  ref,
+) {
   const z = useZero();
 
   // Convert initial fields to array format
@@ -85,6 +92,13 @@ export function CustomFieldsEditor({ documentId, organizationId, initialFields =
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    addField: () => {
+      const fields = form.getFieldValue("fields") || [];
+      form.setFieldValue("fields", [...fields, { key: "", value: "", type: "string" }]);
+    },
+  }));
+
   return (
     <form
       onSubmit={(e) => {
@@ -111,22 +125,13 @@ export function CustomFieldsEditor({ documentId, organizationId, initialFields =
                   />
                 );
               })}
-              <button
-                type="button"
-                onClick={() => {
-                  field.pushValue({ key: "", value: "", type: "string" });
-                }}
-                className="text-sm text-gray-600 hover:text-gray-900 px-0 py-1.5 rounded-md hover:bg-transparent transition-colors self-start mt-1"
-              >
-                + Add property
-              </button>
             </div>
           )}
         </form.Field>
       </div>
     </form>
   );
-}
+});
 
 type CustomFieldRowProps = {
   form: any;

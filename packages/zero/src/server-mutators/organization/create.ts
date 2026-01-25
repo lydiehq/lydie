@@ -1,9 +1,13 @@
 import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
-import { db, documentEmbeddingsTable, documentTitleEmbeddingsTable, documentsTable } from "@lydie/database";
+import {
+  db,
+  documentEmbeddingsTable,
+  documentTitleEmbeddingsTable,
+  documentsTable,
+} from "@lydie/database";
 import { defineMutator } from "@rocicorp/zero";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { demoContent } from "../../demo-content";

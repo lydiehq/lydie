@@ -4,15 +4,10 @@ export function createIntroDocument(documentIdMap: Map<string, string>) {
   const releaseChecklistId = documentIdMap.get("Release Checklist v1.0") || "";
 
   return {
-    title: "Welcome to Your Workspace",
+    title: "👋 Welcome to Your Workspace!",
     content: {
       type: "doc",
       content: [
-        {
-          type: "heading",
-          attrs: { level: 1 },
-          content: [{ type: "text", text: "👋 Welcome to Your Workspace!" }],
-        },
         {
           type: "paragraph",
           content: [
