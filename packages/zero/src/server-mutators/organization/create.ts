@@ -91,10 +91,10 @@ async function createOnboardingDocumentsWithEmbeddings(
     parentId: null,
     sortOrder: 0,
     customFields: {
-      isOnboardingGuide: "true",
-      Status: "Getting Started",
-      Type: "Guide",
+      Description:
+        "These are custom fields that can be added to documents. They can be queried and filtered on via the REST API.",
       Priority: "High",
+      Type: "Guide",
     },
     createdAt: now,
     updatedAt: now,

@@ -3,12 +3,7 @@ import type { QueryResultType } from "@rocicorp/zero";
 import { AddRegular } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
 import { useContext, useRef, useState } from "react";
-import {
-  Button as RACButton,
-  DisclosureStateContext,
-  Disclosure,
-  DisclosurePanel,
-} from "react-aria-components";
+import { DisclosureStateContext, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "react-aria-components";
 
 import { Button } from "@/components/generic/Button";
@@ -64,16 +59,13 @@ function MetadataDisclosureHeader() {
   const { isExpanded } = useContext(DisclosureStateContext)!;
 
   return (
-    <RACButton
-      slot="trigger"
-      className="size-6 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-default"
-    >
+    <Button slot="trigger" intent="ghost" size="icon-sm">
       <CollapseArrow
         className={`size-3.5 text-gray-500 transition-transform duration-200 ${
           isExpanded ? "rotate-90" : "rotate-270"
         }`}
       />
-    </RACButton>
+    </Button>
   );
 }
 
@@ -99,7 +91,7 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
       className={isExpanded ? "mb-5 pb-5 border-b border-gray-200" : "pb-5"}
     >
       <Tabs selectedKey={selectedKey} onSelectionChange={(key) => setSelectedKey(key as string)}>
-        <div className="flex items-center gap-x-2">
+        <div className="flex items-center justify-between">
           <TabList
             aria-label="Metadata tabs"
             className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center w-fit"
@@ -124,16 +116,14 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
               <span className="text-[10px]/none -mb-px text-gray-400">{documentCount}</span>
             </Tab>
           </TabList>
-          <Button
-            size="sm"
-            intent="ghost"
-            onPress={handleAdd}
-            className="text-gray-600 hover:text-gray-900 ml-auto"
-          >
-            <AddRegular className="size-4 mr-1" />
-            {selectedKey === "fields" ? "Add field" : "Add document"}
-          </Button>
-          <MetadataDisclosureHeader />
+          <div className="flex gap-x-1">
+            <Button size="sm" intent="ghost" onPress={handleAdd}>
+              <AddRegular className="size-4 mr-1" />
+              {selectedKey === "fields" ? "Add field" : "Add document"}
+            </Button>
+
+            <MetadataDisclosureHeader />
+          </div>
         </div>
         <DisclosurePanel className="mt-2">
           <TabPanels>
