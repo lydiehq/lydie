@@ -39,7 +39,15 @@ import {
 const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id";
 const FLOATING_ASSISTANT_AGENT_KEY = "floating-assistant-agent-id";
 
-export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: string | null }) {
+export function FloatingAssistant({
+  currentDocumentId,
+  dockedContainer,
+  floatingContainer,
+}: {
+  currentDocumentId: string | null;
+  dockedContainer: HTMLDivElement | null;
+  floatingContainer: HTMLDivElement | null;
+}) {
   const isDocked = useAtomValue(isDockedAtom);
   const isMinimized = useAtomValue(isMinimizedAtom);
   const close = useSetAtom(closeAssistantAtom);
@@ -105,7 +113,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
     currentConversation?.id,
     conversationId,
     setMessages,
-    currentConversation.messages,
+    currentConversation?.messages,
     currentConversation,
   ]);
 
@@ -161,13 +169,6 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
       },
     ];
   }, [isDocked, dock, undock, handleNewChat, handleClose]);
-
-  const floatingContainer =
-    typeof document !== "undefined"
-      ? document.getElementById("floating-assistant-container")
-      : null;
-  const dockedContainer =
-    typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null;
 
   const targetContainer = isMinimized ? null : isDocked ? dockedContainer : floatingContainer;
 

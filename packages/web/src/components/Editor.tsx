@@ -6,7 +6,7 @@ import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Panel, PanelGroup } from "react-resizable-panels";
+import { Group, Panel, useDefaultLayout } from "react-resizable-panels";
 import { toast } from "sonner";
 
 import {
@@ -49,6 +49,11 @@ function EditorContainer({ doc }: Props) {
   const openLinkDialogRef = useRef<(() => void) | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isLocked = doc.is_locked ?? false;
+
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "editor-panel-group",
+    storage: localStorage,
+  });
 
   const setDocumentEditor = useSetAtom(documentEditorAtom);
   const setTitleEditor = useSetAtom(titleEditorAtom);
@@ -227,8 +232,12 @@ function EditorContainer({ doc }: Props) {
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden">
-        <PanelGroup autoSaveId="editor-panel-group" direction="horizontal">
-          <Panel minSize={20} defaultSize={75} className="flex flex-col grow relative">
+        <Group
+          orientation="horizontal"
+          defaultLayout={defaultLayout}
+          onLayoutChanged={onLayoutChanged}
+        >
+          <Panel minSize="400px" className="flex flex-col grow relative">
             <EditorToolbar
               editor={contentEditor.editor}
               doc={doc}
@@ -274,7 +283,7 @@ function EditorContainer({ doc }: Props) {
               </div>
             </div>
           </Panel>
-        </PanelGroup>
+        </Group>
       </Surface>
     </div>
   );

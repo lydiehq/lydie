@@ -1,8 +1,8 @@
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { type ImperativePanelHandle, Panel, PanelGroup } from "react-resizable-panels";
+import { useCallback, useEffect, useState } from "react";
+import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
 import { AssistantChat } from "@/components/assistant/AssistantChat";
@@ -37,17 +37,22 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/assistant/$cha
   },
 });
 
-const COLLAPSED_SIZE = 3.5;
+const COLLAPSED_SIZE = 56; // pixels
 
 function PageComponent() {
   const { chatId } = Route.useParams();
   const { organization } = useOrganization();
-  const [sidebarSize, setSidebarSize] = useState(25);
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+  const [sidebarSize, setSidebarSize] = useState(320); // pixels
+  const sidebarPanelRef = usePanelRef();
   const search = useSearch({
     from: "/__auth/w/$organizationSlug/assistant/$chatId/",
   });
   const initialPrompt = (search as { prompt?: string })?.prompt;
+
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "assistant-panel-group",
+    storage: localStorage,
+  });
 
   const [conv, status] = useQuery(
     queries.assistant.byId({
@@ -92,9 +97,12 @@ function PageComponent() {
   }, [conv, setMessages]);
 
   const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current;
-    if (!panel) return;
-    panel.isCollapsed() ? panel.expand() : panel.collapse();
+    if (!sidebarPanelRef.current) return;
+    if (sidebarPanelRef.current.isCollapsed()) {
+      sidebarPanelRef.current.expand();
+    } else {
+      sidebarPanelRef.current.collapse();
+    }
   };
 
   if (!conv && status.type === "complete") {
@@ -120,8 +128,12 @@ function PageComponent() {
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden size-full">
-        <PanelGroup autoSaveId="assistant-panel-group" direction="horizontal">
-          <Panel minSize={20} defaultSize={75} className="flex flex-col grow">
+        <Group
+          orientation="horizontal"
+          defaultLayout={defaultLayout}
+          onLayoutChanged={onLayoutChanged}
+        >
+          <Panel minSize="400px" className="flex flex-col grow">
             <div className="flex flex-col h-full mx-auto w-full max-w-xl">
               <AssistantChat
                 organizationId={organization.id}
@@ -139,13 +151,13 @@ function PageComponent() {
           </Panel>
           <PanelResizer />
           <Panel
-            ref={sidebarPanelRef}
+            panelRef={sidebarPanelRef}
             id="assistant-sidebar"
             collapsible={true}
-            collapsedSize={COLLAPSED_SIZE}
-            minSize={12}
-            defaultSize={25}
-            onResize={setSidebarSize}
+            collapsedSize="56px"
+            minSize="200px"
+            defaultSize="320px"
+            onResize={(nextSize) => setSidebarSize(nextSize.inPixels)}
           >
             <AssistantSidebar
               isCollapsed={sidebarSize === COLLAPSED_SIZE}
@@ -154,7 +166,7 @@ function PageComponent() {
               onNewConversation={resetConversation}
             />
           </Panel>
-        </PanelGroup>
+        </Group>
       </Surface>
     </div>
   );

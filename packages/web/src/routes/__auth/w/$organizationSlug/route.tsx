@@ -6,8 +6,8 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { type ImperativePanelHandle, Panel, PanelGroup } from "react-resizable-panels";
+import { useCallback, useMemo, useState } from "react";
+import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
@@ -48,31 +48,41 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   ssr: false,
 });
 
-const COLLAPSED_SIZE = 3;
+const COLLAPSED_SIZE = 50; // pixels
 
 function RouteComponent() {
   return <RouteLayout />;
 }
 
 function RouteLayout() {
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
-  const assistantPanelRef = useRef<ImperativePanelHandle>(null);
-  const [size, setSize] = useState(25);
+  const sidebarPanelRef = usePanelRef();
+  const assistantPanelRef = usePanelRef();
+  const [dockedAssistantContainer, setDockedAssistantContainer] = useState<HTMLDivElement | null>(
+    null,
+  );
+  const [floatingAssistantContainer, setFloatingAssistantContainer] =
+    useState<HTMLDivElement | null>(null);
+  const [size, setSize] = useState(280); // pixels
   const routerState = useRouterState();
   const isDocked = useAtomValue(isDockedAtom);
   const navigate = useNavigate();
   const search = Route.useSearch();
   const params = Route.useParams();
 
-  // Template installation dialog state
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const dockedAssistantContainerRef = useCallback((node: HTMLDivElement | null) => {
+    setDockedAssistantContainer(node);
+  }, []);
 
-  // Open template installation dialog when installTemplate parameter is present
-  useEffect(() => {
-    if (search.installTemplate) {
-      setIsTemplateDialogOpen(true);
-    }
-  }, [search.installTemplate]);
+  const floatingAssistantContainerRef = useCallback((node: HTMLDivElement | null) => {
+    setFloatingAssistantContainer(node);
+  }, []);
+
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "main-panel-group",
+    storage: localStorage,
+  });
+
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(!!search.installTemplate);
 
   const handleTemplateDialogClose = (isOpen: boolean) => {
     setIsTemplateDialogOpen(isOpen);
@@ -88,9 +98,12 @@ function RouteLayout() {
   };
 
   const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current;
-    if (!panel) return;
-    panel.isCollapsed() ? panel.expand() : panel.collapse();
+    if (!sidebarPanelRef.current) return;
+    if (sidebarPanelRef.current.isCollapsed()) {
+      sidebarPanelRef.current.expand();
+    } else {
+      sidebarPanelRef.current.collapse();
+    }
   };
 
   const currentDocumentId = useMemo(() => {
@@ -102,23 +115,26 @@ function RouteLayout() {
     return null;
   }, [routerState.location.pathname]);
 
-  const isSettingsRoute = routerState.location.pathname.includes("/settings");
-  const shouldShowDockedPanel = isDocked && !isSettingsRoute;
+  const shouldShowDockedPanel = isDocked;
 
   return (
     <div className="flex h-screen flex-col">
       <CommandMenu />
-      <PanelGroup autoSaveId="main-panel-group" direction="horizontal">
+      <Group
+        orientation="horizontal"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
+      >
         <Panel
-          className="h-full flex flex-col"
-          ref={sidebarPanelRef}
+          className="h-full flex flex-col overflow-hidden"
+          panelRef={sidebarPanelRef}
           id="left-sidebar"
           collapsible
-          collapsedSize={COLLAPSED_SIZE}
-          minSize={16}
-          maxSize={40}
-          defaultSize={25}
-          onResize={setSize}
+          collapsedSize="50px"
+          minSize="200px"
+          maxSize="400px"
+          defaultSize="280px"
+          onResize={(nextSize) => setSize(nextSize.inPixels)}
         >
           <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
         </Panel>
@@ -130,22 +146,23 @@ function RouteLayout() {
           <>
             <PanelResizer />
             <Panel
-              ref={assistantPanelRef}
+              panelRef={assistantPanelRef}
               id="assistant-panel"
-              defaultSize={30}
-              minSize={20}
-              maxSize={50}
+              defaultSize="400px"
+              minSize="300px"
+              maxSize="600px"
             >
-              <div id="docked-assistant-container" className="h-full pr-1 py-1 pl-px" />
+              <div ref={dockedAssistantContainerRef} className="h-full pr-1 py-1 pl-px" />
             </Panel>
           </>
         )}
-      </PanelGroup>
-      {/* Portal containers */}
-      <div id="floating-assistant-container" />
-      {/* The assistant component (always rendered) */}
-      <FloatingAssistant currentDocumentId={currentDocumentId} />
-      {/* Template installation dialog */}
+      </Group>
+      <div ref={floatingAssistantContainerRef} />
+      <FloatingAssistant
+        currentDocumentId={currentDocumentId}
+        dockedContainer={dockedAssistantContainer}
+        floatingContainer={floatingAssistantContainer}
+      />
       {search.installTemplate && (
         <InstallTemplateDialog
           isOpen={isTemplateDialogOpen}

@@ -92,7 +92,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
   };
 
   return (
-    <div className="flex flex-col grow max-h-screen overflow-hidden">
+    <div className="flex flex-col grow max-h-screen">
       <div className="flex justify-between items-center p-3">
         <OrganizationMenu isCollapsed={isCollapsed} />
         <TooltipTrigger delay={500}>
