@@ -26,7 +26,6 @@ export interface Document {
   userId: string;
   folderId: string | null;
   organizationId: string;
-  indexStatus: string;
   published: boolean;
   lastIndexedTitle: string | null;
   lastIndexedContentHash: string | null;

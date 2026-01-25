@@ -79,7 +79,6 @@ test.describe("command menu", () => {
       yjsState: yjsState1,
       userId: user.id,
       organizationId: organization.id,
-      indexStatus: "outdated",
       published: false,
     });
 
@@ -91,7 +90,6 @@ test.describe("command menu", () => {
       yjsState: yjsState2,
       userId: user.id,
       organizationId: organization.id,
-      indexStatus: "outdated",
       published: false,
     });
 

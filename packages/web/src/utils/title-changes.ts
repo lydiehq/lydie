@@ -17,7 +17,6 @@ export async function applyTitleChange(
       mutators.document.update({
         documentId,
         title: newTitle.trim(),
-        indexStatus: "outdated",
         organizationId,
       }),
     );

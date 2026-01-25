@@ -23,7 +23,6 @@ export function useAutoSave({
       mutators.document.update({
         documentId,
         ...(data.title !== undefined && { title: data.title }),
-        indexStatus: "outdated", // Mark as needing re-indexing
         organizationId: organization.id,
       }),
     );

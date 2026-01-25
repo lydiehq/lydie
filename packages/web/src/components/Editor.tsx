@@ -125,7 +125,6 @@ function EditorContainer({ doc }: Props) {
         mutators.document.update({
           documentId: doc.id,
           title: finalTitle,
-          indexStatus: "outdated",
           organizationId: doc.organization_id,
         }),
       );

@@ -171,7 +171,6 @@ export async function pullFromIntegrationLink(
                 yjsState: yjsState,
                 customFields: customFields || null,
                 isLocked,
-                indexStatus: "pending", // Re-index when content changes
                 updatedAt: new Date(),
                 deletedAt: null, // Ensure document is not marked as deleted
               })
@@ -201,7 +200,6 @@ export async function pullFromIntegrationLink(
               externalId: result.externalId ?? null,
               customFields: customFields || null,
               isLocked,
-              indexStatus: "pending",
               published: true, // Documents from integrations are published by default
               createdAt: new Date(),
               updatedAt: new Date(),

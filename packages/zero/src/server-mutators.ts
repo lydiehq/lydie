@@ -8,6 +8,7 @@ import { updateDocumentMutation } from "./server-mutators/documents/update";
 import { createFeedbackMutation } from "./server-mutators/feedback/create";
 import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link";
 import { disconnectIntegrationMutation } from "./server-mutators/integrations/disconnect";
+import { createOrganizationMutation } from "./server-mutators/organization/create";
 import { createTemplateMutation } from "./server-mutators/templates/create";
 
 export interface MutatorContext {
@@ -18,6 +19,9 @@ export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
   const context = { asyncTasks };
 
   return defineMutators(sharedMutators, {
+    organization: {
+      create: createOrganizationMutation(context),
+    },
     document: {
       publish: publishDocumentMutation(context),
       update: updateDocumentMutation(context),

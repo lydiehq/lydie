@@ -83,7 +83,6 @@ IMPORTANT:
           organizationId,
           yjsState,
           parentId: parentId || null,
-          indexStatus: "pending",
           published: false,
         });
 

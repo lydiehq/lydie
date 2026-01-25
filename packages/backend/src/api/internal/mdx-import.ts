@@ -158,7 +158,6 @@ async function getOrCreatePageByPath(
         userId,
         organizationId,
         parentId: currentParentId || null,
-        indexStatus: "pending",
         published: false,
       });
       currentParentId = newPageId;
@@ -244,7 +243,6 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         organizationId,
         parentId: finalParentId || null,
         customFields: parsed.customFields || null,
-        indexStatus: "outdated" as const,
         published: false,
       };
 
@@ -267,7 +265,6 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
           {
             documentId: insertedDocument.id,
             yjsState: insertedDocument.yjsState,
-            title: insertedDocument.title,
           },
           db,
         ).catch((error) => {

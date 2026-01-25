@@ -27,7 +27,7 @@ async function processDocumentWithoutSections(
     .transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
       await tx
         .update(documentsTable)
-        .set({ indexStatus: "indexing", updatedAt: new Date() })
+        .set({ updatedAt: new Date() })
         .where(eq(documentsTable.id, documentId));
 
       await tx
@@ -71,16 +71,15 @@ async function processDocumentWithoutSections(
       await tx
         .update(documentsTable)
         .set({
-          indexStatus: "indexed",
           updatedAt: new Date(),
         })
         .where(eq(documentsTable.id, documentId));
     })
     .catch(async (error: unknown) => {
-      // If transaction fails, mark document as failed outside transaction
+      // If transaction fails, update timestamp outside transaction
       await db
         .update(documentsTable)
-        .set({ indexStatus: "failed", updatedAt: new Date() })
+        .set({ updatedAt: new Date() })
         .where(eq(documentsTable.id, documentId));
 
       throw error;
@@ -150,7 +149,7 @@ export async function processDocumentEmbedding(
     .transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
       await tx
         .update(documentsTable)
-        .set({ indexStatus: "indexing", updatedAt: new Date() })
+        .set({ updatedAt: new Date() })
         .where(eq(documentsTable.id, documentId));
 
       if (isFullReindex) {
@@ -202,17 +201,16 @@ export async function processDocumentEmbedding(
       await tx
         .update(documentsTable)
         .set({
-          indexStatus: "indexed",
           sectionHashes: newSectionHashes,
           updatedAt: new Date(),
         } as any)
         .where(eq(documentsTable.id, documentId));
     })
     .catch(async (error: unknown) => {
-      // If transaction fails, mark document as failed outside transaction
+      // If transaction fails, update timestamp outside transaction
       await db
         .update(documentsTable)
-        .set({ indexStatus: "failed", updatedAt: new Date() })
+        .set({ updatedAt: new Date() })
         .where(eq(documentsTable.id, documentId));
 
       throw error;

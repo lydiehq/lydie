@@ -69,71 +69,9 @@ export const organizationMutators = {
         }),
       );
 
-      // Create onboarding guide if onboardingDocId is provided
-      if (onboardingDocId) {
-        const { createOnboardingGuideContent } = await import("../onboarding-guide-content");
-        const { demoContent } = await import("../demo-content");
-        const { convertJsonToYjs } = await import("@lydie/core/yjs-to-json");
-
-        // Create a map of demo document IDs
-        const documentIdMap = new Map<string, string>();
-        for (const doc of demoContent) {
-          documentIdMap.set(doc.title, createId());
-        }
-        documentIdMap.set("Welcome to Your Workspace", onboardingDocId);
-
-        // Create onboarding guide content with references to demo docs
-        const guideContent = createOnboardingGuideContent(documentIdMap);
-        const guideYjsState = convertJsonToYjs(guideContent);
-
-        // Insert onboarding guide document
-        await tx.mutate.documents.insert(
-          withTimestamps({
-            id: onboardingDocId,
-            slug: `${slugify("Welcome to Your Workspace")}-${createId().slice(0, 6)}`,
-            title: "👋 Welcome to Your Workspace!",
-            yjs_state: guideYjsState,
-            user_id: ctx.userId,
-            organization_id: id,
-            integration_link_id: null,
-            is_locked: false,
-            published: false,
-            parent_id: null,
-            sort_order: 0,
-            custom_fields: {
-              isOnboardingGuide: "true",
-              Status: "Getting Started",
-              Type: "Guide",
-              Priority: "High",
-            },
-          }),
-        );
-
-        // Create demo documents as children of the onboarding guide
-        for (let i = 0; i < demoContent.length; i++) {
-          const doc = demoContent[i];
-          if (!doc) continue;
-          const docId = documentIdMap.get(doc.title)!;
-          const yjsState = convertJsonToYjs(doc.content);
-
-          await tx.mutate.documents.insert(
-            withTimestamps({
-              id: docId,
-              slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
-              title: doc.title,
-              yjs_state: yjsState,
-              user_id: ctx.userId,
-              organization_id: id,
-              integration_link_id: null,
-              is_locked: false,
-              published: false,
-              parent_id: onboardingDocId,
-              sort_order: i,
-              custom_fields: { isOnboarding: "true" },
-            }),
-          );
-        }
-      }
+      // Note: Onboarding documents are created by the server mutator
+      // which handles embedding generation. The onboardingDocId is passed
+      // through to enable this, but document creation happens server-side.
     },
   ),
 
