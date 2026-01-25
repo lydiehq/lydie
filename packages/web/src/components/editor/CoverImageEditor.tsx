@@ -74,13 +74,16 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
           className="w-full h-60 rounded-lg bg-center bg-cover bg-no-repeat"
           style={{ backgroundImage: `url(${coverImage})` }}
         />
-        <button
-          onClick={handleRemove}
-          className="absolute top-2 right-2 p-2 bg-white/90 hover:bg-white rounded-md shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+        <Button
+          onPress={handleRemove}
+          intent="secondary"
+          size="icon-sm"
+          rounded={true}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
           aria-label="Remove cover image"
         >
-          <DismissRegular className="w-4 h-4 text-gray-700" />
-        </button>
+          <DismissRegular className="size-3" />
+        </Button>
       </div>
     );
   }

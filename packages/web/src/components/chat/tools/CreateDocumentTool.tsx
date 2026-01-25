@@ -3,6 +3,7 @@ import { StickToBottom } from "use-stick-to-bottom";
 
 import { Button } from "@/components/generic/Button";
 import { Separator } from "@/components/generic/Separator";
+import { useOrganization } from "@/context/organization.context";
 import { countWords } from "@/utils/text";
 
 type Props = {
@@ -34,6 +35,7 @@ type Props = {
 };
 
 export function CreateDocumentTool({ tool }: Props) {
+  const { organization } = useOrganization();
   const { output, input } = tool;
 
   const documentId = output?.document?.id;
@@ -105,11 +107,7 @@ export function CreateDocumentTool({ tool }: Props) {
                   <Button
                     intent="secondary"
                     size="xs"
-                    to="/w/$organizationSlug/$id"
-                    from="/w/$organizationSlug"
-                    params={{
-                      id: documentId,
-                    }}
+                    href={`/w/${organization.slug}/${documentId}`}
                   >
                     Open Document
                   </Button>
