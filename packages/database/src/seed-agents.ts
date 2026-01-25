@@ -1,6 +1,7 @@
-import { db } from "./index"
-import { assistantAgentsTable } from "./schema"
-import { createId } from "@lydie/core/id"
+import { createId } from "@lydie/core/id";
+
+import { db } from "./index";
+import { assistantAgentsTable } from "./schema";
 
 const defaultAgents = [
   {
@@ -37,17 +38,18 @@ const defaultAgents = [
   {
     id: createId(),
     name: "Work Assistant",
-    description: "Professional task-oriented writing for business documents, emails, reports, and planning.",
+    description:
+      "Professional task-oriented writing for business documents, emails, reports, and planning.",
     systemPrompt:
       "You are a professional work assistant. Help with business documents, emails, reports, and task planning. Write clearly, concisely, and professionally. Focus on actionable outcomes and efficiency. Use appropriate business tone and formatting. Prioritize clarity and results.",
     isDefault: true,
     organizationId: null,
     userId: null,
   },
-]
+];
 
 export async function seedDefaultAgents() {
-  console.log("Seeding default agents...")
+  console.log("Seeding default agents...");
 
   for (const agent of defaultAgents) {
     try {
@@ -55,30 +57,30 @@ export async function seedDefaultAgents() {
         ...agent,
         createdAt: new Date(),
         updatedAt: new Date(),
-      })
-      console.log(`✓ Created agent: ${agent.name}`)
+      });
+      console.log(`✓ Created agent: ${agent.name}`);
     } catch (error: any) {
       // Skip if agent already exists
       if (error.code === "23505") {
-        console.log(`- Agent already exists: ${agent.name}`)
+        console.log(`- Agent already exists: ${agent.name}`);
       } else {
-        throw error
+        throw error;
       }
     }
   }
 
-  console.log("Default agents seeded successfully!")
+  console.log("Default agents seeded successfully!");
 }
 
 // Allow running this script directly
 if (require.main === module) {
   seedDefaultAgents()
     .then(() => {
-      console.log("Done!")
-      process.exit(0)
+      console.log("Done!");
+      process.exit(0);
     })
     .catch((error) => {
-      console.error("Error seeding agents:", error)
-      process.exit(1)
-    })
+      console.error("Error seeding agents:", error);
+      process.exit(1);
+    });
 }

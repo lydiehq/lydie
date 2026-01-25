@@ -1,0 +1,186 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { Button } from "../../components/generic/Button";
+import { TemplateViewer } from "../../components/templates/TemplateViewer";
+import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
+import { getAllTemplates } from "../../data/templates";
+import { findRelatedTemplates } from "@lydie/core/embedding/search";
+import { serializeToHTML } from "@lydie/core/content";
+
+export async function getStaticPaths() {
+  try {
+    const templates = await getAllTemplates();
+    return templates.map((template) => ({
+      params: { slug: template.slug },
+      props: { template },
+    }));
+  } catch (error) {
+    console.error("Failed to fetch documents for static paths:", error);
+    // Return empty array to prevent build failure
+    return [];
+  }
+}
+
+const { template } = Astro.props;
+
+if (!template) {
+  return new Response(null, { status: 404 });
+}
+
+const templateName = template.name;
+const categories = template.categories;
+const teaser = template.teaser || template.description || "";
+
+let relatedTemplates: Array<{
+  id: string;
+  name: string;
+  slug: string;
+  teaser: string | null;
+}> = [];
+try {
+  relatedTemplates = await findRelatedTemplates(template.id, 6);
+} catch (error) {
+  console.error("Failed to fetch related templates:", error);
+}
+
+let detailedDescriptionHTML = "";
+if (template.detailedDescription) {
+  try {
+    const jsonContent =
+      typeof template.detailedDescription === "string"
+        ? JSON.parse(template.detailedDescription)
+        : template.detailedDescription;
+    detailedDescriptionHTML = serializeToHTML(jsonContent);
+  } catch (error) {
+    console.error("Failed to render detailed description:", error);
+    detailedDescriptionHTML = "";
+  }
+}
+---
+
+<Layout
+  title={templateName + " - Lydie"}
+  description={template.description ??
+    "Use this " +
+      templateName.toLowerCase() +
+      " template to get started quickly with your project."}
+>
+  <div class="py-8">
+    <Container className="flex flex-col gap-y-8">
+      <div class="flex flex-col gap-y-8">
+        <a href="/templates" class="text-sm text-gray-500 hover:text-gray-900"
+          >Back to templates</a
+        >
+        <header class="">
+          <div class="max-w-lg flex flex-col gap-y-3">
+            <div class="flex gap-x-1 items-center">
+              <!-- <div
+                class="size-7 rounded-full bg-gray-100 ring ring-black/8 flex items-center justify-center overflow-hidden"
+              >
+                <Logo className="size-4 text-gray-800" />
+              </div> -->
+              <svg
+                class="w-4 h-4 text-blue-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span class="text-sm font-medium text-gray-900"
+                >Official template</span
+              >
+            </div>
+
+            <h1 class="text-4xl font-medium text-gray-900">{templateName}</h1>
+            {
+              teaser && (
+                <span class="text-base/relaxed text-gray-600">{teaser}</span>
+              )
+            }
+            {
+              categories && categories.length > 0 && (
+                <div class="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <a
+                      href={`/templates/categories/${category.slug}`}
+                      class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                    >
+                      {category.name}
+                    </a>
+                  ))}
+                </div>
+              )
+            }
+
+            <div class="flex gap-x-1">
+              <Button
+                className="self-start"
+                size="lg"
+                href={`${import.meta.env.PUBLIC_API_URL}/public/template-install?template=${template.slug}`}
+              >
+                Get template
+              </Button>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      <TemplateViewer client:load documents={template.documents} />
+
+      <div class="max-w-3xl flex flex-col gap-y-8 mt-12">
+        {
+          detailedDescriptionHTML ? (
+            <section class="prose prose-gray max-w-none">
+              <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+                About This {templateName}
+              </h2>
+              <div
+                class="text-base/relaxed text-gray-700 space-y-4"
+                set:html={detailedDescriptionHTML}
+              />
+            </section>
+          ) : (
+            <section class="prose prose-gray max-w-none">
+              <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+                About This {templateName}
+              </h2>
+              <div class="text-base/relaxed text-gray-700 space-y-4">
+                <p>
+                  This professional {templateName.toLowerCase()} is designed to
+                  help you get started quickly with your project. Customize it
+                  to fit your needs and make it your own.
+                </p>
+              </div>
+            </section>
+          )
+        }
+      </div>
+
+      {
+        relatedTemplates.length > 0 && (
+          <div class="max-w-3xl flex flex-col gap-y-8 mt-12">
+            <section>
+              <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+                Related Templates
+              </h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {relatedTemplates.map((relatedTemplate) => (
+                  <TemplateThumbnail
+                    name={relatedTemplate.name}
+                    description={relatedTemplate.teaser || undefined}
+                    href={`/templates/${relatedTemplate.slug}`}
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
+        )
+      }
+    </Container>
+  </div>
+</Layout>

@@ -1,22 +1,23 @@
-import { CalendarRegular } from "@fluentui/react-icons"
+import { CalendarRegular } from "@fluentui/react-icons";
 import {
   DateRangePicker as AriaDateRangePicker,
   type DateRangePickerProps as AriaDateRangePickerProps,
   type DateValue,
   type ValidationResult,
-} from "react-aria-components"
-import { Button } from "./Button"
-import { DateInput } from "./DateField"
-import { Dialog } from "./Dialog"
-import { Description, FieldError, FieldGroup, Label } from "./Field"
-import { Popover } from "./Popover"
-import { RangeCalendar } from "./RangeCalendar"
-import { composeTailwindRenderProps } from "./utils"
+} from "react-aria-components";
+
+import { Button } from "./Button";
+import { DateInput } from "./DateField";
+import { Dialog } from "./Dialog";
+import { Description, FieldError, FieldGroup, Label } from "./Field";
+import { Popover } from "./Popover";
+import { RangeCalendar } from "./RangeCalendar";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface DateRangePickerProps<T extends DateValue> extends AriaDateRangePickerProps<T> {
-  label?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
+  label?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
 export function DateRangePicker<T extends DateValue>({
@@ -52,5 +53,5 @@ export function DateRangePicker<T extends DateValue>({
         </Dialog>
       </Popover>
     </AriaDateRangePicker>
-  )
+  );
 }

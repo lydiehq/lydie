@@ -9,13 +9,23 @@
     "catalog": {
       "@rocicorp/zero": "0.25.9",
       "sst": "3.17.21",
-      "zod": "^4.1.12",
+      "zod": "^4.3.6",
+      "react": "^19.2.3",
+      "react-dom": "^19.2.3",
+      "yjs": "^13.6.29",
       "drizzle-orm": "^1.0.0-beta.8-734e789",
       "better-auth": "1.4.7-beta.2",
       "@polar-sh/better-auth": "1.1.9",
       "@ai-sdk/google": "^3.0.1",
       "@ai-sdk/openai": "^3.0.1",
-      "ai": "^6.0.3"
+      "ai": "^6.0.3",
+      "@tiptap/core": "^3.16.0",
+      "@tiptap/pm": "^3.16.0",
+      "@tiptap/react": "^3.16.0",
+      "@tiptap/starter-kit": "^3.16.0",
+      "@tiptap/y-tiptap": "^3.0.1",
+      "@tiptap/extension-mention": "^3.16.0",
+      "@tiptap/extension-placeholder": "^3.16.0"
     }
   },
   "scripts": {
@@ -25,11 +35,13 @@
     "db:studio": "bun --filter=@lydie/database db:studio",
     "deploy:prod": "sst deploy --stage production",
     "deploy:web": "sst deploy --target Web --stage production",
+    "deploy:marketing": "sst deploy --target Marketing --stage production",
     "sso": "aws sso login --sso-session=lydie --use-device-code",
     "sdk:publish": "bun --filter=@lydie-app/sdk sdk:publish",
     "test:e2e": "bun --filter=@lydie/web test:e2e",
     "copy-integration-assets": "bun --filter=@lydie/scripts copy-integration-assets",
     "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check"
   },

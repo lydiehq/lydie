@@ -1,14 +1,15 @@
-import React from "react"
+import React from "react";
 import {
   ColorSlider as AriaColorSlider,
   ColorSliderProps as AriaColorSliderProps,
   SliderOutput,
   SliderTrack,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
-import { Label } from "./Field"
-import { composeTailwindRenderProps } from "./utils"
-import { ColorThumb } from "./ColorThumb"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
+import { ColorThumb } from "./ColorThumb";
+import { Label } from "./Field";
+import { composeTailwindRenderProps } from "./utils";
 
 const trackStyles = tv({
   base: "group col-span-2 orientation-horizontal:h-6 rounded-lg",
@@ -21,10 +22,10 @@ const trackStyles = tv({
       true: "bg-gray-300 dark:bg-zinc-800 forced-colors:bg-[GrayText]",
     },
   },
-})
+});
 
 interface ColorSliderProps extends AriaColorSliderProps {
-  label?: string
+  label?: string;
 }
 
 export function ColorSlider({ label, ...props }: ColorSliderProps) {
@@ -50,5 +51,5 @@ export function ColorSlider({ label, ...props }: ColorSliderProps) {
         <ColorThumb />
       </SliderTrack>
     </AriaColorSlider>
-  )
+  );
 }

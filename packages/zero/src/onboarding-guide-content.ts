@@ -1,7 +1,7 @@
 export function createOnboardingGuideContent(documentIdMap: Map<string, string>) {
-  const welcomeDocId = documentIdMap.get("Welcome to Your Workspace") || ""
-  const apolloKickoffId = documentIdMap.get("Project Apollo - Kickoff Notes") || ""
-  const apolloArchitectureId = documentIdMap.get("Project Apollo - Architecture") || ""
+  const welcomeDocId = documentIdMap.get("Welcome to Your Workspace") || "";
+  const apolloKickoffId = documentIdMap.get("Project Apollo - Kickoff Notes") || "";
+  const apolloArchitectureId = documentIdMap.get("Project Apollo - Architecture") || "";
 
   return {
     type: "doc",
@@ -258,5 +258,5 @@ export function createOnboardingGuideContent(documentIdMap: Map<string, string>)
         },
       },
     ],
-  }
+  };
 }

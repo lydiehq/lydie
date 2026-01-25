@@ -1,55 +1,39 @@
-import { Editor } from "@/components/Editor"
-import { useQuery } from "@rocicorp/zero/react"
-import { createFileRoute } from "@tanstack/react-router"
-import { queries } from "@lydie/zero/queries"
-import { useOrganization } from "@/context/organization.context"
-import { Surface } from "@/components/layout/Surface"
-import { Button } from "@/components/generic/Button"
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { createFileRoute } from "@tanstack/react-router";
+
+import { Editor } from "@/components/Editor";
+import { Button } from "@/components/generic/Button";
+import { Surface } from "@/components/layout/Surface";
+import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   component: RouteComponent,
   ssr: false,
   loader: async ({ context, params }) => {
-    const { zero, organization } = context
-    const { id } = params
+    const { zero, organization } = context;
+    const { id } = params;
 
     const doc = zero.run(
       queries.documents.byId({
         organizationId: organization.id,
         documentId: id,
       }),
-    )
+    );
 
-    return { doc }
+    return { doc };
   },
-  // head: async ({ loaderData }) => {
-  //   const doc = await loaderData?.doc;
-  //   return {
-  //     meta: [
-  //       {
-  //         title: doc ? `${doc.title} | Lydie` : "Lydie",
-  //       },
-  //     ],
-  //   };
-  // },
-})
+});
 
 function RouteComponent() {
-  const { id } = Route.useParams()
-  const { organization } = useOrganization()
+  const { id } = Route.useParams();
+  const { organization } = useOrganization();
   const [doc, status] = useQuery(
     queries.documents.byId({
       organizationId: organization.id,
       documentId: id,
     }),
-  )
-
-  // Track document opened
-  useTrackOnMount("document_opened", {
-    documentId: id,
-    organizationId: organization.id,
-  })
+  );
 
   if (!doc && status.type === "complete") {
     return (
@@ -57,16 +41,19 @@ function RouteComponent() {
         <Surface className="flex items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-y-2">
             <span className="text-sm font-medium text-gray-900">Document not found</span>
-            <p className="text-sm text-gray-500"> The document you are looking for does not exist.</p>
+            <p className="text-sm text-gray-500">
+              {" "}
+              The document you are looking for does not exist.
+            </p>
             <Button size="sm" href={`/w/${organization?.slug}`}>
               Go back
             </Button>
           </div>
         </Surface>
       </div>
-    )
+    );
   }
-  if (!doc) return null
+  if (!doc) return null;
 
-  return <Editor doc={doc} key={id} />
+  return <Editor doc={doc} key={id} />;
 }

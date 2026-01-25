@@ -1,20 +1,22 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
+
+import { cva } from "cva";
 import {
   Radio as RACRadio,
   RadioGroup as RACRadioGroup,
   type RadioGroupProps as RACRadioGroupProps,
   type RadioProps,
   type ValidationResult,
-} from "react-aria-components"
-import { Description, FieldError, Label } from "./Field"
-import { composeTailwindRenderProps, focusRing } from "./utils"
-import { cva } from "cva"
+} from "react-aria-components";
+
+import { Description, FieldError, Label } from "./Field";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface RadioGroupProps extends Omit<RACRadioGroupProps, "children"> {
-  label?: string
-  children?: ReactNode
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
+  label?: string;
+  children?: ReactNode;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
 export function RadioGroup(props: RadioGroupProps) {
@@ -30,7 +32,7 @@ export function RadioGroup(props: RadioGroupProps) {
       {props.description && <Description>{props.description}</Description>}
       <FieldError>{props.errorMessage}</FieldError>
     </RACRadioGroup>
-  )
+  );
 }
 
 const styles = cva({
@@ -48,7 +50,7 @@ const styles = cva({
       true: "border-gray-200 dark:border-zinc-700 forced-colors:border-[GrayText]!",
     },
   },
-})
+});
 
 export function Radio(props: RadioProps) {
   return (
@@ -66,5 +68,5 @@ export function Radio(props: RadioProps) {
         </>
       )}
     </RACRadio>
-  )
+  );
 }

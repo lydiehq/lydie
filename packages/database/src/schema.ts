@@ -1,22 +1,22 @@
-import { createId } from "@lydie/core/id"
+import { createId } from "@lydie/core/id";
+import { sql } from "drizzle-orm";
 import {
-  index,
   PgColumn,
+  boolean,
+  index,
+  integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
   vector,
-  jsonb,
-  boolean,
-  integer,
-} from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm"
+} from "drizzle-orm/pg-core";
 
 const timestamps = {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}
+};
 
 export const usersTable = pgTable("users", {
   id: text("id")
@@ -34,7 +34,7 @@ export const usersTable = pgTable("users", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   ...timestamps,
-})
+});
 
 export const sessionsTable = pgTable(
   "sessions",
@@ -56,7 +56,7 @@ export const sessionsTable = pgTable(
     ...timestamps,
   },
   (table) => [index("sessions_user_id_idx").on(table.userId)],
-)
+);
 
 export const accountsTable = pgTable(
   "accounts",
@@ -80,7 +80,7 @@ export const accountsTable = pgTable(
     ...timestamps,
   },
   (table) => [index("accounts_user_id_idx").on(table.userId)],
-)
+);
 
 export const verificationsTable = pgTable(
   "verifications",
@@ -92,7 +92,7 @@ export const verificationsTable = pgTable(
     ...timestamps,
   },
   (table) => [index("verifications_identifier_idx").on(table.identifier)],
-)
+);
 
 export const organizationsTable = pgTable("organizations", {
   id: text("id")
@@ -109,7 +109,7 @@ export const organizationsTable = pgTable("organizations", {
   subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'pro'
   polarSubscriptionId: text("polar_subscription_id"),
   ...timestamps,
-})
+});
 
 export const membersTable = pgTable(
   "members",
@@ -131,7 +131,7 @@ export const membersTable = pgTable(
     index("members_user_id_idx").on(table.userId),
     index("members_organization_id_idx").on(table.organizationId),
   ],
-)
+);
 
 export const invitationsTable = pgTable(
   "invitations",
@@ -156,7 +156,7 @@ export const invitationsTable = pgTable(
     index("invitations_email_idx").on(table.email),
     index("invitations_organization_id_idx").on(table.organizationId),
   ],
-)
+);
 
 export const documentsTable = pgTable(
   "documents",
@@ -204,7 +204,7 @@ export const documentsTable = pgTable(
     index("documents_parent_id_idx").on(table.parentId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
   ],
-)
+);
 
 export const documentPublicationsTable = pgTable("document_publications", {
   id: text("id")
@@ -218,7 +218,7 @@ export const documentPublicationsTable = pgTable("document_publications", {
     .notNull()
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   ...timestamps,
-})
+});
 
 export const documentEmbeddingsTable = pgTable(
   "document_embeddings",
@@ -242,7 +242,7 @@ export const documentEmbeddingsTable = pgTable(
     index("embedding_index").using("hnsw", table.embedding.op("vector_cosine_ops")),
     index("document_embeddings_document_id_idx").on(table.documentId),
   ],
-)
+);
 
 export const documentTitleEmbeddingsTable = pgTable(
   "document_title_embeddings",
@@ -262,7 +262,7 @@ export const documentTitleEmbeddingsTable = pgTable(
     index("title_embedding_index").using("hnsw", table.embedding.op("vector_cosine_ops")),
     index("document_title_embeddings_document_id_idx").on(table.documentId),
   ],
-)
+);
 
 export const assistantAgentsTable = pgTable(
   "assistant_agents",
@@ -287,7 +287,7 @@ export const assistantAgentsTable = pgTable(
     index("assistant_agents_organization_id_idx").on(table.organizationId),
     index("assistant_agents_user_id_idx").on(table.userId),
   ],
-)
+);
 
 export const assistantConversationsTable = pgTable(
   "assistant_conversations",
@@ -309,7 +309,7 @@ export const assistantConversationsTable = pgTable(
     ...timestamps,
   },
   (table) => [index("assistant_conversations_organization_id_idx").on(table.organizationId)],
-)
+);
 
 export const assistantMessagesTable = pgTable(
   "assistant_messages",
@@ -329,7 +329,7 @@ export const assistantMessagesTable = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => [index("assistant_messages_conversation_id_idx").on(table.conversationId)],
-)
+);
 
 export const apiKeysTable = pgTable(
   "api_keys",
@@ -349,7 +349,7 @@ export const apiKeysTable = pgTable(
     ...timestamps,
   },
   (table) => [index("api_keys_hashed_key_idx").on(table.hashedKey)],
-)
+);
 
 export const documentComponentsTable = pgTable("document_components", {
   id: text("id")
@@ -362,7 +362,7 @@ export const documentComponentsTable = pgTable("document_components", {
     .notNull()
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   ...timestamps,
-})
+});
 
 // LLM usage tracking (unified for both document and assistant chat)
 export const llmUsageTable = pgTable(
@@ -387,7 +387,7 @@ export const llmUsageTable = pgTable(
     ...timestamps,
   },
   (table) => [index("llm_usage_organization_id_idx").on(table.organizationId)],
-)
+);
 
 export const userSettingsTable = pgTable("user_settings", {
   id: text("id")
@@ -400,7 +400,7 @@ export const userSettingsTable = pgTable("user_settings", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   persistDocumentTreeExpansion: boolean("persist_document_tree_expansion").notNull().default(true),
   ...timestamps,
-})
+});
 
 export const organizationSettingsTable = pgTable("organization_settings", {
   id: text("id")
@@ -413,7 +413,7 @@ export const organizationSettingsTable = pgTable("organization_settings", {
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   onboardingStatus: jsonb("onboarding_status"),
   ...timestamps,
-})
+});
 
 export const integrationConnectionsTable = pgTable(
   "integration_connections",
@@ -432,7 +432,7 @@ export const integrationConnectionsTable = pgTable(
     ...timestamps,
   },
   (table) => [index("integration_connections_organization_id_idx").on(table.organizationId)],
-)
+);
 
 export const integrationLinksTable = pgTable(
   "integration_links",
@@ -461,7 +461,7 @@ export const integrationLinksTable = pgTable(
     index("integration_links_organization_id_idx").on(table.organizationId),
     index("integration_links_integration_type_idx").on(table.integrationType),
   ],
-)
+);
 
 export const syncMetadataTable = pgTable(
   "sync_metadata",
@@ -490,7 +490,7 @@ export const syncMetadataTable = pgTable(
     index("sync_metadata_document_id_idx").on(table.documentId),
     index("sync_metadata_connection_id_idx").on(table.connectionId),
   ],
-)
+);
 
 export const integrationActivityLogsTable = pgTable(
   "integration_activity_logs",
@@ -510,7 +510,7 @@ export const integrationActivityLogsTable = pgTable(
     ...timestamps,
   },
   (table) => [index("integration_activity_logs_connection_id_idx").on(table.connectionId)],
-)
+);
 
 export const assetsTable = pgTable(
   "assets",
@@ -536,7 +536,7 @@ export const assetsTable = pgTable(
     index("assets_user_id_idx").on(table.userId),
     index("assets_key_idx").on(table.key),
   ],
-)
+);
 
 export const feedbackSubmissionsTable = pgTable(
   "feedback_submissions",
@@ -560,4 +560,112 @@ export const feedbackSubmissionsTable = pgTable(
     index("feedback_submissions_user_id_idx").on(table.userId),
     index("feedback_submissions_organization_id_idx").on(table.organizationId),
   ],
-)
+);
+
+export const templatesTable = pgTable(
+  "templates",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    description: text("description"),
+    teaser: text("teaser"),
+    detailedDescription: text("detailed_description"),
+    previewData: jsonb("preview_data"), // Serialized document tree for preview
+    titleEmbedding: vector("title_embedding", { dimensions: 1536 }),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_title_embedding_index").using(
+      "hnsw",
+      table.titleEmbedding.op("vector_cosine_ops"),
+    ),
+  ],
+);
+
+export const templateDocumentsTable = pgTable(
+  "template_documents",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content"), // Serialized YJS state
+    jsonContent: jsonb("json_content"), // Pre-processed TipTap JSON for fast marketing site access
+    parentId: text("parent_id").references((): PgColumn<any> => templateDocumentsTable.id, {
+      onDelete: "set null",
+    }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_documents_template_id_idx").on(table.templateId),
+    index("template_documents_parent_id_idx").on(table.parentId),
+  ],
+);
+
+export const templateInstallationsTable = pgTable(
+  "template_installations",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    installedByUserId: text("installed_by_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    rootDocumentId: text("root_document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("template_installations_template_id_idx").on(table.templateId),
+    index("template_installations_organization_id_idx").on(table.organizationId),
+  ],
+);
+
+export const templateCategoriesTable = pgTable("template_categories", {
+  id: text("id")
+    .primaryKey()
+    .notNull()
+    .$default(() => createId()),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  ...timestamps,
+});
+
+export const templateCategoryAssignmentsTable = pgTable(
+  "template_category_assignments",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => templateCategoriesTable.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_category_assignments_template_id_idx").on(table.templateId),
+    index("template_category_assignments_category_id_idx").on(table.categoryId),
+    uniqueIndex("template_category_assignments_unique_idx").on(table.templateId, table.categoryId),
+  ],
+);

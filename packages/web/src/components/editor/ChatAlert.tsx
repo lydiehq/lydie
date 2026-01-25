@@ -1,28 +1,31 @@
-import { AnimatePresence, motion } from "motion/react"
-import { Button as RACButton } from "react-aria-components"
-import { DismissRegular, ErrorCircleRegular, SparkleRegular, FlashRegular } from "@fluentui/react-icons"
-import { useRouter } from "@tanstack/react-router"
-import { useOrganization } from "@/context/organization.context"
-import clsx from "clsx"
+import {
+  DismissRegular,
+  ErrorCircleRegular,
+  FlashRegular,
+  SparkleRegular,
+} from "@fluentui/react-icons";
+import clsx from "clsx";
+import { AnimatePresence, motion } from "motion/react";
+import { Button as RACButton } from "react-aria-components";
 
 export interface ChatAlertState {
-  show: boolean
-  type: "error" | "warning" | "info"
-  title: string
-  message: string
+  show: boolean;
+  type: "error" | "warning" | "info";
+  title: string;
+  message: string;
   action?: {
-    label: string
-    onClick: () => void
-  }
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ChatAlertProps {
-  alert: ChatAlertState | null
-  onDismiss: () => void
+  alert: ChatAlertState | null;
+  onDismiss: () => void;
 }
 
 export function ChatAlert({ alert, onDismiss }: ChatAlertProps) {
-  if (!alert || !alert.show) return null
+  if (!alert || !alert.show) return null;
 
   return (
     <AnimatePresence>
@@ -39,9 +42,15 @@ export function ChatAlert({ alert, onDismiss }: ChatAlertProps) {
         <Container type={alert.type}>
           <div className="flex justify-between items-start p-2 border-b border-black/5">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {alert.type === "error" && <ErrorCircleRegular className="size-4 text-red-500 shrink-0" />}
-              {alert.type === "warning" && <FlashRegular className="size-4 text-amber-500 shrink-0" />}
-              {alert.type === "info" && <SparkleRegular className="size-4 text-blue-500 shrink-0" />}
+              {alert.type === "error" && (
+                <ErrorCircleRegular className="size-4 text-red-500 shrink-0" />
+              )}
+              {alert.type === "warning" && (
+                <FlashRegular className="size-4 text-amber-500 shrink-0" />
+              )}
+              {alert.type === "info" && (
+                <SparkleRegular className="size-4 text-blue-500 shrink-0" />
+              )}
               <span
                 className={clsx(
                   "text-sm font-medium truncate",
@@ -87,10 +96,16 @@ export function ChatAlert({ alert, onDismiss }: ChatAlertProps) {
         </Container>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }
 
-function Container({ children, type }: { children: React.ReactNode; type: "error" | "warning" | "info" }) {
+function Container({
+  children,
+  type,
+}: {
+  children: React.ReactNode;
+  type: "error" | "warning" | "info";
+}) {
   return (
     <motion.div
       className={clsx(
@@ -110,5 +125,5 @@ function Container({ children, type }: { children: React.ReactNode; type: "error
     >
       {children}
     </motion.div>
-  )
+  );
 }

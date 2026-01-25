@@ -1,7 +1,7 @@
-import { tool } from "ai"
-import { z } from "zod"
-import { db, documentsTable } from "@lydie/database"
-import { eq, and, desc, asc, ilike, isNull, ne } from "drizzle-orm"
+import { db, documentsTable } from "@lydie/database";
+import { tool } from "ai";
+import { and, asc, desc, eq, ilike, isNull, ne } from "drizzle-orm";
+import { z } from "zod";
 
 export const listDocuments = (userId: string, organizationId: string, currentDocumentId?: string) =>
   tool({
@@ -29,35 +29,37 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
         message: titleFilter
           ? `Searching for documents matching "${titleFilter}"...`
           : "Loading documents...",
-      }
+      };
 
-      // Add fake delay to see loading state (remove in production)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      let orderBy
+      let orderBy;
       switch (sortBy) {
         case "title":
-          orderBy = sortOrder === "asc" ? asc(documentsTable.title) : desc(documentsTable.title)
-          break
+          orderBy = sortOrder === "asc" ? asc(documentsTable.title) : desc(documentsTable.title);
+          break;
         case "created":
-          orderBy = sortOrder === "asc" ? asc(documentsTable.createdAt) : desc(documentsTable.createdAt)
-          break
+          orderBy =
+            sortOrder === "asc" ? asc(documentsTable.createdAt) : desc(documentsTable.createdAt);
+          break;
         case "updated":
         default:
-          orderBy = sortOrder === "asc" ? asc(documentsTable.updatedAt) : desc(documentsTable.updatedAt)
-          break
+          orderBy =
+            sortOrder === "asc" ? asc(documentsTable.updatedAt) : desc(documentsTable.updatedAt);
+          break;
       }
 
-      const conditions = [eq(documentsTable.organizationId, organizationId), isNull(documentsTable.deletedAt)]
+      const conditions = [
+        eq(documentsTable.organizationId, organizationId),
+        isNull(documentsTable.deletedAt),
+      ];
 
       // Exclude current document if provided
       if (currentDocumentId) {
-        conditions.push(ne(documentsTable.id, currentDocumentId))
+        conditions.push(ne(documentsTable.id, currentDocumentId));
       }
 
       // Add title filter if provided
       if (titleFilter) {
-        conditions.push(ilike(documentsTable.title, `%${titleFilter}%`))
+        conditions.push(ilike(documentsTable.title, `%${titleFilter}%`));
       }
 
       let query = db
@@ -71,9 +73,9 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
         .from(documentsTable)
         .where(and(...conditions))
         .orderBy(orderBy)
-        .limit(limit)
+        .limit(limit);
 
-      const documents = await query
+      const documents = await query;
 
       const results = documents.map((doc) => {
         const result: any = {
@@ -82,13 +84,13 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
           slug: doc.slug,
           createdAt: doc.createdAt.toISOString(),
           updatedAt: doc.updatedAt.toISOString(),
-        }
+        };
 
-        return result
-      })
+        return result;
+      });
 
-      const filterMessage = titleFilter ? ` matching "${titleFilter}"` : ""
-      const sortMessage = `sorted by ${sortBy} (${sortOrder})`
+      const filterMessage = titleFilter ? ` matching "${titleFilter}"` : "";
+      const sortMessage = `sorted by ${sortBy} (${sortOrder})`;
 
       // Yield final result (this is what will be in tool.output)
       yield {
@@ -104,6 +106,6 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
           sortOrder,
           limit,
         },
-      }
+      };
     },
-  })
+  });

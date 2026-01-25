@@ -1,52 +1,52 @@
-import { useEffect, useState, type RefObject } from "react"
-import { Pause, Play } from "lucide-react"
-import { Button } from "react-aria-components"
+import { Pause, Play } from "lucide-react";
+import { type RefObject, useEffect, useState } from "react";
+import { Button } from "react-aria-components";
 
 type PlaybackState = {
-  isPlaying: boolean
-  progress: number
-  duration: number
-}
+  isPlaying: boolean;
+  progress: number;
+  duration: number;
+};
 
 export function PreviewPlayButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
   const [playback, setPlayback] = useState<PlaybackState>({
     isPlaying: true,
     progress: 0,
     duration: 31,
-  })
+  });
 
   useEffect(() => {
-    if (!videoRef.current) return
+    if (!videoRef.current) return;
 
     if (playback.isPlaying) {
-      videoRef.current.play()
+      videoRef.current.play();
     } else {
-      videoRef.current.pause()
+      videoRef.current.pause();
     }
-  }, [playback.isPlaying])
+  }, [playback.isPlaying]);
 
   useEffect(() => {
-    if (!videoRef.current) return
+    if (!videoRef.current) return;
 
-    const video = videoRef.current
+    const video = videoRef.current;
     const updateProgress = () => {
       setPlayback((prev) => ({
         ...prev,
         progress: video.currentTime,
         duration: video.duration,
-      }))
-    }
+      }));
+    };
 
-    video.addEventListener("timeupdate", updateProgress)
-    video.addEventListener("loadedmetadata", updateProgress)
+    video.addEventListener("timeupdate", updateProgress);
+    video.addEventListener("loadedmetadata", updateProgress);
 
     return () => {
-      video.removeEventListener("timeupdate", updateProgress)
-      video.removeEventListener("loadedmetadata", updateProgress)
-    }
-  }, [])
+      video.removeEventListener("timeupdate", updateProgress);
+      video.removeEventListener("loadedmetadata", updateProgress);
+    };
+  }, []);
 
-  const progressPercent = (playback.progress / playback.duration) * 100
+  const progressPercent = (playback.progress / playback.duration) * 100;
 
   return (
     <div className="absolute -bottom-8 right-0 flex items-center gap-x-2">
@@ -66,5 +66,5 @@ export function PreviewPlayButton({ videoRef }: { videoRef: RefObject<HTMLVideoE
         />
       </div>
     </div>
-  )
+  );
 }

@@ -1,19 +1,20 @@
-import { ChevronDownRegular, ChevronUpRegular } from "@fluentui/react-icons"
-import React from "react"
+import { ChevronDownRegular, ChevronUpRegular } from "@fluentui/react-icons";
+import React from "react";
 import {
   NumberField as AriaNumberField,
   NumberFieldProps as AriaNumberFieldProps,
   Button,
   ButtonProps,
   ValidationResult,
-} from "react-aria-components"
-import { Description, FieldError, FieldGroup, Input, Label, fieldBorderStyles } from "./Field"
-import { composeTailwindRenderProps } from "./utils"
+} from "react-aria-components";
+
+import { Description, FieldError, FieldGroup, Input, Label, fieldBorderStyles } from "./Field";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface NumberFieldProps extends AriaNumberFieldProps {
-  label?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
+  label?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
 export function NumberField({ label, description, errorMessage, ...props }: NumberFieldProps) {
@@ -36,7 +37,12 @@ export function NumberField({ label, description, errorMessage, ...props }: Numb
               <StepperButton slot="increment">
                 <ChevronUpRegular aria-hidden className="w-4 h-4" />
               </StepperButton>
-              <div className={fieldBorderStyles({ ...renderProps, class: "border-b-2" })} />
+              <div
+                className={fieldBorderStyles({
+                  ...renderProps,
+                  class: "border-b-2",
+                })}
+              />
               <StepperButton slot="decrement">
                 <ChevronDownRegular aria-hidden className="w-4 h-4" />
               </StepperButton>
@@ -47,7 +53,7 @@ export function NumberField({ label, description, errorMessage, ...props }: Numb
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
     </AriaNumberField>
-  )
+  );
 }
 
 function StepperButton(props: ButtonProps) {
@@ -56,5 +62,5 @@ function StepperButton(props: ButtonProps) {
       {...props}
       className="px-0.5 cursor-default text-gray-500 pressed:bg-gray-100 group-disabled:text-gray-200 dark:text-zinc-400 dark:pressed:bg-zinc-800 dark:group-disabled:text-zinc-600 forced-colors:group-disabled:text-[GrayText]"
     />
-  )
+  );
 }

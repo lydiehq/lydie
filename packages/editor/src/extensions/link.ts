@@ -1,4 +1,4 @@
-import { Link as TiptapLink } from "@tiptap/extension-link"
+import { Link as TiptapLink } from "@tiptap/extension-link";
 
 export const Link = TiptapLink.extend({
   addAttributes() {
@@ -23,11 +23,11 @@ export const Link = TiptapLink.extend({
           if (attributes.href?.startsWith("internal://")) {
             return {
               "data-internal": "",
-            }
+            };
           }
-          return {}
+          return {};
         },
       },
-    }
+    };
   },
-})
+});

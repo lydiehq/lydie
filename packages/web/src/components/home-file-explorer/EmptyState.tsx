@@ -1,7 +1,7 @@
-import { DocumentFilled } from "@fluentui/react-icons"
+import { DocumentFilled } from "@fluentui/react-icons";
 
 interface EmptyStateProps {
-  hasSearch: boolean
+  hasSearch: boolean;
 }
 
 export function EmptyState({ hasSearch }: EmptyStateProps) {
@@ -13,5 +13,5 @@ export function EmptyState({ hasSearch }: EmptyStateProps) {
         {hasSearch ? "Try a different search term" : "Get started by creating your first document"}
       </p>
     </div>
-  )
+  );
 }

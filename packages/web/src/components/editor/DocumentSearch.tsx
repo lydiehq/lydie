@@ -1,49 +1,50 @@
-import React, { useState } from "react"
-import { useZero } from "@/services/zero"
-import { useQuery } from "@rocicorp/zero/react"
-import { SearchFilled, DocumentFilled } from "@fluentui/react-icons"
-import { Input } from "react-aria-components"
-import type { Document } from "@lydie/zero/schema"
-import { useOrganization } from "@/context/organization.context"
-import { queries } from "@lydie/zero/queries"
-import { useAuth } from "@/context/auth.context"
+import type { Document } from "@lydie/zero/schema";
+
+import { DocumentFilled, SearchFilled } from "@fluentui/react-icons";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import React, { useState } from "react";
+import { Input } from "react-aria-components";
+
+import { useOrganization } from "@/context/organization.context";
 
 interface DocumentSearchProps {
-  onSelectDocument: (document: Document) => void
-  onBack: () => void
-  exclude?: string // Exclude current document
+  onSelectDocument: (document: Document) => void;
+  onBack: () => void;
+  exclude?: string; // Exclude current document
 }
 
 export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSearchProps) {
-  const [query, setQuery] = useState("")
-  const z = useZero()
-  const { organization } = useOrganization()
-  const { session } = useAuth()
+  const [query, setQuery] = useState("");
 
-  const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }))
+  const { organization } = useOrganization();
+
+  const [documents] = useQuery(queries.documents.byUpdated({ organizationId: organization.id }));
 
   // Filter documents based on search query
   const filteredDocuments = documents
     .filter((doc) => {
-      if (exclude && doc.id === exclude) return false
-      if (!query.trim()) return true
+      if (exclude && doc.id === exclude) return false;
+      if (!query.trim()) return true;
 
-      const searchTerm = query.toLowerCase()
-      return doc.title.toLowerCase().includes(searchTerm) || doc.slug.toLowerCase().includes(searchTerm)
+      const searchTerm = query.toLowerCase();
+      return (
+        doc.title.toLowerCase().includes(searchTerm) || doc.slug.toLowerCase().includes(searchTerm)
+      );
     })
-    .slice(0, 8) // Limit to 8 results
+    .slice(0, 8); // Limit to 8 results
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
-      e.preventDefault()
-      onBack()
+      e.preventDefault();
+      onBack();
     }
 
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault()
+      e.preventDefault();
       // Handle keyboard navigation if needed
     }
-  }
+  };
 
   return (
     <div className="p-2 min-w-80 max-w-96">
@@ -55,7 +56,6 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
           onKeyDown={handleKeyDown}
           placeholder="Search documents..."
           className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          autoFocus
         />
       </div>
 
@@ -74,7 +74,9 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
               >
                 <DocumentFilled className="size-4 text-gray-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-gray-900 truncate">{doc.title || "Untitled"}</div>
+                  <div className="font-medium text-sm text-gray-900 truncate">
+                    {doc.title || "Untitled"}
+                  </div>
                   <div className="text-xs text-gray-500 truncate">{doc.slug}</div>
                 </div>
               </button>
@@ -87,5 +89,5 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
         <div className="text-xs text-gray-400">Press Escape to go back</div>
       </div>
     </div>
-  )
+  );
 }

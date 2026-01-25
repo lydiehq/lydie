@@ -1,6 +1,6 @@
-import { db, integrationActivityLogsTable } from "@lydie/database"
+import { db, integrationActivityLogsTable } from "@lydie/database";
 
-type ActivityType = "push" | "pull" | "connect" | "delete"
+type ActivityType = "push" | "pull" | "connect" | "delete";
 
 export async function logIntegrationActivity(
   connectionId: string,
@@ -13,5 +13,5 @@ export async function logIntegrationActivity(
     activityType,
     activityStatus,
     integrationType,
-  })
+  });
 }

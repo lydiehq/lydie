@@ -1,11 +1,11 @@
-import { GridRegular, ListRegular } from "@fluentui/react-icons"
-import { Button } from "react-aria-components"
-import { cva } from "cva"
+import { GridRegular, ListRegular } from "@fluentui/react-icons";
+import { cva } from "cva";
+import { Button } from "react-aria-components";
 
 type Props = {
-  viewMode: "grid" | "list"
-  onViewModeChange: (mode: "grid" | "list") => void
-}
+  viewMode: "grid" | "list";
+  onViewModeChange: (mode: "grid" | "list") => void;
+};
 
 const styles = cva({
   base: "px-2 py-1",
@@ -15,7 +15,7 @@ const styles = cva({
       inactive: "text-gray-500",
     },
   },
-})
+});
 
 export function ViewModeToggle({ viewMode, onViewModeChange }: Props) {
   return (
@@ -39,5 +39,5 @@ export function ViewModeToggle({ viewMode, onViewModeChange }: Props) {
         <ListRegular className="size-3.5 text-inherit" />
       </Button>
     </div>
-  )
+  );
 }

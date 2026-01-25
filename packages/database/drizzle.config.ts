@@ -1,5 +1,5 @@
-import { defineConfig } from "drizzle-kit"
-import { Resource } from "sst"
+import { defineConfig } from "drizzle-kit";
+import { Resource } from "sst";
 
 export default defineConfig({
   schema: "./src/schema.ts",
@@ -9,4 +9,4 @@ export default defineConfig({
     url: Resource.PostgresConnectionStringDirect.value,
   },
   schemaFilter: ["public"],
-})
+});

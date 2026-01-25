@@ -1,56 +1,60 @@
-import { ArrowClockwiseRegular } from "@fluentui/react-icons"
-import { motion } from "motion/react"
-import { countWords } from "@/utils/text"
-import { useOrganization } from "@/context/organization.context"
-import { StickToBottom } from "use-stick-to-bottom"
-import { Button } from "@/components/generic/Button"
-import { Separator } from "@/components/generic/Separator"
+import { motion } from "motion/react";
+import { StickToBottom } from "use-stick-to-bottom";
+
+import { Button } from "@/components/generic/Button";
+import { Separator } from "@/components/generic/Separator";
+import { countWords } from "@/utils/text";
 
 type Props = {
   tool: {
-    toolCallId: string
-    state?: "input-streaming" | "input-available" | "call-streaming" | "output-available" | "output-error"
+    toolCallId: string;
+    state?:
+      | "input-streaming"
+      | "input-available"
+      | "call-streaming"
+      | "output-available"
+      | "output-error";
     input?: {
-      title?: string
-      content?: string
-    }
+      title?: string;
+      content?: string;
+    };
     output?: {
-      state?: "success" | "error"
-      message?: string
+      state?: "success" | "error";
+      message?: string;
       document?: {
-        id: string
-        title: string
-        slug: string
-        parentId?: string | null
-      }
-      contentApplied?: boolean
-      error?: string
-    }
-  }
-}
+        id: string;
+        title: string;
+        slug: string;
+        parentId?: string | null;
+      };
+      contentApplied?: boolean;
+      error?: string;
+    };
+  };
+};
 
 export function CreateDocumentTool({ tool }: Props) {
-  const { output, input } = tool
+  const { output, input } = tool;
 
-  const documentId = output?.document?.id
-  const fullContent = input?.content || ""
+  const documentId = output?.document?.id;
+  const fullContent = input?.content || "";
 
-  const isInputStreaming = tool.state === "input-streaming"
-  const isCreated = !!documentId
-  const isError = output?.state === "error" || tool.state === "output-error"
-  const isSuccess = output?.state === "success"
+  const isInputStreaming = tool.state === "input-streaming";
+  const isCreated = !!documentId;
+  const isError = output?.state === "error" || tool.state === "output-error";
+  const isSuccess = output?.state === "success";
 
-  const hasContent = fullContent.length > 0
-  const wordCount = countWords(fullContent)
+  const hasContent = fullContent.length > 0;
+  const wordCount = countWords(fullContent);
 
-  const roundedWordCount = Math.floor(wordCount / 10) * 10
+  const roundedWordCount = Math.floor(wordCount / 10) * 10;
 
   const getStatusText = () => {
-    if (isError) return "Failed to create document"
-    if (isCreated && isSuccess) return "Document created"
-    if (isInputStreaming && hasContent) return "Writing content"
-    return "Writing content"
-  }
+    if (isError) return "Failed to create document";
+    if (isCreated && isSuccess) return "Document created";
+    if (isInputStreaming && hasContent) return "Writing content";
+    return "Writing content";
+  };
 
   return (
     <motion.div className="p-1 bg-gray-100 rounded-[10px] my-4 relative">
@@ -64,7 +68,9 @@ export function CreateDocumentTool({ tool }: Props) {
           >
             {getStatusText()}
           </motion.span>
-          {hasContent && wordCount > 0 && <span className="text-gray-500">{roundedWordCount} words</span>}
+          {hasContent && wordCount > 0 && (
+            <span className="text-gray-500">{roundedWordCount} words</span>
+          )}
         </motion.div>
       </div>
       <div className="relative">
@@ -76,9 +82,15 @@ export function CreateDocumentTool({ tool }: Props) {
         />
         <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
           <div className="p-2">
-            <StickToBottom className="text-xs text-gray-600 h-56 overflow-y-auto" initial={{ damping: 1, stiffness: 1 }}>
+            <StickToBottom
+              className="text-xs text-gray-600 h-56 overflow-y-auto"
+              initial={{ damping: 1, stiffness: 1 }}
+            >
               <StickToBottom.Content>
-                <div className="editor-content-sm" dangerouslySetInnerHTML={{ __html: fullContent }} />
+                <div
+                  className="editor-content-sm"
+                  dangerouslySetInnerHTML={{ __html: fullContent }}
+                />
               </StickToBottom.Content>
             </StickToBottom>
             {documentId && (
@@ -108,5 +120,5 @@ export function CreateDocumentTool({ tool }: Props) {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

@@ -3,13 +3,15 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
+    "./mutators": "./src/mutators/index.ts",
+    "./queries": "./src/queries/index.ts",
     "./*": "./src/*.ts"
   },
   "scripts": {
     "dev": "zero-cache"
   },
   "dependencies": {
-    "@aws-sdk/client-sqs": "^3.974.0",
+    "@aws-sdk/client-sqs": "^3.975.0",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "@lydie/integrations": "workspace:*",

@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LandingRouteRouteImport } from './routes/_landing/route'
 import { Route as _authRouteRouteImport } from './routes/__auth/route'
 import { Route as _authIndexRouteImport } from './routes/__auth/index'
-import { Route as LandingBlogIndexRouteImport } from './routes/_landing/blog/index'
+import { Route as _authInstallTemplateRouteImport } from './routes/__auth/install-template'
 import { Route as LandingAuthIndexRouteImport } from './routes/_landing/auth/index'
 import { Route as _authNewIndexRouteImport } from './routes/__auth/new/index'
 import { Route as _authWOrganizationSlugRouteRouteImport } from './routes/__auth/w/$organizationSlug/route'
@@ -47,10 +47,10 @@ const _authIndexRoute = _authIndexRouteImport.update({
   path: '/',
   getParentRoute: () => _authRouteRoute,
 } as any)
-const LandingBlogIndexRoute = LandingBlogIndexRouteImport.update({
-  id: '/blog/',
-  path: '/blog/',
-  getParentRoute: () => LandingRouteRoute,
+const _authInstallTemplateRoute = _authInstallTemplateRouteImport.update({
+  id: '/install-template',
+  path: '/install-template',
+  getParentRoute: () => _authRouteRoute,
 } as any)
 const LandingAuthIndexRoute = LandingAuthIndexRouteImport.update({
   id: '/auth/',
@@ -181,10 +181,10 @@ const _authWOrganizationSlugSettingsIntegrationsIntegrationTypeActivityRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof _authIndexRoute
+  '/install-template': typeof _authInstallTemplateRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugRouteRouteWithChildren
   '/new/': typeof _authNewIndexRoute
   '/auth/': typeof LandingAuthIndexRoute
-  '/blog/': typeof LandingBlogIndexRoute
   '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
   '/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
@@ -205,9 +205,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof _authIndexRoute
+  '/install-template': typeof _authInstallTemplateRoute
   '/new': typeof _authNewIndexRoute
   '/auth': typeof LandingAuthIndexRoute
-  '/blog': typeof LandingBlogIndexRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugIndexRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
@@ -228,11 +228,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/__auth': typeof _authRouteRouteWithChildren
   '/_landing': typeof LandingRouteRouteWithChildren
+  '/__auth/install-template': typeof _authInstallTemplateRoute
   '/__auth/': typeof _authIndexRoute
   '/__auth/w/$organizationSlug': typeof _authWOrganizationSlugRouteRouteWithChildren
   '/__auth/new/': typeof _authNewIndexRoute
   '/_landing/auth/': typeof LandingAuthIndexRoute
-  '/_landing/blog/': typeof LandingBlogIndexRoute
   '/__auth/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
   '/__auth/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
   '/__auth/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
@@ -255,10 +255,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/install-template'
     | '/w/$organizationSlug'
     | '/new/'
     | '/auth/'
-    | '/blog/'
     | '/w/$organizationSlug/settings'
     | '/w/$organizationSlug/'
     | '/w/$organizationSlug/settings/admin'
@@ -279,9 +279,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/install-template'
     | '/new'
     | '/auth'
-    | '/blog'
     | '/w/$organizationSlug'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
@@ -301,11 +301,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/__auth'
     | '/_landing'
+    | '/__auth/install-template'
     | '/__auth/'
     | '/__auth/w/$organizationSlug'
     | '/__auth/new/'
     | '/_landing/auth/'
-    | '/_landing/blog/'
     | '/__auth/w/$organizationSlug/settings'
     | '/__auth/w/$organizationSlug/'
     | '/__auth/w/$organizationSlug/settings/admin'
@@ -353,12 +353,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authIndexRouteImport
       parentRoute: typeof _authRouteRoute
     }
-    '/_landing/blog/': {
-      id: '/_landing/blog/'
-      path: '/blog'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof LandingBlogIndexRouteImport
-      parentRoute: typeof LandingRouteRoute
+    '/__auth/install-template': {
+      id: '/__auth/install-template'
+      path: '/install-template'
+      fullPath: '/install-template'
+      preLoaderRoute: typeof _authInstallTemplateRouteImport
+      parentRoute: typeof _authRouteRoute
     }
     '/_landing/auth/': {
       id: '/_landing/auth/'
@@ -589,12 +589,14 @@ const _authWOrganizationSlugRouteRouteWithChildren =
   )
 
 interface _authRouteRouteChildren {
+  _authInstallTemplateRoute: typeof _authInstallTemplateRoute
   _authIndexRoute: typeof _authIndexRoute
   _authWOrganizationSlugRouteRoute: typeof _authWOrganizationSlugRouteRouteWithChildren
   _authNewIndexRoute: typeof _authNewIndexRoute
 }
 
 const _authRouteRouteChildren: _authRouteRouteChildren = {
+  _authInstallTemplateRoute: _authInstallTemplateRoute,
   _authIndexRoute: _authIndexRoute,
   _authWOrganizationSlugRouteRoute:
     _authWOrganizationSlugRouteRouteWithChildren,
@@ -607,12 +609,10 @@ const _authRouteRouteWithChildren = _authRouteRoute._addFileChildren(
 
 interface LandingRouteRouteChildren {
   LandingAuthIndexRoute: typeof LandingAuthIndexRoute
-  LandingBlogIndexRoute: typeof LandingBlogIndexRoute
 }
 
 const LandingRouteRouteChildren: LandingRouteRouteChildren = {
   LandingAuthIndexRoute: LandingAuthIndexRoute,
-  LandingBlogIndexRoute: LandingBlogIndexRoute,
 }
 
 const LandingRouteRouteWithChildren = LandingRouteRoute._addFileChildren(

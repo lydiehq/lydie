@@ -1,27 +1,29 @@
-import { useEditor, Editor } from "@tiptap/react"
-import { ReactNodeViewRenderer } from "@tiptap/react"
-import { getDocumentEditorExtensions } from "@lydie/editor/document-editor"
-import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent"
-import { CodeBlockComponent } from "@/components/CodeBlockComponent"
-import { OnboardingStepView } from "@/components/editor/OnboardingStepView"
-import { OnboardingCalloutView } from "@/components/editor/OnboardingCalloutView"
-import { useCallback, useMemo } from "react"
-import * as Y from "yjs"
-import { HocuspocusProvider } from "@hocuspocus/provider"
-import type { QueryResultType } from "@rocicorp/zero"
-import type { queries } from "@lydie/zero/queries"
-import { useAuth } from "@/context/auth.context"
-import { useImageUpload } from "@/hooks/use-image-upload"
-import type { EditorView } from "@tiptap/pm/view"
-import type { Slice } from "@tiptap/pm/model"
-import { base64ToUint8Array } from "@lydie/core/lib/base64"
+import type { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
+import type { Slice } from "@tiptap/pm/model";
+import type { EditorView } from "@tiptap/pm/view";
+
+import { HocuspocusProvider } from "@hocuspocus/provider";
+import { base64ToUint8Array } from "@lydie/core/lib/base64";
+import { getDocumentEditorExtensions } from "@lydie/editor/document-editor";
+import { Editor, useEditor } from "@tiptap/react";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { useCallback, useMemo } from "react";
+import * as Y from "yjs";
+
+import { CodeBlockComponent } from "@/components/CodeBlockComponent";
+import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
+import { OnboardingCalloutView } from "@/components/editor/OnboardingCalloutView";
+import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
+import { useAuth } from "@/context/auth.context";
+import { useImageUpload } from "@/hooks/use-image-upload";
 
 export type DocumentEditorHookResult = {
-  editor: Editor | null
-  setContent: (content: string) => void
-  provider: HocuspocusProvider | null
-  ydoc: Y.Doc | null
-}
+  editor: Editor | null;
+  setContent: (content: string) => void;
+  provider: HocuspocusProvider | null;
+  ydoc: Y.Doc | null;
+};
 
 function getUserColor(userId: string): string {
   const colors = [
@@ -35,25 +37,24 @@ function getUserColor(userId: string): string {
     "#1be7ff",
     "#ff006e",
     "#8338ec",
-  ]
+  ];
 
-  // Simple hash function to get consistent color for user
-  let hash = 0
+  let hash = 0;
   for (let i = 0; i < userId.length; i++) {
-    hash = userId.charCodeAt(i) + ((hash << 5) - hash)
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return colors[Math.abs(hash) % colors.length]
+  return colors[Math.abs(hash) % colors.length];
 }
 
 type UseDocumentEditorProps = {
-  onUpdate?: () => void
-  onSave?: () => void
-  onTextSelect?: (e: any) => void
-  onAddLink?: () => void
-  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>
-}
+  onUpdate?: () => void;
+  onSave?: () => void;
+  onTextSelect?: (e: any) => void;
+  onAddLink?: () => void;
+  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
+};
 
-const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001"
+const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001";
 
 export function useDocumentEditor({
   doc,
@@ -61,22 +62,22 @@ export function useDocumentEditor({
   onTextSelect,
   onAddLink,
 }: UseDocumentEditorProps): DocumentEditorHookResult {
-  const { user } = useAuth()
-  const { uploadImage } = useImageUpload()
-  const isLocked = doc.is_locked ?? false
+  const { user } = useAuth();
+  const { uploadImage } = useImageUpload();
+  const isLocked = doc.is_locked ?? false;
 
   const { ydoc, provider } = useMemo(() => {
-    if (!doc.id) return { ydoc: null, provider: null }
+    if (!doc.id) return { ydoc: null, provider: null };
 
-    const yjsState = new Y.Doc()
+    const yjsState = new Y.Doc();
 
     // Initialize document with existing state if available
     if (doc.yjs_state) {
       try {
-        const bytes = base64ToUint8Array(doc.yjs_state)
-        Y.applyUpdate(yjsState, bytes)
+        const bytes = base64ToUint8Array(doc.yjs_state);
+        Y.applyUpdate(yjsState, bytes);
       } catch (error) {
-        console.error("[DocumentEditor] Error applying initial Yjs state:", error)
+        console.error("[DocumentEditor] Error applying initial Yjs state:", error);
       }
     }
 
@@ -84,14 +85,16 @@ export function useDocumentEditor({
       name: doc.id,
       url: `${yjsServerUrl}/${doc.id}`,
       document: yjsState,
-    })
+    });
 
-    return { ydoc: yjsState, provider: hocuspocusProvider }
-  }, [doc.id, doc.yjs_state])
+    return { ydoc: yjsState, provider: hocuspocusProvider };
+  }, [doc.id, doc.yjs_state]);
 
   const userInfo = useMemo(() => {
-    return user ? { name: user.name, color: getUserColor(user.id) } : { name: "Anonymous", color: "#808080" }
-  }, [user?.id, user?.name])
+    return user
+      ? { name: user.name, color: getUserColor(user.id) }
+      : { name: "Anonymous", color: "#808080" };
+  }, [user?.id, user?.name, user]);
 
   const extensions = useMemo(() => {
     return getDocumentEditorExtensions({
@@ -113,8 +116,8 @@ export function useDocumentEditor({
       },
       collaboration: { document: ydoc },
       collaborationCaret: { provider, user: userInfo },
-    })
-  }, [ydoc, provider, userInfo, onTextSelect, onAddLink])
+    });
+  }, [ydoc, provider, userInfo, onTextSelect, onAddLink]);
 
   const editor = useEditor({
     autofocus: !isLocked,
@@ -127,83 +130,80 @@ export function useDocumentEditor({
       handleDrop: isLocked ? undefined : createImageDropHandler(uploadImage),
     },
     onUpdate: isLocked ? undefined : onUpdate,
-  })
+  });
 
   const setContent = useCallback(
     (content: string) => {
-      if (!editor) return
-      editor.commands.setContent(content)
+      if (!editor) return;
+      editor.commands.setContent(content);
     },
     [editor],
-  )
+  );
 
-  return { editor, setContent, provider, ydoc }
+  return { editor, setContent, provider, ydoc };
 }
 
 function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
   return function (view: EditorView, event: DragEvent, _slice: Slice, moved: boolean): boolean {
-    // Only handle external file drops (not moving content within editor)
     if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
-      const file = event.dataTransfer.files[0]
-      const filesize = (file.size / 1024 / 1024).toFixed(4) // Size in MB
+      const file = event.dataTransfer.files[0];
+      const filesize = (file.size / 1024 / 1024).toFixed(4);
 
-      // Validate image type and size (allow jpeg, png, webp, gif under 10MB)
-      const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]
+      const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
       if (validImageTypes.includes(file.type) && parseFloat(filesize) < 10) {
         // Check image dimensions
-        const _URL = window.URL || window.webkitURL
-        const img = new Image()
-        img.src = _URL.createObjectURL(file)
+        const _URL = window.URL || window.webkitURL;
+        const img = new Image();
+        img.src = _URL.createObjectURL(file);
         img.onload = function () {
           // Allow images up to 5000px in width/height
           if (img.width > 5000 || img.height > 5000) {
-            window.alert("Your images need to be less than 5000 pixels in height and width.")
-            _URL.revokeObjectURL(img.src)
-            return
+            window.alert("Your images need to be less than 5000 pixels in height and width.");
+            _URL.revokeObjectURL(img.src);
+            return;
           }
 
-          // Upload the image
           uploadImage(file)
             .then(function (url) {
-              // Pre-load the image before inserting to avoid delay
-              const preloadImg = new Image()
-              preloadImg.src = url
+              const preloadImg = new Image();
+              preloadImg.src = url;
               preloadImg.onload = function () {
-                // Insert the image at the drop position
-                const { schema } = view.state
+                const { schema } = view.state;
                 const coordinates = view.posAtCoords({
                   left: event.clientX,
                   top: event.clientY,
-                })
+                });
                 if (coordinates) {
-                  const node = schema.nodes.image.create({ src: url })
-                  const transaction = view.state.tr.insert(coordinates.pos, node)
-                  view.dispatch(transaction)
+                  const node = schema.nodes.image.create({ src: url });
+                  const transaction = view.state.tr.insert(coordinates.pos, node);
+                  view.dispatch(transaction);
                 }
-              }
+              };
               preloadImg.onerror = function () {
-                window.alert("There was a problem loading your image, please try again.")
-              }
+                window.alert("There was a problem loading your image, please try again.");
+              };
             })
             .catch(function (error) {
-              console.error("Failed to upload image:", error)
-              window.alert("There was a problem uploading your image, please try again.")
+              console.error("Failed to upload image:", error);
+              window.alert("There was a problem uploading your image, please try again.");
             })
             .finally(() => {
-              _URL.revokeObjectURL(img.src)
-            })
-        }
+              _URL.revokeObjectURL(img.src);
+            });
+        };
         img.onerror = function () {
-          _URL.revokeObjectURL(img.src)
-          window.alert("Invalid image file. Please try again.")
-        }
+          _URL.revokeObjectURL(img.src);
+          window.alert("Invalid image file. Please try again.");
+        };
 
-        return true // Handled
+        return true; // Handled
       } else {
-        window.alert("Images need to be in jpg, png, webp, or gif format and less than 10MB in size.")
-        return true // Handled (even if invalid)
+        window.alert(
+          "Images need to be in jpg, png, webp, or gif format and less than 10MB in size.",
+        );
+        return true; // Handled (even if invalid)
       }
     }
-    return false // Not handled, use default behaviour
-  }
+    return false; // Not handled, use default behaviour
+  };
 }

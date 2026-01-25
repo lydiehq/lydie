@@ -1,17 +1,17 @@
 export interface ConversionConfig {
-  slug: string // URL: /tools/convert/{slug}
-  fromFormat: string // Display name
-  toFormat: string // Display name
-  pandocFrom: string // Pandoc format name
-  pandocTo: string // Pandoc format name
-  title: string
-  h1: string
-  description: string
-  introText: string
-  howToSteps: string[]
-  faqs: { q: string; a: string }[]
-  keywords: string[]
-  relatedSlugs: string[]
+  slug: string; // URL: /tools/convert/{slug}
+  fromFormat: string; // Display name
+  toFormat: string; // Display name
+  pandocFrom: string; // Pandoc format name
+  pandocTo: string; // Pandoc format name
+  title: string;
+  h1: string;
+  description: string;
+  introText: string;
+  howToSteps: string[];
+  faqs: { q: string; a: string }[];
+  keywords: string[];
+  relatedSlugs: string[];
 }
 
 export const conversionConfigs: ConversionConfig[] = [
@@ -133,7 +133,11 @@ export const conversionConfigs: ConversionConfig[] = [
       "Free HTML to markdown converter. Convert web pages and HTML files to clean markdown format.",
     introText:
       "Convert HTML content to clean Markdown format. Perfect for importing web content into markdown-based systems.",
-    howToSteps: ["Paste your HTML content", 'Click "Convert to Markdown"', "Download your markdown file"],
+    howToSteps: [
+      "Paste your HTML content",
+      'Click "Convert to Markdown"',
+      "Download your markdown file",
+    ],
     faqs: [
       {
         q: "Does it work with complex HTML?",
@@ -193,7 +197,8 @@ export const conversionConfigs: ConversionConfig[] = [
     pandocTo: "markdown",
     title: "Convert Word (DOCX) to Markdown Online Free | DOCX to MD Converter",
     h1: "Convert Word (DOCX) to Markdown",
-    description: "Free DOCX to markdown converter. Extract content from Word documents to markdown format.",
+    description:
+      "Free DOCX to markdown converter. Extract content from Word documents to markdown format.",
     introText:
       "Convert Microsoft Word documents to clean Markdown format. Perfect for migrating content to markdown-based systems.",
     howToSteps: [
@@ -226,7 +231,8 @@ export const conversionConfigs: ConversionConfig[] = [
     pandocTo: "pdf",
     title: "Convert HTML to PDF Online Free | Web Page to PDF Converter",
     h1: "Convert HTML to PDF",
-    description: "Free HTML to PDF converter. Convert web pages and HTML documents to PDF format instantly.",
+    description:
+      "Free HTML to PDF converter. Convert web pages and HTML documents to PDF format instantly.",
     introText:
       "Convert HTML content to PDF format. Ideal for archiving web pages or creating printable versions of web content.",
     howToSteps: ["Paste your HTML content", 'Click "Convert to PDF"', "Download your PDF document"],
@@ -289,7 +295,8 @@ export const conversionConfigs: ConversionConfig[] = [
     pandocTo: "epub",
     title: "Convert Markdown to EPUB Online | Create eBooks from Markdown",
     h1: "Convert Markdown to EPUB",
-    description: "Free markdown to EPUB converter. Create e-books from your markdown content instantly.",
+    description:
+      "Free markdown to EPUB converter. Create e-books from your markdown content instantly.",
     introText:
       "Convert Markdown documents to EPUB format for e-readers. Perfect for creating e-books from your markdown content.",
     howToSteps: [
@@ -357,7 +364,8 @@ export const conversionConfigs: ConversionConfig[] = [
     title: "Convert HTML to Plain Text | Strip HTML Tags Online",
     h1: "Convert HTML to Plain Text",
     description: "Free HTML to text converter. Remove HTML tags and extract plain text content.",
-    introText: "Strip HTML tags and convert to plain text. Useful for extracting content from web pages.",
+    introText:
+      "Strip HTML tags and convert to plain text. Useful for extracting content from web pages.",
     howToSteps: [
       "Paste your HTML content",
       'Click "Convert to Plain Text"',
@@ -388,8 +396,10 @@ export const conversionConfigs: ConversionConfig[] = [
     pandocTo: "html",
     title: "Convert reStructuredText (RST) to HTML | RST to HTML Converter",
     h1: "Convert reStructuredText to HTML",
-    description: "Free RST to HTML converter. Convert Python documentation and RST files to HTML format.",
-    introText: "Convert reStructuredText to HTML. Perfect for rendering Python documentation as web pages.",
+    description:
+      "Free RST to HTML converter. Convert Python documentation and RST files to HTML format.",
+    introText:
+      "Convert reStructuredText to HTML. Perfect for rendering Python documentation as web pages.",
     howToSteps: [
       "Paste your reStructuredText content",
       'Click "Convert to HTML"',
@@ -416,7 +426,8 @@ export const conversionConfigs: ConversionConfig[] = [
     pandocTo: "mediawiki",
     title: "Convert Markdown to MediaWiki Format | Markdown to Wikipedia Syntax",
     h1: "Convert Markdown to MediaWiki",
-    description: "Free markdown to MediaWiki converter. Convert markdown to Wikipedia-style wiki markup.",
+    description:
+      "Free markdown to MediaWiki converter. Convert markdown to Wikipedia-style wiki markup.",
     introText:
       "Convert Markdown to MediaWiki format. Useful for contributing to Wikipedia or other MediaWiki-based wikis.",
     howToSteps: [
@@ -452,7 +463,11 @@ export const conversionConfigs: ConversionConfig[] = [
     description: "Free HTML to Word converter. Convert web content to editable Word documents.",
     introText:
       "Convert HTML content to Microsoft Word format. Perfect for saving web content as editable documents.",
-    howToSteps: ["Paste your HTML content", 'Click "Convert to DOCX"', "Download and open in Microsoft Word"],
+    howToSteps: [
+      "Paste your HTML content",
+      'Click "Convert to DOCX"',
+      "Download and open in Microsoft Word",
+    ],
     faqs: [
       {
         q: "Are styles preserved?",
@@ -545,7 +560,11 @@ export const conversionConfigs: ConversionConfig[] = [
       "Free ODT to markdown converter. Extract content from OpenDocument files to markdown format.",
     introText:
       "Convert ODT (OpenDocument Text) files to Markdown. Perfect for migrating LibreOffice content to markdown systems.",
-    howToSteps: ["Upload your ODT file", 'Click "Convert to Markdown"', "Download your markdown file"],
+    howToSteps: [
+      "Upload your ODT file",
+      'Click "Convert to Markdown"',
+      "Download your markdown file",
+    ],
     faqs: [
       {
         q: "What is ODT?",
@@ -567,10 +586,15 @@ export const conversionConfigs: ConversionConfig[] = [
     pandocTo: "markdown",
     title: "Convert Textile to Markdown Online | Textile to MD Converter",
     h1: "Convert Textile to Markdown",
-    description: "Free Textile to markdown converter. Migrate from Textile markup to Markdown format.",
+    description:
+      "Free Textile to markdown converter. Migrate from Textile markup to Markdown format.",
     introText:
       "Convert Textile markup to Markdown. Useful for migrating legacy content to markdown-based systems.",
-    howToSteps: ["Paste your Textile content", 'Click "Convert to Markdown"', "Download your markdown file"],
+    howToSteps: [
+      "Paste your Textile content",
+      'Click "Convert to Markdown"',
+      "Download your markdown file",
+    ],
     faqs: [
       {
         q: "What is Textile?",
@@ -595,7 +619,11 @@ export const conversionConfigs: ConversionConfig[] = [
     description: "Free Org Mode to markdown converter. Convert Emacs Org files to markdown format.",
     introText:
       "Convert Org Mode files to Markdown. Perfect for migrating Emacs Org notes to markdown-based systems.",
-    howToSteps: ["Paste your Org Mode content", 'Click "Convert to Markdown"', "Download your markdown file"],
+    howToSteps: [
+      "Paste your Org Mode content",
+      'Click "Convert to Markdown"',
+      "Download your markdown file",
+    ],
     faqs: [
       {
         q: "What is Org Mode?",
@@ -613,4 +641,4 @@ export const conversionConfigs: ConversionConfig[] = [
     keywords: ["org to markdown", "org mode to markdown", "convert org to md"],
     relatedSlugs: ["markdown-to-html", "rst-to-markdown", "html-to-markdown"],
   },
-]
+];

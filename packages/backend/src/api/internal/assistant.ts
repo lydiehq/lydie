@@ -1,30 +1,31 @@
-import { Hono } from "hono"
-import { chatModel } from "@lydie/core/ai/llm"
-import { validateUIMessages, createAgentUIStreamResponse, ToolLoopAgent, smoothStream, stepCountIs } from "ai"
+import { openai } from "@ai-sdk/openai";
+import { chatModel } from "@lydie/core/ai/llm";
+import { createDocument } from "@lydie/core/ai/tools/create-document";
+import { listDocuments } from "@lydie/core/ai/tools/list-documents";
+import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
+import { readDocument } from "@lydie/core/ai/tools/read-document";
+import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
+import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
+import { searchInDocument } from "@lydie/core/ai/tools/search-in-document";
+import { showDocuments } from "@lydie/core/ai/tools/show-documents";
+import { VisibleError } from "@lydie/core/error";
 import {
-  db,
+  assistantAgentsTable,
   assistantConversationsTable,
   assistantMessagesTable,
-  assistantAgentsTable,
-  llmUsageTable,
+  db,
   documentsTable,
-} from "@lydie/database"
-import { eq, and, sql, inArray } from "drizzle-orm"
-import { generateConversationTitle } from "../utils/conversation"
-import { HTTPException } from "hono/http-exception"
-import { VisibleError } from "@lydie/core/error"
-import { buildAssistantSystemPrompt } from "../utils/ai/assistant/system-prompt"
-import { z } from "zod"
-import { checkDailyMessageLimit } from "../utils/usage-limits"
-import { searchDocuments } from "@lydie/core/ai/tools/search-documents"
-import { readDocument } from "@lydie/core/ai/tools/read-document"
-import { listDocuments } from "@lydie/core/ai/tools/list-documents"
-import { showDocuments } from "@lydie/core/ai/tools/show-documents"
-import { moveDocuments } from "@lydie/core/ai/tools/move-documents"
-import { createDocument } from "@lydie/core/ai/tools/create-document"
-import { searchInDocument } from "@lydie/core/ai/tools/search-in-document"
-import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document"
-import { openai } from "@ai-sdk/openai"
+  llmUsageTable,
+} from "@lydie/database";
+import { ToolLoopAgent, createAgentUIStreamResponse, validateUIMessages } from "ai";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+import { z } from "zod";
+
+import { buildAssistantSystemPrompt } from "../utils/ai/assistant/system-prompt";
+import { generateConversationTitle } from "../utils/conversation";
+import { checkDailyMessageLimit } from "../utils/usage-limits";
 
 export const messageMetadataSchema = z
   .object({
@@ -44,98 +45,99 @@ export const messageMetadataSchema = z
     contextDocumentIds: z.array(z.string()).optional(),
     documentWordCount: z.number().optional(),
   })
-  .passthrough()
+  .passthrough();
 
-export type MessageMetadata = z.infer<typeof messageMetadataSchema>
+export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
 
 export const AssistantRoute = new Hono<{
   Variables: {
-    organizationId: string
-    user: any
-    session: any
-  }
+    organizationId: string;
+    user: any;
+    session: any;
+  };
 }>().post("/", async (c) => {
   try {
-    const { messages, conversationId: providedConversationId, agentId } = await c.req.json()
-    const userId = c.get("user").id
-    const organizationId = c.get("organizationId")
+    const { messages, conversationId: providedConversationId, agentId } = await c.req.json();
+    const userId = c.get("user").id;
+    const organizationId = c.get("organizationId");
 
-    let conversationId = providedConversationId
-    let conversation = null
+    let conversationId = providedConversationId;
+    let conversation = null;
 
     if (conversationId) {
-      ;[conversation] = await db
+      [conversation] = await db
         .select()
         .from(assistantConversationsTable)
-        .where(eq(assistantConversationsTable.id, conversationId))
+        .where(eq(assistantConversationsTable.id, conversationId));
 
       if (conversation) {
-        // Verify conversation belongs to the organization from context
         if (conversation.organizationId !== organizationId) {
           throw new HTTPException(403, {
             message: "You are not authorized to access this conversation",
-          })
+          });
         }
 
-        // Verify conversation belongs to the user
         if (conversation.userId !== userId) {
           throw new HTTPException(403, {
             message: "You are not authorized to access this conversation",
-          })
+          });
         }
       }
     }
 
     if (!conversation) {
-      const title = await generateConversationTitle(messages[0])
+      const title = await generateConversationTitle(messages[0]);
       await db.insert(assistantConversationsTable).values({
         id: providedConversationId,
         userId,
         organizationId,
         agentId: agentId || null,
         title,
-      })
+      });
     }
 
-    const latestMessage = messages[messages.length - 1]
-    const user = c.get("user")
+    const latestMessage = messages[messages.length - 1];
+    const user = c.get("user");
 
-    const messageMetadata = latestMessage?.metadata ?? {}
-    const currentDocumentId = messageMetadata.currentDocumentId as string | undefined
-    const documentWordCount = messageMetadata.documentWordCount as number | undefined
+    const messageMetadata = latestMessage?.metadata ?? {};
+    const currentDocumentId = messageMetadata.currentDocumentId as string | undefined;
+    const documentWordCount = messageMetadata.documentWordCount as number | undefined;
     const contextDocumentIdsRaw = Array.isArray(messageMetadata.contextDocumentIds)
       ? messageMetadata.contextDocumentIds
-      : []
+      : [];
 
     const organization = await db.query.organizationsTable.findFirst({
       where: { id: organizationId },
-    })
+    });
 
     if (!organization) {
       throw new HTTPException(404, {
         message: "Organization not found",
-      })
+      });
     }
 
-    const isAdmin = (user as any)?.role === "admin"
+    const isAdmin = (user as any)?.role === "admin";
     if (!isAdmin) {
       const limitCheck = await checkDailyMessageLimit({
         id: organization.id,
         subscriptionPlan: organization.subscriptionPlan,
         subscriptionStatus: organization.subscriptionStatus,
-      })
+      });
 
       if (!limitCheck.allowed) {
         throw new VisibleError(
           "usage_limit_exceeded",
           `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
           429,
-        )
+        );
       }
     }
 
-    // Fetch current document first
-    let currentDocument: { id: string; title: string; organizationId: string } | null = null
+    let currentDocument: {
+      id: string;
+      title: string;
+      organizationId: string;
+    } | null = null;
 
     if (currentDocumentId) {
       const [document] = await db
@@ -152,22 +154,23 @@ export const AssistantRoute = new Hono<{
             sql`${documentsTable.deletedAt} IS NULL`,
           ),
         )
-        .limit(1)
+        .limit(1);
 
       if (!document) {
         throw new HTTPException(404, {
           message: "Document not found",
-        })
+        });
       }
 
-      currentDocument = document
+      currentDocument = document;
     }
 
-    // Resolve context document IDs to full document info
     const contextDocumentIds: string[] = Array.isArray(contextDocumentIdsRaw)
-      ? contextDocumentIdsRaw.filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
-      : []
-    const uniqueContextDocumentIds = Array.from(new Set(contextDocumentIds))
+      ? contextDocumentIdsRaw.filter(
+          (id: unknown): id is string => typeof id === "string" && id.length > 0,
+        )
+      : [];
+    const uniqueContextDocumentIds = Array.from(new Set(contextDocumentIds));
     const contextDocuments =
       uniqueContextDocumentIds.length > 0
         ? await db
@@ -183,7 +186,7 @@ export const AssistantRoute = new Hono<{
                 sql`${documentsTable.deletedAt} IS NULL`,
               ),
             )
-        : []
+        : [];
 
     // Save the user message after limit check passes with enhanced metadata
     await saveMessage({
@@ -198,53 +201,53 @@ export const AssistantRoute = new Hono<{
         })),
         currentDocumentId: currentDocument?.id,
       },
-    })
+    });
 
-    // Fetch agent for system prompt
-    const effectiveAgentId = agentId || conversation?.agentId
-    let agentSystemPrompt: string
+    const effectiveAgentId = agentId || conversation?.agentId;
+    let agentSystemPrompt: string;
 
     if (effectiveAgentId) {
       const [agent] = await db
         .select()
         .from(assistantAgentsTable)
         .where(eq(assistantAgentsTable.id, effectiveAgentId))
-        .limit(1)
+        .limit(1);
 
       if (!agent) {
         throw new HTTPException(404, {
           message: "Agent not found",
-        })
+        });
       }
 
-      agentSystemPrompt = agent.systemPrompt
+      agentSystemPrompt = agent.systemPrompt;
     } else {
-      // Use default agent if no agent specified
       const [defaultAgent] = await db
         .select()
         .from(assistantAgentsTable)
-        .where(and(eq(assistantAgentsTable.isDefault, true), eq(assistantAgentsTable.name, "Default")))
-        .limit(1)
+        .where(
+          and(eq(assistantAgentsTable.isDefault, true), eq(assistantAgentsTable.name, "Default")),
+        )
+        .limit(1);
 
       if (!defaultAgent) {
         throw new HTTPException(500, {
           message: "Default agent not found. Please run the seed script.",
-        })
+        });
       }
 
-      agentSystemPrompt = defaultAgent.systemPrompt
+      agentSystemPrompt = defaultAgent.systemPrompt;
     }
 
-    const systemPrompt = buildAssistantSystemPrompt(agentSystemPrompt)
+    const systemPrompt = buildAssistantSystemPrompt(agentSystemPrompt);
 
-    const startTime = Date.now()
+    const startTime = Date.now();
 
     const contextInfo = createContextInfo({
       currentDocument,
       contextDocuments,
       documentWordCount,
       focusedContent: messageMetadata.focusedContent,
-    })
+    });
 
     const enhancedLatestMessage =
       contextInfo && latestMessage
@@ -258,10 +261,12 @@ export const AssistantRoute = new Hono<{
               },
             ],
           }
-        : latestMessage
+        : latestMessage;
 
     const enhancedMessages =
-      enhancedLatestMessage && latestMessage ? [...messages.slice(0, -1), enhancedLatestMessage] : messages
+      enhancedLatestMessage && latestMessage
+        ? [...messages.slice(0, -1), enhancedLatestMessage]
+        : messages;
 
     const tools: Record<string, any> = {
       web_search: openai.tools.webSearch({
@@ -273,11 +278,15 @@ export const AssistantRoute = new Hono<{
       show_documents: showDocuments(userId, organizationId, currentDocument?.id),
       move_documents: moveDocuments(userId, organizationId),
       create_document: createDocument(userId, organizationId),
-    }
+    };
 
     if (currentDocument?.id) {
-      tools.search_in_document = searchInDocument(currentDocument.id, userId, currentDocument.organizationId)
-      tools.replace_in_document = replaceInDocument()
+      tools.search_in_document = searchInDocument(
+        currentDocument.id,
+        userId,
+        currentDocument.organizationId,
+      );
+      tools.replace_in_document = replaceInDocument();
     }
 
     const agent = new ToolLoopAgent({
@@ -287,7 +296,7 @@ export const AssistantRoute = new Hono<{
       model: chatModel,
       instructions: systemPrompt,
       tools,
-    })
+    });
 
     return createAgentUIStreamResponse({
       agent,
@@ -298,35 +307,31 @@ export const AssistantRoute = new Hono<{
         if (part.type === "start") {
           return {
             createdAt: new Date().toISOString(),
-          }
+          };
         }
         if (part.type === "finish") {
           return {
             duration: Date.now() - startTime,
             usage: part.totalUsage.totalTokens,
-          }
+          };
         }
-        return undefined
+        return undefined;
       },
       onFinish: async ({ messages: finalMessages }) => {
-        const assistantMessage = finalMessages[finalMessages.length - 1]
+        const assistantMessage = finalMessages[finalMessages.length - 1];
 
-        // Save assistant message without context information (context only applies to user messages)
         const savedMessage = await saveMessage({
           conversationId,
           parts: assistantMessage.parts,
           metadata: assistantMessage.metadata as MessageMetadata,
           role: "assistant",
-        })
+        });
 
-        // Extract usage data from metadata
-        const totalTokens = (assistantMessage.metadata as MessageMetadata)?.usage || 0
+        const totalTokens = (assistantMessage.metadata as MessageMetadata)?.usage || 0;
 
-        // Save LLM usage data to the usage table
         if (totalTokens > 0) {
-          // Estimate token split (Gemini doesn't always provide detailed breakdown)
-          const promptTokens = Math.floor(totalTokens * 0.7)
-          const completionTokens = totalTokens - promptTokens
+          const promptTokens = Math.floor(totalTokens * 0.7);
+          const completionTokens = totalTokens - promptTokens;
 
           await db.insert(llmUsageTable).values({
             conversationId,
@@ -339,18 +344,21 @@ export const AssistantRoute = new Hono<{
             totalTokens,
             finishReason: "stop",
             toolCalls: null,
-          })
+          });
         }
       },
-    })
+    });
   } catch (e) {
     if (e instanceof VisibleError) {
-      throw e
+      throw e;
     }
 
-    throw new VisibleError("chat_processing_error", "An error occurred while processing your request")
+    throw new VisibleError(
+      "chat_processing_error",
+      "An error occurred while processing your request",
+    );
   }
-})
+});
 
 function createContextInfo({
   currentDocument,
@@ -358,22 +366,17 @@ function createContextInfo({
   documentWordCount,
   focusedContent,
 }: {
-  currentDocument: { id: string; title: string; organizationId: string } | null
-  contextDocuments: Array<{ id: string; title: string | null }>
-  documentWordCount?: number
-  focusedContent?: string
+  currentDocument: { id: string; title: string; organizationId: string } | null;
+  contextDocuments: Array<{ id: string; title: string | null }>;
+  documentWordCount?: number;
+  focusedContent?: string;
 }) {
   if (!currentDocument && contextDocuments.length === 0 && !focusedContent && !documentWordCount) {
-    return ""
+    return "";
   }
 
   let context = `<additional_data>
-Below are some potentially helpful pieces of information for responding to the user's request:`
-
-  // Filter out current document from context documents to avoid duplication
-  const otherContextDocuments = contextDocuments.filter(
-    (doc) => !currentDocument || doc.id !== currentDocument.id,
-  )
+Below are some potentially helpful pieces of information for responding to the user's request:`;
 
   if (currentDocument) {
     context += `
@@ -381,24 +384,24 @@ Below are some potentially helpful pieces of information for responding to the u
 Primary Document (when user says "this document", they refer to this):
 - Title: ${currentDocument.title || "Untitled document"}
 - ID: ${currentDocument.id}
-- IMPORTANT: If the user asks to make changes to "this document" or similar, you should read this document first using read_document or read_current_document before making modifications.`
+- IMPORTANT: If the user asks to make changes to "this document" or similar, you should read this document first using read_document or read_current_document before making modifications.`;
   }
 
   if (typeof documentWordCount === "number") {
     context += `
 
-Primary Document Word Count: ${documentWordCount}`
+Primary Document Word Count: ${documentWordCount}`;
   }
 
   if (contextDocuments.length > 0) {
     context += `
 
 Context Documents (available for reading and reference):
-IMPORTANT: These documents are provided as context. If the user asks to modify a document or make changes, you should read the relevant document(s) first using read_document before making modifications.`
+IMPORTANT: These documents are provided as context. If the user asks to modify a document or make changes, you should read the relevant document(s) first using read_document before making modifications.`;
     for (const doc of contextDocuments) {
-      const isPrimary = currentDocument && doc.id === currentDocument.id
+      const isPrimary = currentDocument && doc.id === currentDocument.id;
       context += `
-- ${doc.title || "Untitled document"} (ID: ${doc.id})${isPrimary ? " [Primary Document]" : ""}`
+- ${doc.title || "Untitled document"} (ID: ${doc.id})${isPrimary ? " [Primary Document]" : ""}`;
     }
   }
 
@@ -410,13 +413,13 @@ The user has selected the following content, which may indicate their area of fo
 \`\`\`
 ${focusedContent}
 \`\`\`
-</focused_selection>`
+</focused_selection>`;
   }
 
   context += `
-</additional_data>`
+</additional_data>`;
 
-  return context
+  return context;
 }
 
 async function saveMessage({
@@ -425,13 +428,13 @@ async function saveMessage({
   role,
   metadata,
 }: {
-  conversationId: string
-  parts: object | undefined
-  role: string
-  metadata: MessageMetadata | undefined
+  conversationId: string;
+  parts: object | undefined;
+  role: string;
+  metadata: MessageMetadata | undefined;
 }) {
   if (!parts) {
-    throw new Error("Message parts cannot be undefined")
+    throw new Error("Message parts cannot be undefined");
   }
 
   const [savedMessage] = await db
@@ -442,7 +445,7 @@ async function saveMessage({
       role,
       metadata,
     })
-    .returning()
+    .returning();
 
-  return savedMessage
+  return savedMessage;
 }

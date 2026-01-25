@@ -1,5 +1,5 @@
-import { Command } from "cmdk"
-import { cva } from "cva"
+import { Command } from "cmdk";
+import { cva } from "cva";
 
 const itemClassName = cva({
   base: "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-3 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800 transition-colors duration-150",
@@ -8,26 +8,26 @@ const itemClassName = cva({
       true: "data-[selected=true]:text-red-600 text-red-500",
     },
   },
-})
+});
 
 export interface MenuItem {
-  id: string
-  label: string
-  description?: string
-  icon?: React.ComponentType<{ className?: string }>
-  iconUrl?: string
-  action: () => void
-  destructive?: boolean
-  customClassName?: string
+  id: string;
+  label: string;
+  description?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  iconUrl?: string;
+  action: () => void;
+  destructive?: boolean;
+  customClassName?: string;
 }
 
 interface CommandMenuItemProps {
-  item: MenuItem
-  onSelect?: (item: MenuItem) => void
+  item: MenuItem;
+  onSelect?: (item: MenuItem) => void;
 }
 
 export function CommandMenuItem({ item, onSelect }: CommandMenuItemProps) {
-  const Icon = item.icon
+  const Icon = item.icon;
 
   return (
     <Command.Item
@@ -47,5 +47,5 @@ export function CommandMenuItem({ item, onSelect }: CommandMenuItemProps) {
         )}
       </div>
     </Command.Item>
-  )
+  );
 }

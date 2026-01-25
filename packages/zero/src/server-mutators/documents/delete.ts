@@ -1,13 +1,13 @@
-import { defineMutator } from "@rocicorp/zero"
-import { z } from "zod"
-import { zql } from "../../schema"
-import { hasOrganizationAccess } from "../../auth"
-import { db } from "@lydie/database"
-import { logIntegrationActivity } from "@lydie/core/integrations"
-import { mutators as sharedMutators } from "../../mutators"
+import { logIntegrationActivity } from "@lydie/core/integrations/activity-log";
+import { db } from "@lydie/database";
+import { integrationRegistry } from "@lydie/integrations";
+import { defineMutator } from "@rocicorp/zero";
+import { z } from "zod";
 
-import { integrationRegistry } from "@lydie/integrations"
-import { MutatorContext } from "../../server-mutators"
+import { hasOrganizationAccess } from "../../auth";
+import { mutators as sharedMutators } from "../../mutators/index";
+import { zql } from "../../schema";
+import { MutatorContext } from "../../server-mutators";
 
 export const deleteDocumentMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
@@ -16,34 +16,38 @@ export const deleteDocumentMutation = ({ asyncTasks }: MutatorContext) =>
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args: { documentId, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
 
       // Get document before deletion to check for integration link
       const doc = await tx.run(
         zql.documents.where("id", documentId).where("organization_id", organizationId).one(),
-      )
+      );
 
       if (!doc) {
-        throw new Error(`Document not found: ${documentId}`)
+        throw new Error(`Document not found: ${documentId}`);
       }
 
       await sharedMutators.document.delete.fn({
         tx,
         ctx,
         args: { documentId, organizationId },
-      })
+      });
 
-      const isIntegrationDocument = Boolean(doc.integration_link_id && doc.external_id)
+      const isIntegrationDocument = Boolean(doc.integration_link_id && doc.external_id);
 
       if (isIntegrationDocument) {
         asyncTasks.push(async () => {
-          await deleteFromIntegration(documentId, doc.external_id!, doc.integration_link_id!)
-        })
+          await deleteFromIntegration(documentId, doc.external_id!, doc.integration_link_id!);
+        });
       }
     },
-  )
+  );
 
-async function deleteFromIntegration(documentId: string, externalId: string, integrationLinkId: string) {
+async function deleteFromIntegration(
+  documentId: string,
+  externalId: string,
+  integrationLinkId: string,
+) {
   try {
     // Fetch the integration link with its connection
     const link = await db.query.integrationLinksTable.findFirst({
@@ -51,29 +55,29 @@ async function deleteFromIntegration(documentId: string, externalId: string, int
       with: {
         connection: true,
       },
-    })
+    });
 
     if (!link || !link.connection) {
-      console.error(`[Delete] Integration link not found: ${integrationLinkId}`)
-      return
+      console.error(`[Delete] Integration link not found: ${integrationLinkId}`);
+      return;
     }
 
     // Get integration from registry
-    const integration = integrationRegistry.get(link.connection.integrationType)
+    const integration = integrationRegistry.get(link.connection.integrationType);
     if (!integration) {
-      console.error(`[Delete] Unknown integration type: ${link.connection.integrationType}`)
-      return
+      console.error(`[Delete] Unknown integration type: ${link.connection.integrationType}`);
+      return;
     }
 
     // Merge connection config with link config (link config has repo-specific info)
     const mergedConfig = {
       ...(link.connection.config as Record<string, any>),
       ...(link.config as Record<string, any>),
-    }
+    };
 
     console.log(
       `[Delete] Deleting document ${documentId} (${externalId}) from ${link.connection.integrationType} link: ${link.name}`,
-    )
+    );
 
     // Call integration's delete method
     const result = await integration.delete({
@@ -88,17 +92,27 @@ async function deleteFromIntegration(documentId: string, externalId: string, int
         updatedAt: link.connection.updatedAt,
       },
       commitMessage: `Delete ${externalId} from Lydie`,
-    })
+    });
 
     if (result.success) {
-      await logIntegrationActivity(link.connection.id, "delete", "success", link.connection.integrationType)
-      console.log(`[Delete] Successfully deleted document ${documentId}: ${result.message}`)
+      await logIntegrationActivity(
+        link.connection.id,
+        "delete",
+        "success",
+        link.connection.integrationType,
+      );
+      console.log(`[Delete] Successfully deleted document ${documentId}: ${result.message}`);
     } else {
-      await logIntegrationActivity(link.connection.id, "delete", "error", link.connection.integrationType)
-      console.error(`[Delete] Failed to delete document ${documentId}: ${result.error}`)
+      await logIntegrationActivity(
+        link.connection.id,
+        "delete",
+        "error",
+        link.connection.integrationType,
+      );
+      console.error(`[Delete] Failed to delete document ${documentId}: ${result.error}`);
     }
   } catch (error) {
     // Log but don't throw - delete failure shouldn't block the mutation
-    console.error(`[Delete] Error deleting document ${documentId}:`, error)
+    console.error(`[Delete] Error deleting document ${documentId}:`, error);
   }
 }

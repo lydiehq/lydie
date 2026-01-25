@@ -1,22 +1,24 @@
-import { SearchFilled, DismissRegular } from "@fluentui/react-icons"
+import type { RefObject } from "react";
+
+import { DismissRegular, SearchFilled } from "@fluentui/react-icons";
 import {
   SearchField as AriaSearchField,
+  type SearchFieldProps as AriaSearchFieldProps,
   Button,
   Group,
   Input,
   Label,
-  type SearchFieldProps as AriaSearchFieldProps,
   type ValidationResult,
-} from "react-aria-components"
-import { composeTailwindRenderProps } from "./utils"
-import type { RefObject } from "react"
+} from "react-aria-components";
+
+import { composeTailwindRenderProps } from "./utils";
 
 export interface SearchFieldProps extends AriaSearchFieldProps {
-  label?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
-  placeholder?: string
-  inputRef?: RefObject<HTMLInputElement | null>
+  label?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
+  placeholder?: string;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
 export function SearchField({
@@ -30,7 +32,10 @@ export function SearchField({
   return (
     <AriaSearchField
       {...props}
-      className={composeTailwindRenderProps(props.className, "group flex flex-col gap-1 min-w-[40px]")}
+      className={composeTailwindRenderProps(
+        props.className,
+        "group flex flex-col gap-1 min-w-[40px]",
+      )}
     >
       {label && <Label>{label}</Label>}
       <Group className="flex items-center bg-gray-100 rounded-lg ">
@@ -45,5 +50,5 @@ export function SearchField({
         </Button>
       </Group>
     </AriaSearchField>
-  )
+  );
 }

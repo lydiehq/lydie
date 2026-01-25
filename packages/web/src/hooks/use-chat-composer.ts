@@ -1,33 +1,34 @@
-import { useEditor, type Editor } from "@tiptap/react"
-import { Placeholder } from "@tiptap/extension-placeholder"
-import { Mention } from "@tiptap/extension-mention"
-import { Extension } from "@tiptap/core"
-import StarterKit from "@tiptap/starter-kit"
-import { useMemo, useCallback } from "react"
-import tippy from "tippy.js"
-import { MentionList } from "@/lib/editor/MentionList"
+import { Extension } from "@tiptap/core";
+import { Mention } from "@tiptap/extension-mention";
+import { Placeholder } from "@tiptap/extension-placeholder";
+import { type Editor, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useCallback, useMemo } from "react";
+import tippy from "tippy.js";
+
+import { MentionList } from "@/lib/editor/MentionList";
 
 export type ChatComposerDocument = {
-  id: string
-  title?: string | null
-}
+  id: string;
+  title?: string | null;
+};
 
 export interface UseChatComposerOptions {
-  documents: ChatComposerDocument[]
-  onEnter?: () => void
-  onChange?: (editor: Editor) => void
-  placeholder?: string
-  autoFocus?: boolean
-  initialContent?: string
-  editorClassName?: string
+  documents: ChatComposerDocument[];
+  onEnter?: () => void;
+  onChange?: (editor: Editor) => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+  initialContent?: string;
+  editorClassName?: string;
 }
 
 export interface ChatComposerHandle {
-  editor: Editor | null
-  getTextContent: () => string
-  getHTMLContent: () => string
-  clearContent: () => void
-  setContent: (content: string) => void
+  editor: Editor | null;
+  getTextContent: () => string;
+  getHTMLContent: () => string;
+  clearContent: () => void;
+  setContent: (content: string) => void;
 }
 
 export function useChatComposer({
@@ -44,26 +45,26 @@ export function useChatComposer({
       id: doc.id,
       label: doc.title || "Untitled document",
       type: "document",
-    }))
-  }, [documents])
+    }));
+  }, [documents]);
 
   const enterExtension = useMemo(() => {
     return Extension.create({
       addKeyboardShortcuts() {
         return {
           Enter: () => {
-            onEnter?.()
-            return true
+            onEnter?.();
+            return true;
           },
           "Shift-Enter": () => {
-            return this.editor.commands.setHardBreak()
+            return this.editor.commands.setHardBreak();
           },
-        }
+        };
       },
-    })
-  }, [onEnter])
+    });
+  }, [onEnter]);
 
-  const mentionSuggestion = useMemo(() => createMentionSuggestion(mentionItems), [mentionItems])
+  const mentionSuggestion = useMemo(() => createMentionSuggestion(mentionItems), [mentionItems]);
 
   const extensions = useMemo(() => {
     return [
@@ -77,12 +78,12 @@ export function useChatComposer({
           class: "mention bg-blue-100 text-blue-800 px-1 rounded",
         },
         renderText({ node }) {
-          return `[reference_document:id:${node.attrs.id}]`
+          return `[reference_document:id:${node.attrs.id}]`;
         },
         suggestion: mentionSuggestion,
       }),
-    ]
-  }, [placeholder, mentionSuggestion, enterExtension])
+    ];
+  }, [placeholder, mentionSuggestion, enterExtension]);
 
   const editor = useEditor({
     extensions,
@@ -94,30 +95,30 @@ export function useChatComposer({
       },
     },
     onUpdate: onChange ? ({ editor }) => onChange(editor) : undefined,
-  })
+  });
 
   const getTextContent = useCallback(() => {
-    if (!editor) return ""
-    return editor.getText()
-  }, [editor])
+    if (!editor) return "";
+    return editor.getText();
+  }, [editor]);
 
   const getHTMLContent = useCallback(() => {
-    if (!editor) return ""
-    return editor.getHTML()
-  }, [editor])
+    if (!editor) return "";
+    return editor.getHTML();
+  }, [editor]);
 
   const clearContent = useCallback(() => {
-    if (!editor) return
-    editor.commands.clearContent()
-  }, [editor])
+    if (!editor) return;
+    editor.commands.clearContent();
+  }, [editor]);
 
   const setContent = useCallback(
     (content: string) => {
-      if (!editor) return
-      editor.commands.setContent(content)
+      if (!editor) return;
+      editor.commands.setContent(content);
     },
     [editor],
-  )
+  );
 
   return {
     editor,
@@ -125,7 +126,7 @@ export function useChatComposer({
     getHTMLContent,
     clearContent,
     setContent,
-  }
+  };
 }
 
 function createMentionSuggestion(items: Array<{ id: string; label: string }>) {
@@ -133,7 +134,9 @@ function createMentionSuggestion(items: Array<{ id: string; label: string }>) {
     allowSpaces: true,
     char: "@",
     items: ({ query }: { query: string }) => {
-      return items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())).slice(0, 10)
+      return items
+        .filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 10);
     },
     command: ({ editor, range, props }: { editor: any; range: any; props: any }) => {
       // Delete the range (@Marke) and insert the mention
@@ -151,21 +154,21 @@ function createMentionSuggestion(items: Array<{ id: string; label: string }>) {
             text: " ",
           },
         ])
-        .run()
+        .run();
     },
     render() {
-      let component: MentionList | null = null
-      let popup: any = null
+      let component: MentionList | null = null;
+      let popup: any = null;
 
       return {
         onStart: (props: any) => {
           component = new MentionList({
             items: props.items,
             command: props.command,
-          })
+          });
 
           if (!props.clientRect) {
-            return
+            return;
           }
 
           popup = tippy("body", {
@@ -176,37 +179,37 @@ function createMentionSuggestion(items: Array<{ id: string; label: string }>) {
             interactive: true,
             trigger: "manual",
             placement: "bottom-start",
-          })
+          });
         },
 
         onUpdate(props: any) {
-          component?.updateProps(props)
+          component?.updateProps(props);
 
           if (!props.clientRect) {
-            return
+            return;
           }
 
           if (popup && popup[0]) {
             popup[0].setProps({
               getReferenceClientRect: props.clientRect,
-            })
+            });
           }
         },
 
         onKeyDown(props: { event: KeyboardEvent }) {
           if (props.event.key === "Escape") {
-            popup?.[0]?.hide()
-            return true
+            popup?.[0]?.hide();
+            return true;
           }
 
-          return component?.onKeyDown(props) ?? false
+          return component?.onKeyDown(props) ?? false;
         },
 
         onExit() {
-          popup?.[0]?.destroy()
-          component?.destroy()
+          popup?.[0]?.destroy();
+          component?.destroy();
         },
-      }
+      };
     },
-  }
+  };
 }

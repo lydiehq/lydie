@@ -1,17 +1,17 @@
+import { cva } from "cva";
+import React from "react";
 import {
-  OverlayArrow,
   Popover as AriaPopover,
   type PopoverProps as AriaPopoverProps,
-  composeRenderProps,
+  OverlayArrow,
   PopoverContext,
+  composeRenderProps,
   useSlottedContext,
-} from "react-aria-components"
-import React from "react"
-import { cva } from "cva"
+} from "react-aria-components";
 
 export interface PopoverProps extends Omit<AriaPopoverProps, "children"> {
-  showArrow?: boolean
-  children: React.ReactNode
+  showArrow?: boolean;
+  children: React.ReactNode;
 }
 
 const styles = cva({
@@ -24,13 +24,13 @@ const styles = cva({
       true: "animate-out fade-out placement-bottom:slide-out-to-top-1 placement-top:slide-out-to-bottom-1 placement-left:slide-out-to-right-1 placement-right:slide-out-to-left-1 ease-in duration-150",
     },
   },
-})
+});
 
 export function Popover({ children, showArrow, className, ...props }: PopoverProps) {
-  let popoverContext = useSlottedContext(PopoverContext)!
-  let isSubmenu = popoverContext?.trigger === "SubmenuTrigger"
-  let offset = showArrow ? 12 : 8
-  offset = isSubmenu ? offset - 6 : offset
+  let popoverContext = useSlottedContext(PopoverContext)!;
+  let isSubmenu = popoverContext?.trigger === "SubmenuTrigger";
+  let offset = showArrow ? 12 : 8;
+  offset = isSubmenu ? offset - 6 : offset;
   return (
     <AriaPopover
       offset={offset}
@@ -53,5 +53,5 @@ export function Popover({ children, showArrow, className, ...props }: PopoverPro
       )}
       {children}
     </AriaPopover>
-  )
+  );
 }

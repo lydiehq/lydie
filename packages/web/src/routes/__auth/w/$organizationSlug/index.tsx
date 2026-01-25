@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { Surface } from "@/components/layout/Surface"
+import { createFileRoute } from "@tanstack/react-router";
+
+import { Surface } from "@/components/layout/Surface";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
   component: PageComponent,
   ssr: false,
-})
+});
 
 function PageComponent() {
   return (
@@ -18,5 +19,5 @@ function PageComponent() {
         </div>
       </Surface>
     </div>
-  )
+  );
 }

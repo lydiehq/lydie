@@ -1,95 +1,97 @@
-import { useState } from "react"
-import { motion, AnimatePresence } from "motion/react"
 import {
-  ChevronRightRegular,
-  DocumentFilled,
-  SearchRegular,
-  GlobeRegular,
-  ListRegular,
   ArrowClockwiseRegular,
   CheckmarkRegular,
+  ChevronRightRegular,
+  DocumentFilled,
   ErrorCircleRegular,
-} from "@fluentui/react-icons"
+  GlobeRegular,
+  ListRegular,
+  SearchRegular,
+} from "@fluentui/react-icons";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 
 export interface ResearchAction {
-  type: "read" | "search" | "list" | "web_search" | "search_in_document"
-  label: string
-  status: "loading" | "success" | "error"
-  toolPart: any
+  type: "read" | "search" | "list" | "web_search" | "search_in_document";
+  label: string;
+  status: "loading" | "success" | "error";
+  toolPart: any;
 }
 
 export interface ResearchGroupProps {
-  actions: ResearchAction[]
-  isLoading: boolean
+  actions: ResearchAction[];
+  isLoading: boolean;
 }
 
 function getActionIcon(type: ResearchAction["type"]) {
   switch (type) {
     case "read":
-      return DocumentFilled
+      return DocumentFilled;
     case "search":
     case "search_in_document":
-      return SearchRegular
+      return SearchRegular;
     case "web_search":
-      return GlobeRegular
+      return GlobeRegular;
     case "list":
-      return ListRegular
+      return ListRegular;
     default:
-      return DocumentFilled
+      return DocumentFilled;
   }
 }
 
 function getActionVerb(type: ResearchAction["type"]) {
   switch (type) {
     case "read":
-      return "Read"
+      return "Read";
     case "search":
-      return "Searched"
+      return "Searched";
     case "search_in_document":
-      return "Searched in"
+      return "Searched in";
     case "web_search":
-      return "Web search"
+      return "Web search";
     case "list":
-      return "Listed"
+      return "Listed";
     default:
-      return "Accessed"
+      return "Accessed";
   }
 }
 
 function buildSummaryLabel(actions: ResearchAction[]): string {
-  const documents = actions.filter((a) => a.type === "read").length
-  const searches = actions.filter((a) => a.type === "search" || a.type === "search_in_document").length
-  const webSearches = actions.filter((a) => a.type === "web_search").length
-  const lists = actions.filter((a) => a.type === "list").length
+  const documents = actions.filter((a) => a.type === "read").length;
+  const searches = actions.filter(
+    (a) => a.type === "search" || a.type === "search_in_document",
+  ).length;
+  const webSearches = actions.filter((a) => a.type === "web_search").length;
+  const lists = actions.filter((a) => a.type === "list").length;
 
-  const parts: string[] = []
+  const parts: string[] = [];
 
   if (documents > 0) {
-    parts.push(`${documents} document${documents !== 1 ? "s" : ""}`)
+    parts.push(`${documents} document${documents !== 1 ? "s" : ""}`);
   }
   if (searches > 0) {
-    parts.push(`${searches} search${searches !== 1 ? "es" : ""}`)
+    parts.push(`${searches} search${searches !== 1 ? "es" : ""}`);
   }
   if (webSearches > 0) {
-    parts.push(`${webSearches} web search${webSearches !== 1 ? "es" : ""}`)
+    parts.push(`${webSearches} web search${webSearches !== 1 ? "es" : ""}`);
   }
   if (lists > 0) {
-    parts.push(`${lists} list${lists !== 1 ? "s" : ""}`)
+    parts.push(`${lists} list${lists !== 1 ? "s" : ""}`);
   }
 
   if (parts.length === 0) {
-    return "Explored"
+    return "Explored";
   }
 
-  return `Explored ${parts.join(" ")}`
+  return `Explored ${parts.join(" ")}`;
 }
 
 export function ResearchGroup({ actions, isLoading }: ResearchGroupProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const summaryLabel = buildSummaryLabel(actions)
-  const allSucceeded = actions.every((a) => a.status === "success")
-  const hasErrors = actions.some((a) => a.status === "error")
+  const summaryLabel = buildSummaryLabel(actions);
+  const allSucceeded = actions.every((a) => a.status === "success");
+  const hasErrors = actions.some((a) => a.status === "error");
 
   return (
     <div className="my-1">
@@ -128,8 +130,8 @@ export function ResearchGroup({ actions, isLoading }: ResearchGroupProps) {
           >
             <ul className="pl-5 pt-1 space-y-0.5">
               {actions.map((action, index) => {
-                const Icon = getActionIcon(action.type)
-                const verb = getActionVerb(action.type)
+                const Icon = getActionIcon(action.type);
+                const verb = getActionVerb(action.type);
 
                 return (
                   <motion.li
@@ -150,77 +152,89 @@ export function ResearchGroup({ actions, isLoading }: ResearchGroupProps) {
                       {verb} {action.label}
                     </span>
                   </motion.li>
-                )
+                );
               })}
             </ul>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
-/**
- * Extracts a human-readable label from a tool part for display in the research group.
- */
+// Extracts a human-readable label from a tool part for display in the research group.
 export function extractActionFromToolPart(part: any): ResearchAction | null {
-  const toolType = part.type?.replace("tool-", "")
+  const toolType = part.type?.replace("tool-", "");
 
   switch (toolType) {
     case "read_document":
     case "read_current_document": {
       const title =
-        part.output?.document?.title || part.output?.documentTitle || part.args?.documentTitle || "current document"
-      const status = getToolStatus(part)
-      return { type: "read", label: `"${title}"`, status, toolPart: part }
+        part.output?.document?.title ||
+        part.output?.documentTitle ||
+        part.args?.documentTitle ||
+        "current document";
+      const status = getToolStatus(part);
+      return { type: "read", label: `"${title}"`, status, toolPart: part };
     }
 
     case "search_documents": {
-      const query = part.output?.searchQuery || part.args?.query || "documents"
-      const status = getToolStatus(part)
-      return { type: "search", label: `"${query}"`, status, toolPart: part }
+      const query = part.output?.searchQuery || part.args?.query || "documents";
+      const status = getToolStatus(part);
+      return { type: "search", label: `"${query}"`, status, toolPart: part };
     }
 
     case "search_in_document": {
-      const query = part.output?.searchQuery || part.args?.query || "content"
-      const status = getToolStatus(part)
-      return { type: "search_in_document", label: `"${query}"`, status, toolPart: part }
+      const query = part.output?.searchQuery || part.args?.query || "content";
+      const status = getToolStatus(part);
+      return {
+        type: "search_in_document",
+        label: `"${query}"`,
+        status,
+        toolPart: part,
+      };
     }
 
     case "list_documents": {
-      const count = part.output?.documents?.length
-      const label = count !== undefined ? `${count} documents` : "documents"
-      const status = getToolStatus(part)
-      return { type: "list", label, status, toolPart: part }
+      const count = part.output?.documents?.length;
+      const label = count !== undefined ? `${count} documents` : "documents";
+      const status = getToolStatus(part);
+      return { type: "list", label, status, toolPart: part };
     }
 
     case "web_search": {
-      const query = part.args?.query || part.output?.query || "the web"
-      const status = getToolStatus(part)
-      return { type: "web_search", label: `"${query}"`, status, toolPart: part }
+      const query = part.args?.query || part.output?.query || "the web";
+      const status = getToolStatus(part);
+      return {
+        type: "web_search",
+        label: `"${query}"`,
+        status,
+        toolPart: part,
+      };
     }
 
     default:
-      return null
+      return null;
   }
 }
 
 function getToolStatus(part: any): ResearchAction["status"] {
   if (part.state === "call-streaming" || part.state === "input-streaming") {
-    return "loading"
+    return "loading";
   }
   if (part.state === "output-error" || part.output?.state === "error" || part.output?.error) {
-    return "error"
+    return "error";
   }
-  if (part.state === "output-available" && (part.output?.state === "success" || !part.output?.error)) {
-    return "success"
+  if (
+    part.state === "output-available" &&
+    (part.output?.state === "success" || !part.output?.error)
+  ) {
+    return "success";
   }
-  return "loading"
+  return "loading";
 }
 
-/**
- * Checks if a tool part is a research tool (should be grouped/collapsed).
- */
+// Checks if a tool part is a research tool (should be grouped/collapsed).
 export function isResearchTool(part: any): boolean {
   const researchToolTypes = [
     "tool-read_document",
@@ -229,39 +243,35 @@ export function isResearchTool(part: any): boolean {
     "tool-search_in_document",
     "tool-list_documents",
     "tool-web_search",
-  ]
-  return researchToolTypes.includes(part.type)
+  ];
+  return researchToolTypes.includes(part.type);
 }
 
-export type GroupedPart =
-  | { type: "research-group"; parts: any[] }
-  | { type: "single"; part: any }
+export type GroupedPart = { type: "research-group"; parts: any[] } | { type: "single"; part: any };
 
-/**
- * Groups consecutive research tool parts together.
- * Non-research parts and text parts break the grouping.
- */
+// Groups consecutive research tool parts together.
+// Non-research parts and text parts break the grouping.
 export function groupMessageParts(parts: any[]): GroupedPart[] {
-  const groups: GroupedPart[] = []
-  let currentResearchGroup: any[] = []
+  const groups: GroupedPart[] = [];
+  let currentResearchGroup: any[] = [];
 
   for (const part of parts) {
     if (isResearchTool(part)) {
-      currentResearchGroup.push(part)
+      currentResearchGroup.push(part);
     } else {
       // Flush research group if any
       if (currentResearchGroup.length > 0) {
-        groups.push({ type: "research-group", parts: currentResearchGroup })
-        currentResearchGroup = []
+        groups.push({ type: "research-group", parts: currentResearchGroup });
+        currentResearchGroup = [];
       }
-      groups.push({ type: "single", part })
+      groups.push({ type: "single", part });
     }
   }
 
   // Flush remaining research group
   if (currentResearchGroup.length > 0) {
-    groups.push({ type: "research-group", parts: currentResearchGroup })
+    groups.push({ type: "research-group", parts: currentResearchGroup });
   }
 
-  return groups
+  return groups;
 }

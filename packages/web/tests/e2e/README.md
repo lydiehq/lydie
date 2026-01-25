@@ -56,15 +56,17 @@ Comprehensive tests for the onboarding flow including:
 ### Auth Fixture (`fixtures/auth.fixture.ts`)
 
 Provides authenticated test context with:
+
 - `user` - Test user
 - `session` - Authentication session
 - `organization` - Test organization
 
 Example:
+
 ```typescript
 test("my test", async ({ page, user, organization }) => {
   // Test code here
-})
+});
 ```
 
 ### Multi-User Fixture (`fixtures/auth-multi-user.fixture.ts`)
@@ -97,35 +99,35 @@ Provides multiple authenticated users for collaboration tests.
 ### Example: Simple Onboarding Test
 
 ```typescript
-import { expect, test } from "./fixtures/auth.fixture"
-import { navigateToOnboardingStep } from "./utils/onboarding"
+import { expect, test } from "./fixtures/auth.fixture";
+import { navigateToOnboardingStep } from "./utils/onboarding";
 
 test("should navigate through onboarding steps", async ({ page, organization }) => {
-  await page.goto(`/w/${organization.slug}/assistant`)
-  await page.waitForLoadState("networkidle")
+  await page.goto(`/w/${organization.slug}/assistant`);
+  await page.waitForLoadState("networkidle");
 
   // Verify we're on documents step
-  await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
 
   // Navigate to assistant step
-  await navigateToOnboardingStep(page, "assistant")
-  await expect(page.getByRole("heading", { name: "Assistant" })).toBeVisible()
-})
+  await navigateToOnboardingStep(page, "assistant");
+  await expect(page.getByRole("heading", { name: "Assistant" })).toBeVisible();
+});
 ```
 
 ### Example: Database State Verification
 
 ```typescript
-import { getOnboardingStatus } from "./utils/onboarding"
+import { getOnboardingStatus } from "./utils/onboarding";
 
 test("should save state to database", async ({ page, organization }) => {
   // ... perform actions ...
 
   // Check database state
-  const status = await getOnboardingStatus(organization.id)
-  expect(status?.currentStep).toBe("assistant")
-  expect(status?.checkedItems).toContain("documents:open-command-menu")
-})
+  const status = await getOnboardingStatus(organization.id);
+  expect(status?.currentStep).toBe("assistant");
+  expect(status?.checkedItems).toContain("documents:open-command-menu");
+});
 ```
 
 ## Best Practices
@@ -141,16 +143,19 @@ test("should save state to database", async ({ page, organization }) => {
 ## Debugging
 
 ### View test results
+
 ```bash
 npx playwright show-report
 ```
 
 ### Run with traces
+
 ```bash
 npm test -- --trace on
 ```
 
 ### Open trace viewer
+
 ```bash
 npx playwright show-trace trace.zip
 ```
@@ -158,6 +163,7 @@ npx playwright show-trace trace.zip
 ### VS Code Extension
 
 Install the [Playwright Test for VSCode](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) extension for:
+
 - Running tests from the editor
 - Setting breakpoints
 - Viewing test results inline
@@ -165,6 +171,7 @@ Install the [Playwright Test for VSCode](https://marketplace.visualstudio.com/it
 ## CI/CD
 
 Tests run automatically on:
+
 - Pull requests
 - Pushes to main branch
 - Pre-deployment checks
@@ -174,16 +181,19 @@ The configuration is in `.github/workflows/` (if exists).
 ## Troubleshooting
 
 ### Tests timing out
+
 - Increase timeout in `playwright.config.ts`
 - Check if the app is running on the correct port
 - Verify database connection
 
 ### Flaky tests
+
 - Add explicit waits for elements
 - Use `waitForLoadState("networkidle")`
 - Check for race conditions in Zero sync
 
 ### Database cleanup issues
+
 - Verify cleanup code runs in `finally` blocks
 - Check for foreign key constraints
 - Run tests with `--workers=1` to avoid parallelism issues

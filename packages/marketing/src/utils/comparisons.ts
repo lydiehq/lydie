@@ -1,19 +1,19 @@
-import type { SectionOverride } from "./comparison-sections"
+import type { SectionOverride } from "./comparison-sections";
 
 export interface ComparisonFeature {
-  name: string
-  description?: string
-  lydie: boolean | string
-  competitor: boolean | string
+  name: string;
+  description?: string;
+  lydie: boolean | string;
+  competitor: boolean | string;
 }
 
 export interface Comparison {
-  slug: string
-  name: string
-  description: string
-  icon?: string
-  features: ComparisonFeature[]
-  sections?: (string | SectionOverride)[] // Section IDs or objects with overrides
+  slug: string;
+  name: string;
+  description: string;
+  icon?: string;
+  features: ComparisonFeature[];
+  sections?: (string | SectionOverride)[]; // Section IDs or objects with overrides
 }
 
 export const comparisons: Comparison[] = [
@@ -63,7 +63,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Limited API access",
       },
@@ -133,7 +134,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Limited to Notion's API and integrations",
       },
@@ -190,7 +192,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: true,
       },
@@ -272,7 +275,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Via Atlassian Marketplace",
       },
@@ -329,7 +333,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Limited API access",
       },
@@ -359,8 +364,97 @@ export const comparisons: Comparison[] = [
       },
     ],
   },
-]
+  {
+    slug: "onenote",
+    name: "OneNote",
+    description:
+      "Upgrade from OneNote to Lydie for better team collaboration and modern features. While OneNote excels at personal note-taking with handwriting support, Lydie brings powerful real-time collaboration, integrated AI, and the freedom to self-host. Perfect for teams who need more than OneNote's limited collaboration capabilities.",
+    sections: [
+      {
+        id: "opensource",
+        title: "Open-source alternative to OneNote",
+        description:
+          "OneNote locks you into Microsoft's ecosystem with no self-hosting options. As an open-source OneNote alternative, Lydie gives you complete control over your notes and data. Self-host on your own infrastructure or use our cloud version - the choice is yours, without vendor lock-in.",
+      },
+      {
+        id: "ai",
+        title: "Built-in AI, not a separate add-on",
+        description:
+          "OneNote requires Microsoft Copilot (on paid plans) for AI features. Lydie includes powerful AI assistance built directly into the editor, available to everyone. Get writing help, generate content, and chat with your documents without paying extra for AI capabilities.",
+      },
+      {
+        id: "collaboration",
+        title: "Real-time collaboration built for teams",
+        description:
+          "While OneNote has basic sharing features, Lydie offers true real-time collaboration with live cursors, instant updates, and seamless teamwork. See changes as they happen and work together in real-time - something OneNote's sync-based approach can't match.",
+      },
+    ],
+    features: [
+      {
+        name: "Real-time collaboration",
+        description: "Collaborate with your team in real-time on documents",
+        lydie: true,
+        competitor: "Sync-based sharing, not real-time",
+      },
+      {
+        name: "Open-source",
+        description: "Self-host and customize the platform to your needs",
+        lydie: true,
+        competitor: false,
+      },
+      {
+        name: "Integrated AI",
+        description: "AI-powered features built directly into the editor",
+        lydie: true,
+        competitor: "Microsoft Copilot (paid plans only)",
+      },
+      {
+        name: "Version history",
+        description: "Track and restore previous versions of your documents",
+        lydie: true,
+        competitor: "Limited version history",
+      },
+      {
+        name: "External platform sync",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        lydie: true,
+        competitor: "Limited to Microsoft ecosystem",
+      },
+      {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
+        lydie: true,
+        competitor: "Limited Microsoft Graph API access",
+      },
+      {
+        name: "Handwriting support",
+        description: "Support for handwritten notes and drawings",
+        lydie: false,
+        competitor: true,
+      },
+      {
+        name: "Offline access",
+        description: "Access and edit documents without internet",
+        lydie: "Planned",
+        competitor: true,
+      },
+      {
+        name: "Cross-platform",
+        description: "Available on web, desktop, and mobile",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "Team workspaces",
+        description: "Dedicated spaces for team collaboration",
+        lydie: true,
+        competitor: "Limited collaboration features",
+      },
+    ],
+  },
+];
 
 export function getComparison(slug: string): Comparison | undefined {
-  return comparisons.find((comparison) => comparison.slug === slug)
+  return comparisons.find((comparison) => comparison.slug === slug);
 }

@@ -1,37 +1,40 @@
-import { Command } from "cmdk"
-import { useEffect, useState, useMemo, useRef, useCallback } from "react"
-import { useDocumentActions } from "@/hooks/use-document-actions"
-import { useParams, useNavigate } from "@tanstack/react-router"
-import { useZero } from "@/services/zero"
-import { useQuery } from "@rocicorp/zero/react"
-import { useOrganization } from "@/context/organization.context"
-import { queries } from "@lydie/zero/queries"
-import { confirmDialog } from "@/stores/confirm-dialog"
-import { useAtom } from "jotai"
-import { commandMenuOpenAtom, commandMenuStateAtom } from "@/stores/command-menu"
-import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
-import { useOnboardingSteps } from "@/hooks/use-onboarding-steps"
-import { mutators } from "@lydie/zero/mutators"
 import {
-  SearchFilled,
   AddRegular,
-  HomeFilled,
-  BotRegular,
-  SettingsRegular,
-  PaymentRegular,
   ArrowUploadRegular,
+  BotRegular,
+  HomeFilled,
+  PaymentRegular,
   PlugConnectedRegular,
-} from "@fluentui/react-icons"
-import { ModalOverlay, Modal } from "react-aria-components"
-import { overlayStyles } from "../../generic/Modal"
-import { Dialog } from "../../generic/Dialog"
-import { cva } from "cva"
-import type { MenuItem } from "./CommandMenuItem"
-import { CommandMenuSection, type MenuSection } from "./CommandMenuSection"
-import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp"
-import { SearchResults } from "./CommandMenuSearchResults"
-import { integrationMetadata, type IntegrationMetadata } from "@lydie/integrations/client"
-import { getIntegrationIconUrl } from "@/utils/integration-icons"
+  SearchFilled,
+  SettingsRegular,
+} from "@fluentui/react-icons";
+import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
+import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { Command } from "cmdk";
+import { cva } from "cva";
+import { useAtom } from "jotai";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Modal, ModalOverlay } from "react-aria-components";
+
+import { useOrganization } from "@/context/organization.context";
+import { useDocumentActions } from "@/hooks/use-document-actions";
+import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
+import { useOnboardingSteps } from "@/hooks/use-onboarding-steps";
+import { useZero } from "@/services/zero";
+import { commandMenuOpenAtom, commandMenuStateAtom } from "@/stores/command-menu";
+import { confirmDialog } from "@/stores/confirm-dialog";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
+
+import type { MenuItem } from "./CommandMenuItem";
+
+import { Dialog } from "../../generic/Dialog";
+import { overlayStyles } from "../../generic/Modal";
+import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
+import { SearchResults } from "./CommandMenuSearchResults";
+import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
 
 const modalStyles = cva({
   base: "w-full max-w-lg max-h-full rounded-lg shadow-2xl bg-clip-padding ring ring-black/10 overflow-hidden",
@@ -43,107 +46,117 @@ const modalStyles = cva({
       true: "animate-out fade-out duration-75 ease-in",
     },
   },
-})
+});
 
 export function CommandMenu() {
-  const { createDocument, deleteDocument, publishDocument } = useDocumentActions()
-  const params = useParams({ strict: false })
-  const navigate = useNavigate()
-  const { organization } = useOrganization()
-  const z = useZero()
-  const [search, setSearch] = useState("")
-  const [pages, setPages] = useState<string[]>([])
-  const currentPage = pages[pages.length - 1]
-  const checkedItemsRef = useRef<Set<string>>(new Set())
+  const { createDocument, deleteDocument, publishDocument } = useDocumentActions();
+  const params = useParams({ strict: false });
+  const navigate = useNavigate();
+  const { organization } = useOrganization();
+  const z = useZero();
+  const [search, setSearch] = useState("");
+  const [pages, setPages] = useState<string[]>([]);
+  const currentPage = pages[pages.length - 1];
+  const checkedItemsRef = useRef<Set<string>>(new Set());
 
-  const currentDocumentId = params.id as string | undefined
+  const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
     currentDocumentId
       ? queries.documents.byId({
-        organizationId: organization.id,
-        documentId: currentDocumentId,
-      })
+          organizationId: organization.id,
+          documentId: currentDocumentId,
+        })
       : queries.documents.byId({
-        organizationId: organization.id,
-        documentId: "non-existent",
-      }),
-  )
+          organizationId: organization.id,
+          documentId: "non-existent",
+        }),
+  );
 
   const [searchData] = useQuery(
     currentPage === "search"
       ? queries.organizations.searchDocuments({
-        organizationId: organization.id,
-        searchTerm: search,
-      })
+          organizationId: organization.id,
+          searchTerm: search,
+        })
       : queries.organizations.searchDocuments({
-        organizationId: organization.id,
-        searchTerm: "",
-      }),
-  )
+          organizationId: organization.id,
+          searchTerm: "",
+        }),
+  );
 
-  const searchDocuments = searchData?.documents || []
+  const searchDocuments = searchData?.documents || [];
 
   const [integrationLinks] = useQuery(
     queries.integrationLinks.byOrganization({
       organizationId: organization.id,
     }),
-  )
+  );
 
-  const [isOpen, setOpen] = useAtom(commandMenuOpenAtom)
-  const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom)
-  const { setChecked } = useOnboardingChecklist()
-  const { currentStep } = useOnboardingSteps()
+  const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
+  const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom);
+  const { setChecked } = useOnboardingChecklist();
+  const { currentStep } = useOnboardingSteps();
 
-  const handleOpenChange = useCallback((newIsOpen: boolean) => {
-    if (newIsOpen && !isOpen) {
-      if (commandMenuState.initialPage) {
-        setPages([commandMenuState.initialPage])
-        setCommandMenuState({
-          ...commandMenuState,
-          initialPage: undefined,
-        })
+  const handleOpenChange = useCallback(
+    (newIsOpen: boolean) => {
+      if (newIsOpen && !isOpen) {
+        if (commandMenuState.initialPage) {
+          setPages([commandMenuState.initialPage]);
+          setCommandMenuState({
+            ...commandMenuState,
+            initialPage: undefined,
+          });
+        }
+      } else if (!newIsOpen && isOpen) {
+        setPages([]);
+        setSearch("");
       }
-    } else if (!newIsOpen && isOpen) {
-      setPages([])
-      setSearch("")
-    }
 
-    setOpen(newIsOpen)
-  }, [isOpen, commandMenuState, setCommandMenuState, setOpen])
+      setOpen(newIsOpen);
+    },
+    [isOpen, commandMenuState, setCommandMenuState, setOpen],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        const target = e.target as HTMLElement
-        const isInEditor = target.closest(".ProseMirror")
-        if (isInEditor) return
+        const target = e.target as HTMLElement;
+        const isInEditor = target.closest(".ProseMirror");
+        if (isInEditor) return;
 
-        e.preventDefault()
-        const willOpen = !isOpen
+        e.preventDefault();
+        const willOpen = !isOpen;
 
-        if (willOpen && currentStep === "documents" && !checkedItemsRef.current.has("documents:open-command-menu")) {
-          checkedItemsRef.current.add("documents:open-command-menu")
-          setChecked("documents:open-command-menu", true)
+        if (
+          willOpen &&
+          currentStep === "documents" &&
+          !checkedItemsRef.current.has("documents:open-command-menu")
+        ) {
+          checkedItemsRef.current.add("documents:open-command-menu");
+          setChecked("documents:open-command-menu", true);
         }
 
-        handleOpenChange(willOpen)
+        handleOpenChange(willOpen);
       }
-    }
+    };
 
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [isOpen, handleOpenChange, currentStep, setChecked])
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleOpenChange, currentStep, setChecked]);
 
-  const handleCommand = useCallback((action: () => void) => {
-    action()
-    handleOpenChange(false)
-  }, [handleOpenChange])
+  const handleCommand = useCallback(
+    (action: () => void) => {
+      action();
+      handleOpenChange(false);
+    },
+    [handleOpenChange],
+  );
 
   const getIntegrationRoute = (integrationType: string) =>
-    `/w/$organizationSlug/settings/integrations/${integrationType}`
+    `/w/$organizationSlug/settings/integrations/${integrationType}`;
 
   const menuSections = useMemo<MenuSection[]>(() => {
-    const onboardingItems: MenuItem[] = []
+    const onboardingItems: MenuItem[] = [];
 
     if (currentStep === "documents") {
       onboardingItems.push({
@@ -157,15 +170,15 @@ export function CommandMenu() {
               mutators.document.importDemoContent({
                 organizationId: organization.id,
               }),
-            )
+            );
 
-            await setChecked("documents:import-demo-content", true)
-            await setChecked("documents:explore-editor", true)
+            await setChecked("documents:import-demo-content", true);
+            await setChecked("documents:explore-editor", true);
 
             if (result?.client) {
-              const clientResult = await result.client
+              const clientResult = await result.client;
               if (clientResult.type === "success") {
-                const welcomeDocId = (clientResult as any).result?.welcomeDocumentId
+                const welcomeDocId = (clientResult as any).result?.welcomeDocumentId;
                 if (welcomeDocId) {
                   navigate({
                     to: "/w/$organizationSlug/$id",
@@ -173,31 +186,31 @@ export function CommandMenu() {
                       organizationSlug: organization.slug,
                       id: welcomeDocId,
                     },
-                  })
+                  });
                 }
               }
             }
 
-            handleOpenChange(false)
+            handleOpenChange(false);
           } catch (error) {
-            console.error("Failed to import demo content:", error)
+            console.error("Failed to import demo content:", error);
           }
         },
         customClassName:
           "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-3 text-sm outline-none data-[selected=true]:bg-blue-100 data-[selected=true]:text-blue-950 text-blue-700 bg-blue-50 border border-blue-200 transition-colors duration-150 font-medium",
-      })
+      });
     }
 
-    const favoritesItems: MenuItem[] = []
+    const favoritesItems: MenuItem[] = [];
 
-      favoritesItems.push({
-        id: "create-document",
-        label: "Create new document…",
-        icon: AddRegular,
-        action: async () => {
-          createDocument()
-        },
-      })
+    favoritesItems.push({
+      id: "create-document",
+      label: "Create new document…",
+      icon: AddRegular,
+      action: async () => {
+        createDocument();
+      },
+    });
 
     if (currentDocument) {
       favoritesItems.push({
@@ -206,27 +219,27 @@ export function CommandMenu() {
         icon: AddRegular,
         action: () => {
           if (currentDocument) {
-            publishDocument(currentDocument.id)
+            publishDocument(currentDocument.id);
           }
         },
-      })
+      });
       favoritesItems.push({
         id: "delete-document",
         label: "Delete document",
         icon: AddRegular,
         action: () => {
           if (currentDocumentId) {
-            const documentTitle = currentDocument.title || "Untitled Document"
+            const documentTitle = currentDocument.title || "Untitled Document";
             confirmDialog({
               title: `Delete "${documentTitle}"`,
               message: "This action cannot be undone. This document will be permanently deleted.",
               onConfirm: () => {
-                deleteDocument(currentDocumentId, true)
+                deleteDocument(currentDocumentId, true);
               },
-            })
+            });
           }
         },
-      })
+      });
     }
 
     const navigationItems: MenuItem[] = [
@@ -235,8 +248,8 @@ export function CommandMenu() {
         label: "Search documents…",
         icon: SearchFilled,
         action: () => {
-          setPages([...pages, "search"])
-          setSearch("") // Clear search when entering search page
+          setPages([...pages, "search"]);
+          setSearch(""); // Clear search when entering search page
         },
       },
       {
@@ -254,7 +267,7 @@ export function CommandMenu() {
               q: undefined,
               focusSearch: undefined,
             },
-          })
+          });
         },
       },
       {
@@ -267,7 +280,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          })
+          });
         },
       },
       {
@@ -280,7 +293,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          })
+          });
         },
       },
       {
@@ -293,7 +306,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          })
+          });
         },
       },
       {
@@ -306,7 +319,7 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-          })
+          });
         },
       },
       {
@@ -324,7 +337,7 @@ export function CommandMenu() {
               error: undefined,
               connectionId: undefined,
             },
-          })
+          });
         },
       },
       ...integrationMetadata.map((integration: IntegrationMetadata) => ({
@@ -334,7 +347,7 @@ export function CommandMenu() {
         action: () => {
           navigate({
             to: getIntegrationRoute(integration.id),
-          })
+          });
         },
       })),
       {
@@ -344,20 +357,19 @@ export function CommandMenu() {
         action: () => {
           navigate({
             to: "/new",
-          })
+          });
         },
       },
-    ]
+    ];
 
-    const sections: MenuSection[] = []
+    const sections: MenuSection[] = [];
 
-    // Add onboarding section if it has items
     if (onboardingItems.length > 0) {
       sections.push({
         id: "onboarding",
         heading: "Onboarding",
         items: onboardingItems,
-      })
+      });
     }
 
     sections.push(
@@ -371,9 +383,9 @@ export function CommandMenu() {
         heading: "Navigation",
         items: navigationItems,
       },
-    )
+    );
 
-    return sections
+    return sections;
   }, [
     createDocument,
     currentDocument,
@@ -387,19 +399,23 @@ export function CommandMenu() {
     currentStep,
     setChecked,
     handleOpenChange,
-  ])
+    publishDocument,
+  ]);
 
   return (
-    <ModalOverlay isOpen={isOpen} onOpenChange={handleOpenChange} isDismissable className={overlayStyles}>
+    <ModalOverlay
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+      isDismissable
+      className={overlayStyles}
+    >
       <Modal className={modalStyles}>
         <Dialog className="flex flex-col bg-gray-50">
           <Command
             onKeyDown={(e) => {
-              // Escape goes to previous page
-              // Backspace goes to previous page when search is empty
               if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
-                e.preventDefault()
-                setPages((pages) => pages.slice(0, -1))
+                e.preventDefault();
+                setPages((pages) => pages.slice(0, -1));
               }
             }}
           >
@@ -408,8 +424,9 @@ export function CommandMenu() {
               <Command.Input
                 value={search}
                 onValueChange={setSearch}
-                autoFocus
-                placeholder={currentPage === "search" ? "Search documents..." : "Type a command or search..."}
+                placeholder={
+                  currentPage === "search" ? "Search documents..." : "Type a command or search..."
+                }
                 className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
@@ -427,11 +444,10 @@ export function CommandMenu() {
                       key={section.id}
                       section={section}
                       onSelect={(item) => {
-                        // Don't close dialog for "search" - it navigates to a sub-page
                         if (item.id === "search") {
-                          item.action()
+                          item.action();
                         } else {
-                          handleCommand(item.action)
+                          handleCommand(item.action);
                         }
                       }}
                     />
@@ -454,5 +470,5 @@ export function CommandMenu() {
         </Dialog>
       </Modal>
     </ModalOverlay>
-  )
+  );
 }

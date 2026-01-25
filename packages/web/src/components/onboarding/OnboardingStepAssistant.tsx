@@ -1,31 +1,40 @@
-import { Checkbox } from "@/components/generic/Checkbox"
-import { useSetAtom } from "jotai"
-import { openAssistantAtom } from "@/stores/floating-assistant"
-import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist"
-import { useOrganization } from "@/context/organization.context"
-import { useNavigate } from "@tanstack/react-router"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { BotRegular, FolderRegular, DocumentTextFilled, SparkleRegular } from "@fluentui/react-icons"
+import {
+  BotRegular,
+  DocumentTextFilled,
+  FolderRegular,
+  SparkleRegular,
+} from "@fluentui/react-icons";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { useNavigate } from "@tanstack/react-router";
+import { useSetAtom } from "jotai";
+
+import { Checkbox } from "@/components/generic/Checkbox";
+import { useOrganization } from "@/context/organization.context";
+import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
+import { openAssistantAtom } from "@/stores/floating-assistant";
 
 export function OnboardingStepAssistant() {
-  const openAssistant = useSetAtom(openAssistantAtom)
-  const { isChecked, setChecked } = useOnboardingChecklist()
-  const { organization } = useOrganization()
-  const navigate = useNavigate()
+  const openAssistant = useSetAtom(openAssistantAtom);
+  const { isChecked, setChecked } = useOnboardingChecklist();
+  const { organization } = useOrganization();
+  const navigate = useNavigate();
 
   const [documents] = useQuery(
     queries.documents.byUpdated({
       organizationId: organization.id,
     }),
-  )
+  );
 
   const handleStepClick = async (
-    checklistItem: "assistant:organize-documents" | "assistant:create-document" | "assistant:improve-document",
+    checklistItem:
+      | "assistant:organize-documents"
+      | "assistant:create-document"
+      | "assistant:improve-document",
     prompt: string,
     documentId?: string,
   ) => {
-    await setChecked(checklistItem, true)
+    await setChecked(checklistItem, true);
 
     if (documentId) {
       navigate({
@@ -34,11 +43,11 @@ export function OnboardingStepAssistant() {
           organizationSlug: organization.slug,
           id: documentId,
         },
-      })
+      });
     }
 
-    openAssistant(prompt)
-  }
+    openAssistant(prompt);
+  };
 
   const documentForStep3 = documents?.find(
     (doc) =>
@@ -47,7 +56,7 @@ export function OnboardingStepAssistant() {
         typeof doc.custom_fields === "object" &&
         "isOnboarding" in doc.custom_fields &&
         doc.custom_fields.isOnboarding === "true"),
-  )
+  );
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -58,7 +67,8 @@ export function OnboardingStepAssistant() {
         <span className="text-lg font-medium text-gray-900">Assistant</span>
       </div>
       <p className="text-gray-700 text-sm/relaxed">
-        The AI assistant can help you organize, create, and improve your documents. Try these tasks to see it in action.
+        The AI assistant can help you organize, create, and improve your documents. Try these tasks
+        to see it in action.
       </p>
       <div className="flex flex-col gap-y-3">
         <Checkbox
@@ -130,5 +140,5 @@ export function OnboardingStepAssistant() {
         </Checkbox>
       </div>
     </div>
-  )
+  );
 }

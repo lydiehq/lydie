@@ -1,7 +1,7 @@
 type SidebarIconProps = {
-  direction?: "left" | "right"
-  collapsed?: boolean
-}
+  direction?: "left" | "right";
+  collapsed?: boolean;
+};
 
 export function SidebarIcon({ direction = "left", collapsed = false }: SidebarIconProps) {
   return (
@@ -12,5 +12,5 @@ export function SidebarIcon({ direction = "left", collapsed = false }: SidebarIc
         } shadow-xs`}
       />
     </div>
-  )
+  );
 }

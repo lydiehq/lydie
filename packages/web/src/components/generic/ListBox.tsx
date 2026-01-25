@@ -1,4 +1,5 @@
-import { CheckmarkRegular } from "@fluentui/react-icons"
+import { CheckmarkRegular } from "@fluentui/react-icons";
+import { compose, cva } from "cva";
 import {
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
@@ -9,9 +10,9 @@ import {
   ListBoxSection,
   type SectionProps,
   composeRenderProps,
-} from "react-aria-components"
-import { composeTailwindRenderProps, focusRing } from "./utils"
-import { compose, cva } from "cva"
+} from "react-aria-components";
+
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
 interface ListBoxProps<T> extends Omit<AriaListBoxProps<T>, "layout" | "orientation"> {}
 
@@ -26,26 +27,32 @@ export function ListBox<T extends object>({ children, ...props }: ListBoxProps<T
     >
       {children}
     </AriaListBox>
-  )
+  );
 }
 
 export const itemStyles = cva({
   base: "group relative flex items-center gap-8 cursor-default select-none py-1.5 px-2.5 rounded-md will-change-transform text-sm forced-color-adjust-none",
   variants: {
     isSelected: {
-      false: "text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 -outline-offset-2",
+      false:
+        "text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 -outline-offset-2",
       true: "bg-blue-600 text-white forced-colors:bg-[Highlight] forced-colors:text-[HighlightText] [&:has(+[data-selected])]:rounded-b-none [&+[data-selected]]:rounded-t-none -outline-offset-4 outline-white dark:outline-white forced-colors:outline-[HighlightText]",
     },
     isDisabled: {
       true: "text-slate-300 dark:text-zinc-600 forced-colors:text-[GrayText]",
     },
   },
-})
+});
 
 export function ListBoxItem(props: ListBoxItemProps) {
-  let textValue = props.textValue || (typeof props.children === "string" ? props.children : undefined)
+  let textValue =
+    props.textValue || (typeof props.children === "string" ? props.children : undefined);
   return (
-    <AriaListBoxItem {...props} textValue={textValue} className={compose(dropdownItemStyles, focusRing)}>
+    <AriaListBoxItem
+      {...props}
+      textValue={textValue}
+      className={compose(dropdownItemStyles, focusRing)}
+    >
       {composeRenderProps(props.children, (children, { selectionMode, isSelected }) => (
         <>
           {selectionMode !== "none" && (
@@ -59,7 +66,7 @@ export function ListBoxItem(props: ListBoxItemProps) {
         </>
       ))}
     </AriaListBoxItem>
-  )
+  );
 }
 
 export const dropdownItemStyles = cva({
@@ -73,10 +80,11 @@ export const dropdownItemStyles = cva({
       true: "bg-gray-100",
     },
   },
-})
+});
 
 export function DropdownItem(props: ListBoxItemProps) {
-  let textValue = props.textValue || (typeof props.children === "string" ? props.children : undefined)
+  let textValue =
+    props.textValue || (typeof props.children === "string" ? props.children : undefined);
   return (
     <AriaListBoxItem {...props} textValue={textValue} className={dropdownItemStyles}>
       {composeRenderProps(props.children, (children, { selectionMode, isSelected }) => (
@@ -92,12 +100,12 @@ export function DropdownItem(props: ListBoxItemProps) {
         </>
       ))}
     </AriaListBoxItem>
-  )
+  );
 }
 
 export interface DropdownSectionProps<T> extends SectionProps<T> {
-  title?: string
-  items?: any
+  title?: string;
+  items?: any;
 }
 
 export function DropdownSection<T extends object>(props: DropdownSectionProps<T>) {
@@ -108,5 +116,5 @@ export function DropdownSection<T extends object>(props: DropdownSectionProps<T>
       </Header>
       <Collection items={props.items}>{props.children}</Collection>
     </ListBoxSection>
-  )
+  );
 }

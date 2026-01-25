@@ -1,4 +1,4 @@
-import { Heading } from "../generic/Heading"
+import { Heading } from "../generic/Heading";
 
 export function ToolHeader({ title, description }: { title: string; description: string }) {
   return (
@@ -6,5 +6,5 @@ export function ToolHeader({ title, description }: { title: string; description:
       <Heading>{title}</Heading>
       <p className="text-gray-600 text-sm/relaxed max-w-[65ch]">{description}</p>
     </div>
-  )
+  );
 }

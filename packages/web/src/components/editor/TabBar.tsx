@@ -1,14 +1,20 @@
-import { Input } from "react-aria-components"
+import { Input } from "react-aria-components";
 
 type TabBarProps = {
-  title: string
-  onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onTitleFocus: () => void
-  onTitleBlur: () => void
-  onTitleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
-}
+  title: string;
+  onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onTitleFocus: () => void;
+  onTitleBlur: () => void;
+  onTitleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+};
 
-export function TabBar({ title, onTitleChange, onTitleFocus, onTitleBlur, onTitleKeyDown }: TabBarProps) {
+export function TabBar({
+  title,
+  onTitleChange,
+  onTitleFocus,
+  onTitleBlur,
+  onTitleKeyDown,
+}: TabBarProps) {
   return (
     <div className="h-10 shrink-0 flex items-center">
       <div className="inline-flex max-w-[40ch]">
@@ -30,11 +36,13 @@ export function TabBar({ title, onTitleChange, onTitleFocus, onTitleBlur, onTitl
         <ul className="flex items-center gap-1">
           {[...Array(3)].map((_, index) => (
             <li key={index}>
-              <button className="text-sm font-medium text-gray-700 rounded-lg px-2 py-1">Yooooooooo</button>
+              <button className="text-sm font-medium text-gray-700 rounded-lg px-2 py-1">
+                Yooooooooo
+              </button>
             </li>
           ))}
         </ul>
       </div>
     </div>
-  )
+  );
 }

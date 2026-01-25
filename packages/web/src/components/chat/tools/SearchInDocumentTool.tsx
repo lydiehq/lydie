@@ -1,53 +1,54 @@
-import { Disclosure, DisclosurePanel, Button } from "react-aria-components"
-import { ArrowClockwiseRegular, SearchFilled, ChevronRightRegular } from "@fluentui/react-icons"
-import { ToolContainer } from "./ToolContainer"
+import { ArrowClockwiseRegular, ChevronRightRegular, SearchFilled } from "@fluentui/react-icons";
+import { Button, Disclosure, DisclosurePanel } from "react-aria-components";
+
+import { ToolContainer } from "./ToolContainer";
 
 interface SearchResult {
-  content: string
-  similarity: number
-  chunkIndex?: number
-  heading?: string
-  headingLevel?: number
+  content: string;
+  similarity: number;
+  chunkIndex?: number;
+  heading?: string;
+  headingLevel?: number;
 }
 
 export interface SearchInDocumentToolProps {
   tool: {
-    state: string
+    state: string;
     args?: {
-      query?: string
-      documentId?: string
-      limit?: number
-    }
+      query?: string;
+      documentId?: string;
+      limit?: number;
+    };
     output?: {
-      message?: string
-      state?: string
-      documentTitle?: string
-      documentId?: string
-      query?: string
-      resultsCount?: number
-      results?: SearchResult[]
-      error?: string
-    }
-  }
-  className?: string
+      message?: string;
+      state?: string;
+      documentTitle?: string;
+      documentId?: string;
+      query?: string;
+      resultsCount?: number;
+      results?: SearchResult[];
+      error?: string;
+    };
+  };
+  className?: string;
 }
 
 export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentToolProps) {
-  const isLoading = tool.state === "input-streaming" || tool.state === "call-streaming"
-  const hasOutput = tool.state === "output-available"
-  const error = tool.output?.error
-  const results = tool.output?.results || []
-  const query = tool.output?.query || tool.args?.query
-  const preliminaryState = tool.output?.state
+  const isLoading = tool.state === "input-streaming" || tool.state === "call-streaming";
+  const hasOutput = tool.state === "output-available";
+  const error = tool.output?.error;
+  const results = tool.output?.results || [];
+  const query = tool.output?.query || tool.args?.query;
+  const preliminaryState = tool.output?.state;
 
   if (isLoading) {
-    let message = "Reading section"
-    const sectionName = query || "section"
+    let message = "Reading section";
+    const sectionName = query || "section";
 
     if (preliminaryState === "searching") {
-      message = `Searching for "${sectionName}"`
+      message = `Searching for "${sectionName}"`;
     } else {
-      message = `Reading "${sectionName}"`
+      message = `Reading "${sectionName}"`;
     }
 
     return (
@@ -55,7 +56,7 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
         <ArrowClockwiseRegular className="size-3 animate-spin" />
         <span className="text-[13px]">{message}...</span>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -66,7 +67,7 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
           <p className="text-xs mt-1 text-red-500">{error}</p>
         </div>
       </ToolContainer>
-    )
+    );
   }
 
   if (!hasOutput || results.length === 0) {
@@ -77,14 +78,14 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
           <SearchFilled className="size-3" />
           <span className="text-[13px]">Section not found</span>
         </div>
-      )
+      );
     }
-    return null
+    return null;
   }
 
   // Show most relevant heading from results
-  const topResult = results[0]
-  const displayHeading = topResult?.heading || query || "content"
+  const topResult = results[0];
+  const displayHeading = topResult?.heading || query || "content";
 
   return (
     <Disclosure className={`group w-full flex flex-col ${className}`}>
@@ -94,7 +95,9 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
       >
         <SearchIcon className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
         <ChevronRightRegular className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
-        <span className="text-[13px]">Read {topResult?.heading ? `"${topResult.heading}"` : "section"}</span>
+        <span className="text-[13px]">
+          Read {topResult?.heading ? `"${topResult.heading}"` : "section"}
+        </span>
       </Button>
       <DisclosurePanel className="overflow-hidden pl-5">
         <div className="pt-2">
@@ -115,5 +118,5 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
         </div>
       </DisclosurePanel>
     </Disclosure>
-  )
+  );
 }

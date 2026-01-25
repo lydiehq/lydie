@@ -1,5 +1,5 @@
-import { google } from "@lydie/core/ai/llm"
-import { generateText, type UIMessage } from "ai"
+import { google } from "@lydie/core/ai/llm";
+import { type UIMessage, generateText } from "ai";
 
 export async function generateConversationTitle(message: UIMessage) {
   const { text: title } = await generateText({
@@ -10,7 +10,7 @@ export async function generateConversationTitle(message: UIMessage) {
     - the title should be a summary of the user's message
     - do not use quotes or colons`,
     prompt: JSON.stringify(message),
-  })
+  });
 
-  return title
+  return title;
 }

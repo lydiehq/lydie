@@ -1,8 +1,9 @@
-import { Container } from "../Container"
-import { ChevronRight, Code, BookOpen, Zap } from "lucide-react"
-import { Eyebrow } from "./Eyebrow"
-import { AsciiBackground } from "./AsciiBackground"
-import { Button } from "../generic/Button"
+import { BookOpen, ChevronRight, Code, Zap } from "lucide-react";
+
+import { Container } from "../Container";
+import { Button } from "../generic/Button";
+import { AsciiBackground } from "./AsciiBackground";
+import { Eyebrow } from "./Eyebrow";
 
 const points = [
   {
@@ -13,7 +14,8 @@ const points = [
   },
   {
     title: "REST API",
-    description: "Low-level API access for complete control. Simple HTTP endpoints with full type safety.",
+    description:
+      "Low-level API access for complete control. Simple HTTP endpoints with full type safety.",
     icon: Code,
   },
   {
@@ -22,7 +24,7 @@ const points = [
       "Official SDK with React hooks, HTML rendering, and full TypeScript support for advanced integrations.",
     icon: Zap,
   },
-]
+];
 
 export function ApiSection() {
   return (
@@ -39,7 +41,7 @@ export function ApiSection() {
         <div className="rounded-xl ring ring-black/8 p-4 relative h-[600px]"></div>
       </Container>
     </section>
-  )
+  );
 
   return (
     <section className="pt-px z-0 relative -mb-40">
@@ -84,8 +86,8 @@ const doc = await client.getDocument("getting-started");`}</code>
               Easily set up <br /> a blog.
             </h2>
             <span className="text-[15px]/relaxed text-gray-600 text-balance">
-              Deploy a blog in minutes with our ready-to-use examples, or use our low-level REST API and
-              TypeScript SDK for complete control over your integration.
+              Deploy a blog in minutes with our ready-to-use examples, or use our low-level REST API
+              and TypeScript SDK for complete control over your integration.
             </span>
             <div className="flex items-center gap-x-3">
               <Button href="https://app.lydie.co/auth" size="lg" className="self-start">
@@ -94,7 +96,12 @@ const doc = await client.getDocument("getting-started");`}</code>
                   <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
                 </div>
               </Button>
-              <Button href="/documentation/examples" intent="secondary" size="lg" className="self-start">
+              <Button
+                href="/documentation/examples"
+                intent="secondary"
+                size="lg"
+                className="self-start"
+              >
                 <div className="flex items-center gap-x-1">
                   <span>View examples</span>
                   <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
@@ -117,5 +124,5 @@ const doc = await client.getDocument("getting-started");`}</code>
         </div>
       </Container>
     </section>
-  )
+  );
 }

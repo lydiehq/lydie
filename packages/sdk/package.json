@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
-    "react": "^19.2.3"
+    "react": "catalog:"
   },
   "devDependencies": {
     "@types/react": "^19.2.9"

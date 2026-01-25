@@ -1,6 +1,6 @@
-import React from "react"
-import { Toolbar as RACToolbar, ToolbarProps, composeRenderProps } from "react-aria-components"
-import { tv } from "tailwind-variants"
+import React from "react";
+import { Toolbar as RACToolbar, ToolbarProps, composeRenderProps } from "react-aria-components";
+import { tv } from "tailwind-variants";
 
 const styles = tv({
   base: "flex gap-2",
@@ -10,7 +10,7 @@ const styles = tv({
       vertical: "flex-col items-start",
     },
   },
-})
+});
 
 export function Toolbar(props: ToolbarProps) {
   return (
@@ -20,5 +20,5 @@ export function Toolbar(props: ToolbarProps) {
         styles({ ...renderProps, className }),
       )}
     />
-  )
+  );
 }

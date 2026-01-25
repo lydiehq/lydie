@@ -1,200 +1,162 @@
-import { useQuery } from "@rocicorp/zero/react"
-import { Tree } from "react-aria-components"
-import { DocumentTreeItem } from "./DocumentTreeItem"
-import type { ReactElement } from "react"
-import { useOrganization } from "@/context/organization.context"
-import { queries } from "@lydie/zero/queries"
-import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop"
-import { useAtom } from "jotai"
-import { useMemo, useEffect, useState } from "react"
-import type { Key } from "react-aria-components"
-import { atom } from "jotai"
-import { useParams } from "@tanstack/react-router"
-import type { QueryResultType } from "@rocicorp/zero"
-import { useAuth } from "@/context/auth.context"
-import { getUserStorage, setUserStorage, removeUserStorage } from "@/lib/user-storage"
+import type { QueryResultType } from "@rocicorp/zero";
+import type { ReactElement } from "react";
+import type { Key } from "react-aria-components";
 
-import { getIntegrationMetadata } from "@lydie/integrations/metadata"
+import { getIntegrationMetadata } from "@lydie/integrations/metadata";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { useAtom } from "jotai";
+import { atom } from "jotai";
+import { useEffect, useMemo, useState } from "react";
+import { Tree } from "react-aria-components";
+
+import { useAuth } from "@/context/auth.context";
+import { useOrganization } from "@/context/organization.context";
+import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
+import { getUserStorage, removeUserStorage, setUserStorage } from "@/lib/user-storage";
+
+import { DocumentTreeItem } from "./DocumentTreeItem";
 
 type TreeItem = {
-  id: string
-  name: string
-  type: "document" | "integration-link" | "integration-group"
-  children?: TreeItem[]
-  integrationLinkId?: string | null
-  integrationType?: string
-  syncStatus?: string | null
-  isLocked?: boolean
-}
+  id: string;
+  name: string;
+  type: "document" | "integration-link" | "integration-group";
+  children?: TreeItem[];
+  integrationLinkId?: string | null;
+  integrationType?: string;
+  syncStatus?: string | null;
+  isLocked?: boolean;
+};
 
-const STORAGE_KEY = "lydie:document:tree:expanded:keys"
+const STORAGE_KEY = "lydie:document:tree:expanded:keys";
 
 function loadFromStorage(userId: string | null | undefined): string[] {
   try {
-    const stored = getUserStorage(userId, STORAGE_KEY)
+    const stored = getUserStorage(userId, STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored)
+      return JSON.parse(stored);
     }
-  } catch (e) {
-    // Ignore errors
-  }
-  return []
+  } catch {}
+  return [];
 }
 
 function saveToStorage(userId: string | null | undefined, keys: string[]): void {
   try {
-    setUserStorage(userId, STORAGE_KEY, JSON.stringify(keys))
-  } catch (e) {
-    // Ignore errors
-  }
+    setUserStorage(userId, STORAGE_KEY, JSON.stringify(keys));
+  } catch {}
 }
 
-const documentTreeExpandedKeysAtom = atom<string[]>([])
+const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
-type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documents>>
+type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documents>>;
 
-// Finds all parent document IDs for a given document by traversing up the parent hierarchy.
 function findParentDocumentIds(documentId: string, documents: QueryResult["documents"]): string[] {
-  const document = documents.find((doc) => doc.id === documentId)
+  const document = documents.find((doc) => doc.id === documentId);
   if (!document || !document.parent_id) {
-    return []
+    return [];
   }
 
-  const parentIds: string[] = []
-  let currentParentId: string | null = document.parent_id
+  const parentIds: string[] = [];
+  let currentParentId: string | null = document.parent_id;
 
   while (currentParentId) {
-    parentIds.push(currentParentId)
-    const parentDoc = documents.find((d) => d.id === currentParentId)
-    currentParentId = parentDoc?.parent_id ?? null
+    parentIds.push(currentParentId);
+    const parentDoc = documents.find((d) => d.id === currentParentId);
+    currentParentId = parentDoc?.parent_id ?? null;
   }
 
-  // Return in order from root to immediate parent
-  return parentIds.reverse()
+  return parentIds.reverse();
 }
 
 export function DocumentTree() {
-  const { organization } = useOrganization()
-  const { id: currentDocumentId } = useParams({ strict: false })
-  const { session } = useAuth()
-  const userId = session?.userId
+  const { organization } = useOrganization();
 
-  // Get user settings to determine if we should persist to local storage
-  const [userSettings] = useQuery(queries.settings.user({}))
-  const persistExpansion = userSettings?.persist_document_tree_expansion ?? true
+  const { session } = useAuth();
+  const userId = session?.userId;
 
-  // Initialize state from localStorage if persistence is enabled
-  const [initialized, setInitialized] = useState(false)
-  const [expandedKeysArray, setExpandedKeysArray] = useAtom(documentTreeExpandedKeysAtom)
+  const [userSettings] = useQuery(queries.settings.user({}));
+  const persistExpansion = userSettings?.persist_document_tree_expansion ?? true;
 
-  // Load initial state from localStorage if persistence is enabled
+  const [initialized, setInitialized] = useState(false);
+  const [expandedKeysArray, setExpandedKeysArray] = useAtom(documentTreeExpandedKeysAtom);
+
   useEffect(() => {
     if (!initialized && persistExpansion) {
-      const stored = loadFromStorage(userId)
-      setExpandedKeysArray(stored)
-      setInitialized(true)
+      const stored = loadFromStorage(userId);
+      setExpandedKeysArray(stored);
+      setInitialized(true);
     } else if (!initialized) {
-      setInitialized(true)
+      setInitialized(true);
     }
-  }, [initialized, persistExpansion, userId, setExpandedKeysArray])
+  }, [initialized, persistExpansion, userId, setExpandedKeysArray]);
 
-  // Save to localStorage when state changes (only if persistence is enabled)
   useEffect(() => {
     if (initialized && persistExpansion) {
-      saveToStorage(userId, expandedKeysArray)
+      saveToStorage(userId, expandedKeysArray);
     } else if (initialized && !persistExpansion) {
-      // Clear localStorage when persistence is disabled
-      removeUserStorage(userId, STORAGE_KEY)
+      removeUserStorage(userId, STORAGE_KEY);
     }
-  }, [initialized, persistExpansion, userId, expandedKeysArray])
+  }, [initialized, persistExpansion, userId, expandedKeysArray]);
 
-  // Convert array to Set for React Aria Tree component
-  const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray])
+  const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
 
   const handleExpandedChange = (keys: Set<Key>) => {
-    // In our case, all IDs are strings, so we can safely convert
-    setExpandedKeysArray(Array.from(keys).map((key) => String(key)))
-  }
+    setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
+  };
 
   const [orgData] = useQuery(
     queries.organizations.documents({
       organizationSlug: organization.slug,
     }),
-  )
+  );
 
   const [connections] = useQuery(
     queries.integrations.byOrganization({
       organizationId: organization.id,
     }),
-  )
+  );
 
   const [extensionLinks] = useQuery(
     queries.integrationLinks.byOrganization({
       organizationId: organization.id,
     }),
-  )
+  );
 
-  const documents = orgData?.documents || []
+  const documents = orgData?.documents || [];
 
-  // Expand all parent documents when a document is opened
-  // useEffect(() => {
-  //   if (currentDocumentId && initialized && documents.length > 0) {
-  //     const parentDocumentIds = findParentDocumentIds(
-  //       currentDocumentId,
-  //       documents
-  //     );
-
-  //     if (parentDocumentIds.length > 0) {
-  //       // Merge with existing expanded keys, avoiding duplicates
-  //       setExpandedKeysArray((prev) => {
-  //         const newKeys = new Set([...prev, ...parentDocumentIds]);
-  //         return Array.from(newKeys);
-  //       });
-  //     }
-  //   }
-  // }, [currentDocumentId, initialized, documents, setExpandedKeysArray]);
-
-  // Build tree items for documents (pages-in-pages structure)
-  // parentId can be null (root level) or a document ID
   const buildTreeItems = (parentId: string | null): TreeItem[] => {
-    // Only include documents that don't belong to an extension link
-    // Filter by parent_id for pages-in-pages structure
-    const childDocs = documents.filter((doc) => doc.parent_id === parentId && !doc.integration_link_id)
+    const childDocs = documents.filter(
+      (doc) => doc.parent_id === parentId && !doc.integration_link_id,
+    );
 
-    // Sort documents by sort_order only
     const sortedDocs = [...childDocs].sort((a, b) => {
-      return (a.sort_order ?? 0) - (b.sort_order ?? 0)
-    })
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
 
     return sortedDocs.map((doc) => {
-      // Recursively get children for this document
-      const children = buildTreeItems(doc.id)
+      const children = buildTreeItems(doc.id);
       return {
         id: doc.id,
         name: doc.title || "Untitled document",
         type: "document" as const,
         children: children.length > 0 ? children : undefined,
         isLocked: doc.is_locked ?? false,
-      }
-    })
-  }
+      };
+    });
+  };
 
-  // Build tree items for an extension link (documents that belong to this link)
-  // Uses parent_id for page-hierarchy structure
   const buildLinkItems = (linkId: string): TreeItem[] => {
-    const linkDocs = documents.filter((doc) => doc.integration_link_id === linkId)
+    const linkDocs = documents.filter((doc) => doc.integration_link_id === linkId);
 
-    // Build nested structure using parent_id (pages-in-pages)
     const buildNestedDocs = (parentId: string | null): TreeItem[] => {
-      const childDocs = linkDocs.filter((d) => d.parent_id === parentId)
+      const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
 
-      // Sort documents by sort_order only
       const sortedDocs = [...childDocs].sort((a, b) => {
-        return (a.sort_order ?? 0) - (b.sort_order ?? 0)
-      })
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      });
 
       return sortedDocs.map((doc) => {
-        const children = buildNestedDocs(doc.id)
+        const children = buildNestedDocs(doc.id);
         return {
           id: doc.id,
           name: doc.title || "Untitled document",
@@ -202,60 +164,53 @@ export function DocumentTree() {
           children: children.length > 0 ? children : undefined,
           integrationLinkId: doc.integration_link_id,
           isLocked: doc.is_locked ?? false,
-        }
-      })
-    }
+        };
+      });
+    };
 
-    return buildNestedDocs(null)
-  }
+    return buildNestedDocs(null);
+  };
 
-  // Build integration link entries grouped by type
-  // Show groups for all active connections, even if they have no links
   const linkGroups = useMemo(() => {
-    // Get all active connections grouped by integration type
-    const connectionGroups = new Map<string, typeof connections>()
+    const connectionGroups = new Map<string, typeof connections>();
 
     connections?.forEach((connection) => {
-      if (connection.status !== "active") return
+      if (connection.status !== "active") return;
 
-      const type = connection.integration_type
-      if (!type) return
+      const type = connection.integration_type;
+      if (!type) return;
 
       if (!connectionGroups.has(type)) {
-        connectionGroups.set(type, [])
+        connectionGroups.set(type, []);
       }
-      connectionGroups.get(type)?.push(connection)
-    })
+      connectionGroups.get(type)?.push(connection);
+    });
 
-    // Group links by integration type
-    const linkGroupsByType = new Map<string, typeof extensionLinks>()
+    const linkGroupsByType = new Map<string, typeof extensionLinks>();
 
     extensionLinks.forEach((link) => {
-      const type = link.connection?.integration_type
-      if (!type) return
+      const type = link.connection?.integration_type;
+      if (!type) return;
 
       if (!linkGroupsByType.has(type)) {
-        linkGroupsByType.set(type, [])
+        linkGroupsByType.set(type, []);
       }
-      linkGroupsByType.get(type)?.push(link)
-    })
+      linkGroupsByType.get(type)?.push(link);
+    });
 
-    const items: TreeItem[] = []
+    const items: TreeItem[] = [];
 
-    // Create groups for all active connections
     connectionGroups.forEach((_conns, type) => {
-      const metadata = getIntegrationMetadata(type)
-      if (!metadata) return
+      const metadata = getIntegrationMetadata(type);
+      if (!metadata) return;
 
-      // Get links for this integration type
-      const linksForType = linkGroupsByType.get(type) || []
+      const linksForType = linkGroupsByType.get(type) || [];
 
-      // Sort links within each integration group alphabetically by name
       const sortedLinks = [...linksForType].sort((a, b) =>
         (a.name || "").localeCompare(b.name || "", undefined, {
           sensitivity: "base",
         }),
-      )
+      );
 
       items.push({
         id: `integration-group-${type}`,
@@ -271,25 +226,23 @@ export function DocumentTree() {
           children: buildLinkItems(link.id),
         })),
         integrationType: type,
-      })
-    })
+      });
+    });
 
-    // Ensure integration groups themselves are sorted alphabetically by name
-    items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }))
+    items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 
-    return items
-  }, [connections, extensionLinks, documents]) // Re-compute when data changes
+    return items;
+  }, [connections, extensionLinks, documents, buildLinkItems]);
 
-  // Combine integration groups (at top) with regular tree items
-  const treeItems = [...linkGroups, ...buildTreeItems(null)]
+  const treeItems = [...linkGroups, ...buildTreeItems(null)];
 
   const renderItem = (item: TreeItem): ReactElement => (
     <DocumentTreeItem item={item} renderItem={renderItem} documents={documents} />
-  )
+  );
 
   const { dragAndDropHooks } = useDocumentDragDrop({
     allDocuments: documents,
-  })
+  });
 
   return (
     <Tree
@@ -303,5 +256,5 @@ export function DocumentTree() {
     >
       {renderItem}
     </Tree>
-  )
+  );
 }

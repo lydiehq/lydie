@@ -1,30 +1,31 @@
-import { Container } from "../Container"
-import { Button } from "../generic/Button"
-import styles from "./Hero.module.css"
-import { motion, AnimatePresence } from "motion/react"
-import { useState } from "react"
-import { HeroBackground } from "./HeroBackground"
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+
+import { Container } from "../Container";
+import { Button } from "../generic/Button";
+import styles from "./Hero.module.css";
+import { HeroBackground } from "./HeroBackground";
 
 interface HeroProps {
-  imageSrc: string
-  imageSrcSet?: string
-  imageSizes?: string
-  imageAlt: string
-  imageWidth?: number
-  imageHeight?: number
+  imageSrc: string;
+  imageSrcSet?: string;
+  imageSizes?: string;
+  imageAlt: string;
+  imageWidth?: number;
+  imageHeight?: number;
 }
 
 function DemoButton() {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDemoClick = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Mock loading for 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   return (
     <div className={`relative group ${styles.demoButtonContainer}`}>
@@ -88,10 +89,17 @@ function DemoButton() {
         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
       </div>
     </div>
-  )
+  );
 }
 
-export function Hero({ imageSrc, imageSrcSet, imageSizes, imageAlt, imageWidth, imageHeight }: HeroProps) {
+export function Hero({
+  imageSrc,
+  imageSrcSet,
+  imageSizes,
+  imageAlt,
+  imageWidth,
+  imageHeight,
+}: HeroProps) {
   return (
     <div className="md:px-4">
       <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4">
@@ -108,7 +116,8 @@ export function Hero({ imageSrc, imageSrcSet, imageSizes, imageAlt, imageWidth, 
             </div>
             <h1 className="text-5xl font-medium tracking-tight text-white drop-shadow-text">
               <span className={styles.heroWord1}>Centralize</span>{" "}
-              <span className={styles.heroWord2}>your</span> <span className={styles.heroWord3}>writing</span>
+              <span className={styles.heroWord2}>your</span>{" "}
+              <span className={styles.heroWord3}>writing</span>
             </h1>
             <p className="text-[17px]/relaxed text-white/90 text-balance">
               <span className={styles.heroSentence1}>
@@ -120,7 +129,9 @@ export function Hero({ imageSrc, imageSrcSet, imageSizes, imageAlt, imageWidth, 
               </span>
             </p>
             <div className="flex items-center justify-center gap-x-1.5 mt-4">
-              <div className={`${styles.heroButton1} ring ring-white/1 p-0.5 bg-black/4 rounded-[8px]`}>
+              <div
+                className={`${styles.heroButton1} ring ring-white/1 p-0.5 bg-black/4 rounded-[8px]`}
+              >
                 <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
                   <span>Start writing for free</span>
                 </Button>
@@ -181,5 +192,5 @@ export function Hero({ imageSrc, imageSrcSet, imageSizes, imageAlt, imageWidth, 
         </div>
       </HeroBackground>
     </div>
-  )
+  );
 }

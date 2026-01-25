@@ -1,5 +1,5 @@
-import { defineConfig, devices } from "@playwright/test"
-import { Resource } from "sst"
+import { defineConfig, devices } from "@playwright/test";
+import { Resource } from "sst";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -35,4 +35,4 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-})
+});

@@ -1,23 +1,25 @@
-import React, { useEffect, useState } from "react"
-import type { Editor } from "@tiptap/react"
-import { Toolbar, Group } from "react-aria-components"
+import type { Editor } from "@tiptap/react";
+
 import {
   Bold,
-  Italic,
-  Strikethrough,
   Code,
   Heading1,
   Heading2,
   Heading3,
+  Italic,
   List,
   ListOrdered,
-  Undo,
   Redo,
-} from "lucide-react"
-import { Button } from "./Button"
+  Strikethrough,
+  Undo,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Group, Toolbar } from "react-aria-components";
+
+import { Button } from "./Button";
 
 interface TipTapToolbarProps {
-  editor: Editor
+  editor: Editor;
 }
 
 function ToolbarButton({
@@ -28,12 +30,12 @@ function ToolbarButton({
   isActive,
   isDisabled,
 }: {
-  editor: Editor
-  onPress: () => void
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  isActive?: boolean
-  isDisabled?: boolean
+  editor: Editor;
+  onPress: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  isActive?: boolean;
+  isDisabled?: boolean;
 }) {
   return (
     <Button
@@ -47,27 +49,27 @@ function ToolbarButton({
     >
       <Icon className="w-4 h-4" />
     </Button>
-  )
+  );
 }
 
 export function TipTapToolbar({ editor }: TipTapToolbarProps) {
-  const [, forceUpdate] = useState({})
+  const [, forceUpdate] = useState({});
 
   // Force re-render when editor state changes
   useEffect(() => {
-    const update = () => forceUpdate({})
-    editor.on("selectionUpdate", update)
-    editor.on("update", update)
-    editor.on("transaction", update)
+    const update = () => forceUpdate({});
+    editor.on("selectionUpdate", update);
+    editor.on("update", update);
+    editor.on("transaction", update);
 
     return () => {
-      editor.off("selectionUpdate", update)
-      editor.off("update", update)
-      editor.off("transaction", update)
-    }
-  }, [editor])
+      editor.off("selectionUpdate", update);
+      editor.off("update", update);
+      editor.off("transaction", update);
+    };
+  }, [editor]);
 
-  if (!editor) return null
+  if (!editor) return null;
 
   return (
     <div className="border-b border-gray-200 bg-gray-50 p-2">
@@ -168,5 +170,5 @@ export function TipTapToolbar({ editor }: TipTapToolbarProps) {
         </Group>
       </Toolbar>
     </div>
-  )
+  );
 }

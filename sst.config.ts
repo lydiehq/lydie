@@ -11,13 +11,13 @@ export default $config({
         },
         command: true,
       },
-    }
+    };
   },
   async run() {
-    await import("./infra/onboarding")
-    await import("./infra/backend")
-    await import("./infra/web")
-    await import("./infra/zero")
-    return {}
+    await import("./infra/onboarding");
+    await import("./infra/backend");
+    await import("./infra/web");
+    await import("./infra/zero");
+    return {};
   },
-})
+});

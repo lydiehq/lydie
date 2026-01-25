@@ -1,100 +1,94 @@
-import { Heading } from "@/components/generic/Heading"
-import { useAuthenticatedApi } from "@/services/api"
-import { getIntegrationIconUrl } from "@/utils/integration-icons"
-import { getIntegrationMetadata } from "@lydie/integrations/client"
-import { queries } from "@lydie/zero/queries"
-import { useQuery, useZero } from "@rocicorp/zero/react"
-import { createFileRoute, notFound } from "@tanstack/react-router"
-import { Button } from "@/components/generic/Button"
-import { Link } from "@/components/generic/Link"
-import { toast } from "sonner"
-import { z } from "zod"
-import { Outlet } from "@tanstack/react-router"
-import { mutators } from "@lydie/zero/mutators"
-import { useState } from "react"
-import { confirmDialog } from "@/stores/confirm-dialog"
-import { DialogTrigger } from "react-aria-components"
-import { Modal } from "@/components/generic/Modal"
-import { Dialog } from "@/components/generic/Dialog"
-import { WordPressConnectionForm } from "@/components/integrations/forms/wordpress-connection-form"
-import { useOrganization } from "@/context/organization.context"
-import { trackEvent } from "@/lib/posthog"
+import { getIntegrationMetadata } from "@lydie/integrations/client";
+import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery, useZero } from "@rocicorp/zero/react";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Outlet } from "@tanstack/react-router";
+import { useState } from "react";
+import { DialogTrigger } from "react-aria-components";
+import { toast } from "sonner";
+import { z } from "zod";
 
-export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integrations/$integrationType")({
+import { Button } from "@/components/generic/Button";
+import { Dialog } from "@/components/generic/Dialog";
+import { Heading } from "@/components/generic/Heading";
+import { Link } from "@/components/generic/Link";
+import { Modal } from "@/components/generic/Modal";
+import { WordPressConnectionForm } from "@/components/settings/integrations/forms/wordpress-connection-form";
+import { useOrganization } from "@/context/organization.context";
+import { useAuthenticatedApi } from "@/services/api";
+import { confirmDialog } from "@/stores/confirm-dialog";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
+
+export const Route = createFileRoute(
+  "/__auth/w/$organizationSlug/settings/integrations/$integrationType",
+)({
   component: RouteComponent,
   validateSearch: z.object({
     integrationType: z.string().optional(),
   }),
   loader: async ({ context, params }) => {
-    const { zero, organization } = context
+    const { zero, organization } = context;
 
     zero.run(
       queries.integrations.byIntegrationType({
         integrationType: params.integrationType,
         organizationId: organization.id,
       }),
-    )
+    );
 
-    const integration = getIntegrationMetadata(params.integrationType)
-    if (!integration) throw notFound()
+    const integration = getIntegrationMetadata(params.integrationType);
+    if (!integration) throw notFound();
     // TODO: default image
-    const iconUrl = getIntegrationIconUrl(integration.id) ?? ""
-    const integrationDetails = { ...integration, iconUrl }
-    return { integrationDetails }
+    const iconUrl = getIntegrationIconUrl(integration.id) ?? "";
+    const integrationDetails = { ...integration, iconUrl };
+    return { integrationDetails };
   },
   ssr: false,
-})
+});
 
 function RouteComponent() {
-  const { organization } = useOrganization()
-  const { integrationDetails } = Route.useLoaderData()
-  const { createClient } = useAuthenticatedApi()
-  const zero = useZero()
+  const { organization } = useOrganization();
+  const { integrationDetails } = Route.useLoaderData();
+  const { createClient } = useAuthenticatedApi();
+  const zero = useZero();
 
   const [integrationConnections] = useQuery(
     queries.integrations.byIntegrationType({
       integrationType: integrationDetails.id,
       organizationId: organization.id,
     }),
-  )
+  );
 
-  const isEnabled = integrationConnections.length > 0
-  const authType = integrationDetails.authType || "oauth"
-  const isOAuth = authType === "oauth"
+  const isEnabled = integrationConnections.length > 0;
+  const authType = integrationDetails.authType || "oauth";
+  const isOAuth = authType === "oauth";
 
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
 
   const connectOAuth = async () => {
     try {
-      setIsConnecting(true)
-      const client = await createClient()
-      const redirectUrl = `/w/${organization?.slug}/settings/integrations/${integrationDetails.id}`
+      setIsConnecting(true);
+      const client = await createClient();
+      const redirectUrl = `/w/${organization?.slug}/settings/integrations/${integrationDetails.id}`;
       const response = await client.internal.integrations[":type"].oauth.authorize
         .$post({
           param: { type: integrationDetails.id },
           json: { redirectUrl },
         })
-        .then((res: Response) => res.json())
-      window.location.href = response.authUrl
+        .then((res: Response) => res.json());
+      window.location.href = response.authUrl;
     } catch (error) {
-      setIsConnecting(false)
-      console.error(`${integrationDetails.name} OAuth error:`, error)
-      toast.error(`Failed to start ${integrationDetails.name} connection`)
+      setIsConnecting(false);
+      console.error(`${integrationDetails.name} OAuth error:`, error);
+      toast.error(`Failed to start ${integrationDetails.name} connection`);
     }
-  }
+  };
 
   const handleConnectionSuccess = () => {
-    setIsConnectionDialogOpen(false)
-
-    // Track integration connected
-    trackEvent("integration_connected", {
-      integrationType: integrationDetails.id,
-      integrationName: integrationDetails.name,
-      organizationId: organization.id,
-      authType,
-    })
-  }
+    setIsConnectionDialogOpen(false);
+  };
 
   const disconnect = () => {
     confirmDialog({
@@ -107,17 +101,10 @@ function RouteComponent() {
             connectionId: integrationConnections[0].id,
             organizationId: organization.id,
           }),
-        )
-
-        // Track integration disconnected
-        trackEvent("integration_disconnected", {
-          integrationType: integrationDetails.id,
-          integrationName: integrationDetails.name,
-          organizationId: organization.id,
-        })
+        );
       },
-    })
-  }
+    });
+  };
 
   const pages = [
     {
@@ -128,7 +115,7 @@ function RouteComponent() {
       label: "Activity",
       href: `/w/$organizationSlug/settings/integrations/${integrationDetails.id}/activity`,
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -160,7 +147,10 @@ function RouteComponent() {
             </Button>
           ) : (
             <>
-              <DialogTrigger isOpen={isConnectionDialogOpen} onOpenChange={setIsConnectionDialogOpen}>
+              <DialogTrigger
+                isOpen={isConnectionDialogOpen}
+                onOpenChange={setIsConnectionDialogOpen}
+              >
                 <Button>Enable Integration</Button>
                 <Modal isDismissable>
                   <Dialog>
@@ -202,5 +192,5 @@ function RouteComponent() {
       </div>
       <Outlet />
     </div>
-  )
+  );
 }

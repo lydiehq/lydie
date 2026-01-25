@@ -1,5 +1,5 @@
-import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons"
-import React from "react"
+import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons";
+import React from "react";
 import {
   Calendar as AriaCalendar,
   CalendarGridHeader as AriaCalendarGridHeader,
@@ -12,10 +12,11 @@ import {
   Heading,
   Text,
   useLocale,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
-import { Button } from "./Button"
-import { focusRing } from "./utils"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
+import { Button } from "./Button";
+import { focusRing } from "./utils";
 
 const cellStyles = tv({
   extend: focusRing,
@@ -30,10 +31,13 @@ const cellStyles = tv({
       true: "text-gray-300 dark:text-zinc-600 forced-colors:text-[GrayText]",
     },
   },
-})
+});
 
-export interface CalendarProps<T extends DateValue> extends Omit<AriaCalendarProps<T>, "visibleDuration"> {
-  errorMessage?: string
+export interface CalendarProps<T extends DateValue> extends Omit<
+  AriaCalendarProps<T>,
+  "visibleDuration"
+> {
+  errorMessage?: string;
 }
 
 export function Calendar<T extends DateValue>({ errorMessage, ...props }: CalendarProps<T>) {
@@ -42,7 +46,9 @@ export function Calendar<T extends DateValue>({ errorMessage, ...props }: Calend
       <CalendarHeader />
       <CalendarGrid>
         <CalendarGridHeader />
-        <CalendarGridBody>{(date) => <CalendarCell date={date} className={cellStyles} />}</CalendarGridBody>
+        <CalendarGridBody>
+          {(date) => <CalendarCell date={date} className={cellStyles} />}
+        </CalendarGridBody>
       </CalendarGrid>
       {errorMessage && (
         <Text slot="errorMessage" className="text-sm text-red-600">
@@ -50,31 +56,41 @@ export function Calendar<T extends DateValue>({ errorMessage, ...props }: Calend
         </Text>
       )}
     </AriaCalendar>
-  )
+  );
 }
 
 export function CalendarHeader() {
-  let { direction } = useLocale()
+  let { direction } = useLocale();
 
   return (
     <header className="flex items-center gap-1 pb-4 px-1 w-full">
       <Button variant="icon" slot="previous">
-        {direction === "rtl" ? <ChevronRightRegular aria-hidden /> : <ChevronLeftRegular aria-hidden />}
+        {direction === "rtl" ? (
+          <ChevronRightRegular aria-hidden />
+        ) : (
+          <ChevronLeftRegular aria-hidden />
+        )}
       </Button>
       <Heading className="flex-1 font-semibold text-xl text-center mx-2 text-zinc-900 dark:text-zinc-200" />
       <Button variant="icon" slot="next">
-        {direction === "rtl" ? <ChevronLeftRegular aria-hidden /> : <ChevronRightRegular aria-hidden />}
+        {direction === "rtl" ? (
+          <ChevronLeftRegular aria-hidden />
+        ) : (
+          <ChevronRightRegular aria-hidden />
+        )}
       </Button>
     </header>
-  )
+  );
 }
 
 export function CalendarGridHeader() {
   return (
     <AriaCalendarGridHeader>
       {(day) => (
-        <CalendarHeaderCell className="text-xs text-gray-500 font-semibold">{day}</CalendarHeaderCell>
+        <CalendarHeaderCell className="text-xs text-gray-500 font-semibold">
+          {day}
+        </CalendarHeaderCell>
       )}
     </AriaCalendarGridHeader>
-  )
+  );
 }

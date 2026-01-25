@@ -4,6 +4,6 @@ export class VisibleError extends Error {
     message: string,
     public readonly status: number = 400,
   ) {
-    super(message)
+    super(message);
   }
 }

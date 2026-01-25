@@ -1,9 +1,10 @@
-import { z } from "zod"
-import { defineMutator } from "@rocicorp/zero"
-import { mutators as sharedMutators } from "../../mutators"
-import { db } from "@lydie/database"
-import { processDocumentTitleEmbedding } from "@lydie/core/embedding/title-processing"
-import { MutatorContext } from "../../server-mutators"
+import { processDocumentTitleEmbedding } from "@lydie/core/embedding/title-processing";
+import { db } from "@lydie/database";
+import { defineMutator } from "@rocicorp/zero";
+import { z } from "zod";
+
+import { mutators as sharedMutators } from "../../mutators/index";
+import { MutatorContext } from "../../server-mutators";
 
 export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
@@ -17,10 +18,9 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
       coverImage: z.string().nullable().optional(),
     }),
     async ({ tx, ctx, args }) => {
-      await sharedMutators.document.update.fn({ tx, ctx, args })
-      console.log("args", args)
+      await sharedMutators.document.update.fn({ tx, ctx, args });
 
-      const { documentId, title } = args
+      const { documentId, title } = args;
 
       // If title was updated, trigger async title embedding generation
       // Skip if title is empty or too short (minimum 3 chars for meaningful embeddings)
@@ -32,8 +32,8 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
               title: title.trim(),
             },
             db,
-          )
-        })
+          );
+        });
       }
     },
-  )
+  );

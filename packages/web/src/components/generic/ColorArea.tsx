@@ -1,7 +1,11 @@
-import React from "react"
-import { ColorArea as AriaColorArea, ColorAreaProps as AriaColorAreaProps } from "react-aria-components"
-import { composeTailwindRenderProps } from "./utils"
-import { ColorThumb } from "./ColorThumb"
+import React from "react";
+import {
+  ColorArea as AriaColorArea,
+  ColorAreaProps as AriaColorAreaProps,
+} from "react-aria-components";
+
+import { ColorThumb } from "./ColorThumb";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface ColorAreaProps extends AriaColorAreaProps {}
 
@@ -20,5 +24,5 @@ export function ColorArea(props: ColorAreaProps) {
     >
       <ColorThumb />
     </AriaColorArea>
-  )
+  );
 }

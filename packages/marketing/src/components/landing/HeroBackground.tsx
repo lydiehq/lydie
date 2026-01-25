@@ -1,9 +1,9 @@
-import "../../styles/grainy-gradient.css"
-import styles from "./Hero.module.css"
+import "../../styles/grainy-gradient.css";
+import styles from "./Hero.module.css";
 
 interface HeroBackgroundProps {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
 }
 
 export function HeroBackground({ children, className = "" }: HeroBackgroundProps) {
@@ -30,5 +30,5 @@ export function HeroBackground({ children, className = "" }: HeroBackgroundProps
       </svg>
       {children}
     </div>
-  )
+  );
 }

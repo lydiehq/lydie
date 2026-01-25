@@ -1,25 +1,21 @@
 export const WORKSPACE_COLORS = [
-  "#ef4444", // red-500
-  "#f97316", // orange-500
-  "#f59e0b", // amber-500
-  "#eab308", // yellow-500
-  "#84cc16", // lime-500
-  "#22c55e", // green-500
-  "#10b981", // emerald-500
-  "#14b8a6", // teal-500
-  "#06b6d4", // cyan-500
-  "#0ea5e9", // sky-500
-  "#3b82f6", // blue-500
-  "#6366f1", // indigo-500
-  "#8b5cf6", // violet-500
-  "#a855f7", // purple-500
-  "#d946ef", // fuchsia-500
-  "#ec4899", // pink-500
-  "#f43f5e", // rose-500
-] as const
+  { value: "#ff7a95", name: "Pastel Pink" },
+  { value: "#ffb366", name: "Pastel Peach" },
+  { value: "#ffeb3b", name: "Pastel Yellow" },
+  { value: "#4dd0e1", name: "Pastel Mint" },
+  { value: "#64b5f6", name: "Pastel Blue" },
+  { value: "#ba68c8", name: "Pastel Lavender" },
+  { value: "#f06292", name: "Pastel Rose" },
+  { value: "#9575cd", name: "Lavender" },
+  { value: "#d4c157", name: "Pastel Khaki" },
+  { value: "#26a69a", name: "Pastel Turquoise" },
+  { value: "#ff8a95", name: "Pastel Coral" },
+  { value: "#7986cb", name: "Pastel Periwinkle" },
+  { value: "#ef5350", name: "Pastel Red" },
+  { value: "#66bb6a", name: "Pastel Green" },
+] as const;
 
-export type WorkspaceColor = (typeof WORKSPACE_COLORS)[number]
-
-export function getRandomWorkspaceColor(): WorkspaceColor {
-  return WORKSPACE_COLORS[Math.floor(Math.random() * WORKSPACE_COLORS.length)]
+export function getRandomWorkspaceColor() {
+  const randomColor = WORKSPACE_COLORS[Math.floor(Math.random() * WORKSPACE_COLORS.length)]!;
+  return randomColor.value;
 }

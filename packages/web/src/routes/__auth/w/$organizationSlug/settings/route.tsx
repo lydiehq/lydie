@@ -1,38 +1,39 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router"
-import { Surface } from "@/components/layout/Surface"
 import {
-  PersonFilled,
-  SettingsFilled,
-  SparkleFilled,
-  PaymentFilled,
-  CubeFilled,
   ArrowUploadFilled,
+  CubeFilled,
   DocumentFilled,
   OpenFilled,
+  PaymentFilled,
+  PersonFilled,
+  SettingsFilled,
   ShieldErrorFilled,
-  PuzzlePieceFilled,
-} from "@fluentui/react-icons"
-import { sidebarItemStyles, sidebarItemIconStyles } from "@/components/layout/Sidebar"
-import { Eyebrow } from "@/components/generic/Eyebrow"
-import { useAuth } from "@/context/auth.context"
-import { isAdmin } from "@/utils/admin"
+  SparkleFilled,
+  TabDesktopMultiple16Filled,
+} from "@fluentui/react-icons";
+import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
+
+import { Eyebrow } from "@/components/generic/Eyebrow";
+import { sidebarItemIconStyles, sidebarItemStyles } from "@/components/layout/Sidebar";
+import { Surface } from "@/components/layout/Surface";
+import { useAuth } from "@/context/auth.context";
+import { isAdmin } from "@/utils/admin";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings")({
   component: RouteComponent,
-})
+});
 
 type SettingsRoute = {
-  path: string
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  external?: boolean
-  adminOnly?: boolean
-}
+  path: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  external?: boolean;
+  adminOnly?: boolean;
+};
 
 type SettingsSection = {
-  title: string
-  routes: SettingsRoute[]
-}
+  title: string;
+  routes: SettingsRoute[];
+};
 
 const settingsRoutes: SettingsSection[] = [
   {
@@ -83,7 +84,7 @@ const settingsRoutes: SettingsSection[] = [
       {
         path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
-        icon: PuzzlePieceFilled,
+        icon: TabDesktopMultiple16Filled,
       },
       {
         path: "/w/$organizationSlug/settings/import",
@@ -104,11 +105,11 @@ const settingsRoutes: SettingsSection[] = [
       },
     ],
   },
-]
+];
 
 function RouteComponent() {
-  const { user } = useAuth()
-  const userIsAdmin = isAdmin(user)
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
 
   return (
     <div className="p-1 size-full">
@@ -158,7 +159,7 @@ function RouteComponent() {
                               </div>
                             </Link>
                           </li>
-                        )
+                        );
                       })}
                   </ul>
                 </li>
@@ -171,5 +172,5 @@ function RouteComponent() {
         </div>
       </Surface>
     </div>
-  )
+  );
 }

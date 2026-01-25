@@ -1,24 +1,26 @@
-import React from "react"
-import { Switch as AriaSwitch, type SwitchProps as AriaSwitchProps } from "react-aria-components"
-import { cva } from "cva"
-import { composeTailwindRenderProps } from "./utils"
+import { cva } from "cva";
+import React from "react";
+import { Switch as AriaSwitch, type SwitchProps as AriaSwitchProps } from "react-aria-components";
+
+import { composeTailwindRenderProps } from "./utils";
 
 export interface SwitchProps extends Omit<AriaSwitchProps, "children"> {
-  children?: React.ReactNode
+  children?: React.ReactNode;
 }
 
 const track = cva({
   base: "flex h-4 w-7 px-px items-center shrink-0 cursor-default rounded-full transition duration-200 ease-in-out shadow-inner border border-transparent",
   variants: {
     isSelected: {
-      false: "bg-gray-400 dark:bg-zinc-400 group-pressed:bg-gray-500 dark:group-pressed:bg-zinc-300",
+      false:
+        "bg-gray-400 dark:bg-zinc-400 group-pressed:bg-gray-500 dark:group-pressed:bg-zinc-300",
       true: "bg-gray-700 dark:bg-zinc-300 forced-colors:bg-[Highlight]! group-pressed:bg-gray-800 dark:group-pressed:bg-zinc-200",
     },
     isDisabled: {
       true: "bg-gray-200 dark:bg-zinc-700 forced-colors:group-selected:bg-[GrayText]! forced-colors:border-[GrayText]",
     },
   },
-})
+});
 
 const handle = cva({
   base: "h-3 w-3 transform rounded-full bg-white dark:bg-zinc-900 outline -outline-offset-1 outline-transparent shadow-xs transition duration-200 ease-in-out",
@@ -31,7 +33,7 @@ const handle = cva({
       true: "forced-colors:outline-[GrayText]",
     },
   },
-})
+});
 
 export function Switch({ children, ...props }: SwitchProps) {
   return (
@@ -51,5 +53,5 @@ export function Switch({ children, ...props }: SwitchProps) {
         </>
       )}
     </AriaSwitch>
-  )
+  );
 }

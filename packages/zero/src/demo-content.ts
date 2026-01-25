@@ -1,7 +1,7 @@
 export function createIntroDocument(documentIdMap: Map<string, string>) {
-  const apolloKickoffId = documentIdMap.get("Project Apollo - Kickoff Notes") || ""
-  const apolloArchitectureId = documentIdMap.get("Project Apollo - Architecture") || ""
-  const releaseChecklistId = documentIdMap.get("Release Checklist v1.0") || ""
+  const apolloKickoffId = documentIdMap.get("Project Apollo - Kickoff Notes") || "";
+  const apolloArchitectureId = documentIdMap.get("Project Apollo - Architecture") || "";
+  const releaseChecklistId = documentIdMap.get("Release Checklist v1.0") || "";
 
   return {
     title: "Welcome to Your Workspace",
@@ -99,7 +99,11 @@ export function createIntroDocument(documentIdMap: Map<string, string>) {
                 {
                   type: "paragraph",
                   content: [
-                    { type: "text", text: "Status: ", marks: [{ type: "bold" }] },
+                    {
+                      type: "text",
+                      text: "Status: ",
+                      marks: [{ type: "bold" }],
+                    },
                     { type: "text", text: "Getting Started" },
                   ],
                 },
@@ -123,7 +127,11 @@ export function createIntroDocument(documentIdMap: Map<string, string>) {
                 {
                   type: "paragraph",
                   content: [
-                    { type: "text", text: "Priority: ", marks: [{ type: "bold" }] },
+                    {
+                      type: "text",
+                      text: "Priority: ",
+                      marks: [{ type: "bold" }],
+                    },
                     { type: "text", text: "High" },
                   ],
                 },
@@ -330,7 +338,7 @@ export function createIntroDocument(documentIdMap: Map<string, string>) {
       Type: "Guide",
       Priority: "High",
     },
-  }
+  };
 }
 
 export const demoContent = [
@@ -361,7 +369,10 @@ export const demoContent = [
         {
           type: "paragraph",
           content: [
-            { type: "text", text: "Align on the vision for Project Apollo (our next gen mobile app)." },
+            {
+              type: "text",
+              text: "Align on the vision for Project Apollo (our next gen mobile app).",
+            },
           ],
         },
         {
@@ -378,7 +389,10 @@ export const demoContent = [
                 {
                   type: "paragraph",
                   content: [
-                    { type: "text", text: "Need to focus on speed first. The current app is too slow." },
+                    {
+                      type: "text",
+                      text: "Need to focus on speed first. The current app is too slow.",
+                    },
                   ],
                 },
               ],
@@ -389,7 +403,10 @@ export const demoContent = [
                 {
                   type: "paragraph",
                   content: [
-                    { type: "text", text: "Design needs a refresh. Dark mode is a must-have for v1." },
+                    {
+                      type: "text",
+                      text: "Design needs a refresh. Dark mode is a must-have for v1.",
+                    },
                   ],
                 },
               ],
@@ -438,16 +455,29 @@ export const demoContent = [
             {
               type: "listItem",
               content: [
-                { type: "paragraph", content: [{ type: "text", text: "React Native for mobile client" }] },
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "React Native for mobile client" }],
+                },
               ],
             },
             {
               type: "listItem",
-              content: [{ type: "paragraph", content: [{ type: "text", text: "Node.js backend" }] }],
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Node.js backend" }],
+                },
+              ],
             },
             {
               type: "listItem",
-              content: [{ type: "paragraph", content: [{ type: "text", text: "Postgres database" }] }],
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Postgres database" }],
+                },
+              ],
             },
           ],
         },
@@ -483,15 +513,9 @@ export const demoContent = [
             {
               type: "listItem",
               content: [
-                { type: "paragraph", content: [{ type: "text", text: "Teaser video with space theme?" }] },
-              ],
-            },
-            {
-              type: "listItem",
-              content: [
                 {
                   type: "paragraph",
-                  content: [{ type: "text", text: "Can we get an influencer to leak it?" }],
+                  content: [{ type: "text", text: "Teaser video with space theme?" }],
                 },
               ],
             },
@@ -500,13 +524,37 @@ export const demoContent = [
               content: [
                 {
                   type: "paragraph",
-                  content: [{ type: "text", text: "Product Hunt launch is scheduled for June 1st." }],
+                  content: [
+                    {
+                      type: "text",
+                      text: "Can we get an influencer to leak it?",
+                    },
+                  ],
                 },
               ],
             },
             {
               type: "listItem",
-              content: [{ type: "paragraph", content: [{ type: "text", text: "Need new swag. Hoodies?" }] }],
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Product Hunt launch is scheduled for June 1st.",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Need new swag. Hoodies?" }],
+                },
+              ],
             },
           ],
         },
@@ -552,7 +600,12 @@ export const demoContent = [
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "Feature request: Offline mode is critical for her." }],
+          content: [
+            {
+              type: "text",
+              text: "Feature request: Offline mode is critical for her.",
+            },
+          ],
         },
       ],
     },
@@ -573,7 +626,12 @@ export const demoContent = [
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "He wants better notifications. He misses important updates." }],
+          content: [
+            {
+              type: "text",
+              text: "He wants better notifications. He misses important updates.",
+            },
+          ],
         },
         {
           type: "paragraph",
@@ -594,7 +652,12 @@ export const demoContent = [
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "Looking at what Competitor X and Y are doing." }],
+          content: [
+            {
+              type: "text",
+              text: "Looking at what Competitor X and Y are doing.",
+            },
+          ],
         },
         {
           type: "heading",
@@ -617,7 +680,12 @@ export const demoContent = [
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "Very cheap, but buggy. Support is terrible." }],
+          content: [
+            {
+              type: "text",
+              text: "Very cheap, but buggy. Support is terrible.",
+            },
+          ],
         },
       ],
     },
@@ -642,11 +710,21 @@ export const demoContent = [
           content: [
             {
               type: "listItem",
-              content: [{ type: "paragraph", content: [{ type: "text", text: "KR1: 1000 beta users" }] }],
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "KR1: 1000 beta users" }],
+                },
+              ],
             },
             {
               type: "listItem",
-              content: [{ type: "paragraph", content: [{ type: "text", text: "KR2: < 1% crash rate" }] }],
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "KR2: < 1% crash rate" }],
+                },
+              ],
             },
           ],
         },
@@ -698,19 +776,32 @@ export const demoContent = [
             {
               type: "listItem",
               content: [
-                { type: "paragraph", content: [{ type: "text", text: "Pizza place down the street" }] },
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Pizza place down the street" }],
+                },
               ],
-            },
-            {
-              type: "listItem",
-              content: [{ type: "paragraph", content: [{ type: "text", text: "Thai food" }] }],
             },
             {
               type: "listItem",
               content: [
                 {
                   type: "paragraph",
-                  content: [{ type: "text", text: "Tacos (Sarah is allergic to cilantro??)" }],
+                  content: [{ type: "text", text: "Thai food" }],
+                },
+              ],
+            },
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Tacos (Sarah is allergic to cilantro??)",
+                    },
+                  ],
                 },
               ],
             },
@@ -731,12 +822,22 @@ export const demoContent = [
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "We need to finalize the schema for the user profiles." }],
+          content: [
+            {
+              type: "text",
+              text: "We need to finalize the schema for the user profiles.",
+            },
+          ],
         },
         {
           type: "codeBlock",
           attrs: { language: "mermaid" },
-          content: [{ type: "text", text: "graph TD;\n    Client-->API;\n    API-->DB;\n    API-->Cache;" }],
+          content: [
+            {
+              type: "text",
+              text: "graph TD;\n    Client-->API;\n    API-->DB;\n    API-->Cache;",
+            },
+          ],
         },
       ],
     },
@@ -757,24 +858,42 @@ export const demoContent = [
             {
               type: "taskItem",
               attrs: { checked: true },
-              content: [{ type: "paragraph", content: [{ type: "text", text: "QA Signoff" }] }],
-            },
-            {
-              type: "taskItem",
-              attrs: { checked: false },
-              content: [{ type: "paragraph", content: [{ type: "text", text: "Security Audit" }] }],
-            },
-            {
-              type: "taskItem",
-              attrs: { checked: false },
               content: [
-                { type: "paragraph", content: [{ type: "text", text: "Marketing Email Scheduled" }] },
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "QA Signoff" }],
+                },
               ],
             },
             {
               type: "taskItem",
               attrs: { checked: false },
-              content: [{ type: "paragraph", content: [{ type: "text", text: "Flip the switch" }] }],
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Security Audit" }],
+                },
+              ],
+            },
+            {
+              type: "taskItem",
+              attrs: { checked: false },
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Marketing Email Scheduled" }],
+                },
+              ],
+            },
+            {
+              type: "taskItem",
+              attrs: { checked: false },
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Flip the switch" }],
+                },
+              ],
             },
           ],
         },
@@ -793,16 +912,31 @@ export const demoContent = [
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "Seeing a spike in 500 errors on the /login endpoint." }],
+          content: [
+            {
+              type: "text",
+              text: "Seeing a spike in 500 errors on the /login endpoint.",
+            },
+          ],
         },
         {
           type: "codeBlock",
           attrs: { language: "json" },
-          content: [{ type: "text", text: '{ "error": "Connection timeout", "code": 500 }' }],
+          content: [
+            {
+              type: "text",
+              text: '{ "error": "Connection timeout", "code": 500 }',
+            },
+          ],
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "David thinks it's the Redis instance acting up." }],
+          content: [
+            {
+              type: "text",
+              text: "David thinks it's the Redis instance acting up.",
+            },
+          ],
         },
       ],
     },
@@ -852,14 +986,24 @@ export const demoContent = [
           content: [
             {
               type: "listItem",
-              content: [{ type: "paragraph", content: [{ type: "text", text: "David is OOO next week." }] }],
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "David is OOO next week." }],
+                },
+              ],
             },
             {
               type: "listItem",
               content: [
                 {
                   type: "paragraph",
-                  content: [{ type: "text", text: "We need to fix the coffee machine." }],
+                  content: [
+                    {
+                      type: "text",
+                      text: "We need to fix the coffee machine.",
+                    },
+                  ],
                 },
               ],
             },
@@ -868,4 +1012,4 @@ export const demoContent = [
       ],
     },
   },
-]
+];

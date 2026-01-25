@@ -1,59 +1,57 @@
-import { useZero } from "@/services/zero"
-import { mutators } from "@lydie/zero/mutators"
-import { useImageUpload } from "@/hooks/use-image-upload"
-import { useState, useRef } from "react"
-import { Button } from "@/components/generic/Button"
-import { ImageRegular, DismissRegular } from "@fluentui/react-icons"
+import { DismissRegular, ImageRegular } from "@fluentui/react-icons";
+import { mutators } from "@lydie/zero/mutators";
+import { useRef, useState } from "react";
+
+import { Button } from "@/components/generic/Button";
+import { useImageUpload } from "@/hooks/use-image-upload";
+import { useZero } from "@/services/zero";
 
 type Props = {
-  documentId: string
-  organizationId: string
-  coverImage: string | null | undefined
-}
+  documentId: string;
+  organizationId: string;
+  coverImage: string | null | undefined;
+};
 
 export function CoverImageEditor({ documentId, organizationId, coverImage }: Props) {
-  const z = useZero()
-  const { uploadImage } = useImageUpload()
-  const [isUploading, setIsUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const z = useZero();
+  const { uploadImage } = useImageUpload();
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    // Validate file is an image
     if (!file.type.startsWith("image/")) {
-      window.alert("Please select an image file")
-      return
+      window.alert("Please select an image file");
+      return;
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      window.alert("Image must be less than 10MB")
-      return
+      window.alert("Image must be less than 10MB");
+      return;
     }
 
-    setIsUploading(true)
+    setIsUploading(true);
     try {
-      const url = await uploadImage(file)
+      const url = await uploadImage(file);
       z.mutate(
         mutators.document.update({
           documentId,
           coverImage: url,
           organizationId,
         }),
-      )
+      );
     } catch (error) {
-      console.error("Failed to upload cover image:", error)
-      window.alert("Failed to upload image. Please try again.")
+      console.error("Failed to upload cover image:", error);
+      window.alert("Failed to upload image. Please try again.");
     } finally {
-      setIsUploading(false)
-      // Reset input so the same file can be selected again
+      setIsUploading(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = "";
       }
     }
-  }
+  };
 
   const handleRemove = () => {
     z.mutate(
@@ -62,12 +60,12 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
         coverImage: null,
         organizationId,
       }),
-    )
-  }
+    );
+  };
 
   const handleAddClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   if (coverImage) {
     return (
@@ -84,7 +82,7 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
           <DismissRegular className="w-4 h-4 text-gray-700" />
         </button>
       </div>
-    )
+    );
   }
 
   return (
@@ -108,5 +106,5 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
         {isUploading ? "Uploading..." : "Add cover image"}
       </Button>
     </div>
-  )
+  );
 }

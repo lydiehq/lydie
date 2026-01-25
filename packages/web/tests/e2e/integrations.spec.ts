@@ -1,6 +1,6 @@
-import { test, expect } from "./fixtures/auth.fixture"
+import { expect, test } from "./fixtures/auth.fixture";
 
-const defaultIntegrations = ["github", "shopify", "wordpress"]
+const defaultIntegrations = ["github", "shopify", "wordpress"];
 
 // It is limited how much we want to test of our integrations, as we do not want
 // to hit the external APIs too much.
@@ -8,18 +8,18 @@ const defaultIntegrations = ["github", "shopify", "wordpress"]
 // in order to test more in-depth.
 test.describe("integrations", () => {
   test("metadata shows in the integrations list", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.slug}/settings/integrations`)
-    await page.waitForURL(`/w/${organization.slug}/settings/integrations`)
+    await page.goto(`/w/${organization.slug}/settings/integrations`);
+    await page.waitForURL(`/w/${organization.slug}/settings/integrations`);
 
-    await expect(page.getByRole("heading", { name: "GitHub" })).toBeVisible()
-  })
+    await expect(page.getByRole("heading", { name: "GitHub" })).toBeVisible();
+  });
 
   test("can go to integration settings page", async ({ page, organization }) => {
     for (const integration of defaultIntegrations) {
-      await page.goto(`/w/${organization.slug}/settings/integrations`)
-      await page.waitForURL(`/w/${organization.slug}/settings/integrations`)
-      await page.getByRole("link", { name: integration }).click()
-      await page.waitForURL(`/w/${organization.slug}/settings/integrations/${integration}`)
+      await page.goto(`/w/${organization.slug}/settings/integrations`);
+      await page.waitForURL(`/w/${organization.slug}/settings/integrations`);
+      await page.getByRole("link", { name: integration }).click();
+      await page.waitForURL(`/w/${organization.slug}/settings/integrations/${integration}`);
     }
-  })
-})
+  });
+});

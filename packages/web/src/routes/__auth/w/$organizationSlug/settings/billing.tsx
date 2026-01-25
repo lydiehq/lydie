@@ -1,67 +1,61 @@
-import { Button } from "@/components/generic/Button"
-import { createFileRoute, useParams } from "@tanstack/react-router"
-import { useOrganization } from "@/context/organization.context"
-import { Separator } from "@/components/generic/Separator"
-import { Heading } from "@/components/generic/Heading"
-import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types"
-import { useMemo, useState } from "react"
 import {
+  ArrowRightRegular,
   ArrowTrendingRegular,
   CalendarRegular,
-  FlashRegular,
-  ErrorCircleRegular,
   CheckmarkRegular,
-  ArrowRightRegular,
+  ErrorCircleRegular,
+  FlashRegular,
   SparkleRegular,
-} from "@fluentui/react-icons"
-import { DialogTrigger } from "react-aria-components"
-import { Modal } from "@/components/generic/Modal"
-import { Dialog } from "@/components/generic/Dialog"
-import { toast } from "sonner"
-import { authClient } from "@/utils/auth"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { Card } from "@/components/layout/Card"
-import { useTrackOnMount } from "@/hooks/use-posthog-tracking"
-import { trackEvent } from "@/lib/posthog"
+} from "@fluentui/react-icons";
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { DialogTrigger } from "react-aria-components";
+import { toast } from "sonner";
+
+import { Button } from "@/components/generic/Button";
+import { Dialog } from "@/components/generic/Dialog";
+import { Heading } from "@/components/generic/Heading";
+import { Modal } from "@/components/generic/Modal";
+import { Separator } from "@/components/generic/Separator";
+import { Card } from "@/components/layout/Card";
+import { useOrganization } from "@/context/organization.context";
+import { authClient } from "@/utils/auth";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/billing")({
   component: RouteComponent,
   loader: async ({ context, params }) => {
-    const { zero } = context
-    const { organizationSlug } = params
+    const { zero } = context;
+    const { organizationSlug } = params;
     // Preload billing data including LLM usage
-    zero.run(queries.organizations.billing({ organizationSlug }))
+    zero.run(queries.organizations.billing({ organizationSlug }));
   },
   ssr: false,
-})
+});
 
 function RouteComponent() {
   const { organizationSlug } = useParams({
     from: "/__auth/w/$organizationSlug/settings/billing",
-  })
-  const { organization } = useOrganization()
-  const [isUpgrading, setIsUpgrading] = useState(false)
+  });
+  const { organization } = useOrganization();
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
-  const [billingData] = useQuery(queries.organizations.billing({ organizationSlug }))
-
-  // Track billing page viewed
-  useTrackOnMount("billing_viewed", {
-    organizationId: organization.id,
-  })
+  const [billingData] = useQuery(queries.organizations.billing({ organizationSlug }));
 
   const currentPlan = useMemo(() => {
     if (!billingData) {
-      return PLAN_TYPES.FREE
+      return PLAN_TYPES.FREE;
     }
 
     const hasProAccess =
-      billingData.subscription_plan === "pro" && billingData.subscription_status === "active"
+      billingData.subscription_plan === "pro" && billingData.subscription_status === "active";
 
-    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE
-  }, [billingData])
+    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE;
+  }, [billingData]);
 
-  const planInfo = PLAN_LIMITS[currentPlan]
+  const planInfo = PLAN_LIMITS[currentPlan];
 
   // Calculate usage statistics
   const usageStats = useMemo(() => {
@@ -69,54 +63,50 @@ function RouteComponent() {
       return {
         totalTokens: 0,
         totalRequests: 0,
-      }
+      };
     }
 
-    const totalTokens = billingData.llmUsage.reduce((sum: any, usage: any) => sum + usage.total_tokens, 0) || 0
-    const totalRequests = billingData.llmUsage.length || 0
+    const totalTokens =
+      billingData.llmUsage.reduce((sum: any, usage: any) => sum + usage.total_tokens, 0) || 0;
+    const totalRequests = billingData.llmUsage.length || 0;
 
     return {
       totalTokens,
       totalRequests,
-    }
-  }, [billingData])
+    };
+  }, [billingData]);
 
   const handleUpgrade = async () => {
-    setIsUpgrading(true)
-
-    // Track subscription upgrade initiation
-    trackEvent("subscription_upgrade_initiated", {
-      organizationId: organization.id,
-      fromPlan: currentPlan,
-      toPlan: "pro",
-    })
+    setIsUpgrading(true);
 
     try {
       await authClient.checkout({
         slug: "pro",
         referenceId: organization.id,
-      })
+      });
     } catch (error: any) {
-      console.error("Upgrade error:", error)
-      toast.error(error?.message || "Failed to start upgrade process")
-      setIsUpgrading(false)
+      console.error("Upgrade error:", error);
+      toast.error(error?.message || "Failed to start upgrade process");
+      setIsUpgrading(false);
     }
-  }
+  };
 
   const handleManageSubscription = async () => {
     try {
-      await authClient.customer.portal()
+      await authClient.customer.portal();
     } catch (error: any) {
-      console.error("Portal error:", error)
-      toast.error(error?.message || "Failed to open customer portal")
+      console.error("Portal error:", error);
+      toast.error(error?.message || "Failed to open customer portal");
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-y-6">
       <div>
         <Heading level={1}>Billing & Usage</Heading>
-        <p className="text-sm text-gray-600 mt-1">Monitor your AI usage and manage your subscription</p>
+        <p className="text-sm text-gray-600 mt-1">
+          Monitor your AI usage and manage your subscription
+        </p>
       </div>
       <Separator />
 
@@ -139,7 +129,9 @@ function RouteComponent() {
                   <Heading level={2} className="text-xl font-semibold mb-2">
                     Upgrade to Pro
                   </Heading>
-                  <p className="text-sm text-gray-600 mb-6">Unlock unlimited AI features with Pro plan.</p>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Unlock unlimited AI features with Pro plan.
+                  </p>
 
                   {/* Pro Plan Card */}
                   <div className="max-w-md mx-auto">
@@ -175,7 +167,7 @@ function RouteComponent() {
 
                       <Button
                         onPress={() => {
-                          handleUpgrade()
+                          handleUpgrade();
                         }}
                         isDisabled={isUpgrading}
                         className="w-full"
@@ -195,23 +187,23 @@ function RouteComponent() {
 
                   <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-900">
-                      <strong>✨ Pro Features</strong> - Get unlimited AI usage, priority support, and
-                      advanced features.
+                      <strong>✨ Pro Features</strong> - Get unlimited AI usage, priority support,
+                      and advanced features.
                     </p>
                   </div>
 
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">
-                      <strong>Need custom limits?</strong> Contact us for Enterprise pricing with unlimited
-                      usage, dedicated support, and advanced features.
+                      <strong>Need custom limits?</strong> Contact us for Enterprise pricing with
+                      unlimited usage, dedicated support, and advanced features.
                     </p>
                   </div>
 
                   <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-sm text-amber-800">
-                      <strong>⚠️ Early Alpha Disclaimer:</strong> The PRO plan may be subject to changes in
-                      terms of token limitations and pricing as we are still figuring out our monetization
-                      model during this early alpha phase.
+                      <strong>⚠️ Early Alpha Disclaimer:</strong> The PRO plan may be subject to
+                      changes in terms of token limitations and pricing as we are still figuring out
+                      our monetization model during this early alpha phase.
                     </p>
                   </div>
 
@@ -235,10 +227,11 @@ function RouteComponent() {
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-gray-900">{planInfo.name} Plan</h2>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${billingData?.subscription_status === "active"
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    billingData?.subscription_status === "active"
                       ? "bg-green-100 text-green-700"
                       : "bg-gray-100 text-gray-700"
-                    }`}
+                  }`}
                 >
                   {billingData?.subscription_status || "active"}
                 </span>
@@ -266,8 +259,8 @@ function RouteComponent() {
                         Manage Subscription
                       </Heading>
                       <p className="text-sm text-gray-600 mb-6">
-                        Use the customer portal to manage your subscription, view invoices, and update payment
-                        methods.
+                        Use the customer portal to manage your subscription, view invoices, and
+                        update payment methods.
                       </p>
 
                       <div className="flex justify-end gap-2 mt-6">
@@ -276,7 +269,7 @@ function RouteComponent() {
                         </Button>
                         <Button
                           onPress={() => {
-                            handleManageSubscription()
+                            handleManageSubscription();
                           }}
                           intent="primary"
                         >
@@ -332,7 +325,9 @@ function RouteComponent() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-md font-semibold text-gray-900">AI Usage</h3>
           {billingData?.llmUsage && billingData.llmUsage.length > 0 && (
-            <span className="text-xs text-gray-500">{billingData.llmUsage.length} total requests</span>
+            <span className="text-xs text-gray-500">
+              {billingData.llmUsage.length} total requests
+            </span>
           )}
         </div>
 
@@ -343,17 +338,23 @@ function RouteComponent() {
         ) : billingData.llmUsage.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p className="text-sm mb-2">No usage data yet</p>
-            <p className="text-xs">Start using the AI assistant to see your usage statistics here.</p>
+            <p className="text-xs">
+              Start using the AI assistant to see your usage statistics here.
+            </p>
           </div>
         ) : (
           <div className="flex justify-between items-center py-4">
             <div className="space-y-1">
               <p className="text-sm text-gray-600">Total Requests</p>
-              <p className="text-2xl font-semibold text-gray-900">{usageStats.totalRequests.toLocaleString()}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {usageStats.totalRequests.toLocaleString()}
+              </p>
             </div>
             <div className="space-y-1 text-right">
               <p className="text-sm text-gray-600">Total Tokens</p>
-              <p className="text-2xl font-semibold text-gray-900">{usageStats.totalTokens.toLocaleString()}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {usageStats.totalTokens.toLocaleString()}
+              </p>
             </div>
           </div>
         )}
@@ -365,13 +366,13 @@ function RouteComponent() {
           <div>
             <h3 className="text-sm font-semibold text-amber-800 mb-1">Early Alpha Disclaimer</h3>
             <p className="text-sm text-amber-700">
-              The PRO plan may be subject to changes in terms of token limitations, pricing, and features as
-              we are still figuring out our monetization model during this early alpha phase. We'll notify you
-              of any significant changes in advance.
+              The PRO plan may be subject to changes in terms of token limitations, pricing, and
+              features as we are still figuring out our monetization model during this early alpha
+              phase. We'll notify you of any significant changes in advance.
             </p>
           </div>
         </div>
       </Card>
     </div>
-  )
+  );
 }

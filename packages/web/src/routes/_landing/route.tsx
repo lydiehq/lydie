@@ -1,5 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
-import "@fontsource-variable/dm-sans"
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import "@fontsource-variable/dm-sans";
 
 export const Route = createFileRoute("/_landing")({
   component: RouteComponent,
@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_landing")({
     if (context.auth) {
       throw redirect({
         to: "/",
-      })
+      });
     }
     // if (context.auth) {
     //   const lastWorkspace =
@@ -18,8 +18,8 @@ export const Route = createFileRoute("/_landing")({
     //   });
     // }
   },
-})
+});
 
 function RouteComponent() {
-  return <Outlet />
+  return <Outlet />;
 }

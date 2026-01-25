@@ -1,71 +1,80 @@
-import { motion, AnimatePresence } from "motion/react"
-import { useCallback, useState, useMemo, useEffect } from "react"
-import { createPortal } from "react-dom"
-import { Button as RACButton, TooltipTrigger } from "react-aria-components"
-import { Button } from "@/components/generic/Button"
 import {
-  SubtractFilled,
-  DocumentFilled,
   DocumentCopyFilled,
+  DocumentFilled,
   EditRegular,
-  QuestionCircleRegular,
-  TextBulletListSquareEditRegular,
-  PictureInPictureEnterRegular,
-  PersonChatFilled,
   ExpandUpRight16Filled,
-} from "@fluentui/react-icons"
-import { ChatMessages } from "@/components/chat/ChatMessages"
-import { useAtomValue, useSetAtom } from "jotai"
+  PersonChatFilled,
+  PictureInPictureEnterRegular,
+  QuestionCircleRegular,
+  SubtractFilled,
+  TextBulletListSquareEditRegular,
+} from "@fluentui/react-icons";
+import { createId } from "@lydie/core/id";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { AnimatePresence, motion } from "motion/react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { Button as RACButton, TooltipTrigger } from "react-aria-components";
+import { createPortal } from "react-dom";
+
+import { AssistantInput } from "@/components/assistant/AssistantInput";
+import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
+import { ChatMessages } from "@/components/chat/ChatMessages";
+import { Button } from "@/components/generic/Button";
+import { Tooltip } from "@/components/generic/Tooltip";
+import { useOrganization } from "@/context/organization.context";
+import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import {
+  clearPendingMessageAtom,
+  closeAssistantAtom,
+  dockAssistantAtom,
   isDockedAtom,
   isMinimizedAtom,
-  closeAssistantAtom,
-  toggleAssistantAtom,
-  dockAssistantAtom,
-  undockAssistantAtom,
   pendingMessageAtom,
-  clearPendingMessageAtom,
-} from "@/stores/floating-assistant"
-import { useOrganization } from "@/context/organization.context"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { createId } from "@lydie/core/id"
-import { useAssistantChat } from "@/hooks/use-assistant-chat"
-import { ConversationDropdown } from "@/components/assistant/ConversationDropdown"
-import { Tooltip } from "@/components/generic/Tooltip"
-import { AssistantInput } from "@/components/assistant/AssistantInput"
+  toggleAssistantAtom,
+  undockAssistantAtom,
+} from "@/stores/floating-assistant";
 
-const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id"
-const FLOATING_ASSISTANT_AGENT_KEY = "floating-assistant-agent-id"
+const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id";
+const FLOATING_ASSISTANT_AGENT_KEY = "floating-assistant-agent-id";
 
-export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: string | null }) {
-  const isDocked = useAtomValue(isDockedAtom)
-  const isMinimized = useAtomValue(isMinimizedAtom)
-  const close = useSetAtom(closeAssistantAtom)
-  const toggle = useSetAtom(toggleAssistantAtom)
-  const dock = useSetAtom(dockAssistantAtom)
-  const undock = useSetAtom(undockAssistantAtom)
-  const { organization } = useOrganization()
+export function FloatingAssistant({
+  currentDocumentId,
+  dockedContainer,
+  floatingContainer,
+}: {
+  currentDocumentId: string | null;
+  dockedContainer: HTMLDivElement | null;
+  floatingContainer: HTMLDivElement | null;
+}) {
+  const isDocked = useAtomValue(isDockedAtom);
+  const isMinimized = useAtomValue(isMinimizedAtom);
+  const close = useSetAtom(closeAssistantAtom);
+  const toggle = useSetAtom(toggleAssistantAtom);
+  const dock = useSetAtom(dockAssistantAtom);
+  const undock = useSetAtom(undockAssistantAtom);
+  const { organization } = useOrganization();
 
   const [conversationId, setConversationId] = useState(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(FLOATING_ASSISTANT_CONVERSATION_KEY)
+      const saved = localStorage.getItem(FLOATING_ASSISTANT_CONVERSATION_KEY);
       if (saved) {
-        return saved
+        return saved;
       }
     }
-    return createId()
-  })
+    return createId();
+  });
 
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(FLOATING_ASSISTANT_AGENT_KEY)
+      const saved = localStorage.getItem(FLOATING_ASSISTANT_AGENT_KEY);
       if (saved) {
-        return saved
+        return saved;
       }
     }
-    return null
-  })
+    return null;
+  });
 
   const [currentConversation] = useQuery(
     conversationId
@@ -74,7 +83,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
           conversationId,
         })
       : null,
-  )
+  );
 
   const { messages, sendMessage, stop, status, setMessages } = useAssistantChat({
     conversationId,
@@ -85,7 +94,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         parts: msg.parts,
         metadata: msg.metadata,
       })) || [],
-  })
+  });
 
   useEffect(() => {
     if (currentConversation?.messages) {
@@ -96,41 +105,47 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
           parts: msg.parts,
           metadata: msg.metadata,
         })),
-      )
+      );
     } else if (currentConversation === null && conversationId) {
-      setMessages([])
+      setMessages([]);
     }
-  }, [currentConversation?.id, conversationId, setMessages])
+  }, [
+    currentConversation?.id,
+    conversationId,
+    setMessages,
+    currentConversation?.messages,
+    currentConversation,
+  ]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(FLOATING_ASSISTANT_CONVERSATION_KEY, conversationId)
+      localStorage.setItem(FLOATING_ASSISTANT_CONVERSATION_KEY, conversationId);
     }
-  }, [conversationId])
+  }, [conversationId]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && selectedAgentId) {
-      localStorage.setItem(FLOATING_ASSISTANT_AGENT_KEY, selectedAgentId)
+      localStorage.setItem(FLOATING_ASSISTANT_AGENT_KEY, selectedAgentId);
     }
-  }, [selectedAgentId])
+  }, [selectedAgentId]);
 
   const handleSelectAgent = useCallback((agentId: string) => {
-    setSelectedAgentId(agentId)
-  }, [])
+    setSelectedAgentId(agentId);
+  }, []);
 
   const handleNewChat = useCallback(() => {
-    const newId = createId()
-    setConversationId(newId)
-    setMessages([])
-  }, [setMessages])
+    const newId = createId();
+    setConversationId(newId);
+    setMessages([]);
+  }, [setMessages]);
 
   const handleSelectConversation = useCallback((id: string) => {
-    setConversationId(id)
-  }, [])
+    setConversationId(id);
+  }, []);
 
   const handleClose = useCallback(() => {
-    close()
-  }, [close])
+    close();
+  }, [close]);
 
   const headerButtons = useMemo(() => {
     return [
@@ -152,15 +167,10 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         tooltip: "Close assistant",
         icon: SubtractFilled,
       },
-    ]
-  }, [isDocked, dock, undock, handleNewChat, handleClose])
+    ];
+  }, [isDocked, dock, undock, handleNewChat, handleClose]);
 
-  const floatingContainer =
-    typeof document !== "undefined" ? document.getElementById("floating-assistant-container") : null
-  const dockedContainer =
-    typeof document !== "undefined" ? document.getElementById("docked-assistant-container") : null
-
-  const targetContainer = isMinimized ? null : isDocked ? dockedContainer : floatingContainer
+  const targetContainer = isMinimized ? null : isDocked ? dockedContainer : floatingContainer;
 
   const content = (
     <motion.div
@@ -214,7 +224,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
               </div>
               <div className="flex items-center gap-x-0.5">
                 {headerButtons.map((button) => {
-                  const Icon = button.icon
+                  const Icon = button.icon;
                   return (
                     <TooltipTrigger key={button.ariaLabel} delay={500}>
                       <Button
@@ -227,7 +237,7 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
                       </Button>
                       <Tooltip placement="top">{button.tooltip}</Tooltip>
                     </TooltipTrigger>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -247,14 +257,14 @@ export function FloatingAssistant({ currentDocumentId }: { currentDocumentId: st
         )}
       </AnimatePresence>
     </motion.div>
-  )
+  );
 
-  if (isMinimized) return content
-  if (!targetContainer) return null
-  return createPortal(content, targetContainer)
+  if (isMinimized) return content;
+  if (!targetContainer) return null;
+  return createPortal(content, targetContainer);
 }
 
-function FloatingAssistantChatContent({
+const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent({
   organizationId,
   currentDocumentId,
   messages,
@@ -264,25 +274,25 @@ function FloatingAssistantChatContent({
   selectedAgentId,
   onSelectAgent,
 }: {
-  organizationId: string
-  currentDocumentId: string | null
-  messages: any[]
-  sendMessage: (options: { text: string; metadata?: any; agentId?: string | null }) => void
-  stop: () => void
-  status: string
-  selectedAgentId: string | null
-  onSelectAgent: (agentId: string) => void
+  organizationId: string;
+  currentDocumentId: string | null;
+  messages: any[];
+  sendMessage: (options: { text: string; metadata?: any; agentId?: string | null }) => void;
+  stop: () => void;
+  status: string;
+  selectedAgentId: string | null;
+  onSelectAgent: (agentId: string) => void;
 }) {
-  const pendingMessage = useAtomValue(pendingMessageAtom)
-  const clearPendingMessage = useSetAtom(clearPendingMessageAtom)
-  const [pendingContent, setPendingContent] = useState<string | undefined>(undefined)
+  const pendingMessage = useAtomValue(pendingMessageAtom);
+  const clearPendingMessage = useSetAtom(clearPendingMessageAtom);
+  const [pendingContent, setPendingContent] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (pendingMessage) {
-      setPendingContent(pendingMessage)
-      clearPendingMessage()
+      setPendingContent(pendingMessage);
+      clearPendingMessage();
     }
-  }, [pendingMessage, clearPendingMessage])
+  }, [pendingMessage, clearPendingMessage]);
 
   const handleSubmit = useCallback(
     (text: string, contextDocumentIds: string[]) => {
@@ -294,13 +304,13 @@ function FloatingAssistantChatContent({
           currentDocumentId: currentDocumentId || undefined,
         },
         agentId: selectedAgentId,
-      })
-      setPendingContent(undefined)
+      });
+      setPendingContent(undefined);
     },
     [sendMessage, currentDocumentId, selectedAgentId],
-  )
+  );
 
-  const canStop = status === "submitted" || status === "streaming"
+  const canStop = status === "submitted" || status === "streaming";
 
   const suggestions = useMemo(() => {
     if (currentDocumentId) {
@@ -317,7 +327,7 @@ function FloatingAssistantChatContent({
           text: "Explain this in simpler terms",
           icon: QuestionCircleRegular,
         },
-      ]
+      ];
     } else {
       return [
         {
@@ -332,9 +342,9 @@ function FloatingAssistantChatContent({
           text: "What can you help me with?",
           icon: QuestionCircleRegular,
         },
-      ]
+      ];
     }
-  }, [currentDocumentId])
+  }, [currentDocumentId]);
 
   const handleSuggestionClick = useCallback(
     (suggestionText: string) => {
@@ -346,12 +356,12 @@ function FloatingAssistantChatContent({
           currentDocumentId: currentDocumentId || undefined,
         },
         agentId: selectedAgentId,
-      })
+      });
     },
     [sendMessage, currentDocumentId, selectedAgentId],
-  )
+  );
 
-  const isChatEmpty = messages.length === 0
+  const isChatEmpty = messages.length === 0;
 
   return (
     <div className="flex flex-col overflow-hidden grow h-full">
@@ -364,7 +374,7 @@ function FloatingAssistantChatContent({
         {isChatEmpty && (
           <div className="flex flex-col gap-y-1 pb-3">
             {suggestions.map((suggestion, index) => {
-              const Icon = suggestion.icon
+              const Icon = suggestion.icon;
               return (
                 <>
                   <RACButton
@@ -377,7 +387,7 @@ function FloatingAssistantChatContent({
                   </RACButton>
                   {index < suggestions.length - 1 && <div className="h-px bg-black/6 ml-8" />}
                 </>
-              )
+              );
             })}
           </div>
         )}
@@ -395,5 +405,5 @@ function FloatingAssistantChatContent({
         />
       </div>
     </div>
-  )
-}
+  );
+});

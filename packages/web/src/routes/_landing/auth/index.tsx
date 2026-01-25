@@ -1,17 +1,19 @@
-import { Button } from "@/components/generic/Button"
-import { Heading } from "@/components/generic/Heading"
-import { authClient } from "@/utils/auth"
-import { createFileRoute } from "@tanstack/react-router"
-import { z } from "zod"
-import { useState } from "react"
-import "@/styles/grainy-gradient.css"
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
+
+import { Button } from "@/components/generic/Button";
+import { Heading } from "@/components/generic/Heading";
+import { authClient } from "@/utils/auth";
+import "@/styles/grainy-gradient.css";
 
 export const Route = createFileRoute("/_landing/auth/")({
   component: RouteComponent,
   validateSearch: z.object({
     redirect: z.string().optional(),
+    template: z.string().optional(),
   }),
-})
+});
 
 function RouteComponent() {
   return (
@@ -58,25 +60,33 @@ function RouteComponent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function AuthBox() {
-  const [isPending, setIsPending] = useState(false)
-  const { redirect } = Route.useSearch()
+  const [isPending, setIsPending] = useState(false);
+  const { redirect, template } = Route.useSearch();
 
   const handleGoogleSignIn = async () => {
-    setIsPending(true)
+    setIsPending(true);
     try {
-      const callbackURL = redirect ? `${window.location.origin}${redirect}` : window.location.origin
+      let callbackURL = window.location.origin;
+
+      if (template) {
+        sessionStorage.setItem("pendingTemplateInstall", template);
+        callbackURL = window.location.origin;
+      } else if (redirect) {
+        callbackURL = `${window.location.origin}${redirect}`;
+      }
+
       await authClient.signIn.social({
         provider: "google",
         callbackURL,
-      })
-    } catch (error) {
-      setIsPending(false)
+      });
+    } catch {
+      setIsPending(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-sm w-full gap-y-4 flex flex-col">
@@ -100,5 +110,5 @@ function AuthBox() {
         By continuing, you agree to our Terms of Service and Privacy Policy
       </div> */}
     </div>
-  )
+  );
 }

@@ -1,14 +1,16 @@
-import type { Editor } from "@tiptap/core"
-import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus"
-import { ToolbarButton } from "./toolbar/ToolbarButton"
-import { Separator } from "../generic/Separator"
-import { TextStrikethroughFilled, SparkleRegular } from "@fluentui/react-icons"
-import { BoldIcon, ItalicIcon, CodeIcon, LinkIcon } from "./wysiwyg-icons"
+import type { Editor } from "@tiptap/core";
+
+import { SparkleRegular, TextStrikethroughFilled } from "@fluentui/react-icons";
+import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
+
+import { Separator } from "../generic/Separator";
+import { ToolbarButton } from "./toolbar/ToolbarButton";
+import { BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "./wysiwyg-icons";
 
 type Props = {
-  editor: Editor
-  onAddLink?: () => void
-}
+  editor: Editor;
+  onAddLink?: () => void;
+};
 
 export function BubbleMenu({ editor, onAddLink }: Props) {
   return (
@@ -51,7 +53,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       <ToolbarButton
         onPress={() => {
           if (onAddLink) {
-            onAddLink()
+            onAddLink();
           }
         }}
         title="Add Link"
@@ -64,7 +66,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
 
       <ToolbarButton
         onPress={() => {
-          editor.commands.captureAndMarkSelection()
+          editor.commands.captureAndMarkSelection();
         }}
         title="Add to context"
         icon={SparkleRegular}
@@ -72,5 +74,5 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
         className="flex p-1.5 rounded hover:bg-gray-100"
       />
     </TiptapBubbleMenu>
-  )
+  );
 }

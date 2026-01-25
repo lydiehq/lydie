@@ -1,21 +1,22 @@
-import { DismissFilled } from "@fluentui/react-icons"
-import { DocumentFilled } from "@fluentui/react-icons"
-import { Button } from "react-aria-components"
-import { DocumentMultiSelect } from "@/components/assistant/DocumentMultiSelect"
+import { DismissFilled } from "@fluentui/react-icons";
+import { DocumentFilled } from "@fluentui/react-icons";
+import { Button } from "react-aria-components";
+
+import { DocumentMultiSelect } from "@/components/assistant/DocumentMultiSelect";
 
 export type ChatContextItem = {
-  id: string
-  type: "document"
-  label: string
-  source: "current" | "mention" | "manual"
-  removable?: boolean
-}
+  id: string;
+  type: "document";
+  label: string;
+  source: "current" | "mention" | "manual";
+  removable?: boolean;
+};
 
 interface ChatContextListProps {
-  items: ChatContextItem[]
-  onRemove?: (item: ChatContextItem) => void
-  availableDocuments?: Array<{ id: string; title: string }>
-  onAddDocument?: (documentId: string) => void
+  items: ChatContextItem[];
+  onRemove?: (item: ChatContextItem) => void;
+  availableDocuments?: Array<{ id: string; title: string }>;
+  onAddDocument?: (documentId: string) => void;
 }
 
 export function ChatContextList({
@@ -24,9 +25,9 @@ export function ChatContextList({
   availableDocuments,
   onAddDocument,
 }: ChatContextListProps) {
-  const showAddButton = availableDocuments && onAddDocument
+  const showAddButton = availableDocuments && onAddDocument;
 
-  if (items.length === 0 && !showAddButton) return null
+  if (items.length === 0 && !showAddButton) return null;
 
   return (
     <div className="flex flex-wrap gap-1.5 items-center">
@@ -38,22 +39,26 @@ export function ChatContextList({
         />
       )}
       {items.map((item) => (
-        <ContextChip key={`${item.type}-${item.id}-${item.source}`} item={item} onRemove={onRemove} />
+        <ContextChip
+          key={`${item.type}-${item.id}-${item.source}`}
+          item={item}
+          onRemove={onRemove}
+        />
       ))}
     </div>
-  )
+  );
 }
 
 function ContextChip({
   item,
   onRemove,
 }: {
-  item: ChatContextItem
-  onRemove?: (item: ChatContextItem) => void
+  item: ChatContextItem;
+  onRemove?: (item: ChatContextItem) => void;
 }) {
-  const canRemove = item.removable && onRemove
+  const canRemove = item.removable && onRemove;
   const sourceLabel =
-    item.source === "current" ? "Current" : item.source === "manual" ? "Selected" : "Mentioned"
+    item.source === "current" ? "Current" : item.source === "manual" ? "Selected" : "Mentioned";
 
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-white/80 text-xs text-gray-700 px-1 py-0.5 ring ring-black/8">
@@ -71,5 +76,5 @@ function ContextChip({
         </Button>
       )}
     </div>
-  )
+  );
 }

@@ -1,107 +1,126 @@
-import { EditorContent } from "@tiptap/react"
-import { useZero } from "@/services/zero"
-import { Panel, PanelGroup } from "react-resizable-panels"
-import { useRef, useState, useCallback, useEffect } from "react"
-import { EditorToolbar } from "./editor/EditorToolbar"
-import { useTitleEditor } from "@/lib/editor/title-editor"
-import { SelectedContentProvider, useSelectedContent } from "@/context/selected-content.context"
-import { LinkPopover } from "./editor/LinkPopover"
-import { BubbleMenu } from "./editor/BubbleMenu"
-import type { QueryResultType } from "@rocicorp/zero"
-import { queries } from "@lydie/zero/queries"
-import { Surface } from "./layout/Surface"
-import { mutators } from "@lydie/zero/mutators"
-import { useDocumentEditor } from "@/lib/editor/document-editor"
-import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs"
-import { CoverImageEditor } from "./editor/CoverImageEditor"
-import { useSetAtom, useAtom } from "jotai"
-import { documentEditorAtom, titleEditorAtom, pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
-import { applyContentChanges } from "@/utils/document-changes"
-import { toast } from "sonner"
+import type { QueryResultType } from "@rocicorp/zero";
+
+import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { EditorContent } from "@tiptap/react";
+import clsx from "clsx";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Group, Panel, useDefaultLayout } from "react-resizable-panels";
+import { toast } from "sonner";
+
+import {
+  documentEditorAtom,
+  pendingChangeStatusAtom,
+  pendingEditorChangeAtom,
+  titleEditorAtom,
+} from "@/atoms/editor";
+import { SelectedContentProvider, useSelectedContent } from "@/context/selected-content.context";
+import { useDocumentEditor } from "@/lib/editor/document-editor";
+import { useTitleEditor } from "@/lib/editor/title-editor";
+import { useZero } from "@/services/zero";
+import { isDockedAtom, isOpenAtom } from "@/stores/floating-assistant";
+import { applyContentChanges } from "@/utils/document-changes";
+import { applyTitleChange } from "@/utils/title-changes";
+
+import { BubbleMenu } from "./editor/BubbleMenu";
+import { CoverImageEditor } from "./editor/CoverImageEditor";
+import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs";
+import { EditorToolbar } from "./editor/EditorToolbar";
+import { LinkPopover } from "./editor/LinkPopover";
+import { Surface } from "./layout/Surface";
 
 type Props = {
-  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>
-}
+  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
+};
 
 export function Editor({ doc }: Props) {
   return (
     <SelectedContentProvider>
       <EditorContainer doc={doc} />
     </SelectedContentProvider>
-  )
+  );
 }
 
 function EditorContainer({ doc }: Props) {
-  const z = useZero()
-  const [title, setTitle] = useState(doc.title || "")
-  const { setFocusedContent } = useSelectedContent()
-  const openLinkDialogRef = useRef<(() => void) | null>(null)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const isLocked = doc.is_locked ?? false
-  
-  // Store editor instances in Jotai atoms for global access
-  const setDocumentEditor = useSetAtom(documentEditorAtom)
-  const setTitleEditor = useSetAtom(titleEditorAtom)
-  const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom)
-  const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom)
+  const z = useZero();
+  const [title, setTitle] = useState(doc.title || "");
+  const { setFocusedContent } = useSelectedContent();
+  const openLinkDialogRef = useRef<(() => void) | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isLocked = doc.is_locked ?? false;
+
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "editor-panel-group",
+    storage: localStorage,
+  });
+
+  const setDocumentEditor = useSetAtom(documentEditorAtom);
+  const setTitleEditor = useSetAtom(titleEditorAtom);
+  const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom);
+  const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
+  const isDocked = useAtomValue(isDockedAtom);
+  const isAssistantOpen = useAtomValue(isOpenAtom);
+
+  // When assistant is undocked and open, shift content left to avoid overlap
+  // Only apply on screens smaller than 2xl (1536px) to avoid unnecessary adjustments on ultrawide monitors
+  const shouldShiftContent = !isDocked && isAssistantOpen;
 
   const handleTitleUpdate = (newTitle: string) => {
-    const finalTitle = newTitle.trim()
-    setTitle(finalTitle)
-  }
+    const finalTitle = newTitle.trim();
+    setTitle(finalTitle);
+  };
 
   const handleOpenLinkDialog = useCallback(() => {
     if (openLinkDialogRef.current) {
-      openLinkDialogRef.current()
+      openLinkDialogRef.current();
     }
-  }, [])
+  }, []);
 
   const registerLinkDialogCallback = useCallback((callback: () => void) => {
-    openLinkDialogRef.current = callback
-  }, [])
+    openLinkDialogRef.current = callback;
+  }, []);
 
   const selectText = (selectedText: string) => {
-    setFocusedContent(selectedText)
-  }
+    setFocusedContent(selectedText);
+  };
 
   const contentEditor = useDocumentEditor({
     doc,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
-  })
+  });
 
   const titleEditor = useTitleEditor({
     initialTitle: doc.title || "",
     onUpdate: handleTitleUpdate,
     onEnter: () => {
       if (contentEditor.editor) {
-        contentEditor.editor.commands.focus(0)
+        contentEditor.editor.commands.focus(0);
       }
     },
     editable: !isLocked,
-  })
+  });
 
-  // Sync document editor to global atom
   useEffect(() => {
-    setDocumentEditor(contentEditor.editor)
+    setDocumentEditor(contentEditor.editor);
     return () => {
-      setDocumentEditor(null)
-    }
-  }, [contentEditor.editor, setDocumentEditor])
+      setDocumentEditor(null);
+    };
+  }, [contentEditor.editor, setDocumentEditor]);
 
-  // Sync title editor to global atom
   useEffect(() => {
-    setTitleEditor(titleEditor.editor)
+    setTitleEditor(titleEditor.editor);
     return () => {
-      setTitleEditor(null)
-    }
-  }, [titleEditor.editor, setTitleEditor])
+      setTitleEditor(null);
+    };
+  }, [titleEditor.editor, setTitleEditor]);
 
   useEffect(() => {
-    if (!titleEditor.editor) return
+    if (!titleEditor.editor) return;
 
     const handleBlur = () => {
-      const finalTitle = title.trim()
+      const finalTitle = title.trim();
       z.mutate(
         mutators.document.update({
           documentId: doc.id,
@@ -109,84 +128,121 @@ function EditorContainer({ doc }: Props) {
           indexStatus: "outdated",
           organizationId: doc.organization_id,
         }),
-      )
-    }
+      );
+    };
 
-    const editorElement = titleEditor.editor.view.dom
-    editorElement.addEventListener("blur", handleBlur)
+    const editorElement = titleEditor.editor.view.dom;
+    editorElement.addEventListener("blur", handleBlur);
 
     return () => {
-      editorElement.removeEventListener("blur", handleBlur)
-    }
-  }, [titleEditor.editor, title, z, doc.id, doc.organization_id])
+      editorElement.removeEventListener("blur", handleBlur);
+    };
+  }, [titleEditor.editor, title, z, doc.id, doc.organization_id]);
 
-  // Apply pending changes after navigation
   useEffect(() => {
-    if (!pendingChange || !contentEditor.editor) return
-    
-    // Check if this is the target document
-    if (pendingChange.documentId !== doc.id) return
+    if (!pendingChange) return;
+    if (!contentEditor.editor && !titleEditor.editor) return;
+
+    if (pendingChange.documentId !== doc.id) return;
 
     const applyPendingChange = async () => {
-      setPendingChangeStatus("applying")
-      toast.info("Applying changes...")
-      
-      try {
-        const result = await applyContentChanges(
-          contentEditor.editor!,
-          [
-            {
-              search: pendingChange.search,
-              replace: pendingChange.replace,
-            },
-          ],
-          pendingChange.organizationId,
-        )
+      setPendingChangeStatus("applying");
+      toast.info("Applying changes...");
 
-        if (result.success) {
-          setPendingChangeStatus("applied")
-          toast.success("Changes applied successfully")
-          if (result.usedLLMFallback) {
-            console.info("✨ LLM-assisted replacement was used for this change")
+      try {
+        let contentSuccess = true;
+        let titleSuccess = true;
+
+        if (pendingChange.title && titleEditor.editor) {
+          const titleResult = await applyTitleChange(
+            titleEditor.editor,
+            pendingChange.title,
+            doc.id,
+            pendingChange.organizationId,
+            z,
+          );
+          titleSuccess = titleResult.success;
+          if (!titleSuccess) {
+            console.error("Failed to apply title change:", titleResult.error);
           }
+        }
+
+        if (pendingChange.replace && contentEditor.editor) {
+          const result = await applyContentChanges(
+            contentEditor.editor,
+            [
+              {
+                search: pendingChange.search,
+                replace: pendingChange.replace,
+              },
+            ],
+            pendingChange.organizationId,
+          );
+
+          contentSuccess = result.success;
+          if (result.success) {
+            if (result.usedLLMFallback) {
+              console.info("✨ LLM-assisted replacement was used for this change");
+            }
+          } else {
+            console.error("Failed to apply content changes:", result.error);
+          }
+        }
+
+        if (contentSuccess && titleSuccess) {
+          setPendingChangeStatus("applied");
+          toast.success("Changes applied successfully");
         } else {
-          setPendingChangeStatus("failed")
-          toast.error("Failed to apply changes")
-          console.error("Failed to apply changes:", result.error)
+          setPendingChangeStatus("failed");
+          toast.error("Failed to apply changes");
         }
       } catch (error) {
-        setPendingChangeStatus("failed")
-        console.error("Failed to apply pending change:", error)
-        toast.error("Failed to apply changes")
+        setPendingChangeStatus("failed");
+        console.error("Failed to apply pending change:", error);
+        toast.error("Failed to apply changes");
       } finally {
-        // Clear the pending change after a short delay to allow UI to update
         setTimeout(() => {
-          setPendingChange(null)
-          setPendingChangeStatus(null)
-        }, 1000)
+          setPendingChange(null);
+          setPendingChangeStatus(null);
+        }, 1000);
       }
-    }
+    };
 
-    // Small delay to ensure editor is fully ready
     const timeoutId = setTimeout(() => {
-      applyPendingChange()
-    }, 100)
+      applyPendingChange();
+    }, 100);
 
     return () => {
-      clearTimeout(timeoutId)
-    }
-  }, [contentEditor.editor, doc.id, pendingChange, setPendingChange])
+      clearTimeout(timeoutId);
+    };
+  }, [
+    contentEditor.editor,
+    titleEditor.editor,
+    doc.id,
+    pendingChange,
+    setPendingChange,
+    setPendingChangeStatus,
+    z,
+  ]);
 
   if (!contentEditor.editor || !titleEditor.editor) {
-    return null
+    return null;
   }
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface className="overflow-hidden">
-        <PanelGroup autoSaveId="editor-panel-group" direction="horizontal">
-          <Panel minSize={20} defaultSize={75} className="flex flex-col grow relative">
-            <EditorToolbar editor={contentEditor.editor} doc={doc} onAddLink={handleOpenLinkDialog} />
+        <Group
+          orientation="horizontal"
+          defaultLayout={defaultLayout}
+          onLayoutChanged={onLayoutChanged}
+        >
+          <Panel minSize="400px" className="flex flex-col grow relative">
+            <EditorToolbar
+              editor={contentEditor.editor}
+              doc={doc}
+              onAddLink={handleOpenLinkDialog}
+            />
             {isLocked && (
               <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
                 This page is managed by an integration and cannot be edited.
@@ -194,7 +250,10 @@ function EditorContainer({ doc }: Props) {
             )}
             <div
               ref={scrollContainerRef}
-              className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4"
+              className={clsx(
+                "flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative transition-[padding] duration-500 ease-in-out",
+                shouldShiftContent ? "max-2xl:pl-4 max-2xl:pr-[160px]" : "px-4",
+              )}
             >
               <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
                 <CoverImageEditor
@@ -202,12 +261,19 @@ function EditorContainer({ doc }: Props) {
                   organizationId={doc.organization_id}
                   coverImage={doc.cover_image}
                 />
-                <EditorContent editor={titleEditor.editor} aria-label="Document title" className="mb-6" />
+                <EditorContent
+                  editor={titleEditor.editor}
+                  aria-label="Document title"
+                  className="mb-6"
+                />
                 <DocumentMetadataTabs
                   doc={doc}
                   initialFields={(doc.custom_fields as Record<string, string | number>) || {}}
                 />
-                <LinkPopover editor={contentEditor.editor} onOpenLinkDialog={registerLinkDialogCallback} />
+                <LinkPopover
+                  editor={contentEditor.editor}
+                  onOpenLinkDialog={registerLinkDialogCallback}
+                />
                 <BubbleMenu editor={contentEditor.editor} onAddLink={handleOpenLinkDialog} />
                 <EditorContent
                   aria-label="Document content"
@@ -216,13 +282,9 @@ function EditorContainer({ doc }: Props) {
                 />
               </div>
             </div>
-            {/* <BottomBar
-              editor={contentEditor.editor}
-              lastSaved={new Date(doc.updated_at)}
-            /> */}
           </Panel>
-        </PanelGroup>
+        </Group>
       </Surface>
     </div>
-  )
+  );
 }

@@ -1,35 +1,43 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { Form } from "react-aria-components"
-import { useAppForm } from "@/hooks/use-app-form"
-import { Button } from "@/components/generic/Button"
-import { Heading } from "@/components/generic/Heading"
-import { useZero } from "@/services/zero"
-import { useNavigate, useRouter } from "@tanstack/react-router"
-import { createId } from "@lydie/core/id"
-import { toast } from "sonner"
-import { slugify } from "@lydie/core/utils"
-import { authClient } from "@/utils/auth"
-import { useQueryClient } from "@tanstack/react-query"
-import { useQuery as useZeroQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { revalidateSession } from "@/lib/auth/session"
-import { mutators } from "@lydie/zero/mutators"
-import { clearZeroInstance } from "@/lib/zero/instance"
-import { trackEvent } from "@/lib/posthog"
-import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors"
+import { createId } from "@lydie/core/id";
+import { slugify } from "@lydie/core/utils";
+import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors";
+import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery as useZeroQuery } from "@rocicorp/zero/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Form } from "react-aria-components";
+import { toast } from "sonner";
+
+import { Button } from "@/components/generic/Button";
+import { Heading } from "@/components/generic/Heading";
+import { useAppForm } from "@/hooks/use-app-form";
+import { revalidateSession } from "@/lib/auth/session";
+import { clearZeroInstance } from "@/lib/zero/instance";
+import { useZero } from "@/services/zero";
+import { authClient } from "@/utils/auth";
 
 export const Route = createFileRoute("/__auth/new/")({
   component: RouteComponent,
-})
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      template: (search.template as string) || undefined,
+    };
+  },
+});
 
 function RouteComponent() {
-  const z = useZero()
-  const navigate = useNavigate()
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const { auth } = Route.useRouteContext()
+  const z = useZero();
+  const navigate = useNavigate();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { auth } = Route.useRouteContext();
+  const search = Route.useSearch();
 
-  const defaultName = auth?.user?.name ? `${auth.user.name.split(" ")[0]}'s Workspace` : "My Workspace"
+  const defaultName = auth?.user?.name
+    ? `${auth.user.name.split(" ")[0]}'s Workspace`
+    : "My Workspace";
 
   const form = useAppForm({
     defaultValues: {
@@ -38,9 +46,9 @@ function RouteComponent() {
     },
     onSubmit: async (values) => {
       try {
-        const id = createId()
-        const onboardingDocId = createId()
-        const slug = values.value.slug || slugify(values.value.name)
+        const id = createId();
+        const onboardingDocId = createId();
+        const slug = values.value.slug || slugify(values.value.name);
 
         const write = z.mutate(
           mutators.organization.create({
@@ -50,54 +58,53 @@ function RouteComponent() {
             color: getRandomWorkspaceColor(),
             onboardingDocId,
           }),
-        )
+        );
 
-        // Wait for the server to exist in the database.
-        await write.server
+        await write.server;
 
-        await revalidateSession(queryClient)
-        clearZeroInstance()
-        await router.invalidate()
+        await revalidateSession(queryClient);
+        clearZeroInstance();
+        await router.invalidate();
 
-        // Track organization created
-        trackEvent("organization_created", {
-          organizationId: id,
-          organizationSlug: slug,
-          organizationName: values.value.name,
-        })
+        // Navigate to the onboarding document or workspace with template
+        if (search.template) {
+          navigate({
+            to: "/w/$organizationSlug",
+            params: { organizationSlug: slug },
+            search: { installTemplate: search.template },
+          });
+        } else {
+          navigate({
+            to: "/w/$organizationSlug/$id",
+            params: { organizationSlug: slug, id: onboardingDocId },
+          });
+        }
 
-        // Navigate to the onboarding document
-        navigate({
-          to: "/w/$organizationSlug/$id",
-          params: { organizationSlug: slug, id: onboardingDocId },
-        })
-
-        toast.success("Workspace created successfully")
-      } catch (err) {
-        console.error("Failed to create workspace:", err)
-        toast.error("Failed to create workspace")
+        toast.success("Workspace created successfully");
+      } catch (error) {
+        console.error("Failed to create workspace:", error);
+        toast.error("Failed to create workspace");
       }
     },
-  })
+  });
 
-  const [invitations] = useZeroQuery(queries.invitations.byUser({ email: auth?.user?.email || "" }))
+  const [invitations] = useZeroQuery(
+    queries.invitations.byUser({ email: auth?.user?.email || "" }),
+  );
 
   const acceptInvitation = async (invitationId: string) => {
     try {
       await authClient.organization.acceptInvitation({
         invitationId,
-      })
-      await revalidateSession(queryClient)
-      await router.invalidate()
-      toast.success("Invitation accepted")
-      // Redirect to home or specific workspace logic will be handled by auth state change or manual redirect
-      // Often accepting invitation sets active organization, but we should redirect.
-      // We can fetch user orgs and redirect to the new one.
-      navigate({ to: "/" })
+      });
+      await revalidateSession(queryClient);
+      await router.invalidate();
+      toast.success("Invitation accepted");
+      navigate({ to: "/" });
     } catch {
-      toast.error("Failed to accept invitation")
+      toast.error("Failed to accept invitation");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen relative grainy-gradient-container custom-inner-shadow overflow-hidden">
@@ -139,16 +146,16 @@ function RouteComponent() {
             <div className="p-8 md:p-16 size-full rounded-[8px] flex flex-col gap-8">
               <Form
                 onSubmit={(e) => {
-                  e.preventDefault()
-                  form.handleSubmit()
+                  e.preventDefault();
+                  form.handleSubmit();
                 }}
                 className="flex flex-col gap-y-8"
               >
                 <div className="gap-y-2 flex flex-col">
                   <Heading className="text-white">Create Workspace</Heading>
                   <p className="text-white/90">
-                    Use workspaces for different areas of your company, or to separate your live and test
-                    environments.
+                    Use workspaces for different areas of your company, or to separate your live and
+                    test environments.
                   </p>
                 </div>
 
@@ -157,7 +164,6 @@ function RouteComponent() {
                     name="name"
                     children={(field) => (
                       <field.TextField
-                        autoFocus
                         label="Workspace Name"
                         placeholder="My Workspace"
                         description="This will be the name of your workspace"
@@ -165,9 +171,9 @@ function RouteComponent() {
                         descriptionClassName="text-white/70"
                         className="text-white"
                         onChange={(v) => {
-                          field.handleChange(v)
-                          const newSlug = slugify(v)
-                          form.setFieldValue("slug", newSlug)
+                          field.handleChange(v);
+                          const newSlug = slugify(v);
+                          form.setFieldValue("slug", newSlug);
                         }}
                       />
                     )}
@@ -203,7 +209,8 @@ function RouteComponent() {
                   <div className="gap-y-2 flex flex-col mb-4">
                     <Heading className="text-white text-lg">Detailed Invitations</Heading>
                     <p className="text-white/90 text-sm">
-                      You have been invited to join the following workspaces using {auth?.user?.email}.
+                      You have been invited to join the following workspaces using{" "}
+                      {auth?.user?.email}.
                     </p>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -233,5 +240,5 @@ function RouteComponent() {
         </div>
       </div>
     </div>
-  )
+  );
 }

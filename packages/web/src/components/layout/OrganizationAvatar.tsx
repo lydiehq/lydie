@@ -1,6 +1,7 @@
-import { cva, type VariantProps } from "cva"
-import { useOrganization } from "@/context/organization.context"
-import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors"
+import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors";
+import { type VariantProps, cva } from "cva";
+
+import { useOrganization } from "@/context/organization.context";
 
 const avatarStyles = cva({
   base: [
@@ -16,21 +17,21 @@ const avatarStyles = cva({
   defaultVariants: {
     size: "sm",
   },
-})
+});
 
 type OrganizationAvatarProps = VariantProps<typeof avatarStyles> & {
-  className?: string
-  organization?: { name?: string | null; color?: string | null } | null
-}
+  className?: string;
+  organization?: { name?: string | null; color?: string | null } | null;
+};
 
 export function OrganizationAvatar({
   size,
   className,
   organization: organizationProp,
 }: OrganizationAvatarProps) {
-  const { organization: organizationFromContext } = useOrganization()
-  const organization = organizationProp ?? organizationFromContext
-  const color = organization?.color || WORKSPACE_COLORS[0]
+  const { organization: organizationFromContext } = useOrganization();
+  const organization = organizationProp ?? organizationFromContext;
+  const color = organization?.color || WORKSPACE_COLORS[0].value;
 
   return (
     <div
@@ -42,5 +43,5 @@ export function OrganizationAvatar({
     >
       {organization?.name?.slice(0, 1).toUpperCase() || ""}
     </div>
-  )
+  );
 }

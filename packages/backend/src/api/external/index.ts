@@ -1,18 +1,19 @@
-import { Hono } from "hono"
-import { HTTPException } from "hono/http-exception"
-import { apiKeyAuth, externalRateLimit } from "./middleware"
-import { extractTableOfContents } from "../../utils/toc"
-import { db, documentsTable } from "@lydie/database"
-import { eq, and, isNull, desc } from "drizzle-orm"
-import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer"
-import { findRelatedDocuments } from "@lydie/core/embedding/index"
-import { convertYjsToJson } from "@lydie/core/yjs-to-json"
+import { findRelatedDocuments } from "@lydie/core/embedding/search";
+import { convertYjsToJson } from "@lydie/core/yjs-to-json";
+import { db, documentsTable } from "@lydie/database";
+import { and, desc, eq, isNull } from "drizzle-orm";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+
+import { extractTableOfContents } from "../../utils/toc";
+import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
+import { apiKeyAuth, externalRateLimit } from "./middleware";
 
 export const ExternalApi = new Hono()
   .use(apiKeyAuth)
   .use(externalRateLimit)
   .get("/documents", async (c) => {
-    const organizationId = c.get("organizationId")
+    const organizationId = c.get("organizationId");
     const documents = await db
       .select({
         id: documentsTable.id,
@@ -32,24 +33,24 @@ export const ExternalApi = new Hono()
           eq(documentsTable.published, true),
         ),
       )
-      .orderBy(desc(documentsTable.createdAt))
+      .orderBy(desc(documentsTable.createdAt));
 
     const documentsWithPaths = documents.map((doc) => ({
       ...doc,
       path: "/",
       fullPath: `/${doc.slug}`,
       customFields: doc.customFields || null,
-    }))
+    }));
 
     return c.json({
       documents: documentsWithPaths,
-    })
+    });
   })
   .get("/documents/:slug", async (c) => {
-    const organizationId = c.get("organizationId")
-    const slug = c.req.param("slug")
-    const includeRelated = c.req.query("include_related") === "true"
-    const includeToc = c.req.query("include_toc") === "true"
+    const organizationId = c.get("organizationId");
+    const slug = c.req.param("slug");
+    const includeRelated = c.req.query("include_related") === "true";
+    const includeToc = c.req.query("include_toc") === "true";
 
     const documentResult = await db
       .select()
@@ -62,56 +63,52 @@ export const ExternalApi = new Hono()
           eq(documentsTable.published, true),
         ),
       )
-      .limit(1)
+      .limit(1);
 
     if (documentResult.length === 0) {
       throw new HTTPException(404, {
         message: "Document not found",
-      })
+      });
     }
 
     const document = {
       ...documentResult[0],
       path: "/",
       fullPath: `/${slug}`,
-    }
+    };
 
-    const json = convertYjsToJson(document.yjsState)
+    const json = convertYjsToJson(document.yjsState);
 
-    const transformedContent = await transformDocumentLinksToInternalLinkMarks(json)
+    const transformedContent = await transformDocumentLinksToInternalLinkMarks(json);
 
-    let related: Awaited<ReturnType<typeof findRelatedDocuments>> = []
+    let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
     if (includeRelated) {
       try {
-        related = await findRelatedDocuments(document.id as string, organizationId, 5)
+        related = await findRelatedDocuments(document.id as string, organizationId, 5);
       } catch (error) {
-        console.error("Error fetching related documents:", error)
-        // Don't fail the whole request if related documents fail
-        related = []
+        console.error("Error fetching related documents:", error);
+        related = [];
       }
     }
 
-    let toc: Array<{ id: string; level: number; text: string }> = []
+    let toc: Array<{ id: string; level: number; text: string }> = [];
     if (includeToc) {
       try {
-        toc = extractTableOfContents(transformedContent)
+        toc = extractTableOfContents(transformedContent);
       } catch (error) {
-        console.error("Error extracting table of contents:", error)
-        // Don't fail the whole request if TOC extraction fails
-        toc = []
+        console.error("Error extracting table of contents:", error);
+        toc = [];
       }
     }
 
-    // Add optional fields to the already-transformed document
-    // Remove yjsState from response - we don't want to expose the binary state
-    const { yjsState: _, ...documentWithoutYjs } = document
+    const { yjsState: _, ...documentWithoutYjs } = document;
     const response = {
       ...documentWithoutYjs,
       jsonContent: transformedContent,
       customFields: document.customFields || null,
       ...(includeRelated && { related }),
       ...(includeToc && { toc }),
-    }
+    };
 
-    return c.json(response)
-  })
+    return c.json(response);
+  });

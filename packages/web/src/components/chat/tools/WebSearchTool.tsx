@@ -1,36 +1,36 @@
-import { ArrowClockwiseRegular, GlobeRegular, OpenRegular } from "@fluentui/react-icons"
-import { motion, AnimatePresence } from "motion/react"
+import { ArrowClockwiseRegular, GlobeRegular, OpenRegular } from "@fluentui/react-icons";
+import { AnimatePresence, motion } from "motion/react";
 
 export interface WebSearchToolProps {
   tool: {
-    state: string
-    toolCallId?: string
-    input?: Record<string, any>
+    state: string;
+    toolCallId?: string;
+    input?: Record<string, any>;
     output?: {
       action?: {
-        type?: string
-        query?: string
-      }
+        type?: string;
+        query?: string;
+      };
       sources?: Array<{
-        type?: string
-        url?: string
-      }>
-    }
-    providerExecuted?: boolean
-  }
-  className?: string
+        type?: string;
+        url?: string;
+      }>;
+    };
+    providerExecuted?: boolean;
+  };
+  className?: string;
 }
 
 export function WebSearchTool({ tool }: WebSearchToolProps) {
-  const query = tool.output?.action?.query || ""
-  const sources = tool.output?.sources || []
+  const query = tool.output?.action?.query || "";
+  const sources = tool.output?.sources || [];
   const isToolLoading =
     tool.state === "call-streaming" ||
     tool.state === "input-streaming" ||
-    (tool.state === "output-available" && !tool.providerExecuted)
+    (tool.state === "output-available" && !tool.providerExecuted);
 
   if (tool.state !== "output-available" && tool.state !== "call-streaming" && !isToolLoading) {
-    return null
+    return null;
   }
 
   const message = isToolLoading
@@ -39,7 +39,7 @@ export function WebSearchTool({ tool }: WebSearchToolProps) {
       : "Searching the web..."
     : query
       ? `Found ${sources.length} result${sources.length !== 1 ? "s" : ""} for "${query}"`
-      : `Found ${sources.length} result${sources.length !== 1 ? "s" : ""}`
+      : `Found ${sources.length} result${sources.length !== 1 ? "s" : ""}`;
 
   return (
     <motion.div className="p-1 bg-gray-100 rounded-[10px] my-2">
@@ -84,7 +84,10 @@ export function WebSearchTool({ tool }: WebSearchToolProps) {
                 visible: {
                   opacity: 1,
                   transition: {
-                    staggerChildren: Math.max(0.02, Math.min(0.08, 0.08 - (sources.length - 1) * 0.005)),
+                    staggerChildren: Math.max(
+                      0.02,
+                      Math.min(0.08, 0.08 - (sources.length - 1) * 0.005),
+                    ),
                   },
                 },
               }}
@@ -109,7 +112,9 @@ export function WebSearchTool({ tool }: WebSearchToolProps) {
                     className="group flex items-center gap-x-1.5 py-1.5 rounded-md text-sm px-2 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
                     <GlobeRegular className="text-gray-500 shrink-0 size-3.5" />
-                    <span className="truncate flex-1 text-[13px]">{source.url || "Unknown source"}</span>
+                    <span className="truncate flex-1 text-[13px]">
+                      {source.url || "Unknown source"}
+                    </span>
                     <OpenRegular className="text-gray-400 shrink-0 size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </a>
                 </motion.li>
@@ -130,5 +135,5 @@ export function WebSearchTool({ tool }: WebSearchToolProps) {
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  )
+  );
 }

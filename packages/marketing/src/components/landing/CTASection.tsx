@@ -1,11 +1,12 @@
-import { Container } from "../Container"
-import { Button } from "../generic/Button"
-import { ChevronRight } from "lucide-react"
-import { HeroBackground } from "./HeroBackground"
+import { ChevronRight } from "lucide-react";
+
+import { Container } from "../Container";
+import { Button } from "../generic/Button";
+import { HeroBackground } from "./HeroBackground";
 
 export function CTASection() {
   return (
-    <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4 -mb-32 md:-mb-40 z-10 mx-32">
+    <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4 z-10 mx-32 mb-8">
       <Container className="flex flex-col gap-y-6 relative z-20 py-16 md:py-20">
         <div className="flex flex-col gap-y-4 text-center max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-tight text-white drop-shadow-text">
@@ -24,5 +25,5 @@ export function CTASection() {
         </div>
       </Container>
     </HeroBackground>
-  )
+  );
 }

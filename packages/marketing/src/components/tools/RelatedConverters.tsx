@@ -1,13 +1,15 @@
-import { conversionConfigs } from "../../data/conversions"
+import { conversionConfigs } from "../../data/conversions";
 
 interface Props {
-  slugs: string[]
+  slugs: string[];
 }
 
 export function RelatedConverters({ slugs }: Props) {
-  const relatedConfigs = slugs.map((slug) => conversionConfigs.find((c) => c.slug === slug)).filter(Boolean)
+  const relatedConfigs = slugs
+    .map((slug) => conversionConfigs.find((c) => c.slug === slug))
+    .filter(Boolean);
 
-  if (relatedConfigs.length === 0) return null
+  if (relatedConfigs.length === 0) return null;
 
   return (
     <div className="space-y-4">
@@ -25,5 +27,5 @@ export function RelatedConverters({ slugs }: Props) {
         ))}
       </div>
     </div>
-  )
+  );
 }

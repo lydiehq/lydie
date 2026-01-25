@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import {
   RangeCalendar as AriaRangeCalendar,
   RangeCalendarProps as AriaRangeCalendarProps,
@@ -7,16 +7,17 @@ import {
   CalendarGridBody,
   DateValue,
   Text,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
-import { CalendarGridHeader, CalendarHeader } from "./Calendar"
-import { focusRing } from "./utils"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
+import { CalendarGridHeader, CalendarHeader } from "./Calendar";
+import { focusRing } from "./utils";
 
 export interface RangeCalendarProps<T extends DateValue> extends Omit<
   AriaRangeCalendarProps<T>,
   "visibleDuration"
 > {
-  errorMessage?: string
+  errorMessage?: string;
 }
 
 const cell = tv({
@@ -37,9 +38,12 @@ const cell = tv({
       true: "text-gray-300 dark:text-zinc-600 forced-colors:text-[GrayText]",
     },
   },
-})
+});
 
-export function RangeCalendar<T extends DateValue>({ errorMessage, ...props }: RangeCalendarProps<T>) {
+export function RangeCalendar<T extends DateValue>({
+  errorMessage,
+  ...props
+}: RangeCalendarProps<T>) {
   return (
     <AriaRangeCalendar {...props}>
       <CalendarHeader />
@@ -84,5 +88,5 @@ export function RangeCalendar<T extends DateValue>({ errorMessage, ...props }: R
         </Text>
       )}
     </AriaRangeCalendar>
-  )
+  );
 }

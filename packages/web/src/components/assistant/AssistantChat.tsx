@@ -1,22 +1,24 @@
-import { useCallback, useEffect, useState } from "react"
-import { useNavigate } from "@tanstack/react-router"
-import { ChatMessages } from "@/components/chat/ChatMessages"
-import { ChatAlert } from "@/components/editor/ChatAlert"
-import { AssistantInput } from "@/components/assistant/AssistantInput"
-import type { ChatAlertState } from "@/components/editor/ChatAlert"
+import { useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+
+import type { ChatAlertState } from "@/components/editor/ChatAlert";
+
+import { AssistantInput } from "@/components/assistant/AssistantInput";
+import { ChatMessages } from "@/components/chat/ChatMessages";
+import { ChatAlert } from "@/components/editor/ChatAlert";
 
 interface AssistantChatProps {
-  organizationId: string
-  initialPrompt?: string
-  onPromptUsed?: () => void
-  showEmptyState?: boolean
-  messages: any[]
-  sendMessage: (options: { text: string; metadata?: any }) => void
-  stop: () => void
-  status: string
-  alert: ChatAlertState | null
-  setAlert: (alert: ChatAlertState | null) => void
-  conversationId: string
+  organizationId: string;
+  initialPrompt?: string;
+  onPromptUsed?: () => void;
+  showEmptyState?: boolean;
+  messages: any[];
+  sendMessage: (options: { text: string; metadata?: any }) => void;
+  stop: () => void;
+  status: string;
+  alert: ChatAlertState | null;
+  setAlert: (alert: ChatAlertState | null) => void;
+  conversationId: string;
 }
 
 export function AssistantChat({
@@ -32,14 +34,16 @@ export function AssistantChat({
   setAlert,
   conversationId,
 }: AssistantChatProps) {
-  const navigate = useNavigate()
-  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(initialPrompt)
+  const navigate = useNavigate();
+  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(
+    initialPrompt,
+  );
 
   useEffect(() => {
     if (currentInitialPrompt && initialPrompt !== currentInitialPrompt) {
-      setCurrentInitialPrompt(initialPrompt)
+      setCurrentInitialPrompt(initialPrompt);
     }
-  }, [initialPrompt, currentInitialPrompt])
+  }, [initialPrompt, currentInitialPrompt]);
 
   const handleSubmit = useCallback(
     (text: string, contextDocumentIds: string[]) => {
@@ -49,23 +53,23 @@ export function AssistantChat({
           createdAt: new Date().toISOString(),
           contextDocumentIds,
         },
-      })
+      });
 
       navigate({
         to: "/w/$organizationSlug/assistant/$chatId",
         params: (prev) => ({ ...prev, chatId: conversationId }),
         replace: true,
-      })
+      });
 
       if (currentInitialPrompt) {
-        setCurrentInitialPrompt(undefined)
-        onPromptUsed?.()
+        setCurrentInitialPrompt(undefined);
+        onPromptUsed?.();
       }
     },
     [sendMessage, navigate, conversationId, currentInitialPrompt, onPromptUsed],
-  )
+  );
 
-  const canStop = status === "submitted" || status === "streaming"
+  const canStop = status === "submitted" || status === "streaming";
 
   return (
     <div className="flex flex-col h-full">
@@ -107,5 +111,5 @@ export function AssistantChat({
         )}
       </div>
     </div>
-  )
+  );
 }

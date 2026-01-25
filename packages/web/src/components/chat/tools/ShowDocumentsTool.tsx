@@ -1,45 +1,46 @@
-import { ArrowClockwiseRegular, DocumentFilled } from "@fluentui/react-icons"
-import { Link } from "@tanstack/react-router"
-import { motion, AnimatePresence } from "motion/react"
+import { ArrowClockwiseRegular, DocumentFilled } from "@fluentui/react-icons";
+import { Link } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "motion/react";
 
 export interface ShowDocumentsToolProps {
   tool: {
-    state: string
+    state: string;
     args?: {
-      limit?: number
-      sortBy?: "title" | "updated" | "created"
-      sortOrder?: "asc" | "desc"
-      titleFilter?: string
-    }
+      limit?: number;
+      sortBy?: "title" | "updated" | "created";
+      sortOrder?: "asc" | "desc";
+      titleFilter?: string;
+    };
     output?: {
-      state?: string
-      message?: string
+      state?: string;
+      message?: string;
       documents?: Array<{
-        id: string
-        title: string
-        slug: string
-        createdAt: string
-        updatedAt: string
-      }>
-      totalFound?: number
-    }
-  }
-  className?: string
+        id: string;
+        title: string;
+        slug: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      totalFound?: number;
+    };
+  };
+  className?: string;
 }
 
 export function ShowDocumentsTool({ tool, className = "" }: ShowDocumentsToolProps) {
-  const outputState = tool.output?.state
-  const isToolLoading = tool.state === "call-streaming" || (outputState && outputState !== "success")
-  const documents = tool.output?.documents || []
+  const outputState = tool.output?.state;
+  const isToolLoading =
+    tool.state === "call-streaming" || (outputState && outputState !== "success");
+  const documents = tool.output?.documents || [];
 
-  let loadingMessage = "Loading documents..."
+  let loadingMessage = "Loading documents...";
   if (outputState === "loading") {
-    loadingMessage = tool.output?.message || "Loading documents..."
+    loadingMessage = tool.output?.message || "Loading documents...";
   }
 
   const message = isToolLoading
     ? loadingMessage
-    : `Found ${documents.length} document${documents.length !== 1 ? "s" : ""}`
+    : `Found ${documents.length} document${documents.length !== 1 ? "s" : ""}`;
 
   return (
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-2 ${className}`}>
@@ -84,7 +85,10 @@ export function ShowDocumentsTool({ tool, className = "" }: ShowDocumentsToolPro
                 visible: {
                   opacity: 1,
                   transition: {
-                    staggerChildren: Math.max(0.02, Math.min(0.12, 0.12 - (documents.length - 1) * 0.01)),
+                    staggerChildren: Math.max(
+                      0.02,
+                      Math.min(0.12, 0.12 - (documents.length - 1) * 0.01),
+                    ),
                   },
                 },
               }}
@@ -128,5 +132,5 @@ export function ShowDocumentsTool({ tool, className = "" }: ShowDocumentsToolPro
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  )
+  );
 }

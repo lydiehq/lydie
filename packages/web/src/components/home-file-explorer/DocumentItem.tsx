@@ -1,29 +1,31 @@
-import { GridListItem, MenuTrigger, Button as RACButton } from "react-aria-components"
-import { Checkbox } from "@/components/generic/Checkbox"
-import { useNavigate } from "@tanstack/react-router"
-import { composeTailwindRenderProps, focusRing } from "../generic/utils"
-import { formatDistanceToNow } from "date-fns"
-import { DocumentMenu } from "./DocumentMenu"
-import { DocumentFilled, MoreVerticalRegular } from "@fluentui/react-icons"
+import { DocumentFilled, MoreVerticalRegular } from "@fluentui/react-icons";
+import { useNavigate } from "@tanstack/react-router";
+import { formatDistanceToNow } from "date-fns";
+import { GridListItem, MenuTrigger, Button as RACButton } from "react-aria-components";
+
+import { Checkbox } from "@/components/generic/Checkbox";
+
+import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { DocumentMenu } from "./DocumentMenu";
 
 type DocumentItemProps = {
-  id: string
-  name: string
-  updated_at?: number | string | null
-  viewMode: "grid" | "list"
-  isSelected?: boolean
-}
+  id: string;
+  name: string;
+  updated_at?: number | string | null;
+  viewMode: "grid" | "list";
+  isSelected?: boolean;
+};
 
 export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleNavigate = () => {
     navigate({
       to: "/w/$organizationSlug/$id",
       params: { id },
       from: "/w/$organizationSlug",
-    })
-  }
+    });
+  };
 
   if (viewMode === "list") {
     return (
@@ -31,13 +33,18 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
         id={id}
         textValue={name}
         onAction={handleNavigate}
-        className={composeTailwindRenderProps(focusRing, "flex items-center gap-3 p-3 hover:bg-gray-50")}
+        className={composeTailwindRenderProps(
+          focusRing,
+          "flex items-center gap-3 p-3 hover:bg-gray-50",
+        )}
       >
         <DocumentFilled className="size-3.5 text-gray-400" />
         <span className="text-sm font-medium text-gray-900 flex-1 text-left">{name}</span>
         {updated_at && (
           <span className="text-xs text-gray-500">
-            {new Date(typeof updated_at === "number" ? updated_at : updated_at).toLocaleDateString()}
+            {new Date(
+              typeof updated_at === "number" ? updated_at : updated_at,
+            ).toLocaleDateString()}
           </span>
         )}
         <MenuTrigger>
@@ -47,7 +54,7 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
           <DocumentMenu documentId={id} documentName={name} />
         </MenuTrigger>
       </GridListItem>
-    )
+    );
   }
 
   return (
@@ -83,5 +90,5 @@ export function DocumentItem({ id, name, updated_at, viewMode }: DocumentItemPro
         </MenuTrigger>
       </div>
     </GridListItem>
-  )
+  );
 }
