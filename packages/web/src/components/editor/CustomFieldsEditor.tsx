@@ -96,7 +96,7 @@ export function CustomFieldsEditor({ documentId, organizationId, initialFields =
       <div className="flex flex-col">
         <form.Field name="fields" mode="array">
           {(field) => (
-            <div className="flex flex-col gap-1 ">
+            <div className="flex flex-col gap-1">
               {field.state.value.map((_, i) => {
                 const fieldType = field.state.value[i]?.type || "string";
                 return (
@@ -149,8 +149,8 @@ function CustomFieldRow({
   const TypeIcon = getTypeIcon(fieldType);
 
   return (
-    <div className="group flex items-center h-[28px] rounded-md text-sm font-medium transition-colors duration-75 px-1.5">
-      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+    <div className="group flex items-start min-h-[28px] rounded-md text-sm font-medium transition-colors duration-75">
+      <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
         {/* Type picker button with icon */}
         <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <Button
@@ -217,8 +217,7 @@ function CustomFieldRow({
         </form.Field>
         <form.Field name={`fields[${index}].value`}>
           {(valueField: any) => (
-            <input
-              type="text"
+            <textarea
               placeholder="Value"
               value={String(valueField.state.value || "")}
               onChange={(e) => {
@@ -228,7 +227,8 @@ function CustomFieldRow({
                 handleFieldChange();
               }}
               onBlur={handleFieldChange}
-              className="flex-1 text-sm text-gray-600 bg-transparent border-none outline-none focus:outline-none px-1.5 py-0.5 rounded-md hover:bg-black/5 min-w-0 transition-colors"
+              rows={1}
+              className="flex-1 text-sm field-sizing-content text-gray-600 bg-transparent border-none outline-none focus:outline-none px-1.5 py-0.5 rounded-md hover:bg-black/5 min-w-0 transition-colors resize-none"
             />
           )}
         </form.Field>

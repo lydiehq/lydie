@@ -17,7 +17,7 @@ import {
   documentsTable,
   llmUsageTable,
 } from "@lydie/database";
-import { ToolLoopAgent, createAgentUIStreamResponse, validateUIMessages } from "ai";
+import { ToolLoopAgent, createAgentUIStreamResponse, smoothStream, validateUIMessages } from "ai";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -277,6 +277,10 @@ export const AssistantRoute = new Hono<{
 
     return createAgentUIStreamResponse({
       agent,
+      experimental_transform: smoothStream({
+        delayInMs: 10,
+        chunking: "line",
+      }),
       uiMessages: await validateUIMessages({
         messages: enhancedMessages,
       }),
@@ -360,13 +364,13 @@ function createContextInfo({
     parts.push("## Primary Document");
     parts.push(`**${currentDocument.title}**`);
     parts.push(`Document ID: \`${currentDocument.id}\``);
-    
+
     if (typeof documentWordCount === "number") {
       parts.push(`Word count: ${documentWordCount}`);
     }
-    
+
     parts.push(
-      "\nWhen the user says \"this document\", \"the document\", or similar, they refer to this document."
+      '\nWhen the user says "this document", "the document", or similar, they refer to this document.',
     );
   }
 
@@ -374,7 +378,7 @@ function createContextInfo({
   if (otherDocuments.length > 0) {
     parts.push("\n## Context Documents");
     parts.push("Available for reading and reference:\n");
-    
+
     for (const doc of otherDocuments) {
       parts.push(`- **${doc.title}** (ID: \`${doc.id}\`)`);
     }
