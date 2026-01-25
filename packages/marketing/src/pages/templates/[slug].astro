@@ -60,8 +60,11 @@ if (template.detailedDescription) {
 ---
 
 <Layout
-  title="Lydie Blog"
-  description="A minimal, powerful writing environment supercharged with AI."
+  title={templateName + " - Lydie"}
+  description={template.description ??
+    "Use this " +
+      templateName.toLowerCase() +
+      " template to get started quickly with your project."}
 >
   <div class="py-8">
     <Container className="flex flex-col gap-y-8">
