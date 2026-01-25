@@ -1,52 +1,49 @@
-import { ErrorCircleRegular, ArrowClockwiseRegular } from "@fluentui/react-icons"
-import { Button } from "@/components/generic/Button"
-import { Logo } from "@/components/layout/Logo"
-import { useNavigate, useRouter } from "@tanstack/react-router"
-import { authClient } from "@/utils/auth"
-import { useQueryClient } from "@tanstack/react-query"
+import { ArrowClockwiseRegular, ErrorCircleRegular } from "@fluentui/react-icons";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useRouter } from "@tanstack/react-router";
+
+import { Button } from "@/components/generic/Button";
+import { Logo } from "@/components/layout/Logo";
+import { authClient } from "@/utils/auth";
 
 interface ErrorPageProps {
-  error: Error
-  reset?: () => void
+  error: Error;
+  reset?: () => void;
 }
 
 export function ErrorPage({ error, reset }: ErrorPageProps) {
-  const router = useRouter()
-  const isDev = import.meta.env.DEV
+  const router = useRouter();
+  const isDev = import.meta.env.DEV;
 
   if (isDev) {
-    console.error("Route Error:", error)
+    console.error("Route Error:", error);
     console.error("Error details:", {
       name: error.name,
       message: error.message,
       stack: error.stack,
       cause: error.cause,
-    })
-  }
-
-  const handleGoHome = () => {
-    router.navigate({ to: "/" })
+    });
   }
 
   const handleReload = () => {
     if (reset) {
-      reset()
+      reset();
     } else {
-      window.location.reload()
+      window.location.reload();
     }
-  }
+  };
 
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const signOut = async () => {
-    await authClient.signOut()
+    await authClient.signOut();
     queryClient.removeQueries({
       queryKey: ["auth", "getSession"],
-    })
-    await router.invalidate()
-    navigate({ to: "/auth" })
-  }
+    });
+    await router.invalidate();
+    navigate({ to: "/auth" });
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-6 px-4">
@@ -57,7 +54,9 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Something went wrong</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            Something went wrong
+          </h1>
           <p className="text-gray-600 dark:text-gray-400">
             {isDev
               ? error.message || "An unexpected error occurred"
@@ -87,5 +86,5 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

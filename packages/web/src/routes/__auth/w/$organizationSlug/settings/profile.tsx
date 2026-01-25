@@ -1,16 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { Separator } from "@/components/generic/Separator"
-import { Heading } from "@/components/generic/Heading"
-import { SectionHeader } from "@/components/generic/SectionHeader"
-import { useAuth } from "@/context/auth.context"
-import { ProfileForm } from "@/components/settings/profile/ProfileForm"
+import { createFileRoute } from "@tanstack/react-router";
+
+import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
+import { Separator } from "@/components/generic/Separator";
+import { ProfileForm } from "@/components/settings/profile/ProfileForm";
+import { useAuth } from "@/context/auth.context";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/profile")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   if (!user) {
     return (
@@ -21,7 +22,7 @@ function RouteComponent() {
         <Separator />
         <div className="text-sm text-gray-500">Loading profile...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -39,5 +40,5 @@ function RouteComponent() {
         <ProfileForm user={user} />
       </div>
     </div>
-  )
+  );
 }

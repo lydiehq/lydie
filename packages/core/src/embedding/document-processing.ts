@@ -1,19 +1,21 @@
-import { documentsTable, documentEmbeddingsTable } from "@lydie/database/schema-only"
-import { eq, inArray } from "drizzle-orm"
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
-import { generateContentHash } from "../hash"
-import { serializeToPlainText } from "../serialization/text"
-import { generateParagraphChunks, generateSimpleChunks, type ParagraphChunk } from "./chunking"
-import { generateManyEmbeddings } from "./generation"
-import { convertYjsToJson } from "../yjs-to-json"
-import {
-  extractSections,
-  sectionsToHashMap,
-  findChangedSections,
-  type SectionHashes,
-} from "./section-hashing"
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
-type Database = PostgresJsDatabase<any>
+import { documentEmbeddingsTable, documentsTable } from "@lydie/database/schema-only";
+import { eq } from "drizzle-orm";
+
+import { generateContentHash } from "../hash";
+import { serializeToPlainText } from "../serialization/text";
+import { convertYjsToJson } from "../yjs-to-json";
+import { type ParagraphChunk, generateParagraphChunks, generateSimpleChunks } from "./chunking";
+import { generateManyEmbeddings } from "./generation";
+import {
+  type SectionHashes,
+  extractSections,
+  findChangedSections,
+  sectionsToHashMap,
+} from "./section-hashing";
+
+type Database = PostgresJsDatabase<any>;
 
 async function processDocumentWithoutSections(
   documentId: string,
@@ -26,24 +28,26 @@ async function processDocumentWithoutSections(
       await tx
         .update(documentsTable)
         .set({ indexStatus: "indexing", updatedAt: new Date() })
-        .where(eq(documentsTable.id, documentId))
+        .where(eq(documentsTable.id, documentId));
 
-      await tx.delete(documentEmbeddingsTable).where(eq(documentEmbeddingsTable.documentId, documentId))
+      await tx
+        .delete(documentEmbeddingsTable)
+        .where(eq(documentEmbeddingsTable.documentId, documentId));
 
-      let chunks: ParagraphChunk[] | ReturnType<typeof generateSimpleChunks>
+      let chunks: ParagraphChunk[] | ReturnType<typeof generateSimpleChunks>;
       try {
-        chunks = generateParagraphChunks(jsonContent)
+        chunks = generateParagraphChunks(jsonContent);
       } catch (error) {
         console.warn(
           `Failed to generate paragraph chunks for document ${documentId}, falling back to simple chunking`,
           error,
-        )
-        chunks = generateSimpleChunks(plaintextContent)
+        );
+        chunks = generateSimpleChunks(plaintextContent);
       }
 
       if (chunks.length > 0) {
-        const chunkTexts = chunks.map((c) => c.content)
-        const embeddings = await generateManyEmbeddings(chunkTexts)
+        const chunkTexts = chunks.map((c) => c.content);
+        const embeddings = await generateManyEmbeddings(chunkTexts);
 
         await tx.insert(documentEmbeddingsTable).values(
           chunks.map((chunk, i) => ({
@@ -52,14 +56,16 @@ async function processDocumentWithoutSections(
             documentId: documentId,
             chunkIndex: chunk.index,
             heading:
-              "headerPath" in chunk ? chunk.headerPath[chunk.headerPath.length - 1] : (chunk as any).heading,
+              "headerPath" in chunk
+                ? chunk.headerPath[chunk.headerPath.length - 1]
+                : (chunk as any).heading,
             headingLevel:
               "headerLevels" in chunk
                 ? chunk.headerLevels[chunk.headerLevels.length - 1]
                 : (chunk as any).level,
             headerBreadcrumb: "headerBreadcrumb" in chunk ? chunk.headerBreadcrumb : null,
           })),
-        )
+        );
       }
 
       await tx
@@ -68,37 +74,39 @@ async function processDocumentWithoutSections(
           indexStatus: "indexed",
           updatedAt: new Date(),
         })
-        .where(eq(documentsTable.id, documentId))
+        .where(eq(documentsTable.id, documentId));
     })
     .catch(async (error: unknown) => {
       // If transaction fails, mark document as failed outside transaction
       await db
         .update(documentsTable)
         .set({ indexStatus: "failed", updatedAt: new Date() })
-        .where(eq(documentsTable.id, documentId))
+        .where(eq(documentsTable.id, documentId));
 
-      throw error
-    })
+      throw error;
+    });
 }
 
 export async function processDocumentEmbedding(
   params: {
-    documentId: string
-    yjsState: string | null // base64 encoded
+    documentId: string;
+    yjsState: string | null; // base64 encoded
   },
   db: Database,
 ): Promise<{ skipped: boolean; reason?: string }> {
-  const { documentId, yjsState } = params
+  const { documentId, yjsState } = params;
 
-  const jsonContent = convertYjsToJson(yjsState)
+  const jsonContent = convertYjsToJson(yjsState);
 
-  const sections = extractSections(jsonContent)
+  const sections = extractSections(jsonContent);
 
   if (sections.length === 0) {
-    console.warn(`Document ${documentId}: No sections extracted, falling back to full document chunking`)
+    console.warn(
+      `Document ${documentId}: No sections extracted, falling back to full document chunking`,
+    );
 
-    const plaintextContent = serializeToPlainText(jsonContent as any)
-    const currentContentHash = generateContentHash(plaintextContent)
+    const plaintextContent = serializeToPlainText(jsonContent as any);
+    const currentContentHash = generateContentHash(plaintextContent);
 
     const existingDoc = await db
       .select({
@@ -106,20 +114,21 @@ export async function processDocumentEmbedding(
       })
       .from(documentsTable)
       .where(eq(documentsTable.id, documentId))
-      .limit(1)
+      .limit(1);
 
     const hasContentChanged =
-      !existingDoc[0]?.lastIndexedContentHash || existingDoc[0].lastIndexedContentHash !== currentContentHash
+      !existingDoc[0]?.lastIndexedContentHash ||
+      existingDoc[0].lastIndexedContentHash !== currentContentHash;
 
     if (!hasContentChanged) {
-      return { skipped: true, reason: "content_unchanged" }
+      return { skipped: true, reason: "content_unchanged" };
     }
 
-    await processDocumentWithoutSections(documentId, jsonContent, plaintextContent, db)
-    return { skipped: false }
+    await processDocumentWithoutSections(documentId, jsonContent, plaintextContent, db);
+    return { skipped: false };
   }
 
-  const newSectionHashes = sectionsToHashMap(sections)
+  const newSectionHashes = sectionsToHashMap(sections);
 
   const existingDoc = await db
     .select({
@@ -127,17 +136,14 @@ export async function processDocumentEmbedding(
     })
     .from(documentsTable)
     .where(eq(documentsTable.id, documentId))
-    .limit(1)
+    .limit(1);
 
-  const oldSectionHashes = existingDoc[0]?.sectionHashes as SectionHashes | null
+  const oldSectionHashes = existingDoc[0]?.sectionHashes as SectionHashes | null;
 
-  const { changedSections, unchangedSectionKeys, isFullReindex } = findChangedSections(
-    oldSectionHashes,
-    sections,
-  )
+  const { changedSections, isFullReindex } = findChangedSections(oldSectionHashes, sections);
 
   if (changedSections.length === 0 && !isFullReindex) {
-    return { skipped: true, reason: "content_unchanged" }
+    return { skipped: true, reason: "content_unchanged" };
   }
 
   await db
@@ -145,30 +151,34 @@ export async function processDocumentEmbedding(
       await tx
         .update(documentsTable)
         .set({ indexStatus: "indexing", updatedAt: new Date() })
-        .where(eq(documentsTable.id, documentId))
+        .where(eq(documentsTable.id, documentId));
 
       if (isFullReindex) {
-        await tx.delete(documentEmbeddingsTable).where(eq(documentEmbeddingsTable.documentId, documentId))
+        await tx
+          .delete(documentEmbeddingsTable)
+          .where(eq(documentEmbeddingsTable.documentId, documentId));
       } else {
-        await tx.delete(documentEmbeddingsTable).where(eq(documentEmbeddingsTable.documentId, documentId))
+        await tx
+          .delete(documentEmbeddingsTable)
+          .where(eq(documentEmbeddingsTable.documentId, documentId));
       }
 
-      let allChunks: ParagraphChunk[] | ReturnType<typeof generateSimpleChunks> = []
+      let allChunks: ParagraphChunk[] | ReturnType<typeof generateSimpleChunks> = [];
 
       try {
-        allChunks = generateParagraphChunks(jsonContent)
+        allChunks = generateParagraphChunks(jsonContent);
       } catch (error) {
         console.warn(
           `Failed to generate paragraph chunks for document ${documentId}, falling back to simple chunking`,
           error,
-        )
-        const plaintextContent = serializeToPlainText(jsonContent)
-        allChunks = generateSimpleChunks(plaintextContent)
+        );
+        const plaintextContent = serializeToPlainText(jsonContent);
+        allChunks = generateSimpleChunks(plaintextContent);
       }
 
       if (allChunks.length > 0) {
-        const chunkTexts = allChunks.map((c) => c.content)
-        const embeddings = await generateManyEmbeddings(chunkTexts)
+        const chunkTexts = allChunks.map((c) => c.content);
+        const embeddings = await generateManyEmbeddings(chunkTexts);
 
         await tx.insert(documentEmbeddingsTable).values(
           allChunks.map((chunk, i) => ({
@@ -177,14 +187,16 @@ export async function processDocumentEmbedding(
             documentId: documentId,
             chunkIndex: chunk.index,
             heading:
-              "headerPath" in chunk ? chunk.headerPath[chunk.headerPath.length - 1] : (chunk as any).heading,
+              "headerPath" in chunk
+                ? chunk.headerPath[chunk.headerPath.length - 1]
+                : (chunk as any).heading,
             headingLevel:
               "headerLevels" in chunk
                 ? chunk.headerLevels[chunk.headerLevels.length - 1]
                 : (chunk as any).level,
             headerBreadcrumb: "headerBreadcrumb" in chunk ? chunk.headerBreadcrumb : null,
           })),
-        )
+        );
       }
 
       await tx
@@ -194,17 +206,17 @@ export async function processDocumentEmbedding(
           sectionHashes: newSectionHashes,
           updatedAt: new Date(),
         } as any)
-        .where(eq(documentsTable.id, documentId))
+        .where(eq(documentsTable.id, documentId));
     })
     .catch(async (error: unknown) => {
       // If transaction fails, mark document as failed outside transaction
       await db
         .update(documentsTable)
         .set({ indexStatus: "failed", updatedAt: new Date() })
-        .where(eq(documentsTable.id, documentId))
+        .where(eq(documentsTable.id, documentId));
 
-      throw error
-    })
+      throw error;
+    });
 
-  return { skipped: false }
+  return { skipped: false };
 }

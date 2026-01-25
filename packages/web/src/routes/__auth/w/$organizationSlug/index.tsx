@@ -1,28 +1,29 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { Surface } from "@/components/layout/Surface"
-import { Button } from "@/components/generic/Button"
-import { Separator } from "@/components/generic/Separator"
-import { CircularProgress } from "@/components/generic/CircularProgress"
-import { useOnboardingSteps } from "@/hooks/use-onboarding-steps"
-import { OnboardingStepDocuments } from "@/components/onboarding/OnboardingStepDocuments"
-import { OnboardingStepAssistant } from "@/components/onboarding/OnboardingStepAssistant"
-import { OnboardingStepIntegrations } from "@/components/onboarding/OnboardingStepIntegrations"
-import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons"
-import { useOrganization } from "@/context/organization.context"
-import { useState } from "react"
-import { useZero } from "@/services/zero"
-import { mutators } from "@lydie/zero/mutators"
-import { Modal } from "@/components/generic/Modal"
-import { Dialog } from "@/components/generic/Dialog"
-import { Checkbox } from "@/components/generic/Checkbox"
-import { DialogTrigger, Heading, Button as RACButton } from "react-aria-components"
-import { AnimatePresence, motion } from "motion/react"
-import { toast } from "sonner"
+import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons";
+import { mutators } from "@lydie/zero/mutators";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import { DialogTrigger, Heading, Button as RACButton } from "react-aria-components";
+import { toast } from "sonner";
+
+import { Button } from "@/components/generic/Button";
+import { Checkbox } from "@/components/generic/Checkbox";
+import { CircularProgress } from "@/components/generic/CircularProgress";
+import { Dialog } from "@/components/generic/Dialog";
+import { Modal } from "@/components/generic/Modal";
+import { Separator } from "@/components/generic/Separator";
+import { Surface } from "@/components/layout/Surface";
+import { OnboardingStepAssistant } from "@/components/onboarding/OnboardingStepAssistant";
+import { OnboardingStepDocuments } from "@/components/onboarding/OnboardingStepDocuments";
+import { OnboardingStepIntegrations } from "@/components/onboarding/OnboardingStepIntegrations";
+import { useOrganization } from "@/context/organization.context";
+import { useOnboardingSteps } from "@/hooks/use-onboarding-steps";
+import { useZero } from "@/services/zero";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
   component: PageComponent,
   ssr: false,
-})
+});
 
 function PageComponent() {
   return (
@@ -31,7 +32,7 @@ function PageComponent() {
         <Onboarding />
       </Surface>
     </div>
-  )
+  );
 }
 
 function Onboarding() {
@@ -45,36 +46,35 @@ function Onboarding() {
     getTotalSteps,
     isFirstStep,
     isLastStep,
-  } = useOnboardingSteps()
-  const navigate = useNavigate()
-  const { organization } = useOrganization()
-  const z = useZero()
-  const [isQuitDialogOpen, setIsQuitDialogOpen] = useState(false)
-  const [deleteDemoContent, setDeleteDemoContent] = useState(true)
-  const [direction] = useState<"forward" | "backward">("forward")
+  } = useOnboardingSteps();
+  const navigate = useNavigate();
+  const { organization } = useOrganization();
+  const z = useZero();
+  const [isQuitDialogOpen, setIsQuitDialogOpen] = useState(false);
+  const [deleteDemoContent, setDeleteDemoContent] = useState(true);
+  const [direction] = useState<"forward" | "backward">("forward");
 
-  const progress = getProgress()
-
+  const progress = getProgress();
 
   const handleSkip = () => {
-    completeOnboarding()
+    completeOnboarding();
     navigate({
       to: "/w/$organizationSlug",
       params: { organizationSlug: organization.slug },
-    })
-  }
+    });
+  };
 
   const handleNext = () => {
     if (isLastStep) {
-      completeOnboarding()
+      completeOnboarding();
       navigate({
         to: "/w/$organizationSlug",
         params: { organizationSlug: organization.slug },
-      })
+      });
     } else {
-      nextStep()
+      nextStep();
     }
-  }
+  };
 
   const handleQuitIntro = () => {
     if (deleteDemoContent) {
@@ -83,35 +83,34 @@ function Onboarding() {
           mutators.document.deleteAllOnboarding({
             organizationId: organization.id,
           }),
-        )
-        toast.success("Demo content deleted")
+        );
+        toast.success("Demo content deleted");
       } catch (error) {
-        console.error("Failed to delete demo content:", error)
-        toast.error("Failed to delete demo content")
+        console.error("Failed to delete demo content:", error);
+        toast.error("Failed to delete demo content");
       }
     }
-    completeOnboarding()
+    completeOnboarding();
     navigate({
       to: "/w/$organizationSlug",
       params: { organizationSlug: organization.slug },
-    })
-    setIsQuitDialogOpen(false)
-    setDeleteDemoContent(true)
-  }
-
+    });
+    setIsQuitDialogOpen(false);
+    setDeleteDemoContent(true);
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
       case "documents":
-        return <OnboardingStepDocuments />
+        return <OnboardingStepDocuments />;
       case "assistant":
-        return <OnboardingStepAssistant />
+        return <OnboardingStepAssistant />;
       case "integrations":
-        return <OnboardingStepIntegrations />
+        return <OnboardingStepIntegrations />;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="flex items-center size-full justify-center">
@@ -186,11 +185,11 @@ function Onboarding() {
                     mutators.organizationSettings.resetOnboarding({
                       organizationId: organization.id,
                     }),
-                  )
-                  toast.success("Onboarding reset successfully")
+                  );
+                  toast.success("Onboarding reset successfully");
                 } catch (error) {
-                  console.error("Failed to reset onboarding:", error)
-                  toast.error("Failed to reset onboarding")
+                  console.error("Failed to reset onboarding:", error);
+                  toast.error("Failed to reset onboarding");
                 }
               }}
               className="text-xs font-medium text-orange-600 hover:text-orange-900"
@@ -203,9 +202,9 @@ function Onboarding() {
         <DialogTrigger
           isOpen={isQuitDialogOpen}
           onOpenChange={(isOpen) => {
-            setIsQuitDialogOpen(isOpen)
+            setIsQuitDialogOpen(isOpen);
             if (!isOpen) {
-              setDeleteDemoContent(true) // Reset to default when dialog closes
+              setDeleteDemoContent(true); // Reset to default when dialog closes
             }
           }}
         >
@@ -235,5 +234,5 @@ function Onboarding() {
         </DialogTrigger>
       </div>
     </div>
-  )
+  );
 }

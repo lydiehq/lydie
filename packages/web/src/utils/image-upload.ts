@@ -1,4 +1,4 @@
-import type { HonoClient } from "hono/client"
+import type { HonoClient } from "hono/client";
 
 export async function uploadImage(file: File, apiClient: HonoClient<any>): Promise<string> {
   // Get presigned URL
@@ -8,13 +8,13 @@ export async function uploadImage(file: File, apiClient: HonoClient<any>): Promi
       contentType: file.type,
       size: file.size,
     },
-  })
+  });
 
   if (!uploadResponse.ok) {
-    throw new Error("Failed to get upload URL")
+    throw new Error("Failed to get upload URL");
   }
 
-  const { uploadUrl, url } = await uploadResponse.json()
+  const { uploadUrl, url } = await uploadResponse.json();
 
   // Upload file to S3
   const uploadResult = await fetch(uploadUrl, {
@@ -23,11 +23,11 @@ export async function uploadImage(file: File, apiClient: HonoClient<any>): Promi
     headers: {
       "Content-Type": file.type,
     },
-  })
+  });
 
   if (!uploadResult.ok) {
-    throw new Error("Failed to upload image")
+    throw new Error("Failed to upload image");
   }
 
-  return url
+  return url;
 }

@@ -1,55 +1,56 @@
-import { useAppForm } from "@/hooks/use-app-form"
-import { useAuthenticatedApi } from "@/services/api"
-import { useQuery as useTSQQuery } from "@tanstack/react-query"
-import { toast } from "sonner"
+import { useQuery as useTSQQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { useAppForm } from "@/hooks/use-app-form";
+import { useAuthenticatedApi } from "@/services/api";
 
 export type GitHubLinkConfig = {
-  owner: string
-  repo: string
-  branch: string
-  basePath: string
-}
+  owner: string;
+  repo: string;
+  branch: string;
+  basePath: string;
+};
 
 export type GitHubFormData = {
-  repositoryId: string
-  branch: string
-  basePath: string
-  linkName: string
-}
+  repositoryId: string;
+  branch: string;
+  basePath: string;
+  linkName: string;
+};
 
 export type GitHubFormProps = {
-  connectionId: string
-  organizationId: string
-  onCreate: (name: string, config: GitHubLinkConfig) => Promise<void>
-  onCancel: () => void
-}
+  connectionId: string;
+  organizationId: string;
+  onCreate: (name: string, config: GitHubLinkConfig) => Promise<void>;
+  onCancel: () => void;
+};
 
 export function GitHubForm({ connectionId, organizationId, onCreate, onCancel }: GitHubFormProps) {
-  const { createClient } = useAuthenticatedApi()
+  const { createClient } = useAuthenticatedApi();
 
   const { data, isLoading } = useTSQQuery<{
     resources: Array<{
-      id: string
-      name: string
-      fullName: string
-      metadata?: { defaultBranch?: string }
-    }>
+      id: string;
+      name: string;
+      fullName: string;
+      metadata?: { defaultBranch?: string };
+    }>;
   }>({
     initialData: { resources: [] },
     queryKey: ["github-resources", connectionId],
     queryFn: async () => {
-      const client = await createClient()
+      const client = await createClient();
       const res = await client.internal.integrations[":connectionId"].resources.$get({
         param: { connectionId },
-      })
+      });
       if (!res.ok) {
-        throw new Error("Failed to fetch repositories")
+        throw new Error("Failed to fetch repositories");
       }
-      return res.json()
+      return res.json();
     },
-  })
+  });
 
-  const resources = data?.resources || []
+  const resources = data?.resources || [];
 
   const form = useAppForm({
     defaultValues: {
@@ -61,43 +62,45 @@ export function GitHubForm({ connectionId, organizationId, onCreate, onCancel }:
     onSubmit: async (values) => {
       try {
         if (!values.value.repositoryId) {
-          toast.error("Please select a repository")
-          return
+          toast.error("Please select a repository");
+          return;
         }
 
-        const selectedResource = resources.find((r) => r.id === values.value.repositoryId)
+        const selectedResource = resources.find((r) => r.id === values.value.repositoryId);
         if (!selectedResource) {
-          toast.error("Selected repository not found")
-          return
+          toast.error("Selected repository not found");
+          return;
         }
 
-        const [owner, repo] = selectedResource.fullName.split("/")
-        const normalizedBasePath = values.value.basePath.trim().replace(/^\/+|\/+$/g, "")
-        const branchName = values.value.branch.trim() || selectedResource.metadata?.defaultBranch || "main"
+        const [owner, repo] = selectedResource.fullName.split("/");
+        const normalizedBasePath = values.value.basePath.trim().replace(/^\/+|\/+$/g, "");
+        const branchName =
+          values.value.branch.trim() || selectedResource.metadata?.defaultBranch || "main";
 
         const name =
-          values.value.linkName.trim() || `${repo}${normalizedBasePath ? `/${normalizedBasePath}` : ""}`
+          values.value.linkName.trim() ||
+          `${repo}${normalizedBasePath ? `/${normalizedBasePath}` : ""}`;
 
         const config: GitHubLinkConfig = {
           owner,
           repo,
           branch: branchName,
           basePath: normalizedBasePath || "",
-        }
+        };
 
-        await onCreate(name, config)
+        await onCreate(name, config);
       } catch (error) {
-        console.error("Failed to create GitHub link:", error)
-        toast.error("Failed to create link")
+        console.error("Failed to create GitHub link:", error);
+        toast.error("Failed to create link");
       }
     },
-  })
+  });
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
+        e.preventDefault();
+        form.handleSubmit();
       }}
       className="flex flex-col gap-y-3"
     >
@@ -122,7 +125,9 @@ export function GitHubForm({ connectionId, organizationId, onCreate, onCancel }:
                 disabled={isLoading}
               >
                 {isLoading && <option value="">Loading repositories...</option>}
-                {!isLoading && resources.length === 0 && <option value="">No repositories available</option>}
+                {!isLoading && resources.length === 0 && (
+                  <option value="">No repositories available</option>
+                )}
                 {!isLoading && <option value="">Select a repository</option>}
                 {!isLoading &&
                   resources.map((repo) => (
@@ -189,5 +194,5 @@ export function GitHubForm({ connectionId, organizationId, onCreate, onCancel }:
         </button>
       </div>
     </form>
-  )
+  );
 }

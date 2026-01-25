@@ -1,33 +1,34 @@
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { integrationMetadata, type IntegrationMetadata } from "@lydie/integrations/client"
-import { getIntegrationIconUrl } from "@/utils/integration-icons"
-import { Link } from "@/components/generic/Link"
-import { cardStyles } from "@/components/layout/Card"
-import { useOrganization } from "@/context/organization.context"
-import { Eyebrow } from "@/components/generic/Eyebrow"
-import { Check24Filled } from "@fluentui/react-icons"
+import { Check24Filled } from "@fluentui/react-icons";
+import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+
+import { Eyebrow } from "@/components/generic/Eyebrow";
+import { Link } from "@/components/generic/Link";
+import { cardStyles } from "@/components/layout/Card";
+import { useOrganization } from "@/context/organization.context";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 export function IntegrationsList() {
-  const { organization } = useOrganization()
+  const { organization } = useOrganization();
   const [connections] = useQuery(
     queries.integrations.byOrganization({
       organizationId: organization.id,
     }),
-  )
+  );
 
   const connectedIntegrationIds = new Set(
     connections?.filter((conn) => conn.status === "active").map((conn) => conn.integration_type),
-  )
+  );
 
   // Split integrations into enabled and not enabled
   const connectedIntegrations = integrationMetadata.filter((integration) =>
     connectedIntegrationIds.has(integration.id),
-  )
+  );
 
   const notConnectedIntegrations = integrationMetadata.filter(
     (integration) => !connectedIntegrationIds.has(integration.id),
-  )
+  );
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -36,7 +37,11 @@ export function IntegrationsList() {
           <Eyebrow>Enabled</Eyebrow>
           <ul className="flex flex-col gap-y-2">
             {connectedIntegrations.map((integration) => (
-              <IntegrationsListItem key={integration.id} integration={integration} isEnabled={true} />
+              <IntegrationsListItem
+                key={integration.id}
+                integration={integration}
+                isEnabled={true}
+              />
             ))}
           </ul>
         </div>
@@ -46,23 +51,27 @@ export function IntegrationsList() {
           <Eyebrow>Not Enabled</Eyebrow>
           <ul className="flex flex-col gap-y-2">
             {notConnectedIntegrations.map((integration) => (
-              <IntegrationsListItem key={integration.id} integration={integration} isEnabled={false} />
+              <IntegrationsListItem
+                key={integration.id}
+                integration={integration}
+                isEnabled={false}
+              />
             ))}
           </ul>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 type IntegrationsListItemProps = {
-  integration: IntegrationMetadata
-  isEnabled: boolean
-}
+  integration: IntegrationMetadata;
+  isEnabled: boolean;
+};
 
 export function IntegrationsListItem({ integration, isEnabled }: IntegrationsListItemProps) {
-  const iconUrl = getIntegrationIconUrl(integration.id)
-  const integrationRoute = `/w/$organizationSlug/settings/integrations/${integration.id}`
+  const iconUrl = getIntegrationIconUrl(integration.id);
+  const integrationRoute = `/w/$organizationSlug/settings/integrations/${integration.id}`;
 
   return (
     <li
@@ -75,7 +84,11 @@ export function IntegrationsListItem({ integration, isEnabled }: IntegrationsLis
           <div className="flex items-center gap-x-2">
             <div className="rounded-md ring ring-black/6 p-[2px]">
               {iconUrl ? (
-                <img src={iconUrl} alt={`${integration.name} icon`} className="rounded-[5px] size-7" />
+                <img
+                  src={iconUrl}
+                  alt={`${integration.name} icon`}
+                  className="rounded-[5px] size-7"
+                />
               ) : (
                 <div className="rounded-sm size-7 bg-gray-100" />
               )}
@@ -92,5 +105,5 @@ export function IntegrationsListItem({ integration, isEnabled }: IntegrationsLis
         </div>
       </Link>
     </li>
-  )
+  );
 }

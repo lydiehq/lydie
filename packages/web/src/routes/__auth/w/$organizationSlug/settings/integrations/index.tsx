@@ -1,23 +1,21 @@
-import { Heading } from "@/components/generic/Heading"
-import { Separator } from "@/components/generic/Separator"
-import { createFileRoute } from "@tanstack/react-router"
-import { IntegrationsList } from "@/components/settings/integrations/IntegrationsList"
-import { queries } from "@lydie/zero/queries"
-import { useOrganization } from "@/context/organization.context"
+import { queries } from "@lydie/zero/queries";
+import { createFileRoute } from "@tanstack/react-router";
+
+import { Heading } from "@/components/generic/Heading";
+import { Separator } from "@/components/generic/Separator";
+import { IntegrationsList } from "@/components/settings/integrations/IntegrationsList";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integrations/")({
   component: RouteComponent,
   loader: async ({ context }) => {
-    const { zero, organization } = context
+    const { zero, organization } = context;
     // Preload all integration connections for the organization
-    zero.run(queries.integrations.byOrganization({ organizationId: organization.id }))
+    zero.run(queries.integrations.byOrganization({ organizationId: organization.id }));
   },
   ssr: false,
-})
+});
 
 function RouteComponent() {
-  const { organization } = useOrganization()
-
   return (
     <div className="flex flex-col gap-y-6">
       <div className="flex flex-col gap-y-1">
@@ -29,5 +27,5 @@ function RouteComponent() {
       <Separator />
       <IntegrationsList />
     </div>
-  )
+  );
 }

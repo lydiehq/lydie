@@ -1,20 +1,22 @@
-import { StarterKit, type StarterKitOptions } from "@tiptap/starter-kit"
-import { CharacterCount } from "@tiptap/extension-character-count"
-import { TableKit } from "@tiptap/extension-table"
-import { TaskList, TaskItem } from "@tiptap/extension-list"
-import { Collaboration, type CollaborationOptions } from "@tiptap/extension-collaboration"
-import CollaborationCaret, { type CollaborationCaretOptions } from "@tiptap/extension-collaboration-caret"
+import { CharacterCount } from "@tiptap/extension-character-count";
+import { Collaboration, type CollaborationOptions } from "@tiptap/extension-collaboration";
+import CollaborationCaret, {
+  type CollaborationCaretOptions,
+} from "@tiptap/extension-collaboration-caret";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { TableKit } from "@tiptap/extension-table";
+import { StarterKit, type StarterKitOptions } from "@tiptap/starter-kit";
 
-import * as E from "./extensions"
+import * as E from "./extensions";
 
 export interface GetDocumentEditorExtensionsOptions {
-  starterKit?: StarterKitOptions
-  textSelection?: Partial<E.TextSelectionOptions>
-  keyboardShortcuts?: Partial<E.KeyboardShortcutOptions>
-  documentComponent?: Partial<E.DocumentComponentOptions>
-  codeBlock?: Partial<E.CodeBlockOptions>
-  collaboration?: Partial<CollaborationOptions>
-  collaborationCaret?: Partial<CollaborationCaretOptions>
+  starterKit?: StarterKitOptions;
+  textSelection?: Partial<E.TextSelectionOptions>;
+  keyboardShortcuts?: Partial<E.KeyboardShortcutOptions>;
+  documentComponent?: Partial<E.DocumentComponentOptions>;
+  codeBlock?: Partial<E.CodeBlockOptions>;
+  collaboration?: Partial<CollaborationOptions>;
+  collaborationCaret?: Partial<CollaborationCaretOptions>;
 }
 
 export function getDocumentEditorExtensions(options?: GetDocumentEditorExtensionsOptions) {
@@ -40,15 +42,15 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.CodeBlock.configure(options?.codeBlock),
     E.IndentHandlerExtension,
     E.ImageUpload,
-  ]
+  ];
 
   // Add collaboration extensions if configured
   if (options?.collaboration) {
-    extensions.push(Collaboration.configure(options.collaboration))
+    extensions.push(Collaboration.configure(options.collaboration));
   }
   if (options?.collaborationCaret) {
-    extensions.push(CollaborationCaret.configure(options.collaborationCaret))
+    extensions.push(CollaborationCaret.configure(options.collaborationCaret));
   }
 
-  return extensions
+  return extensions;
 }

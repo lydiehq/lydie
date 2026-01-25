@@ -1,8 +1,8 @@
-import { motion } from "motion/react"
+import { motion } from "motion/react";
 
 type AnimatedWordProps = {
-  children: string
-}
+  children: string;
+};
 
 export const AnimatedWord = ({ children }: AnimatedWordProps) => (
   <motion.span
@@ -19,4 +19,4 @@ export const AnimatedWord = ({ children }: AnimatedWordProps) => (
   >
     {children}
   </motion.span>
-)
+);

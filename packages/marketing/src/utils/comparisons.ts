@@ -1,19 +1,19 @@
-import type { SectionOverride } from "./comparison-sections"
+import type { SectionOverride } from "./comparison-sections";
 
 export interface ComparisonFeature {
-  name: string
-  description?: string
-  lydie: boolean | string
-  competitor: boolean | string
+  name: string;
+  description?: string;
+  lydie: boolean | string;
+  competitor: boolean | string;
 }
 
 export interface Comparison {
-  slug: string
-  name: string
-  description: string
-  icon?: string
-  features: ComparisonFeature[]
-  sections?: (string | SectionOverride)[] // Section IDs or objects with overrides
+  slug: string;
+  name: string;
+  description: string;
+  icon?: string;
+  features: ComparisonFeature[];
+  sections?: (string | SectionOverride)[]; // Section IDs or objects with overrides
 }
 
 export const comparisons: Comparison[] = [
@@ -63,7 +63,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Limited API access",
       },
@@ -133,7 +134,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Limited to Notion's API and integrations",
       },
@@ -190,7 +192,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: true,
       },
@@ -272,7 +275,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Via Atlassian Marketplace",
       },
@@ -329,7 +333,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Limited API access",
       },
@@ -411,7 +416,8 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "External platform sync",
-        description: "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
         lydie: true,
         competitor: "Limited to Microsoft ecosystem",
       },
@@ -447,8 +453,8 @@ export const comparisons: Comparison[] = [
       },
     ],
   },
-]
+];
 
 export function getComparison(slug: string): Comparison | undefined {
-  return comparisons.find((comparison) => comparison.slug === slug)
+  return comparisons.find((comparison) => comparison.slug === slug);
 }

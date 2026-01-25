@@ -1,10 +1,10 @@
-import { Hocuspocus, onAuthenticatePayload } from "@hocuspocus/server"
-import { Database } from "@hocuspocus/extension-database"
-import { db } from "@lydie/database"
-import { documentsTable, membersTable } from "@lydie/database/schema"
-import { eq, and } from "drizzle-orm"
-import { authClient } from "@lydie/core/auth"
-import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing"
+import { Database } from "@hocuspocus/extension-database";
+import { Hocuspocus, onAuthenticatePayload } from "@hocuspocus/server";
+import { authClient } from "@lydie/core/auth";
+import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
+import { db } from "@lydie/database";
+import { documentsTable, membersTable } from "@lydie/database/schema";
+import { and, eq } from "drizzle-orm";
 
 async function verifyDocumentAccess(documentId: string, userId: string): Promise<boolean> {
   try {
@@ -12,21 +12,26 @@ async function verifyDocumentAccess(documentId: string, userId: string): Promise
       .select()
       .from(documentsTable)
       .where(eq(documentsTable.id, documentId))
-      .limit(1)
+      .limit(1);
 
     if (!document) {
-      return false
+      return false;
     }
 
     const membership = await db
       .select()
       .from(membersTable)
-      .where(and(eq(membersTable.organizationId, document.organizationId), eq(membersTable.userId, userId)))
-      .limit(1)
+      .where(
+        and(
+          eq(membersTable.organizationId, document.organizationId),
+          eq(membersTable.userId, userId),
+        ),
+      )
+      .limit(1);
 
-    return membership.length > 0
-  } catch (error) {
-    return false
+    return membership.length > 0;
+  } catch {
+    return false;
   }
 }
 
@@ -39,21 +44,21 @@ export const hocuspocus = new Hocuspocus({
             .select({ yjsState: documentsTable.yjsState })
             .from(documentsTable)
             .where(eq(documentsTable.id, documentName))
-            .limit(1)
+            .limit(1);
 
           if (!result[0] || !result[0].yjsState) {
-            return null
+            return null;
           }
 
           // Convert base64 string back to Uint8Array
-          const buffer = Buffer.from(result[0].yjsState, "base64")
-          return new Uint8Array(buffer)
-        } catch (error) {
-          return null
+          const buffer = Buffer.from(result[0].yjsState, "base64");
+          return new Uint8Array(buffer);
+        } catch {
+          return null;
         }
       },
       store: async ({ documentName, state }) => {
-        const base64State = Buffer.from(state).toString("base64")
+        const base64State = Buffer.from(state).toString("base64");
 
         await db
           .update(documentsTable)
@@ -61,7 +66,7 @@ export const hocuspocus = new Hocuspocus({
             yjsState: base64State,
             updatedAt: new Date(),
           })
-          .where(eq(documentsTable.id, documentName))
+          .where(eq(documentsTable.id, documentName));
 
         processDocumentEmbedding(
           {
@@ -70,40 +75,44 @@ export const hocuspocus = new Hocuspocus({
           },
           db,
         ).catch((error) => {
-          console.error(`Failed to generate content embeddings for document ${documentName}:`, error)
-        })
+          console.error(
+            `Failed to generate content embeddings for document ${documentName}:`,
+            error,
+          );
+        });
       },
     }),
   ],
 
   async onAuthenticate({ documentName, request }: onAuthenticatePayload): Promise<any> {
     if (!request?.headers) {
-      throw new Error("Authentication required")
+      throw new Error("Authentication required");
     }
 
     try {
       const session = await authClient.api.getSession({
         headers: request.headers as any,
-      })
+      });
 
       if (!session?.user) {
-        throw new Error("Invalid authentication")
+        throw new Error("Invalid authentication");
       }
 
-      const hasAccess = await verifyDocumentAccess(documentName, session.user.id)
+      const hasAccess = await verifyDocumentAccess(documentName, session.user.id);
 
       if (!hasAccess) {
-        throw new Error("Access denied")
+        throw new Error("Access denied");
       }
 
       return {
         id: session.user.id,
         name: session.user.name,
-      }
+      };
     } catch (error) {
-      throw new Error("Authentication failed")
+      console.error("Authentication failed:", error);
+      throw new Error("Authentication failed");
     }
   },
 
   debounce: 25000,
-})
+});

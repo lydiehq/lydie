@@ -1,14 +1,18 @@
-import { Radio, RadioGroup } from "react-aria-components"
-import { Label } from "@/components/generic/Field"
-import { Tooltip, TooltipTrigger } from "@/components/generic/Tooltip"
-import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors"
+import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors";
+import { Radio, RadioGroup } from "react-aria-components";
+
+import { Label } from "@/components/generic/Field";
+import { Tooltip, TooltipTrigger } from "@/components/generic/Tooltip";
 
 type OrganizationColorPickerProps = {
-  selectedColor: string
-  onColorChange: (color: string) => void
-}
+  selectedColor: string;
+  onColorChange: (color: string) => void;
+};
 
-export function OrganizationColorPicker({ selectedColor, onColorChange }: OrganizationColorPickerProps) {
+export function OrganizationColorPicker({
+  selectedColor,
+  onColorChange,
+}: OrganizationColorPickerProps) {
   return (
     <div className="flex flex-col gap-y-2">
       <Label>Workspace Color</Label>
@@ -43,9 +47,9 @@ export function OrganizationColorPicker({ selectedColor, onColorChange }: Organi
               </Radio>
               <Tooltip placement="bottom">{color.name}</Tooltip>
             </TooltipTrigger>
-          )
+          );
         })}
       </RadioGroup>
     </div>
-  )
+  );
 }

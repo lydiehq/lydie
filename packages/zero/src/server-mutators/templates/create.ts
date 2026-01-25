@@ -1,10 +1,11 @@
-import { defineMutator } from "@rocicorp/zero"
-import { z } from "zod"
-import { mutators as sharedMutators } from "../../mutators/index"
-import { db } from "@lydie/database"
-import { processTemplateTitleEmbedding } from "@lydie/core/embedding/template-processing"
-import { MutatorContext } from "../../server-mutators"
-import { zql } from "../../schema"
+import { processTemplateTitleEmbedding } from "@lydie/core/embedding/template-processing";
+import { db } from "@lydie/database";
+import { defineMutator } from "@rocicorp/zero";
+import { z } from "zod";
+
+import { mutators as sharedMutators } from "../../mutators/index";
+import { zql } from "../../schema";
+import { MutatorContext } from "../../server-mutators";
 
 export const createTemplateMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
@@ -19,18 +20,18 @@ export const createTemplateMutation = ({ asyncTasks }: MutatorContext) =>
     }),
     async ({ tx, ctx, args }) => {
       // Call the shared client mutator first
-      await sharedMutators.template.create.fn({ tx, ctx, args })
+      await sharedMutators.template.create.fn({ tx, ctx, args });
 
       // Find the template that was just created by querying for the most recent template
       // with this name. Since we're in the same transaction, the template should be
       // the most recent one with this name.
       const templates = await tx.run(
         zql.templates.where("name", args.name).orderBy("created_at", "desc").limit(1),
-      )
+      );
 
-      const template = templates[0]
+      const template = templates[0];
       if (!template) {
-        throw new Error("Failed to find created template")
+        throw new Error("Failed to find created template");
       }
 
       // Generate title embedding (only on server side, fire-and-forget)
@@ -43,10 +44,10 @@ export const createTemplateMutation = ({ asyncTasks }: MutatorContext) =>
             },
             db,
           ).catch((error) => {
-            console.error(`Failed to generate embedding for template ${template.id}:`, error)
+            console.error(`Failed to generate embedding for template ${template.id}:`, error);
             // Don't throw - embedding generation failure shouldn't fail template creation
-          })
-        })
+          });
+        });
       }
     },
-  )
+  );

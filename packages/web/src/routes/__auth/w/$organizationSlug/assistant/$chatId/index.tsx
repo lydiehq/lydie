@@ -1,29 +1,29 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router"
-import { Surface } from "@/components/layout/Surface"
-import { useRef, useState, useCallback, useEffect } from "react"
-import { useOrganization } from "@/context/organization.context"
-import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
-import { PanelResizer } from "@/components/panels/PanelResizer"
-import { AssistantSidebar } from "@/components/assistant/AssistantSidebar"
-import { queries } from "@lydie/zero/queries"
-import { z } from "zod"
-import { AssistantChat } from "@/components/assistant/AssistantChat"
-import { Button } from "@/components/generic/Button"
-import { useQuery } from "@rocicorp/zero/react"
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
-import { useAssistantChat } from "@/hooks/use-assistant-chat"
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { type ImperativePanelHandle, Panel, PanelGroup } from "react-resizable-panels";
+import { z } from "zod";
+
+import { AssistantChat } from "@/components/assistant/AssistantChat";
+import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
+import { Button } from "@/components/generic/Button";
+import { Surface } from "@/components/layout/Surface";
+import { PanelResizer } from "@/components/panels/PanelResizer";
+import { useOrganization } from "@/context/organization.context";
+import { useAssistantChat } from "@/hooks/use-assistant-chat";
 
 const assistantSearchSchema = z.object({
   prompt: z.string().optional(),
-})
+});
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/assistant/$chatId/")({
   component: PageComponent,
   ssr: false,
   validateSearch: assistantSearchSchema,
   loader: async ({ context, params }) => {
-    const { zero, organization } = context
-    const { chatId } = params
+    const { zero, organization } = context;
+    const { chatId } = params;
 
     const conversation = await zero.run(
       queries.assistant.byId({
@@ -31,28 +31,30 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/assistant/$cha
         conversationId: chatId,
       }),
       { type: "complete" },
-    )
+    );
 
-    return { conversation }
+    return { conversation };
   },
-})
+});
 
-const COLLAPSED_SIZE = 3.5
+const COLLAPSED_SIZE = 3.5;
 
 function PageComponent() {
-  const { chatId } = Route.useParams()
-  const { organization } = useOrganization()
-  const [sidebarSize, setSidebarSize] = useState(25)
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
-  const search = useSearch({ from: "/__auth/w/$organizationSlug/assistant/$chatId/" })
-  const initialPrompt = (search as { prompt?: string })?.prompt
+  const { chatId } = Route.useParams();
+  const { organization } = useOrganization();
+  const [sidebarSize, setSidebarSize] = useState(25);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+  const search = useSearch({
+    from: "/__auth/w/$organizationSlug/assistant/$chatId/",
+  });
+  const initialPrompt = (search as { prompt?: string })?.prompt;
 
   const [conv, status] = useQuery(
     queries.assistant.byId({
       organizationId: organization.id,
       conversationId: chatId,
     }),
-  )
+  );
 
   const {
     messages,
@@ -71,11 +73,11 @@ function PageComponent() {
         parts: msg.parts,
         metadata: msg.metadata,
       })) || [],
-  })
+  });
 
   const resetConversation = useCallback(() => {
-    setMessages([])
-  }, [setMessages])
+    setMessages([]);
+  }, [setMessages]);
 
   useEffect(() => {
     if (conv?.messages) {
@@ -84,16 +86,16 @@ function PageComponent() {
         role: msg.role as "user" | "system" | "assistant",
         parts: msg.parts,
         metadata: msg.metadata,
-      }))
-      setMessages(formattedMessages)
+      }));
+      setMessages(formattedMessages);
     }
-  }, [conv, setMessages])
+  }, [conv, setMessages]);
 
   const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current
-    if (!panel) return
-    panel.isCollapsed() ? panel.expand() : panel.collapse()
-  }
+    const panel = sidebarPanelRef.current;
+    if (!panel) return;
+    panel.isCollapsed() ? panel.expand() : panel.collapse();
+  };
 
   if (!conv && status.type === "complete") {
     return (
@@ -101,17 +103,19 @@ function PageComponent() {
         <Surface className="flex items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-y-2">
             <span className="text-sm font-medium text-gray-900">Conversation not found</span>
-            <p className="text-sm text-gray-500">The conversation you are looking for does not exist.</p>
+            <p className="text-sm text-gray-500">
+              The conversation you are looking for does not exist.
+            </p>
             <Button size="sm" href={`/w/${organization?.slug}/assistant`}>
               Start new conversation
             </Button>
           </div>
         </Surface>
       </div>
-    )
+    );
   }
 
-  if (!conv) return null
+  if (!conv) return null;
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
@@ -153,5 +157,5 @@ function PageComponent() {
         </PanelGroup>
       </Surface>
     </div>
-  )
+  );
 }

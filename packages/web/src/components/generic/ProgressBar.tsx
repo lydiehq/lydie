@@ -1,13 +1,14 @@
-import React from "react"
+import React from "react";
 import {
   ProgressBar as AriaProgressBar,
   ProgressBarProps as AriaProgressBarProps,
-} from "react-aria-components"
-import { Label } from "./Field"
-import { composeTailwindRenderProps } from "./utils"
+} from "react-aria-components";
+
+import { Label } from "./Field";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface ProgressBarProps extends AriaProgressBarProps {
-  label?: string
+  label?: string;
 }
 
 export function ProgressBar({ label, ...props }: ProgressBarProps) {
@@ -31,5 +32,5 @@ export function ProgressBar({ label, ...props }: ProgressBarProps) {
         </>
       )}
     </AriaProgressBar>
-  )
+  );
 }

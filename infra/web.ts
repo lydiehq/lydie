@@ -1,16 +1,18 @@
 // oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
-import { secret } from "./secret"
-import { zero } from "./zero"
+import { secret } from "./secret";
+import { zero } from "./zero";
 
-export const organizationAssetsBucket = new sst.aws.Bucket("OrganizationAssets", { access: "cloudfront" })
+export const organizationAssetsBucket = new sst.aws.Bucket("OrganizationAssets", {
+  access: "cloudfront",
+});
 
 export const assetsRouter = new sst.aws.Router(
   "AssetsRouter",
   $app.stage === "production" ? { domain: "assets.lydie.co" } : {},
-)
+);
 
-assetsRouter.routeBucket("*", organizationAssetsBucket)
+assetsRouter.routeBucket("*", organizationAssetsBucket);
 
 new sst.aws.StaticSite("Web", {
   path: "./packages/web",
@@ -25,7 +27,7 @@ new sst.aws.StaticSite("Web", {
     VITE_ASSETS_DOMAIN: assetsRouter.url,
   },
   ...($dev ? {} : { domain: "app.lydie.co" }),
-})
+});
 
 new sst.aws.Astro("Marketing", {
   path: "./packages/marketing",
@@ -56,4 +58,4 @@ if (isRoot && hasToken) {
           },
         },
       }),
-})
+});

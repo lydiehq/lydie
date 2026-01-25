@@ -1,5 +1,5 @@
 interface CommandMenuKeyboardHelpProps {
-  showBack?: boolean
+  showBack?: boolean;
 }
 
 export function CommandMenuKeyboardHelp({ showBack }: CommandMenuKeyboardHelpProps) {
@@ -30,5 +30,5 @@ export function CommandMenuKeyboardHelp({ showBack }: CommandMenuKeyboardHelpPro
         </>
       )}
     </div>
-  )
+  );
 }

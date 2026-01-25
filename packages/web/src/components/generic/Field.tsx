@@ -1,3 +1,5 @@
+import { compose, cva } from "cva";
+import { forwardRef } from "react";
 import {
   type FieldErrorProps,
   Group,
@@ -7,16 +9,15 @@ import {
   FieldError as RACFieldError,
   Input as RACInput,
   Label as RACLabel,
-  Text,
-  type TextProps,
   TextArea as RACTextArea,
+  Text,
   type TextAreaProps,
+  type TextProps,
   composeRenderProps,
-} from "react-aria-components"
-import { twMerge } from "tailwind-merge"
-import { composeTailwindRenderProps, focusRing } from "./utils"
-import { compose, cva } from "cva"
-import { forwardRef } from "react"
+} from "react-aria-components";
+import { twMerge } from "tailwind-merge";
+
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
 export function Label(props: LabelProps) {
   return (
@@ -24,11 +25,17 @@ export function Label(props: LabelProps) {
       {...props}
       className={twMerge("text-sm text-gray-700 font-medium cursor-default w-fit", props.className)}
     />
-  )
+  );
 }
 
 export function Description(props: TextProps) {
-  return <Text {...props} slot="description" className={twMerge("text-sm text-gray-600", props.className)} />
+  return (
+    <Text
+      {...props}
+      slot="description"
+      className={twMerge("text-sm text-gray-600", props.className)}
+    />
+  );
 }
 
 export function FieldError(props: FieldErrorProps) {
@@ -40,7 +47,7 @@ export function FieldError(props: FieldErrorProps) {
         "text-sm text-red-600 forced-colors:text-[Mark]",
       )}
     />
-  )
+  );
 }
 
 export const fieldBorderStyles = cva({
@@ -56,7 +63,7 @@ export const fieldBorderStyles = cva({
       true: "border-gray-200 dark:border-gray-700 forced-colors:border-[GrayText]",
     },
   },
-})
+});
 
 export const fieldGroupStyles = compose(
   cva({
@@ -64,7 +71,7 @@ export const fieldGroupStyles = compose(
   }),
   focusRing,
   fieldBorderStyles,
-)
+);
 
 export function FieldGroup(props: GroupProps) {
   return (
@@ -74,7 +81,7 @@ export function FieldGroup(props: GroupProps) {
         fieldGroupStyles({ ...renderProps, className }),
       )}
     />
-  )
+  );
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
@@ -87,8 +94,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
         "px-3 py-2 flex-1 ring ring-black/8 rounded-md min-w-0 bg-white text-sm text-gray-800 disabled:text-gray-200 focus:ring-black/20",
       )}
     />
-  )
-})
+  );
+});
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>((props, ref) => {
   return (
@@ -100,5 +107,5 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>((props, r
         "px-3 py-2 w-full ring ring-black/8 rounded-md bg-white text-sm text-gray-800 disabled:text-gray-200 focus:ring-black/20 resize-y",
       )}
     />
-  )
-})
+  );
+});

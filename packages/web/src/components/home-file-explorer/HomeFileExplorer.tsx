@@ -1,70 +1,71 @@
-import { Button } from "@/components/generic/Button"
-import { BottomActionBar } from "@/components/generic/BottomActionBar"
-import { SearchField } from "@/components/generic/SearchField"
-import { DocumentItem } from "./DocumentItem"
-import { ViewModeToggle } from "./ViewModeToggle"
-import { EmptyState } from "./EmptyState"
-import { useDocumentActions } from "@/hooks/use-document-actions"
-import { useDocumentSearch } from "@/hooks/use-document-search"
-import { usePageNavigation } from "@/hooks/use-page-navigation"
-import { useBulkDelete } from "@/hooks/use-bulk-delete"
-import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop"
-import { AddRegular } from "@fluentui/react-icons"
-import { GridList } from "react-aria-components"
-import { useState, useMemo, useEffect } from "react"
-import { Heading } from "@/components/generic/Heading"
-import { useListData } from "react-stately"
-import { useOrganization } from "@/context/organization.context"
-import { useSearch } from "@tanstack/react-router"
-import { useAuth } from "@/context/auth.context"
-import { Separator } from "../generic/Separator"
-import { getUserStorage, setUserStorage } from "@/lib/user-storage"
+import { useSearch } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { GridList } from "react-aria-components";
+import { useListData } from "react-stately";
+
+import { BottomActionBar } from "@/components/generic/BottomActionBar";
+import { Button } from "@/components/generic/Button";
+import { Heading } from "@/components/generic/Heading";
+import { SearchField } from "@/components/generic/SearchField";
+import { useAuth } from "@/context/auth.context";
+import { useOrganization } from "@/context/organization.context";
+import { useBulkDelete } from "@/hooks/use-bulk-delete";
+import { useDocumentActions } from "@/hooks/use-document-actions";
+import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
+import { useDocumentSearch } from "@/hooks/use-document-search";
+import { usePageNavigation } from "@/hooks/use-page-navigation";
+import { getUserStorage, setUserStorage } from "@/lib/user-storage";
+
+import { Separator } from "../generic/Separator";
+import { DocumentItem } from "./DocumentItem";
+import { EmptyState } from "./EmptyState";
+import { ViewModeToggle } from "./ViewModeToggle";
 
 interface ItemType {
-  id: string
-  name: string
-  type: "document"
-  updated_at?: number | string | null
+  id: string;
+  name: string;
+  type: "document";
+  updated_at?: number | string | null;
 }
 
-const VIEW_MODE_STORAGE_KEY = "lydie:view:mode"
+const VIEW_MODE_STORAGE_KEY = "lydie:view:mode";
 
 export function HomeFileExplorer() {
-  const { user, session } = useAuth()
-  const userId = session?.userId
-  const { organization } = useOrganization()
-  const { tree } = useSearch({ strict: false })
-  const organizationId = organization.id
-  const organizationSlug = organization?.slug || ""
-  const { createDocument } = useDocumentActions()
+  const { user, session } = useAuth();
+  const userId = session?.userId;
+  const { organization } = useOrganization();
+  const { tree } = useSearch({ strict: false });
+  const organizationId = organization.id;
+  const organizationSlug = organization?.slug || "";
+  const { createDocument } = useDocumentActions();
 
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     if (typeof window !== "undefined") {
-      const stored = getUserStorage(userId, VIEW_MODE_STORAGE_KEY)
+      const stored = getUserStorage(userId, VIEW_MODE_STORAGE_KEY);
       if (stored === "grid" || stored === "list") {
-        return stored
+        return stored;
       }
     }
-    return "grid"
-  })
+    return "grid";
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setUserStorage(userId, VIEW_MODE_STORAGE_KEY, viewMode)
+      setUserStorage(userId, VIEW_MODE_STORAGE_KEY, viewMode);
     }
-  }, [viewMode, userId])
+  }, [viewMode, userId]);
 
   const { search, setSearch, searchFieldRef, onSearchChange, allDocuments } = useDocumentSearch(
     organizationId,
     organizationSlug,
     "/__auth/w/$organizationSlug/",
-  )
+  );
 
   const documents = search.trim()
     ? allDocuments
     : tree
       ? allDocuments.filter((doc) => doc.parent_id === tree)
-      : allDocuments.filter((doc) => !doc.parent_id)
+      : allDocuments.filter((doc) => !doc.parent_id);
 
   const documentItems: ItemType[] = useMemo(
     () =>
@@ -75,49 +76,51 @@ export function HomeFileExplorer() {
         updated_at: doc.updated_at,
       })),
     [documents],
-  )
+  );
 
-  const { handleBackClick } = usePageNavigation(organizationId, setSearch)
+  const { handleBackClick } = usePageNavigation(organizationId, setSearch);
 
   const { dragAndDropHooks } = useDocumentDragDrop({
     allDocuments,
-  })
+  });
 
   const documentList = useListData<ItemType>({
     initialItems: documentItems,
     getKey: (item) => item.id,
-  })
+  });
 
   useEffect(() => {
-    const currentDocIds = new Set(documentList.items.map((item) => item.id))
-    const newDocIds = new Set(documentItems.map((item) => item.id))
+    const currentDocIds = new Set(documentList.items.map((item) => item.id));
+    const newDocIds = new Set(documentItems.map((item) => item.id));
 
     documentList.items.forEach((item) => {
       if (!newDocIds.has(item.id)) {
-        documentList.remove(item.id)
+        documentList.remove(item.id);
       }
-    })
+    });
 
     documentItems.forEach((item) => {
       if (!currentDocIds.has(item.id)) {
-        documentList.append(item)
+        documentList.append(item);
       }
-    })
-  }, [documentItems.map((i) => i.id).join(",")])
+    });
+  }, [documentItems.map((i) => i.id).join(","), documentList.items, documentItems, documentList]);
 
-  const currentParentPage = tree ? allDocuments.find((d) => d.id === tree) : null
+  const currentParentPage = tree ? allDocuments.find((d) => d.id === tree) : null;
 
   const recentlyOpenedDocuments: ItemType[] = useMemo(() => {
     if (search.trim() || tree) {
-      return []
+      return [];
     }
 
     return allDocuments
       .filter((doc) => doc.updated_at)
       .sort((a, b) => {
-        const aTime = typeof a.updated_at === "number" ? a.updated_at : new Date(a.updated_at || 0).getTime()
-        const bTime = typeof b.updated_at === "number" ? b.updated_at : new Date(b.updated_at || 0).getTime()
-        return bTime - aTime
+        const aTime =
+          typeof a.updated_at === "number" ? a.updated_at : new Date(a.updated_at || 0).getTime();
+        const bTime =
+          typeof b.updated_at === "number" ? b.updated_at : new Date(b.updated_at || 0).getTime();
+        return bTime - aTime;
       })
       .slice(0, 4)
       .map((doc) => ({
@@ -125,51 +128,57 @@ export function HomeFileExplorer() {
         name: doc.title || "Untitled document",
         type: "document" as const,
         updated_at: doc.updated_at,
-      }))
-  }, [allDocuments, search, tree])
+      }));
+  }, [allDocuments, search, tree]);
 
   const recentlyOpenedList = useListData<ItemType>({
     initialItems: recentlyOpenedDocuments,
     getKey: (item) => item.id,
-  })
+  });
 
   useEffect(() => {
-    const currentIds = new Set(recentlyOpenedList.items.map((item) => item.id))
-    const newIds = new Set(recentlyOpenedDocuments.map((item) => item.id))
+    const currentIds = new Set(recentlyOpenedList.items.map((item) => item.id));
+    const newIds = new Set(recentlyOpenedDocuments.map((item) => item.id));
 
     recentlyOpenedList.items.forEach((item) => {
       if (!newIds.has(item.id)) {
-        recentlyOpenedList.remove(item.id)
+        recentlyOpenedList.remove(item.id);
       }
-    })
+    });
 
     recentlyOpenedDocuments.forEach((item) => {
       if (!currentIds.has(item.id)) {
-        recentlyOpenedList.append(item)
+        recentlyOpenedList.append(item);
       }
-    })
-  }, [recentlyOpenedDocuments.map((i) => i.id).join(",")])
+    });
+  }, [
+    recentlyOpenedDocuments.map((i) => i.id).join(","),
+    recentlyOpenedList.items,
+    recentlyOpenedDocuments,
+    recentlyOpenedList,
+  ]);
 
   const allSelectedItems = [
     ...recentlyOpenedList.items.filter((item) =>
       recentlyOpenedList.selectedKeys === "all"
         ? true
-        : recentlyOpenedList.selectedKeys instanceof Set && recentlyOpenedList.selectedKeys.has(item.id),
+        : recentlyOpenedList.selectedKeys instanceof Set &&
+          recentlyOpenedList.selectedKeys.has(item.id),
     ),
     ...documentList.items.filter((item) =>
       documentList.selectedKeys === "all"
         ? true
         : documentList.selectedKeys instanceof Set && documentList.selectedKeys.has(item.id),
     ),
-  ]
+  ];
 
-  const { handleDelete } = useBulkDelete()
+  const { handleDelete } = useBulkDelete();
   const onDelete = () => {
     handleDelete(allSelectedItems, () => {
-      recentlyOpenedList.setSelectedKeys(new Set())
-      documentList.setSelectedKeys(new Set())
-    })
-  }
+      recentlyOpenedList.setSelectedKeys(new Set());
+      documentList.setSelectedKeys(new Set());
+    });
+  };
 
   return (
     <>
@@ -193,7 +202,9 @@ export function HomeFileExplorer() {
       </div>
       <Separator />
       <div className="p-4">
-        <Heading className="mb-4">Welcome back{user?.name && `, ${user.name.split(" ")[0]}!`}</Heading>
+        <Heading className="mb-4">
+          Welcome back{user?.name && `, ${user.name.split(" ")[0]}!`}
+        </Heading>
         {currentParentPage && (
           <div className="mb-4 flex items-center gap-2">
             <Button
@@ -204,7 +215,9 @@ export function HomeFileExplorer() {
             >
               ← Back
             </Button>
-            <span className="text-sm text-gray-600">{currentParentPage.title || "Untitled document"}</span>
+            <span className="text-sm text-gray-600">
+              {currentParentPage.title || "Untitled document"}
+            </span>
           </div>
         )}
         {documentList.items.length === 0 && recentlyOpenedList.items.length === 0 ? (
@@ -270,7 +283,8 @@ export function HomeFileExplorer() {
                     isSelected={
                       documentList.selectedKeys === "all"
                         ? true
-                        : documentList.selectedKeys instanceof Set && documentList.selectedKeys.has(item.id)
+                        : documentList.selectedKeys instanceof Set &&
+                          documentList.selectedKeys.has(item.id)
                     }
                   />
                 )}
@@ -286,5 +300,5 @@ export function HomeFileExplorer() {
         onDelete={onDelete}
       />
     </>
-  )
+  );
 }

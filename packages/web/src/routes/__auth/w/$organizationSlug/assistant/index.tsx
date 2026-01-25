@@ -1,56 +1,49 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router"
-import { Surface } from "@/components/layout/Surface"
-import { useRef, useState, useCallback } from "react"
-import { useOrganization } from "@/context/organization.context"
-import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
-import { PanelResizer } from "@/components/panels/PanelResizer"
-import { AssistantSidebar } from "@/components/assistant/AssistantSidebar"
-import { z } from "zod"
-import { AssistantChat } from "@/components/assistant/AssistantChat"
-import { createId } from "@lydie/core/id"
-import { useAssistantChat } from "@/hooks/use-assistant-chat"
+import { createId } from "@lydie/core/id";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useCallback, useRef, useState } from "react";
+import { type ImperativePanelHandle, Panel, PanelGroup } from "react-resizable-panels";
+import { z } from "zod";
+
+import { AssistantChat } from "@/components/assistant/AssistantChat";
+import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
+import { Surface } from "@/components/layout/Surface";
+import { PanelResizer } from "@/components/panels/PanelResizer";
+import { useOrganization } from "@/context/organization.context";
+import { useAssistantChat } from "@/hooks/use-assistant-chat";
 
 const assistantSearchSchema = z.object({
   prompt: z.string().optional(),
-})
+});
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/assistant/")({
   component: PageComponent,
   ssr: false,
   validateSearch: assistantSearchSchema,
-})
+});
 
-const COLLAPSED_SIZE = 3.5
+const COLLAPSED_SIZE = 3.5;
 
 function PageComponent() {
-  const { organization } = useOrganization()
-  const [sidebarSize, setSidebarSize] = useState(25)
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
-  const search = useSearch({ from: "/__auth/w/$organizationSlug/assistant/" })
-  const initialPrompt = (search as { prompt?: string })?.prompt
-  const [conversationId] = useState(() => createId())
+  const { organization } = useOrganization();
+  const [sidebarSize, setSidebarSize] = useState(25);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+  const search = useSearch({ from: "/__auth/w/$organizationSlug/assistant/" });
+  const initialPrompt = (search as { prompt?: string })?.prompt;
+  const [conversationId] = useState(() => createId());
 
-  const {
-    messages,
-    sendMessage,
-    stop,
-    status,
-    alert,
-    setAlert,
-    setMessages,
-  } = useAssistantChat({
+  const { messages, sendMessage, stop, status, alert, setAlert, setMessages } = useAssistantChat({
     conversationId,
-  })
+  });
 
   const resetConversation = useCallback(() => {
-    setMessages([])
-  }, [setMessages])
+    setMessages([]);
+  }, [setMessages]);
 
   const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current
-    if (!panel) return
-    panel.isCollapsed() ? panel.expand() : panel.collapse()
-  }
+    const panel = sidebarPanelRef.current;
+    if (!panel) return;
+    panel.isCollapsed() ? panel.expand() : panel.collapse();
+  };
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
@@ -92,5 +85,5 @@ function PageComponent() {
         </PanelGroup>
       </Surface>
     </div>
-  )
+  );
 }

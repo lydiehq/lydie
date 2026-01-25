@@ -1,30 +1,31 @@
-import { InferAgentUIMessage, LanguageModel, smoothStream, stepCountIs, ToolLoopAgent } from "ai"
-import { searchInDocument } from "../../tools/search-in-document"
-import { replaceInDocument } from "../../tools/replace-in-document"
-import { searchDocuments } from "../../tools/search-documents"
-import { readDocument } from "../../tools/read-document"
-import { listDocuments } from "../../tools/list-documents"
+import { InferAgentUIMessage, LanguageModel, ToolLoopAgent, smoothStream, stepCountIs } from "ai";
+
+import { listDocuments } from "../../tools/list-documents";
+import { readDocument } from "../../tools/read-document";
+import { replaceInDocument } from "../../tools/replace-in-document";
+import { searchDocuments } from "../../tools/search-documents";
+import { searchInDocument } from "../../tools/search-in-document";
 
 export interface DocumentChatMessageMetadata {
-  createdAt?: string
-  duration?: number
-  usage?: number
+  createdAt?: string;
+  duration?: number;
+  usage?: number;
 }
 
 interface BuildDocumentAgentParams {
-  documentId: string
-  userId: string
+  documentId: string;
+  userId: string;
   currentDocument: {
-    id: string
-    organizationId: string
-  }
-  instructions: string
-  model: LanguageModel
+    id: string;
+    organizationId: string;
+  };
+  instructions: string;
+  model: LanguageModel;
 }
 
 // This function is kept only for type inference - the actual agent creation is inlined in assistant.ts
 function buildDocumentAgent(params: BuildDocumentAgentParams) {
-  const { documentId, userId, currentDocument, instructions, model } = params
+  const { documentId, userId, currentDocument, instructions, model } = params;
 
   return new ToolLoopAgent({
     model,
@@ -41,11 +42,11 @@ function buildDocumentAgent(params: BuildDocumentAgentParams) {
       read_document: readDocument(userId, currentDocument.organizationId),
       list_documents: listDocuments(userId, currentDocument.organizationId, currentDocument.id),
     },
-  })
+  });
 }
 
-type BaseDocumentChatAgentUIMessage = InferAgentUIMessage<typeof buildDocumentAgent>
+type BaseDocumentChatAgentUIMessage = InferAgentUIMessage<typeof buildDocumentAgent>;
 
 export type DocumentChatAgentUIMessage = Omit<BaseDocumentChatAgentUIMessage, "metadata"> & {
-  metadata: DocumentChatMessageMetadata
-}
+  metadata: DocumentChatMessageMetadata;
+};

@@ -53,7 +53,7 @@ User responses may include:
 - Document titles
 - Human-readable descriptions
 - Natural language references
-`
+`;
 
 const documentModePrompt = `
 # Document Mode (documents are provided in context)
@@ -125,12 +125,12 @@ CRITICAL:
   - Never say: "I've updated the document"
 - Do not explain or restate the changes — the tool UI already shows them.
 - When multiple distinct changes are requested, use separate replaceInDocument calls.
-`
+`;
 
 export function buildAssistantSystemPrompt(agentSystemPrompt: string): string {
   return `${agentSystemPrompt}
 
 ${assistantBasePrompt}
 
-${documentModePrompt}`
+${documentModePrompt}`;
 }

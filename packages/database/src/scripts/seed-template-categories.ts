@@ -1,7 +1,7 @@
-import { db } from "../index"
-import { Resource } from "sst"
-import { templateCategoriesTable } from "../schema"
-import { eq } from "drizzle-orm"
+import { Resource } from "sst";
+
+import { db } from "../index";
+import { templateCategoriesTable } from "../schema";
 
 const categories = [
   {
@@ -34,26 +34,26 @@ const categories = [
     name: "Personal & Life",
     slug: "personal-life",
   },
-]
+];
 
 async function seedTemplateCategories() {
-  console.log(`Environment: ${Resource.App.stage}`)
-  console.log(`Starting to seed template categories...`)
-  console.log(`Connecting to database...`)
+  console.log(`Environment: ${Resource.App.stage}`);
+  console.log(`Starting to seed template categories...`);
+  console.log(`Connecting to database...`);
 
-  let created = 0
-  let skipped = 0
+  let created = 0;
+  let skipped = 0;
 
   for (const category of categories) {
     try {
       const existing = await db.query.templateCategoriesTable.findFirst({
         where: { slug: category.slug },
-      })
+      });
 
       if (existing) {
-        console.log(`⏭️  Skipping category "${category.name}" (already exists)`)
-        skipped++
-        continue
+        console.log(`⏭️  Skipping category "${category.name}" (already exists)`);
+        skipped++;
+        continue;
       }
 
       await db.insert(templateCategoriesTable).values({
@@ -62,27 +62,27 @@ async function seedTemplateCategories() {
         slug: category.slug,
         createdAt: new Date(),
         updatedAt: new Date(),
-      })
+      });
 
-      console.log(`✅ Created category "${category.name}"`)
-      created++
+      console.log(`✅ Created category "${category.name}"`);
+      created++;
     } catch (error) {
-      console.error(`❌ Error creating category "${category.name}":`, error)
+      console.error(`❌ Error creating category "${category.name}":`, error);
     }
   }
 
-  console.log(`\n✅ Completed!`)
-  console.log(`   ✅ Created: ${created}`)
-  console.log(`   ⏭️  Skipped: ${skipped}`)
-  console.log(`   📊 Total: ${categories.length}`)
+  console.log(`\n✅ Completed!`);
+  console.log(`   ✅ Created: ${created}`);
+  console.log(`   ⏭️  Skipped: ${skipped}`);
+  console.log(`   📊 Total: ${categories.length}`);
 }
 
 seedTemplateCategories()
   .then(() => {
-    console.log("✅ Seed successful")
-    process.exit(0)
+    console.log("✅ Seed successful");
+    process.exit(0);
   })
   .catch((error) => {
-    console.error("❌ Seed failed:", error)
-    process.exit(1)
-  })
+    console.error("❌ Seed failed:", error);
+    process.exit(1);
+  });

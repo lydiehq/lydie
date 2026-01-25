@@ -1,5 +1,5 @@
 interface Props {
-  steps: string[]
+  steps: string[];
 }
 
 export function HowToSection({ steps }: Props) {
@@ -14,5 +14,5 @@ export function HowToSection({ steps }: Props) {
         ))}
       </ol>
     </div>
-  )
+  );
 }

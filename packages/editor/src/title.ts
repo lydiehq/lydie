@@ -1,14 +1,15 @@
-import { Extension } from "@tiptap/core"
-import { UndoRedo } from "@tiptap/extensions"
-import { Document } from "@tiptap/extension-document"
-import { Text } from "@tiptap/extension-text"
-import { Heading } from "@tiptap/extension-heading"
-import { Placeholder } from "@tiptap/extension-placeholder"
-import { KeyboardShortcutExtension } from "./extensions/keyboard-shortcuts"
+import { Extension } from "@tiptap/core";
+import { Document } from "@tiptap/extension-document";
+import { Heading } from "@tiptap/extension-heading";
+import { Placeholder } from "@tiptap/extension-placeholder";
+import { Text } from "@tiptap/extension-text";
+import { UndoRedo } from "@tiptap/extensions";
+
+import { KeyboardShortcutExtension } from "./extensions/keyboard-shortcuts";
 
 export interface GetTitleExtensionsOptions {
-  onEnter?: () => void
-  placeholder?: string
+  onEnter?: () => void;
+  placeholder?: string;
 }
 
 function createPreventBreakExtension(onEnter?: () => void) {
@@ -17,13 +18,13 @@ function createPreventBreakExtension(onEnter?: () => void) {
     addKeyboardShortcuts() {
       return {
         Enter: () => {
-          onEnter?.()
-          return true
+          onEnter?.();
+          return true;
         },
         "Shift-Enter": () => true,
-      }
+      };
     },
-  })
+  });
 }
 
 export function getTitleExtensions(options?: GetTitleExtensionsOptions) {
@@ -38,5 +39,5 @@ export function getTitleExtensions(options?: GetTitleExtensionsOptions) {
     }),
     createPreventBreakExtension(options?.onEnter),
     KeyboardShortcutExtension,
-  ]
+  ];
 }

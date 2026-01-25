@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "motion/react"
-import { FileText, ChevronDown } from "lucide-react"
-import styles from "./Hero.module.css"
+import { ChevronDown, FileText } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
 
-type FeatureTab = "fields" | "collaboration" | "linking"
+import styles from "./Hero.module.css";
+
+type FeatureTab = "fields" | "collaboration" | "linking";
 
 export function InteractiveMockEditor() {
-  const [activeTab, setActiveTab] = useState<FeatureTab>("fields")
-  const [showLinkPopover, setShowLinkPopover] = useState(false)
-  const [fieldsExpanded, setFieldsExpanded] = useState(false)
-  const [showEditingCursor, setShowEditingCursor] = useState(false)
+  const [activeTab, setActiveTab] = useState<FeatureTab>("fields");
+  const [showLinkPopover, setShowLinkPopover] = useState(false);
+  const [fieldsExpanded, setFieldsExpanded] = useState(false);
+  const [showEditingCursor, setShowEditingCursor] = useState(false);
 
   return (
     <div className="flex flex-col items-center gap-y-4">
@@ -18,8 +19,8 @@ export function InteractiveMockEditor() {
         <TabButton
           active={activeTab === "fields"}
           onClick={() => {
-            setActiveTab("fields")
-            setFieldsExpanded(true)
+            setActiveTab("fields");
+            setFieldsExpanded(true);
           }}
         >
           Custom Fields
@@ -27,8 +28,8 @@ export function InteractiveMockEditor() {
         <TabButton
           active={activeTab === "collaboration"}
           onClick={() => {
-            setActiveTab("collaboration")
-            setFieldsExpanded(false)
+            setActiveTab("collaboration");
+            setFieldsExpanded(false);
           }}
         >
           Collaborative Editing
@@ -36,9 +37,9 @@ export function InteractiveMockEditor() {
         <TabButton
           active={activeTab === "linking"}
           onClick={() => {
-            setActiveTab("linking")
-            setFieldsExpanded(false)
-            setTimeout(() => setShowLinkPopover(true), 600)
+            setActiveTab("linking");
+            setFieldsExpanded(false);
+            setTimeout(() => setShowLinkPopover(true), 600);
           }}
         >
           Internal Linking
@@ -157,10 +158,10 @@ export function InteractiveMockEditor() {
                           expanded={activeTab === "fields" && fieldsExpanded}
                           onToggle={() => {
                             if (activeTab === "fields") {
-                              setFieldsExpanded(!fieldsExpanded)
+                              setFieldsExpanded(!fieldsExpanded);
                             } else {
-                              setActiveTab("fields")
-                              setFieldsExpanded(true)
+                              setActiveTab("fields");
+                              setFieldsExpanded(true);
                             }
                           }}
                           isActive={activeTab === "fields"}
@@ -201,8 +202,8 @@ export function InteractiveMockEditor() {
                       <div className="prose prose-sm max-w-none text-gray-700 space-y-3 relative">
                         <h2 className="text-xl font-semibold text-gray-900 mt-4 mb-2">Overview</h2>
                         <p className="leading-relaxed relative">
-                          This quarter we're focusing on enhancing our core platform capabilities and
-                          expanding integration support. Our key priorities include{" "}
+                          This quarter we're focusing on enhancing our core platform capabilities
+                          and expanding integration support. Our key priorities include{" "}
                           <CollaborativeTextEdit
                             originalText="performance improvements, advanced collaboration features"
                             newText="advanced collaboration features, performance improvements"
@@ -267,7 +268,7 @@ export function InteractiveMockEditor() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Tab Button Component
@@ -276,9 +277,9 @@ function TabButton({
   onClick,
   children,
 }: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -289,7 +290,7 @@ function TabButton({
     >
       {children}
     </button>
-  )
+  );
 }
 
 // Custom Fields Section Component
@@ -298,9 +299,9 @@ function CustomFieldsSection({
   onToggle,
   isActive,
 }: {
-  expanded: boolean
-  onToggle: () => void
-  isActive: boolean
+  expanded: boolean;
+  onToggle: () => void;
+  isActive: boolean;
 }) {
   return (
     <div className="flex flex-col gap-y-2 w-full border-b border-gray-200 pb-4">
@@ -345,7 +346,7 @@ function CustomFieldsSection({
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 // Custom Field Component
@@ -357,7 +358,7 @@ function CustomField({ label, value }: { label: string; value: string }) {
         {value}
       </div>
     </div>
-  )
+  );
 }
 
 // Collaborator Cursor Component
@@ -366,9 +367,9 @@ function CollaboratorCursor({
   color,
   position,
 }: {
-  name: string
-  color: string
-  position: { top: string; left: string }
+  name: string;
+  color: string;
+  position: { top: string; left: string };
 }) {
   return (
     <motion.div
@@ -399,7 +400,7 @@ function CollaboratorCursor({
         {name}
       </motion.div>
     </motion.div>
-  )
+  );
 }
 
 // Collaborator Avatar Component
@@ -412,7 +413,7 @@ function CollaboratorAvatar({ name, color }: { name: string; color: string }) {
     >
       {name[0]}
     </div>
-  )
+  );
 }
 
 // Link Popover Mock Component
@@ -444,16 +445,20 @@ function LinkPopoverMock({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
 // Popover Button Component
 function PopoverButton({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <button className="p-1 rounded hover:bg-gray-100" title={title} onClick={(e) => e.preventDefault()}>
+    <button
+      className="p-1 rounded hover:bg-gray-100"
+      title={title}
+      onClick={(e) => e.preventDefault()}
+    >
       {children}
     </button>
-  )
+  );
 }
 
 // Toolbar Button Component
@@ -462,7 +467,7 @@ function ToolbarButton({ title, children }: { title: string; children: React.Rea
     <button className="p-1 rounded hover:bg-gray-100 text-gray-700" title={title}>
       {children}
     </button>
-  )
+  );
 }
 
 // Icon Components
@@ -482,13 +487,21 @@ function BoldIcon() {
         d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"
       ></path>
     </svg>
-  )
+  );
 }
 
 function ItalicIcon() {
   return (
     <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <line x1="19" y1="4" x2="10" y2="4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></line>
+      <line
+        x1="19"
+        y1="4"
+        x2="10"
+        y2="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      ></line>
       <line
         x1="14"
         y1="20"
@@ -498,9 +511,17 @@ function ItalicIcon() {
         strokeLinejoin="round"
         strokeWidth="2"
       ></line>
-      <line x1="15" y1="4" x2="9" y2="20" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></line>
+      <line
+        x1="15"
+        y1="4"
+        x2="9"
+        y2="20"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      ></line>
     </svg>
-  )
+  );
 }
 
 function StrikethroughIcon() {
@@ -513,7 +534,7 @@ function StrikethroughIcon() {
         d="M4 12h16M6 6c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2v1M6 18c0 1.1.9 2 2 2h8c1.1 0 2 .9 2 2v-1"
       ></path>
     </svg>
-  )
+  );
 }
 
 function CodeIcon() {
@@ -532,7 +553,7 @@ function CodeIcon() {
         strokeWidth="2"
       ></polyline>
     </svg>
-  )
+  );
 }
 
 function H1Icon() {
@@ -545,7 +566,7 @@ function H1Icon() {
         d="M4 12h8m-8-6v12m8-12v12m5-12v12m0-6h3"
       ></path>
     </svg>
-  )
+  );
 }
 
 function H2Icon() {
@@ -558,7 +579,7 @@ function H2Icon() {
         d="M4 12h8m-8-6v12m8-12v12m5 4h5l-5-6h5"
       ></path>
     </svg>
-  )
+  );
 }
 
 function H3Icon() {
@@ -571,7 +592,7 @@ function H3Icon() {
         d="M4 12h8m-8-6v12m8-12v12m6 0h4a2 2 0 0 0 0-4h-4m0 4h4a2 2 0 0 0 0-4"
       ></path>
     </svg>
-  )
+  );
 }
 
 function BulletListIcon() {
@@ -584,7 +605,7 @@ function BulletListIcon() {
       <circle cx="3.5" cy="12" r="1" fill="currentColor"></circle>
       <circle cx="3.5" cy="18" r="1" fill="currentColor"></circle>
     </svg>
-  )
+  );
 }
 
 function OrderedListIcon() {
@@ -600,7 +621,7 @@ function OrderedListIcon() {
         strokeWidth="2"
       ></path>
     </svg>
-  )
+  );
 }
 
 function LinkIcon() {
@@ -619,7 +640,7 @@ function LinkIcon() {
         d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
       ></path>
     </svg>
-  )
+  );
 }
 
 function ImageIcon() {
@@ -634,7 +655,7 @@ function ImageIcon() {
         strokeWidth="2"
       ></polyline>
     </svg>
-  )
+  );
 }
 
 function TableIcon() {
@@ -645,7 +666,7 @@ function TableIcon() {
       <line x1="3" y1="15" x2="21" y2="15" strokeWidth="2"></line>
       <line x1="12" y1="3" x2="12" y2="21" strokeWidth="2"></line>
     </svg>
-  )
+  );
 }
 
 // Collaborative Text Edit Component
@@ -655,62 +676,62 @@ function CollaborativeTextEdit({
   isActive,
   onCursorShow,
 }: {
-  originalText: string
-  newText: string
-  isActive: boolean
-  onCursorShow: (show: boolean) => void
+  originalText: string;
+  newText: string;
+  isActive: boolean;
+  onCursorShow: (show: boolean) => void;
 }) {
-  const [showSelection, setShowSelection] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
-  const [displayedText, setDisplayedText] = useState(originalText)
-  const [hasStarted, setHasStarted] = useState(false)
+  const [showSelection, setShowSelection] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [displayedText, setDisplayedText] = useState(originalText);
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
     if (!isActive) {
       // Reset when tab is not active
-      setShowSelection(false)
-      setIsTyping(false)
-      setDisplayedText(originalText)
-      setHasStarted(false)
-      onCursorShow(false)
-      return
+      setShowSelection(false);
+      setIsTyping(false);
+      setDisplayedText(originalText);
+      setHasStarted(false);
+      onCursorShow(false);
+      return;
     }
 
     // Start the animation sequence after a delay
     const timer = setTimeout(() => {
-      setHasStarted(true)
-      setShowSelection(true)
-      onCursorShow(true) // Show cursor when selection starts
+      setHasStarted(true);
+      setShowSelection(true);
+      onCursorShow(true); // Show cursor when selection starts
 
       // After selection is shown, start typing
       const typingTimer = setTimeout(() => {
-        setShowSelection(false)
-        setIsTyping(true)
+        setShowSelection(false);
+        setIsTyping(true);
 
         // Type out the new text character by character
-        let currentIndex = 0
+        let currentIndex = 0;
         const typingInterval = setInterval(() => {
           if (currentIndex < newText.length) {
-            setDisplayedText(newText.slice(0, currentIndex + 1))
-            currentIndex++
+            setDisplayedText(newText.slice(0, currentIndex + 1));
+            currentIndex++;
           } else {
-            clearInterval(typingInterval)
-            setIsTyping(false)
+            clearInterval(typingInterval);
+            setIsTyping(false);
             // Keep cursor visible for a moment after typing completes
             setTimeout(() => {
-              onCursorShow(false)
-            }, 500)
+              onCursorShow(false);
+            }, 500);
           }
-        }, 50) // Typing speed: 50ms per character (faster for longer text)
+        }, 50); // Typing speed: 50ms per character (faster for longer text)
 
-        return () => clearInterval(typingInterval)
-      }, 1200) // Show selection for 1.2 seconds
+        return () => clearInterval(typingInterval);
+      }, 1200); // Show selection for 1.2 seconds
 
-      return () => clearTimeout(typingTimer)
-    }, 800) // Initial delay before starting
+      return () => clearTimeout(typingTimer);
+    }, 800); // Initial delay before starting
 
-    return () => clearTimeout(timer)
-  }, [isActive, originalText, newText, onCursorShow])
+    return () => clearTimeout(timer);
+  }, [isActive, originalText, newText, onCursorShow]);
 
   return (
     <span className="relative inline-block">
@@ -730,7 +751,11 @@ function CollaborativeTextEdit({
             </motion.span>
           )}
           {isTyping && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-blue-600">
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-blue-600"
+            >
               {displayedText}
               <motion.span
                 animate={{ opacity: [1, 0, 1] }}
@@ -739,11 +764,13 @@ function CollaborativeTextEdit({
               />
             </motion.span>
           )}
-          {!showSelection && !isTyping && hasStarted && <span className="text-blue-600">{newText}</span>}
+          {!showSelection && !isTyping && hasStarted && (
+            <span className="text-blue-600">{newText}</span>
+          )}
         </>
       )}
     </span>
-  )
+  );
 }
 
 function EditIcon({ className }: { className?: string }) {
@@ -756,7 +783,7 @@ function EditIcon({ className }: { className?: string }) {
         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
       />
     </svg>
-  )
+  );
 }
 
 function UnlinkIcon({ className }: { className?: string }) {
@@ -769,5 +796,5 @@ function UnlinkIcon({ className }: { className?: string }) {
         d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
       />
     </svg>
-  )
+  );
 }

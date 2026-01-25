@@ -1,32 +1,34 @@
-import { useState } from "react"
-import { DialogTrigger, Form, Heading, Button as RACButton } from "react-aria-components"
-import { Button } from "../generic/Button"
-import { Dialog } from "../generic/Dialog"
-import { Modal } from "../generic/Modal"
-import { Separator } from "../generic/Separator"
-import { ChatFilled } from "@fluentui/react-icons"
-import { useZero } from "@/services/zero"
-import { createId } from "@lydie/core/id"
-import { useOrganization } from "@/context/organization.context"
-import { useAppForm } from "@/hooks/use-app-form"
-import { mutators } from "@lydie/zero/mutators"
-import { sidebarItemIconStyles, sidebarItemStyles } from "../layout/Sidebar"
+import { ChatFilled } from "@fluentui/react-icons";
+import { createId } from "@lydie/core/id";
+import { mutators } from "@lydie/zero/mutators";
+import { useState } from "react";
+import { DialogTrigger, Form, Heading, Button as RACButton } from "react-aria-components";
+
+import { useOrganization } from "@/context/organization.context";
+import { useAppForm } from "@/hooks/use-app-form";
+import { useZero } from "@/services/zero";
+
+import { Button } from "../generic/Button";
+import { Dialog } from "../generic/Dialog";
+import { Modal } from "../generic/Modal";
+import { Separator } from "../generic/Separator";
+import { sidebarItemIconStyles, sidebarItemStyles } from "../layout/Sidebar";
 
 export function FeedbackWidget() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [isOpen, setIsOpen] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
-  const zero = useZero()
-  const { organization } = useOrganization()
+  const zero = useZero();
+  const { organization } = useOrganization();
 
   const form = useAppForm({
     defaultValues: {
       message: "",
     },
     onSubmit: async ({ value: values }) => {
-      if (!organization) return
+      if (!organization) return;
 
-      setSubmitStatus("idle")
+      setSubmitStatus("idle");
 
       try {
         zero.mutate(
@@ -40,22 +42,22 @@ export function FeedbackWidget() {
             },
             organizationId: organization.id,
           }),
-        )
+        );
 
-        setSubmitStatus("success")
+        setSubmitStatus("success");
 
         // Auto-close after success
         setTimeout(() => {
-          setIsOpen(false)
-          setSubmitStatus("idle")
-          form.reset()
-        }, 2000)
+          setIsOpen(false);
+          setSubmitStatus("idle");
+          form.reset();
+        }, 2000);
       } catch (error) {
-        console.error("Failed to submit feedback:", error)
-        setSubmitStatus("error")
+        console.error("Failed to submit feedback:", error);
+        setSubmitStatus("error");
       }
     },
-  })
+  });
 
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -77,9 +79,9 @@ export function FeedbackWidget() {
               <Separator />
               <Form
                 onSubmit={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  form.handleSubmit()
+                  e.preventDefault();
+                  e.stopPropagation();
+                  form.handleSubmit();
                 }}
                 className="flex flex-col"
               >
@@ -89,16 +91,15 @@ export function FeedbackWidget() {
                     validators={{
                       onChange: ({ value }) => {
                         if (!value || !value.trim()) {
-                          return "Message is required"
+                          return "Message is required";
                         }
-                        return undefined
+                        return undefined;
                       },
                     }}
                     children={(field) => (
                       <field.TextField
                         label="Message"
                         textarea
-                        autoFocus
                         placeholder="Tell us what you think or how we can help..."
                       />
                     )}
@@ -124,7 +125,11 @@ export function FeedbackWidget() {
                   <form.Subscribe
                     selector={(state) => [state.canSubmit, state.isSubmitting]}
                     children={([canSubmit, isSubmitting]) => (
-                      <Button type="submit" intent="primary" isDisabled={!canSubmit || isSubmitting}>
+                      <Button
+                        type="submit"
+                        intent="primary"
+                        isDisabled={!canSubmit || isSubmitting}
+                      >
                         {isSubmitting ? "Sending..." : "Send"}
                       </Button>
                     )}
@@ -136,5 +141,5 @@ export function FeedbackWidget() {
         </Dialog>
       </Modal>
     </DialogTrigger>
-  )
+  );
 }

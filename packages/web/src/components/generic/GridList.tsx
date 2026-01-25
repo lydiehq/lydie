@@ -1,14 +1,15 @@
-import React from "react"
+import React from "react";
 import {
   GridList as AriaGridList,
   GridListItem as AriaGridListItem,
   Button,
   GridListItemProps,
   GridListProps,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
-import { Checkbox } from "./Checkbox"
-import { composeTailwindRenderProps, focusRing } from "./utils"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
+import { Checkbox } from "./Checkbox";
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
 export function GridList<T extends object>({ children, ...props }: GridListProps<T>) {
   return (
@@ -21,7 +22,7 @@ export function GridList<T extends object>({ children, ...props }: GridListProps
     >
       {children}
     </AriaGridList>
-  )
+  );
 }
 
 const itemStyles = tv({
@@ -36,20 +37,22 @@ const itemStyles = tv({
       true: "text-slate-300 dark:text-zinc-600 forced-colors:text-[GrayText] z-10",
     },
   },
-})
+});
 
 export function GridListItem({ children, ...props }: GridListItemProps) {
-  let textValue = typeof children === "string" ? children : undefined
+  let textValue = typeof children === "string" ? children : undefined;
   return (
     <AriaGridListItem textValue={textValue} {...props} className={itemStyles}>
       {({ selectionMode, selectionBehavior, allowsDragging }) => (
         <>
           {/* Add elements for drag and drop and selection. */}
           {allowsDragging && <Button slot="drag">≡</Button>}
-          {selectionMode === "multiple" && selectionBehavior === "toggle" && <Checkbox slot="selection" />}
+          {selectionMode === "multiple" && selectionBehavior === "toggle" && (
+            <Checkbox slot="selection" />
+          )}
           {children}
         </>
       )}
     </AriaGridListItem>
-  )
+  );
 }

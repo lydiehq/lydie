@@ -1,42 +1,44 @@
-import { Modal } from "../generic/Modal"
-import { Dialog } from "../generic/Dialog"
-import { Heading, Button as RACButton } from "react-aria-components"
-import { Separator } from "../generic/Separator"
-import { Button } from "../generic/Button"
-import { useNavigate, useRouteContext } from "@tanstack/react-router"
-import { ChevronRightRegular } from "@fluentui/react-icons"
-import { useOrganization } from "@/context/organization.context"
-import { OrganizationAvatar } from "./OrganizationAvatar"
-import { authClient } from "@/utils/auth"
+import { ChevronRightRegular } from "@fluentui/react-icons";
+import { useNavigate, useRouteContext } from "@tanstack/react-router";
+import { Heading, Button as RACButton } from "react-aria-components";
+
+import { useOrganization } from "@/context/organization.context";
+import { authClient } from "@/utils/auth";
+
+import { Button } from "../generic/Button";
+import { Dialog } from "../generic/Dialog";
+import { Modal } from "../generic/Modal";
+import { Separator } from "../generic/Separator";
+import { OrganizationAvatar } from "./OrganizationAvatar";
 
 export function OrganizationsDialog({
   isOpen,
   onOpenChange,
 }: {
-  isOpen: boolean
-  onOpenChange: (isOpen: boolean) => void
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
 }) {
-  const { organization } = useOrganization()
-  const { organizations } = useRouteContext({ from: "/__auth" })
+  const { organization } = useOrganization();
+  const { organizations } = useRouteContext({ from: "/__auth" });
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const goToOrganization = (targetOrg: { id: string; slug: string }) => {
     if (organization?.slug === targetOrg.slug) {
-      return
+      return;
     }
 
     authClient.organization.setActive({
       organizationId: targetOrg.id,
-    })
+    });
 
     navigate({
       to: "/w/$organizationSlug",
       params: { organizationSlug: targetOrg.slug },
-    })
+    });
 
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   return (
     <>
@@ -62,7 +64,9 @@ export function OrganizationsDialog({
                   <OrganizationAvatar organization={o} size="lg" />
                   <div className="font-medium text-black text-sm">
                     {o.name}
-                    {organization?.slug === o.slug && <span className="text-gray-500 ml-1">current</span>}
+                    {organization?.slug === o.slug && (
+                      <span className="text-gray-500 ml-1">current</span>
+                    )}
                   </div>
                   <ChevronRightRegular className="size-[14px] absolute right-2 text-gray-200 top-1/2 -translate-y-1/2 group-hover:text-gray-400" />
                 </RACButton>
@@ -78,5 +82,5 @@ export function OrganizationsDialog({
         </Dialog>
       </Modal>
     </>
-  )
+  );
 }

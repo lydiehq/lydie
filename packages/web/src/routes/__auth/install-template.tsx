@@ -1,28 +1,29 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useState } from "react"
-import { useZero } from "@/services/zero"
-import { mutators } from "@lydie/zero/mutators"
-import { OrganizationAvatar } from "@/components/layout/OrganizationAvatar"
-import { Button } from "@/components/generic/Button"
-import { Heading } from "@/components/generic/Heading"
-import { toast } from "sonner"
-import { ChevronRightRegular } from "@fluentui/react-icons"
+import { ChevronRightRegular } from "@fluentui/react-icons";
+import { mutators } from "@lydie/zero/mutators";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/generic/Button";
+import { Heading } from "@/components/generic/Heading";
+import { OrganizationAvatar } from "@/components/layout/OrganizationAvatar";
+import { useZero } from "@/services/zero";
 
 export const Route = createFileRoute("/__auth/install-template")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => {
     return {
       template: (search.template as string) || "",
-    }
+    };
   },
-})
+});
 
 function RouteComponent() {
-  const { template } = Route.useSearch()
-  const { organizations } = Route.useRouteContext()
-  const navigate = useNavigate()
-  const z = useZero()
-  const [installing, setInstalling] = useState<string | null>(null)
+  const { template } = Route.useSearch();
+  const { organizations } = Route.useRouteContext();
+  const navigate = useNavigate();
+  const z = useZero();
+  const [installing, setInstalling] = useState<string | null>(null);
 
   if (!template) {
     return (
@@ -35,35 +36,35 @@ function RouteComponent() {
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   const handleInstall = async (organizationId: string, organizationSlug: string) => {
-    setInstalling(organizationId)
+    setInstalling(organizationId);
     try {
       const result = await z.mutate(
         mutators.template.install({
           templateSlug: template,
           organizationId,
         }),
-      )
+      );
 
       if (result?.client) {
-        await result.client
+        await result.client;
       }
 
-      toast.success("Template installed successfully!")
+      toast.success("Template installed successfully!");
 
       navigate({
         to: "/w/$organizationSlug",
         params: { organizationSlug },
-      })
+      });
     } catch (error) {
-      console.error("Failed to install template:", error)
-      toast.error("Failed to install template. Please try again.")
-      setInstalling(null)
+      console.error("Failed to install template:", error);
+      toast.error("Failed to install template. Please try again.");
+      setInstalling(null);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -84,7 +85,9 @@ function RouteComponent() {
               <OrganizationAvatar organization={org} size="lg" />
               <div className="flex-1 text-left">
                 <div className="font-medium text-gray-900">{org.name}</div>
-                {installing === org.id && <div className="text-sm text-gray-500">Installing...</div>}
+                {installing === org.id && (
+                  <div className="text-sm text-gray-500">Installing...</div>
+                )}
               </div>
               <ChevronRightRegular className="size-5 text-gray-400 group-hover:text-gray-600" />
             </button>
@@ -98,5 +101,5 @@ function RouteComponent() {
         </div>
       </div>
     </div>
-  )
+  );
 }

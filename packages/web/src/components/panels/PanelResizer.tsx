@@ -1,8 +1,8 @@
-import { PanelResizeHandle } from "react-resizable-panels"
-import { useFocusVisible } from "react-aria"
+import { useFocusVisible } from "react-aria";
+import { PanelResizeHandle } from "react-resizable-panels";
 
 export function PanelResizer(props: any) {
-  const { isFocusVisible } = useFocusVisible()
+  const { isFocusVisible } = useFocusVisible();
   return (
     <PanelResizeHandle
       {...props}
@@ -10,5 +10,5 @@ export function PanelResizer(props: any) {
         isFocusVisible ? "" : "focus:outline-none"
       }`}
     />
-  )
+  );
 }

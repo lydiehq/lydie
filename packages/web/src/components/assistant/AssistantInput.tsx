@@ -1,28 +1,29 @@
-import { EditorContent } from "@tiptap/react"
-import { Form } from "react-aria-components"
-import { motion } from "motion/react"
-import { ChevronUpRegular, SquareFilled, ArrowCircleUpRegular } from "@fluentui/react-icons"
-import { Button } from "@/components/generic/Button"
-import { useChatComposer } from "@/hooks/use-chat-composer"
-import { useCallback, useRef, useEffect, useState, useMemo } from "react"
-import { ChatContextList, type ChatContextItem } from "@/components/chat/ChatContextList"
-import { getReferenceDocumentIds } from "@/utils/parse-references"
-import { useDocumentContext } from "@/hooks/use-document-context"
-import { AgentSelector } from "@/components/assistant/AgentSelector"
+import { ArrowCircleUpRegular, ChevronUpRegular, SquareFilled } from "@fluentui/react-icons";
+import { EditorContent } from "@tiptap/react";
+import { motion } from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Form } from "react-aria-components";
+
+import { AgentSelector } from "@/components/assistant/AgentSelector";
+import { type ChatContextItem, ChatContextList } from "@/components/chat/ChatContextList";
+import { Button } from "@/components/generic/Button";
+import { useChatComposer } from "@/hooks/use-chat-composer";
+import { useDocumentContext } from "@/hooks/use-document-context";
+import { getReferenceDocumentIds } from "@/utils/parse-references";
 
 export interface AssistantInputProps {
-  onSubmit: (text: string, contextDocumentIds: string[]) => void
-  onStop?: () => void
-  placeholder?: string
-  canStop?: boolean
-  initialPrompt?: string
-  currentDocumentId?: string | null
-  onRemoveContext?: (item: ChatContextItem) => void
-  editorClassName?: string
-  variant?: "rounded" | "flat"
-  content?: string
-  selectedAgentId?: string | null
-  onSelectAgent?: (agentId: string) => void
+  onSubmit: (text: string, contextDocumentIds: string[]) => void;
+  onStop?: () => void;
+  placeholder?: string;
+  canStop?: boolean;
+  initialPrompt?: string;
+  currentDocumentId?: string | null;
+  onRemoveContext?: (item: ChatContextItem) => void;
+  editorClassName?: string;
+  variant?: "rounded" | "flat";
+  content?: string;
+  selectedAgentId?: string | null;
+  onSelectAgent?: (agentId: string) => void;
 }
 
 export function AssistantInput({
@@ -39,12 +40,12 @@ export function AssistantInput({
   selectedAgentId,
   onSelectAgent,
 }: AssistantInputProps) {
-  const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([])
-  const [manuallySelectedDocumentIds, setManuallySelectedDocumentIds] = useState<string[]>([])
+  const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([]);
+  const [manuallySelectedDocumentIds, setManuallySelectedDocumentIds] = useState<string[]>([]);
 
   const allReferencedDocumentIds = useMemo(() => {
-    return Array.from(new Set([...mentionedDocumentIds, ...manuallySelectedDocumentIds]))
-  }, [mentionedDocumentIds, manuallySelectedDocumentIds])
+    return Array.from(new Set([...mentionedDocumentIds, ...manuallySelectedDocumentIds]));
+  }, [mentionedDocumentIds, manuallySelectedDocumentIds]);
 
   const {
     availableDocuments,
@@ -55,40 +56,40 @@ export function AssistantInput({
   } = useDocumentContext({
     currentDocumentId,
     mentionedDocumentIds: allReferencedDocumentIds,
-  })
+  });
 
-  const handleSubmitRef = useRef<() => void>(() => {})
+  const handleSubmitRef = useRef<() => void>(() => {});
 
   const chatEditor = useChatComposer({
     documents: availableDocuments,
     placeholder,
     editorClassName,
     onChange: (editor) => {
-      const textContent = editor.getText()
-      setMentionedDocumentIds(getReferenceDocumentIds(textContent))
+      const textContent = editor.getText();
+      setMentionedDocumentIds(getReferenceDocumentIds(textContent));
     },
     onEnter: () => {
-      const textContent = chatEditor.getTextContent()
+      const textContent = chatEditor.getTextContent();
       if (textContent.trim()) {
-        handleSubmitRef.current()
+        handleSubmitRef.current();
       }
     },
-  })
+  });
 
   useEffect(() => {
     if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
-      chatEditor.setContent(initialPrompt)
+      chatEditor.setContent(initialPrompt);
     }
-  }, [initialPrompt, chatEditor])
+  }, [initialPrompt, chatEditor]);
 
   useEffect(() => {
     if (content !== undefined && content !== null && chatEditor.editor) {
-      const currentContent = chatEditor.getTextContent()
+      const currentContent = chatEditor.getTextContent();
       if (content !== currentContent) {
-        chatEditor.setContent(content)
+        chatEditor.setContent(content);
       }
     }
-  }, [content, chatEditor])
+  }, [content, chatEditor]);
 
   // Enhance context items to mark manually selected documents
   const contextItems = useMemo(() => {
@@ -98,59 +99,59 @@ export function AssistantInput({
           ...item,
           source: "manual" as const,
           removable: true,
-        }
+        };
       }
-      return item
-    })
-  }, [baseContextItems, manuallySelectedDocumentIds])
+      return item;
+    });
+  }, [baseContextItems, manuallySelectedDocumentIds]);
 
   const handleAddDocument = useCallback((documentId: string) => {
-    setManuallySelectedDocumentIds((prev) => [...prev, documentId])
-  }, [])
+    setManuallySelectedDocumentIds((prev) => [...prev, documentId]);
+  }, []);
 
   const handleRemoveContext = useCallback(
     (item: ChatContextItem) => {
       // If it's a manually selected document, remove it from manual selection
       if (manuallySelectedDocumentIds.includes(item.id)) {
-        setManuallySelectedDocumentIds((prev) => prev.filter((id) => id !== item.id))
+        setManuallySelectedDocumentIds((prev) => prev.filter((id) => id !== item.id));
       }
       // Also call the default or custom handler
       if (onRemoveContext) {
-        onRemoveContext(item)
+        onRemoveContext(item);
       } else {
-        defaultHandleRemoveContext(item)
+        defaultHandleRemoveContext(item);
       }
     },
     [manuallySelectedDocumentIds, onRemoveContext, defaultHandleRemoveContext],
-  )
+  );
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
-      e?.preventDefault()
-      const textContent = chatEditor.getTextContent()
-      if (!textContent.trim()) return
+      e?.preventDefault();
+      const textContent = chatEditor.getTextContent();
+      if (!textContent.trim()) return;
 
-      onSubmit(textContent, contextDocumentIds)
-      chatEditor.clearContent()
-      resetDismissal()
-      setManuallySelectedDocumentIds([])
+      onSubmit(textContent, contextDocumentIds);
+      chatEditor.clearContent();
+      resetDismissal();
+      setManuallySelectedDocumentIds([]);
     },
     [chatEditor, onSubmit, contextDocumentIds, resetDismissal],
-  )
+  );
 
-  handleSubmitRef.current = handleSubmit
+  handleSubmitRef.current = handleSubmit;
 
   const containerClassName =
     variant === "rounded"
       ? "rounded-full bg-white text-sm shadow-surface flex flex-col gap-y-2 relative w-full"
-      : "rounded-lg flex flex-col z-10 relative bg-gray-100 shadow-inner p-0.5 border border-black/8"
+      : "rounded-lg flex flex-col z-10 relative bg-gray-100 shadow-inner p-0.5 border border-black/8";
 
-  const formClassName = variant === "rounded" ? "relative flex flex-col" : "relative flex flex-col"
+  const formClassName = variant === "rounded" ? "relative flex flex-col" : "relative flex flex-col";
 
   const editorWrapperClassName =
     variant === "rounded"
       ? "text-sm text-start"
-      : "flex flex-col bg-white rounded-[6px] p-2 relative shadow-surface"
+      : "flex flex-col bg-white rounded-[6px] p-2 relative shadow-surface";
 
   return (
     <motion.div
@@ -218,5 +219,5 @@ export function AssistantInput({
         </Form>
       </div>
     </motion.div>
-  )
+  );
 }

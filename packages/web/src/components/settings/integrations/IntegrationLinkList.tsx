@@ -1,46 +1,54 @@
-import { Menu, MenuItem } from "@/components/generic/Menu"
-import { Button as RACButton, Heading as RACHeading, MenuTrigger, DialogTrigger } from "react-aria-components"
-import { MoreHorizontalRegular, LinkRegular, ArrowClockwiseRegular } from "@fluentui/react-icons"
-import { useZero } from "@rocicorp/zero/react"
-import { mutators } from "@lydie/zero/mutators"
-import { useOrganization } from "@/context/organization.context"
-import type { QueryResultType } from "@rocicorp/zero"
-import { queries } from "@lydie/zero/queries"
-import { formatDistanceToNow } from "date-fns"
-import { useAuthenticatedApi } from "@/services/api"
-import { useState } from "react"
-import { useQuery } from "@rocicorp/zero/react"
-import { toast } from "sonner"
-import { createId } from "@lydie/core/id"
-import { GitHubForm } from "./forms/github-form"
-import { WordPressForm } from "./forms/wordpress-form"
-import { ShopifyForm } from "./forms/shopify-form"
-import { Button } from "@/components/generic/Button"
-import { Modal } from "@/components/generic/Modal"
-import { Dialog } from "@/components/generic/Dialog"
+import type { QueryResultType } from "@rocicorp/zero";
+
+import { ArrowClockwiseRegular, LinkRegular, MoreHorizontalRegular } from "@fluentui/react-icons";
+import { createId } from "@lydie/core/id";
+import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useZero } from "@rocicorp/zero/react";
+import { useQuery } from "@rocicorp/zero/react";
+import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import {
+  DialogTrigger,
+  MenuTrigger,
+  Button as RACButton,
+  Heading as RACHeading,
+} from "react-aria-components";
+import { toast } from "sonner";
+
+import { Button } from "@/components/generic/Button";
+import { Dialog } from "@/components/generic/Dialog";
+import { Menu, MenuItem } from "@/components/generic/Menu";
+import { Modal } from "@/components/generic/Modal";
+import { useOrganization } from "@/context/organization.context";
+import { useAuthenticatedApi } from "@/services/api";
+
+import { GitHubForm } from "./forms/github-form";
+import { ShopifyForm } from "./forms/shopify-form";
+import { WordPressForm } from "./forms/wordpress-form";
 
 type Props = {
-  links: QueryResultType<typeof queries.integrationLinks.byIntegrationType>
-  integrationType: string
-  organizationId: string
-}
+  links: QueryResultType<typeof queries.integrationLinks.byIntegrationType>;
+  integrationType: string;
+  organizationId: string;
+};
 
 export function IntegrationLinkList({ links, integrationType, organizationId }: Props) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const zero = useZero()
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const zero = useZero();
 
   const [connections] = useQuery(
     queries.integrations.byOrganization({
       organizationId: organizationId || "",
     }),
-  )
+  );
 
-  const connection = connections.find((c) => c.integration_type === integrationType)
+  const connection = connections.find((c) => c.integration_type === integrationType);
 
   const handleCreateLink = async (name: string, config: any) => {
     if (!connection) {
-      toast.error("No connection found")
-      return
+      toast.error("No connection found");
+      return;
     }
 
     try {
@@ -52,44 +60,44 @@ export function IntegrationLinkList({ links, integrationType, organizationId }: 
           name,
           config,
         }),
-      )
+      );
 
-      toast.success("Link created, pulling resources...")
-      setIsDialogOpen(false)
+      toast.success("Link created, pulling resources...");
+      setIsDialogOpen(false);
     } catch (error) {
-      console.error("Failed to create link:", error)
-      toast.error("Failed to create link")
-      throw error
+      console.error("Failed to create link:", error);
+      toast.error("Failed to create link");
+      throw error;
     }
-  }
+  };
 
   const renderForm = () => {
-    if (!connection) return null
+    if (!connection) return null;
 
     const formProps = {
       connectionId: connection.id,
       organizationId,
       onCreate: handleCreateLink,
       onCancel: () => setIsDialogOpen(false),
-    }
+    };
 
     // Todo: can we dynamically load this? even better, we should load it from
     // the integration itself or have a schema for defining the form?
     switch (integrationType) {
       case "github":
-        return <GitHubForm {...formProps} />
+        return <GitHubForm {...formProps} />;
       case "shopify":
-        return <ShopifyForm {...formProps} />
+        return <ShopifyForm {...formProps} />;
       case "wordpress":
-        return <WordPressForm {...formProps} />
+        return <WordPressForm {...formProps} />;
       default:
         return (
           <div className="p-4">
             <p className="text-sm text-gray-600">Form not available for this integration type.</p>
           </div>
-        )
+        );
     }
-  }
+  };
 
   return (
     <div className="bg-black/2 rounded-lg p-1 flex flex-col gap-y-1">
@@ -128,31 +136,31 @@ export function IntegrationLinkList({ links, integrationType, organizationId }: 
         </div>
       )}
     </div>
-  )
+  );
 }
 
 type IntegrationLinkListItemProps = {
-  link: QueryResultType<typeof queries.integrationLinks.byIntegrationType>[number]
-}
+  link: QueryResultType<typeof queries.integrationLinks.byIntegrationType>[number];
+};
 
 export function IntegrationLinkListItem({ link }: IntegrationLinkListItemProps) {
-  const client = useAuthenticatedApi()
+  const client = useAuthenticatedApi();
 
   const onSync = async () => {
-    const apiClient = await client.createClient()
+    const apiClient = await client.createClient();
     // TODO: maybe handle via Zero mutator
     // better UI feedback for pull
     await apiClient.internal.integrations.links[":linkId"].pull
       .$post({
         param: { linkId: link.id },
       })
-      .then((res: Response) => res.json())
-  }
+      .then((res: Response) => res.json());
+  };
 
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const isPullingResources = link.sync_status === "pulling"
-  const hasError = link.sync_status === "error"
+  const isPullingResources = link.sync_status === "pulling";
+  const hasError = link.sync_status === "error";
 
   return (
     <ul className="p-2.5 hover:bg-black/1 first:rounded-t-lg last:rounded-b-lg transition-colors duration-75">
@@ -187,21 +195,25 @@ export function IntegrationLinkListItem({ link }: IntegrationLinkListItemProps) 
             <MenuItem onAction={() => setIsDeleteDialogOpen(true)}>Delete</MenuItem>
           </Menu>
         </MenuTrigger>
-        <DeleteLinkDialog isOpen={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} link={link} />
+        <DeleteLinkDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          link={link}
+        />
       </div>
     </ul>
-  )
+  );
 }
 
 type DeleteLinkDialogProps = {
-  isOpen: boolean
-  onOpenChange: (isOpen: boolean) => void
-  link: QueryResultType<typeof queries.integrationLinks.byIntegrationType>[number]
-}
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  link: QueryResultType<typeof queries.integrationLinks.byIntegrationType>[number];
+};
 
 function DeleteLinkDialog({ isOpen, onOpenChange, link }: DeleteLinkDialogProps) {
-  const zero = useZero()
-  const { organization } = useOrganization()
+  const zero = useZero();
+  const { organization } = useOrganization();
 
   const handleConfirm = () => {
     zero.mutate(
@@ -210,10 +222,10 @@ function DeleteLinkDialog({ isOpen, onOpenChange, link }: DeleteLinkDialogProps)
         organizationId: organization.id,
         deleteDocuments: true,
       }),
-    )
-  }
+    );
+  };
 
-  const hasDocuments = link.documents.length > 0
+  const hasDocuments = link.documents.length > 0;
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} isDismissable size="sm">
@@ -231,12 +243,12 @@ function DeleteLinkDialog({ isOpen, onOpenChange, link }: DeleteLinkDialogProps)
             <Button intent="secondary" onPress={() => onOpenChange(false)} size="sm">
               Cancel
             </Button>
-            <Button onPress={handleConfirm} size="sm" autoFocus>
+            <Button onPress={handleConfirm} size="sm">
               Confirm
             </Button>
           </div>
         </div>
       </Dialog>
     </Modal>
-  )
+  );
 }

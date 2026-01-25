@@ -1,74 +1,81 @@
-import { createFileRoute, notFound, Outlet, useRouterState, useNavigate } from "@tanstack/react-router"
-import { Sidebar } from "@/components/layout/Sidebar"
-import { Panel, PanelGroup, type ImperativePanelHandle } from "react-resizable-panels"
-import { PanelResizer } from "@/components/panels/PanelResizer"
-import { useRef, useState, useMemo, useEffect } from "react"
-import { CommandMenu } from "@/components/layout/command-menu/CommandMenu"
-import { loadOrganization } from "@/lib/organization/loadOrganization"
-import { useAtomValue } from "jotai"
-import { isDockedAtom } from "@/stores/floating-assistant"
-import { FloatingAssistant } from "@/components/assistant/FloatingAssistant"
-import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog"
-import { z } from "zod"
+import {
+  Outlet,
+  createFileRoute,
+  notFound,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
+import { useAtomValue } from "jotai";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type ImperativePanelHandle, Panel, PanelGroup } from "react-resizable-panels";
+import { z } from "zod";
+
+import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
+import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { PanelResizer } from "@/components/panels/PanelResizer";
+import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
+import { loadOrganization } from "@/lib/organization/loadOrganization";
+import { isDockedAtom } from "@/stores/floating-assistant";
 
 const organizationSearchSchema = z.object({
   installTemplate: z.string().optional().catch(undefined),
-})
+});
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   component: RouteComponent,
   validateSearch: (search) => organizationSearchSchema.parse(search),
   beforeLoad: async ({ context, params }) => {
     try {
-      const { zero, queryClient } = context
-      const { organizationSlug } = params
+      const { zero, queryClient } = context;
+      const { organizationSlug } = params;
 
-      const organization = await loadOrganization(queryClient, zero, organizationSlug)
+      const organization = await loadOrganization(queryClient, zero, organizationSlug);
 
       // await authClient.organization.setActive({
       //   organizationId: organization.id,
       // })
 
-      return { organization }
+      return { organization };
     } catch (error) {
-      console.error(error)
-      throw notFound()
+      console.error(error);
+      throw notFound();
     }
   },
   notFoundComponent: () => <div>Organization not found</div>,
   gcTime: Infinity,
   staleTime: Infinity,
   ssr: false,
-})
+});
 
-const COLLAPSED_SIZE = 3
+const COLLAPSED_SIZE = 3;
 
 function RouteComponent() {
-  return <RouteLayout />
+  return <RouteLayout />;
 }
 
 function RouteLayout() {
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null)
-  const assistantPanelRef = useRef<ImperativePanelHandle>(null)
-  const [size, setSize] = useState(25)
-  const routerState = useRouterState()
-  const isDocked = useAtomValue(isDockedAtom)
-  const navigate = useNavigate()
-  const search = Route.useSearch()
-  const params = Route.useParams()
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+  const assistantPanelRef = useRef<ImperativePanelHandle>(null);
+  const [size, setSize] = useState(25);
+  const routerState = useRouterState();
+  const isDocked = useAtomValue(isDockedAtom);
+  const navigate = useNavigate();
+  const search = Route.useSearch();
+  const params = Route.useParams();
 
   // Template installation dialog state
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
 
   // Open template installation dialog when installTemplate parameter is present
   useEffect(() => {
     if (search.installTemplate) {
-      setIsTemplateDialogOpen(true)
+      setIsTemplateDialogOpen(true);
     }
-  }, [search.installTemplate])
+  }, [search.installTemplate]);
 
   const handleTemplateDialogClose = (isOpen: boolean) => {
-    setIsTemplateDialogOpen(isOpen)
+    setIsTemplateDialogOpen(isOpen);
 
     if (!isOpen && search.installTemplate) {
       navigate({
@@ -76,27 +83,27 @@ function RouteLayout() {
         params: { organizationSlug: params.organizationSlug },
         search: {},
         replace: true,
-      })
+      });
     }
-  }
+  };
 
   const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current
-    if (!panel) return
-    panel.isCollapsed() ? panel.expand() : panel.collapse()
-  }
+    const panel = sidebarPanelRef.current;
+    if (!panel) return;
+    panel.isCollapsed() ? panel.expand() : panel.collapse();
+  };
 
   const currentDocumentId = useMemo(() => {
-    const params = routerState.location.pathname.split("/")
-    const orgSlugIndex = params.indexOf("w")
+    const params = routerState.location.pathname.split("/");
+    const orgSlugIndex = params.indexOf("w");
     if (orgSlugIndex !== -1 && params[orgSlugIndex + 2]) {
-      return params[orgSlugIndex + 2]
+      return params[orgSlugIndex + 2];
     }
-    return null
-  }, [routerState.location.pathname])
+    return null;
+  }, [routerState.location.pathname]);
 
-  const isSettingsRoute = routerState.location.pathname.includes("/settings")
-  const shouldShowDockedPanel = isDocked && !isSettingsRoute
+  const isSettingsRoute = routerState.location.pathname.includes("/settings");
+  const shouldShowDockedPanel = isDocked && !isSettingsRoute;
 
   return (
     <div className="flex h-screen flex-col">
@@ -122,7 +129,13 @@ function RouteLayout() {
         {shouldShowDockedPanel && (
           <>
             <PanelResizer />
-            <Panel ref={assistantPanelRef} id="assistant-panel" defaultSize={30} minSize={20} maxSize={50}>
+            <Panel
+              ref={assistantPanelRef}
+              id="assistant-panel"
+              defaultSize={30}
+              minSize={20}
+              maxSize={50}
+            >
               <div id="docked-assistant-container" className="h-full pr-1 py-1 pl-px" />
             </Panel>
           </>
@@ -141,5 +154,5 @@ function RouteLayout() {
         />
       )}
     </div>
-  )
+  );
 }

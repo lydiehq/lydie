@@ -1,60 +1,64 @@
-import { Editor } from "@tiptap/react"
-import { Toolbar, Group, Separator, MenuTrigger, TooltipTrigger } from "react-aria-components"
-import { useState, useRef } from "react"
-import { useImageUpload } from "@/hooks/use-image-upload"
-import { DocumentSettingsDialog } from "./DocumentSettingsDialog"
-import { Menu, MenuItem } from "../generic/Menu"
-import { useDocumentActions } from "@/hooks/use-document-actions"
-import type { QueryResultType } from "@rocicorp/zero"
-import { queries } from "@lydie/zero/queries"
-import { Tooltip } from "../generic/Tooltip"
+import type { QueryResultType } from "@rocicorp/zero";
+
 import {
-  MoreVerticalRegular,
-  TextStrikethroughFilled,
-  DeleteFilled,
-  SubtractFilled,
   AddFilled,
-  ListFilled,
-  TextNumberListLtrFilled,
   ColumnRegular,
+  DeleteFilled,
+  ListFilled,
+  MoreVerticalRegular,
   RowChildFilled,
-} from "@fluentui/react-icons"
-import { Button } from "../generic/Button"
+  SubtractFilled,
+  TextNumberListLtrFilled,
+  TextStrikethroughFilled,
+} from "@fluentui/react-icons";
+import { queries } from "@lydie/zero/queries";
+import { Editor } from "@tiptap/react";
+import { useRef, useState } from "react";
+import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
+
+import { useDocumentActions } from "@/hooks/use-document-actions";
+import { useImageUpload } from "@/hooks/use-image-upload";
+
+import { Button } from "../generic/Button";
+import { Menu, MenuItem } from "../generic/Menu";
+import { Tooltip } from "../generic/Tooltip";
+import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
 import {
+  BoldIcon,
+  CodeIcon,
   H1Icon,
   H2Icon,
   H3Icon,
-  BoldIcon,
-  ItalicIcon,
-  CodeIcon,
-  LinkIcon,
   ImageIcon,
+  ItalicIcon,
+  LinkIcon,
   TableIcon,
   TaskListIcon,
-} from "./wysiwyg-icons"
+} from "./wysiwyg-icons";
 
 type Props = {
-  editor: Editor
-  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>
-  onAddLink?: () => void
-}
+  editor: Editor;
+  doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
+  onAddLink?: () => void;
+};
 
 export function EditorToolbar({ editor, doc, onAddLink }: Props) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const { deleteDocument, publishDocument, unpublishDocument } = useDocumentActions()
-  const { uploadImage } = useImageUpload()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { deleteDocument, publishDocument, unpublishDocument } = useDocumentActions();
+  const { uploadImage } = useImageUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0
-  const mod = isMac ? "⌘" : "Ctrl"
+  const isMac =
+    typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+  const mod = isMac ? "⌘" : "Ctrl";
 
   const handlePublish = async () => {
-    publishDocument(doc.id)
-  }
+    publishDocument(doc.id);
+  };
 
   const handleUnpublish = async () => {
-    unpublishDocument(doc.id)
-  }
+    unpublishDocument(doc.id);
+  };
 
   return (
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
@@ -232,7 +236,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
               <Button
                 onPress={() => {
                   if (onAddLink) {
-                    onAddLink()
+                    onAddLink();
                   }
                 }}
                 intent="ghost"
@@ -256,19 +260,19 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
               accept="image/*"
               className="hidden"
               onChange={async (e) => {
-                const file = e.target.files?.[0]
-                if (!file) return
+                const file = e.target.files?.[0];
+                if (!file) return;
 
                 try {
-                  const url = await uploadImage(file)
-                  const alt = prompt("Enter alt text for the image (optional):") || ""
-                  editor.chain().focus().setImage({ src: url, alt }).run()
+                  const url = await uploadImage(file);
+                  const alt = prompt("Enter alt text for the image (optional):") || "";
+                  editor.chain().focus().setImage({ src: url, alt }).run();
                 } catch (error) {
-                  console.error("Failed to upload image:", error)
-                  alert("Failed to upload image. Please try again.")
+                  console.error("Failed to upload image:", error);
+                  alert("Failed to upload image. Please try again.");
                 } finally {
                   if (fileInputRef.current) {
-                    fileInputRef.current.value = ""
+                    fileInputRef.current.value = "";
                   }
                 }
               }}
@@ -276,7 +280,7 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
             <TooltipTrigger delay={500}>
               <Button
                 onPress={() => {
-                  fileInputRef.current?.click()
+                  fileInputRef.current?.click();
                 }}
                 intent="ghost"
                 size="icon-sm"
@@ -294,7 +298,11 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
             <TooltipTrigger delay={500}>
               <Button
                 onPress={() =>
-                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+                  editor
+                    .chain()
+                    .focus()
+                    .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                    .run()
                 }
                 intent="ghost"
                 size="icon-sm"
@@ -348,7 +356,9 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
                     <MenuItem onAction={() => editor.chain().focus().addRowAfter().run()}>
                       Add Row After
                     </MenuItem>
-                    <MenuItem onAction={() => editor.chain().focus().deleteRow().run()}>Delete Row</MenuItem>
+                    <MenuItem onAction={() => editor.chain().focus().deleteRow().run()}>
+                      Delete Row
+                    </MenuItem>
                     <MenuItem onAction={() => editor.chain().focus().toggleHeaderRow().run()}>
                       Toggle Header Row
                     </MenuItem>
@@ -435,7 +445,11 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
       </Toolbar>
 
       <div className="flex gap-x-1 items-center">
-        <Button onPress={doc.published ? handleUnpublish : handlePublish} intent="secondary" size="sm">
+        <Button
+          onPress={doc.published ? handleUnpublish : handlePublish}
+          intent="secondary"
+          size="sm"
+        >
           {doc.published ? "Unpublish" : "Publish"}
         </Button>
         <MenuTrigger>
@@ -447,8 +461,12 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
             <MenuItem onAction={() => deleteDocument(doc.id, true)}>Delete</MenuItem>
           </Menu>
         </MenuTrigger>
-        <DocumentSettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} doc={doc} />
+        <DocumentSettingsDialog
+          isOpen={isSettingsOpen}
+          onOpenChange={setIsSettingsOpen}
+          doc={doc}
+        />
       </div>
     </div>
-  )
+  );
 }

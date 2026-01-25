@@ -1,9 +1,13 @@
-import { tool } from "ai"
-import { z } from "zod"
-import { searchDocuments as searchDocumentsFunction, hybridSearchDocuments } from "../../embedding/search"
+import { tool } from "ai";
+import { z } from "zod";
+
+import {
+  hybridSearchDocuments,
+  searchDocuments as searchDocumentsFunction,
+} from "../../embedding/search";
 
 // Constant minimum similarity threshold
-const MIN_SIMILARITY = 0.3
+const MIN_SIMILARITY = 0.3;
 
 const description = `
 Search across a user’s workspace using semantic and hybrid retrieval to locate relevant documents and passages.
@@ -26,9 +30,13 @@ Use this tool **whenever the user asks about information that may exist in their
 - Results are already filtered by relevance and similarity threshold
 
 If no documents meaningfully match the query, the tool will return an empty result set.
-`
+`;
 
-export const searchDocuments = (userId: string, organizationId: string, currentDocumentId?: string) =>
+export const searchDocuments = (
+  userId: string,
+  organizationId: string,
+  currentDocumentId?: string,
+) =>
   tool({
     description,
     inputSchema: z.object({
@@ -43,7 +51,12 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
           "Search strategy: 'title_first' for finding documents by name/topic, 'content_first' for finding specific information, 'both' for comprehensive search",
         )
         .default("both"),
-      limit: z.number().describe("The maximum number of results to return.").min(1).max(10).default(5),
+      limit: z
+        .number()
+        .describe("The maximum number of results to return.")
+        .min(1)
+        .max(10)
+        .default(5),
     }),
     execute: async function* ({ query, searchStrategy = "both", limit = 5 }) {
       // Yield initial searching state
@@ -51,11 +64,11 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
         state: "searching",
         message: `Searching documents for "${query}"...`,
         query,
-      }
+      };
 
-      const excludeCurrentDocument = !!currentDocumentId
+      const excludeCurrentDocument = !!currentDocumentId;
 
-      let searchResults: any[] = []
+      let searchResults: any[] = [];
 
       if (searchStrategy === "title_first" || searchStrategy === "both") {
         // Use hybrid search for title-first or both strategies
@@ -65,7 +78,7 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
           organizationId,
           searchStrategy,
           limit + (excludeCurrentDocument ? 3 : 0),
-        )
+        );
       } else {
         // Use content-only search (already grouped by document with correct field names)
         searchResults = await searchDocumentsFunction(
@@ -73,23 +86,23 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
           userId,
           organizationId,
           limit + (excludeCurrentDocument ? 2 : 0),
-        )
+        );
       }
 
       // Filter out current document if currentDocumentId is provided
       if (excludeCurrentDocument) {
-        searchResults = searchResults.filter((result) => result.documentId !== currentDocumentId)
+        searchResults = searchResults.filter((result) => result.documentId !== currentDocumentId);
       }
 
       // Filter by minimum similarity and process results
-      const processedResults: any[] = []
+      const processedResults: any[] = [];
 
       for (const result of searchResults) {
         if (result.contentChunks && result.contentChunks.length > 0) {
           // Filter content chunks by similarity using constant threshold
           const filteredChunks = result.contentChunks.filter(
             (chunk: any) => chunk.similarity >= MIN_SIMILARITY,
-          )
+          );
 
           if (filteredChunks.length > 0) {
             processedResults.push({
@@ -99,12 +112,12 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
               documentSlug: result.documentSlug,
               titleSimilarity: result.titleSimilarity,
               contentChunks: filteredChunks.slice(0, 3), // Limit chunks per document
-            })
+            });
           }
         }
       }
 
-      const finalResults = processedResults.slice(0, limit)
+      const finalResults = processedResults.slice(0, limit);
 
       if (finalResults.length === 0) {
         yield {
@@ -112,8 +125,8 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
           results: [],
           searchQuery: query,
           searchStrategy,
-        }
-        return
+        };
+        return;
       }
 
       // Format results for LLM consumption
@@ -122,19 +135,21 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
         documentTitle: result.documentTitle,
         documentSlug: result.documentSlug,
         searchType: result.searchType,
-        titleSimilarity: result.titleSimilarity ? Math.round(result.titleSimilarity * 100) / 100 : undefined,
+        titleSimilarity: result.titleSimilarity
+          ? Math.round(result.titleSimilarity * 100) / 100
+          : undefined,
         relevantContent: result.contentChunks.map((chunk: any) => ({
           content: chunk.content,
           similarity: Math.round(chunk.similarity * 100) / 100,
         })),
-      }))
+      }));
 
       const strategyMessage =
         searchStrategy === "title_first"
           ? "by document titles"
           : searchStrategy === "content_first"
             ? "by document content"
-            : "by titles and content"
+            : "by titles and content";
 
       // Yield final result (this is what will be in tool.output)
       yield {
@@ -145,6 +160,6 @@ export const searchDocuments = (userId: string, organizationId: string, currentD
         searchQuery: query,
         searchStrategy,
         totalFound: finalResults.length,
-      }
+      };
     },
-  })
+  });

@@ -1,14 +1,15 @@
-import { DialogTrigger, Form } from "react-aria-components"
-import { Modal } from "@/components/generic/Modal"
-import { Dialog } from "@/components/generic/Dialog"
-import { Heading } from "@/components/generic/Heading"
-import { Button } from "@/components/generic/Button"
+import { DialogTrigger, Form } from "react-aria-components";
+
+import { Button } from "@/components/generic/Button";
+import { Dialog } from "@/components/generic/Dialog";
+import { Heading } from "@/components/generic/Heading";
+import { Modal } from "@/components/generic/Modal";
 
 type InviteDialogProps = {
-  isOpen: boolean
-  onOpenChange: (isOpen: boolean) => void
-  invitationForm: any
-}
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  invitationForm: any;
+};
 
 export function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDialogProps) {
   return (
@@ -17,8 +18,8 @@ export function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDia
         <Dialog>
           <Form
             onSubmit={(e) => {
-              e.preventDefault()
-              invitationForm.handleSubmit()
+              e.preventDefault();
+              invitationForm.handleSubmit();
             }}
           >
             <div className="p-4 flex flex-col gap-y-4">
@@ -29,7 +30,6 @@ export function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDia
                   <field.TextField
                     label="Email Address"
                     placeholder="colleague@example.com"
-                    autoFocus
                     isRequired
                     type="email"
                   />
@@ -59,8 +59,8 @@ export function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDia
                 <Button
                   intent="secondary"
                   onPress={() => {
-                    onOpenChange(false)
-                    invitationForm.reset()
+                    onOpenChange(false);
+                    invitationForm.reset();
                   }}
                   type="button"
                   size="sm"
@@ -81,5 +81,5 @@ export function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDia
         </Dialog>
       </Modal>
     </DialogTrigger>
-  )
+  );
 }

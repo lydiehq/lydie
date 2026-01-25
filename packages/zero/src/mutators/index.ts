@@ -1,17 +1,18 @@
-import { defineMutators } from "@rocicorp/zero"
-import { documentMutators } from "./document"
-import { documentComponentMutators } from "./document-component"
-import { assistantMutators } from "./assistant"
-import { apiKeyMutators } from "./api-key"
-import { userSettingsMutators } from "./user-settings"
-import { organizationSettingsMutators } from "./organization-settings"
-import { organizationMutators } from "./organization"
-import { integrationMutators } from "./integration"
-import { integrationConnectionMutators } from "./integration-connection"
-import { syncMetadataMutators } from "./sync-metadata"
-import { feedbackMutators } from "./feedback"
-import { agentMutators } from "./agent"
-import { templateMutators } from "./template"
+import { defineMutators } from "@rocicorp/zero";
+
+import { agentMutators } from "./agent";
+import { apiKeyMutators } from "./api-key";
+import { assistantMutators } from "./assistant";
+import { documentMutators } from "./document";
+import { documentComponentMutators } from "./document-component";
+import { feedbackMutators } from "./feedback";
+import { integrationMutators } from "./integration";
+import { integrationConnectionMutators } from "./integration-connection";
+import { organizationMutators } from "./organization";
+import { organizationSettingsMutators } from "./organization-settings";
+import { syncMetadataMutators } from "./sync-metadata";
+import { templateMutators } from "./template";
+import { userSettingsMutators } from "./user-settings";
 
 export const mutators = defineMutators({
   document: documentMutators,
@@ -27,6 +28,6 @@ export const mutators = defineMutators({
   feedback: feedbackMutators,
   agents: agentMutators,
   template: templateMutators,
-})
+});
 
-export type Mutators = typeof mutators
+export type Mutators = typeof mutators;

@@ -24,4 +24,4 @@ export const secret = {
   // Shopify integration
   shopifyClientId: new sst.Secret("ShopifyClientId"),
   shopifyClientSecret: new sst.Secret("ShopifyClientSecret"),
-}
+};

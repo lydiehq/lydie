@@ -1,9 +1,10 @@
-import { tool } from "ai"
-import { z } from "zod"
-import { db, documentsTable } from "@lydie/database"
-import { eq, and, ilike } from "drizzle-orm"
-import { serializeToHTML } from "../../serialization/html"
-import { convertYjsToJson } from "../../yjs-to-json"
+import { db, documentsTable } from "@lydie/database";
+import { tool } from "ai";
+import { and, eq, ilike } from "drizzle-orm";
+import { z } from "zod";
+
+import { serializeToHTML } from "../../serialization/html";
+import { convertYjsToJson } from "../../yjs-to-json";
 
 export const readDocument = (userId: string, organizationId: string) =>
   tool({
@@ -38,14 +39,16 @@ Use this tool to access the complete content of any document, including the curr
         yield {
           state: "error",
           error: "Either documentId or documentTitle must be provided",
-        }
-        return
+        };
+        return;
       }
 
       yield {
         state: "searching",
-        message: documentTitle ? `Searching for document "${documentTitle}"...` : "Searching for document...",
-      }
+        message: documentTitle
+          ? `Searching for document "${documentTitle}"...`
+          : "Searching for document...",
+      };
 
       let query = db
         .select({
@@ -57,30 +60,32 @@ Use this tool to access the complete content of any document, including the curr
           updatedAt: documentsTable.updatedAt,
         })
         .from(documentsTable)
-        .$dynamic()
+        .$dynamic();
 
-      const conditions = [eq(documentsTable.organizationId, organizationId)]
+      const conditions = [eq(documentsTable.organizationId, organizationId)];
 
       if (documentId) {
-        conditions.push(eq(documentsTable.id, documentId))
+        conditions.push(eq(documentsTable.id, documentId));
       } else if (documentTitle) {
-        conditions.push(ilike(documentsTable.title, `%${documentTitle}%`))
+        conditions.push(ilike(documentsTable.title, `%${documentTitle}%`));
       }
 
-      query = query.where(and(...conditions))
+      query = query.where(and(...conditions));
 
-      const documents = await query.limit(1)
+      const documents = await query.limit(1);
 
       if (documents.length === 0) {
-        const searchTerm = documentId ? `ID "${documentId}"` : `title containing "${documentTitle}"`
+        const searchTerm = documentId
+          ? `ID "${documentId}"`
+          : `title containing "${documentTitle}"`;
         yield {
           state: "error",
           error: `No document found with ${searchTerm} `,
-        }
-        return
+        };
+        return;
       }
 
-      const document = documents[0]
+      const document = documents[0];
 
       if (!document) {
         yield {
@@ -88,42 +93,42 @@ Use this tool to access the complete content of any document, including the curr
           error: `No document found with ${
             documentId ? `ID "${documentId}"` : `title containing "${documentTitle}"`
           }`,
-        }
-        return
+        };
+        return;
       }
 
       yield {
         state: "reading",
         message: `Reading document "${document.title}"...`,
         documentTitle: document.title,
-      }
+      };
 
-      const jsonContent = convertYjsToJson(document.yjsState)
+      const jsonContent = convertYjsToJson(document.yjsState);
 
-      let htmlContent: string
+      let htmlContent: string;
       try {
-        htmlContent = serializeToHTML(jsonContent as any)
+        htmlContent = serializeToHTML(jsonContent as any);
       } catch (error) {
-        console.error("[ReadDocument] Error converting jsonContent to HTML:", error)
-        htmlContent = JSON.stringify(jsonContent, null, 2)
+        console.error("[ReadDocument] Error converting jsonContent to HTML:", error);
+        htmlContent = JSON.stringify(jsonContent, null, 2);
       }
 
       const result: any = {
         id: document.id,
         title: document.title,
         content: htmlContent,
-      }
+      };
 
       if (includeMetadata) {
-        result.slug = document.slug
-        result.createdAt = document.createdAt.toISOString()
-        result.updatedAt = document.updatedAt.toISOString()
+        result.slug = document.slug;
+        result.createdAt = document.createdAt.toISOString();
+        result.updatedAt = document.updatedAt.toISOString();
       }
 
       yield {
         state: "success",
         message: `Successfully retrieved document: "${document.title}"`,
         document: result,
-      }
+      };
     },
-  })
+  });

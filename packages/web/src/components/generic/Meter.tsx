@@ -1,16 +1,20 @@
-import { WarningRegular } from "@fluentui/react-icons"
-import React from "react"
-import { Meter as AriaMeter, MeterProps as AriaMeterProps } from "react-aria-components"
-import { Label } from "./Field"
-import { composeTailwindRenderProps } from "./utils"
+import { WarningRegular } from "@fluentui/react-icons";
+import React from "react";
+import { Meter as AriaMeter, MeterProps as AriaMeterProps } from "react-aria-components";
+
+import { Label } from "./Field";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface MeterProps extends AriaMeterProps {
-  label?: string
+  label?: string;
 }
 
 export function Meter({ label, ...props }: MeterProps) {
   return (
-    <AriaMeter {...props} className={composeTailwindRenderProps(props.className, "flex flex-col gap-1")}>
+    <AriaMeter
+      {...props}
+      className={composeTailwindRenderProps(props.className, "flex flex-col gap-1")}
+    >
       {({ percentage, valueText }) => (
         <>
           <div className="flex justify-between gap-2">
@@ -19,7 +23,10 @@ export function Meter({ label, ...props }: MeterProps) {
               className={`text-sm ${percentage >= 80 ? "text-red-600 dark:text-red-500" : "text-gray-600 dark:text-zinc-400"}`}
             >
               {percentage >= 80 && (
-                <WarningRegular aria-label="Alert" className="inline-block w-4 h-4 align-text-bottom" />
+                <WarningRegular
+                  aria-label="Alert"
+                  className="inline-block w-4 h-4 align-text-bottom"
+                />
               )}
               {" " + valueText}
             </span>
@@ -33,17 +40,17 @@ export function Meter({ label, ...props }: MeterProps) {
         </>
       )}
     </AriaMeter>
-  )
+  );
 }
 
 function getColor(percentage: number) {
   if (percentage < 70) {
-    return "bg-green-600"
+    return "bg-green-600";
   }
 
   if (percentage < 80) {
-    return "bg-orange-500"
+    return "bg-orange-500";
   }
 
-  return "bg-red-600"
+  return "bg-red-600";
 }

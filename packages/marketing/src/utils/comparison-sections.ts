@@ -1,10 +1,10 @@
 export interface ComparisonSection {
-  id: string
-  title: string
-  description: string
-  illustrationId: string // ID to map to illustration component
-  imageAlt: string
-  featurePageUrl?: string // Optional link to dedicated feature page
+  id: string;
+  title: string;
+  description: string;
+  illustrationId: string; // ID to map to illustration component
+  imageAlt: string;
+  featurePageUrl?: string; // Optional link to dedicated feature page
 }
 
 // Registry of reusable comparison sections
@@ -59,18 +59,18 @@ export const comparisonSections: Record<string, ComparisonSection> = {
     illustrationId: "performance",
     imageAlt: "Lydie performance illustration",
   },
-}
+};
 
 // Get a section by ID
 export function getSection(id: string): ComparisonSection | undefined {
-  return comparisonSections[id]
+  return comparisonSections[id];
 }
 
 // Section override type for comparisons
 export interface SectionOverride {
-  id: string
-  title?: string
-  description?: string
+  id: string;
+  title?: string;
+  description?: string;
 }
 
 // Get multiple sections by IDs or override objects
@@ -78,16 +78,16 @@ export interface SectionOverride {
 export function getSections(sections: (string | SectionOverride)[]): ComparisonSection[] {
   return sections
     .map((sectionRef) => {
-      const sectionId = typeof sectionRef === "string" ? sectionRef : sectionRef.id
-      const baseSection = comparisonSections[sectionId]
+      const sectionId = typeof sectionRef === "string" ? sectionRef : sectionRef.id;
+      const baseSection = comparisonSections[sectionId];
 
       if (!baseSection) {
-        return undefined
+        return undefined;
       }
 
       // If it's just a string ID, return the base section
       if (typeof sectionRef === "string") {
-        return baseSection
+        return baseSection;
       }
 
       // Otherwise, merge overrides with base section
@@ -95,7 +95,7 @@ export function getSections(sections: (string | SectionOverride)[]): ComparisonS
         ...baseSection,
         title: sectionRef.title ?? baseSection.title,
         description: sectionRef.description ?? baseSection.description,
-      }
+      };
     })
-    .filter((section): section is ComparisonSection => section !== undefined)
+    .filter((section): section is ComparisonSection => section !== undefined);
 }

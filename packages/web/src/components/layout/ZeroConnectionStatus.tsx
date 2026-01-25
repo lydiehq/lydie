@@ -1,25 +1,27 @@
-import { useConnectionState } from "@rocicorp/zero/react"
-import { useZero } from "@/services/zero"
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
-import { useCallback } from "react"
-import clsx from "clsx"
 import {
+  ArrowClockwiseRegular,
+  ErrorCircleRegular,
+  ShieldErrorRegular,
   Wifi4Regular,
   WifiOffRegular,
-  ErrorCircleRegular,
-  ArrowClockwiseRegular,
-  ShieldErrorRegular,
-} from "@fluentui/react-icons"
+} from "@fluentui/react-icons";
+import { useConnectionState } from "@rocicorp/zero/react";
+import clsx from "clsx";
+import { useCallback } from "react";
+
+import { useZero } from "@/services/zero";
+
+import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 
 export function ZeroConnectionStatus() {
-  const state = useConnectionState()
-  const zero = useZero()
+  const state = useConnectionState();
+  const zero = useZero();
 
   const handleRetry = useCallback(() => {
     if (zero?.connection) {
-      zero.connection.connect()
+      zero.connection.connect();
     }
-  }, [zero])
+  }, [zero]);
 
   const getStatusConfig = () => {
     switch (state.name) {
@@ -31,7 +33,7 @@ export function ZeroConnectionStatus() {
           bgColor: "bg-amber-50",
           borderColor: "border-amber-200",
           tooltip: state.reason || "Connecting to Zero cache",
-        }
+        };
       case "connected":
         return {
           icon: Wifi4Regular,
@@ -40,7 +42,7 @@ export function ZeroConnectionStatus() {
           bgColor: "bg-green-50",
           borderColor: "border-green-200",
           tooltip: "Connected to Zero cache",
-        }
+        };
       case "disconnected":
         return {
           icon: WifiOffRegular,
@@ -49,7 +51,7 @@ export function ZeroConnectionStatus() {
           bgColor: "bg-gray-50",
           borderColor: "border-gray-200",
           tooltip: state.reason || "Disconnected from Zero cache",
-        }
+        };
       case "error":
         return {
           icon: ErrorCircleRegular,
@@ -59,7 +61,7 @@ export function ZeroConnectionStatus() {
           borderColor: "border-red-200",
           tooltip: state.reason || "Connection error",
           clickable: true,
-        }
+        };
       case "needs-auth":
         return {
           icon: ShieldErrorRegular,
@@ -69,7 +71,7 @@ export function ZeroConnectionStatus() {
           borderColor: "border-orange-200",
           tooltip: "Authentication required",
           clickable: true,
-        }
+        };
       default:
         return {
           icon: WifiOffRegular,
@@ -78,13 +80,13 @@ export function ZeroConnectionStatus() {
           bgColor: "bg-gray-50",
           borderColor: "border-gray-200",
           tooltip: "Unknown connection state",
-        }
+        };
     }
-  }
+  };
 
-  const config = getStatusConfig()
-  const Icon = config.icon
-  const isAnimating = state.name === "connecting"
+  const config = getStatusConfig();
+  const Icon = config.icon;
+  const isAnimating = state.name === "connecting";
 
   return (
     <TooltipTrigger>
@@ -106,5 +108,5 @@ export function ZeroConnectionStatus() {
         {config.clickable && " (Click to retry)"}
       </Tooltip>
     </TooltipTrigger>
-  )
+  );
 }

@@ -1,22 +1,22 @@
-import { Command } from "cmdk"
-import { DocumentFilled, PlugConnectedRegular } from "@fluentui/react-icons"
+import { DocumentFilled, PlugConnectedRegular } from "@fluentui/react-icons";
+import { Command } from "cmdk";
 
 function getIntegrationIcon(integrationType: string | null | undefined) {
-  if (!integrationType) return null
+  if (!integrationType) return null;
 
   switch (integrationType.toLowerCase()) {
     case "github":
     case "shopify":
     default:
-      return PlugConnectedRegular
+      return PlugConnectedRegular;
   }
 }
 
 interface SearchResultsProps {
-  searchDocuments: any[]
-  integrationLinks: any[]
-  organizationId: string
-  onNavigate: (options: any) => void
+  searchDocuments: any[];
+  integrationLinks: any[];
+  organizationId: string;
+  onNavigate: (options: any) => void;
 }
 
 export function SearchResults({
@@ -26,14 +26,18 @@ export function SearchResults({
   onNavigate,
 }: SearchResultsProps) {
   function CommandGroupHeading({ children }: { children: React.ReactNode }) {
-    return <div className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 text-left">{children}</div>
+    return (
+      <div className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 text-left">{children}</div>
+    );
   }
 
   return (
     <Command.Group heading={<CommandGroupHeading>Search Results</CommandGroupHeading>}>
       {searchDocuments.map((doc) => {
-        const link = integrationLinks?.find((l) => l.id === doc.integration_link_id)
-        const IntegrationIcon = link?.connection ? getIntegrationIcon(link.connection.integration_type) : null
+        const link = integrationLinks?.find((l) => l.id === doc.integration_link_id);
+        const IntegrationIcon = link?.connection
+          ? getIntegrationIcon(link.connection.integration_type)
+          : null;
 
         return (
           <Command.Item
@@ -56,8 +60,8 @@ export function SearchResults({
             </div>
             <span className="truncate">{doc.title || "Untitled Document"}</span>
           </Command.Item>
-        )
+        );
       })}
     </Command.Group>
-  )
+  );
 }

@@ -1,75 +1,85 @@
-import { useState, useRef, useLayoutEffect } from "react"
-import { Button as AriaButton } from "react-aria-components"
 import {
+  ArrowClockwiseRegular,
   ChevronDownRegular,
   ChevronUpRegular,
-  ArrowClockwiseRegular,
   DocumentFilled,
-} from "@fluentui/react-icons"
-import { motion } from "motion/react"
-import { StickToBottom } from "use-stick-to-bottom"
-import { Button } from "@/components/generic/Button"
-import { Separator } from "@/components/generic/Separator"
-import { countWords } from "@/utils/text"
-import { useAuth } from "@/context/auth.context"
-import { isAdmin } from "@/utils/admin"
-import { applyContentChanges } from "@/utils/document-changes"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { useNavigate, useParams } from "@tanstack/react-router"
-import { useDocumentEditor, useTitleEditor } from "@/hooks/useEditor"
-import { useSetAtom, useAtomValue } from "jotai"
-import { pendingEditorChangeAtom, pendingChangeStatusAtom } from "@/atoms/editor"
-import { useEffect } from "react"
-import { applyTitleChange } from "@/utils/title-changes"
-import { useZero } from "@/services/zero"
+} from "@fluentui/react-icons";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { useAtomValue, useSetAtom } from "jotai";
+import { motion } from "motion/react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect } from "react";
+import { Button as AriaButton } from "react-aria-components";
+import { StickToBottom } from "use-stick-to-bottom";
+
+import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
+import { Button } from "@/components/generic/Button";
+import { Separator } from "@/components/generic/Separator";
+import { useAuth } from "@/context/auth.context";
+import { useDocumentEditor, useTitleEditor } from "@/hooks/useEditor";
+import { useZero } from "@/services/zero";
+import { isAdmin } from "@/utils/admin";
+import { applyContentChanges } from "@/utils/document-changes";
+import { countWords } from "@/utils/text";
+import { applyTitleChange } from "@/utils/title-changes";
 
 export interface ReplaceInDocumentToolProps {
   tool: {
-    state: "input-streaming" | "input-available" | "call-streaming" | "output-available" | "output-error"
+    state:
+      | "input-streaming"
+      | "input-available"
+      | "call-streaming"
+      | "output-available"
+      | "output-error";
     input?: {
-      documentId?: string
-      title?: string
-      search?: string
-      replace?: string
-    }
+      documentId?: string;
+      title?: string;
+      search?: string;
+      replace?: string;
+    };
     output?: {
-      documentId?: string
-      title?: string
-      search?: string
-      replace?: string
-    }
-    errorText?: string
-  }
-  organizationId: string
-  className?: string
+      documentId?: string;
+      title?: string;
+      search?: string;
+      replace?: string;
+    };
+    errorText?: string;
+  };
+  organizationId: string;
+  className?: string;
 }
 
-export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: ReplaceInDocumentToolProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [hasOverflow, setHasOverflow] = useState(false)
-  const [isApplied, setIsApplied] = useState(false)
-  const [isApplying, setIsApplying] = useState(false)
-  const [isUsingLLM, setIsUsingLLM] = useState(false)
-  const [applyStatus, setApplyStatus] = useState<string>("")
-  const contentRef = useRef<HTMLDivElement>(null)
+export function ReplaceInDocumentTool({
+  tool,
+  organizationId,
+  className = "",
+}: ReplaceInDocumentToolProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const [isApplied, setIsApplied] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [isUsingLLM, setIsUsingLLM] = useState(false);
+  const [applyStatus, setApplyStatus] = useState<string>("");
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const params = useParams({ strict: false })
-  const z = useZero()
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const params = useParams({ strict: false });
+  const z = useZero();
 
-  const editor = useDocumentEditor()
-  const titleEditor = useTitleEditor()
-  const setPendingChange = useSetAtom(pendingEditorChangeAtom)
-  const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom)
-  const pendingChange = useAtomValue(pendingEditorChangeAtom)
-  const pendingChangeStatus = useAtomValue(pendingChangeStatusAtom)
+  const editor = useDocumentEditor();
+  const titleEditor = useTitleEditor();
+  const setPendingChange = useSetAtom(pendingEditorChangeAtom);
+  const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
+  const pendingChange = useAtomValue(pendingEditorChangeAtom);
+  const pendingChangeStatus = useAtomValue(pendingChangeStatusAtom);
 
-  const targetDocumentId = tool.input?.documentId || tool.output?.documentId
-  const newTitle = tool.input?.title || tool.output?.title
-  const replaceText = tool.input?.replace || tool.output?.replace || ""
-  const searchText = tool.input?.search || tool.output?.search || ""
+  const targetDocumentId = tool.input?.documentId || tool.output?.documentId;
+  const newTitle = tool.input?.title || tool.output?.title;
+  const replaceText = tool.input?.replace || tool.output?.replace || "";
+  const searchText = tool.input?.search || tool.output?.search || "";
 
   useEffect(() => {
     const isMatchingPendingChange =
@@ -77,34 +87,37 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       pendingChange.documentId === (targetDocumentId || params.id) &&
       pendingChange.search === searchText &&
       pendingChange.replace === replaceText &&
-      pendingChange.title === newTitle
+      pendingChange.title === newTitle;
 
     if (isMatchingPendingChange) {
       if (pendingChangeStatus === "applying") {
-        setIsApplying(true)
-        setIsUsingLLM(false) // Will be set by the apply function if needed
-        setApplyStatus("Applying...")
+        setIsApplying(true);
+        setIsUsingLLM(false); // Will be set by the apply function if needed
+        setApplyStatus("Applying...");
       } else if (pendingChangeStatus === "applied") {
-        setIsApplied(true)
-        setIsApplying(false)
-        setIsUsingLLM(false)
-        setApplyStatus("")
+        setIsApplied(true);
+        setIsApplying(false);
+        setIsUsingLLM(false);
+        setApplyStatus("");
       } else if (pendingChangeStatus === "failed") {
-        setIsApplied(false)
-        setIsApplying(false)
-        setIsUsingLLM(false)
-        setApplyStatus("Failed to apply")
+        setIsApplied(false);
+        setIsApplying(false);
+        setIsUsingLLM(false);
+        setApplyStatus("Failed to apply");
       } else if (pendingChangeStatus === "pending") {
-        setIsApplying(true)
-        setApplyStatus("Navigating to document...")
+        setIsApplying(true);
+        setApplyStatus("Navigating to document...");
       }
     } else if (!pendingChange && pendingChangeStatus === null) {
-      if (isApplying && (applyStatus === "Navigating to document..." || applyStatus === "Applying...")) {
+      if (
+        isApplying &&
+        (applyStatus === "Navigating to document..." || applyStatus === "Applying...")
+      ) {
         if (targetDocumentId === params.id || !targetDocumentId) {
-          setIsApplied(true)
-          setIsApplying(false)
-          setIsUsingLLM(false)
-          setApplyStatus("")
+          setIsApplied(true);
+          setIsApplying(false);
+          setIsUsingLLM(false);
+          setApplyStatus("");
         }
       }
     }
@@ -118,7 +131,7 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
     newTitle,
     isApplying,
     applyStatus,
-  ])
+  ]);
 
   const [targetDocument] = useQuery(
     targetDocumentId
@@ -127,32 +140,32 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
           documentId: targetDocumentId,
         })
       : null,
-  )
+  );
 
-  const isStreaming = tool.state === "input-streaming"
-  const isFullReplacement = searchText === ""
+  const isStreaming = tool.state === "input-streaming";
+  const isFullReplacement = searchText === "";
 
   useLayoutEffect(() => {
     if (contentRef.current) {
-      const contentHeight = contentRef.current.scrollHeight
-      setHasOverflow(contentHeight > 140)
+      const contentHeight = contentRef.current.scrollHeight;
+      setHasOverflow(contentHeight > 140);
     }
-  }, [replaceText])
+  }, [replaceText]);
 
   if (!replaceText && !newTitle && tool.state !== "input-streaming") {
-    return null
+    return null;
   }
 
-  const wordCount = countWords(replaceText)
+  const wordCount = countWords(replaceText);
 
   const handleApply = async () => {
     if (!replaceText && !newTitle) {
-      return
+      return;
     }
 
     if (targetDocumentId && targetDocumentId !== params.id) {
-      setIsApplying(true)
-      setApplyStatus("Navigating to document...")
+      setIsApplying(true);
+      setApplyStatus("Navigating to document...");
 
       // Store the pending change and set status
       setPendingChange({
@@ -161,8 +174,8 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
         search: searchText,
         replace: replaceText,
         organizationId,
-      })
-      setPendingChangeStatus("pending")
+      });
+      setPendingChangeStatus("pending");
 
       setTimeout(() => {
         navigate({
@@ -171,23 +184,23 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
             organizationSlug: params.organizationSlug as string,
             id: targetDocumentId,
           },
-        })
-      }, 100)
+        });
+      }, 100);
 
-      return
+      return;
     }
 
-    const currentDocId = targetDocumentId || params.id
+    const currentDocId = targetDocumentId || params.id;
     if (!currentDocId || (!editor && !titleEditor)) {
-      return
+      return;
     }
 
-    setIsApplying(true)
-    setApplyStatus("Applying...")
+    setIsApplying(true);
+    setApplyStatus("Applying...");
 
     try {
-      let contentSuccess = true
-      let titleSuccess = true
+      let contentSuccess = true;
+      let titleSuccess = true;
 
       if (newTitle && titleEditor) {
         const titleResult = await applyTitleChange(
@@ -196,10 +209,10 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
           currentDocId,
           organizationId,
           z as any,
-        )
-        titleSuccess = titleResult.success
+        );
+        titleSuccess = titleResult.success;
         if (!titleSuccess) {
-          console.error("Failed to apply title change:", titleResult.error)
+          console.error("Failed to apply title change:", titleResult.error);
         }
       }
 
@@ -215,54 +228,54 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
           organizationId,
           undefined, // onProgress
           (isUsingLLM) => {
-            setIsUsingLLM(isUsingLLM)
+            setIsUsingLLM(isUsingLLM);
           },
-        )
+        );
 
-        contentSuccess = result.success
+        contentSuccess = result.success;
         if (result.success) {
           if (result.usedLLMFallback) {
-            console.info("✨ LLM-assisted replacement was used for this change")
+            console.info("✨ LLM-assisted replacement was used for this change");
           }
         } else {
-          console.error("Failed to apply content changes:", result.error)
+          console.error("Failed to apply content changes:", result.error);
         }
       }
 
       if (contentSuccess && titleSuccess) {
-        setIsApplied(true)
-        setApplyStatus("")
+        setIsApplied(true);
+        setApplyStatus("");
       } else {
-        setApplyStatus("Failed to apply")
+        setApplyStatus("Failed to apply");
       }
     } catch (error) {
-      console.error("Failed to apply:", error)
-      setApplyStatus("Failed to apply")
+      console.error("Failed to apply:", error);
+      setApplyStatus("Failed to apply");
     } finally {
-      setIsApplying(false)
-      setIsUsingLLM(false)
+      setIsApplying(false);
+      setIsUsingLLM(false);
     }
-  }
+  };
 
   const handleCopy = async () => {
     if (replaceText) {
       try {
-        const tempDiv = document.createElement("div")
-        tempDiv.innerHTML = replaceText
-        const plainText = tempDiv.textContent || tempDiv.innerText || ""
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = replaceText;
+        const plainText = tempDiv.textContent || tempDiv.innerText || "";
 
         const clipboardItem = new ClipboardItem({
           "text/html": new Blob([replaceText], { type: "text/html" }),
           "text/plain": new Blob([plainText], { type: "text/plain" }),
-        })
+        });
 
-        await navigator.clipboard.write([clipboardItem])
+        await navigator.clipboard.write([clipboardItem]);
       } catch (error) {
-        console.warn("Rich text copy failed, falling back to plain text:", error)
-        await navigator.clipboard.writeText(replaceText)
+        console.warn("Rich text copy failed, falling back to plain text:", error);
+        await navigator.clipboard.writeText(replaceText);
       }
     }
-  }
+  };
 
   const handleDebug = async () => {
     const debugInfo = {
@@ -274,28 +287,28 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
       replaceLength: replaceText.length,
       isStreaming,
       timestamp: new Date().toISOString(),
-    }
+    };
 
-    console.group("🐛 Replace In Document Tool Debug Info")
-    console.log("Tool object:", tool)
-    console.log("Search text:", searchText)
-    console.log("Replace text:", replaceText)
-    console.log("Is streaming:", isStreaming)
-    console.log("Debug summary:", debugInfo)
-    console.groupEnd()
-  }
+    console.group("🐛 Replace In Document Tool Debug Info");
+    console.log("Tool object:", tool);
+    console.log("Search text:", searchText);
+    console.log("Replace text:", replaceText);
+    console.log("Is streaming:", isStreaming);
+    console.log("Debug summary:", debugInfo);
+    console.groupEnd();
+  };
 
-  const isError = tool.state === "output-error"
-  const roundedWordCount = Math.floor(wordCount / 10) * 10
+  const isError = tool.state === "output-error";
+  const roundedWordCount = Math.floor(wordCount / 10) * 10;
 
   const getStatusText = () => {
-    if (isError) return "Failed to modify document"
-    if (isApplied) return "Changes applied"
-    if (isApplying) return "Applying changes"
-    if (isStreaming) return "Generating content"
-    if (isFullReplacement) return "Replace entire document"
-    return "Modify document"
-  }
+    if (isError) return "Failed to modify document";
+    if (isApplied) return "Changes applied";
+    if (isApplying) return "Applying changes";
+    if (isStreaming) return "Generating content";
+    if (isFullReplacement) return "Replace entire document";
+    return "Modify document";
+  };
 
   return (
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}>
@@ -415,5 +428,5 @@ export function ReplaceInDocumentTool({ tool, organizationId, className = "" }: 
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

@@ -1,22 +1,24 @@
-import { defineQueries } from "@rocicorp/zero"
-import { documentQueries } from "./document"
-import { componentQueries } from "./component"
-import { apiKeyQueries } from "./api-key"
-import { memberQueries } from "./member"
-import { invitationQueries } from "./invitation"
-import { organizationQueries } from "./organization"
-import { assistantQueries } from "./assistant"
-import { agentQueries } from "./agent"
-import { usageQueries } from "./usage"
-import { settingsQueries } from "./settings"
-import { integrationQueries } from "./integration"
-import { integrationLinkQueries } from "./integration-link"
-import { syncMetadataQueries } from "./sync-metadata"
-import { integrationActivityQueries } from "./integration-activity"
-import { templateCategoryQueries } from "./template-category"
-import type { Context } from "../auth"
+import { defineQueries } from "@rocicorp/zero";
 
-export type QueryContext = Context
+import type { Context } from "../auth";
+
+import { agentQueries } from "./agent";
+import { apiKeyQueries } from "./api-key";
+import { assistantQueries } from "./assistant";
+import { componentQueries } from "./component";
+import { documentQueries } from "./document";
+import { integrationQueries } from "./integration";
+import { integrationActivityQueries } from "./integration-activity";
+import { integrationLinkQueries } from "./integration-link";
+import { invitationQueries } from "./invitation";
+import { memberQueries } from "./member";
+import { organizationQueries } from "./organization";
+import { settingsQueries } from "./settings";
+import { syncMetadataQueries } from "./sync-metadata";
+import { templateCategoryQueries } from "./template-category";
+import { usageQueries } from "./usage";
+
+export type QueryContext = Context;
 
 export const queries = defineQueries({
   documents: documentQueries,
@@ -34,4 +36,4 @@ export const queries = defineQueries({
   syncMetadata: syncMetadataQueries,
   integrationActivityLogs: integrationActivityQueries,
   templateCategories: templateCategoryQueries,
-})
+});

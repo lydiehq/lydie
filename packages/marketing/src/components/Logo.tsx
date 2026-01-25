@@ -1,6 +1,6 @@
 type Props = {
-  className?: string
-}
+  className?: string;
+};
 
 export function Logo({ className }: Props) {
   return (
@@ -12,5 +12,5 @@ export function Logo({ className }: Props) {
         clipRule="evenodd"
       />
     </svg>
-  )
+  );
 }

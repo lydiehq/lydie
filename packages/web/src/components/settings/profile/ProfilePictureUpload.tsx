@@ -1,15 +1,16 @@
-import { Card } from "@/components/layout/Card"
-import { Button } from "@/components/generic/Button"
-import { CameraRegular, DismissRegular } from "@fluentui/react-icons"
-import { useRef } from "react"
+import { CameraRegular, DismissRegular } from "@fluentui/react-icons";
+import { useRef } from "react";
+
+import { Button } from "@/components/generic/Button";
+import { Card } from "@/components/layout/Card";
 
 type ProfilePictureUploadProps = {
-  previewImage: string | null
-  userInitial: string
-  isUploading: boolean
-  onImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onRemoveImage: () => void
-}
+  previewImage: string | null;
+  userInitial: string;
+  isUploading: boolean;
+  onImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveImage: () => void;
+};
 
 export function ProfilePictureUpload({
   previewImage,
@@ -18,11 +19,11 @@ export function ProfilePictureUpload({
   onImageSelect,
   onRemoveImage,
 }: ProfilePictureUploadProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   return (
     <Card className="p-4">
@@ -82,5 +83,5 @@ export function ProfilePictureUpload({
         </div>
       </div>
     </Card>
-  )
+  );
 }

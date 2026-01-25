@@ -1,9 +1,11 @@
-import { defineMutator } from "@rocicorp/zero"
-import { z } from "zod"
-import { hasOrganizationAccess } from "../../auth"
-import { sendEmail } from "@lydie/core/email"
-import { zql } from "../../schema"
-import type { MutatorContext } from "../../server-mutators"
+import { sendEmail } from "@lydie/core/email";
+import { defineMutator } from "@rocicorp/zero";
+import { z } from "zod";
+
+import type { MutatorContext } from "../../server-mutators";
+
+import { hasOrganizationAccess } from "../../auth";
+import { zql } from "../../schema";
 
 export function createFeedbackMutation(context: MutatorContext) {
   return defineMutator(
@@ -15,9 +17,9 @@ export function createFeedbackMutation(context: MutatorContext) {
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args: { id, type, message, metadata, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
 
-      const feedbackType = type || "feedback"
+      const feedbackType = type || "feedback";
 
       // Insert into database
       await tx.mutate.feedback_submissions.insert({
@@ -29,14 +31,16 @@ export function createFeedbackMutation(context: MutatorContext) {
         metadata: metadata || null,
         created_at: Date.now(),
         updated_at: Date.now(),
-      })
+      });
 
       // Get user and organization details for the email
       context.asyncTasks.push(async () => {
-        const user = await tx.run(zql.users.where("id", ctx.userId).one())
-        const organization = await tx.run(zql.organizations.where("id", organizationId).one())
+        const user = await tx.run(zql.users.where("id", ctx.userId).one());
+        const organization = await tx.run(zql.organizations.where("id", organizationId).one());
 
-        const metadataStr = metadata ? `\n\n**Context:**\n${JSON.stringify(metadata, null, 2)}` : ""
+        const metadataStr = metadata
+          ? `\n\n**Context:**\n${JSON.stringify(metadata, null, 2)}`
+          : "";
 
         await sendEmail({
           to: "lars@salling.me",
@@ -50,8 +54,8 @@ export function createFeedbackMutation(context: MutatorContext) {
             <p>${message.replace(/\n/g, "<br>")}</p>
             ${metadataStr ? `<pre>${metadataStr}</pre>` : ""}
           `,
-        })
-      })
+        });
+      });
     },
-  )
+  );
 }

@@ -1,48 +1,48 @@
-import { Button } from "@/components/generic/Button"
-import { useAuthenticatedApi } from "@/services/api"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { toast } from "sonner"
-import { useOrganization } from "@/context/organization.context"
-import { Separator } from "@/components/generic/Separator"
-import { Heading } from "@/components/generic/Heading"
-import { SectionHeader } from "@/components/generic/SectionHeader"
-import { useQuery } from "@rocicorp/zero/react"
-import { useState } from "react"
-import { AddRegular } from "@fluentui/react-icons"
-import { useZero } from "@/services/zero"
-import { queries } from "@lydie/zero/queries"
-import { confirmDialog } from "@/stores/confirm-dialog"
-import { useAppForm } from "@/hooks/use-app-form"
-import { mutators } from "@lydie/zero/mutators"
-import { Card } from "@/components/layout/Card"
-import { authClient } from "@/utils/auth"
-import { WorkspaceForm } from "@/components/settings/general/WorkspaceForm"
-import { MembersList } from "@/components/settings/general/MembersList"
-import { InvitationsList } from "@/components/settings/general/InvitationsList"
-import { ApiKeysList } from "@/components/settings/general/ApiKeysList"
-import { ApiKeyDialog } from "@/components/settings/general/ApiKeyDialog"
-import { InviteDialog } from "@/components/settings/general/InviteDialog"
-import { DeleteOrganizationSection } from "@/components/settings/general/DeleteOrganizationSection"
+import { AddRegular } from "@fluentui/react-icons";
+import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 
-type ApiKeyDialogStep = "create" | "success"
+import { Button } from "@/components/generic/Button";
+import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
+import { Separator } from "@/components/generic/Separator";
+import { Card } from "@/components/layout/Card";
+import { ApiKeyDialog } from "@/components/settings/general/ApiKeyDialog";
+import { ApiKeysList } from "@/components/settings/general/ApiKeysList";
+import { DeleteOrganizationSection } from "@/components/settings/general/DeleteOrganizationSection";
+import { InvitationsList } from "@/components/settings/general/InvitationsList";
+import { InviteDialog } from "@/components/settings/general/InviteDialog";
+import { MembersList } from "@/components/settings/general/MembersList";
+import { WorkspaceForm } from "@/components/settings/general/WorkspaceForm";
+import { useOrganization } from "@/context/organization.context";
+import { useAppForm } from "@/hooks/use-app-form";
+import { useAuthenticatedApi } from "@/services/api";
+import { useZero } from "@/services/zero";
+import { confirmDialog } from "@/stores/confirm-dialog";
+import { authClient } from "@/utils/auth";
+
+type ApiKeyDialogStep = "create" | "success";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  const { createClient } = useAuthenticatedApi()
-  const { organization } = useOrganization()
-  const z = useZero()
-  const navigate = useNavigate()
-  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
-  const [apiKeyDialogStep, setApiKeyDialogStep] = useState<ApiKeyDialogStep>("create")
-  const [newApiKey, setNewApiKey] = useState<string>("")
-  const [copied, setCopied] = useState(false)
-  const [showKey, setShowKey] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
-
+  const { createClient } = useAuthenticatedApi();
+  const { organization } = useOrganization();
+  const z = useZero();
+  const navigate = useNavigate();
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+  const [apiKeyDialogStep, setApiKeyDialogStep] = useState<ApiKeyDialogStep>("create");
+  const [newApiKey, setNewApiKey] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
   const apiKeyForm = useAppForm({
     defaultValues: {
@@ -50,27 +50,27 @@ function RouteComponent() {
     },
     onSubmit: async (values) => {
       if (!values.value.name.trim()) {
-        toast.error("Please enter a name for the API key")
-        return
+        toast.error("Please enter a name for the API key");
+        return;
       }
 
-      const client = await createClient()
+      const client = await createClient();
       try {
         const res = await client.internal.organization["api-key"]
           .$post({
             json: { name: values.value.name.trim() },
           })
-          .then((res) => res.json())
+          .then((res) => res.json());
 
-        setNewApiKey(res.key)
-        setApiKeyDialogStep("success")
-        apiKeyForm.reset()
+        setNewApiKey(res.key);
+        setApiKeyDialogStep("success");
+        apiKeyForm.reset();
       } catch (error) {
-        toast.error("Failed to create API key")
-        console.error("API key creation error:", error)
+        toast.error("Failed to create API key");
+        console.error("API key creation error:", error);
       }
     },
-  })
+  });
 
   const handleRevokeApiKey = async (keyId: string, keyName: string) => {
     confirmDialog({
@@ -78,56 +78,56 @@ function RouteComponent() {
       message: "This action cannot be undone. The API key will be permanently revoked.",
       onConfirm: () => {
         try {
-          z.mutate(mutators.apiKey.revoke({ keyId, organizationId: organization.id }))
-          toast.success("API key revoked successfully")
+          z.mutate(mutators.apiKey.revoke({ keyId, organizationId: organization.id }));
+          toast.success("API key revoked successfully");
         } catch (error) {
-          toast.error("Failed to revoke API key")
-          console.error("API key revocation error:", error)
+          toast.error("Failed to revoke API key");
+          console.error("API key revocation error:", error);
         }
       },
-    })
-  }
+    });
+  };
 
   const handleCopyKey = async (key: string) => {
     try {
-      await navigator.clipboard.writeText(key)
-      setCopied(true)
-      toast.success("API key copied to clipboard")
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(key);
+      setCopied(true);
+      toast.success("API key copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error("Failed to copy API key")
-      console.error("Copy error:", error)
+      toast.error("Failed to copy API key");
+      console.error("Copy error:", error);
     }
-  }
+  };
 
   const handleCloseApiKeyDialog = () => {
-    setIsApiKeyDialogOpen(false)
-    setApiKeyDialogStep("create")
-    setNewApiKey("")
-    setCopied(false)
-    setShowKey(false)
-  }
+    setIsApiKeyDialogOpen(false);
+    setApiKeyDialogStep("create");
+    setNewApiKey("");
+    setCopied(false);
+    setShowKey(false);
+  };
 
   const handleDeleteOrganization = () => {
     try {
-      z.mutate(mutators.organization.delete({ organizationId: organization.id }))
-      toast.success("Organization deleted successfully")
-      navigate({ to: "/" })
+      z.mutate(mutators.organization.delete({ organizationId: organization.id }));
+      toast.success("Organization deleted successfully");
+      navigate({ to: "/" });
     } catch (error) {
-      toast.error("Failed to delete organization")
-      console.error("Organization deletion error:", error)
+      toast.error("Failed to delete organization");
+      console.error("Organization deletion error:", error);
     }
-  }
+  };
 
-  const [keys] = useQuery(queries.apiKeys.byOrganization({ organizationId: organization.id }))
+  const [keys] = useQuery(queries.apiKeys.byOrganization({ organizationId: organization.id }));
 
-  const [members] = useQuery(queries.members.byOrganization({ organizationId: organization.id }))
+  const [members] = useQuery(queries.members.byOrganization({ organizationId: organization.id }));
 
   const [invitations] = useQuery(
     queries.invitations.byOrganization({
       organizationId: organization.id,
     }),
-  )
+  );
 
   const invitationForm = useAppForm({
     defaultValues: {
@@ -136,14 +136,14 @@ function RouteComponent() {
     },
     onSubmit: async (values) => {
       if (!values.value.email.trim()) {
-        toast.error("Please enter an email address")
-        return
+        toast.error("Please enter an email address");
+        return;
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(values.value.email.trim())) {
-        toast.error("Please enter a valid email address")
-        return
+        toast.error("Please enter a valid email address");
+        return;
       }
 
       try {
@@ -151,24 +151,24 @@ function RouteComponent() {
           organizationId: organization.id,
           email: values.value.email.trim(),
           role: values.value.role,
-        })
-        toast.success("Invitation sent successfully")
-        invitationForm.reset()
-        setIsInviteDialogOpen(false)
+        });
+        toast.success("Invitation sent successfully");
+        invitationForm.reset();
+        setIsInviteDialogOpen(false);
       } catch (error: any) {
         const errorMessage = error?.message?.includes("already")
           ? "This user is already a member or has a pending invitation"
-          : "Failed to send invitation"
-        toast.error(errorMessage)
-        console.error("Invitation error:", error)
+          : "Failed to send invitation";
+        toast.error(errorMessage);
+        console.error("Invitation error:", error);
       }
     },
-  })
+  });
 
   const handleCancelInvitation = async (invitationId: string, email: string) => {
     if (!organization) {
-      toast.error("Organization not found")
-      return
+      toast.error("Organization not found");
+      return;
     }
 
     confirmDialog({
@@ -179,20 +179,20 @@ function RouteComponent() {
           await authClient.organization.cancelInvitation({
             organizationId: organization.id,
             invitationId,
-          })
-          toast.success("Invitation canceled")
+          });
+          toast.success("Invitation canceled");
         } catch (error) {
-          toast.error("Failed to cancel invitation")
-          console.error("Cancel invitation error:", error)
+          toast.error("Failed to cancel invitation");
+          console.error("Cancel invitation error:", error);
         }
       },
-    })
-  }
+    });
+  };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
     if (!organization) {
-      toast.error("Organization not found")
-      return
+      toast.error("Organization not found");
+      return;
     }
 
     confirmDialog({
@@ -203,15 +203,15 @@ function RouteComponent() {
           await authClient.organization.removeMember({
             organizationId: organization.id,
             memberId,
-          })
-          toast.success("Member removed successfully")
+          });
+          toast.success("Member removed successfully");
         } catch (error) {
-          toast.error("Failed to remove member")
-          console.error("Remove member error:", error)
+          toast.error("Failed to remove member");
+          console.error("Remove member error:", error);
         }
       },
-    })
-  }
+    });
+  };
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -242,7 +242,9 @@ function RouteComponent() {
         {(!members || members.length === 0) && (!invitations || invitations.length === 0) && (
           <Card className="p-8 text-center">
             <div className="text-sm font-medium text-gray-700">No members or invitations yet</div>
-            <div className="text-xs mt-1 text-gray-500">Invite your first team member to get started</div>
+            <div className="text-xs mt-1 text-gray-500">
+              Invite your first team member to get started
+            </div>
           </Card>
         )}
       </div>
@@ -259,8 +261,8 @@ function RouteComponent() {
           />
           <Button
             onPress={() => {
-              setIsApiKeyDialogOpen(true)
-              setApiKeyDialogStep("create")
+              setIsApiKeyDialogOpen(true);
+              setApiKeyDialogStep("create");
             }}
             size="sm"
             intent="secondary"
@@ -300,6 +302,5 @@ function RouteComponent() {
         invitationForm={invitationForm}
       />
     </div>
-  )
+  );
 }
-

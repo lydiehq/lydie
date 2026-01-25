@@ -13,9 +13,9 @@ export const WORKSPACE_COLORS = [
   { value: "#7986cb", name: "Pastel Periwinkle" },
   { value: "#ef5350", name: "Pastel Red" },
   { value: "#66bb6a", name: "Pastel Green" },
-] as const
+] as const;
 
 export function getRandomWorkspaceColor() {
-  const randomColor = WORKSPACE_COLORS[Math.floor(Math.random() * WORKSPACE_COLORS.length)]!
-  return randomColor.value
+  const randomColor = WORKSPACE_COLORS[Math.floor(Math.random() * WORKSPACE_COLORS.length)]!;
+  return randomColor.value;
 }

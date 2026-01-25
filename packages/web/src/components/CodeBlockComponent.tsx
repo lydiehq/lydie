@@ -1,33 +1,34 @@
-import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
+import { ChevronDownRegular } from "@fluentui/react-icons";
+import { NodeViewContent, type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import { type Key, useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Autocomplete,
   Button,
+  Label,
   Popover,
+  SearchField,
   Select,
   SelectValue,
-  Autocomplete,
-  SearchField,
-  Label,
   useFilter,
-} from "react-aria-components"
-import { ChevronDownRegular } from "@fluentui/react-icons"
-import { useMemo, useState, useEffect, useCallback, type Key } from "react"
-import { ListBox, ListBoxItem } from "./generic/ListBox"
+} from "react-aria-components";
+
+import { ListBox, ListBoxItem } from "./generic/ListBox";
 
 type LanguageItem = {
-  id: string
-  name: string
-}
+  id: string;
+  name: string;
+};
 
 function LanguageSelect({
   selectedKey,
   onSelectionChange,
   items,
 }: {
-  selectedKey: string | null
-  onSelectionChange: (value: Key | null) => void
-  items: LanguageItem[]
+  selectedKey: string | null;
+  onSelectionChange: (value: Key | null) => void;
+  items: LanguageItem[];
 }) {
-  let { contains } = useFilter({ sensitivity: "base" })
+  let { contains } = useFilter({ sensitivity: "base" });
 
   return (
     <Select onChange={onSelectionChange} value={selectedKey} className="absolute top-3 right-3">
@@ -38,45 +39,52 @@ function LanguageSelect({
       </Button>
       <Popover style={{ display: "flex", flexDirection: "column" }}>
         <Autocomplete filter={contains}>
-          <SearchField aria-label="Search tags" autoFocus style={{ margin: 4 }} />
-          <ListBox items={items}>{(item) => <ListBoxItem id={item.name}>{item.name}</ListBoxItem>}</ListBox>
+          <SearchField aria-label="Search tags" style={{ margin: 4 }} />
+          <ListBox items={items}>
+            {(item) => <ListBoxItem id={item.name}>{item.name}</ListBoxItem>}
+          </ListBox>
         </Autocomplete>
       </Popover>
     </Select>
-  )
+  );
 }
 
 export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewProps) {
-  const defaultLanguage = node.attrs?.language || "null"
+  const defaultLanguage = node.attrs?.language || "null";
 
   const lowlight = useMemo(() => {
-    const codeBlockExtension = editor.extensionManager.extensions.find((ext) => ext.name === "codeBlock")
-    return codeBlockExtension?.options.lowlight
-  }, [editor])
+    const codeBlockExtension = editor.extensionManager.extensions.find(
+      (ext) => ext.name === "codeBlock",
+    );
+    return codeBlockExtension?.options.lowlight;
+  }, [editor]);
 
   const items = useMemo(() => {
-    const languages = lowlight?.listLanguages() || []
-    return [{ id: "null", name: "auto" }, ...languages.map((lang: string) => ({ id: lang, name: lang }))]
-  }, [lowlight])
+    const languages = lowlight?.listLanguages() || [];
+    return [
+      { id: "null", name: "auto" },
+      ...languages.map((lang: string) => ({ id: lang, name: lang })),
+    ];
+  }, [lowlight]);
 
-  const [selectedKey, setSelectedKey] = useState<string | null>(defaultLanguage)
+  const [selectedKey, setSelectedKey] = useState<string | null>(defaultLanguage);
 
   useEffect(() => {
-    const currentLanguage = node.attrs?.language || "null"
+    const currentLanguage = node.attrs?.language || "null";
     if (currentLanguage !== selectedKey) {
-      setSelectedKey(currentLanguage)
+      setSelectedKey(currentLanguage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [node.attrs?.language])
+  }, [node.attrs?.language]);
 
   const handleSelectionChange = useCallback(
     (key: Key | null) => {
-      const keyString = key === null ? null : String(key)
-      setSelectedKey(keyString)
-      updateAttributes({ language: keyString === "null" ? null : keyString })
+      const keyString = key === null ? null : String(key);
+      setSelectedKey(keyString);
+      updateAttributes({ language: keyString === "null" ? null : keyString });
     },
     [updateAttributes],
-  )
+  );
 
   return (
     <NodeViewWrapper className="relative group">
@@ -86,8 +94,12 @@ export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewP
             <NodeViewContent />
           </code>
         </pre>
-        <LanguageSelect selectedKey={selectedKey} onSelectionChange={handleSelectionChange} items={items} />
+        <LanguageSelect
+          selectedKey={selectedKey}
+          onSelectionChange={handleSelectionChange}
+          items={items}
+        />
       </div>
     </NodeViewWrapper>
-  )
+  );
 }

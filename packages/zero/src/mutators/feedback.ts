@@ -1,7 +1,8 @@
-import { defineMutator } from "@rocicorp/zero"
-import { z } from "zod"
-import { hasOrganizationAccess } from "../auth"
-import { withTimestamps } from "../utils/timestamps"
+import { defineMutator } from "@rocicorp/zero";
+import { z } from "zod";
+
+import { hasOrganizationAccess } from "../auth";
+import { withTimestamps } from "../utils/timestamps";
 
 export const feedbackMutators = {
   create: defineMutator(
@@ -13,7 +14,7 @@ export const feedbackMutators = {
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args: { id, type, message, metadata, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
 
       await tx.mutate.feedback_submissions.insert(
         withTimestamps({
@@ -24,7 +25,7 @@ export const feedbackMutators = {
           message,
           metadata: metadata || null,
         }),
-      )
+      );
     },
   ),
-}
+};

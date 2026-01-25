@@ -1,23 +1,28 @@
-import { db } from "@lydie/database"
-import { integrationConnectionsTable, integrationLinksTable, documentsTable } from "@lydie/database"
-import { eq, and } from "drizzle-orm"
-import { createId } from "@lydie/core/id"
-import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing"
-import { convertJsonToYjs } from "@lydie/core/yjs-to-json"
-import type { Integration } from "./types"
+import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
+import { createId } from "@lydie/core/id";
+import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
+import { db } from "@lydie/database";
+import {
+  documentsTable,
+  integrationConnectionsTable,
+  integrationLinksTable,
+} from "@lydie/database";
+import { and, eq } from "drizzle-orm";
+
+import type { Integration } from "./types";
 
 export interface PullFromLinkOptions {
-  linkId: string
-  organizationId: string
-  userId: string
-  integration: Integration
+  linkId: string;
+  organizationId: string;
+  userId: string;
+  integration: Integration;
 }
 
 export interface PullFromLinkResult {
-  success: boolean
-  imported: number
-  failed: number
-  error?: string
+  success: boolean;
+  imported: number;
+  failed: number;
+  error?: string;
 }
 
 // Pull documents from an integration link
@@ -28,11 +33,13 @@ export interface PullFromLinkResult {
 // - Creating documents from results
 // - Updating link sync timestamp
 // - Updating connection status
-export async function pullFromIntegrationLink(options: PullFromLinkOptions): Promise<PullFromLinkResult> {
-  const { linkId, organizationId, userId, integration } = options
+export async function pullFromIntegrationLink(
+  options: PullFromLinkOptions,
+): Promise<PullFromLinkResult> {
+  const { linkId, organizationId, userId, integration } = options;
 
   try {
-    console.log(`[Integration Pull] Starting pull for link ${linkId}`)
+    console.log(`[Integration Pull] Starting pull for link ${linkId}`);
 
     // Fetch link with its connection
     const link = await db.query.integrationLinksTable.findFirst({
@@ -40,36 +47,36 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
       with: {
         connection: true,
       },
-    })
+    });
 
     if (!link || link.organizationId !== organizationId) {
-      console.error(`[Integration Pull] Link not found or access denied: ${linkId}`)
+      console.error(`[Integration Pull] Link not found or access denied: ${linkId}`);
       return {
         success: false,
         imported: 0,
         failed: 0,
         error: "Link not found",
-      }
+      };
     }
 
-    const connection = link.connection
+    const connection = link.connection;
     if (!connection) {
       return {
         success: false,
         imported: 0,
         failed: 0,
         error: "Connection not found",
-      }
+      };
     }
 
-    console.log(`[Integration Pull] Pulling from ${connection.integrationType} link: ${link.name}`)
+    console.log(`[Integration Pull] Pulling from ${connection.integrationType} link: ${link.name}`);
 
     // Merge connection config with link config for the pull
     // Link config contains path-specific info (e.g., repo path)
     const mergedConfig = {
       ...(connection.config as Record<string, any>),
       ...(link.config as Record<string, any>),
-    }
+    };
 
     // Create a connection object for token refresh
     const connectionForRefresh = {
@@ -79,28 +86,31 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
       config: mergedConfig,
       createdAt: connection.createdAt,
       updatedAt: connection.updatedAt,
-    }
+    };
 
     // Refresh access token if needed (for GitHub Apps with expiring tokens)
     if ("getAccessToken" in integration && typeof integration.getAccessToken === "function") {
       try {
-        const oldToken = (mergedConfig as any).installationAccessToken
-        await integration.getAccessToken(connectionForRefresh)
-        const newToken = (mergedConfig as any).installationAccessToken
+        const oldToken = (mergedConfig as any).installationAccessToken;
+        await integration.getAccessToken(connectionForRefresh);
+        const newToken = (mergedConfig as any).installationAccessToken;
 
         // Update database if token was refreshed
         if (oldToken !== newToken) {
-          console.log(`[Integration Pull] Token refreshed for connection ${connection.id}`)
+          console.log(`[Integration Pull] Token refreshed for connection ${connection.id}`);
           await db
             .update(integrationConnectionsTable)
             .set({
               config: connection.config,
               updatedAt: new Date(),
             })
-            .where(eq(integrationConnectionsTable.id, connection.id))
+            .where(eq(integrationConnectionsTable.id, connection.id));
         }
       } catch (error) {
-        console.error(`[Integration Pull] Failed to refresh token for connection ${connection.id}:`, error)
+        console.error(
+          `[Integration Pull] Failed to refresh token for connection ${connection.id}:`,
+          error,
+        );
         // Continue anyway - the getAccessToken in the integration will handle errors
       }
     }
@@ -110,23 +120,25 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
       connection: connectionForRefresh,
       organizationId,
       userId,
-    })
+    });
 
-    let imported = 0
-    let failed = 0
+    let imported = 0;
+    let failed = 0;
 
     // Build a map of external IDs to document IDs for parent resolution
-    const externalIdToDocId = new Map<string, string>()
+    const externalIdToDocId = new Map<string, string>();
 
     // First pass: create/update all documents (including locked folder pages)
     for (const result of results) {
       if (result.success && result.metadata) {
         try {
-          const isLocked = result.metadata.isLocked ?? false
-          const customFields = result.metadata.customFields as Record<string, string | number> | undefined
+          const isLocked = result.metadata.isLocked ?? false;
+          const customFields = result.metadata.customFields as
+            | Record<string, string | number>
+            | undefined;
 
           // Check if document already exists by externalId
-          let existingDocument = null
+          let existingDocument = null;
           if (result.externalId) {
             const docs = await db
               .select()
@@ -137,19 +149,19 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
                   eq(documentsTable.integrationLinkId, link.id),
                 ),
               )
-              .limit(1)
-            existingDocument = docs[0] || null
+              .limit(1);
+            existingDocument = docs[0] || null;
           }
 
-          let insertedDocument
-          let documentId: string
+          let insertedDocument;
+          let documentId: string;
 
           if (existingDocument) {
             // Update existing document
-            documentId = existingDocument.id
+            documentId = existingDocument.id;
 
             // Convert TipTap JSON to Yjs format
-            const yjsState = convertJsonToYjs(result.metadata.content)
+            const yjsState = convertJsonToYjs(result.metadata.content);
 
             await db
               .update(documentsTable)
@@ -163,20 +175,20 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
                 updatedAt: new Date(),
                 deletedAt: null, // Ensure document is not marked as deleted
               })
-              .where(eq(documentsTable.id, existingDocument.id))
+              .where(eq(documentsTable.id, existingDocument.id));
 
             // Fetch the updated document
             insertedDocument = await db.query.documentsTable.findFirst({
               where: {
                 id: existingDocument.id,
               },
-            })
+            });
           } else {
             // Insert new document
-            documentId = createId()
+            documentId = createId();
 
             // Convert TipTap JSON to Yjs format
-            const yjsState = convertJsonToYjs(result.metadata.content)
+            const yjsState = convertJsonToYjs(result.metadata.content);
 
             await db.insert(documentsTable).values({
               id: documentId,
@@ -193,19 +205,19 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
               published: true, // Documents from integrations are published by default
               createdAt: new Date(),
               updatedAt: new Date(),
-            })
+            });
 
             // Fetch the newly inserted document
             insertedDocument = await db.query.documentsTable.findFirst({
               where: {
                 id: documentId,
               },
-            })
+            });
           }
 
           // Store in map for parent resolution
           if (result.externalId) {
-            externalIdToDocId.set(result.externalId, documentId)
+            externalIdToDocId.set(result.externalId, documentId);
           }
 
           if (insertedDocument && insertedDocument.yjsState) {
@@ -220,21 +232,21 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
               console.error(
                 `[Integration Pull] Failed to generate embeddings for document ${insertedDocument.id} (${result.externalId}):`,
                 error,
-              )
-            })
+              );
+            });
           }
 
-          imported++
+          imported++;
         } catch (error) {
-          failed++
+          failed++;
           console.error(
             `[Integration Pull] Failed to create/update document from ${result.externalId}:`,
             error,
-          )
+          );
         }
       } else {
-        failed++
-        console.error(`[Integration Pull] Pull failed: ${result.error}`)
+        failed++;
+        console.error(`[Integration Pull] Pull failed: ${result.error}`);
       }
     }
 
@@ -242,37 +254,37 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
     // For files: externalId is the file path (e.g., "docs/guide.md")
     // For folders: externalId is "__folder__<path>" (e.g., "__folder__docs")
     // Parent is determined by the directory containing the file/folder
-    console.log("[Integration Pull] Setting parent relationships...")
+    console.log("[Integration Pull] Setting parent relationships...");
     for (const result of results) {
-      if (!result.success || !result.metadata || !result.externalId) continue
+      if (!result.success || !result.metadata || !result.externalId) continue;
 
       // Determine parent path from externalId
-      let parentPath: string | null = null
+      let parentPath: string | null = null;
 
       if (result.externalId.startsWith("__folder__")) {
         // For folder pages, parent is the parent directory
-        const folderPath = result.externalId.substring("__folder__".length)
-        const pathParts = folderPath.split("/")
+        const folderPath = result.externalId.substring("__folder__".length);
+        const pathParts = folderPath.split("/");
         if (pathParts.length > 1) {
-          pathParts.pop() // Remove last segment
-          parentPath = pathParts.join("/")
+          pathParts.pop(); // Remove last segment
+          parentPath = pathParts.join("/");
         }
       } else {
         // For regular files, parent is the containing directory
-        const pathParts = result.externalId.split("/")
+        const pathParts = result.externalId.split("/");
         if (pathParts.length > 1) {
-          pathParts.pop() // Remove filename
-          parentPath = pathParts.join("/")
+          pathParts.pop(); // Remove filename
+          parentPath = pathParts.join("/");
         }
       }
 
       // If we have a parent path, find the corresponding folder document
       if (parentPath) {
-        const parentExternalId = `__folder__${parentPath}`
-        const parentDocId = externalIdToDocId.get(parentExternalId)
+        const parentExternalId = `__folder__${parentPath}`;
+        const parentDocId = externalIdToDocId.get(parentExternalId);
 
         if (parentDocId) {
-          const docId = externalIdToDocId.get(result.externalId)
+          const docId = externalIdToDocId.get(result.externalId);
           if (docId) {
             try {
               await db
@@ -281,11 +293,16 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
                   parentId: parentDocId,
                   updatedAt: new Date(),
                 })
-                .where(eq(documentsTable.id, docId))
+                .where(eq(documentsTable.id, docId));
 
-              console.log(`[Integration Pull] Set parent for ${result.externalId} -> ${parentPath}`)
+              console.log(
+                `[Integration Pull] Set parent for ${result.externalId} -> ${parentPath}`,
+              );
             } catch (error) {
-              console.error(`[Integration Pull] Failed to set parent for ${result.externalId}:`, error)
+              console.error(
+                `[Integration Pull] Failed to set parent for ${result.externalId}:`,
+                error,
+              );
             }
           }
         }
@@ -299,9 +316,9 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
         lastSyncedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(integrationLinksTable.id, linkId))
+      .where(eq(integrationLinksTable.id, linkId));
 
-    console.log(`[Integration Pull] Complete. Imported: ${imported}, Failed: ${failed}`)
+    console.log(`[Integration Pull] Complete. Imported: ${imported}, Failed: ${failed}`);
 
     // If pull succeeded, ensure connection status is active
     if (connection.status !== "active") {
@@ -312,13 +329,16 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
           statusMessage: null,
           updatedAt: new Date(),
         })
-        .where(eq(integrationConnectionsTable.id, connection.id))
+        .where(eq(integrationConnectionsTable.id, connection.id));
     }
 
-    return { success: true, imported, failed }
+    return { success: true, imported, failed };
   } catch (error) {
-    console.error("[Integration Pull] Error during pull:", error)
-    console.error("[Integration Pull] Error stack:", error instanceof Error ? error.stack : "No stack")
+    console.error("[Integration Pull] Error during pull:", error);
+    console.error(
+      "[Integration Pull] Error stack:",
+      error instanceof Error ? error.stack : "No stack",
+    );
 
     // Update connection status to error if pull failed
     try {
@@ -327,7 +347,7 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
         .select()
         .from(integrationLinksTable)
         .where(eq(integrationLinksTable.id, linkId))
-        .limit(1)
+        .limit(1);
 
       if (linkRow[0]) {
         await db
@@ -337,10 +357,10 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
             statusMessage: error instanceof Error ? error.message : "Pull failed",
             updatedAt: new Date(),
           })
-          .where(eq(integrationConnectionsTable.id, linkRow[0].connectionId))
+          .where(eq(integrationConnectionsTable.id, linkRow[0].connectionId));
       }
     } catch (updateError) {
-      console.error("[Integration Pull] Failed to update connection status:", updateError)
+      console.error("[Integration Pull] Failed to update connection status:", updateError);
     }
 
     return {
@@ -348,6 +368,6 @@ export async function pullFromIntegrationLink(options: PullFromLinkOptions): Pro
       imported: 0,
       failed: 0,
       error: error instanceof Error ? error.message : String(error),
-    }
+    };
   }
 }

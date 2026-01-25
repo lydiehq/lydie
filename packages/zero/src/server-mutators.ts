@@ -1,20 +1,21 @@
-import { defineMutators } from "@rocicorp/zero"
-import { mutators as sharedMutators } from "./mutators/index"
-import { publishDocumentMutation } from "./server-mutators/documents/publish"
-import { updateDocumentMutation } from "./server-mutators/documents/update"
-import { moveDocumentMutation } from "./server-mutators/documents/move"
-import { deleteDocumentMutation } from "./server-mutators/documents/delete"
-import { disconnectIntegrationMutation } from "./server-mutators/integrations/disconnect"
-import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link"
-import { createFeedbackMutation } from "./server-mutators/feedback/create"
-import { createTemplateMutation } from "./server-mutators/templates/create"
+import { defineMutators } from "@rocicorp/zero";
+
+import { mutators as sharedMutators } from "./mutators/index";
+import { deleteDocumentMutation } from "./server-mutators/documents/delete";
+import { moveDocumentMutation } from "./server-mutators/documents/move";
+import { publishDocumentMutation } from "./server-mutators/documents/publish";
+import { updateDocumentMutation } from "./server-mutators/documents/update";
+import { createFeedbackMutation } from "./server-mutators/feedback/create";
+import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link";
+import { disconnectIntegrationMutation } from "./server-mutators/integrations/disconnect";
+import { createTemplateMutation } from "./server-mutators/templates/create";
 
 export interface MutatorContext {
-  asyncTasks: Array<() => Promise<void>>
+  asyncTasks: Array<() => Promise<void>>;
 }
 
 export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
-  const context = { asyncTasks }
+  const context = { asyncTasks };
 
   return defineMutators(sharedMutators, {
     document: {
@@ -35,5 +36,5 @@ export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
     template: {
       create: createTemplateMutation(context),
     },
-  })
+  });
 }

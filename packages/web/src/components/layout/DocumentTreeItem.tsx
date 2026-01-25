@@ -1,65 +1,68 @@
-import { TreeItem, TreeItemContent, Button, MenuTrigger } from "react-aria-components"
-import { useParams, useNavigate } from "@tanstack/react-router"
-import { Collection } from "react-aria-components"
-import { type ReactElement, useRef, useState } from "react"
+import type { QueryResultType } from "@rocicorp/zero";
+
 import {
-  FolderSyncRegular,
-  ReOrderRegular,
-  CubeRegular,
+  Add12Regular,
   ArrowClockwiseRegular,
   ArrowRightRegular,
-  DocumentFilled,
   ChevronRightFilled,
-  MoreHorizontalRegular,
-  Add12Regular,
   CollectionsEmpty16Filled,
-} from "@fluentui/react-icons"
-import { composeTailwindRenderProps, focusRing } from "../generic/utils"
-import { sidebarItemStyles, sidebarItemIconStyles } from "./Sidebar"
-import { DocumentMenu } from "../home-file-explorer/DocumentMenu"
-import { Menu, MenuItem } from "../generic/Menu"
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip"
-import type { QueryResultType } from "@rocicorp/zero"
-import { queries } from "@lydie/zero/queries"
-import { getIntegrationIconUrl } from "@/utils/integration-icons"
-import { useDocumentActions } from "@/hooks/use-document-actions"
+  CubeRegular,
+  DocumentFilled,
+  FolderSyncRegular,
+  MoreHorizontalRegular,
+  ReOrderRegular,
+} from "@fluentui/react-icons";
+import { queries } from "@lydie/zero/queries";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { type ReactElement, useRef, useState } from "react";
+import { Button, MenuTrigger, TreeItem, TreeItemContent } from "react-aria-components";
+import { Collection } from "react-aria-components";
+
+import { useDocumentActions } from "@/hooks/use-document-actions";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
+
+import { Menu, MenuItem } from "../generic/Menu";
+import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
+import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
+import { sidebarItemIconStyles, sidebarItemStyles } from "./Sidebar";
 
 type Props = {
   item: {
-    id: string
-    name: string
-    type: "document" | "integration-link" | "integration-group"
-    isLocked?: boolean
+    id: string;
+    name: string;
+    type: "document" | "integration-link" | "integration-group";
+    isLocked?: boolean;
     children?: Array<{
-      id: string
-      name: string
-      type: "document" | "integration-link" | "integration-group"
-      children?: any[]
-      integrationLinkId?: string | null
-      integrationType?: string
-      syncStatus?: string | null
-      isLocked?: boolean
-    }>
-    integrationLinkId?: string | null
-    integrationType?: string
-    syncStatus?: string | null
-  }
-  renderItem: (item: any) => ReactElement
-  documents: NonNullable<QueryResultType<typeof queries.organizations.documents>>["documents"]
-}
+      id: string;
+      name: string;
+      type: "document" | "integration-link" | "integration-group";
+      children?: any[];
+      integrationLinkId?: string | null;
+      integrationType?: string;
+      syncStatus?: string | null;
+      isLocked?: boolean;
+    }>;
+    integrationLinkId?: string | null;
+    integrationType?: string;
+    syncStatus?: string | null;
+  };
+  renderItem: (item: any) => ReactElement;
+  documents: NonNullable<QueryResultType<typeof queries.organizations.documents>>["documents"];
+};
 
 export function DocumentTreeItem({ item, renderItem }: Props) {
-  const { id: currentDocId } = useParams({ strict: false })
-  const navigate = useNavigate()
-  const chevronRef = useRef<HTMLButtonElement>(null)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { id: currentDocId } = useParams({ strict: false });
+  const navigate = useNavigate();
+  const chevronRef = useRef<HTMLButtonElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const isCurrentDocument = item.type === "document" && currentDocId === item.id
-  const isCurrent = isCurrentDocument
+  const isCurrentDocument = item.type === "document" && currentDocId === item.id;
+  const isCurrent = isCurrentDocument;
 
-  const isIntegrationLink = item.type === "integration-link"
-  const isGroup = item.type === "integration-group"
-  const isLocked = item.isLocked ?? false
+  const isIntegrationLink = item.type === "integration-link";
+  const isGroup = item.type === "integration-group";
+  const isLocked = item.isLocked ?? false;
 
   const handleAction = () => {
     if (isGroup && item.integrationType) {
@@ -67,13 +70,13 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         to: "/w/$organizationSlug/settings/integrations/$integrationType",
         params: { integrationType: item.integrationType },
         from: "/w/$organizationSlug",
-      })
-      return
+      });
+      return;
     }
 
     if (isIntegrationLink) {
-      chevronRef.current?.click()
-      return
+      chevronRef.current?.click();
+      return;
     }
 
     if (item.type === "document") {
@@ -81,9 +84,9 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         to: "/w/$organizationSlug/$id",
         params: { id: item.id },
         from: "/w/$organizationSlug",
-      })
+      });
     }
-  }
+  };
 
   return (
     <TreeItem
@@ -175,11 +178,11 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
       </TreeItemContent>
       {item.children && <Collection items={item.children}>{renderItem}</Collection>}
     </TreeItem>
-  )
+  );
 }
 
 function getDisplayName(name: string): string {
-  return name.trim() || "Untitled document"
+  return name.trim() || "Untitled document";
 }
 
 function IntegrationGroupChevron({
@@ -187,11 +190,11 @@ function IntegrationGroupChevron({
   name,
   isExpanded,
 }: {
-  integrationType?: string
-  name: string
-  isExpanded: boolean
+  integrationType?: string;
+  name: string;
+  isExpanded: boolean;
 }) {
-  const iconUrl = integrationType ? getIntegrationIconUrl(integrationType) : null
+  const iconUrl = integrationType ? getIntegrationIconUrl(integrationType) : null;
 
   return (
     <Button
@@ -230,7 +233,7 @@ function IntegrationGroupChevron({
         </>
       )}
     </Button>
-  )
+  );
 }
 
 // Integration Link Chevron - Shows sync icon with loading state
@@ -240,10 +243,10 @@ function IntegrationLinkChevron({
   chevronRef,
   isMenuOpen,
 }: {
-  syncStatus?: string | null
-  isExpanded: boolean
-  chevronRef: React.RefObject<HTMLButtonElement | null>
-  isMenuOpen: boolean
+  syncStatus?: string | null;
+  isExpanded: boolean;
+  chevronRef: React.RefObject<HTMLButtonElement | null>;
+  isMenuOpen: boolean;
 }) {
   return (
     <Button
@@ -274,7 +277,7 @@ function IntegrationLinkChevron({
         </>
       )}
     </Button>
-  )
+  );
 }
 
 function DocumentTreeItemIcon({
@@ -283,12 +286,12 @@ function DocumentTreeItemIcon({
   hasChildren,
   isMenuOpen,
 }: {
-  isExpanded: boolean
-  chevronRef: React.RefObject<HTMLButtonElement | null>
-  hasChildren: boolean
-  isMenuOpen: boolean
+  isExpanded: boolean;
+  chevronRef: React.RefObject<HTMLButtonElement | null>;
+  hasChildren: boolean;
+  isMenuOpen: boolean;
 }) {
-  const IconComponent = hasChildren ? CollectionsEmpty16Filled : DocumentFilled
+  const IconComponent = hasChildren ? CollectionsEmpty16Filled : DocumentFilled;
 
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
@@ -300,7 +303,7 @@ function DocumentTreeItemIcon({
           })}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -322,7 +325,7 @@ function DocumentTreeItemIcon({
         })}
       />
     </Button>
-  )
+  );
 }
 
 function VerticalMenuButton({
@@ -330,19 +333,22 @@ function VerticalMenuButton({
   isOpen: _isOpen = false,
   tooltip,
 }: {
-  "aria-label": string
-  isOpen?: boolean
-  tooltip?: string
+  "aria-label": string;
+  isOpen?: boolean;
+  tooltip?: string;
 }) {
   const button = (
-    <Button className="px-0.5 py-1 text-black hover:text-black/60 group/options" aria-label={ariaLabel}>
+    <Button
+      className="px-0.5 py-1 text-black hover:text-black/60 group/options"
+      aria-label={ariaLabel}
+    >
       <MoreHorizontalRegular
         className={sidebarItemIconStyles({
           className: "size-4 group-hover/options:text-black/60",
         })}
       />
     </Button>
-  )
+  );
 
   if (tooltip) {
     return (
@@ -350,10 +356,10 @@ function VerticalMenuButton({
         {button}
         <Tooltip placement="top">{tooltip}</Tooltip>
       </TooltipTrigger>
-    )
+    );
   }
 
-  return button
+  return button;
 }
 
 function ItemContextMenu({
@@ -365,19 +371,19 @@ function ItemContextMenu({
   isMenuOpen,
   onMenuOpenChange,
 }: {
-  type: "document" | "integration-link" | "integration-group"
-  itemId: string
-  itemName: string
-  integrationLinkId?: string | null
-  integrationType?: string
-  isMenuOpen: boolean
-  onMenuOpenChange: (isOpen: boolean) => void
+  type: "document" | "integration-link" | "integration-group";
+  itemId: string;
+  itemName: string;
+  integrationLinkId?: string | null;
+  integrationType?: string;
+  isMenuOpen: boolean;
+  onMenuOpenChange: (isOpen: boolean) => void;
 }) {
-  const navigate = useNavigate()
-  const { createDocument } = useDocumentActions()
+  const navigate = useNavigate();
+  const { createDocument } = useDocumentActions();
 
   if (type === "integration-group") {
-    return null
+    return null;
   }
 
   if (type === "integration-link") {
@@ -391,7 +397,7 @@ function ItemContextMenu({
             aria-label="Add document"
             onPress={() => {
               if (integrationLinkId) {
-                createDocument(undefined, integrationLinkId)
+                createDocument(undefined, integrationLinkId);
               }
             }}
           >
@@ -417,7 +423,7 @@ function ItemContextMenu({
                     to: "/w/$organizationSlug/settings/integrations/$integrationType",
                     params: { integrationType },
                     from: "/w/$organizationSlug",
-                  })
+                  });
                 }
               }}
             >
@@ -426,7 +432,7 @@ function ItemContextMenu({
             <MenuItem
               onAction={() => {
                 if (integrationLinkId) {
-                  createDocument(undefined, integrationLinkId)
+                  createDocument(undefined, integrationLinkId);
                 }
               }}
             >
@@ -435,7 +441,7 @@ function ItemContextMenu({
           </Menu>
         </MenuTrigger>
       </div>
-    )
+    );
   }
 
   return (
@@ -457,9 +463,13 @@ function ItemContextMenu({
         <Tooltip placement="top">Add page inside</Tooltip>
       </TooltipTrigger>
       <MenuTrigger isOpen={isMenuOpen} onOpenChange={onMenuOpenChange}>
-        <VerticalMenuButton aria-label="Document options" isOpen={isMenuOpen} tooltip="Document options" />
+        <VerticalMenuButton
+          aria-label="Document options"
+          isOpen={isMenuOpen}
+          tooltip="Document options"
+        />
         <DocumentMenu documentId={itemId} documentName={itemName} />
       </MenuTrigger>
     </div>
-  )
+  );
 }

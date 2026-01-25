@@ -1,5 +1,6 @@
-import { ChevronDownRegular } from "@fluentui/react-icons"
-import React from "react"
+import { ChevronDownRegular } from "@fluentui/react-icons";
+import { compose, cva } from "cva";
+import React from "react";
 import {
   Select as AriaSelect,
   type SelectProps as AriaSelectProps,
@@ -8,12 +9,12 @@ import {
   type ListBoxItemProps,
   SelectValue,
   type ValidationResult,
-} from "react-aria-components"
-import { Description, FieldError, Label } from "./Field"
-import { DropdownItem, DropdownSection, type DropdownSectionProps } from "./ListBox"
-import { Popover } from "./Popover"
-import { composeTailwindRenderProps, focusRing } from "./utils"
-import { compose, cva } from "cva"
+} from "react-aria-components";
+
+import { Description, FieldError, Label } from "./Field";
+import { DropdownItem, DropdownSection, type DropdownSectionProps } from "./ListBox";
+import { Popover } from "./Popover";
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
 const styles = cva({
   base: "flex items-center text-start gap-4 w-full cursor-default border border-black/10 dark:border-white/10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] dark:shadow-none rounded-lg pl-3 pr-2 py-2 min-w-[150px] transition bg-gray-50 dark:bg-zinc-700",
@@ -24,14 +25,14 @@ const styles = cva({
       true: "text-gray-200 dark:text-zinc-600 forced-colors:text-[GrayText] dark:bg-zinc-800 dark:border-white/5 forced-colors:border-[GrayText]",
     },
   },
-})
+});
 
 export interface SelectProps<T extends object> extends Omit<AriaSelectProps<T>, "children"> {
-  label?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
-  items?: Iterable<T>
-  children: React.ReactNode | ((item: T) => React.ReactNode)
+  label?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
+  items?: Iterable<T>;
+  children: React.ReactNode | ((item: T) => React.ReactNode);
 }
 
 export function Select<T extends object>({
@@ -66,13 +67,13 @@ export function Select<T extends object>({
         </ListBox>
       </Popover>
     </AriaSelect>
-  )
+  );
 }
 
 export function SelectItem(props: ListBoxItemProps) {
-  return <DropdownItem {...props} />
+  return <DropdownItem {...props} />;
 }
 
 export function SelectSection<T extends object>(props: DropdownSectionProps<T>) {
-  return <DropdownSection {...props} />
+  return <DropdownSection {...props} />;
 }

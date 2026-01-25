@@ -1,6 +1,6 @@
-import { composeRenderProps } from "react-aria-components"
-import { twMerge } from "tailwind-merge"
-import { cva } from "cva"
+import { cva } from "cva";
+import { composeRenderProps } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 
 export const focusRing = cva({
   base: "outline outline-blue-600 dark:outline-blue-500 outline-offset-2",
@@ -10,11 +10,11 @@ export const focusRing = cva({
       true: "outline-2",
     },
   },
-})
+});
 
 export function composeTailwindRenderProps<T>(
   className: string | ((v: T) => string) | undefined,
   tw: string,
 ): string | ((v: T) => string) {
-  return composeRenderProps(className, (className) => twMerge(tw, className))
+  return composeRenderProps(className, (className) => twMerge(tw, className));
 }

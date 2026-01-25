@@ -1,15 +1,12 @@
-// Onboarding guide document content
-// Contains the template for the interactive onboarding guide documents
-
 export interface OnboardingGuideContent {
   parent: {
-    title: string
-    content: any
-  }
+    title: string;
+    content: any;
+  };
   child: {
-    title: string
-    content: any
-  }
+    title: string;
+    content: any;
+  };
 }
 
 export function getOnboardingGuideContent(childId: string): OnboardingGuideContent {
@@ -198,7 +195,11 @@ export function getOnboardingGuideContent(childId: string): OnboardingGuideConte
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", text: "Status: ", marks: [{ type: "bold" }] },
+                      {
+                        type: "text",
+                        text: "Status: ",
+                        marks: [{ type: "bold" }],
+                      },
                       { type: "text", text: "In Progress" },
                     ],
                   },
@@ -210,7 +211,11 @@ export function getOnboardingGuideContent(childId: string): OnboardingGuideConte
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", text: "Priority: ", marks: [{ type: "bold" }] },
+                      {
+                        type: "text",
+                        text: "Priority: ",
+                        marks: [{ type: "bold" }],
+                      },
                       { type: "text", text: "High" },
                     ],
                   },
@@ -222,7 +227,11 @@ export function getOnboardingGuideContent(childId: string): OnboardingGuideConte
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", text: "Type: ", marks: [{ type: "bold" }] },
+                      {
+                        type: "text",
+                        text: "Type: ",
+                        marks: [{ type: "bold" }],
+                      },
                       { type: "text", text: "Tutorial" },
                     ],
                   },
@@ -265,5 +274,5 @@ export function getOnboardingGuideContent(childId: string): OnboardingGuideConte
         ],
       },
     },
-  }
+  };
 }

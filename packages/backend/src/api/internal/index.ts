@@ -1,26 +1,27 @@
-import { Hono } from "hono"
-import { OrganizationRoute } from "./organization"
-import { AssistantRoute } from "./assistant"
-import { MDXImportRoute } from "./mdx-import"
-import { LLMReplaceRoute } from "./llm-replace"
-import { IntegrationsRoute } from "./integrations"
-import { ImagesRoute } from "./images"
-import { VisibleError } from "@lydie/core/error"
-import { authClient } from "@lydie/core/auth"
-import { authenticatedWithOrganization, internalRateLimit } from "./middleware"
-import { HTTPException } from "hono/http-exception"
-import { ZeroRoute } from "./zero"
+import { authClient } from "@lydie/core/auth";
+import { VisibleError } from "@lydie/core/error";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+
+import { AssistantRoute } from "./assistant";
+import { ImagesRoute } from "./images";
+import { IntegrationsRoute } from "./integrations";
+import { LLMReplaceRoute } from "./llm-replace";
+import { MDXImportRoute } from "./mdx-import";
+import { authenticatedWithOrganization, internalRateLimit } from "./middleware";
+import { OrganizationRoute } from "./organization";
+import { ZeroRoute } from "./zero";
 
 const publicRouter = new Hono().on(["GET", "POST"], "/auth/*", async (c) => {
-  return authClient.handler(c.req.raw)
-})
+  return authClient.handler(c.req.raw);
+});
 
 const organizationScopedRouter = new Hono<{
   Variables: {
-    user: any
-    session: any
-    organizationId: string
-  }
+    user: any;
+    session: any;
+    organizationId: string;
+  };
 }>()
   .use("*", internalRateLimit)
   .use("*", authenticatedWithOrganization)
@@ -28,7 +29,7 @@ const organizationScopedRouter = new Hono<{
   .route("/assistant", AssistantRoute)
   .route("/mdx-import", MDXImportRoute)
   .route("/llm-replace", LLMReplaceRoute)
-  .route("/images", ImagesRoute)
+  .route("/images", ImagesRoute);
 
 export const InternalApi = new Hono()
   .route("/public", publicRouter)
@@ -36,21 +37,21 @@ export const InternalApi = new Hono()
   .route("/integrations", IntegrationsRoute)
   .route("/", organizationScopedRouter)
   .onError((err, c) => {
-    console.error(err)
+    console.error(err);
 
     if (err instanceof VisibleError) {
-      return c.json({ error: err.message, code: err.code }, err.status as any)
+      return c.json({ error: err.message, code: err.code }, err.status as any);
     }
 
     if (err instanceof HTTPException) {
-      const response: { error: string; code?: string } = { error: err.message }
+      const response: { error: string; code?: string } = { error: err.message };
 
       if (err.status === 429) {
-        response.code = "usage_limit_exceeded"
+        response.code = "usage_limit_exceeded";
       }
 
-      return c.json(response, err.status)
+      return c.json(response, err.status);
     }
 
-    return c.json({ error: "Internal server error" }, 500)
-  })
+    return c.json({ error: "Internal server error" }, 500);
+  });

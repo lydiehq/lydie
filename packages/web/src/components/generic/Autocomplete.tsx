@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import {
   Autocomplete as AriaAutocomplete,
   AutocompleteProps as AriaAutocompleteProps,
@@ -9,18 +9,27 @@ import {
   Header,
   MenuItemProps,
   useFilter,
-} from "react-aria-components"
-import { MenuItem } from "./Menu"
-import { SearchField } from "./SearchField"
+} from "react-aria-components";
 
-export interface AutocompleteProps<T extends object> extends Omit<AriaAutocompleteProps, "children"> {
-  children: React.ReactNode | ((item: T) => React.ReactNode)
-  items?: Iterable<T>
-  label?: string
+import { MenuItem } from "./Menu";
+import { SearchField } from "./SearchField";
+
+export interface AutocompleteProps<T extends object> extends Omit<
+  AriaAutocompleteProps,
+  "children"
+> {
+  children: React.ReactNode | ((item: T) => React.ReactNode);
+  items?: Iterable<T>;
+  label?: string;
 }
 
-export function Autocomplete<T extends object>({ items, children, label, ...props }: AutocompleteProps<T>) {
-  let { contains } = useFilter({ sensitivity: "base" })
+export function Autocomplete<T extends object>({
+  items,
+  children,
+  label,
+  ...props
+}: AutocompleteProps<T>) {
+  let { contains } = useFilter({ sensitivity: "base" });
   return (
     <div className="p-3 border-2 border-gray-200 rounded-xl dark:border-zinc-700">
       <AriaAutocomplete filter={contains} {...props}>
@@ -30,16 +39,16 @@ export function Autocomplete<T extends object>({ items, children, label, ...prop
         </AriaMenu>
       </AriaAutocomplete>
     </div>
-  )
+  );
 }
 
 export function AutocompleteItem(props: MenuItemProps) {
-  return <MenuItem {...props} />
+  return <MenuItem {...props} />;
 }
 
 export interface AutocompleteSectionProps<T> extends AriaMenuSectionProps<T> {
-  title?: string
-  items?: any
+  title?: string;
+  items?: any;
 }
 
 export function AutocompleteSection<T extends object>(props: AutocompleteSectionProps<T>) {
@@ -50,5 +59,5 @@ export function AutocompleteSection<T extends object>(props: AutocompleteSection
       </Header>
       <Collection items={props.items}>{props.children}</Collection>
     </AriaMenuSection>
-  )
+  );
 }

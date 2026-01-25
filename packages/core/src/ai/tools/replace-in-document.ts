@@ -1,5 +1,5 @@
-import { tool } from "ai"
-import { z } from "zod"
+import { tool } from "ai";
+import { z } from "zod";
 
 export const replaceInDocument = () =>
   tool({
@@ -82,6 +82,6 @@ Format: <ul data-type="taskList"><li data-type="taskItem" data-checked="true">Co
         title: title ?? undefined,
         search: search ?? "",
         replace,
-      }
+      };
     },
-  })
+  });

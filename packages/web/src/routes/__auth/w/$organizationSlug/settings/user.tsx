@@ -1,26 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { Separator } from "@/components/generic/Separator"
-import { Heading } from "@/components/generic/Heading"
-import { SectionHeader } from "@/components/generic/SectionHeader"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { useAuth } from "@/context/auth.context"
-import { PreferencesSection } from "@/components/settings/user/PreferencesSection"
-import { PendingInvitationsSection } from "@/components/settings/user/PendingInvitationsSection"
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { createFileRoute } from "@tanstack/react-router";
+
+import { Heading } from "@/components/generic/Heading";
+import { SectionHeader } from "@/components/generic/SectionHeader";
+import { Separator } from "@/components/generic/Separator";
+import { PendingInvitationsSection } from "@/components/settings/user/PendingInvitationsSection";
+import { PreferencesSection } from "@/components/settings/user/PreferencesSection";
+import { useAuth } from "@/context/auth.context";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
-  const [userSettings] = useQuery(queries.settings.user({}))
+  const [userSettings] = useQuery(queries.settings.user({}));
   const [userInvitations] = useQuery(
     queries.invitations.byUser({
       email: user.email,
     }),
-  )
+  );
 
   if (!userSettings) {
     return (
@@ -31,7 +32,7 @@ function RouteComponent() {
         <Separator />
         <div className="text-sm text-gray-500">Loading settings...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -62,5 +63,5 @@ function RouteComponent() {
         <PendingInvitationsSection invitations={userInvitations} />
       </div>
     </div>
-  )
+  );
 }

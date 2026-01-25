@@ -1,10 +1,15 @@
-import { tool } from "ai"
-import { z } from "zod"
-import { db, documentsTable, documentEmbeddingsTable } from "@lydie/database"
-import { eq, and, sql } from "drizzle-orm"
-import { generateEmbedding } from "../../embedding/generation"
+import { db, documentEmbeddingsTable, documentsTable } from "@lydie/database";
+import { tool } from "ai";
+import { and, eq, sql } from "drizzle-orm";
+import { z } from "zod";
 
-export const searchInDocument = (currentDocumentId: string, userId: string, organizationId: string) =>
+import { generateEmbedding } from "../../embedding/generation";
+
+export const searchInDocument = (
+  currentDocumentId: string,
+  userId: string,
+  organizationId: string,
+) =>
   tool({
     description: `Read specific sections or content within a document.
 This is the MOST EFFICIENT way to access specific parts of a document without loading the entire content.
@@ -69,11 +74,11 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         state: "searching",
         message: `Searching for "${query}" in current document...`,
         query,
-      }
+      };
 
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const targetDocumentId = documentId || currentDocumentId
+      const targetDocumentId = documentId || currentDocumentId;
 
       const [document] = await db
         .select({
@@ -83,27 +88,27 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
         })
         .from(documentsTable)
         .where(eq(documentsTable.id, targetDocumentId))
-        .limit(1)
+        .limit(1);
 
       if (!document) {
         return {
           error: `Document with ID "${targetDocumentId}" not found`,
           results: [],
-        }
+        };
       }
 
       if (document.organizationId !== organizationId) {
         return {
           error: "You do not have permission to access this document",
           results: [],
-        }
+        };
       }
 
-      const queryEmbedding = await generateEmbedding(query)
+      const queryEmbedding = await generateEmbedding(query);
 
       const similarity = sql<number>`1 - (${
         documentEmbeddingsTable.embedding
-      } <=> ${JSON.stringify(queryEmbedding)}::vector)`
+      } <=> ${JSON.stringify(queryEmbedding)}::vector)`;
 
       const results = await db
         .select({
@@ -121,8 +126,10 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
             sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.6`,
           ),
         )
-        .orderBy(sql`${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector`)
-        .limit(limit)
+        .orderBy(
+          sql`${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector`,
+        )
+        .limit(limit);
 
       if (results.length === 0) {
         yield {
@@ -130,8 +137,8 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
           documentTitle: document.title,
           documentId: targetDocumentId,
           results: [],
-        }
-        return
+        };
+        return;
       }
 
       yield {
@@ -148,6 +155,6 @@ This is the MOST EFFICIENT way to access specific parts of a document without lo
           heading: r.heading,
           headingLevel: r.headingLevel,
         })),
-      }
+      };
     },
-  })
+  });

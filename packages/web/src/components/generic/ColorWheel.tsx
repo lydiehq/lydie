@@ -1,10 +1,11 @@
-import React from "react"
+import React from "react";
 import {
   ColorWheel as AriaColorWheel,
   ColorWheelProps as AriaColorWheelProps,
   ColorWheelTrack,
-} from "react-aria-components"
-import { ColorThumb } from "./ColorThumb"
+} from "react-aria-components";
+
+import { ColorThumb } from "./ColorThumb";
 
 export interface ColorWheelProps extends Omit<AriaColorWheelProps, "outerRadius" | "innerRadius"> {}
 
@@ -22,5 +23,5 @@ export function ColorWheel(props: ColorWheelProps) {
       />
       <ColorThumb />
     </AriaColorWheel>
-  )
+  );
 }

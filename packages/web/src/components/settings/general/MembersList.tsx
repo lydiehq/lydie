@@ -1,27 +1,34 @@
-import { Card } from "@/components/layout/Card"
-import { MenuTrigger, Button as RACButton } from "react-aria-components"
-import { Menu, MenuItem } from "@/components/generic/Menu"
-import { PersonRegular, MailRegular, ShieldRegular, ClockRegular, MoreHorizontalRegular } from "@fluentui/react-icons"
-import { formatDistanceToNow } from "date-fns"
+import {
+  ClockRegular,
+  MailRegular,
+  MoreHorizontalRegular,
+  PersonRegular,
+  ShieldRegular,
+} from "@fluentui/react-icons";
+import { formatDistanceToNow } from "date-fns";
+import { MenuTrigger, Button as RACButton } from "react-aria-components";
+
+import { Menu, MenuItem } from "@/components/generic/Menu";
+import { Card } from "@/components/layout/Card";
 
 type Member = {
-  id: string
-  role: string
-  created_at: Date | string
+  id: string;
+  role: string;
+  created_at: Date | string;
   user?: {
-    name?: string | null
-    email?: string | null
-  } | null
-}
+    name?: string | null;
+    email?: string | null;
+  } | null;
+};
 
 type MembersListProps = {
-  members: Member[] | null | undefined
-  onRemoveMember: (memberId: string, memberName: string) => void
-}
+  members: Member[] | null | undefined;
+  onRemoveMember: (memberId: string, memberName: string) => void;
+};
 
 export function MembersList({ members, onRemoveMember }: MembersListProps) {
   if (!members || members.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -34,7 +41,9 @@ export function MembersList({ members, onRemoveMember }: MembersListProps) {
               <div className="flex flex-col gap-y-2 flex-1">
                 <div className="flex items-center gap-2">
                   <PersonRegular className="size-4 text-gray-500" />
-                  <span className="font-medium text-gray-900">{member.user?.name || "Unknown"}</span>
+                  <span className="font-medium text-gray-900">
+                    {member.user?.name || "Unknown"}
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                   <div className="flex items-center gap-1.5">
@@ -83,5 +92,5 @@ export function MembersList({ members, onRemoveMember }: MembersListProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }

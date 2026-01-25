@@ -1,12 +1,12 @@
-import { app, injectWebSocket } from "./api"
-import { serve } from "@hono/node-server"
-import { hocuspocus } from "./hocuspocus-server"
+import { serve } from "@hono/node-server";
 
-const port = 3001
+import { app, injectWebSocket } from "./api";
+
+const port = 3001;
 
 const server = serve({
   fetch: app.fetch,
   port,
-})
+});
 
-injectWebSocket(server)
+injectWebSocket(server);

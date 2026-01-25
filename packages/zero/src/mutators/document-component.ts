@@ -1,7 +1,8 @@
-import { defineMutator } from "@rocicorp/zero"
-import { z } from "zod"
-import { hasOrganizationAccess } from "../auth"
-import { withTimestamps } from "../utils/timestamps"
+import { defineMutator } from "@rocicorp/zero";
+import { z } from "zod";
+
+import { hasOrganizationAccess } from "../auth";
+import { withTimestamps } from "../utils/timestamps";
 
 export const documentComponentMutators = {
   create: defineMutator(
@@ -12,7 +13,7 @@ export const documentComponentMutators = {
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args: { id, name, properties, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
 
       await tx.mutate.document_components.insert(
         withTimestamps({
@@ -21,7 +22,7 @@ export const documentComponentMutators = {
           properties,
           organization_id: organizationId,
         }),
-      )
+      );
     },
   ),
-}
+};

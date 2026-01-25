@@ -1,9 +1,9 @@
-import { tool } from "ai"
-import { z } from "zod"
-import { db, documentsTable } from "@lydie/database"
-import { eq, and, isNull, inArray } from "drizzle-orm"
+import { db, documentsTable } from "@lydie/database";
+import { tool } from "ai";
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import { z } from "zod";
 
-type DocumentToMove = { id: string; title: string; parentId: string | null }
+type DocumentToMove = { id: string; title: string; parentId: string | null };
 
 export const moveDocuments = (userId: string, organizationId: string) =>
   tool({
@@ -43,11 +43,11 @@ You can move documents by their IDs or by searching for documents matching certa
         message: moveAll
           ? `Moving all documents...`
           : `Moving ${documentIds.length} document${documentIds.length === 1 ? "" : "s"}...`,
-      }
+      };
 
       // Resolve destination parent document
-      let resolvedParentId: string | null = null
-      let parentDisplayName = "root level"
+      let resolvedParentId: string | null = null;
+      let parentDisplayName = "root level";
 
       if (parentId) {
         const [parent] = await db
@@ -60,18 +60,18 @@ You can move documents by their IDs or by searching for documents matching certa
               isNull(documentsTable.deletedAt),
             ),
           )
-          .limit(1)
+          .limit(1);
 
         if (!parent) {
           yield {
             state: "error",
             error: `Parent document with ID "${parentId}" not found or you don't have access to it`,
-          }
-          return
+          };
+          return;
         }
 
-        resolvedParentId = parentId
-        parentDisplayName = `"${parent.title}"`
+        resolvedParentId = parentId;
+        parentDisplayName = `"${parent.title}"`;
       } else if (parentTitle) {
         const [parent] = await db
           .select({ id: documentsTable.id })
@@ -84,25 +84,25 @@ You can move documents by their IDs or by searching for documents matching certa
               isNull(documentsTable.parentId),
             ),
           )
-          .limit(1)
+          .limit(1);
 
         if (!parent) {
           yield {
             state: "error",
             error: `Parent document "${parentTitle}" not found at root level`,
-          }
-          return
+          };
+          return;
         }
 
-        resolvedParentId = parent.id
-        parentDisplayName = `"${parentTitle}"`
+        resolvedParentId = parent.id;
+        parentDisplayName = `"${parentTitle}"`;
       }
 
       // Get documents to move
       const baseConditions = [
         eq(documentsTable.organizationId, organizationId),
         isNull(documentsTable.deletedAt),
-      ]
+      ];
 
       const documentsToMove: DocumentToMove[] = moveAll
         ? await db
@@ -122,45 +122,47 @@ You can move documents by their IDs or by searching for documents matching certa
               })
               .from(documentsTable)
               .where(and(...baseConditions, inArray(documentsTable.id, documentIds)))
-          : []
+          : [];
 
       if (documentsToMove.length === 0) {
         yield {
           state: "error",
-          error: moveAll ? "No documents found to move" : "Either provide documentIds or set moveAll to true",
-        }
-        return
+          error: moveAll
+            ? "No documents found to move"
+            : "Either provide documentIds or set moveAll to true",
+        };
+        return;
       }
 
       // Check for circular references by walking up from the target parent
       if (resolvedParentId) {
-        const idsBeingMoved = new Set(documentsToMove.map((d) => d.id))
+        const idsBeingMoved = new Set(documentsToMove.map((d) => d.id));
 
         if (idsBeingMoved.has(resolvedParentId)) {
           yield {
             state: "error",
             error: "Cannot move a document into itself",
-          }
-          return
+          };
+          return;
         }
 
         // Walk up the ancestor chain to check if any ancestor is being moved
-        let currentId: string | null = resolvedParentId
+        let currentId: string | null = resolvedParentId;
         while (currentId) {
           const [parent] = await db
             .select({ parentId: documentsTable.parentId })
             .from(documentsTable)
             .where(eq(documentsTable.id, currentId))
-            .limit(1)
+            .limit(1);
 
-          currentId = parent?.parentId ?? null
+          currentId = parent?.parentId ?? null;
 
           if (currentId && idsBeingMoved.has(currentId)) {
             yield {
               state: "error",
               error: "Cannot move documents into their own descendants",
-            }
-            return
+            };
+            return;
           }
         }
       }
@@ -186,7 +188,7 @@ You can move documents by their IDs or by searching for documents matching certa
           id: documentsTable.id,
           title: documentsTable.title,
           parentId: documentsTable.parentId,
-        })
+        });
 
       yield {
         state: "success",
@@ -195,6 +197,6 @@ You can move documents by their IDs or by searching for documents matching certa
         } to ${parentDisplayName}`,
         movedDocuments: updatedDocuments,
         totalMoved: updatedDocuments.length,
-      }
+      };
     },
-  })
+  });

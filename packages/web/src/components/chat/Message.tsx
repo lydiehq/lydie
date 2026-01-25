@@ -1,37 +1,44 @@
-import { motion } from "motion/react"
-import { Streamdown } from "streamdown"
-import { Link } from "@tanstack/react-router"
-import { useMemo } from "react"
-import { useOrganization } from "@/context/organization.context"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { parseReferences, type ParsedTextSegment } from "@/utils/parse-references"
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
-import { format } from "date-fns"
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
+
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { Link } from "@tanstack/react-router";
+import { format } from "date-fns";
+import { motion } from "motion/react";
+import { useMemo } from "react";
+import { Streamdown } from "streamdown";
+
+import { useOrganization } from "@/context/organization.context";
+import { type ParsedTextSegment, parseReferences } from "@/utils/parse-references";
 
 export interface MessageProps {
-  message: DocumentChatAgentUIMessage
-  status: "submitted" | "streaming" | "ready" | "error"
-  isLastMessage: boolean
-  className?: string
+  message: DocumentChatAgentUIMessage;
+  status: "submitted" | "streaming" | "ready" | "error";
+  isLastMessage: boolean;
+  className?: string;
 }
 
 export function Message({ message, status, isLastMessage, className = "" }: MessageProps) {
   if (message.role === "user") {
-    return <UserMessage message={message} className={className} />
+    return <UserMessage message={message} className={className} />;
   }
 
   return (
-    <AssistantMessage message={message} status={status} isLastMessage={isLastMessage} className={className} />
-  )
+    <AssistantMessage
+      message={message}
+      status={status}
+      isLastMessage={isLastMessage}
+      className={className}
+    />
+  );
 }
 
 export function UserMessage({
   message,
   className = "",
 }: {
-  message: DocumentChatAgentUIMessage
-  className?: string
+  message: DocumentChatAgentUIMessage;
+  className?: string;
 }) {
   return (
     <motion.div
@@ -44,9 +51,11 @@ export function UserMessage({
         <div className="bg-black/4 text-gray-700 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
           {message.parts?.map((part: any, index: number) => {
             if (part.type === "text") {
-              return <TextWithReferences key={index} text={part.text} className="text-sm/relaxed" />
+              return (
+                <TextWithReferences key={index} text={part.text} className="text-sm/relaxed" />
+              );
             }
-            return null
+            return null;
           })}
         </div>
         <div className="flex flex-col items-end gap-y-1 mt-1">
@@ -59,7 +68,7 @@ export function UserMessage({
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
 export function AssistantMessage({
@@ -68,12 +77,12 @@ export function AssistantMessage({
   isLastMessage,
   className = "",
 }: {
-  message: DocumentChatAgentUIMessage
-  status: "submitted" | "streaming" | "ready" | "error"
-  isLastMessage: boolean
-  className?: string
+  message: DocumentChatAgentUIMessage;
+  status: "submitted" | "streaming" | "ready" | "error";
+  isLastMessage: boolean;
+  className?: string;
 }) {
-  const shouldShowMetadata = status === "ready" || !isLastMessage
+  const shouldShowMetadata = status === "ready" || !isLastMessage;
 
   return (
     <motion.div
@@ -94,9 +103,9 @@ export function AssistantMessage({
                 >
                   {part.text}
                 </Streamdown>
-              )
+              );
             }
-            return null
+            return null;
           })}
         </div>
         {shouldShowMetadata && (
@@ -111,56 +120,56 @@ export function AssistantMessage({
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
 // Renders text with inline reference pills
 // Optimized to only parse when references are detected
 export function TextWithReferences({ text, className = "" }: { text: string; className?: string }) {
-  const segments = useMemo(() => parseReferences(text), [text])
+  const segments = useMemo(() => parseReferences(text), [text]);
 
   return (
     <span className={`whitespace-pre-wrap ${className}`}>
       {segments.map((segment, index) => {
         if (segment.type === "text") {
-          return <span key={index}>{segment.content}</span>
+          return <span key={index}>{segment.content}</span>;
         }
 
         if (segment.type === "reference" && segment.reference) {
-          return <ReferenceSegment key={index} reference={segment.reference} />
+          return <ReferenceSegment key={index} reference={segment.reference} />;
         }
 
-        return null
+        return null;
       })}
     </span>
-  )
+  );
 }
 
 function ReferenceSegment({ reference }: { reference: ParsedTextSegment["reference"] }) {
-  if (!reference) return null
+  if (!reference) return null;
 
   if (reference.type === "document") {
-    return <DocumentReferencePill documentId={reference.id} />
+    return <DocumentReferencePill documentId={reference.id} />;
   }
 
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 font-medium">
       {reference.type}
     </span>
-  )
+  );
 }
 
 function DocumentReferencePill({ documentId }: { documentId: string }) {
-  const { organization } = useOrganization()
+  const { organization } = useOrganization();
   const [document] = useQuery(
     queries.documents.byId({
       organizationId: organization.id,
       documentId,
     }),
-  )
+  );
 
-  const title = document?.title || "Untitled"
-  const href = `/w/${organization.slug}/${documentId}`
+  const title = document?.title || "Untitled";
+  const href = `/w/${organization.slug}/${documentId}`;
 
   return (
     <Link
@@ -170,46 +179,48 @@ function DocumentReferencePill({ documentId }: { documentId: string }) {
     >
       <span className="max-w-[150px] truncate text-sm relative">@{title}</span>
     </Link>
-  )
+  );
 }
 
 function MessageContext({
   message,
   align = "left",
 }: {
-  message: DocumentChatAgentUIMessage
-  align?: "left" | "right"
+  message: DocumentChatAgentUIMessage;
+  align?: "left" | "right";
 }) {
-  const { organization } = useOrganization()
-  const metadata = message.metadata as any
+  const { organization } = useOrganization();
+  const metadata = message.metadata as any;
 
-  const contextDocuments = metadata?.contextDocuments || []
-  const currentDocumentId = metadata?.currentDocumentId
+  const contextDocuments = metadata?.contextDocuments || [];
+  const currentDocumentId = metadata?.currentDocumentId;
 
   const allContextDocs = useMemo(() => {
-    const docs: Array<{ id: string; title: string }> = []
-    const seenIds = new Set<string>()
+    const docs: Array<{ id: string; title: string }> = [];
+    const seenIds = new Set<string>();
 
     if (currentDocumentId) {
-      const currentDoc = contextDocuments.find((doc: { id: string }) => doc.id === currentDocumentId)
+      const currentDoc = contextDocuments.find(
+        (doc: { id: string }) => doc.id === currentDocumentId,
+      );
       if (currentDoc && !seenIds.has(currentDoc.id)) {
-        docs.push(currentDoc)
-        seenIds.add(currentDoc.id)
+        docs.push(currentDoc);
+        seenIds.add(currentDoc.id);
       }
     }
 
     for (const doc of contextDocuments) {
       if (!seenIds.has(doc.id)) {
-        docs.push(doc)
-        seenIds.add(doc.id)
+        docs.push(doc);
+        seenIds.add(doc.id);
       }
     }
 
-    return docs
-  }, [currentDocumentId, contextDocuments])
+    return docs;
+  }, [currentDocumentId]);
 
   if (allContextDocs.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -243,5 +254,5 @@ function MessageContext({
         ))}
       </ul>
     </div>
-  )
+  );
 }

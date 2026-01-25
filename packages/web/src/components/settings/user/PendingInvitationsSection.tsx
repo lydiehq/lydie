@@ -1,62 +1,69 @@
-import { Card } from "@/components/layout/Card"
-import { Button } from "@/components/generic/Button"
-import { BuildingRegular, PersonRegular, ClockRegular, CheckmarkRegular, DismissRegular } from "@fluentui/react-icons"
-import { formatDistanceToNow } from "date-fns"
-import { authClient } from "@/utils/auth"
-import { toast } from "sonner"
-import { useNavigate } from "@tanstack/react-router"
+import {
+  BuildingRegular,
+  CheckmarkRegular,
+  ClockRegular,
+  DismissRegular,
+  PersonRegular,
+} from "@fluentui/react-icons";
+import { useNavigate } from "@tanstack/react-router";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+
+import { Button } from "@/components/generic/Button";
+import { Card } from "@/components/layout/Card";
+import { authClient } from "@/utils/auth";
 
 type Invitation = {
-  id: string
-  role: string | null
-  expires_at: Date | string
+  id: string;
+  role: string | null;
+  expires_at: Date | string;
   organization?: {
-    name?: string | null
-    slug?: string | null
-  } | null
+    name?: string | null;
+    slug?: string | null;
+  } | null;
   inviter?: {
-    name?: string | null
-    email?: string | null
-  } | null
-}
+    name?: string | null;
+    email?: string | null;
+  } | null;
+};
 
 type PendingInvitationsSectionProps = {
-  invitations: Invitation[] | null | undefined
-}
+  invitations: Invitation[] | null | undefined;
+};
 
 export function PendingInvitationsSection({ invitations }: PendingInvitationsSectionProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleAcceptInvitation = async (invitationId: string, organizationSlug: string) => {
     try {
       await authClient.organization.acceptInvitation({
         invitationId,
-      })
-      toast.success("Invitation accepted successfully")
+      });
+      toast.success("Invitation accepted successfully");
       // Navigate to the organization
       navigate({
         to: "/w/$organizationSlug",
         params: { organizationSlug },
-      })
+      });
     } catch (error: any) {
-      const errorMessage = error?.message || "Failed to accept invitation"
-      toast.error(errorMessage)
-      console.error("Accept invitation error:", error)
+      const errorMessage = error?.message || "Failed to accept invitation";
+      toast.error(errorMessage);
+      console.error("Accept invitation error:", error);
     }
-  }
+  };
 
   const handleRejectInvitation = async (invitationId: string) => {
     try {
       await authClient.organization.rejectInvitation({
         invitationId,
-      })
-      toast.success("Invitation rejected")
+      });
+      toast.success("Invitation rejected");
     } catch (error: any) {
-      const errorMessage = error?.message || "Failed to reject invitation"
-      toast.error(errorMessage)
-      console.error("Reject invitation error:", error)
+      const errorMessage = error?.message || "Failed to reject invitation";
+      toast.error(errorMessage);
+      console.error("Reject invitation error:", error);
     }
-  }
+  };
 
   if (!invitations || invitations.length === 0) {
     return (
@@ -66,7 +73,7 @@ export function PendingInvitationsSection({ invitations }: PendingInvitationsSec
           You don't have any pending organization invitations
         </div>
       </Card>
-    )
+    );
   }
 
   return (
@@ -85,7 +92,8 @@ export function PendingInvitationsSection({ invitations }: PendingInvitationsSec
                 <div className="flex items-center gap-1.5">
                   <PersonRegular className="size-3.5" />
                   <span>
-                    Role: <span className="capitalize font-medium">{invitation.role || "member"}</span>
+                    Role:{" "}
+                    <span className="capitalize font-medium">{invitation.role || "member"}</span>
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -115,7 +123,11 @@ export function PendingInvitationsSection({ invitations }: PendingInvitationsSec
                 <CheckmarkRegular className="size-3.5 mr-1" />
                 Accept
               </Button>
-              <Button intent="secondary" size="sm" onPress={() => handleRejectInvitation(invitation.id)}>
+              <Button
+                intent="secondary"
+                size="sm"
+                onPress={() => handleRejectInvitation(invitation.id)}
+              >
                 <DismissRegular className="size-3.5 mr-1" />
                 Decline
               </Button>
@@ -124,5 +136,5 @@ export function PendingInvitationsSection({ invitations }: PendingInvitationsSec
         </Card>
       ))}
     </div>
-  )
+  );
 }

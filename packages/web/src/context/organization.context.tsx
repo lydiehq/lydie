@@ -1,6 +1,6 @@
-import { Route } from "@/routes/__auth/w/$organizationSlug/route"
+import { Route } from "@/routes/__auth/w/$organizationSlug/route";
 
 export function useOrganization() {
-  const { organization } = Route.useRouteContext()
-  return { organization }
+  const { organization } = Route.useRouteContext();
+  return { organization };
 }

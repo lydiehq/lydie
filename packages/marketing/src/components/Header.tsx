@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
-import { Container } from "./Container"
-import { Logo } from "./Logo"
-import clsx from "clsx"
-import { Menu, X } from "lucide-react"
-import { motion, AnimatePresence } from "motion/react"
-import { Button } from "./generic/Button"
+import clsx from "clsx";
+import { Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
+
+import { Container } from "./Container";
+import { Button } from "./generic/Button";
+import { Logo } from "./Logo";
 
 const links = [
   {
@@ -23,28 +24,28 @@ const links = [
     href: "/roadmap",
     label: "Roadmap",
   },
-]
+];
 
 export function Header() {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-    handleScroll()
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isMenuOpen) {
-      document.body.style.overflow = "hidden"
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset"
+      document.body.style.overflow = "unset";
     }
-  }, [isMenuOpen])
+  }, [isMenuOpen]);
 
   return (
     <header
@@ -126,5 +127,5 @@ export function Header() {
         </AnimatePresence>
       </Container>
     </header>
-  )
+  );
 }

@@ -1,172 +1,178 @@
 export interface MarkdownDeserializeOptions {}
 
 // Deserialize Markdown string to TipTap JSON
-export function deserializeFromMarkdown(markdown: string, options: MarkdownDeserializeOptions = {}): any {
-  const lines = markdown.split("\n")
-  const content: any[] = []
-  let currentParagraph: any = null
-  let currentList: any = null
-  let currentListType: "bullet" | "ordered" | null = null
-  let inCodeBlock = false
-  let codeBlockLanguage: string | null = null
-  let codeBlockLines: string[] = []
-  let currentTable: any = null
-  let isHeaderRow = false
+export function deserializeFromMarkdown(
+  markdown: string,
+  options: MarkdownDeserializeOptions = {},
+): any {
+  const lines = markdown.split("\n");
+  const content: any[] = [];
+  let currentParagraph: any = null;
+  let currentList: any = null;
+  let currentListType: "bullet" | "ordered" | null = null;
+  let inCodeBlock = false;
+  let codeBlockLanguage: string | null = null;
+  let codeBlockLines: string[] = [];
+  let currentTable: any = null;
+  let isHeaderRow = false;
 
   const closeList = () => {
     if (currentList) {
-      content.push(currentList)
-      currentList = null
-      currentListType = null
+      content.push(currentList);
+      currentList = null;
+      currentListType = null;
     }
-  }
+  };
 
   const closeParagraph = () => {
     if (currentParagraph) {
       if (currentParagraph.content.length > 0) {
-        content.push(currentParagraph)
+        content.push(currentParagraph);
       }
-      currentParagraph = null
+      currentParagraph = null;
     }
-  }
+  };
 
   const closeTable = () => {
     if (currentTable) {
       if (currentTable.content.length > 0) {
-        content.push(currentTable)
+        content.push(currentTable);
       }
-      currentTable = null
-      isHeaderRow = false
+      currentTable = null;
+      isHeaderRow = false;
     }
-  }
+  };
 
   const parseTableRow = (line: string): string[] => {
     // Split by | and filter out empty strings at start/end
-    const cells = line.split("|").map((cell) => cell.trim()).filter((cell) => cell.length > 0)
-    return cells
-  }
+    const cells = line
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell.length > 0);
+    return cells;
+  };
 
   const isTableSeparator = (line: string): boolean => {
     // Check if line is a table separator (e.g., |---|---|)
-    const trimmed = line.trim()
+    const trimmed = line.trim();
     if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) {
-      return false
+      return false;
     }
     // Check if it contains mostly dashes and pipes
-    const content = trimmed.slice(1, -1)
-    return /^[\s\-:]+$/.test(content)
-  }
+    const content = trimmed.slice(1, -1);
+    return /^[\s\-:]+$/.test(content);
+  };
 
   const parseInlineMarkdown = (text: string): any[] => {
-    const textNodes: any[] = []
+    const textNodes: any[] = [];
     if (!text) {
-      return [{ type: "text", text: "" }]
+      return [{ type: "text", text: "" }];
     }
 
-    const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g
-    let lastIndex = 0
-    let match
+    const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let lastIndex = 0;
+    let match;
 
     while ((match = linkPattern.exec(text)) !== null) {
       if (match.index > lastIndex) {
-        const beforeText = text.substring(lastIndex, match.index)
-        textNodes.push(...parseBoldItalic(beforeText))
+        const beforeText = text.substring(lastIndex, match.index);
+        textNodes.push(...parseBoldItalic(beforeText));
       }
 
       textNodes.push({
         type: "text",
         text: match[1],
         marks: [{ type: "link", attrs: { href: match[2] } }],
-      })
+      });
 
-      lastIndex = match.index + match[0].length
+      lastIndex = match.index + match[0].length;
     }
 
     if (lastIndex < text.length) {
-      const remainingText = text.substring(lastIndex)
-      textNodes.push(...parseBoldItalic(remainingText))
+      const remainingText = text.substring(lastIndex);
+      textNodes.push(...parseBoldItalic(remainingText));
     }
 
     function parseBoldItalic(segment: string): any[] {
-      if (!segment) return []
+      if (!segment) return [];
 
-      const nodes: any[] = []
-      const boldPattern = /\*\*([^*]+)\*\*/g
-      let lastIdx = 0
-      let boldMatch
+      const nodes: any[] = [];
+      const boldPattern = /\*\*([^*]+)\*\*/g;
+      let lastIdx = 0;
+      let boldMatch;
 
       while ((boldMatch = boldPattern.exec(segment)) !== null) {
         if (boldMatch.index > lastIdx) {
-          const beforeText = segment.substring(lastIdx, boldMatch.index)
-          nodes.push(...parseItalic(beforeText))
+          const beforeText = segment.substring(lastIdx, boldMatch.index);
+          nodes.push(...parseItalic(beforeText));
         }
 
         nodes.push({
           type: "text",
           text: boldMatch[1],
           marks: [{ type: "bold" }],
-        })
+        });
 
-        lastIdx = boldMatch.index + boldMatch[0].length
+        lastIdx = boldMatch.index + boldMatch[0].length;
       }
 
       if (lastIdx < segment.length) {
-        const remaining = segment.substring(lastIdx)
-        nodes.push(...parseItalic(remaining))
+        const remaining = segment.substring(lastIdx);
+        nodes.push(...parseItalic(remaining));
       }
 
-      return nodes.length > 0 ? nodes : [{ type: "text", text: segment }]
+      return nodes.length > 0 ? nodes : [{ type: "text", text: segment }];
     }
 
     function parseItalic(segment: string): any[] {
-      if (!segment) return []
+      if (!segment) return [];
 
-      const nodes: any[] = []
-      const italicPattern = /(?<!\*)\*([^*]+)\*(?!\*)/g
-      let lastIdx = 0
-      let italicMatch
+      const nodes: any[] = [];
+      const italicPattern = /(?<!\*)\*([^*]+)\*(?!\*)/g;
+      let lastIdx = 0;
+      let italicMatch;
 
       while ((italicMatch = italicPattern.exec(segment)) !== null) {
         if (italicMatch.index > lastIdx) {
           nodes.push({
             type: "text",
             text: segment.substring(lastIdx, italicMatch.index),
-          })
+          });
         }
 
         nodes.push({
           type: "text",
           text: italicMatch[1],
           marks: [{ type: "italic" }],
-        })
+        });
 
-        lastIdx = italicMatch.index + italicMatch[0].length
+        lastIdx = italicMatch.index + italicMatch[0].length;
       }
 
       if (lastIdx < segment.length) {
         nodes.push({
           type: "text",
           text: segment.substring(lastIdx),
-        })
+        });
       }
 
-      return nodes.length > 0 ? nodes : [{ type: "text", text: segment }]
+      return nodes.length > 0 ? nodes : [{ type: "text", text: segment }];
     }
 
-    return textNodes.length > 0 ? textNodes : [{ type: "text", text: "" }]
-  }
+    return textNodes.length > 0 ? textNodes : [{ type: "text", text: "" }];
+  };
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    if (line === undefined) continue
+    const line = lines[i];
+    if (line === undefined) continue;
 
-    const codeBlockStartMatch = line.match(/^```([\w-]+)?$/)
+    const codeBlockStartMatch = line.match(/^```([\w-]+)?$/);
     if (codeBlockStartMatch) {
       if (inCodeBlock) {
-        closeParagraph()
-        closeList()
+        closeParagraph();
+        closeList();
 
-        const codeText = codeBlockLines.join("\n")
+        const codeText = codeBlockLines.join("\n");
         content.push({
           type: "codeBlock",
           attrs: codeBlockLanguage ? { language: codeBlockLanguage } : undefined,
@@ -178,87 +184,87 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
                 },
               ]
             : [],
-        })
+        });
 
-        inCodeBlock = false
-        codeBlockLanguage = null
-        codeBlockLines = []
+        inCodeBlock = false;
+        codeBlockLanguage = null;
+        codeBlockLines = [];
       } else {
-        closeParagraph()
-        closeList()
-        inCodeBlock = true
-        codeBlockLanguage = codeBlockStartMatch[1] || null
-        codeBlockLines = []
+        closeParagraph();
+        closeList();
+        inCodeBlock = true;
+        codeBlockLanguage = codeBlockStartMatch[1] || null;
+        codeBlockLines = [];
       }
-      continue
+      continue;
     }
 
     if (inCodeBlock) {
       if (line !== undefined) {
-        codeBlockLines.push(line)
+        codeBlockLines.push(line);
       }
-      continue
+      continue;
     }
 
     if (line && line.trim().startsWith("#")) {
-      closeParagraph()
-      closeList()
+      closeParagraph();
+      closeList();
 
-      const match = line.match(/^(#+)\s+(.+)$/)
+      const match = line.match(/^(#+)\s+(.+)$/);
       if (match && match[1] && match[2]) {
-        const level = Math.min(match[1].length, 6)
-        const text = match[2]
+        const level = Math.min(match[1].length, 6);
+        const text = match[2];
         content.push({
           type: "heading",
           attrs: { level },
           content: text ? parseInlineMarkdown(text) : [],
-        })
+        });
       }
-      continue
+      continue;
     }
 
     // Handle horizontal rules (---)
     if (line.trim() === "---" || line.trim() === "***") {
-      closeParagraph()
-      closeList()
-      closeTable()
+      closeParagraph();
+      closeList();
+      closeTable();
       content.push({
         type: "horizontalRule",
-      })
-      continue
+      });
+      continue;
     }
 
     // Handle table separator row
     if (line && isTableSeparator(line)) {
       if (currentTable) {
         // Mark that the next row will be data rows (not header)
-        isHeaderRow = false
+        isHeaderRow = false;
       }
-      continue
+      continue;
     }
 
     // Handle table rows
     if (line && line.trim().startsWith("|") && line.trim().endsWith("|")) {
-      closeParagraph()
-      closeList()
+      closeParagraph();
+      closeList();
 
-      const cells = parseTableRow(line)
+      const cells = parseTableRow(line);
       if (cells.length === 0) {
-        continue
+        continue;
       }
 
       if (!currentTable) {
         currentTable = {
           type: "table",
           content: [],
-        }
-        isHeaderRow = true
+        };
+        isHeaderRow = true;
       }
 
-      const rowCells: any[] = []
+      const rowCells: any[] = [];
       for (const cellText of cells) {
-        const cellContent = parseInlineMarkdown(cellText)
-        const cellType = isHeaderRow ? "tableHeader" : "tableCell"
+        const cellContent = parseInlineMarkdown(cellText);
+        const cellType = isHeaderRow ? "tableHeader" : "tableCell";
         rowCells.push({
           type: cellType,
           content: [
@@ -267,22 +273,22 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
               content: cellContent.length > 0 ? cellContent : [],
             },
           ],
-        })
+        });
       }
 
       currentTable.content.push({
         type: "tableRow",
         content: rowCells,
-      })
+      });
 
-      continue
+      continue;
     }
 
-    const unorderedMatch = line?.match(/^(\s*)([-*+])\s+(.+)$/)
+    const unorderedMatch = line?.match(/^(\s*)([-*+])\s+(.+)$/);
     if (unorderedMatch && unorderedMatch[3]) {
-      closeParagraph()
+      closeParagraph();
 
-      const listItemText = unorderedMatch[3]
+      const listItemText = unorderedMatch[3];
       const listItem = {
         type: "listItem",
         content: [
@@ -291,27 +297,27 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
             content: parseInlineMarkdown(listItemText),
           },
         ],
-      }
+      };
 
       if (currentListType !== "bullet") {
-        closeList()
+        closeList();
         currentList = {
           type: "bulletList",
           content: [],
-        }
-        currentListType = "bullet"
+        };
+        currentListType = "bullet";
       }
 
-      currentList.content.push(listItem)
-      continue
+      currentList.content.push(listItem);
+      continue;
     }
 
     // Handle ordered lists (1., 2., etc.)
-    const orderedMatch = line?.match(/^(\s*)(\d+)\.\s+(.+)$/)
+    const orderedMatch = line?.match(/^(\s*)(\d+)\.\s+(.+)$/);
     if (orderedMatch && orderedMatch[2] && orderedMatch[3]) {
-      closeParagraph()
+      closeParagraph();
 
-      const listItemText = orderedMatch[3]
+      const listItemText = orderedMatch[3];
       const listItem = {
         type: "listItem",
         content: [
@@ -320,51 +326,51 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
             content: parseInlineMarkdown(listItemText),
           },
         ],
-      }
+      };
 
       if (currentListType !== "ordered") {
-        closeList()
-        const startNum = parseInt(orderedMatch[2])
+        closeList();
+        const startNum = parseInt(orderedMatch[2]);
         currentList = {
           type: "orderedList",
           attrs: { start: startNum },
           content: [],
-        }
-        currentListType = "ordered"
+        };
+        currentListType = "ordered";
       }
 
-      currentList.content.push(listItem)
-      continue
+      currentList.content.push(listItem);
+      continue;
     }
 
     if (!line || line.trim() === "") {
-      closeParagraph()
-      closeList()
-      closeTable()
-      continue
+      closeParagraph();
+      closeList();
+      closeTable();
+      continue;
     }
 
     // Handle regular text
-    closeList()
+    closeList();
 
     if (!currentParagraph) {
       currentParagraph = {
         type: "paragraph",
         content: [],
-      }
+      };
     }
 
-    const textNodes = parseInlineMarkdown(line)
-    currentParagraph.content.push(...textNodes)
+    const textNodes = parseInlineMarkdown(line);
+    currentParagraph.content.push(...textNodes);
   }
 
-  closeParagraph()
-  closeList()
-  closeTable()
+  closeParagraph();
+  closeList();
+  closeTable();
 
   // Close any remaining code block
   if (inCodeBlock) {
-    const codeText = codeBlockLines.join("\n")
+    const codeText = codeBlockLines.join("\n");
     content.push({
       type: "codeBlock",
       attrs: codeBlockLanguage ? { language: codeBlockLanguage } : undefined,
@@ -376,18 +382,18 @@ export function deserializeFromMarkdown(markdown: string, options: MarkdownDeser
             },
           ]
         : [],
-    })
+    });
   }
 
   if (content.length === 0) {
     content.push({
       type: "paragraph",
       content: [],
-    })
+    });
   }
 
   return {
     type: "doc",
     content,
-  }
+  };
 }

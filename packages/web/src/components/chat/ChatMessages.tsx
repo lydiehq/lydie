@@ -1,38 +1,41 @@
-import { AnimatePresence, motion } from "motion/react"
-import { StickToBottom } from "use-stick-to-bottom"
-import { format } from "date-fns"
-import { Button, DialogTrigger } from "react-aria-components"
-import { MoreVerticalRegular } from "@fluentui/react-icons"
-import { Popover } from "../generic/Popover"
-import { ReplaceInDocumentTool } from "./tools/ReplaceInDocumentTool"
-import { CreateDocumentTool } from "./tools/CreateDocumentTool"
-import { MoveDocumentsTool } from "./tools/MoveDocumentsTool"
-import { ShowDocumentsTool } from "./tools/ShowDocumentsTool"
-import { ResearchGroup, groupMessageParts, extractActionFromToolPart } from "./tools/ResearchGroup"
-import { UserMessage } from "./Message"
-import { Streamdown } from "streamdown"
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 
+import { MoreVerticalRegular } from "@fluentui/react-icons";
+import { format } from "date-fns";
+import { AnimatePresence, motion } from "motion/react";
+import { memo } from "react";
+import { Button, DialogTrigger } from "react-aria-components";
+import { Streamdown } from "streamdown";
+import { StickToBottom } from "use-stick-to-bottom";
+
+import { Popover } from "../generic/Popover";
+import { UserMessage } from "./Message";
+import { CreateDocumentTool } from "./tools/CreateDocumentTool";
+import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";
+import { ReplaceInDocumentTool } from "./tools/ReplaceInDocumentTool";
+import { ResearchGroup, extractActionFromToolPart, groupMessageParts } from "./tools/ResearchGroup";
+import { ShowDocumentsTool } from "./tools/ShowDocumentsTool";
 
 type Props = {
-  messages: DocumentChatAgentUIMessage[]
-  status: "submitted" | "streaming" | "ready" | "error"
-  organizationId: string
+  messages: DocumentChatAgentUIMessage[];
+  status: "submitted" | "streaming" | "ready" | "error";
+  organizationId: string;
   onApplyContent?: (
     edits: any,
     onProgress?: (current: number, total: number, usedLLM: boolean) => void,
-  ) => void
-}
+  ) => void;
+};
 
 export function ChatMessages({ messages, status, organizationId, onApplyContent }: Props) {
-  const lastMessage = messages[messages.length - 1]
-  const isSubmitting = status === "submitted" && messages.length > 0 && lastMessage?.role === "user"
+  const lastMessage = messages[messages.length - 1];
+  const isSubmitting =
+    status === "submitted" && messages.length > 0 && lastMessage?.role === "user";
 
   const shouldShowLoading =
     isSubmitting ||
     (status === "streaming" &&
       lastMessage?.role === "assistant" &&
-      !lastMessage.parts?.some((part: any) => part.type === "text" && part.text?.trim()))
+      !lastMessage.parts?.some((part: any) => part.type === "text" && part.text?.trim()));
 
   return (
     <StickToBottom
@@ -61,7 +64,7 @@ export function ChatMessages({ messages, status, organizationId, onApplyContent 
         {shouldShowLoading && <ThinkingIndicator />}
       </StickToBottom.Content>
     </StickToBottom>
-  )
+  );
 }
 
 function ThinkingIndicator() {
@@ -112,58 +115,58 @@ function ThinkingIndicator() {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
-function AssistantMessageWithTools({
+const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   message,
   onApplyContent,
   status,
   isLastMessage,
   organizationId,
 }: {
-  message: DocumentChatAgentUIMessage
+  message: DocumentChatAgentUIMessage;
   onApplyContent?: (
     edits: any,
     onProgress?: (current: number, total: number, usedLLM: boolean) => void,
-  ) => void
-  status: "submitted" | "streaming" | "ready" | "error"
-  isLastMessage: boolean
-  organizationId: string
+  ) => void;
+  status: "submitted" | "streaming" | "ready" | "error";
+  isLastMessage: boolean;
+  organizationId: string;
 }) {
   const formatDuration = (duration?: number) => {
-    if (!duration) return ""
-    if (duration < 1000) return `${duration}ms`
-    return `${(duration / 1000).toFixed(1)}s`
-  }
+    if (!duration) return "";
+    if (duration < 1000) return `${duration}ms`;
+    return `${(duration / 1000).toFixed(1)}s`;
+  };
 
   const replaceTools = message.parts.filter(
     (part: any) => part.type === "tool-replace_in_document" && (part.input || part.output),
-  )
+  );
 
-  const shouldShowMetadata = status === "ready" || !isLastMessage
+  const shouldShowMetadata = status === "ready" || !isLastMessage;
 
   const handleApplyAll = async () => {
     if (!onApplyContent || replaceTools.length === 0) {
-      return
+      return;
     }
 
     const allChanges = replaceTools
       .map((tool: any) => {
-        const search = tool.input?.search || tool.output?.search || ""
-        const replace = tool.input?.replace || tool.output?.replace || ""
-        return { search, replace }
+        const search = tool.input?.search || tool.output?.search || "";
+        const replace = tool.input?.replace || tool.output?.replace || "";
+        return { search, replace };
       })
-      .filter((change) => change.replace !== undefined)
+      .filter((change) => change.replace !== undefined);
 
     if (allChanges.length === 0) {
-      return
+      return;
     }
 
     onApplyContent({
       changes: allChanges,
-    })
-  }
+    });
+  };
 
   return (
     <motion.div
@@ -177,9 +180,9 @@ function AssistantMessageWithTools({
           if (group.type === "research-group") {
             const actions = group.parts
               .map(extractActionFromToolPart)
-              .filter((a): a is NonNullable<typeof a> => a !== null)
-            const isLoading = actions.some((a) => a.status === "loading")
-            return <ResearchGroup key={index} actions={actions} isLoading={isLoading} />
+              .filter((a): a is NonNullable<typeof a> => a !== null);
+            const isLoading = actions.some((a) => a.status === "loading");
+            return <ResearchGroup key={index} actions={actions} isLoading={isLoading} />;
           }
           return (
             <MessagePart
@@ -189,7 +192,7 @@ function AssistantMessageWithTools({
               isLastMessage={isLastMessage}
               organizationId={organizationId}
             />
-          )
+          );
         })}
       </div>
       {shouldShowMetadata && (
@@ -209,7 +212,9 @@ function AssistantMessageWithTools({
               <Popover>
                 <div className="flex flex-col gap-y-1 text-[11px] text-gray-500 divide-y divide-gray-200">
                   {message.metadata?.duration && (
-                    <span className="p-0.5">Response time: {formatDuration(message.metadata.duration)}</span>
+                    <span className="p-0.5">
+                      Response time: {formatDuration(message.metadata.duration)}
+                    </span>
                   )}
                   {message.metadata?.usage && (
                     <span className="p-0.5">Tokens used: {message.metadata.usage}</span>
@@ -231,19 +236,19 @@ function AssistantMessageWithTools({
         </div>
       )}
     </motion.div>
-  )
-}
+  );
+});
 
-function MessagePart({
+const MessagePart = memo(function MessagePart({
   part,
   status,
   isLastMessage,
   organizationId,
 }: {
-  part: any
-  status: "submitted" | "streaming" | "ready" | "error"
-  isLastMessage: boolean
-  organizationId: string
+  part: any;
+  status: "submitted" | "streaming" | "ready" | "error";
+  isLastMessage: boolean;
+  organizationId: string;
 }) {
   if (part.type === "text") {
     return (
@@ -257,27 +262,27 @@ function MessagePart({
       >
         {part.text}
       </Streamdown>
-    )
+    );
   }
 
   if (part.type === "tool-replace_in_document") {
-    return <ReplaceInDocumentTool tool={part} organizationId={organizationId} />
+    return <ReplaceInDocumentTool tool={part} organizationId={organizationId} />;
   }
 
   if (part.type === "tool-create_document") {
-    return <CreateDocumentTool tool={part} />
+    return <CreateDocumentTool tool={part} />;
   }
 
   if (part.type === "tool-move_documents") {
-    return <MoveDocumentsTool tool={part} />
+    return <MoveDocumentsTool tool={part} />;
   }
 
   if (part.type === "tool-show_documents") {
-    return <ShowDocumentsTool tool={part} />
+    return <ShowDocumentsTool tool={part} />;
   }
 
   if (part.type?.startsWith("tool-") && import.meta.env.DEV) {
-    console.log("Unknown tool type:", part.type, part)
+    console.log("Unknown tool type:", part.type, part);
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2 text-sm">
         <div className="font-medium text-yellow-800">Debug: Unknown Tool</div>
@@ -289,11 +294,11 @@ function MessagePart({
           </pre>
         </details>
       </div>
-    )
+    );
   }
 
-  return null
-}
+  return null;
+});
 
 function ThinkingAnimation() {
   return (
@@ -305,52 +310,188 @@ function ThinkingAnimation() {
       className="size-4 text-gray-400"
     >
       <rect width="7.33" height="7.33" x="1" y="1" fill="currentColor">
-        <animate id="SVGzjrPLenI" attributeName="x" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="1;4;1" />
+        <animate
+          id="SVGzjrPLenI"
+          attributeName="x"
+          begin="0;SVGXAURnSRI.end+0.2s"
+          dur="1s"
+          values="1;4;1"
+        />
         <animate attributeName="y" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="1;4;1" />
-        <animate attributeName="width" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="width"
+          begin="0;SVGXAURnSRI.end+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="0;SVGXAURnSRI.end+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="8.33" y="1" fill="currentColor">
-        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="8.33;11.33;8.33" />
+        <animate
+          attributeName="x"
+          begin="SVGzjrPLenI.begin+0.1s"
+          dur="1s"
+          values="8.33;11.33;8.33"
+        />
         <animate attributeName="y" begin="SVGzjrPLenI.begin+0.1s" dur="0.6s" values="1;4;1" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.1s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.1s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="1" y="8.33" fill="currentColor">
         <animate attributeName="x" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="1;4;1" />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="8.33;11.33;8.33" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="y"
+          begin="SVGzjrPLenI.begin+0.1s"
+          dur="1s"
+          values="8.33;11.33;8.33"
+        />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.1s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.1s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="15.66" y="1" fill="currentColor">
-        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="15.66;18.66;15.66" />
+        <animate
+          attributeName="x"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="15.66;18.66;15.66"
+        />
         <animate attributeName="y" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="1;4;1" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="8.33" y="8.33" fill="currentColor">
-        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="8.33;11.33;8.33" />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.2s" dur="0.6s" values="8.33;11.33;8.33" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="x"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="8.33;11.33;8.33"
+        />
+        <animate
+          attributeName="y"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="0.6s"
+          values="8.33;11.33;8.33"
+        />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="1" y="15.66" fill="currentColor">
         <animate attributeName="x" begin="SVGzjrPLenI.begin+0.2s" dur="0.6s" values="1;4;1" />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="15.66;18.66;15.66" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="y"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="15.66;18.66;15.66"
+        />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.2s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="15.66" y="8.33" fill="currentColor">
-        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="15.66;18.66;15.66" />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.3s" dur="0.6s" values="8.33;11.33;8.33" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="x"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="1s"
+          values="15.66;18.66;15.66"
+        />
+        <animate
+          attributeName="y"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="0.6s"
+          values="8.33;11.33;8.33"
+        />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="8.33" y="15.66" fill="currentColor">
-        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="8.33;11.33;8.33" />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.3s" dur="0.6s" values="15.66;18.66;15.66" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.3s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="x"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="1s"
+          values="8.33;11.33;8.33"
+        />
+        <animate
+          attributeName="y"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="0.6s"
+          values="15.66;18.66;15.66"
+        />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.3s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
       <rect width="7.33" height="7.33" x="15.66" y="15.66" fill="currentColor">
         <animate
@@ -360,10 +501,25 @@ function ThinkingAnimation() {
           dur="1s"
           values="15.66;18.66;15.66"
         />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.4s" dur="1s" values="15.66;18.66;15.66" />
-        <animate attributeName="width" begin="SVGzjrPLenI.begin+0.4s" dur="1s" values="7.33;1.33;7.33" />
-        <animate attributeName="height" begin="SVGzjrPLenI.begin+0.4s" dur="1s" values="7.33;1.33;7.33" />
+        <animate
+          attributeName="y"
+          begin="SVGzjrPLenI.begin+0.4s"
+          dur="1s"
+          values="15.66;18.66;15.66"
+        />
+        <animate
+          attributeName="width"
+          begin="SVGzjrPLenI.begin+0.4s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
+        <animate
+          attributeName="height"
+          begin="SVGzjrPLenI.begin+0.4s"
+          dur="1s"
+          values="7.33;1.33;7.33"
+        />
       </rect>
     </svg>
-  )
+  );
 }

@@ -1,5 +1,6 @@
-import * as schema from "./schema"
-import { defineRelations } from "drizzle-orm"
+import { defineRelations } from "drizzle-orm";
+
+import * as schema from "./schema";
 
 export const relations = defineRelations(schema, (r) => ({
   documentsTable: {
@@ -282,4 +283,4 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.templateCategoriesTable.id,
     }),
   },
-}))
+}));

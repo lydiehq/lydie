@@ -1,26 +1,30 @@
-import React from "react"
+import React from "react";
 import {
   ColorSwatchPicker as AriaColorSwatchPicker,
   ColorSwatchPickerItem as AriaColorSwatchPickerItem,
   ColorSwatchPickerItemProps,
   ColorSwatchPickerProps,
-} from "react-aria-components"
-import { ColorSwatch } from "./ColorSwatch"
-import { composeTailwindRenderProps, focusRing } from "./utils"
-import { tv } from "tailwind-variants"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
+import { ColorSwatch } from "./ColorSwatch";
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
 export function ColorSwatchPicker({ children, ...props }: Omit<ColorSwatchPickerProps, "layout">) {
   return (
-    <AriaColorSwatchPicker {...props} className={composeTailwindRenderProps(props.className, "flex gap-1")}>
+    <AriaColorSwatchPicker
+      {...props}
+      className={composeTailwindRenderProps(props.className, "flex gap-1")}
+    >
       {children}
     </AriaColorSwatchPicker>
-  )
+  );
 }
 
 const itemStyles = tv({
   extend: focusRing,
   base: "relative rounded-xs",
-})
+});
 
 export function ColorSwatchPickerItem(props: ColorSwatchPickerItemProps) {
   return (
@@ -34,5 +38,5 @@ export function ColorSwatchPickerItem(props: ColorSwatchPickerItemProps) {
         </>
       )}
     </AriaColorSwatchPickerItem>
-  )
+  );
 }

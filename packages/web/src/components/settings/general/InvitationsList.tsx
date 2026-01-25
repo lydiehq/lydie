@@ -1,27 +1,34 @@
-import { Card } from "@/components/layout/Card"
-import { Button } from "@/components/generic/Button"
-import { MailRegular, ShieldRegular, PersonRegular, ClockRegular, DismissRegular } from "@fluentui/react-icons"
-import { formatDistanceToNow } from "date-fns"
+import {
+  ClockRegular,
+  DismissRegular,
+  MailRegular,
+  PersonRegular,
+  ShieldRegular,
+} from "@fluentui/react-icons";
+import { formatDistanceToNow } from "date-fns";
+
+import { Button } from "@/components/generic/Button";
+import { Card } from "@/components/layout/Card";
 
 type Invitation = {
-  id: string
-  email: string
-  role: string | null
-  expires_at: Date | string
+  id: string;
+  email: string;
+  role: string | null;
+  expires_at: Date | string;
   inviter?: {
-    name?: string | null
-    email?: string | null
-  } | null
-}
+    name?: string | null;
+    email?: string | null;
+  } | null;
+};
 
 type InvitationsListProps = {
-  invitations: Invitation[] | null | undefined
-  onCancelInvitation: (invitationId: string, email: string) => void
-}
+  invitations: Invitation[] | null | undefined;
+  onCancelInvitation: (invitationId: string, email: string) => void;
+};
 
 export function InvitationsList({ invitations, onCancelInvitation }: InvitationsListProps) {
   if (!invitations || invitations.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -47,7 +54,8 @@ export function InvitationsList({ invitations, onCancelInvitation }: Invitations
                   <div className="flex items-center gap-1.5">
                     <PersonRegular className="size-3.5" />
                     <span>
-                      Invited by: {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
+                      Invited by:{" "}
+                      {invitation.inviter?.name || invitation.inviter?.email || "Unknown"}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -76,5 +84,5 @@ export function InvitationsList({ invitations, onCancelInvitation }: Invitations
         ))}
       </div>
     </div>
-  )
+  );
 }

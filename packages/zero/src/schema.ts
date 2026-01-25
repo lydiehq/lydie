@@ -1,18 +1,18 @@
 import {
-  table,
-  string,
-  number,
-  createSchema,
-  relationships,
-  json,
   boolean,
   createBuilder,
-} from "@rocicorp/zero"
+  createSchema,
+  json,
+  number,
+  relationships,
+  string,
+  table,
+} from "@rocicorp/zero";
 
 const timestamps = {
   created_at: number(),
   updated_at: number(),
-}
+};
 
 const users = table("users")
   .columns({
@@ -23,7 +23,7 @@ const users = table("users")
     role: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const organizations = table("organizations")
   .columns({
@@ -39,7 +39,7 @@ const organizations = table("organizations")
     polar_subscription_id: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const members = table("members")
   .columns({
@@ -49,7 +49,7 @@ const members = table("members")
     role: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const invitations = table("invitations")
   .columns({
@@ -62,7 +62,7 @@ const invitations = table("invitations")
     inviter_id: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const documents = table("documents")
   .columns({
@@ -84,7 +84,7 @@ const documents = table("documents")
     sort_order: number(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const documentPublications = table("document_publications")
   .columns({
@@ -93,7 +93,7 @@ const documentPublications = table("document_publications")
     organization_id: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const documentPublicationsRelations = relationships(documentPublications, ({ one }) => ({
   document: one({
@@ -106,7 +106,7 @@ const documentPublicationsRelations = relationships(documentPublications, ({ one
     destField: ["id"],
     destSchema: organizations,
   }),
-}))
+}));
 
 const assistantAgents = table("assistant_agents")
   .columns({
@@ -119,7 +119,7 @@ const assistantAgents = table("assistant_agents")
     user_id: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const assistantConversations = table("assistant_conversations")
   .columns({
@@ -130,7 +130,7 @@ const assistantConversations = table("assistant_conversations")
     agent_id: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const assistantMessages = table("assistant_messages")
   .columns({
@@ -141,7 +141,7 @@ const assistantMessages = table("assistant_messages")
     metadata: json().optional(),
     created_at: number(),
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 export const documentComponents = table("document_components")
   .columns({
@@ -151,7 +151,7 @@ export const documentComponents = table("document_components")
     organization_id: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const apiKeys = table("api_keys")
   .columns({
@@ -164,7 +164,7 @@ const apiKeys = table("api_keys")
     last_used_at: number().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const llmUsage = table("llm_usage")
   .columns({
@@ -181,7 +181,7 @@ const llmUsage = table("llm_usage")
     tool_calls: json().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const userSettings = table("user_settings")
   .columns({
@@ -190,7 +190,7 @@ const userSettings = table("user_settings")
     persist_document_tree_expansion: boolean(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const organizationSettings = table("organization_settings")
   .columns({
@@ -199,7 +199,7 @@ const organizationSettings = table("organization_settings")
     onboarding_status: json().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const integrationConnections = table("integration_connections")
   .columns({
@@ -211,7 +211,7 @@ const integrationConnections = table("integration_connections")
     status_message: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 // Integration links - configurable "symlinks" to external sources
 const integrationLinks = table("integration_links")
@@ -226,7 +226,7 @@ const integrationLinks = table("integration_links")
     sync_status: string().optional(), // 'idle', 'pulling', 'pushing', 'error'
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const syncMetadata = table("sync_metadata")
   .columns({
@@ -240,7 +240,7 @@ const syncMetadata = table("sync_metadata")
     sync_error: string().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const documentsRelations = relationships(documents, ({ one, many }) => ({
   parent: one({
@@ -268,7 +268,7 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["document_id"],
     destSchema: documentPublications,
   }),
-}))
+}));
 
 const organizationsRelations = relationships(organizations, ({ one, many }) => ({
   documents: many({
@@ -321,7 +321,7 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     destField: ["organization_id"],
     destSchema: organizationSettings,
   }),
-}))
+}));
 
 const membersRelations = relationships(members, ({ one }) => ({
   organization: one({
@@ -334,7 +334,7 @@ const membersRelations = relationships(members, ({ one }) => ({
     destField: ["id"],
     destSchema: users,
   }),
-}))
+}));
 
 const invitationsRelations = relationships(invitations, ({ one }) => ({
   organization: one({
@@ -347,7 +347,7 @@ const invitationsRelations = relationships(invitations, ({ one }) => ({
     destField: ["id"],
     destSchema: users,
   }),
-}))
+}));
 
 const usersRelations = relationships(users, ({ many, one }) => ({
   members: many({
@@ -370,7 +370,7 @@ const usersRelations = relationships(users, ({ many, one }) => ({
     destField: ["user_id"],
     destSchema: userSettings,
   }),
-}))
+}));
 
 const documentComponentsRelations = relationships(documentComponents, ({ one }) => ({
   organization: one({
@@ -378,7 +378,7 @@ const documentComponentsRelations = relationships(documentComponents, ({ one }) 
     destField: ["id"],
     destSchema: organizations,
   }),
-}))
+}));
 
 const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
   organization: one({
@@ -386,7 +386,7 @@ const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
     destField: ["id"],
     destSchema: organizations,
   }),
-}))
+}));
 
 const assistantAgentsRelations = relationships(assistantAgents, ({ one, many }) => ({
   user: one({
@@ -404,7 +404,7 @@ const assistantAgentsRelations = relationships(assistantAgents, ({ one, many }) 
     destField: ["agent_id"],
     destSchema: assistantConversations,
   }),
-}))
+}));
 
 const assistantConversationsRelations = relationships(assistantConversations, ({ one, many }) => ({
   user: one({
@@ -427,7 +427,7 @@ const assistantConversationsRelations = relationships(assistantConversations, ({
     destField: ["conversation_id"],
     destSchema: assistantMessages,
   }),
-}))
+}));
 
 const assistantMessagesRelations = relationships(assistantMessages, ({ one }) => ({
   conversation: one({
@@ -435,7 +435,7 @@ const assistantMessagesRelations = relationships(assistantMessages, ({ one }) =>
     destField: ["id"],
     destSchema: assistantConversations,
   }),
-}))
+}));
 
 const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
   organization: one({
@@ -453,7 +453,7 @@ const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
     destField: ["id"],
     destSchema: assistantMessages,
   }),
-}))
+}));
 
 const userSettingsRelations = relationships(userSettings, ({ one }) => ({
   user: one({
@@ -461,7 +461,7 @@ const userSettingsRelations = relationships(userSettings, ({ one }) => ({
     destField: ["id"],
     destSchema: users,
   }),
-}))
+}));
 
 const organizationSettingsRelations = relationships(organizationSettings, ({ one }) => ({
   organization: one({
@@ -469,7 +469,7 @@ const organizationSettingsRelations = relationships(organizationSettings, ({ one
     destField: ["id"],
     destSchema: organizations,
   }),
-}))
+}));
 
 const integrationConnectionsRelations = relationships(integrationConnections, ({ one, many }) => ({
   organization: one({
@@ -487,7 +487,7 @@ const integrationConnectionsRelations = relationships(integrationConnections, ({
     destField: ["connection_id"],
     destSchema: integrationLinks,
   }),
-}))
+}));
 
 const integrationLinksRelations = relationships(integrationLinks, ({ one, many }) => ({
   connection: one({
@@ -505,7 +505,7 @@ const integrationLinksRelations = relationships(integrationLinks, ({ one, many }
     destField: ["integration_link_id"],
     destSchema: documents,
   }),
-}))
+}));
 
 const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
   document: one({
@@ -518,7 +518,7 @@ const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
     destField: ["id"],
     destSchema: integrationConnections,
   }),
-}))
+}));
 
 const integrationActivityLogs = table("integration_activity_logs")
   .columns({
@@ -529,7 +529,7 @@ const integrationActivityLogs = table("integration_activity_logs")
     integration_type: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const integrationActivityLogsRelations = relationships(integrationActivityLogs, ({ one }) => ({
   connection: one({
@@ -537,7 +537,7 @@ const integrationActivityLogsRelations = relationships(integrationActivityLogs, 
     destField: ["id"],
     destSchema: integrationConnections,
   }),
-}))
+}));
 
 const feedbackSubmissions = table("feedback_submissions")
   .columns({
@@ -549,7 +549,7 @@ const feedbackSubmissions = table("feedback_submissions")
     metadata: json().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const feedbackSubmissionsRelations = relationships(feedbackSubmissions, ({ one }) => ({
   user: one({
@@ -562,7 +562,7 @@ const feedbackSubmissionsRelations = relationships(feedbackSubmissions, ({ one }
     destField: ["id"],
     destSchema: organizations,
   }),
-}))
+}));
 
 const templates = table("templates")
   .columns({
@@ -575,7 +575,7 @@ const templates = table("templates")
     preview_data: json().optional(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const templateDocuments = table("template_documents")
   .columns({
@@ -587,7 +587,7 @@ const templateDocuments = table("template_documents")
     sort_order: number(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const templateInstallations = table("template_installations")
   .columns({
@@ -598,7 +598,7 @@ const templateInstallations = table("template_installations")
     root_document_id: string(),
     created_at: number(),
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const templateCategories = table("template_categories")
   .columns({
@@ -607,7 +607,7 @@ const templateCategories = table("template_categories")
     slug: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const templateCategoryAssignments = table("template_category_assignments")
   .columns({
@@ -616,7 +616,7 @@ const templateCategoryAssignments = table("template_category_assignments")
     category_id: string(),
     ...timestamps,
   })
-  .primaryKey("id")
+  .primaryKey("id");
 
 const templatesRelations = relationships(templates, ({ many }) => ({
   documents: many({
@@ -634,7 +634,7 @@ const templatesRelations = relationships(templates, ({ many }) => ({
     destField: ["template_id"],
     destSchema: templateCategoryAssignments,
   }),
-}))
+}));
 
 const templateDocumentsRelations = relationships(templateDocuments, ({ one, many }) => ({
   template: one({
@@ -652,7 +652,7 @@ const templateDocumentsRelations = relationships(templateDocuments, ({ one, many
     destField: ["parent_id"],
     destSchema: templateDocuments,
   }),
-}))
+}));
 
 const templateInstallationsRelations = relationships(templateInstallations, ({ one }) => ({
   template: one({
@@ -675,7 +675,7 @@ const templateInstallationsRelations = relationships(templateInstallations, ({ o
     destField: ["id"],
     destSchema: documents,
   }),
-}))
+}));
 
 const templateCategoriesRelations = relationships(templateCategories, ({ many }) => ({
   assignments: many({
@@ -683,20 +683,23 @@ const templateCategoriesRelations = relationships(templateCategories, ({ many })
     destField: ["category_id"],
     destSchema: templateCategoryAssignments,
   }),
-}))
+}));
 
-const templateCategoryAssignmentsRelations = relationships(templateCategoryAssignments, ({ one }) => ({
-  template: one({
-    sourceField: ["template_id"],
-    destField: ["id"],
-    destSchema: templates,
+const templateCategoryAssignmentsRelations = relationships(
+  templateCategoryAssignments,
+  ({ one }) => ({
+    template: one({
+      sourceField: ["template_id"],
+      destField: ["id"],
+      destSchema: templates,
+    }),
+    category: one({
+      sourceField: ["category_id"],
+      destField: ["id"],
+      destSchema: templateCategories,
+    }),
   }),
-  category: one({
-    sourceField: ["category_id"],
-    destField: ["id"],
-    destSchema: templateCategories,
-  }),
-}))
+);
 
 export const schema = createSchema({
   tables: [
@@ -753,14 +756,14 @@ export const schema = createSchema({
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,
-})
+});
 
-export type Schema = typeof schema
+export type Schema = typeof schema;
 
-export const zql = createBuilder(schema)
+export const zql = createBuilder(schema);
 
 declare module "@rocicorp/zero" {
   interface DefaultTypes {
-    schema: Schema
+    schema: Schema;
   }
 }

@@ -1,4 +1,4 @@
-import { Image } from "@tiptap/extension-image"
+import { Image } from "@tiptap/extension-image";
 
 export const ImageUpload = Image.extend({
   addAttributes() {
@@ -7,7 +7,7 @@ export const ImageUpload = Image.extend({
       alt: {
         default: "",
       },
-    }
+    };
   },
   addCommands() {
     return {
@@ -17,9 +17,9 @@ export const ImageUpload = Image.extend({
           return commands.insertContent({
             type: this.name,
             attrs: options,
-          })
-        }
+          });
+        };
       },
-    }
+    };
   },
-})
+});

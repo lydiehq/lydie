@@ -1,21 +1,22 @@
-import { Card } from "@/components/layout/Card"
-import { MenuTrigger, Button as RACButton } from "react-aria-components"
-import { Menu, MenuItem } from "@/components/generic/Menu"
-import { KeyRegular, ClockRegular, MoreHorizontalRegular } from "@fluentui/react-icons"
-import { formatDistanceToNow } from "date-fns"
+import { ClockRegular, KeyRegular, MoreHorizontalRegular } from "@fluentui/react-icons";
+import { formatDistanceToNow } from "date-fns";
+import { MenuTrigger, Button as RACButton } from "react-aria-components";
+
+import { Menu, MenuItem } from "@/components/generic/Menu";
+import { Card } from "@/components/layout/Card";
 
 type ApiKey = {
-  id: string
-  name: string
-  partial_key: string
-  created_at: Date | string
-  last_used_at: Date | string | null
-}
+  id: string;
+  name: string;
+  partial_key: string;
+  created_at: Date | string;
+  last_used_at: Date | string | null;
+};
 
 type ApiKeysListProps = {
-  keys: ApiKey[] | null | undefined
-  onRevokeKey: (keyId: string, keyName: string) => void
-}
+  keys: ApiKey[] | null | undefined;
+  onRevokeKey: (keyId: string, keyName: string) => void;
+};
 
 export function ApiKeysList({ keys, onRevokeKey }: ApiKeysListProps) {
   if (!keys || keys.length === 0) {
@@ -24,7 +25,7 @@ export function ApiKeysList({ keys, onRevokeKey }: ApiKeysListProps) {
         <div className="text-sm font-medium text-gray-700">No API keys created yet</div>
         <div className="text-xs mt-1 text-gray-500">Create your first API key to get started</div>
       </Card>
-    )
+    );
   }
 
   return (
@@ -82,5 +83,5 @@ export function ApiKeysList({ keys, onRevokeKey }: ApiKeysListProps) {
         </Card>
       ))}
     </div>
-  )
+  );
 }

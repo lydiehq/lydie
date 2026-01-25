@@ -1,28 +1,31 @@
-import { Tabs, TabList, Tab, TabPanels, TabPanel, Button } from "react-aria-components"
-import { useState } from "react"
-import { CustomFieldsEditor } from "./CustomFieldsEditor"
-import { ArrowDownRegular, AddRegular } from "@fluentui/react-icons"
-import { useDocumentActions } from "@/hooks/use-document-actions"
-import { DocumentFilled } from "@fluentui/react-icons"
-import { Button as GenericButton } from "@/components/generic/Button"
-import { Link } from "../generic/Link"
-import type { QueryResultType } from "@rocicorp/zero"
-import { queries } from "@lydie/zero/queries"
+import type { QueryResultType } from "@rocicorp/zero";
 
-type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>
+import { AddRegular, ArrowDownRegular } from "@fluentui/react-icons";
+import { DocumentFilled } from "@fluentui/react-icons";
+import { queries } from "@lydie/zero/queries";
+import { useState } from "react";
+import { Button, Tab, TabList, TabPanel, TabPanels, Tabs } from "react-aria-components";
+
+import { Button as GenericButton } from "@/components/generic/Button";
+import { useDocumentActions } from "@/hooks/use-document-actions";
+
+import { Link } from "../generic/Link";
+import { CustomFieldsEditor } from "./CustomFieldsEditor";
+
+type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
 type Props = {
-  doc: DocumentType
-  initialFields?: Record<string, string | number>
-}
+  doc: DocumentType;
+  initialFields?: Record<string, string | number>;
+};
 
 function SubDocuments({ doc }: { doc: DocumentType }) {
-  const { createDocument } = useDocumentActions()
-  const children = doc?.children || []
+  const { createDocument } = useDocumentActions();
+  const children = doc?.children || [];
 
   const handleCreateChildPage = async () => {
-    createDocument(doc.id)
-  }
+    createDocument(doc.id);
+  };
 
   if (children.length === 0) {
     return (
@@ -37,7 +40,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
           Add document
         </GenericButton>
       </div>
-    )
+    );
   }
 
   return (
@@ -69,23 +72,23 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [selectedKey, setSelectedKey] = useState<string | number>("fields")
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [selectedKey, setSelectedKey] = useState<string | number>("fields");
 
-  const documentCount = doc?.children?.length || 0
+  const documentCount = doc?.children?.length || 0;
 
   const handleSelectionChange = (key: string | number) => {
-    const previousKey = selectedKey
-    setSelectedKey(key)
+    const previousKey = selectedKey;
+    setSelectedKey(key);
     // If switching to a different tab and it's collapsed, uncollapse
     if (key !== previousKey && isCollapsed) {
-      setIsCollapsed(false)
+      setIsCollapsed(false);
     }
-  }
+  };
 
   return (
     <Tabs
@@ -136,5 +139,5 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
         </TabPanels>
       </div>
     </Tabs>
-  )
+  );
 }

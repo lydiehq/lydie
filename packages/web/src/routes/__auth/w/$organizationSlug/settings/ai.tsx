@@ -1,52 +1,53 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { Separator } from "@/components/generic/Separator"
-import { Heading } from "@/components/generic/Heading"
-import { SectionHeader } from "@/components/generic/SectionHeader"
-import { useQuery } from "@rocicorp/zero/react"
-import { queries } from "@lydie/zero/queries"
-import { useZero } from "@/services/zero"
-import { toast } from "sonner"
-import { useOrganization } from "@/context/organization.context"
-import { useMemo, useState } from "react"
-import { TextArea, Input } from "react-aria-components"
-import { Button } from "@/components/generic/Button"
-import { Label } from "@/components/generic/Field"
-import { Link } from "@/components/generic/Link"
-import { mutators } from "@lydie/zero/mutators"
-import { Card } from "@/components/layout/Card"
-import { DeleteRegular, EditRegular } from "@fluentui/react-icons"
+import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
+import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { Input, TextArea } from "react-aria-components";
+import { toast } from "sonner";
+
+import { Button } from "@/components/generic/Button";
+import { Label } from "@/components/generic/Field";
+import { Heading } from "@/components/generic/Heading";
+import { Link } from "@/components/generic/Link";
+import { SectionHeader } from "@/components/generic/SectionHeader";
+import { Separator } from "@/components/generic/Separator";
+import { Card } from "@/components/layout/Card";
+import { useOrganization } from "@/context/organization.context";
+import { useZero } from "@/services/zero";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  const { organization } = useOrganization()
-  const z = useZero()
+  const { organization } = useOrganization();
+  const z = useZero();
 
-  const [allAgents] = useQuery(queries.agents.available({ organizationId: organization.id }))
-  const [agents] = useQuery(queries.agents.byUser({ organizationId: organization.id }))
-  const [isCreating, setIsCreating] = useState(false)
-  const [editingAgentId, setEditingAgentId] = useState<string | null>(null)
+  const [allAgents] = useQuery(queries.agents.available({ organizationId: organization.id }));
+  const [agents] = useQuery(queries.agents.byUser({ organizationId: organization.id }));
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     systemPrompt: "",
-  })
+  });
 
   const isPro = useMemo(() => {
-    if (!organization) return false
-    return organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active"
-  }, [organization])
+    if (!organization) return false;
+    return organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active";
+  }, [organization]);
 
   const defaultAgents = useMemo(() => {
-    return allAgents?.filter((agent) => agent.is_default) || []
-  }, [allAgents])
+    return allAgents?.filter((agent) => agent.is_default) || [];
+  }, [allAgents]);
 
   const handleCreateAgent = async () => {
     if (!formData.name.trim() || !formData.systemPrompt.trim()) {
-      toast.error("Name and system prompt are required")
-      return
+      toast.error("Name and system prompt are required");
+      return;
     }
 
     try {
@@ -57,20 +58,20 @@ function RouteComponent() {
           systemPrompt: formData.systemPrompt.trim(),
           organizationId: organization.id,
         }),
-      )
-      toast.success("Agent created successfully")
-      setIsCreating(false)
-      setFormData({ name: "", description: "", systemPrompt: "" })
+      );
+      toast.success("Agent created successfully");
+      setIsCreating(false);
+      setFormData({ name: "", description: "", systemPrompt: "" });
     } catch (error: any) {
-      toast.error(error.message || "Failed to create agent")
-      console.error("Agent creation error:", error)
+      toast.error(error.message || "Failed to create agent");
+      console.error("Agent creation error:", error);
     }
-  }
+  };
 
   const handleUpdateAgent = async (agentId: string) => {
     if (!formData.name.trim() || !formData.systemPrompt.trim()) {
-      toast.error("Name and system prompt are required")
-      return
+      toast.error("Name and system prompt are required");
+      return;
     }
 
     try {
@@ -82,19 +83,19 @@ function RouteComponent() {
           systemPrompt: formData.systemPrompt.trim(),
           organizationId: organization.id,
         }),
-      )
-      toast.success("Agent updated successfully")
-      setEditingAgentId(null)
-      setFormData({ name: "", description: "", systemPrompt: "" })
+      );
+      toast.success("Agent updated successfully");
+      setEditingAgentId(null);
+      setFormData({ name: "", description: "", systemPrompt: "" });
     } catch (error: any) {
-      toast.error(error.message || "Failed to update agent")
-      console.error("Agent update error:", error)
+      toast.error(error.message || "Failed to update agent");
+      console.error("Agent update error:", error);
     }
-  }
+  };
 
   const handleDeleteAgent = async (agentId: string) => {
     if (!confirm("Are you sure you want to delete this agent?")) {
-      return
+      return;
     }
 
     try {
@@ -103,29 +104,29 @@ function RouteComponent() {
           agentId,
           organizationId: organization.id,
         }),
-      )
-      toast.success("Agent deleted successfully")
+      );
+      toast.success("Agent deleted successfully");
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete agent")
-      console.error("Agent deletion error:", error)
+      toast.error(error.message || "Failed to delete agent");
+      console.error("Agent deletion error:", error);
     }
-  }
+  };
 
   const handleStartEdit = (agent: any) => {
-    setEditingAgentId(agent.id)
+    setEditingAgentId(agent.id);
     setFormData({
       name: agent.name,
       description: agent.description || "",
       systemPrompt: agent.system_prompt,
-    })
-    setIsCreating(false)
-  }
+    });
+    setIsCreating(false);
+  };
 
   const handleCancelEdit = () => {
-    setEditingAgentId(null)
-    setIsCreating(false)
-    setFormData({ name: "", description: "", systemPrompt: "" })
-  }
+    setEditingAgentId(null);
+    setIsCreating(false);
+    setFormData({ name: "", description: "", systemPrompt: "" });
+  };
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -147,15 +148,14 @@ function RouteComponent() {
             <h3 className="text-sm font-medium text-gray-900">Available Default Agents</h3>
             <div className="space-y-3">
               {defaultAgents.map((agent) => (
-                <div
-                  key={agent.id}
-                  className="p-4 border border-gray-200 rounded-lg space-y-2"
-                >
+                <div key={agent.id} className="p-4 border border-gray-200 rounded-lg space-y-2">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium text-sm">{agent.name}</h4>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Default</span>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                          Default
+                        </span>
                       </div>
                       {agent.description && (
                         <p className="text-xs text-gray-600 mt-1">{agent.description}</p>
@@ -190,10 +190,7 @@ function RouteComponent() {
                 <h3 className="text-sm font-medium text-gray-900">Your Custom Agents</h3>
                 <div className="space-y-3">
                   {agents.map((agent) => (
-                    <div
-                      key={agent.id}
-                      className="p-4 border border-gray-200 rounded-lg space-y-2"
-                    >
+                    <div key={agent.id} className="p-4 border border-gray-200 rounded-lg space-y-2">
                       {editingAgentId === agent.id ? (
                         <div className="space-y-3">
                           <div>
@@ -201,7 +198,10 @@ function RouteComponent() {
                             <Input
                               value={formData.name}
                               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                setFormData({ ...formData, name: e.target.value })
+                                setFormData({
+                                  ...formData,
+                                  name: e.target.value,
+                                })
                               }
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
                             />
@@ -211,7 +211,10 @@ function RouteComponent() {
                             <Input
                               value={formData.description}
                               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                setFormData({ ...formData, description: e.target.value })
+                                setFormData({
+                                  ...formData,
+                                  description: e.target.value,
+                                })
                               }
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
                             />
@@ -221,7 +224,10 @@ function RouteComponent() {
                             <TextArea
                               value={formData.systemPrompt}
                               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                                setFormData({ ...formData, systemPrompt: e.target.value })
+                                setFormData({
+                                  ...formData,
+                                  systemPrompt: e.target.value,
+                                })
                               }
                               rows={4}
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 resize-y"
@@ -265,7 +271,9 @@ function RouteComponent() {
                             </div>
                           </div>
                           <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                            <p className="text-xs text-gray-600 leading-relaxed">{agent.system_prompt}</p>
+                            <p className="text-xs text-gray-600 leading-relaxed">
+                              {agent.system_prompt}
+                            </p>
                           </div>
                         </>
                       )}
@@ -313,7 +321,8 @@ function RouteComponent() {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 resize-y"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Define how this agent should behave and write. Be specific about tone, style, and approach.
+                    Define how this agent should behave and write. Be specific about tone, style,
+                    and approach.
                   </p>
                 </div>
                 <div className="flex gap-x-2">
@@ -339,11 +348,15 @@ function RouteComponent() {
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-1">Unlock Custom Agents</h3>
                 <p className="text-xs text-gray-600">
-                  Upgrade to Pro to create unlimited custom AI agents tailored to your specific needs. Premium users
-                  can create agents for any writing task, from technical documentation to creative content.
+                  Upgrade to Pro to create unlimited custom AI agents tailored to your specific
+                  needs. Premium users can create agents for any writing task, from technical
+                  documentation to creative content.
                 </p>
               </div>
-              <Link to="/w/$organizationSlug/settings/billing" params={{ organizationSlug: organization.slug }}>
+              <Link
+                to="/w/$organizationSlug/settings/billing"
+                params={{ organizationSlug: organization.slug }}
+              >
                 <Button size="sm">Upgrade to Pro</Button>
               </Link>
             </div>
@@ -351,5 +364,5 @@ function RouteComponent() {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,9 +1,10 @@
-import { defineMutator } from "@rocicorp/zero"
-import { z } from "zod"
-import { hasOrganizationAccess } from "../auth"
-import { zql } from "../schema"
-import { notFoundError } from "../utils/errors"
-import { withTimestamps, withUpdatedTimestamp } from "../utils/timestamps"
+import { defineMutator } from "@rocicorp/zero";
+import { z } from "zod";
+
+import { hasOrganizationAccess } from "../auth";
+import { zql } from "../schema";
+import { notFoundError } from "../utils/errors";
+import { withTimestamps, withUpdatedTimestamp } from "../utils/timestamps";
 
 export const integrationConnectionMutators = {
   create: defineMutator(
@@ -14,7 +15,7 @@ export const integrationConnectionMutators = {
       config: z.any(),
     }),
     async ({ tx, ctx, args: { id, integrationType, organizationId, config } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
 
       await tx.mutate.integration_connections.insert(
         withTimestamps({
@@ -24,7 +25,7 @@ export const integrationConnectionMutators = {
           organization_id: organizationId,
           config,
         }),
-      )
+      );
     },
   ),
 
@@ -35,7 +36,7 @@ export const integrationConnectionMutators = {
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args: { connectionId, config, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
 
       // Verify connection belongs to the organization
       const connection = await tx.run(
@@ -43,19 +44,19 @@ export const integrationConnectionMutators = {
           .where("id", connectionId)
           .where("organization_id", organizationId)
           .one(),
-      )
+      );
 
       if (!connection) {
-        throw notFoundError("Connection", connectionId)
+        throw notFoundError("Connection", connectionId);
       }
 
       const updates: any = {
         id: connectionId,
-      }
+      };
 
-      if (config !== undefined) updates.config = config
+      if (config !== undefined) updates.config = config;
 
-      await tx.mutate.integration_connections.update(withUpdatedTimestamp(updates))
+      await tx.mutate.integration_connections.update(withUpdatedTimestamp(updates));
     },
   ),
 
@@ -65,17 +66,17 @@ export const integrationConnectionMutators = {
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args: { connectionId, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
       const connection = await tx.run(
         zql.integration_connections
           .where("id", connectionId)
           .where("organization_id", organizationId)
           .one()
           .related("links"),
-      )
+      );
 
       if (!connection) {
-        throw notFoundError("Connection", connectionId)
+        throw notFoundError("Connection", connectionId);
       }
 
       // Clean up all resources related to this integration connection
@@ -85,22 +86,22 @@ export const integrationConnectionMutators = {
       for (const link of connection.links) {
         const linkWithDocuments = await tx.run(
           zql.integration_links.where("id", link.id).one().related("documents"),
-        )
+        );
 
         if (linkWithDocuments) {
           // Delete all documents associated with this link
           // This will cascade to embeddings, conversations, publications, etc.
           const deleteDocumentsPromise = linkWithDocuments.documents.map(({ id }) =>
             tx.mutate.documents.delete({ id }),
-          )
-          await Promise.all(deleteDocumentsPromise)
+          );
+          await Promise.all(deleteDocumentsPromise);
         }
       }
 
       // Delete the connection (this will cascade to links, sync_metadata, and activity_logs)
       await tx.mutate.integration_connections.delete({
         id: connectionId,
-      })
+      });
     },
   ),
-}
+};

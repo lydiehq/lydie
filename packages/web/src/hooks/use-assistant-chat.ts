@@ -1,25 +1,26 @@
-import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport } from "ai"
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index"
-import { useCallback, useRef, useState } from "react"
-import { useOrganization } from "@/context/organization.context"
-import { parseChatError, isUsageLimitError } from "@/utils/chat-error-handler"
-import type { ChatAlertState } from "@/components/editor/ChatAlert"
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
+
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useCallback, useRef, useState } from "react";
+
+import type { ChatAlertState } from "@/components/editor/ChatAlert";
+
+import { useOrganization } from "@/context/organization.context";
+import { isUsageLimitError, parseChatError } from "@/utils/chat-error-handler";
 
 interface UseAssistantChatOptions {
-  conversationId: string
-  initialMessages?: DocumentChatAgentUIMessage[]
-  experimental_throttle?: number
+  conversationId: string;
+  initialMessages?: DocumentChatAgentUIMessage[];
 }
 
 export function useAssistantChat({
   conversationId,
   initialMessages = [],
-  experimental_throttle,
 }: UseAssistantChatOptions) {
-  const { organization } = useOrganization()
-  const [alert, setAlert] = useState<ChatAlertState | null>(null)
-  const messageStartTimeRef = useRef<number>(0)
+  const { organization } = useOrganization();
+  const [alert, setAlert] = useState<ChatAlertState | null>(null);
+  const messageStartTimeRef = useRef<number>(0);
 
   const {
     messages,
@@ -30,7 +31,7 @@ export function useAssistantChat({
   } = useChat<DocumentChatAgentUIMessage>({
     id: conversationId,
     messages: initialMessages,
-    experimental_throttle,
+    experimental_throttle: 100,
     transport: new DefaultChatTransport({
       api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
       credentials: "include",
@@ -42,8 +43,8 @@ export function useAssistantChat({
       },
     }),
     onError: (error) => {
-      console.error("Assistant chat error:", error)
-      const { message } = parseChatError(error)
+      console.error("Assistant chat error:", error);
+      const { message } = parseChatError(error);
 
       if (isUsageLimitError(error)) {
         setAlert({
@@ -51,24 +52,24 @@ export function useAssistantChat({
           type: "error",
           title: "Daily Limit Reached",
           message,
-        })
+        });
       } else {
         setAlert({
           show: true,
           type: "error",
           title: "Something went wrong",
           message,
-        })
+        });
       }
     },
     onFinish: () => {
       // Response finished
     },
-  })
+  });
 
   const sendMessage = useCallback(
     (options: { text: string; metadata?: any; agentId?: string | null }) => {
-      messageStartTimeRef.current = Date.now()
+      messageStartTimeRef.current = Date.now();
 
       // Pass agentId in the body
       const transport = new DefaultChatTransport({
@@ -81,12 +82,12 @@ export function useAssistantChat({
         headers: {
           "X-Organization-Id": organization.id,
         },
-      })
+      });
 
-      return originalSendMessage({ ...options, transport })
+      return originalSendMessage({ ...options, transport });
     },
     [originalSendMessage, conversationId, organization.id],
-  )
+  );
 
   return {
     messages,
@@ -96,5 +97,5 @@ export function useAssistantChat({
     alert,
     setAlert,
     setMessages,
-  }
+  };
 }

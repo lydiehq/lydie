@@ -1,10 +1,10 @@
-import React from "react"
+import React from "react";
 import {
-  composeRenderProps,
   ToggleButtonGroup as RACToggleButtonGroup,
   ToggleButtonGroupProps,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
+  composeRenderProps,
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
 
 const styles = tv({
   base: "flex gap-1",
@@ -14,7 +14,7 @@ const styles = tv({
       vertical: "flex-col",
     },
   },
-})
+});
 
 export function ToggleButtonGroup(props: ToggleButtonGroupProps) {
   return (
@@ -24,5 +24,5 @@ export function ToggleButtonGroup(props: ToggleButtonGroupProps) {
         styles({ orientation: props.orientation || "horizontal", className }),
       )}
     />
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { DismissRegular } from "@fluentui/react-icons"
-import React, { createContext, useContext } from "react"
+import { DismissRegular } from "@fluentui/react-icons";
+import React, { createContext, useContext } from "react";
 import {
   Tag as AriaTag,
   TagGroup as AriaTagGroup,
@@ -10,11 +10,12 @@ import {
   TagListProps,
   Text,
   composeRenderProps,
-} from "react-aria-components"
-import { twMerge } from "tailwind-merge"
-import { tv } from "tailwind-variants"
-import { Description, Label } from "./Field"
-import { focusRing } from "./utils"
+} from "react-aria-components";
+import { twMerge } from "tailwind-merge";
+import { tv } from "tailwind-variants";
+
+import { Description, Label } from "./Field";
+import { focusRing } from "./utils";
 
 const colors = {
   gray: "bg-gray-100 text-gray-600 border-gray-200 hover:border-gray-300 dark:bg-zinc-700 dark:text-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-500",
@@ -23,10 +24,10 @@ const colors = {
   yellow:
     "bg-yellow-100 text-yellow-700 border-yellow-200 hover:border-yellow-300 dark:bg-yellow-300/20 dark:text-yellow-400 dark:border-yellow-300/10 dark:hover:border-yellow-300/20",
   blue: "bg-blue-100 text-blue-700 border-blue-200 hover:border-blue-300 dark:bg-blue-400/20 dark:text-blue-300 dark:border-blue-400/10 dark:hover:border-blue-400/20",
-}
+};
 
-type Color = keyof typeof colors
-const ColorContext = createContext<Color>("gray")
+type Color = keyof typeof colors;
+const ColorContext = createContext<Color>("gray");
 
 const tagStyles = tv({
   extend: focusRing,
@@ -54,20 +55,20 @@ const tagStyles = tv({
     color,
     class: colors[color],
   })),
-})
+});
 
 export interface TagGroupProps<T>
   extends
     Omit<AriaTagGroupProps, "children">,
     Pick<TagListProps<T>, "items" | "children" | "renderEmptyState"> {
-  color?: Color
-  label?: string
-  description?: string
-  errorMessage?: string
+  color?: Color;
+  label?: string;
+  description?: string;
+  errorMessage?: string;
 }
 
 export interface TagProps extends AriaTagProps {
-  color?: Color
+  color?: Color;
 }
 
 export function TagGroup<T extends object>({
@@ -94,17 +95,17 @@ export function TagGroup<T extends object>({
         </Text>
       )}
     </AriaTagGroup>
-  )
+  );
 }
 
 const removeButtonStyles = tv({
   extend: focusRing,
   base: "cursor-default rounded-full transition-[background-color] p-0.5 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 pressed:bg-black/20 dark:pressed:bg-white/20",
-})
+});
 
 export function Tag({ children, color, ...props }: TagProps) {
-  let textValue = typeof children === "string" ? children : undefined
-  let groupColor = useContext(ColorContext)
+  let textValue = typeof children === "string" ? children : undefined;
+  let groupColor = useContext(ColorContext);
   return (
     <AriaTag
       textValue={textValue}
@@ -124,5 +125,5 @@ export function Tag({ children, color, ...props }: TagProps) {
         </>
       )}
     </AriaTag>
-  )
+  );
 }

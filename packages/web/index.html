@@ -13,15 +13,15 @@
   <body style="background-color: rgb(248 248 248)">
     <div id="app"></div>
     <script>
-      ;(function () {
+      (function () {
         try {
-          const stored = localStorage.getItem("lydie-root-font-size")
+          const stored = localStorage.getItem("lydie-root-font-size");
           if (stored) {
-            const fontSizeOption = JSON.parse(stored)
+            const fontSizeOption = JSON.parse(stored);
             // If default, don't set explicit font-size (use browser default)
             if (fontSizeOption === "default") {
               // Ensure no explicit font-size is set
-              document.documentElement.style.removeProperty("font-size")
+              document.documentElement.style.removeProperty("font-size");
             } else {
               // Font size mapping
               const fontSizes = {
@@ -29,17 +29,17 @@
                 s: 15,
                 l: 17,
                 xl: 18,
-              }
-              const fontSizePixels = fontSizes[fontSizeOption]
+              };
+              const fontSizePixels = fontSizes[fontSizeOption];
               if (fontSizePixels) {
-                document.documentElement.style.fontSize = fontSizePixels + "px"
+                document.documentElement.style.fontSize = fontSizePixels + "px";
               }
             }
           }
         } catch (e) {
           // Ignore errors, use default
         }
-      })()
+      })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

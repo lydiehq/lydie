@@ -1,12 +1,16 @@
-import { tool } from "ai"
-import { z } from "zod"
-import { db, documentsTable } from "@lydie/database"
-import { eq, and, desc, asc, ilike, isNull, ne } from "drizzle-orm"
+import { db, documentsTable } from "@lydie/database";
+import { tool } from "ai";
+import { and, asc, desc, eq, ilike, isNull, ne } from "drizzle-orm";
+import { z } from "zod";
 
 // User-facing tool for displaying documents in a pretty UI.
 // Use this when the user explicitly asks to SEE their documents.
 // For research/background exploration, use listDocuments instead.
-export const showDocuments = (_userId: string, organizationId: string, currentDocumentId?: string) =>
+export const showDocuments = (
+  _userId: string,
+  organizationId: string,
+  currentDocumentId?: string,
+) =>
   tool({
     description: `Show documents to the user in a visually appealing way.
 Use this tool when the user EXPLICITLY asks to see, view, or display their documents.
@@ -39,30 +43,35 @@ This will render a nice interactive list that the user can click on.
         message: titleFilter
           ? `Finding documents matching "${titleFilter}"...`
           : "Loading your documents...",
-      }
+      };
 
-      let orderBy
+      let orderBy;
       switch (sortBy) {
         case "title":
-          orderBy = sortOrder === "asc" ? asc(documentsTable.title) : desc(documentsTable.title)
-          break
+          orderBy = sortOrder === "asc" ? asc(documentsTable.title) : desc(documentsTable.title);
+          break;
         case "created":
-          orderBy = sortOrder === "asc" ? asc(documentsTable.createdAt) : desc(documentsTable.createdAt)
-          break
+          orderBy =
+            sortOrder === "asc" ? asc(documentsTable.createdAt) : desc(documentsTable.createdAt);
+          break;
         case "updated":
         default:
-          orderBy = sortOrder === "asc" ? asc(documentsTable.updatedAt) : desc(documentsTable.updatedAt)
-          break
+          orderBy =
+            sortOrder === "asc" ? asc(documentsTable.updatedAt) : desc(documentsTable.updatedAt);
+          break;
       }
 
-      const conditions = [eq(documentsTable.organizationId, organizationId), isNull(documentsTable.deletedAt)]
+      const conditions = [
+        eq(documentsTable.organizationId, organizationId),
+        isNull(documentsTable.deletedAt),
+      ];
 
       if (currentDocumentId) {
-        conditions.push(ne(documentsTable.id, currentDocumentId))
+        conditions.push(ne(documentsTable.id, currentDocumentId));
       }
 
       if (titleFilter) {
-        conditions.push(ilike(documentsTable.title, `%${titleFilter}%`))
+        conditions.push(ilike(documentsTable.title, `%${titleFilter}%`));
       }
 
       const documents = await db
@@ -76,7 +85,7 @@ This will render a nice interactive list that the user can click on.
         .from(documentsTable)
         .where(and(...conditions))
         .orderBy(orderBy)
-        .limit(limit)
+        .limit(limit);
 
       const results = documents.map((doc) => ({
         id: doc.id,
@@ -84,7 +93,7 @@ This will render a nice interactive list that the user can click on.
         slug: doc.slug,
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString(),
-      }))
+      }));
 
       yield {
         state: "success",
@@ -100,6 +109,6 @@ This will render a nice interactive list that the user can click on.
           sortOrder,
           limit,
         },
-      }
+      };
     },
-  })
+  });

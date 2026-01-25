@@ -1,23 +1,24 @@
-import { CalendarRegular } from "@fluentui/react-icons"
-import React from "react"
+import { CalendarRegular } from "@fluentui/react-icons";
+import React from "react";
 import {
   DatePicker as AriaDatePicker,
   DatePickerProps as AriaDatePickerProps,
   DateValue,
   ValidationResult,
-} from "react-aria-components"
-import { Button } from "./Button"
-import { Calendar } from "./Calendar"
-import { DateInput } from "./DateField"
-import { Dialog } from "./Dialog"
-import { Description, FieldError, FieldGroup, Label } from "./Field"
-import { Popover } from "./Popover"
-import { composeTailwindRenderProps } from "./utils"
+} from "react-aria-components";
+
+import { Button } from "./Button";
+import { Calendar } from "./Calendar";
+import { DateInput } from "./DateField";
+import { Dialog } from "./Dialog";
+import { Description, FieldError, FieldGroup, Label } from "./Field";
+import { Popover } from "./Popover";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface DatePickerProps<T extends DateValue> extends AriaDatePickerProps<T> {
-  label?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
+  label?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
 export function DatePicker<T extends DateValue>({
@@ -46,5 +47,5 @@ export function DatePicker<T extends DateValue>({
         </Dialog>
       </Popover>
     </AriaDatePicker>
-  )
+  );
 }

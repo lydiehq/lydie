@@ -41,6 +41,7 @@
     "test:e2e": "bun --filter=@lydie/web test:e2e",
     "copy-integration-assets": "bun --filter=@lydie/scripts copy-integration-assets",
     "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check"
   },

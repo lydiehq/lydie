@@ -1,4 +1,4 @@
-import { Container } from "../Container"
+import { Container } from "../Container";
 
 export function AssistantSection() {
   return (
@@ -17,9 +17,9 @@ export function AssistantSection() {
         </div>
       </Container>
     </section>
-  )
+  );
 }
 
 function GridContainer() {
-  return <div className="rounded-[10px] ring ring-black/8 p-4"></div>
+  return <div className="rounded-[10px] ring ring-black/8 p-4"></div>;
 }

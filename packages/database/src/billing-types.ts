@@ -1,24 +1,24 @@
 export const PLAN_TYPES = {
   FREE: "free",
   PRO: "pro",
-} as const
+} as const;
 
-export type PlanType = (typeof PLAN_TYPES)[keyof typeof PLAN_TYPES]
+export type PlanType = (typeof PLAN_TYPES)[keyof typeof PLAN_TYPES];
 
 export const PLAN_LIMITS: Record<
   PlanType,
   {
-    name: string
-    maxTokensPerPeriod: number | null
-    maxRequestsPerPeriod: number | null
-    maxMessagesPerDay: number | null
+    name: string;
+    maxTokensPerPeriod: number | null;
+    maxRequestsPerPeriod: number | null;
+    maxMessagesPerDay: number | null;
     features: {
-      aiAssistant: boolean
-    }
+      aiAssistant: boolean;
+    };
     price: {
-      monthly: number | null
-      yearly: number | null
-    }
+      monthly: number | null;
+      yearly: number | null;
+    };
   }
 > = {
   [PLAN_TYPES.FREE]: {
@@ -47,4 +47,4 @@ export const PLAN_LIMITS: Record<
       yearly: 20000,
     },
   },
-}
+};

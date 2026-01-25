@@ -1,19 +1,21 @@
-import React from "react"
-import { useEditor, EditorContent, type Editor, type UseEditorOptions } from "@tiptap/react"
-import { StarterKit } from "@tiptap/starter-kit"
-import type { Extension } from "@tiptap/core"
-import { twMerge } from "tailwind-merge"
-import { TipTapToolbar } from "./TipTapToolbar"
+import type { Extension } from "@tiptap/core";
+
+import { type Editor, EditorContent, type UseEditorOptions, useEditor } from "@tiptap/react";
+import { StarterKit } from "@tiptap/starter-kit";
+import React from "react";
+import { twMerge } from "tailwind-merge";
+
+import { TipTapToolbar } from "./TipTapToolbar";
 
 interface TipTapEditorProps {
-  content?: string
-  extensions?: Extension[]
-  editorProps?: UseEditorOptions["editorProps"]
-  onUpdate?: (editor: Editor) => void
-  className?: string
-  placeholder?: string
-  minHeight?: string
-  showToolbar?: boolean
+  content?: string;
+  extensions?: Extension[];
+  editorProps?: UseEditorOptions["editorProps"];
+  onUpdate?: (editor: Editor) => void;
+  className?: string;
+  placeholder?: string;
+  minHeight?: string;
+  showToolbar?: boolean;
 }
 
 export function TipTapEditor({
@@ -39,14 +41,14 @@ export function TipTapEditor({
       ...editorProps,
     },
     onUpdate: ({ editor }) => {
-      onUpdate?.(editor)
+      onUpdate?.(editor);
     },
-  })
+  });
 
   return (
     <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
       {showToolbar && editor && <TipTapToolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
-  )
+  );
 }

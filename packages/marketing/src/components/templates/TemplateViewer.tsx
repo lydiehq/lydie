@@ -1,64 +1,89 @@
-import { useState, useMemo, useEffect, type ReactElement } from "react"
-import { useEditor, EditorContent } from "@tiptap/react"
-import StarterKit from "@tiptap/starter-kit"
-import { Tree, TreeItem, TreeItemContent, Button, Collection, type Key } from "react-aria-components"
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { type ReactElement, useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  Collection,
+  type Key,
+  Tree,
+  TreeItem,
+  TreeItemContent,
+} from "react-aria-components";
 
 // SVG Icon Components
 const CollectionsIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" className={className}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    className={className}
+  >
     <path
       fill="currentColor"
       d="M2.854 2.121a2.5 2.5 0 0 0-1.768 3.062L2.12 9.047A2.5 2.5 0 0 0 5 10.857V8a3 3 0 0 1 3-3h2.354L9.78 2.854a2.5 2.5 0 0 0-3.062-1.768zM6 8a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"
     />
   </svg>
-)
+);
 
 const DocumentIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48" className={className}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 48 48"
+    className={className}
+  >
     <path
       fill="currentColor"
       d="M24 4H12.25A4.25 4.25 0 0 0 8 8.25v31.5A4.25 4.25 0 0 0 12.25 44h23.5A4.25 4.25 0 0 0 40 39.75V20H28.25A4.25 4.25 0 0 1 24 15.75zm15.626 13.5a4.3 4.3 0 0 0-.87-1.263L27.762 5.245a4.3 4.3 0 0 0-1.263-.871V15.75c0 .966.784 1.75 1.75 1.75z"
     />
   </svg>
-)
+);
 
 const ChevronRightIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" className={className}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="12"
+    height="12"
+    viewBox="0 0 12 12"
+    className={className}
+  >
     <path
       fill="currentColor"
       d="M2.22 4.47a.75.75 0 0 1 1.06 0L6 7.19l2.72-2.72a.75.75 0 0 1 1.06 1.06L6.53 8.78a.75.75 0 0 1-1.06 0L2.22 5.53a.75.75 0 0 1 0-1.06"
     />
   </svg>
-)
+);
 
 const sidebarItemStyles = (isCurrent: boolean = false) =>
   `group flex items-center h-[28px] rounded-md text-[0.8125rem] font-medium mb-0.5 transition-colors duration-75 cursor-pointer ${
     isCurrent ? "bg-black/5" : "text-gray-600 hover:bg-black/3"
-  }`
+  }`;
 
-const sidebarItemIconStyles = "text-gray-500"
+const sidebarItemIconStyles = "text-gray-500";
 
 type DocumentTreeItem = {
-  id: string
-  name: string
-  type: "document"
-  children?: DocumentTreeItem[]
-  isLocked?: boolean
-}
+  id: string;
+  name: string;
+  type: "document";
+  children?: DocumentTreeItem[];
+  isLocked?: boolean;
+};
 
 type TemplateDocument = {
-  id: string
-  title: string
-  content: any // TipTap JSON content
-  children?: TemplateDocument[]
-}
+  id: string;
+  title: string;
+  content: any; // TipTap JSON content
+  children?: TemplateDocument[];
+};
 
 type TemplateViewerProps = {
-  documents: TemplateDocument[]
-}
+  documents: TemplateDocument[];
+};
 
 export function TemplateViewer({ documents }: TemplateViewerProps) {
-  const [selectedDocId, setSelectedDocId] = useState<string>(documents[0]?.id || "")
+  const [selectedDocId, setSelectedDocId] = useState<string>(documents[0]?.id || "");
 
   // Convert template documents to tree items
   const treeItems = useMemo((): DocumentTreeItem[] => {
@@ -68,41 +93,41 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
       type: "document" as const,
       children: doc.children?.map(convertToTreeItem),
       isLocked: false,
-    })
+    });
 
-    return documents.map(convertToTreeItem)
-  }, [documents])
+    return documents.map(convertToTreeItem);
+  }, [documents]);
 
   // Collect all item IDs recursively to keep tree fully expanded by default
   const getAllItemIds = useMemo((): Set<Key> => {
     const collectIds = (items: DocumentTreeItem[]): Set<string> => {
-      const ids = new Set<string>()
+      const ids = new Set<string>();
       for (const item of items) {
         if (item.children && item.children.length > 0) {
-          ids.add(item.id)
-          const childIds = collectIds(item.children)
-          childIds.forEach((id) => ids.add(id))
+          ids.add(item.id);
+          const childIds = collectIds(item.children);
+          childIds.forEach((id) => ids.add(id));
         }
       }
-      return ids
-    }
-    return collectIds(treeItems) as Set<Key>
-  }, [treeItems])
+      return ids;
+    };
+    return collectIds(treeItems) as Set<Key>;
+  }, [treeItems]);
 
   // Find currently selected document
   const selectedDoc = useMemo(() => {
     const findDoc = (docs: TemplateDocument[]): TemplateDocument | null => {
       for (const doc of docs) {
-        if (doc.id === selectedDocId) return doc
+        if (doc.id === selectedDocId) return doc;
         if (doc.children) {
-          const found = findDoc(doc.children)
-          if (found) return found
+          const found = findDoc(doc.children);
+          if (found) return found;
         }
       }
-      return null
-    }
-    return findDoc(documents)
-  }, [documents, selectedDocId])
+      return null;
+    };
+    return findDoc(documents);
+  }, [documents, selectedDocId]);
 
   // Title editor (read-only)
   const titleEditor = useEditor({
@@ -115,7 +140,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
         class: "prose prose-lg max-w-none focus:outline-none font-semibold text-4xl",
       },
     },
-  })
+  });
 
   const contentEditor = useEditor({
     extensions: [StarterKit],
@@ -127,29 +152,29 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
         class: "prose prose-lg max-w-none focus:outline-none",
       },
     },
-  })
+  });
 
   // Update editor content when selected document changes
   useEffect(() => {
     if (titleEditor && selectedDoc) {
-      titleEditor.commands.setContent(selectedDoc.title || "")
+      titleEditor.commands.setContent(selectedDoc.title || "");
     }
-  }, [titleEditor, selectedDoc?.title])
+  }, [titleEditor, selectedDoc?.title, selectedDoc]);
 
   useEffect(() => {
     if (contentEditor && selectedDoc) {
-      contentEditor.commands.setContent(selectedDoc.content || "")
+      contentEditor.commands.setContent(selectedDoc.content || "");
     }
-  }, [contentEditor, selectedDoc?.content])
+  }, [contentEditor, selectedDoc?.content, selectedDoc]);
 
   const handleItemAction = (itemId: string) => {
-    setSelectedDocId(itemId)
-  }
+    setSelectedDocId(itemId);
+  };
 
   const renderItem = (item: DocumentTreeItem): ReactElement => {
-    const hasChildren = item.children !== undefined && item.children.length > 0
-    const isCurrentDocument = selectedDocId === item.id
-    const isLocked = item.isLocked ?? false
+    const hasChildren = item.children !== undefined && item.children.length > 0;
+    const isCurrentDocument = selectedDocId === item.id;
+    const isLocked = item.isLocked ?? false;
 
     return (
       <TreeItem
@@ -197,8 +222,8 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
         </TreeItemContent>
         {item.children && <Collection items={item.children}>{renderItem}</Collection>}
       </TreeItem>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex gap-x-1 bg-[#f8f8f8] rounded-xl border border-black/10 shadow-inner p-1.5">
@@ -206,7 +231,9 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
       <div className="shrink-0 flex w-[240px] flex-col bg-white rounded-lg shadow-surface">
         <div className="flex flex-col grow min-h-0">
           <div className="flex items-center justify-between shrink-0 px-3 pt-3">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Documents</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Documents
+            </span>
           </div>
           <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
             <Tree
@@ -244,5 +271,5 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

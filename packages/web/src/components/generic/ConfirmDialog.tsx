@@ -1,17 +1,19 @@
-import { useAtom } from "jotai"
-import { confirmDialogAtom, initConfirmDialog } from "@/stores/confirm-dialog"
-import { Modal } from "./Modal"
-import { Dialog } from "./Dialog"
-import { Button } from "./Button"
-import { useEffect } from "react"
-import { Heading } from "react-aria-components"
+import { useAtom } from "jotai";
+import { useEffect } from "react";
+import { Heading } from "react-aria-components";
+
+import { confirmDialogAtom, initConfirmDialog } from "@/stores/confirm-dialog";
+
+import { Button } from "./Button";
+import { Dialog } from "./Dialog";
+import { Modal } from "./Modal";
 
 export function ConfirmDialog() {
-  const [state, setState] = useAtom(confirmDialogAtom)
+  const [state, setState] = useAtom(confirmDialogAtom);
 
   useEffect(() => {
-    initConfirmDialog(setState)
-  }, [setState])
+    initConfirmDialog(setState);
+  }, [setState]);
 
   const handleClose = () => {
     setState({
@@ -19,13 +21,13 @@ export function ConfirmDialog() {
       title: "Confirm",
       message: "",
       onConfirm: undefined,
-    })
-  }
+    });
+  };
 
   const handleConfirm = () => {
-    state.onConfirm?.()
-    handleClose()
-  }
+    state.onConfirm?.();
+    handleClose();
+  };
 
   return (
     <Modal isOpen={state.isOpen} onOpenChange={handleClose} isDismissable size="sm">
@@ -39,12 +41,12 @@ export function ConfirmDialog() {
             <Button intent="secondary" onPress={handleClose} size="sm">
               Cancel
             </Button>
-            <Button onPress={handleConfirm} size="sm" autoFocus>
+            <Button onPress={handleConfirm} size="sm">
               Confirm
             </Button>
           </div>
         </div>
       </Dialog>
     </Modal>
-  )
+  );
 }

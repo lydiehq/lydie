@@ -1,24 +1,25 @@
-import type { QueryClient } from "@tanstack/react-query"
-import type { Zero } from "@rocicorp/zero"
-import { queries } from "@lydie/zero/queries"
-import type { QueryResultType } from "@rocicorp/zero"
+import type { Zero } from "@rocicorp/zero";
+import type { QueryResultType } from "@rocicorp/zero";
+import type { QueryClient } from "@tanstack/react-query";
 
-const STALE_TIME = 5 * 60 * 1000
+import { queries } from "@lydie/zero/queries";
 
-type OrganizationQueryResult = NonNullable<QueryResultType<typeof queries.organizations.bySlug>>
+const STALE_TIME = 5 * 60 * 1000;
+
+type OrganizationQueryResult = NonNullable<QueryResultType<typeof queries.organizations.bySlug>>;
 
 export type Organization = {
-  id: string
-  name: string
-  slug: string
-  color: string | null
-  subscriptionStatus: string | null
-  subscriptionPlan: string | null
-  polarSubscriptionId: string | null
-  createdAt: number
-  updatedAt: number
-  [key: string]: any
-}
+  id: string;
+  name: string;
+  slug: string;
+  color: string | null;
+  subscriptionStatus: string | null;
+  subscriptionPlan: string | null;
+  polarSubscriptionId: string | null;
+  createdAt: number;
+  updatedAt: number;
+  [key: string]: any;
+};
 
 function formatOrganization(org: OrganizationQueryResult): Organization {
   return {
@@ -28,24 +29,24 @@ function formatOrganization(org: OrganizationQueryResult): Organization {
     polarSubscriptionId: org.polar_subscription_id,
     createdAt: org.created_at,
     updatedAt: org.updated_at,
-  }
+  };
 }
 
 async function fetchOrganization(zero: Zero, organizationSlug: string) {
   const org = await zero.run(queries.organizations.bySlug({ organizationSlug }), {
     type: "complete",
     ttl: "10m",
-  })
+  });
 
   if (!org) {
-    throw new Error(`Organization not found: ${organizationSlug}`)
+    throw new Error(`Organization not found: ${organizationSlug}`);
   }
 
-  return formatOrganization(org)
+  return formatOrganization(org);
 }
 
 function getOrganizationQueryKey(organizationSlug: string) {
-  return ["organization", organizationSlug]
+  return ["organization", organizationSlug];
 }
 
 export async function loadOrganization(
@@ -57,5 +58,5 @@ export async function loadOrganization(
     queryKey: getOrganizationQueryKey(organizationSlug),
     queryFn: () => fetchOrganization(zero, organizationSlug),
     staleTime: STALE_TIME,
-  })
+  });
 }

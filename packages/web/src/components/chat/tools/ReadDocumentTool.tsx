@@ -1,53 +1,61 @@
-import React from "react"
-import { CheckmarkRegular, ArrowClockwiseRegular } from "@fluentui/react-icons"
-import { motion, AnimatePresence } from "motion/react"
+import { ArrowClockwiseRegular, CheckmarkRegular } from "@fluentui/react-icons";
+import { AnimatePresence, motion } from "motion/react";
+import React from "react";
 
 export interface ReadDocumentToolProps {
   tool: {
-    state: "input-streaming" | "input-available" | "call-streaming" | "output-available" | "output-error"
+    state:
+      | "input-streaming"
+      | "input-available"
+      | "call-streaming"
+      | "output-available"
+      | "output-error";
     args?: {
-      documentId?: string
-      documentTitle?: string
-      includeMetadata?: boolean
-    }
+      documentId?: string;
+      documentTitle?: string;
+      includeMetadata?: boolean;
+    };
     output?: {
-      message?: string
-      state?: "searching" | "reading" | "success" | "error"
-      documentTitle?: string
+      message?: string;
+      state?: "searching" | "reading" | "success" | "error";
+      documentTitle?: string;
       document?: {
-        id: string
-        title: string
-        content: string
-        slug?: string
-        createdAt?: string
-        updatedAt?: string
-      }
-      error?: string
-    }
-  }
-  className?: string
+        id: string;
+        title: string;
+        content: string;
+        slug?: string;
+        createdAt?: string;
+        updatedAt?: string;
+      };
+      error?: string;
+    };
+  };
+  className?: string;
 }
 
 export function ReadDocumentTool({ tool, className = "" }: ReadDocumentToolProps) {
-  const outputState = tool.output?.state
+  const outputState = tool.output?.state;
   const isToolLoading =
-    tool.state === "call-streaming" || (outputState && outputState !== "success" && outputState !== "error")
+    tool.state === "call-streaming" ||
+    (outputState && outputState !== "success" && outputState !== "error");
 
   // Determine loading message
-  let loadingMessage = "Reading document"
-  const documentTitle = tool.output?.documentTitle || tool.args?.documentTitle
+  let loadingMessage = "Reading document";
+  const documentTitle = tool.output?.documentTitle || tool.args?.documentTitle;
 
   if (outputState === "searching") {
-    loadingMessage = documentTitle ? `Searching for document "${documentTitle}"` : "Searching for document"
+    loadingMessage = documentTitle
+      ? `Searching for document "${documentTitle}"`
+      : "Searching for document";
   } else if (outputState === "reading") {
-    loadingMessage = documentTitle ? `Reading document "${documentTitle}"` : "Reading document"
+    loadingMessage = documentTitle ? `Reading document "${documentTitle}"` : "Reading document";
   } else if (documentTitle) {
-    loadingMessage = `Reading document "${documentTitle}"`
+    loadingMessage = `Reading document "${documentTitle}"`;
   }
 
   // Don't render if no meaningful state
   if (tool.state !== "output-available" && tool.state !== "call-streaming" && !isToolLoading) {
-    return null
+    return null;
   }
 
   const message = isToolLoading
@@ -56,7 +64,7 @@ export function ReadDocumentTool({ tool, className = "" }: ReadDocumentToolProps
       ? "Error reading document"
       : outputState === "success" && tool.output?.document
         ? `Read document: "${tool.output.document.title}"`
-        : "Reading document"
+        : "Reading document";
 
   return (
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-2 ${className}`}>
@@ -121,5 +129,5 @@ export function ReadDocumentTool({ tool, className = "" }: ReadDocumentToolProps
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  )
+  );
 }

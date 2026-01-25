@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import {
   DateField as AriaDateField,
   DateFieldProps as AriaDateFieldProps,
@@ -7,15 +7,16 @@ import {
   DateSegment,
   DateValue,
   ValidationResult,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
-import { Description, FieldError, Label, fieldGroupStyles } from "./Field"
-import { composeTailwindRenderProps } from "./utils"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
+import { Description, FieldError, Label, fieldGroupStyles } from "./Field";
+import { composeTailwindRenderProps } from "./utils";
 
 export interface DateFieldProps<T extends DateValue> extends AriaDateFieldProps<T> {
-  label?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
+  label?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
 export function DateField<T extends DateValue>({
@@ -25,13 +26,16 @@ export function DateField<T extends DateValue>({
   ...props
 }: DateFieldProps<T>) {
   return (
-    <AriaDateField {...props} className={composeTailwindRenderProps(props.className, "flex flex-col gap-1")}>
+    <AriaDateField
+      {...props}
+      className={composeTailwindRenderProps(props.className, "flex flex-col gap-1")}
+    >
       {label && <Label>{label}</Label>}
       <DateInput />
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
     </AriaDateField>
-  )
+  );
 }
 
 const segmentStyles = tv({
@@ -47,17 +51,20 @@ const segmentStyles = tv({
       true: "bg-blue-600 text-white dark:text-white forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
     },
   },
-})
+});
 
 export function DateInput(props: Omit<DateInputProps, "children">) {
   return (
     <AriaDateInput
       className={(renderProps) =>
-        fieldGroupStyles({ ...renderProps, class: "block min-w-[150px] px-2 py-1.5 text-sm" })
+        fieldGroupStyles({
+          ...renderProps,
+          class: "block min-w-[150px] px-2 py-1.5 text-sm",
+        })
       }
       {...props}
     >
       {(segment) => <DateSegment segment={segment} className={segmentStyles} />}
     </AriaDateInput>
-  )
+  );
 }

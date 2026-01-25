@@ -1,37 +1,38 @@
-import type { QueryClient } from "@tanstack/react-query"
-import { authClient } from "@/utils/auth"
+import type { QueryClient } from "@tanstack/react-query";
 
-const SESSION_QUERY_KEY = ["auth", "getSession"]
-const STALE_TIME = 5 * 60 * 1000
+import { authClient } from "@/utils/auth";
 
-type SessionData = Awaited<ReturnType<typeof authClient.getSession>>["data"]
+const SESSION_QUERY_KEY = ["auth", "getSession"];
+const STALE_TIME = 5 * 60 * 1000;
+
+type SessionData = Awaited<ReturnType<typeof authClient.getSession>>["data"];
 
 // Extended session type that includes organizations from customSession plugin
 type ExtendedSessionData = SessionData & {
   session?: {
     organizations?: Array<{
-      id: string
-      name: string
-      slug: string
-      [key: string]: any
-    }>
-  }
-}
+      id: string;
+      name: string;
+      slug: string;
+      [key: string]: any;
+    }>;
+  };
+};
 
 export type LoadSessionResult = {
-  auth: SessionData | undefined
+  auth: SessionData | undefined;
   organizations: Array<{
-    id: string
-    name: string
-    slug: string
-    [key: string]: any
-  }>
-}
+    id: string;
+    name: string;
+    slug: string;
+    [key: string]: any;
+  }>;
+};
 
 // Fetch session data from the server
 async function fetchSession() {
-  const response = await authClient.getSession()
-  return response.data
+  const response = await authClient.getSession();
+  return response.data;
 }
 
 // Load session data, using cache when available
@@ -41,12 +42,12 @@ export async function loadSession(queryClient: QueryClient): Promise<LoadSession
     queryFn: fetchSession,
     staleTime: STALE_TIME,
     retry: 2,
-  })) as ExtendedSessionData
+  })) as ExtendedSessionData;
 
   return {
     auth: data || undefined,
     organizations: data?.session?.organizations || [],
-  }
+  };
 }
 
 // Revalidate session data by forcing a fresh fetch from the server
@@ -55,15 +56,15 @@ export async function revalidateSession(queryClient: QueryClient) {
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
     staleTime: 0,
-  })
+  });
 }
 
 // Clear session data (useful for logout)
 export async function clearSession(queryClient: QueryClient) {
   await queryClient.invalidateQueries({
     queryKey: SESSION_QUERY_KEY,
-  })
+  });
   queryClient.removeQueries({
     queryKey: SESSION_QUERY_KEY,
-  })
+  });
 }

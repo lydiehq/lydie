@@ -1,14 +1,15 @@
-import React from "react"
+import React from "react";
 import {
   Slider as AriaSlider,
   SliderProps as AriaSliderProps,
   SliderOutput,
   SliderThumb,
   SliderTrack,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
-import { Label } from "./Field"
-import { composeTailwindRenderProps, focusRing } from "./utils"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
+import { Label } from "./Field";
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
 const trackStyles = tv({
   base: "rounded-full",
@@ -22,7 +23,7 @@ const trackStyles = tv({
       true: "bg-gray-100 dark:bg-zinc-800 forced-colors:bg-[GrayText]",
     },
   },
-})
+});
 
 const thumbStyles = tv({
   extend: focusRing,
@@ -35,14 +36,18 @@ const thumbStyles = tv({
       true: "border-gray-300 dark:border-zinc-700 forced-colors:border-[GrayText]",
     },
   },
-})
+});
 
 export interface SliderProps<T> extends AriaSliderProps<T> {
-  label?: string
-  thumbLabels?: string[]
+  label?: string;
+  thumbLabels?: string[];
 }
 
-export function Slider<T extends number | number[]>({ label, thumbLabels, ...props }: SliderProps<T>) {
+export function Slider<T extends number | number[]>({
+  label,
+  thumbLabels,
+  ...props
+}: SliderProps<T>) {
   return (
     <AriaSlider
       {...props}
@@ -60,11 +65,16 @@ export function Slider<T extends number | number[]>({ label, thumbLabels, ...pro
           <>
             <div className={trackStyles(renderProps)} />
             {state.values.map((_, i) => (
-              <SliderThumb key={i} index={i} aria-label={thumbLabels?.[i]} className={thumbStyles} />
+              <SliderThumb
+                key={i}
+                index={i}
+                aria-label={thumbLabels?.[i]}
+                className={thumbStyles}
+              />
             ))}
           </>
         )}
       </SliderTrack>
     </AriaSlider>
-  )
+  );
 }

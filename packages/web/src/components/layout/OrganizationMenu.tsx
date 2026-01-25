@@ -1,37 +1,36 @@
-import { MenuItem, MenuItemLink, MenuSeparator } from "@/components/generic/Menu"
-import { useOrganization } from "@/context/organization.context"
-import { useNavigate, useRouter } from "@tanstack/react-router"
-import { Button as RACButton, MenuTrigger, Menu } from "react-aria-components"
-import { useState } from "react"
-import { OrganizationsDialog } from "./OrganizationsDialog"
-import clsx from "clsx"
-import { authClient } from "@/utils/auth"
-import { useQueryClient } from "@tanstack/react-query"
-import { composeTailwindRenderProps, focusRing } from "../generic/utils"
-import { Popover } from "../generic/Popover"
-import { OrganizationAvatar } from "./OrganizationAvatar"
-import { ChevronDown12Regular, ChevronUpDownRegular } from "@fluentui/react-icons"
-import { useAuth } from "@/context/auth.context"
-import { clearSession } from "@/lib/auth/session"
-import { clearZeroInstance } from "@/lib/zero/instance"
+import { ChevronDown12Regular } from "@fluentui/react-icons";
+import { useQueryClient } from "@tanstack/react-query";
+import clsx from "clsx";
+import { useState } from "react";
+import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
+
+import { MenuItem, MenuItemLink, MenuSeparator } from "@/components/generic/Menu";
+import { useOrganization } from "@/context/organization.context";
+import { clearSession } from "@/lib/auth/session";
+import { clearZeroInstance } from "@/lib/zero/instance";
+import { authClient } from "@/utils/auth";
+
+import { Popover } from "../generic/Popover";
+import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { OrganizationAvatar } from "./OrganizationAvatar";
+import { OrganizationsDialog } from "./OrganizationsDialog";
 
 type Props = {
-  isCollapsed: boolean
-}
+  isCollapsed: boolean;
+};
 
 export function OrganizationMenu({ isCollapsed }: Props) {
-  const { organization } = useOrganization()
-  const { session } = useAuth()
-  const userId = session?.userId
-  const queryClient = useQueryClient()
-  const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false)
+  const { organization } = useOrganization();
+
+  const queryClient = useQueryClient();
+  const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
 
   const signOut = async () => {
-    await authClient.signOut()
-    await clearSession(queryClient)
-    clearZeroInstance()
-    window.location.href = "https://lydie.co"
-  }
+    await authClient.signOut();
+    await clearSession(queryClient);
+    clearZeroInstance();
+    window.location.href = "https://lydie.co";
+  };
 
   return (
     <div>
@@ -78,7 +77,10 @@ export function OrganizationMenu({ isCollapsed }: Props) {
           </Menu>
         </Popover>
       </MenuTrigger>
-      <OrganizationsDialog isOpen={isOrganizationDialogOpen} onOpenChange={setIsOrganizationDialogOpen} />
+      <OrganizationsDialog
+        isOpen={isOrganizationDialogOpen}
+        onOpenChange={setIsOrganizationDialogOpen}
+      />
     </div>
-  )
+  );
 }

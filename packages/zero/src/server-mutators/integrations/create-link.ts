@@ -1,17 +1,16 @@
-import { defineMutator } from "@rocicorp/zero"
-import { z } from "zod"
-import { zql } from "../../schema"
-import { hasOrganizationAccess } from "../../auth"
-import { mutators as sharedMutators } from "../../mutators/index"
-import { logIntegrationActivity } from "@lydie/core/integrations/activity-log"
-import { pullFromIntegrationLink } from "@lydie/core/integrations/pull"
-import { db } from "@lydie/database"
-import { integrationLinksTable } from "@lydie/database/schema"
-import { eq } from "drizzle-orm"
+import { logIntegrationActivity } from "@lydie/core/integrations/activity-log";
+import { pullFromIntegrationLink } from "@lydie/core/integrations/pull";
+import { db } from "@lydie/database";
+import { integrationLinksTable } from "@lydie/database/schema";
+import { integrationRegistry } from "@lydie/integrations";
+import { defineMutator } from "@rocicorp/zero";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 
-import { integrationRegistry } from "@lydie/integrations"
-
-import { MutatorContext } from "../../server-mutators"
+import { hasOrganizationAccess } from "../../auth";
+import { mutators as sharedMutators } from "../../mutators/index";
+import { zql } from "../../schema";
+import { MutatorContext } from "../../server-mutators";
 
 export const createIntegrationLinkMutation = ({ asyncTasks }: MutatorContext) =>
   defineMutator(
@@ -23,29 +22,32 @@ export const createIntegrationLinkMutation = ({ asyncTasks }: MutatorContext) =>
       organizationId: z.string(),
     }),
     async ({ tx, ctx, args: { id, connectionId, name, config, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId)
+      hasOrganizationAccess(ctx, organizationId);
       await sharedMutators.integration.createLink.fn({
         tx,
         ctx,
         args: { id, connectionId, name, config, organizationId },
-      })
+      });
 
       const connection = await tx.run(
-        zql.integration_connections.where("id", connectionId).where("organization_id", organizationId).one(),
-      )
+        zql.integration_connections
+          .where("id", connectionId)
+          .where("organization_id", organizationId)
+          .one(),
+      );
 
       if (!connection) {
-        throw new Error(`Connection not found: ${connectionId}`)
+        throw new Error(`Connection not found: ${connectionId}`);
       }
 
-      const integration = integrationRegistry.get(connection.integration_type)
+      const integration = integrationRegistry.get(connection.integration_type);
       if (!integration) {
-        throw new Error(`Integration not found: ${connection.integration_type}`)
+        throw new Error(`Integration not found: ${connection.integration_type}`);
       }
 
       // Automatically pull from the integration after creating the link
       asyncTasks.push(async () => {
-        console.log(`[Integration Link] Auto-pulling from newly created link ${id}`)
+        console.log(`[Integration Link] Auto-pulling from newly created link ${id}`);
 
         try {
           const result = await pullFromIntegrationLink({
@@ -53,13 +55,18 @@ export const createIntegrationLinkMutation = ({ asyncTasks }: MutatorContext) =>
             organizationId,
             userId: ctx.userId,
             integration,
-          })
+          });
 
           if (result.success) {
             console.log(
               `[Integration Link] Auto-pull succeeded: imported ${result.imported}, failed ${result.failed}`,
-            )
-            await logIntegrationActivity(connectionId, "pull", "success", connection.integration_type)
+            );
+            await logIntegrationActivity(
+              connectionId,
+              "pull",
+              "success",
+              connection.integration_type,
+            );
 
             // Update sync status to idle
             await db
@@ -69,10 +76,15 @@ export const createIntegrationLinkMutation = ({ asyncTasks }: MutatorContext) =>
                 lastSyncedAt: new Date(),
                 updatedAt: new Date(),
               })
-              .where(eq(integrationLinksTable.id, id))
+              .where(eq(integrationLinksTable.id, id));
           } else {
-            console.error(`[Integration Link] Auto-pull failed: ${result.error}`)
-            await logIntegrationActivity(connectionId, "pull", "error", connection.integration_type)
+            console.error(`[Integration Link] Auto-pull failed: ${result.error}`);
+            await logIntegrationActivity(
+              connectionId,
+              "pull",
+              "error",
+              connection.integration_type,
+            );
 
             // Update sync status to error
             await db
@@ -81,10 +93,10 @@ export const createIntegrationLinkMutation = ({ asyncTasks }: MutatorContext) =>
                 syncStatus: "error",
                 updatedAt: new Date(),
               })
-              .where(eq(integrationLinksTable.id, id))
+              .where(eq(integrationLinksTable.id, id));
           }
         } catch (error) {
-          console.error(`[Integration Link] Auto-pull exception:`, error)
+          console.error(`[Integration Link] Auto-pull exception:`, error);
 
           // Update sync status to error
           await db
@@ -93,8 +105,8 @@ export const createIntegrationLinkMutation = ({ asyncTasks }: MutatorContext) =>
               syncStatus: "error",
               updatedAt: new Date(),
             })
-            .where(eq(integrationLinksTable.id, id))
+            .where(eq(integrationLinksTable.id, id));
         }
-      })
+      });
     },
-  )
+  );
