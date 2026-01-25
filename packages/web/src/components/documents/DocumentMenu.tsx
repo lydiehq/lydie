@@ -129,12 +129,10 @@ export function DocumentMenu({
 
   const handleCreateTemplate = async () => {
     if (!templateName.trim()) {
-      toast.error("Please enter a template name");
       return;
     }
 
     if (!document) {
-      toast.error("Document not found");
       return;
     }
 

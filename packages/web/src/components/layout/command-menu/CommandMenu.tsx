@@ -114,9 +114,8 @@ export function CommandMenu() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        const target = e.target as HTMLElement;
-        const isInEditor = target.closest(".ProseMirror");
-        if (isInEditor) return;
+        // If the event was already handled (e.g., by an editor with selected text), don't handle it here
+        if (e.defaultPrevented) return;
 
         e.preventDefault();
         handleOpenChange(!isOpen);
@@ -340,6 +339,7 @@ export function CommandMenu() {
             <div className="flex items-center border-b border-gray-100 px-3">
               <SearchFilled className="size-4 text-gray-400 mr-2" />
               <Command.Input
+                autoFocus
                 value={search}
                 onValueChange={setSearch}
                 placeholder={
