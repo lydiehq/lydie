@@ -13,6 +13,8 @@ import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
+import { OnboardingCalloutView } from "@/components/editor/OnboardingCalloutView";
+import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
 
@@ -105,6 +107,12 @@ export function useDocumentEditor({
       },
       codeBlock: {
         addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
+      },
+      onboardingStep: {
+        addNodeView: () => ReactNodeViewRenderer(OnboardingStepView),
+      },
+      onboardingCallout: {
+        addNodeView: () => ReactNodeViewRenderer(OnboardingCalloutView),
       },
       collaboration: { document: ydoc },
       collaborationCaret: { provider, user: userInfo },

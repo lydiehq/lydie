@@ -13,7 +13,6 @@ const itemClassName = cva({
 export interface MenuItem {
   id: string;
   label: string;
-  description?: string;
   icon?: React.ComponentType<{ className?: string }>;
   iconUrl?: string;
   action: () => void;
@@ -42,9 +41,6 @@ export function CommandMenuItem({ item, onSelect }: CommandMenuItemProps) {
       )}
       <div className="flex flex-col flex-1 min-w-0 items-start gap-y-0.5">
         <span className="truncate">{item.label}</span>
-        {item.description && (
-          <span className="text-xs text-gray-500 font-medium truncate">{item.description}</span>
-        )}
       </div>
     </Command.Item>
   );

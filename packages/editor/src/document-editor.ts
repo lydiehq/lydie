@@ -15,6 +15,8 @@ export interface GetDocumentEditorExtensionsOptions {
   keyboardShortcuts?: Partial<E.KeyboardShortcutOptions>;
   documentComponent?: Partial<E.DocumentComponentOptions>;
   codeBlock?: Partial<E.CodeBlockOptions>;
+  onboardingStep?: Partial<E.OnboardingStepOptions>;
+  onboardingCallout?: Partial<E.OnboardingCalloutOptions>;
   collaboration?: Partial<CollaborationOptions>;
   collaborationCaret?: Partial<CollaborationCaretOptions>;
 }
@@ -40,6 +42,8 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.KeyboardShortcutExtension.configure(options?.keyboardShortcuts),
     E.DocumentComponent.configure(options?.documentComponent),
     E.CodeBlock.configure(options?.codeBlock),
+    E.OnboardingStep.configure(options?.onboardingStep),
+    E.OnboardingCallout.configure(options?.onboardingCallout),
     E.IndentHandlerExtension,
     E.ImageUpload,
   ];

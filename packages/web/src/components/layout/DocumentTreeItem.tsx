@@ -106,7 +106,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         }),
       )}
       style={{
-        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
+        paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.5rem)`,
         paddingRight: "0.5rem",
       }}
     >
@@ -129,7 +129,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               </Button>
             )}
 
-            <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
+            <div className="flex items-center gap-x-1 flex-1 min-w-0">
               {/* Render appropriate chevron based on item type */}
               {isGroup && (
                 <IntegrationGroupChevron
@@ -296,7 +296,7 @@ function DocumentTreeItemIcon({
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
     return (
-      <div className="text-gray-500 p-1 -ml-1">
+      <div className="text-gray-500 p-1 -ml-1 flex">
         <IconComponent
           className={sidebarItemIconStyles({
             className: "size-4 shrink-0",

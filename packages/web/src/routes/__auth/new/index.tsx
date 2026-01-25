@@ -47,6 +47,7 @@ function RouteComponent() {
     onSubmit: async (values) => {
       try {
         const id = createId();
+        const onboardingDocId = createId();
         const slug = values.value.slug || slugify(values.value.name);
 
         const write = z.mutate(
@@ -55,6 +56,7 @@ function RouteComponent() {
             name: values.value.name,
             slug,
             color: getRandomWorkspaceColor(),
+            onboardingDocId,
           }),
         );
 
@@ -64,13 +66,19 @@ function RouteComponent() {
         clearZeroInstance();
         await router.invalidate();
 
-        navigate({
-          to: "/w/$organizationSlug",
-          params: { organizationSlug: slug },
-          search: search.template
-            ? { installTemplate: search.template }
-            : { installTemplate: undefined },
-        });
+        // Navigate to the onboarding document or workspace with template
+        if (search.template) {
+          navigate({
+            to: "/w/$organizationSlug",
+            params: { organizationSlug: slug },
+            search: { installTemplate: search.template },
+          });
+        } else {
+          navigate({
+            to: "/w/$organizationSlug/$id",
+            params: { organizationSlug: slug, id: onboardingDocId },
+          });
+        }
 
         toast.success("Workspace created successfully");
       } catch (error) {
@@ -185,14 +193,14 @@ function RouteComponent() {
                     )}
                   />
 
-                  <Button
-                    intent="primary"
-                    type="submit"
-                    isPending={form.state.isSubmitting}
-                    className="w-full"
-                  >
-                    {form.state.isSubmitting ? "Creating workspace..." : "Create Workspace"}
-                  </Button>
+                  <form.Subscribe
+                    selector={(state) => state.isSubmitting}
+                    children={(isSubmitting) => (
+                      <Button intent="primary" type="submit" isPending={isSubmitting} className="w-full">
+                        {isSubmitting ? "Creating workspace..." : "Create Workspace"}
+                      </Button>
+                    )}
+                  />
                 </div>
               </Form>
 

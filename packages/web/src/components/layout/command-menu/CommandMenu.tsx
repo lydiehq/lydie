@@ -9,7 +9,6 @@ import {
   SettingsRegular,
 } from "@fluentui/react-icons";
 import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
-import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -157,49 +156,6 @@ export function CommandMenu() {
 
   const menuSections = useMemo<MenuSection[]>(() => {
     const onboardingItems: MenuItem[] = [];
-
-    if (currentStep === "documents") {
-      onboardingItems.push({
-        id: "import-demo-content",
-        label: "Import Demo Content",
-        description: "Quickly add sample documents to get started",
-        icon: AddRegular,
-        action: async () => {
-          try {
-            const result = await z.mutate(
-              mutators.document.importDemoContent({
-                organizationId: organization.id,
-              }),
-            );
-
-            await setChecked("documents:import-demo-content", true);
-            await setChecked("documents:explore-editor", true);
-
-            if (result?.client) {
-              const clientResult = await result.client;
-              if (clientResult.type === "success") {
-                const welcomeDocId = (clientResult as any).result?.welcomeDocumentId;
-                if (welcomeDocId) {
-                  navigate({
-                    to: "/w/$organizationSlug/$id",
-                    params: {
-                      organizationSlug: organization.slug,
-                      id: welcomeDocId,
-                    },
-                  });
-                }
-              }
-            }
-
-            handleOpenChange(false);
-          } catch (error) {
-            console.error("Failed to import demo content:", error);
-          }
-        },
-        customClassName:
-          "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-3 text-sm outline-none data-[selected=true]:bg-blue-100 data-[selected=true]:text-blue-950 text-blue-700 bg-blue-50 border border-blue-200 transition-colors duration-150 font-medium",
-      });
-    }
 
     const favoritesItems: MenuItem[] = [];
 
