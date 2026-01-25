@@ -139,8 +139,6 @@ export function CommandMenu() {
     `/w/$organizationSlug/settings/integrations/${integrationType}`;
 
   const menuSections = useMemo<MenuSection[]>(() => {
-    const onboardingItems: MenuItem[] = [];
-
     const favoritesItems: MenuItem[] = [];
 
     favoritesItems.push({
@@ -293,14 +291,6 @@ export function CommandMenu() {
     ];
 
     const sections: MenuSection[] = [];
-
-    if (onboardingItems.length > 0) {
-      sections.push({
-        id: "onboarding",
-        heading: "Onboarding",
-        items: onboardingItems,
-      });
-    }
 
     sections.push(
       {
