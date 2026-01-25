@@ -89,7 +89,7 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
   }
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 -ml-2">
       <input
         ref={fileInputRef}
         type="file"
@@ -98,13 +98,7 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
         className="hidden"
         aria-label="Upload cover image"
       />
-      <Button
-        size="sm"
-        intent="ghost"
-        onPress={handleAddClick}
-        isDisabled={isUploading}
-        className="text-gray-600 hover:text-gray-900"
-      >
+      <Button size="sm" intent="ghost" onPress={handleAddClick} isDisabled={isUploading}>
         <ImageRegular className="size-4 mr-1" />
         {isUploading ? "Uploading..." : "Add cover image"}
       </Button>

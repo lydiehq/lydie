@@ -1,14 +1,10 @@
 import {
-  Add12Filled,
   Add16Filled,
-  AddSquare16Filled,
   ArrowClockwiseRegular,
   ErrorCircleRegular,
   Home16Filled,
   PersonChat16Filled,
-  Search12Filled,
   Search16Filled,
-  SearchFilled,
   ShieldErrorRegular,
   TabDesktopMultiple16Filled,
   Wifi4Regular,
@@ -208,7 +204,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
                 aria-label="Create new document"
               >
                 <Add16Filled
-                  className={sidebarItemIconStyles({ className: "size-3.5 icon-muted" })}
+                  className={sidebarItemIconStyles({ className: "size-3 m-0.5 icon-muted" })}
                 />
               </Button>
               <Tooltip>Add document</Tooltip>

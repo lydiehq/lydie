@@ -9,7 +9,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
 
 function PageComponent() {
   return (
-    <div className="h-screen py-1 pr-1 flex flex-col pl-1">
+    <div className="h-screen p-1">
       <Surface className="overflow-y-auto size-full">
         <div className="flex items-center justify-center size-full">
           <div className="flex flex-col items-center justify-center gap-y-2">

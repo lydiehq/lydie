@@ -14,7 +14,7 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
-import { DocumentFilled, EditFilled, LinkDismissRegular, OpenRegular } from "@fluentui/react-icons";
+import { EditFilled, LinkDismissRegular, OpenRegular } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
@@ -36,6 +36,7 @@ import { useOrganization } from "@/context/organization.context";
 
 import { Separator } from "../generic/Separator";
 import { Tooltip } from "../generic/Tooltip";
+import { DocumentIcon } from "./icons/DocumentIcon";
 
 type Props = {
   editor: Editor;
@@ -446,7 +447,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
                       className="flex items-center gap-2 w-full p-1.5 text-left text-sm rounded hover:bg-gray-100 cursor-pointer data-[focused]:bg-gray-100"
                       onAction={() => handleDocumentSelect(doc.id)}
                     >
-                      <DocumentFilled className="size-3.5 text-gray-500 shrink-0" />
+                      <DocumentIcon className="size-3.5 text-gray-500 shrink-0" />
                       <span className="truncate">{doc.title || "Untitled document"}</span>
                     </MenuItem>
                   ))}
@@ -457,7 +458,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
             <div className="flex gap-x-1 items-center max-w-[300px]">
               <div className="flex gap-x-2 overflow-hidden text-ellipsis whitespace-nowrap px-1 items-center">
                 {isInternal ? (
-                  <DocumentFilled className="size-3.5 text-gray-500 shrink-0" />
+                  <DocumentIcon className="size-3.5 text-gray-500 shrink-0" />
                 ) : domain ? (
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
@@ -476,7 +477,7 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
               <div className="flex gap-x-0.5">
                 <LinkPopoverButton
                   title={isInternal ? "Open document" : "Open link in new tab"}
-                  icon={isInternal ? DocumentFilled : OpenRegular}
+                  icon={isInternal ? DocumentIcon : OpenRegular}
                   onPress={handleOpenLink}
                 >
                   {isInternal ? "Open document" : "Open in new tab"}

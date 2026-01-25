@@ -19,7 +19,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       options={{
         placement: "bottom",
       }}
-      className="z-50 bg-white ring ring-black/10 rounded-lg shadow-lg p-1 flex items-center gap-1"
+      className="z-50 bg-black/85 text-white rounded-lg shadow-popover p-1 flex items-center gap-1"
     >
       {/* Formatting buttons */}
       <ToolbarButton
@@ -27,24 +27,28 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
         title="Bold"
         icon={BoldIcon}
         editor={editor}
+        inverted
       />
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleItalic().run()}
         title="Italic"
         icon={ItalicIcon}
         editor={editor}
+        inverted
       />
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleStrike().run()}
         title="Strike"
         icon={TextStrikethroughFilled}
         editor={editor}
+        inverted
       />
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleCode().run()}
         title="Code"
         icon={CodeIcon}
         editor={editor}
+        inverted
       />
 
       <Separator orientation="vertical" className="h-4 mx-1" />
@@ -60,6 +64,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
         icon={LinkIcon}
         editor={editor}
         isDisabled={editor.state.selection.empty}
+        inverted
       />
 
       <Separator orientation="vertical" className="h-4 mx-1" />
@@ -71,7 +76,7 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
         title="Add to context"
         icon={SparkleRegular}
         editor={editor}
-        className="flex p-1.5 rounded hover:bg-gray-100"
+        inverted
       />
     </TiptapBubbleMenu>
   );

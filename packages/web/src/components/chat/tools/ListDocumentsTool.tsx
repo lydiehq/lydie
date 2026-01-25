@@ -3,13 +3,14 @@ import {
   CalendarRegular,
   ChevronRightRegular,
   ClockRegular,
-  DocumentFilled,
   ListRegular,
   OpenRegular,
 } from "@fluentui/react-icons";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Button, Disclosure, DisclosurePanel } from "react-aria-components";
+
+import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 
 import { ToolContainer } from "./ToolContainer";
 
@@ -140,7 +141,7 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
                     params={{ id: doc.id }}
                     className="group flex items-center gap-x-1.5 py-1 rounded-md text-sm font-medium px-2 mb-0.5 text-gray-600 hover:bg-black/3 transition-colors duration-75"
                   >
-                    <DocumentFilled className="text-gray-500 shrink-0 size-3.5" />
+                    <DocumentIcon className="text-gray-500 shrink-0 size-3.5" />
                     <span className="truncate flex-1">{doc.title || "Untitled document"}</span>
                   </Link>
                 </motion.div>
@@ -259,7 +260,7 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
                       </div>
                       {doc.wordCount !== undefined && (
                         <div className="flex items-center gap-1">
-                          <DocumentFilled className="size-3" />
+                          <DocumentIcon className="size-3" />
                           {doc.wordCount} words
                         </div>
                       )}

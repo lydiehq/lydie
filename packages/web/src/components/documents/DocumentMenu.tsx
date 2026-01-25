@@ -1,3 +1,4 @@
+import { Shield12Filled } from "@fluentui/react-icons";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -16,7 +17,7 @@ import { Button } from "@/components/generic/Button";
 import { Checkbox, CheckboxGroup } from "@/components/generic/Checkbox";
 import { Dialog } from "@/components/generic/Dialog";
 import { Input, Label } from "@/components/generic/Field";
-import { Menu, MenuItem } from "@/components/generic/Menu";
+import { Menu, MenuItem, MenuSeparator } from "@/components/generic/Menu";
 import { Modal } from "@/components/generic/Modal";
 import { Separator } from "@/components/generic/Separator";
 import { useAuth } from "@/context/auth.context";
@@ -179,12 +180,11 @@ export function DocumentMenu({
         {document?.integration_link_id && !document?.published && (
           <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
         )}
-        {userIsAdmin && (
-          <MenuItem onAction={() => setIsCreateTemplateDialogOpen(true)}>
-            Create template <span className="text-xs text-gray-500 ml-2">admin</span>
-          </MenuItem>
-        )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
+        <MenuSeparator />
+        {userIsAdmin && (
+          <MenuItem onAction={() => setIsCreateTemplateDialogOpen(true)}>Create template</MenuItem>
+        )}
       </Menu>
 
       <Modal isOpen={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen} isDismissable>

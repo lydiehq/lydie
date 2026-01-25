@@ -2,7 +2,6 @@ import {
   ArrowClockwiseRegular,
   CheckmarkRegular,
   ChevronRightRegular,
-  DocumentFilled,
   ErrorCircleRegular,
   GlobeRegular,
   ListRegular,
@@ -10,6 +9,8 @@ import {
 } from "@fluentui/react-icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+
+import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 
 export interface ResearchAction {
   type: "read" | "search" | "list" | "web_search" | "search_in_document";
@@ -26,7 +27,7 @@ export interface ResearchGroupProps {
 function getActionIcon(type: ResearchAction["type"]) {
   switch (type) {
     case "read":
-      return DocumentFilled;
+      return DocumentIcon;
     case "search":
     case "search_in_document":
       return SearchRegular;
@@ -35,7 +36,7 @@ function getActionIcon(type: ResearchAction["type"]) {
     case "list":
       return ListRegular;
     default:
-      return DocumentFilled;
+      return DocumentIcon;
   }
 }
 

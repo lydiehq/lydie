@@ -1,7 +1,6 @@
 import {
   ArrowUploadRegular,
   CheckmarkCircleRegular,
-  DocumentFilled,
   ErrorCircleRegular,
   FolderRegular,
 } from "@fluentui/react-icons";
@@ -11,6 +10,7 @@ import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
 import { Button } from "@/components/generic/Button";
+import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";
 
@@ -461,7 +461,7 @@ function RouteComponent() {
                       {fileWithPath.folderPath ? (
                         <FolderRegular className="h-4 w-4 text-blue-500" />
                       ) : (
-                        <DocumentFilled className="h-4 w-4" />
+                        <DocumentIcon className="h-4 w-4" />
                       )}
                       <span className="flex-1 truncate">
                         {fileWithPath.folderPath && (

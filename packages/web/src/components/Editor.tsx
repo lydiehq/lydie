@@ -249,12 +249,9 @@ function EditorContainer({ doc }: Props) {
             )}
             <div
               ref={scrollContainerRef}
-              className={clsx(
-                "flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative transition-[padding] duration-500 ease-in-out",
-                shouldShiftContent ? "max-2xl:pl-4 max-2xl:pr-[160px]" : "px-4",
-              )}
+              className="flex py-8 px-4 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative"
             >
-              <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
+              <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col shrink-0">
                 <CoverImageEditor
                   documentId={doc.id}
                   organizationId={doc.organization_id}
@@ -280,6 +277,12 @@ function EditorContainer({ doc }: Props) {
                   className="block grow pb-8"
                 />
               </div>
+              <div
+                className={clsx(
+                  "shrink-0 transition-[width] duration-500 ease-in-out",
+                  shouldShiftContent ? "max-2xl:w-[156px]" : "w-0",
+                )}
+              />
             </div>
           </Panel>
         </Group>

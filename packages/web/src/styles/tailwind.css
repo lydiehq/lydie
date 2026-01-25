@@ -15,7 +15,9 @@
   --color-surface: #fcfcfc;
   --font-sans: Inter Variable, sans-serif;
   --text-sm: 0.8125rem;
-  --shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1), 0 0 1.5px 0 rgba(0, 0, 0, 0.2);
+  --shadow-surface:
+    0px 0px 8px -4px rgba(0, 0, 0, 0.2), 0 1px 1.5px 0 rgba(0, 0, 0, 0.1),
+    0 0 1.5px 0 rgba(0, 0, 0, 0.2);
   --shadow-popover:
     0px 8px 12px -4px rgba(0, 0, 0, 0.2), 0px 0px 2px 0px rgba(0, 0, 0, 0.05),
     0px 1px 2px 0px rgba(0, 0, 0, 0.1);
@@ -125,7 +127,7 @@ body {
 }
 
 .icon-muted {
-  @apply text-black/50 group-hover:text-black/60;
+  @apply text-black/50 group-hover:text-black/58;
 }
 
 @media (forced-colors: active) {

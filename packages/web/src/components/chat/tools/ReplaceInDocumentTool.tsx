@@ -2,7 +2,6 @@ import {
   ArrowClockwiseRegular,
   ChevronDownRegular,
   ChevronUpRegular,
-  DocumentFilled,
 } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -17,6 +16,7 @@ import { StickToBottom } from "use-stick-to-bottom";
 import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
 import { Button } from "@/components/generic/Button";
 import { Separator } from "@/components/generic/Separator";
+import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentEditor, useTitleEditor } from "@/hooks/useEditor";
 import { useZero } from "@/services/zero";
@@ -332,7 +332,7 @@ export function ReplaceInDocumentTool({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <DocumentFilled className="size-3" />
+            <DocumentIcon className="size-3" />
             <span>Target: {targetDocument.title || "Untitled document"}</span>
           </motion.div>
         )}

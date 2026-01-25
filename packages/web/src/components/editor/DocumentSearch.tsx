@@ -1,12 +1,14 @@
 import type { Document } from "@lydie/zero/schema";
 
-import { DocumentFilled, SearchFilled } from "@fluentui/react-icons";
+import { SearchFilled } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import React, { useState } from "react";
 import { Input } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
+
+import { DocumentIcon } from "./icons/DocumentIcon";
 
 interface DocumentSearchProps {
   onSelectDocument: (document: Document) => void;
@@ -72,7 +74,7 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
                 onClick={() => onSelectDocument(doc)}
                 className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3 transition-colors"
               >
-                <DocumentFilled className="size-4 text-gray-400 flex-shrink-0" />
+                <DocumentIcon className="size-4 text-gray-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm text-gray-900 truncate">
                     {doc.title || "Untitled"}

@@ -1,8 +1,9 @@
 import { DismissFilled } from "@fluentui/react-icons";
-import { DocumentFilled } from "@fluentui/react-icons";
 import { Button } from "react-aria-components";
 
 import { DocumentMultiSelect } from "@/components/assistant/DocumentMultiSelect";
+
+import { DocumentIcon } from "../editor/icons/DocumentIcon";
 
 export type ChatContextItem = {
   id: string;
@@ -62,7 +63,7 @@ function ContextChip({
 
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-white/80 text-xs text-gray-700 px-1 py-0.5 ring ring-black/8">
-      <DocumentFilled className="size-3 text-gray-500" />
+      <DocumentIcon className="size-3 text-gray-500" />
       <span className="max-w-[180px] truncate">{item.label}</span>
       <span className="text-[10px] text-gray-500">{sourceLabel}</span>
       {canRemove && (

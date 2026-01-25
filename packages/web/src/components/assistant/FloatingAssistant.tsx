@@ -1,6 +1,5 @@
 import {
   DocumentCopyFilled,
-  DocumentFilled,
   EditRegular,
   ExpandUpRight16Filled,
   PersonChatFilled,
@@ -18,11 +17,12 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
 import { createPortal } from "react-dom";
 
-const MotionButton = motion(RACButton);
+const MotionButton = motion.create(RACButton);
 
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
 import { ChatMessages } from "@/components/chat/ChatMessages";
+import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { Button } from "@/components/generic/Button";
 import { Tooltip } from "@/components/generic/Tooltip";
 import { useOrganization } from "@/context/organization.context";
@@ -291,7 +291,7 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
       return [
         {
           text: "Summarize this document",
-          icon: DocumentFilled,
+          icon: DocumentIcon,
         },
         {
           text: "Help me write a draft",

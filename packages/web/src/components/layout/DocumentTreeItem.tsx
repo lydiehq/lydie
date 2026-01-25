@@ -4,17 +4,15 @@ import {
   Add12Regular,
   ArrowClockwiseRegular,
   ArrowRightRegular,
-  ChevronRightFilled,
   CollectionsEmpty16Filled,
   CubeRegular,
-  DocumentFilled,
   FolderSyncRegular,
   MoreHorizontalRegular,
   ReOrderRegular,
 } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { type ReactElement, useRef, useState } from "react";
+import { type ReactElement, useState } from "react";
 import { Button, MenuTrigger, TreeItem, TreeItemContent } from "react-aria-components";
 import { Collection } from "react-aria-components";
 
@@ -22,6 +20,8 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import { DocumentMenu } from "../documents/DocumentMenu";
+import { CollapseArrow } from "../editor/icons/CollapseArrow";
+import { DocumentIcon } from "../editor/icons/DocumentIcon";
 import { Menu, MenuItem } from "../generic/Menu";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
@@ -54,7 +54,6 @@ type Props = {
 export function DocumentTreeItem({ item, renderItem }: Props) {
   const { id: currentDocId } = useParams({ strict: false });
   const navigate = useNavigate();
-  const chevronRef = useRef<HTMLButtonElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isCurrentDocument = item.type === "document" && currentDocId === item.id;
@@ -71,11 +70,6 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         params: { integrationType: item.integrationType },
         from: "/w/$organizationSlug",
       });
-      return;
-    }
-
-    if (isIntegrationLink) {
-      chevronRef.current?.click();
       return;
     }
 
@@ -143,7 +137,6 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                 <IntegrationLinkChevron
                   syncStatus={item.syncStatus}
                   isExpanded={isExpanded}
-                  chevronRef={chevronRef}
                   isMenuOpen={isMenuOpen}
                 />
               )}
@@ -151,7 +144,6 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               {item.type === "document" && (
                 <DocumentTreeItemIcon
                   isExpanded={isExpanded}
-                  chevronRef={chevronRef}
                   hasChildren={item.children !== undefined && item.children.length > 0}
                   isMenuOpen={isMenuOpen}
                 />
@@ -210,13 +202,21 @@ function IntegrationGroupChevron({
             alt={`${name} icon`}
             className="size-3.5 rounded-[2px] group-hover/chevron:hidden"
           />
-          <ArrowRightRegular
+          <CollapseArrow
             className={sidebarItemIconStyles({
               className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
                 isExpanded ? "rotate-90" : ""
               }`,
             })}
           />
+
+          {/* <ArrowRightRegular
+            className={sidebarItemIconStyles({
+              className: `size-3.5 shrink-0 hidden group-hover/chevron:block transition-transform duration-200 ease-in-out  ${
+                isExpanded ? "rotate-90" : ""
+              }`,
+            })}
+          /> */}
         </>
       ) : (
         <>
@@ -240,17 +240,14 @@ function IntegrationGroupChevron({
 function IntegrationLinkChevron({
   syncStatus,
   isExpanded,
-  chevronRef,
   isMenuOpen,
 }: {
   syncStatus?: string | null;
   isExpanded: boolean;
-  chevronRef: React.RefObject<HTMLButtonElement | null>;
   isMenuOpen: boolean;
 }) {
   return (
     <Button
-      ref={chevronRef}
       className="text-gray-500 p-1 rounded hover:bg-black/5 active:bg-black/10 -ml-1 group/chevron"
       slot="chevron"
     >
@@ -282,22 +279,18 @@ function IntegrationLinkChevron({
 
 function DocumentTreeItemIcon({
   isExpanded,
-  chevronRef,
   hasChildren,
   isMenuOpen,
 }: {
   isExpanded: boolean;
-  chevronRef: React.RefObject<HTMLButtonElement | null>;
   hasChildren: boolean;
   isMenuOpen: boolean;
 }) {
-  const IconComponent = hasChildren ? CollectionsEmpty16Filled : DocumentFilled;
-
   // If no children, just show the icon (not interactive)
   if (!hasChildren) {
     return (
       <div className="text-gray-500 p-1 -ml-1 flex">
-        <IconComponent
+        <DocumentIcon
           className={sidebarItemIconStyles({
             className: "size-4 shrink-0",
           })}
@@ -308,24 +301,21 @@ function DocumentTreeItemIcon({
 
   return (
     <Button
-      ref={chevronRef}
-      className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative"
+      className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/chevron relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center group-pressed/chevron:bg-black/80"
       slot="chevron"
     >
-      <IconComponent
+      <CollectionsEmpty16Filled
         className={sidebarItemIconStyles({
           className: `size-4 shrink-0 transition-[opacity_100ms,transform_200ms] ${isMenuOpen ? "opacity-0" : "group-hover:opacity-0"}`,
         })}
       />
-      <div className="size-5 rounded-md hover:bg-black/5 absolute inset-0 m-auto flex items-center justify-center">
-        <ChevronRightFilled
-          className={sidebarItemIconStyles({
-            className: `size-3 shrink-0 ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
-              isExpanded ? "rotate-90" : ""
-            }`,
-          })}
-        />
-      </div>
+      <CollapseArrow
+        className={sidebarItemIconStyles({
+          className: `size-3 shrink-0 absolute ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} text-black/45! transition-[opacity_100ms,transform_200ms] ${
+            isExpanded ? "rotate-90" : ""
+          }`,
+        })}
+      />
     </Button>
   );
 }

@@ -1,4 +1,4 @@
-import { AddRegular, DocumentFilled } from "@fluentui/react-icons";
+import { AddRegular } from "@fluentui/react-icons";
 import { useCallback, useMemo, useState } from "react";
 import {
   Autocomplete,
@@ -12,6 +12,7 @@ import { Popover } from "@/components/generic/Popover";
 import { SearchField } from "@/components/generic/SearchField";
 import { SelectItem } from "@/components/generic/Select";
 
+import { DocumentIcon } from "../editor/icons/DocumentIcon";
 import { Button } from "../generic/Button";
 
 interface DocumentMultiSelectProps {
@@ -80,7 +81,7 @@ export function DocumentMultiSelect({
                   onPress={() => handleSelectDocument(document.id)}
                   className="flex items-center gap-2 w-full text-left outline-none hover:bg-gray-50 rounded px-2 py-1.5"
                 >
-                  <DocumentFilled className="size-4 text-gray-500 shrink-0" />
+                  <DocumentIcon className="size-4 text-gray-500 shrink-0" />
                   <span className="text-sm truncate flex-1">{document.title}</span>
                 </RACButton>
               </SelectItem>

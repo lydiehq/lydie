@@ -1,16 +1,23 @@
 import type { QueryResultType } from "@rocicorp/zero";
 
-import { AddRegular, ArrowDownRegular } from "@fluentui/react-icons";
-import { DocumentFilled } from "@fluentui/react-icons";
+import { AddRegular } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
-import { useState } from "react";
-import { Button, Tab, TabList, TabPanel, TabPanels, Tabs } from "react-aria-components";
+import { useContext, useState } from "react";
+import {
+  Button as RACButton,
+  DisclosureStateContext,
+  Heading,
+  Disclosure,
+  DisclosurePanel,
+} from "react-aria-components";
 
-import { Button as GenericButton } from "@/components/generic/Button";
+import { Button } from "@/components/generic/Button";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 
 import { Link } from "../generic/Link";
 import { CustomFieldsEditor } from "./CustomFieldsEditor";
+import { CollapseArrow } from "./icons/CollapseArrow";
+import { DocumentIcon } from "./icons/DocumentIcon";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
@@ -29,8 +36,9 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
 
   if (children.length === 0) {
     return (
-      <div className="border-t border-gray-200">
-        <GenericButton
+      <div className="ring ring-black/4 rounded-xl p-2 flex items-center justify-center">
+        <span className="text-sm font-medium text-gray-600">No child pages yet</span>
+        <Button
           size="sm"
           intent="ghost"
           onPress={handleCreateChildPage}
@@ -38,14 +46,14 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
         >
           <AddRegular className="size-4 mr-1" />
           Add document
-        </GenericButton>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="">
-      <GenericButton
+      <Button
         size="sm"
         intent="ghost"
         onPress={handleCreateChildPage}
@@ -53,8 +61,8 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
       >
         <AddRegular className="size-4 mr-1" />
         Add page
-      </GenericButton>
-      <div className="">
+      </Button>
+      <div className="max-h-[180px] overflow-y-auto">
         {children.map((child) => (
           <Link
             key={child.id}
@@ -63,7 +71,7 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
             className="px-2 py-1.5 rounded-md hover:bg-black/5 transition-all duration-75 flex justify-between"
           >
             <div className="flex gap-x-1.5 items-center">
-              <DocumentFilled className="size-3.5 text-gray-400" />
+              <DocumentIcon className="size-4 text-gray-400" />
               <span className="truncate text-sm font-medium text-gray-600">
                 {child.title || "Untitled document"}
               </span>
@@ -75,69 +83,80 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
   );
 }
 
-export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selectedKey, setSelectedKey] = useState<string | number>("fields");
-
-  const documentCount = doc?.children?.length || 0;
-
-  const handleSelectionChange = (key: string | number) => {
-    const previousKey = selectedKey;
-    setSelectedKey(key);
-    // If switching to a different tab and it's collapsed, uncollapse
-    if (key !== previousKey && isCollapsed) {
-      setIsCollapsed(false);
-    }
-  };
+function MetadataDisclosureHeader({
+  selectedTab,
+  onTabChange,
+  documentCount,
+}: {
+  selectedTab: "fields" | "documents";
+  onTabChange: (tab: "fields" | "documents") => void;
+  documentCount: number;
+}) {
+  const { isExpanded } = useContext(DisclosureStateContext)!;
 
   return (
-    <Tabs
-      selectedKey={selectedKey}
-      onSelectionChange={handleSelectionChange}
-      className="flex flex-col gap-y-2 w-full mb-6"
-    >
-      <div className="flex justify-between w-full border-b border-gray-200">
-        <TabList aria-label="Document metadata" className=" flex gap-x-4">
-          <Tab
-            id="fields"
-            className="text-gray-500 text-sm px-2 py-1 rounded-none hover:text-gray-700 selected:text-gray-900 selected:bg-transparent selected:border-b-2 selected:border-gray-900 outline-none cursor-default"
+    <Heading className="m-0">
+      <div className="flex items-center gap-x-1">
+        <div className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center">
+          <button
+            onClick={() => onTabChange("fields")}
+            className={`rounded-full px-3 py-0.5 text-sm font-medium transition-all cursor-default ${
+              selectedTab === "fields"
+                ? "bg-white shadow-surface text-gray-600"
+                : "text-gray-500 hover:text-gray-600"
+            }`}
           >
             Fields
-          </Tab>
-          <Tab
-            id="subdocuments"
-            className="text-gray-500 text-sm px-2 py-1 rounded-none hover:text-gray-700 selected:text-gray-900 selected:bg-transparent selected:border-b-2 selected:border-gray-900 outline-none cursor-default flex items-center gap-x-1"
+          </button>
+          <button
+            onClick={() => onTabChange("documents")}
+            className={`rounded-full px-3 py-0.5 text-sm font-medium flex items-center gap-x-1 transition-all cursor-default ${
+              selectedTab === "documents"
+                ? "bg-white shadow-surface text-gray-600"
+                : "text-gray-500 hover:text-gray-600"
+            }`}
           >
             <span>Documents</span>
             <span className="text-xs text-gray-400">{documentCount}</span>
-          </Tab>
-        </TabList>
-        <Button onPress={() => setIsCollapsed(!isCollapsed)}>
-          <div
-            style={{
-              transform: isCollapsed ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.2s",
-            }}
-          >
-            <ArrowDownRegular className="size-3.5 text-black/34 hover:text-black/44" />
-          </div>
-        </Button>
+          </button>
+        </div>
+        <RACButton
+          slot="trigger"
+          className="size-6 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-default"
+        >
+          <CollapseArrow
+            className={`size-3.5 text-gray-500 transition-transform duration-200 ${
+              isExpanded ? "rotate-0" : "rotate-180"
+            }`}
+          />
+        </RACButton>
       </div>
+    </Heading>
+  );
+}
 
-      <div>
-        <TabPanels>
-          <TabPanel id="fields" className="p-0 pt-2 outline-none">
-            <CustomFieldsEditor
-              documentId={doc.id}
-              organizationId={doc.organization_id}
-              initialFields={initialFields}
-            />
-          </TabPanel>
-          <TabPanel id="subdocuments" className="p-0 pt-2 outline-none">
-            <SubDocuments doc={doc} />
-          </TabPanel>
-        </TabPanels>
-      </div>
-    </Tabs>
+export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
+  const [selectedTab, setSelectedTab] = useState<"fields" | "documents">("fields");
+  const documentCount = doc?.children?.length || 0;
+
+  return (
+    <Disclosure defaultExpanded={true}>
+      <MetadataDisclosureHeader
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+        documentCount={documentCount}
+      />
+      <DisclosurePanel className="mt-2 mb-4">
+        {selectedTab === "fields" ? (
+          <CustomFieldsEditor
+            documentId={doc.id}
+            organizationId={doc.organization_id}
+            initialFields={initialFields}
+          />
+        ) : (
+          <SubDocuments doc={doc} />
+        )}
+      </DisclosurePanel>
+    </Disclosure>
   );
 }

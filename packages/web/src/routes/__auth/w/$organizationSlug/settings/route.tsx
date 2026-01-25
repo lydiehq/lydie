@@ -1,7 +1,6 @@
 import {
   ArrowUploadFilled,
   CubeFilled,
-  DocumentFilled,
   OpenFilled,
   PaymentFilled,
   PersonFilled,
@@ -15,6 +14,7 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 import { Eyebrow } from "@/components/generic/Eyebrow";
 import { sidebarItemIconStyles, sidebarItemStyles } from "@/components/layout/Sidebar";
 import { Surface } from "@/components/layout/Surface";
+import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
 
@@ -101,7 +101,7 @@ const settingsRoutes: SettingsSection[] = [
         path: "https://lydie.co/documentation",
         external: true,
         label: "Docs",
-        icon: DocumentFilled,
+        icon: DocumentIcon,
       },
     ],
   },
