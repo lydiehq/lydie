@@ -21,10 +21,10 @@ import { Collection } from "react-aria-components";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
+import { DocumentMenu } from "../documents/DocumentMenu";
 import { Menu, MenuItem } from "../generic/Menu";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
-import { DocumentMenu } from "../home-file-explorer/DocumentMenu";
 import { sidebarItemIconStyles, sidebarItemStyles } from "./Sidebar";
 
 type Props = {
