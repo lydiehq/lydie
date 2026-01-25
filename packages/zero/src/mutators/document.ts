@@ -114,75 +114,6 @@ export const documentMutators = {
       );
     },
   ),
-
-  createOnboardingGuide: defineMutator(
-    z.object({
-      organizationId: z.string(),
-      parentId: z.string(),
-      childId: z.string(),
-    }),
-    async ({ tx, ctx, args: { organizationId, parentId, childId } }) => {
-      hasOrganizationAccess(ctx, organizationId);
-
-      const { getOnboardingGuideContent } = await import("../onboarding-guide-content");
-      const guideContent = getOnboardingGuideContent(childId);
-
-      // Get the highest sort_order to append at the end
-      const siblings = await tx.run(
-        zql.documents
-          .where("organization_id", organizationId)
-          .where("parent_id", "IS", null)
-          .where("deleted_at", "IS", null),
-      );
-
-      const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0);
-
-      const parentYjsState = convertJsonToYjs(guideContent.parent.content);
-      const childYjsState = convertJsonToYjs(guideContent.child.content);
-
-      // Insert parent document
-      await tx.mutate.documents.insert(
-        withTimestamps({
-          id: parentId,
-          slug: parentId,
-          title: guideContent.parent.title,
-          yjs_state: parentYjsState,
-          user_id: ctx.userId,
-          organization_id: organizationId,
-          integration_link_id: null,
-          is_locked: false,
-          published: false,
-          parent_id: null,
-          sort_order: maxSortOrder + 1,
-          custom_fields: { isOnboardingGuide: "true" },
-        }),
-      );
-
-      // Insert child document
-      await tx.mutate.documents.insert(
-        withTimestamps({
-          id: childId,
-          slug: childId,
-          title: guideContent.child.title,
-          yjs_state: childYjsState,
-          user_id: ctx.userId,
-          organization_id: organizationId,
-          integration_link_id: null,
-          is_locked: false,
-          published: false,
-          parent_id: parentId,
-          sort_order: 0,
-          custom_fields: {
-            isOnboardingGuide: "true",
-            Status: "In Progress",
-            Priority: "High",
-            Type: "Tutorial",
-          },
-        }),
-      );
-    },
-  ),
-
   update: defineMutator(
     z.object({
       documentId: z.string(),
@@ -196,15 +127,7 @@ export const documentMutators = {
     async ({
       tx,
       ctx,
-      args: {
-        documentId,
-        title,
-        published,
-        slug,
-        customFields,
-        coverImage,
-        organizationId,
-      },
+      args: { documentId, title, published, slug, customFields, coverImage, organizationId },
     }) => {
       hasOrganizationAccess(ctx, organizationId);
 
@@ -317,7 +240,8 @@ export const documentMutators = {
       // Check if any documents are missing
       for (let i = 0; i < documentIds.length; i++) {
         if (!documents[i]) {
-          throw notFoundError("Document", documentIds[i]);
+          console.error(`Document not found: ${documentIds[i]}`);
+          continue;
         }
       }
 
