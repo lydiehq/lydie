@@ -277,7 +277,7 @@ function EditorContainer({ doc }: Props) {
                 <EditorContent
                   aria-label="Document content"
                   editor={contentEditor.editor}
-                  className="block grow"
+                  className="block grow pb-8"
                 />
               </div>
             </div>
