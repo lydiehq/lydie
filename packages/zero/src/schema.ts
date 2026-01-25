@@ -71,7 +71,6 @@ const documents = table("documents")
     slug: string(),
     user_id: string(),
     organization_id: string(),
-    index_status: string(),
     parent_id: string().optional(),
     yjs_state: string().optional(),
     integration_link_id: string().optional(),

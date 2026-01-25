@@ -264,22 +264,6 @@ export function DocumentMenu({
                     </span>
                   </div>
                 </div>
-                <div role="group" aria-labelledby="index-status-label">
-                  <Label id="index-status-label" className="text-xs text-gray-500">
-                    Index Status
-                  </Label>
-                  <div className="mt-1">
-                    <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${
-                        document.index_status === "indexed"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {document.index_status === "indexed" ? "Indexed" : "Not Indexed"}
-                    </span>
-                  </div>
-                </div>
                 {document.created_at && (
                   <div>
                     <Label className="text-xs text-gray-500">Created</Label>

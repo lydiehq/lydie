@@ -183,7 +183,6 @@ export const documentsTable = pgTable(
     externalId: text("external_id"),
     customFields: jsonb("custom_fields").$type<Record<string, string | number>>(),
     coverImage: text("cover_image"),
-    indexStatus: text("index_status").notNull().default("outdated"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
     lastIndexedContentHash: text("last_indexed_content_hash"),

@@ -77,41 +77,9 @@ function ThinkingIndicator() {
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1 text-gray-600 text-sm">
+        <div className="flex items-center gap-x-2 text-gray-600 text-sm">
           <ThinkingAnimation />
           <span>Thinking</span>
-          <span className="inline-flex gap-0.5">
-            <motion.span
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{
-                duration: 1.5,
-                repeat: Number.POSITIVE_INFINITY,
-                delay: 0,
-              }}
-            >
-              .
-            </motion.span>
-            <motion.span
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{
-                duration: 1.5,
-                repeat: Number.POSITIVE_INFINITY,
-                delay: 0.2,
-              }}
-            >
-              .
-            </motion.span>
-            <motion.span
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{
-                duration: 1.5,
-                repeat: Number.POSITIVE_INFINITY,
-                delay: 0.4,
-              }}
-            >
-              .
-            </motion.span>
-          </span>
         </div>
       </div>
     </motion.div>
@@ -300,226 +268,106 @@ const MessagePart = memo(function MessagePart({
   return null;
 });
 
+const THINKING_ANIMATION_VALUES = "0.7;.15;0.7";
+
 function ThinkingAnimation() {
   return (
     <svg
+      viewBox="0 0 105 105"
       xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      className="size-4 text-gray-400"
+      fill="currentColor"
+      className="size-3.5"
     >
-      <rect width="7.33" height="7.33" x="1" y="1" fill="currentColor">
+      <circle cx="12.5" cy="12.5" r="12.5">
         <animate
-          id="SVGzjrPLenI"
-          attributeName="x"
-          begin="0;SVGXAURnSRI.end+0.2s"
+          attributeName="fill-opacity"
+          begin="0s"
           dur="1s"
-          values="1;4;1"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
-        <animate attributeName="y" begin="0;SVGXAURnSRI.end+0.2s" dur="1s" values="1;4;1" />
+      </circle>
+      <circle cx="12.5" cy="52.5" r="12.5" fill-opacity=".5">
         <animate
-          attributeName="width"
-          begin="0;SVGXAURnSRI.end+0.2s"
+          attributeName="fill-opacity"
+          begin="100ms"
           dur="1s"
-          values="7.33;1.33;7.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
+      </circle>
+      <circle cx="52.5" cy="12.5" r="12.5">
         <animate
-          attributeName="height"
-          begin="0;SVGXAURnSRI.end+0.2s"
+          attributeName="fill-opacity"
+          begin="300ms"
           dur="1s"
-          values="7.33;1.33;7.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
-      </rect>
-      <rect width="7.33" height="7.33" x="8.33" y="1" fill="currentColor">
+      </circle>
+      <circle cx="52.5" cy="52.5" r="12.5">
         <animate
-          attributeName="x"
-          begin="SVGzjrPLenI.begin+0.1s"
+          attributeName="fill-opacity"
+          begin="600ms"
           dur="1s"
-          values="8.33;11.33;8.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.1s" dur="0.6s" values="1;4;1" />
+      </circle>
+      <circle cx="92.5" cy="12.5" r="12.5">
         <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.1s"
+          attributeName="fill-opacity"
+          begin="800ms"
           dur="1s"
-          values="7.33;1.33;7.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
+      </circle>
+      <circle cx="92.5" cy="52.5" r="12.5">
         <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.1s"
+          attributeName="fill-opacity"
+          begin="400ms"
           dur="1s"
-          values="7.33;1.33;7.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
-      </rect>
-      <rect width="7.33" height="7.33" x="1" y="8.33" fill="currentColor">
-        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.1s" dur="1s" values="1;4;1" />
+      </circle>
+      <circle cx="12.5" cy="92.5" r="12.5">
         <animate
-          attributeName="y"
-          begin="SVGzjrPLenI.begin+0.1s"
+          attributeName="fill-opacity"
+          begin="700ms"
           dur="1s"
-          values="8.33;11.33;8.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
+      </circle>
+      <circle cx="52.5" cy="92.5" r="12.5">
         <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.1s"
+          attributeName="fill-opacity"
+          begin="500ms"
           dur="1s"
-          values="7.33;1.33;7.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
+      </circle>
+      <circle cx="92.5" cy="92.5" r="12.5">
         <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.1s"
+          attributeName="fill-opacity"
+          begin="200ms"
           dur="1s"
-          values="7.33;1.33;7.33"
+          values={THINKING_ANIMATION_VALUES}
+          calcMode="linear"
+          repeatCount="indefinite"
         />
-      </rect>
-      <rect width="7.33" height="7.33" x="15.66" y="1" fill="currentColor">
-        <animate
-          attributeName="x"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="15.66;18.66;15.66"
-        />
-        <animate attributeName="y" begin="SVGzjrPLenI.begin+0.2s" dur="1s" values="1;4;1" />
-        <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-        <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-      </rect>
-      <rect width="7.33" height="7.33" x="8.33" y="8.33" fill="currentColor">
-        <animate
-          attributeName="x"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="8.33;11.33;8.33"
-        />
-        <animate
-          attributeName="y"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="0.6s"
-          values="8.33;11.33;8.33"
-        />
-        <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-        <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-      </rect>
-      <rect width="7.33" height="7.33" x="1" y="15.66" fill="currentColor">
-        <animate attributeName="x" begin="SVGzjrPLenI.begin+0.2s" dur="0.6s" values="1;4;1" />
-        <animate
-          attributeName="y"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="15.66;18.66;15.66"
-        />
-        <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-        <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.2s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-      </rect>
-      <rect width="7.33" height="7.33" x="15.66" y="8.33" fill="currentColor">
-        <animate
-          attributeName="x"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="1s"
-          values="15.66;18.66;15.66"
-        />
-        <animate
-          attributeName="y"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="0.6s"
-          values="8.33;11.33;8.33"
-        />
-        <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-        <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-      </rect>
-      <rect width="7.33" height="7.33" x="8.33" y="15.66" fill="currentColor">
-        <animate
-          attributeName="x"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="1s"
-          values="8.33;11.33;8.33"
-        />
-        <animate
-          attributeName="y"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="0.6s"
-          values="15.66;18.66;15.66"
-        />
-        <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-        <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.3s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-      </rect>
-      <rect width="7.33" height="7.33" x="15.66" y="15.66" fill="currentColor">
-        <animate
-          id="SVGXAURnSRI"
-          attributeName="x"
-          begin="SVGzjrPLenI.begin+0.4s"
-          dur="1s"
-          values="15.66;18.66;15.66"
-        />
-        <animate
-          attributeName="y"
-          begin="SVGzjrPLenI.begin+0.4s"
-          dur="1s"
-          values="15.66;18.66;15.66"
-        />
-        <animate
-          attributeName="width"
-          begin="SVGzjrPLenI.begin+0.4s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-        <animate
-          attributeName="height"
-          begin="SVGzjrPLenI.begin+0.4s"
-          dur="1s"
-          values="7.33;1.33;7.33"
-        />
-      </rect>
+      </circle>
     </svg>
   );
 }

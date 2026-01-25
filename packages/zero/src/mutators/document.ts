@@ -105,7 +105,6 @@ export const documentMutators = {
           yjs_state: yjsState,
           user_id: ctx.userId,
           organization_id: organizationId,
-          index_status: "pending",
           integration_link_id: finalIntegrationLinkId || null,
           is_locked: false,
           published: false,
@@ -150,7 +149,6 @@ export const documentMutators = {
           yjs_state: parentYjsState,
           user_id: ctx.userId,
           organization_id: organizationId,
-          index_status: "pending",
           integration_link_id: null,
           is_locked: false,
           published: false,
@@ -169,7 +167,6 @@ export const documentMutators = {
           yjs_state: childYjsState,
           user_id: ctx.userId,
           organization_id: organizationId,
-          index_status: "pending",
           integration_link_id: null,
           is_locked: false,
           published: false,
@@ -192,7 +189,6 @@ export const documentMutators = {
       title: z.string().optional(),
       published: z.boolean().optional(),
       slug: z.string().optional(),
-      indexStatus: z.string().optional(),
       customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
       coverImage: z.string().nullable().optional(),
       organizationId: z.string(),
@@ -205,7 +201,6 @@ export const documentMutators = {
         title,
         published,
         slug,
-        indexStatus,
         customFields,
         coverImage,
         organizationId,
@@ -228,7 +223,6 @@ export const documentMutators = {
       if (title !== undefined) updates.title = title;
       if (published !== undefined) updates.published = published;
       if (slug !== undefined) updates.slug = slug;
-      if (indexStatus !== undefined) updates.index_status = indexStatus;
       if (customFields !== undefined) updates.custom_fields = customFields;
       if (coverImage !== undefined) updates.cover_image = coverImage;
 
