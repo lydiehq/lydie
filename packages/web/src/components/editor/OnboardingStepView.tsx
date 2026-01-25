@@ -1,24 +1,51 @@
-import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { Checkbox } from "@/components/generic/Checkbox"
-import { CircularProgress } from "@/components/generic/CircularProgress"
-import type { OnboardingStepTask } from "@lydie/editor/extensions"
+import type { OnboardingStepTask } from "@lydie/editor/extensions";
+
+import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+
+import { Checkbox } from "@/components/generic/Checkbox";
+import { CircularProgress } from "@/components/generic/CircularProgress";
+
+import { Button } from "../generic/Button";
 
 export function OnboardingStepView({ node, updateAttributes }: NodeViewProps) {
-  const stepNumber = node.attrs.stepNumber || 1
-  const title = node.attrs.title || ""
-  const description = node.attrs.description || ""
-  const tasks = (node.attrs.tasks || []) as OnboardingStepTask[]
+  const stepNumber = node.attrs.stepNumber || 1;
+  const title = node.attrs.title || "";
+  const description = node.attrs.description || "";
+  const tasks = (node.attrs.tasks || []) as OnboardingStepTask[];
 
-  const completedTasks = tasks.filter((task) => task.completed).length
-  const totalTasks = tasks.length
-  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+  const completedTasks = tasks.filter((task) => task.completed).length;
+  const totalTasks = tasks.length;
+  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   const handleTaskToggle = (taskId: string) => {
     const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    )
-    updateAttributes({ tasks: updatedTasks })
-  }
+      task.id === taskId ? { ...task, completed: !task.completed } : task,
+    );
+    updateAttributes({ tasks: updatedTasks });
+  };
+
+  return (
+    <NodeViewWrapper>
+      <div className="editor-content-reset rounded-xl p-2 flex flex-col gap-y-2 bg-white shadow-surface">
+        <div className="flex flex-col gap-y-1">
+          <span className="font-medium text-sm text-gray-900">Assistant</span>
+          <p className="text-sm/relaxed text-gray-500">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Explicabo fuga dolorum saepe
+            error velit nemo, ad nisi nulla illum at.
+          </p>
+        </div>
+
+        <ul>
+          {[...Array(3)].map(() => (
+            <li className="bg-gray-100 w-full p-3 rounded-lg flex justify-between items-center">
+              <div></div>
+              <Button>Sup</Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </NodeViewWrapper>
+  );
 
   return (
     <NodeViewWrapper className="my-6">
@@ -66,5 +93,5 @@ export function OnboardingStepView({ node, updateAttributes }: NodeViewProps) {
         </div>
       </div>
     </NodeViewWrapper>
-  )
+  );
 }

@@ -14,6 +14,8 @@ import { useOrganization } from "@/context/organization.context";
 import { useOnboardingChecklist } from "@/hooks/use-onboarding-checklist";
 import { openAssistantAtom } from "@/stores/floating-assistant";
 
+import { Button } from "../generic/Button";
+
 export function OnboardingStepAssistant() {
   const openAssistant = useSetAtom(openAssistantAtom);
   const { isChecked, setChecked } = useOnboardingChecklist();
@@ -56,6 +58,27 @@ export function OnboardingStepAssistant() {
         typeof doc.custom_fields === "object" &&
         "isOnboarding" in doc.custom_fields &&
         doc.custom_fields.isOnboarding === "true"),
+  );
+
+  return (
+    <div className="rounded-xl p-2 flex flex-col gap-y-2 bg-white shadow-surface">
+      <div className="flex flex-col gap-y-1">
+        <span className="font-medium text-sm text-gray-900">Assistant</span>
+        <p className="text-sm/relaxed text-gray-500">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Explicabo fuga dolorum saepe
+          error velit nemo, ad nisi nulla illum at.
+        </p>
+      </div>
+
+      <ul>
+        {[...Array(3)].map(() => (
+          <li className="bg-gray-100 w-full h-20 rounded-lg flex justify-bewteen items-center">
+            <div></div>
+            <Button>Sup</Button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 
   return (

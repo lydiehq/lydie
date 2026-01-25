@@ -8,7 +8,7 @@ export const authClient = createAuthClient({
     credentials: "include",
   },
   plugins: [organizationClient(), customSessionClient(), polarClient(), adminClient()],
-});
+}) as ReturnType<typeof createAuthClient<typeof import("@lydie/core/auth").authClient>>;
 
 export const listOrganizationsQuery = {
   queryKey: ["auth", "listOrganizations"],
