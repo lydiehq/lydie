@@ -1,5 +1,4 @@
 import { createId } from "@lydie/core/id";
-import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
@@ -465,68 +464,6 @@ export const documentMutators = {
           withUpdatedTimestamp({
             id: docId,
             deleted_at: now,
-          }),
-        );
-      }
-    },
-  ),
-
-  importDemoContent: defineMutator(
-    z.object({
-      organizationId: z.string(),
-    }),
-    async ({ tx, ctx, args: { organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId);
-
-      const { demoContent, createIntroDocument } = await import("../demo-content");
-      const documentIdMap = new Map<string, string>();
-      for (const doc of demoContent) {
-        documentIdMap.set(doc.title, createId());
-      }
-      const introDoc = createIntroDocument(documentIdMap);
-      const introDocId = createId();
-      documentIdMap.set(introDoc.title, introDocId);
-      const introYjsState = convertJsonToYjs(introDoc.content);
-
-      await tx.mutate.documents.insert(
-        withTimestamps({
-          id: introDocId,
-          slug: `${slugify(introDoc.title)}-${createId().slice(0, 6)}`,
-          title: introDoc.title,
-          yjs_state: introYjsState,
-          user_id: ctx.userId,
-          organization_id: organizationId,
-          index_status: "pending",
-          integration_link_id: null,
-          is_locked: false,
-          published: false,
-          parent_id: null,
-          sort_order: 0,
-          custom_fields: introDoc.customFields || { isOnboarding: "true" },
-        }),
-      );
-
-      // Create all other demo documents
-      for (let i = 0; i < demoContent.length; i++) {
-        const doc = demoContent[i];
-        const docId = documentIdMap.get(doc.title)!;
-        const yjsState = convertJsonToYjs(doc.content);
-
-        await tx.mutate.documents.insert(
-          withTimestamps({
-            id: docId,
-            slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
-            title: doc.title,
-            yjs_state: yjsState,
-            user_id: ctx.userId,
-            organization_id: organizationId,
-            index_status: "pending",
-            integration_link_id: null,
-            is_locked: false,
-            published: false,
-            parent_id: null,
-            sort_order: i + 1, // Intro is 0, others start at 1
-            custom_fields: { isOnboarding: "true" },
           }),
         );
       }
