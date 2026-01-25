@@ -23,6 +23,11 @@ export async function getStaticPaths() {
 }
 
 const { template } = Astro.props;
+
+if (!template) {
+  return new Response(null, { status: 404 });
+}
+
 const templateName = template.name;
 const categories = template.categories;
 const teaser = template.teaser || template.description || "";
@@ -113,7 +118,7 @@ if (template.detailedDescription) {
               <Button
                 className="self-start"
                 size="lg"
-                href={`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/public/template-install?template=${template.slug}`}
+                href={`${import.meta.env.PUBLIC_API_URL}/public/template-install?template=${template.slug}`}
               >
                 Get template
               </Button>

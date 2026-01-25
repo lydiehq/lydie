@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
-    "@tiptap/core": "^3.16.0",
+    "@tiptap/core": "catalog:",
     "@tiptap/extension-character-count": "^3.16.0",
     "@tiptap/extension-code-block-lowlight": "^3.16.0",
     "@tiptap/extension-collaboration": "^3.16.0",
@@ -24,17 +24,17 @@
     "@tiptap/extension-image": "^3.16.0",
     "@tiptap/extension-link": "^3.16.0",
     "@tiptap/extension-list": "^3.16.0",
-    "@tiptap/extension-mention": "^3.16.0",
-    "@tiptap/extension-placeholder": "^3.16.0",
+    "@tiptap/extension-mention": "catalog:",
+    "@tiptap/extension-placeholder": "catalog:",
     "@tiptap/extension-table": "^3.16.0",
     "@tiptap/extension-text": "^3.16.0",
     "@tiptap/extensions": "^3.16.0",
-    "@tiptap/pm": "^3.16.0",
-    "@tiptap/react": "^3.16.0",
-    "@tiptap/starter-kit": "^3.16.0",
-    "@tiptap/y-tiptap": "^3.0.1",
+    "@tiptap/pm": "catalog:",
+    "@tiptap/react": "catalog:",
+    "@tiptap/starter-kit": "catalog:",
+    "@tiptap/y-tiptap": "catalog:",
     "lowlight": "^3.3.0",
-    "yjs": "^13.6.29"
+    "yjs": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^25.0.10",

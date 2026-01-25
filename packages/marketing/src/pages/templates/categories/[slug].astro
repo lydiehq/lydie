@@ -1,8 +1,9 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { Container } from "../../../components/Container";
-import { Button } from "../../../components/generic/Button";
 import { getCategoryBySlug, categories } from "../../../data/categories";
+import { getAllTemplates } from "../../../data/templates";
+import TemplateThumbnail from "../../../components/templates/TemplateThumbnail.astro";
 
 export async function getStaticPaths() {
   return categories.map((category) => ({
@@ -14,8 +15,13 @@ const { slug } = Astro.params;
 const category = getCategoryBySlug(slug || "");
 
 if (!category) {
-  return Astro.redirect("/templates/categories");
+  return new Response(null, { status: 404 });
 }
+
+const allTemplates = await getAllTemplates();
+const categoryTemplates = allTemplates.filter((template) =>
+  template.categories.some((cat) => cat.slug === slug),
+);
 ---
 
 <Layout
@@ -25,14 +31,17 @@ if (!category) {
   <div class="py-8">
     <Container className="flex flex-col gap-y-8">
       <div class="flex flex-col gap-y-8">
-        <a href="/templates/categories" class="text-sm text-gray-500 hover:text-gray-900"
+        <a
+          href="/templates/categories"
+          class="text-sm text-gray-500 hover:text-gray-900"
           >Back to categories</a
         >
         <header class="">
           <div class="max-w-lg flex flex-col gap-y-3">
             <h1 class="text-4xl font-medium text-gray-900">{category.name}</h1>
             <span class="text-base/relaxed text-gray-600"
-              >Browse our collection of {category.name.toLowerCase()} templates to find the perfect one for your needs.</span
+              >Browse our collection of {category.name.toLowerCase()} templates to
+              find the perfect one for your needs.</span
             >
           </div>
         </header>
@@ -41,11 +50,22 @@ if (!category) {
         <div class="max-w-lg flex flex-col gap-y-3">
           <h2 class="text-2xl font-medium text-gray-900">Templates</h2>
           <span class="text-base/relaxed text-gray-600"
-            >Templates will be added here soon.</span
+            >{categoryTemplates.length}
+            {category.name.toLowerCase()} template{
+              categoryTemplates.length !== 1 ? "s" : ""
+            } available.</span
           >
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Templates will be rendered here */}
+          {
+            categoryTemplates.map((template) => (
+              <TemplateThumbnail
+                name={template.name}
+                description={template.teaser || template.description}
+                href={`/templates/${template.slug}`}
+              />
+            ))
+          }
         </div>
       </div>
     </Container>

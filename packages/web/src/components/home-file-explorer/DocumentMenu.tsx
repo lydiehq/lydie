@@ -49,6 +49,11 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
       setTemplateDetailedDescription(JSON.stringify(editor.getJSON()))
     },
     immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        class: "text-sm min-h-[200px] max-h-[300px] p-3",
+      },
+    },
   })
   const z = useZero()
   const { deleteDocument, publishDocument } = useDocumentActions()
@@ -306,33 +311,43 @@ export function DocumentMenu({ documentId, documentName, placement = "bottom end
               </Heading>
             </div>
             <Separator />
-            <div className="p-3 space-y-4">
-              <TextField value={templateName} onChange={setTemplateName} autoFocus>
-                <Label>Template Name</Label>
-                <Input placeholder="e.g., Developer Resume" />
-              </TextField>
-              <TextField value={templateTeaser} onChange={setTemplateTeaser}>
-                <Label>Teaser (Short Description)</Label>
-                <Input placeholder="A brief description shown in listings..." />
-              </TextField>
-              <div className="flex flex-col gap-2">
-                <Label>Detailed Description</Label>
-                {detailedDescriptionEditor && (
-                  <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
-                    <EditorContent editor={detailedDescriptionEditor} className="min-h-[200px] p-3" />
+            <div className="p-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <TextField value={templateName} onChange={setTemplateName} autoFocus>
+                    <Label>Template Name</Label>
+                    <Input placeholder="e.g., Developer Resume" />
+                  </TextField>
+                  <TextField value={templateTeaser} onChange={setTemplateTeaser}>
+                    <Label>Teaser (Short Description)</Label>
+                    <Input placeholder="A brief description shown in listings..." />
+                  </TextField>
+                  <div className="flex flex-col gap-2">
+                    <Label>Detailed Description</Label>
+                    {detailedDescriptionEditor && (
+                      <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                        <EditorContent editor={detailedDescriptionEditor} className="" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <CheckboxGroup label="Categories" value={selectedCategoryIds} onChange={setSelectedCategoryIds}>
-                <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
-                  {categories.map((category) => (
-                    <Checkbox key={category.id} value={category.id} slot="selection">
-                      {category.name}
-                    </Checkbox>
-                  ))}
                 </div>
-              </CheckboxGroup>
-              <div className="flex justify-end gap-2">
+                <div className="space-y-4">
+                  <CheckboxGroup
+                    label="Categories"
+                    value={selectedCategoryIds}
+                    onChange={setSelectedCategoryIds}
+                  >
+                    <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
+                      {categories.map((category) => (
+                        <Checkbox key={category.id} value={category.id} slot="selection">
+                          {category.name}
+                        </Checkbox>
+                      ))}
+                    </div>
+                  </CheckboxGroup>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
                 <Button
                   intent="secondary"
                   onPress={() => {

@@ -31,9 +31,6 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
           : "Loading documents...",
       }
 
-      // Add fake delay to see loading state (remove in production)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
       let orderBy
       switch (sortBy) {
         case "title":

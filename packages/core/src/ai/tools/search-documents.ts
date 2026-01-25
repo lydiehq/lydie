@@ -5,25 +5,32 @@ import { searchDocuments as searchDocumentsFunction, hybridSearchDocuments } fro
 // Constant minimum similarity threshold
 const MIN_SIMILARITY = 0.3
 
+const description = `
+Search across a user’s workspace using semantic and hybrid retrieval to locate relevant documents and passages.
+
+Use this tool **whenever the user asks about information that may exist in their documents**, including:
+- Finding documents by topic or name
+- Answering questions using their notes, docs, or knowledge base
+- Referencing prior work, meetings, specs, ideas, or research stored in the workspace
+
+**Do NOT use this tool** to find:
+- “Recent”, “latest”, or “newest” documents  
+→ Use "listDocuments" instead, which supports time-based sorting.
+
+### What this tool returns
+- A ranked list of documents relevant to the query
+- Each document includes:
+  - Title + identifiers
+  - Search type used
+  - High-similarity content excerpts (semantic matches only)
+- Results are already filtered by relevance and similarity threshold
+
+If no documents meaningfully match the query, the tool will return an empty result set.
+`
+
 export const searchDocuments = (userId: string, organizationId: string, currentDocumentId?: string) =>
   tool({
-    description: `Advanced search through all the user's documents with multiple search strategies.
-Use this tool when the user asks about content in their documents, wants to find specific information,
-or needs to reference information from their workspace. 
-
-**IMPORTANT: Do NOT use this tool for finding "recent", "latest", or "newest" documents. Use the listDocuments tool for those queries as it allows sorting by creation/update time.**
-
-Examples: "Show me documents about coffee", "Find my meeting notes", "What documents mention project deadlines?"
-
-**Search Strategies:**
-- 'title_first': Best for "find my document about X" or "reference my X document" 
-- 'content_first': Best for finding specific information or concepts within documents
-- 'both': Combines both approaches for comprehensive results
-
-**When to use each strategy:**
-- Use 'title_first' when user mentions "my document about...", "the X document", or refers to a specific document
-- Use 'content_first' when user asks about concepts, facts, or specific information
-- Use 'both' when unsure or when comprehensive search is needed`,
+    description,
     inputSchema: z.object({
       query: z
         .string()
@@ -46,10 +53,6 @@ Examples: "Show me documents about coffee", "Find my meeting notes", "What docum
         query,
       }
 
-      // Add fake delay to see loading state (remove in production)
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      // Always exclude current document if currentDocumentId is provided
       const excludeCurrentDocument = !!currentDocumentId
 
       let searchResults: any[] = []

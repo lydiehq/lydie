@@ -6,6 +6,7 @@ import { Link } from "@/components/generic/Link"
 import { cardStyles } from "@/components/layout/Card"
 import { useOrganization } from "@/context/organization.context"
 import { Eyebrow } from "@/components/generic/Eyebrow"
+import { Check24Filled } from "@fluentui/react-icons"
 
 export function IntegrationsList() {
   const { organization } = useOrganization()
@@ -82,7 +83,7 @@ export function IntegrationsListItem({ integration, isEnabled }: IntegrationsLis
             <h3 className="text-sm font-medium text-gray-950">{integration.name}</h3>
             {isEnabled && (
               <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-50 border border-green-200">
-                <CheckCircle2Icon className="size-3 text-green-600" />
+                <Check24Filled className="size-3 text-green-600" />
                 <span className="text-xs font-medium text-green-700">On</span>
               </div>
             )}

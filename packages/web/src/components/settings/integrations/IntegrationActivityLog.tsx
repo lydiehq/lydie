@@ -1,7 +1,7 @@
+import { Card } from "@/components/layout/Card"
+import { Alert24Filled, Check24Filled, Dismiss12Filled } from "@fluentui/react-icons"
 import type { queries } from "@lydie/zero/queries"
-import { Card } from "../layout/Card"
 import type { QueryResultType } from "@rocicorp/zero"
-import { ErrorCircleRegular, CheckmarkCircleRegular, DismissRegular } from "@fluentui/react-icons"
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow"
 
 type Props = {
@@ -35,10 +35,10 @@ export function IntegrationActivityLog({ logs }: Props) {
 function ActivityLogIcon({ status }: { status: string }) {
   switch (status) {
     case "success":
-      return <CheckCircle2Icon className="size-4 text-green-500" />
+      return <Check24Filled className="size-4 text-green-500" />
     case "error":
-      return <XIcon className="size-4 text-red-500" />
+      return <Dismiss12Filled className="size-4 text-red-500" />
     case "conflict":
-      return <AlertCircleIcon className="size-4 text-amber-500" />
+      return <Alert24Filled className="size-4 text-amber-500" />
   }
 }

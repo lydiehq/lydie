@@ -8,14 +8,16 @@ import type { QueryResultType } from "@rocicorp/zero"
 import { queries } from "@lydie/zero/queries"
 import { formatDistanceToNow } from "date-fns"
 import { useAuthenticatedApi } from "@/services/api"
-import { Button } from "../generic/Button"
-import { Modal } from "../generic/Modal"
-import { Dialog } from "../generic/Dialog"
 import { useState } from "react"
 import { useQuery } from "@rocicorp/zero/react"
 import { toast } from "sonner"
 import { createId } from "@lydie/core/id"
-import { GitHubForm, ShopifyForm, WordPressForm, type IntegrationLinkConfig } from "./forms"
+import { GitHubForm } from "./forms/github-form"
+import { WordPressForm } from "./forms/wordpress-form"
+import { ShopifyForm } from "./forms/shopify-form"
+import { Button } from "@/components/generic/Button"
+import { Modal } from "@/components/generic/Modal"
+import { Dialog } from "@/components/generic/Dialog"
 
 type Props = {
   links: QueryResultType<typeof queries.integrationLinks.byIntegrationType>
@@ -35,7 +37,7 @@ export function IntegrationLinkList({ links, integrationType, organizationId }: 
 
   const connection = connections.find((c) => c.integration_type === integrationType)
 
-  const handleCreateLink = async (name: string, config: IntegrationLinkConfig) => {
+  const handleCreateLink = async (name: string, config: any) => {
     if (!connection) {
       toast.error("No connection found")
       return
@@ -97,7 +99,7 @@ export function IntegrationLinkList({ links, integrationType, organizationId }: 
           {connection && (
             <DialogTrigger isOpen={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <Button size="sm" intent="secondary">
-                <LinkIcon className="size-3.5 mr-1" />
+                <LinkRegular className="size-3.5 mr-1" />
                 Add Link
               </Button>
               <Modal isDismissable>
@@ -159,7 +161,7 @@ export function IntegrationLinkListItem({ link }: IntegrationLinkListItemProps) 
           <span className="font-medium">{link.name}</span>
           {isPullingResources && (
             <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <LoaderIcon className="size-3 animate-spin" />
+              <ArrowClockwiseRegular className="size-3 animate-spin" />
               <span>pulling resources...</span>
             </div>
           )}
@@ -178,7 +180,7 @@ export function IntegrationLinkListItem({ link }: IntegrationLinkListItemProps) 
         </div>
         <MenuTrigger>
           <RACButton>
-            <MoreHorizontalIcon className="size-4 text-gray-500" />
+            <MoreHorizontalRegular className="size-4 text-gray-500" />
           </RACButton>
           <Menu>
             <MenuItem onAction={onSync}>Resync</MenuItem>

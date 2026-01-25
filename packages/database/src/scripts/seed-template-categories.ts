@@ -37,9 +37,9 @@ const categories = [
 ]
 
 async function seedTemplateCategories() {
-  console.log(`📦 Environment: ${Resource.App.stage}`)
-  console.log(`🚀 Starting to seed template categories...`)
-  console.log(`🔌 Connecting to database...`)
+  console.log(`Environment: ${Resource.App.stage}`)
+  console.log(`Starting to seed template categories...`)
+  console.log(`Connecting to database...`)
 
   let created = 0
   let skipped = 0
@@ -47,7 +47,7 @@ async function seedTemplateCategories() {
   for (const category of categories) {
     try {
       const existing = await db.query.templateCategoriesTable.findFirst({
-        where: (categories, { eq }) => eq(categories.slug, category.slug),
+        where: { slug: category.slug },
       })
 
       if (existing) {

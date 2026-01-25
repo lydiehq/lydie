@@ -25,7 +25,7 @@
     "@lydie/zero": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
     "@rocicorp/zero": "catalog:",
-    "@tiptap/y-tiptap": "^3.0.1",
+    "@tiptap/y-tiptap": "catalog:",
     "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
@@ -33,7 +33,7 @@
     "hono-rate-limiter": "^0.5.3",
     "postgres": "^3.4.8",
     "ws": "^8.19.0",
-    "yjs": "^13.6.29",
+    "yjs": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

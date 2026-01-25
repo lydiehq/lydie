@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { chatModel } from "@lydie/core/ai/llm"
-import { validateUIMessages, createAgentUIStreamResponse, ToolLoopAgent, smoothStream, stepCountIs } from "ai"
+import { validateUIMessages, createAgentUIStreamResponse, ToolLoopAgent } from "ai"
 import {
   db,
   assistantConversationsTable,

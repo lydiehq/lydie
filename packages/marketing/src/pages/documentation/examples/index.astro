@@ -1,22 +1,21 @@
 ---
 import DocumentationLayout from "../../../layouts/DocumentationLayout.astro";
 import { Code, ExternalLink, Github } from "lucide-react";
+import { getAllTemplates } from "../../../data/templates";
 
-const examples = [
-  {
-    title: "Next.js Blog",
-    description:
-      "A simple blog built with Next.js that fetches and displays documents from the Lydie REST API.",
-    framework: "Next.js",
-    href: "https://github.com/lydiehq/lydie/tree/main/examples/nextjs-blog",
-    features: [
-      "Server-side rendering",
-      "Dynamic routes",
-      "API integration",
-      "TypeScript support",
-    ],
-  },
-];
+const recentTemplates = await getAllTemplates();
+const examples = recentTemplates.slice(0, 3).map(template => ({
+  title: template.name,
+  description: template.teaser || template.description,
+  framework: template.categories.map(cat => cat.name).join(", ") || "Template",
+  href: `/templates/${template.slug}`,
+  features: [
+    "Template-based",
+    "Pre-built components",
+    "Ready to use",
+    "Customizable",
+  ],
+}));
 ---
 
 <DocumentationLayout
@@ -38,6 +37,13 @@ const examples = [
     </div>
 
     <div class="flex flex-col gap-y-8">
+      <div class="flex items-center gap-x-2 mb-4">
+        <h2
+          class="text-2xl font-heading font-medium tracking-tight text-gray-800"
+        >
+          Recent Templates
+        </h2>
+      </div>
       <div class="grid gap-6">
         {
           examples.map((example) => (
@@ -56,12 +62,9 @@ const examples = [
                 </div>
                 <a
                   href={example.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   class="flex items-center gap-x-2 text-sm text-gray-700 hover:text-gray-900 transition-colors shrink-0"
                 >
-                  <Github className="size-4" />
-                  <span>View on GitHub</span>
+                  <span>View Template</span>
                   <ExternalLink className="size-3.5" />
                 </a>
               </div>
