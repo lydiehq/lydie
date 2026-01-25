@@ -1,4 +1,4 @@
-import { CalendarRegular, DismissRegular, NumberSymbolRegular } from "@fluentui/react-icons";
+import { CalendarRegular, Dismiss12Filled, NumberSymbolRegular } from "@fluentui/react-icons";
 import { mutators } from "@lydie/zero/mutators";
 import { useMemo, useState } from "react";
 import { MenuTrigger } from "react-aria-components";
@@ -8,6 +8,7 @@ import { Menu, MenuItem } from "@/components/generic/Menu";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
 
+import { Button } from "../generic/Button";
 import { DocumentIcon } from "./icons/DocumentIcon";
 
 type CustomField = {
@@ -95,7 +96,7 @@ export function CustomFieldsEditor({ documentId, organizationId, initialFields =
       <div className="flex flex-col">
         <form.Field name="fields" mode="array">
           {(field) => (
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-1 ">
               {field.state.value.map((_, i) => {
                 const fieldType = field.state.value[i]?.type || "string";
                 return (
@@ -148,17 +149,19 @@ function CustomFieldRow({
   const TypeIcon = getTypeIcon(fieldType);
 
   return (
-    <div className="group flex items-center h-[28px] rounded-md text-sm font-medium transition-colors duration-75 px-1.5 hover:bg-black/5">
+    <div className="group flex items-center h-[28px] rounded-md text-sm font-medium transition-colors duration-75 px-1.5">
       <div className="flex items-center gap-1.5 flex-1 min-w-0">
         {/* Type picker button with icon */}
         <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
-          <button
+          <Button
             type="button"
             className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/type-picker relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center"
             aria-label="Change property type"
+            size="icon-xs"
+            intent="ghost"
           >
-            <TypeIcon className="size-4 shrink-0 text-gray-500" />
-          </button>
+            <TypeIcon className="size-4 icon-muted" />
+          </Button>
           <Menu>
             <MenuItem
               onAction={() => {
@@ -208,12 +211,10 @@ function CustomFieldRow({
                 handleFieldChange();
               }}
               onBlur={handleFieldChange}
-              className="w-[25%] text-sm font-medium text-gray-900 bg-transparent border-none outline-none focus:outline-none px-0 py-0 shrink-0"
+              className="w-[25%] text-sm font-medium text-gray-900 bg-transparent border-none outline-none focus:outline-none px-1.5 py-0.5 rounded-md hover:bg-black/5 shrink-0 transition-colors"
             />
           )}
         </form.Field>
-
-        {/* Value input - fills the rest */}
         <form.Field name={`fields[${index}].value`}>
           {(valueField: any) => (
             <input
@@ -227,24 +228,24 @@ function CustomFieldRow({
                 handleFieldChange();
               }}
               onBlur={handleFieldChange}
-              className="flex-1 text-sm text-gray-600 bg-transparent border-none outline-none focus:outline-none px-0 py-0 min-w-0"
+              className="flex-1 text-sm text-gray-600 bg-transparent border-none outline-none focus:outline-none px-1.5 py-0.5 rounded-md hover:bg-black/5 min-w-0 transition-colors"
             />
           )}
         </form.Field>
       </div>
-
-      {/* Remove button */}
-      <button
+      <Button
         type="button"
-        onClick={() => {
+        onPress={() => {
           field.removeValue(index);
           handleFieldChange();
         }}
-        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-black/5 transition-all shrink-0 -mr-1"
+        className="opacity-0 group-hover:opacity-100"
         aria-label="Remove property"
+        size="icon-xs"
+        intent="ghost"
       >
-        <DismissRegular className="w-4 h-4" />
-      </button>
+        <Dismiss12Filled className="size-3 icon-muted" />
+      </Button>
     </div>
   );
 }

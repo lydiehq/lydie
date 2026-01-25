@@ -260,7 +260,7 @@ function EditorContainer({ doc }: Props) {
                 <EditorContent
                   editor={titleEditor.editor}
                   aria-label="Document title"
-                  className="mb-6"
+                  className="my-2"
                 />
                 <DocumentMetadataTabs
                   doc={doc}

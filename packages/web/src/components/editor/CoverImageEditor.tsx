@@ -69,7 +69,7 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
 
   if (coverImage) {
     return (
-      <div className="relative group mb-6">
+      <div className="relative group">
         <div
           className="w-full h-60 rounded-lg bg-center bg-cover bg-no-repeat"
           style={{ backgroundImage: `url(${coverImage})` }}
@@ -89,7 +89,7 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
   }
 
   return (
-    <div className="mb-6 -ml-2">
+    <div className="-ml-2">
       <input
         ref={fileInputRef}
         type="file"

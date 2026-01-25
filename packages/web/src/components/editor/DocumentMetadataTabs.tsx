@@ -2,19 +2,21 @@ import type { QueryResultType } from "@rocicorp/zero";
 
 import { AddRegular } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import {
   Button as RACButton,
   DisclosureStateContext,
-  Heading,
   Disclosure,
   DisclosurePanel,
 } from "react-aria-components";
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from "react-aria-components";
 
 import { Button } from "@/components/generic/Button";
 import { useDocumentActions } from "@/hooks/use-document-actions";
+import { focusRing } from "@/utils/focus-ring";
 
 import { Link } from "../generic/Link";
+import { composeTailwindRenderProps } from "../generic/utils";
 import { CustomFieldsEditor } from "./CustomFieldsEditor";
 import { CollapseArrow } from "./icons/CollapseArrow";
 import { DocumentIcon } from "./icons/DocumentIcon";
@@ -83,80 +85,71 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
   );
 }
 
-function MetadataDisclosureHeader({
-  selectedTab,
-  onTabChange,
-  documentCount,
-}: {
-  selectedTab: "fields" | "documents";
-  onTabChange: (tab: "fields" | "documents") => void;
-  documentCount: number;
-}) {
+function MetadataDisclosureHeader() {
   const { isExpanded } = useContext(DisclosureStateContext)!;
 
   return (
-    <Heading className="m-0">
-      <div className="flex items-center gap-x-1">
-        <div className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center">
-          <button
-            onClick={() => onTabChange("fields")}
-            className={`rounded-full px-3 py-0.5 text-sm font-medium transition-all cursor-default ${
-              selectedTab === "fields"
-                ? "bg-white shadow-surface text-gray-600"
-                : "text-gray-500 hover:text-gray-600"
-            }`}
-          >
-            Fields
-          </button>
-          <button
-            onClick={() => onTabChange("documents")}
-            className={`rounded-full px-3 py-0.5 text-sm font-medium flex items-center gap-x-1 transition-all cursor-default ${
-              selectedTab === "documents"
-                ? "bg-white shadow-surface text-gray-600"
-                : "text-gray-500 hover:text-gray-600"
-            }`}
-          >
-            <span>Documents</span>
-            <span className="text-xs text-gray-400">{documentCount}</span>
-          </button>
-        </div>
-        <RACButton
-          slot="trigger"
-          className="size-6 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-default"
-        >
-          <CollapseArrow
-            className={`size-3.5 text-gray-500 transition-transform duration-200 ${
-              isExpanded ? "rotate-0" : "rotate-180"
-            }`}
-          />
-        </RACButton>
-      </div>
-    </Heading>
+    <RACButton
+      slot="trigger"
+      className="size-6 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-default"
+    >
+      <CollapseArrow
+        className={`size-3.5 text-gray-500 transition-transform duration-200 ${
+          isExpanded ? "rotate-0" : "rotate-180"
+        }`}
+      />
+    </RACButton>
   );
 }
 
 export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
-  const [selectedTab, setSelectedTab] = useState<"fields" | "documents">("fields");
   const documentCount = doc?.children?.length || 0;
 
   return (
     <Disclosure defaultExpanded={true}>
-      <MetadataDisclosureHeader
-        selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
-        documentCount={documentCount}
-      />
-      <DisclosurePanel className="mt-2 mb-4">
-        {selectedTab === "fields" ? (
-          <CustomFieldsEditor
-            documentId={doc.id}
-            organizationId={doc.organization_id}
-            initialFields={initialFields}
-          />
-        ) : (
-          <SubDocuments doc={doc} />
-        )}
-      </DisclosurePanel>
+      <Tabs defaultSelectedKey="fields" className="gap-0 mb-4">
+        <div className="flex items-center gap-x-2">
+          <TabList
+            aria-label="Metadata tabs"
+            className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center w-fit"
+          >
+            <Tab
+              id="fields"
+              className={composeTailwindRenderProps(
+                focusRing,
+                "rounded-full px-3 py-0.5 text-sm font-medium selected:bg-white selected:shadow-surface selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5",
+              )}
+            >
+              Fields
+            </Tab>
+            <Tab
+              id="documents"
+              className={composeTailwindRenderProps(
+                focusRing,
+                "rounded-full px-3 py-0.5 text-sm font-medium flex items-center gap-x-1.5 selected:bg-white selected:shadow-surface selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5",
+              )}
+            >
+              <span>Documents</span>
+              <span className="text-[10px]/none -mb-px text-gray-400">{documentCount}</span>
+            </Tab>
+          </TabList>
+          <MetadataDisclosureHeader />
+        </div>
+        <DisclosurePanel className="mt-2">
+          <TabPanels>
+            <TabPanel id="fields">
+              <CustomFieldsEditor
+                documentId={doc.id}
+                organizationId={doc.organization_id}
+                initialFields={initialFields}
+              />
+            </TabPanel>
+            <TabPanel id="documents">
+              <SubDocuments doc={doc} />
+            </TabPanel>
+          </TabPanels>
+        </DisclosurePanel>
+      </Tabs>
     </Disclosure>
   );
 }
