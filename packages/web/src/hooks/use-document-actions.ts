@@ -13,7 +13,12 @@ export function useDocumentActions() {
   const { navigate: routerNavigate } = useRouter();
   const { organization } = useOrganization();
 
-  const createDocument = async (parentId?: string, integrationLinkId?: string) => {
+  const createDocument = async (
+    parentId?: string,
+    integrationLinkId?: string,
+    initialContent?: string,
+    title?: string,
+  ) => {
     const id = createId();
     z.mutate(
       mutators.document.create({
@@ -21,6 +26,8 @@ export function useDocumentActions() {
         organizationId: organization.id,
         parentId,
         integrationLinkId,
+        content: initialContent,
+        title,
       }),
     );
 

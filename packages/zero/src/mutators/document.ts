@@ -1,4 +1,5 @@
 import { createId } from "@lydie/core/id";
+import { deserializeFromHTML } from "@lydie/core/serialization/html";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
@@ -58,8 +59,13 @@ export const documentMutators = {
       title: z.string().optional(),
       parentId: z.string().optional(),
       integrationLinkId: z.string().optional(),
+      content: z.string().optional(),
     }),
-    async ({ tx, ctx, args: { id, organizationId, title = "", parentId, integrationLinkId } }) => {
+    async ({
+      tx,
+      ctx,
+      args: { id, organizationId, title = "", parentId, integrationLinkId, content },
+    }) => {
       hasOrganizationAccess(ctx, organizationId);
 
       let finalIntegrationLinkId = integrationLinkId;
@@ -93,9 +99,23 @@ export const documentMutators = {
             )
           : 0;
 
-      // Create empty Yjs state for new document
-      const emptyContent = { type: "doc", content: [] };
-      const yjsState = convertJsonToYjs(emptyContent);
+      // Prepare content
+      let yjsState;
+      if (content) {
+        try {
+          const jsonContent = deserializeFromHTML(content);
+          yjsState = convertJsonToYjs(jsonContent);
+        } catch (contentError: any) {
+          console.error("Failed to parse content:", contentError);
+          // Create document with empty content if parsing fails
+          const emptyContent = { type: "doc", content: [] };
+          yjsState = convertJsonToYjs(emptyContent);
+        }
+      } else {
+        // Create empty Yjs state for new document
+        const emptyContent = { type: "doc", content: [] };
+        yjsState = convertJsonToYjs(emptyContent);
+      }
 
       await tx.mutate.documents.insert(
         withTimestamps({

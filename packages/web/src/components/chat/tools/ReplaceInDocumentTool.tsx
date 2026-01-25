@@ -18,6 +18,7 @@ import { Button } from "@/components/generic/Button";
 import { Separator } from "@/components/generic/Separator";
 import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
+import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useDocumentEditor, useTitleEditor } from "@/hooks/useEditor";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
@@ -75,6 +76,7 @@ export function ReplaceInDocumentTool({
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
   const pendingChange = useAtomValue(pendingEditorChangeAtom);
   const pendingChangeStatus = useAtomValue(pendingChangeStatusAtom);
+  const { createDocument } = useDocumentActions();
 
   const targetDocumentId = tool.input?.documentId || tool.output?.documentId;
   const newTitle = tool.input?.title || tool.output?.title;
@@ -298,6 +300,18 @@ export function ReplaceInDocumentTool({
     console.groupEnd();
   };
 
+  const handleCreatePage = async () => {
+    if (!replaceText) {
+      return;
+    }
+
+    try {
+      await createDocument(undefined, undefined, replaceText, newTitle);
+    } catch (error) {
+      console.error("Failed to create page:", error);
+    }
+  };
+
   const isError = tool.state === "output-error";
   const roundedWordCount = Math.floor(wordCount / 10) * 10;
 
@@ -411,6 +425,11 @@ export function ReplaceInDocumentTool({
                 {replaceText && (
                   <Button intent="secondary" size="xs" onPress={handleCopy}>
                     Copy
+                  </Button>
+                )}
+                {replaceText && (
+                  <Button intent="secondary" size="xs" onPress={handleCreatePage} isDisabled={isStreaming}>
+                    Create page with content
                   </Button>
                 )}
                 <Button

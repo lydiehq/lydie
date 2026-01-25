@@ -121,7 +121,6 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
               <AddRegular className="size-4 mr-1" />
               {selectedKey === "fields" ? "Add field" : "Add document"}
             </Button>
-
             <MetadataDisclosureHeader />
           </div>
         </div>
