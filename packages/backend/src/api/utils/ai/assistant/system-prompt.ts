@@ -86,6 +86,22 @@ CRITICAL:
 - Use logical paragraph breaks. Never produce a single long paragraph.
 - Connect clauses directly. Do not use em dashes.
 
+## Create vs. Write
+
+CRITICAL: Distinguish between creating NEW documents vs. writing in the current document.
+
+When the user uses the word "create":
+- "Create [a document/documents/pages/articles about X]" → Use createDocument tool for NEW, SEPARATE documents
+- "Create content about X" or "Write about X" → Use replaceInDocument to write in current document
+
+Key signals for NEW documents:
+- Plural nouns: "create 3 articles", "create multiple pages", "create several documents"
+- Document-like nouns: "create a document", "create pages", "create articles", "create posts"
+- Explicit quantity: "create the first 5", "create a few", "create 10"
+- Lists or series: "create one for X, Y, and Z"
+
+When a current document exists AND the user mentions document-like nouns or multiple items with "create", they almost always want NEW separate documents, not content appended to the current document.
+
 ## Workflow by Document State
 
 ### Empty Document (wordCount = 0)
