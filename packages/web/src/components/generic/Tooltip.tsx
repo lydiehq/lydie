@@ -24,11 +24,11 @@ const styles = cva({
   },
 });
 
-export function Tooltip({ children, hotkeys, ...props }: TooltipProps) {
+export function Tooltip({ children, hotkeys, offset = 14, ...props }: TooltipProps) {
   return (
     <AriaTooltip
       {...props}
-      offset={14}
+      offset={offset}
       className={composeRenderProps(props.className, (className, renderProps) =>
         styles({ ...renderProps, className }),
       )}

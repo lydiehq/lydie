@@ -199,7 +199,7 @@ function IntegrationGroupChevron({
   return (
     <Button
       className={sidebarItemIconStyles({
-        className: "p-1 rounded hover:bg-gray-200 -ml-1 group/chevron hover:text-black/60",
+        className: "p-1 rounded hover:bg-black/5 -ml-1 group/chevron hover:text-black/60",
       })}
       slot="chevron"
     >
@@ -251,7 +251,7 @@ function IntegrationLinkChevron({
   return (
     <Button
       ref={chevronRef}
-      className="text-gray-500 p-1 rounded hover:bg-gray-200 -ml-1 group/chevron"
+      className="text-gray-500 p-1 rounded hover:bg-black/5 active:bg-black/10 -ml-1 group/chevron"
       slot="chevron"
     >
       {syncStatus === "pulling" ? (
@@ -317,34 +317,41 @@ function DocumentTreeItemIcon({
           className: `size-4 shrink-0 transition-[opacity_100ms,transform_200ms] ${isMenuOpen ? "opacity-0" : "group-hover:opacity-0"}`,
         })}
       />
-      <ChevronRightFilled
-        className={sidebarItemIconStyles({
-          className: `size-3 shrink-0 absolute inset-0 m-auto ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
-            isExpanded ? "rotate-90" : ""
-          }`,
-        })}
-      />
+      <div className="size-5 rounded-md hover:bg-black/5 absolute inset-0 m-auto flex items-center justify-center">
+        <ChevronRightFilled
+          className={sidebarItemIconStyles({
+            className: `size-3 shrink-0 ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+              isExpanded ? "rotate-90" : ""
+            }`,
+          })}
+        />
+      </div>
     </Button>
   );
 }
 
-function VerticalMenuButton({
-  "aria-label": ariaLabel,
-  isOpen: _isOpen = false,
-  tooltip,
-}: {
+type ActionButtonProps = {
   "aria-label": string;
-  isOpen?: boolean;
+  icon: React.ComponentType<{ className?: string }>;
+  onPress?: () => void;
   tooltip?: string;
-}) {
+};
+
+function ActionButton({
+  "aria-label": ariaLabel,
+  icon: Icon,
+  onPress,
+  tooltip,
+}: ActionButtonProps) {
   const button = (
     <Button
-      className="px-0.5 py-1 text-black hover:text-black/60 group/options"
+      className="p-0.5 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8"
       aria-label={ariaLabel}
+      onPress={onPress}
     >
-      <MoreHorizontalRegular
+      <Icon
         className={sidebarItemIconStyles({
-          className: "size-4 group-hover/options:text-black/60",
+          className: "size-4",
         })}
       />
     </Button>
@@ -354,7 +361,9 @@ function VerticalMenuButton({
     return (
       <TooltipTrigger delay={500}>
         {button}
-        <Tooltip placement="top">{tooltip}</Tooltip>
+        <Tooltip placement="top" offset={8}>
+          {tooltip}
+        </Tooltip>
       </TooltipTrigger>
     );
   }
@@ -391,28 +400,20 @@ function ItemContextMenu({
       <div
         className={`flex items-center ${isMenuOpen ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"}`}
       >
-        <TooltipTrigger delay={500}>
-          <Button
-            className="px-0.5 py-1 text-black hover:text-black/60 group/add"
-            aria-label="Add document"
-            onPress={() => {
-              if (integrationLinkId) {
-                createDocument(undefined, integrationLinkId);
-              }
-            }}
-          >
-            <Add12Regular
-              className={sidebarItemIconStyles({
-                className: "size-4 group-hover/add:text-black/60",
-              })}
-            />
-          </Button>
-          <Tooltip placement="top">Add document</Tooltip>
-        </TooltipTrigger>
+        <ActionButton
+          aria-label="Add document"
+          icon={Add12Regular}
+          onPress={() => {
+            if (integrationLinkId) {
+              createDocument(undefined, integrationLinkId);
+            }
+          }}
+          tooltip="Add document"
+        />
         <MenuTrigger isOpen={isMenuOpen} onOpenChange={onMenuOpenChange}>
-          <VerticalMenuButton
+          <ActionButton
             aria-label="Integration link options"
-            isOpen={isMenuOpen}
+            icon={MoreHorizontalRegular}
             tooltip="Integration link options"
           />
           <Menu>
@@ -446,26 +447,18 @@ function ItemContextMenu({
 
   return (
     <div
-      className={`flex items-center ${isMenuOpen ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"}`}
+      className={`flex gap-x-px items-center ${isMenuOpen ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"}`}
     >
-      <TooltipTrigger delay={500}>
-        <Button
-          className="px-0.5 py-1 text-black hover:text-black/60 group/add"
-          aria-label="Add sub document"
-          onPress={() => createDocument(itemId)}
-        >
-          <Add12Regular
-            className={sidebarItemIconStyles({
-              className: "size-4 icon-muted",
-            })}
-          />
-        </Button>
-        <Tooltip placement="top">Add page inside</Tooltip>
-      </TooltipTrigger>
+      <ActionButton
+        aria-label="Add sub document"
+        icon={Add12Regular}
+        onPress={() => createDocument(itemId)}
+        tooltip="Add page inside"
+      />
       <MenuTrigger isOpen={isMenuOpen} onOpenChange={onMenuOpenChange}>
-        <VerticalMenuButton
+        <ActionButton
           aria-label="Document options"
-          isOpen={isMenuOpen}
+          icon={MoreHorizontalRegular}
           tooltip="Document options"
         />
         <DocumentMenu documentId={itemId} documentName={itemName} />
