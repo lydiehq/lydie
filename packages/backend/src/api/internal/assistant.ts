@@ -37,7 +37,6 @@ export const messageMetadataSchema = z
       .array(
         z.object({
           id: z.string(),
-          title: z.string(),
           current: z.boolean().optional(),
         }),
       )
@@ -56,9 +55,17 @@ export const AssistantRoute = new Hono<{
   };
 }>().post("/", async (c) => {
   try {
-    const { messages, conversationId: providedConversationId, agentId } = await c.req.json();
+    const {
+      messages,
+      conversationId: providedConversationId,
+      agentId: bodyAgentId,
+    } = await c.req.json();
     const userId = c.get("user").id;
     const organizationId = c.get("organizationId");
+
+    // Extract agentId from message metadata if not provided in body
+    const latestMessageForAgent = messages[messages.length - 1];
+    const agentId = bodyAgentId || latestMessageForAgent?.metadata?.agentId || null;
 
     let conversationId = providedConversationId;
     let conversation = null;
@@ -78,13 +85,16 @@ export const AssistantRoute = new Hono<{
 
     if (!conversation) {
       const title = await generateConversationTitle(messages[0]);
-      await db.insert(assistantConversationsTable).values({
-        id: providedConversationId,
-        userId,
-        organizationId,
-        agentId: agentId || null,
-        title,
-      });
+      const [newConversation] = await db
+        .insert(assistantConversationsTable)
+        .values({
+          userId,
+          organizationId,
+          agentId: agentId || null,
+          title,
+        })
+        .returning();
+      conversationId = newConversation.id;
     }
 
     const latestMessage = messages[messages.length - 1];
@@ -127,11 +137,12 @@ export const AssistantRoute = new Hono<{
     const contextDocumentIds: string[] = Array.from(
       new Set(
         contextDocumentsFromMetadata
-          .filter((doc: any): doc is { id: string; current?: boolean } => 
-            typeof doc === "object" && typeof doc.id === "string" && doc.id.length > 0
+          .filter(
+            (doc: any): doc is { id: string; current?: boolean } =>
+              typeof doc === "object" && typeof doc.id === "string" && doc.id.length > 0,
           )
-          .map((doc: { id: string; current?: boolean }) => doc.id)
-      )
+          .map((doc: { id: string; current?: boolean }) => doc.id),
+      ),
     );
 
     const contextDocuments =
@@ -251,11 +262,7 @@ export const AssistantRoute = new Hono<{
     };
 
     if (currentDocument?.id) {
-      tools.search_in_document = searchInDocument(
-        currentDocument.id,
-        userId,
-        organizationId,
-      );
+      tools.search_in_document = searchInDocument(currentDocument.id, userId, organizationId);
       tools.replace_in_document = replaceInDocument();
     }
 
@@ -344,52 +351,45 @@ function createContextInfo({
     return "";
   }
 
-  let context = `<additional_data>
-Below are some potentially helpful pieces of information for responding to the user's request:`;
-
+  const parts: string[] = [];
   const currentDocument = contextDocuments.find((doc) => doc.current);
+  const otherDocuments = contextDocuments.filter((doc) => !doc.current);
 
+  // Primary Document section
   if (currentDocument) {
-    context += `
-
-Primary Document (when user says "this document", they refer to this):
-- Title: ${currentDocument.title}
-- ID: ${currentDocument.id}
-- IMPORTANT: If the user asks to make changes to "this document" or similar, you should read this document first using read_document or read_current_document before making modifications.`;
+    parts.push("## Primary Document");
+    parts.push(`**${currentDocument.title}**`);
+    parts.push(`Document ID: \`${currentDocument.id}\``);
+    
+    if (typeof documentWordCount === "number") {
+      parts.push(`Word count: ${documentWordCount}`);
+    }
+    
+    parts.push(
+      "\nWhen the user says \"this document\", \"the document\", or similar, they refer to this document."
+    );
   }
 
-  if (typeof documentWordCount === "number") {
-    context += `
-
-Primary Document Word Count: ${documentWordCount}`;
-  }
-
-  if (contextDocuments.length > 0) {
-    context += `
-
-Context Documents (available for reading and reference):
-IMPORTANT: These documents are provided as context. If the user asks to modify a document or make changes, you should read the relevant document(s) first using read_document before making modifications.`;
-    for (const doc of contextDocuments) {
-      context += `
-- ${doc.title} (ID: ${doc.id})${doc.current ? " [Primary Document]" : ""}`;
+  // Context Documents section
+  if (otherDocuments.length > 0) {
+    parts.push("\n## Context Documents");
+    parts.push("Available for reading and reference:\n");
+    
+    for (const doc of otherDocuments) {
+      parts.push(`- **${doc.title}** (ID: \`${doc.id}\`)`);
     }
   }
 
+  // Focused Selection section
   if (focusedContent && focusedContent.trim()) {
-    context += `
-
-<focused_selection>
-The user has selected the following content, which may indicate their area of focus:
-\`\`\`
-${focusedContent}
-\`\`\`
-</focused_selection>`;
+    parts.push("\n## Focused Selection");
+    parts.push("The user has selected this content:\n");
+    parts.push("```");
+    parts.push(focusedContent);
+    parts.push("```");
   }
 
-  context += `
-</additional_data>`;
-
-  return context;
+  return "\n---\n\n" + parts.join("\n") + "\n\n---";
 }
 
 async function saveMessage({

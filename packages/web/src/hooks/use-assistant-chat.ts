@@ -62,31 +62,24 @@ export function useAssistantChat({
         });
       }
     },
-    onFinish: () => {
-      // Response finished
-    },
   });
 
   const sendMessage = useCallback(
     (options: { text: string; metadata?: any; agentId?: string | null }) => {
       messageStartTimeRef.current = Date.now();
 
-      // Pass agentId in the body
-      const transport = new DefaultChatTransport({
-        api: import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/internal/assistant",
-        credentials: "include",
-        body: {
-          conversationId,
-          agentId: options.agentId || null,
-        },
-        headers: {
-          "X-Organization-Id": organization.id,
-        },
-      });
+      // Store agentId in metadata so backend can extract it
+      const enhancedMetadata = {
+        ...options.metadata,
+        agentId: options.agentId || null,
+      };
 
-      return originalSendMessage({ ...options, transport });
+      return originalSendMessage({
+        text: options.text,
+        metadata: enhancedMetadata,
+      });
     },
-    [originalSendMessage, conversationId, organization.id],
+    [originalSendMessage],
   );
 
   return {

@@ -27,17 +27,9 @@ import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import {
   clearPendingMessageAtom,
-  closeAssistantAtom,
-  dockAssistantAtom,
-  isDockedAtom,
-  isMinimizedAtom,
   pendingMessageAtom,
-  toggleAssistantAtom,
-  undockAssistantAtom,
-} from "@/stores/floating-assistant";
-
-const FLOATING_ASSISTANT_CONVERSATION_KEY = "floating-assistant-conversation-id";
-const FLOATING_ASSISTANT_AGENT_KEY = "floating-assistant-agent-id";
+  useFloatingAssistant,
+} from "@/hooks/use-floating-assistant";
 
 export function FloatingAssistant({
   currentDocumentId,
@@ -48,33 +40,12 @@ export function FloatingAssistant({
   dockedContainer: HTMLDivElement | null;
   floatingContainer: HTMLDivElement | null;
 }) {
-  const isDocked = useAtomValue(isDockedAtom);
-  const isMinimized = useAtomValue(isMinimizedAtom);
-  const close = useSetAtom(closeAssistantAtom);
-  const toggle = useSetAtom(toggleAssistantAtom);
-  const dock = useSetAtom(dockAssistantAtom);
-  const undock = useSetAtom(undockAssistantAtom);
   const { organization } = useOrganization();
+  const assistant = useFloatingAssistant();
 
-  const [conversationId, setConversationId] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(FLOATING_ASSISTANT_CONVERSATION_KEY);
-      if (saved) {
-        return saved;
-      }
-    }
-    return createId();
-  });
-
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(FLOATING_ASSISTANT_AGENT_KEY);
-      if (saved) {
-        return saved;
-      }
-    }
-    return null;
-  });
+  // Local conversation state
+  const [conversationId, setConversationId] = useState(() => createId());
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
 
   const [currentConversation] = useQuery(
     conversationId
@@ -117,18 +88,6 @@ export function FloatingAssistant({
     currentConversation,
   ]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(FLOATING_ASSISTANT_CONVERSATION_KEY, conversationId);
-    }
-  }, [conversationId]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && selectedAgentId) {
-      localStorage.setItem(FLOATING_ASSISTANT_AGENT_KEY, selectedAgentId);
-    }
-  }, [selectedAgentId]);
-
   const handleSelectAgent = useCallback((agentId: string) => {
     setSelectedAgentId(agentId);
   }, []);
@@ -139,13 +98,13 @@ export function FloatingAssistant({
     setMessages([]);
   }, [setMessages]);
 
-  const handleSelectConversation = useCallback((id: string) => {
-    setConversationId(id);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    close();
-  }, [close]);
+  const handleSelectConversation = useCallback(
+    (id: string) => {
+      setConversationId(id);
+      setMessages([]);
+    },
+    [setMessages],
+  );
 
   const headerButtons = useMemo(() => {
     return [
@@ -156,21 +115,25 @@ export function FloatingAssistant({
         icon: TextBulletListSquareEditRegular,
       },
       {
-        onPress: isDocked ? undock : dock,
-        ariaLabel: isDocked ? "Undock assistant" : "Dock assistant",
-        tooltip: isDocked ? "Undock assistant" : "Dock assistant",
-        icon: isDocked ? PictureInPictureEnterRegular : ExpandUpRight16Filled,
+        onPress: assistant.isDocked ? assistant.undock : assistant.dock,
+        ariaLabel: assistant.isDocked ? "Undock assistant" : "Dock assistant",
+        tooltip: assistant.isDocked ? "Undock assistant" : "Dock assistant",
+        icon: assistant.isDocked ? PictureInPictureEnterRegular : ExpandUpRight16Filled,
       },
       {
-        onPress: handleClose,
+        onPress: assistant.close,
         ariaLabel: "Close assistant",
         tooltip: "Close assistant",
         icon: SubtractFilled,
       },
     ];
-  }, [isDocked, dock, undock, handleNewChat, handleClose]);
+  }, [assistant, handleNewChat]);
 
-  const targetContainer = isMinimized ? null : isDocked ? dockedContainer : floatingContainer;
+  const targetContainer = assistant.isMinimized
+    ? null
+    : assistant.isDocked
+      ? dockedContainer
+      : floatingContainer;
 
   const content = (
     <motion.div
@@ -181,15 +144,15 @@ export function FloatingAssistant({
       aria-label="AI Assistant"
       aria-labelledby="assistant-title"
       className={
-        isMinimized
+        assistant.isMinimized
           ? "fixed right-4 bottom-4 z-30 bg-white shadow-surface rounded-full size-10"
-          : isDocked
+          : assistant.isDocked
             ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
             : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/6 shadow-lg flex flex-col overflow-hidden z-30"
       }
     >
       <AnimatePresence initial={false}>
-        {isMinimized ? (
+        {assistant.isMinimized ? (
           <motion.div
             key="minimized"
             initial={{ opacity: 0, scale: 0.8 }}
@@ -199,7 +162,7 @@ export function FloatingAssistant({
             className="flex justify-center items-center size-full"
           >
             <RACButton
-              onPress={toggle}
+              onPress={assistant.toggle}
               aria-label="Open AI Assistant"
               className="size-full justify-center items-center flex hover:bg-gray-50 transition-colors rounded-full group"
             >
@@ -259,7 +222,7 @@ export function FloatingAssistant({
     </motion.div>
   );
 
-  if (isMinimized) return content;
+  if (assistant.isMinimized) return content;
   if (!targetContainer) return null;
   return createPortal(content, targetContainer);
 }
@@ -299,7 +262,6 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
       // Build contextDocuments array with current flag
       const contextDocuments = contextDocumentIds.map((id) => ({
         id,
-        title: "", // Will be fetched from database on backend
         current: id === currentDocumentId,
       }));
 

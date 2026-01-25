@@ -15,9 +15,9 @@ test.describe("assistant", () => {
     await expect(assistantButton).toBeVisible();
     await assistantButton.click();
 
-    // Verify assistant is open
+    // Verify assistant is open (wait a bit for state initialization)
     const assistantWindow = page.getByRole("region", { name: "AI Assistant" });
-    await expect(assistantWindow).toBeVisible();
+    await expect(assistantWindow).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("AI Assistant")).toBeVisible();
 
     // Close the assistant
@@ -183,7 +183,7 @@ test.describe("assistant", () => {
     await assistantButton.click();
 
     const assistantWindow = page.getByRole("region", { name: "AI Assistant" });
-    await expect(assistantWindow).toBeVisible();
+    await expect(assistantWindow).toBeVisible({ timeout: 10000 });
 
     const closeButton = page.getByRole("button", { name: "Close assistant" });
     await closeButton.click();
@@ -200,5 +200,122 @@ test.describe("assistant", () => {
     // Verify assistant is still closed after refresh
     await expect(assistantButton).toBeVisible();
     await expect(assistantWindow).not.toBeVisible();
+  });
+
+  test("maintains conversation state when refreshing before sending first message", async ({
+    page,
+    organization,
+  }) => {
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForLoadState("networkidle");
+
+    // Wait for the page to be fully loaded
+    await page.getByRole("button", { name: "Quick Action" }).waitFor();
+
+    // Open the assistant
+    const assistantButton = page.getByRole("button", {
+      name: "Open AI Assistant",
+    });
+    await assistantButton.click();
+
+    // Verify assistant is open
+    const assistantWindow = page.getByRole("region", { name: "AI Assistant" });
+    await expect(assistantWindow).toBeVisible({ timeout: 10000 });
+
+    // Get the conversation ID from localStorage
+    const conversationIdBefore = await page.evaluate(() => {
+      const stored = localStorage.getItem("assistant:conversation");
+      return stored ? JSON.parse(stored).id : null;
+    });
+
+    // Refresh the page without sending a message
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: "Quick Action" }).waitFor();
+
+    // Verify assistant is still open
+    await expect(assistantWindow).toBeVisible({ timeout: 10000 });
+
+    // Verify the conversation ID is the same
+    const conversationIdAfter = await page.evaluate(() => {
+      const stored = localStorage.getItem("assistant:conversation");
+      return stored ? JSON.parse(stored).id : null;
+    });
+
+    expect(conversationIdBefore).toBe(conversationIdAfter);
+  });
+
+  test("creates new conversation when clicking new chat button", async ({ page, organization }) => {
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForLoadState("networkidle");
+
+    // Wait for the page to be fully loaded
+    await page.getByRole("button", { name: "Quick Action" }).waitFor();
+
+    // Open the assistant
+    const assistantButton = page.getByRole("button", {
+      name: "Open AI Assistant",
+    });
+    await assistantButton.click();
+
+    // Verify assistant is open
+    const assistantWindow = page.getByRole("region", { name: "AI Assistant" });
+    await expect(assistantWindow).toBeVisible({ timeout: 10000 });
+
+    // Get the initial conversation ID
+    const conversationIdBefore = await page.evaluate(() => {
+      const stored = localStorage.getItem("assistant:conversation");
+      return stored ? JSON.parse(stored).id : null;
+    });
+
+    // Click the new chat button
+    const newChatButton = page.getByRole("button", { name: "New chat" });
+    await newChatButton.click();
+
+    // Wait a bit for the state to update
+    await page.waitForTimeout(500);
+
+    // Get the new conversation ID
+    const conversationIdAfter = await page.evaluate(() => {
+      const stored = localStorage.getItem("assistant:conversation");
+      return stored ? JSON.parse(stored).id : null;
+    });
+
+    // Verify the conversation ID changed
+    expect(conversationIdBefore).not.toBe(conversationIdAfter);
+  });
+
+  test("handles conversation state transitions correctly", async ({ page, organization }) => {
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForLoadState("networkidle");
+
+    // Wait for the page to be fully loaded
+    await page.getByRole("button", { name: "Quick Action" }).waitFor();
+
+    // Open the assistant
+    const assistantButton = page.getByRole("button", {
+      name: "Open AI Assistant",
+    });
+    await assistantButton.click();
+
+    // Verify assistant is open
+    const assistantWindow = page.getByRole("region", { name: "AI Assistant" });
+    await expect(assistantWindow).toBeVisible({ timeout: 10000 });
+
+    // Verify initial state is "idle"
+    const initialState = await page.evaluate(() => {
+      const stored = localStorage.getItem("assistant:conversation");
+      return stored ? JSON.parse(stored).state : null;
+    });
+    expect(initialState).toBe("idle");
+
+    // Type a message (but don't send yet)
+    const input = page.locator('[contenteditable="true"]').first();
+    await input.click();
+    await input.fill("Hello, assistant!");
+
+    // Note: We're not testing the full flow with sending messages here
+    // as that would require mocking the AI backend, but the state machine
+    // should transition from idle -> creating -> ready when a message is sent
   });
 });

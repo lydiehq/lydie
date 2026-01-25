@@ -15,8 +15,8 @@ import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
+import { isDockedAtom } from "@/hooks/use-floating-assistant";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
-import { isDockedAtom } from "@/stores/floating-assistant";
 
 const organizationSearchSchema = z.object({
   installTemplate: z.string().optional().catch(undefined),

@@ -1,18 +1,17 @@
 import { BotRegular, SparkleRegular } from "@fluentui/react-icons";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { useSetAtom } from "jotai";
 
 import { Button } from "@/components/generic/Button";
-import { openAssistantAtom } from "@/stores/floating-assistant";
+import { useFloatingAssistant } from "@/hooks/use-floating-assistant";
 
 export function OnboardingAssistantTaskView({ node, updateAttributes }: NodeViewProps) {
   const completed = node.attrs.completed || false;
   const prompt = node.attrs.prompt || "Please look at all our documents related to project apollo and organize them";
-  const openAssistant = useSetAtom(openAssistantAtom);
+  const assistant = useFloatingAssistant();
 
   const handleClick = () => {
     updateAttributes({ completed: true });
-    openAssistant(prompt);
+    assistant.openAndSendMessage(prompt);
   };
 
   return (

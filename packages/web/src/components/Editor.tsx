@@ -16,10 +16,10 @@ import {
   titleEditorAtom,
 } from "@/atoms/editor";
 import { SelectedContentProvider, useSelectedContent } from "@/context/selected-content.context";
+import { isDockedAtom, isOpenAtom } from "@/hooks/use-floating-assistant";
 import { useDocumentEditor } from "@/lib/editor/document-editor";
 import { useTitleEditor } from "@/lib/editor/title-editor";
 import { useZero } from "@/services/zero";
-import { isDockedAtom, isOpenAtom } from "@/stores/floating-assistant";
 import { applyContentChanges } from "@/utils/document-changes";
 import { applyTitleChange } from "@/utils/title-changes";
 
