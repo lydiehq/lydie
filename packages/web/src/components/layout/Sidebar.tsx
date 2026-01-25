@@ -1,9 +1,13 @@
 import {
+  Add12Filled,
+  Add16Filled,
   AddSquare16Filled,
   ArrowClockwiseRegular,
   ErrorCircleRegular,
   Home16Filled,
   PersonChat16Filled,
+  Search12Filled,
+  Search16Filled,
   SearchFilled,
   ShieldErrorRegular,
   TabDesktopMultiple16Filled,
@@ -147,12 +151,12 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           </Button>
           <Button
             intent="secondary"
-            size="sm"
+            size="icon-sm"
             onPress={handleSearchClick}
             aria-label="Search"
             className="group"
           >
-            <SearchFilled className="size-[14px] icon-muted" />
+            <Search16Filled className="size-3.5 icon-muted" />
           </Button>
         </div>
         <div className="flex flex-col px-2">
@@ -198,13 +202,14 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <Eyebrow>Documents</Eyebrow>
             <TooltipTrigger delay={500}>
               <Button
-                intent="ghost"
-                size="icon-md"
+                intent="secondary"
+                size="icon-sm"
                 onPress={() => createDocument()}
                 aria-label="Create new document"
-                className="-mr-1.5"
               >
-                <AddSquare16Filled className={sidebarItemIconStyles({ className: "size-4.5" })} />
+                <Add16Filled
+                  className={sidebarItemIconStyles({ className: "size-3.5 icon-muted" })}
+                />
               </Button>
               <Tooltip>Add document</Tooltip>
             </TooltipTrigger>
