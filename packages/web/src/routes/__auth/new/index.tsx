@@ -9,6 +9,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
 import { toast } from "sonner";
+import z from "zod";
 
 import { Button } from "@/components/generic/Button";
 import { Heading } from "@/components/generic/Heading";
@@ -20,11 +21,7 @@ import { authClient } from "@/utils/auth";
 
 export const Route = createFileRoute("/__auth/new/")({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      template: (search.template as string) || undefined,
-    };
-  },
+  validateSearch: (search) => z.object({ template: z.string().optional() }).parse(search),
 });
 
 function RouteComponent() {
@@ -196,7 +193,12 @@ function RouteComponent() {
                   <form.Subscribe
                     selector={(state) => state.isSubmitting}
                     children={(isSubmitting) => (
-                      <Button intent="primary" type="submit" isPending={isSubmitting} className="w-full">
+                      <Button
+                        intent="primary"
+                        type="submit"
+                        isPending={isSubmitting}
+                        className="w-full"
+                      >
                         {isSubmitting ? "Creating workspace..." : "Create Workspace"}
                       </Button>
                     )}

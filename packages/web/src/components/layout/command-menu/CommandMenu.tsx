@@ -218,11 +218,6 @@ export function CommandMenu() {
             params: {
               organizationSlug: organization?.slug as string,
             },
-            search: {
-              tree: undefined,
-              q: undefined,
-              focusSearch: undefined,
-            },
           });
         },
       },
@@ -287,11 +282,6 @@ export function CommandMenu() {
             to: "/w/$organizationSlug/settings/integrations",
             params: {
               organizationSlug: organization?.slug as string,
-            },
-            search: {
-              success: false,
-              error: undefined,
-              connectionId: undefined,
             },
           });
         },

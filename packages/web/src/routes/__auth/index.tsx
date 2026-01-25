@@ -1,12 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import z from "zod";
 
 export const Route = createFileRoute("/__auth/")({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      template: (search.template as string) || undefined,
-    };
-  },
+  validateSearch: (search) => z.object({ template: z.string().optional() }).parse(search),
   beforeLoad: async ({ context: { auth, organizations }, search }) => {
     let templateSlug = search.template;
     if (!templateSlug && typeof window !== "undefined") {

@@ -1,20 +1,19 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-export function usePageNavigation(organizationId: string, setSearch: (value: string) => void) {
+export function usePageNavigation(organizationSlug: string, setSearch: (value: string) => void) {
   const navigate = useNavigate();
 
   const handlePageClick = useCallback(
-    (pageId: string) => {
+    () => {
       // Clear search when entering a page (search is global)
       setSearch("");
       navigate({
         to: "/w/$organizationSlug",
-        params: { organizationId },
-        search: { tree: pageId, q: undefined, focusSearch: undefined },
+        params: { organizationSlug },
       });
     },
-    [navigate, organizationId, setSearch],
+    [navigate, organizationSlug, setSearch],
   );
 
   const handleBackClick = useCallback(() => {
@@ -22,10 +21,9 @@ export function usePageNavigation(organizationId: string, setSearch: (value: str
     setSearch("");
     navigate({
       to: "/w/$organizationSlug",
-      params: { organizationId },
-      search: { tree: undefined, q: undefined, focusSearch: undefined },
+      params: { organizationSlug },
     });
-  }, [navigate, organizationId, setSearch]);
+  }, [navigate, organizationSlug, setSearch]);
 
   return {
     handlePageClick,
