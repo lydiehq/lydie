@@ -18,6 +18,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
 import { createPortal } from "react-dom";
 
+const MotionButton = motion(RACButton);
+
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
 import { ChatMessages } from "@/components/chat/ChatMessages";
@@ -145,10 +147,10 @@ export function FloatingAssistant({
       aria-labelledby="assistant-title"
       className={
         assistant.isMinimized
-          ? "fixed right-4 bottom-4 z-30 bg-white shadow-surface rounded-full size-10"
+          ? "fixed right-4 bottom-4 z-30 bg-white shadow-popover rounded-full size-10"
           : assistant.isDocked
             ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
-            : "fixed right-4 bottom-4 w-[400px] h-[540px] bg-white rounded-xl ring ring-black/6 shadow-lg flex flex-col overflow-hidden z-30"
+            : "fixed right-4 bottom-4 w-[400px] h-[540px] rounded-xl shadow-popover flex flex-col overflow-hidden z-30"
       }
     >
       <AnimatePresence initial={false}>
@@ -161,13 +163,17 @@ export function FloatingAssistant({
             transition={{ duration: 0.15, delay: 2 }}
             className="flex justify-center items-center size-full"
           >
-            <RACButton
+            <MotionButton
+              layout
               onPress={assistant.toggle}
               aria-label="Open AI Assistant"
               className="size-full justify-center items-center flex hover:bg-gray-50 transition-colors rounded-full group"
+              style={{ borderRadius: 9999 }}
             >
-              <PersonChatFilled className="size-4.5 icon-muted" aria-hidden="true" />
-            </RACButton>
+              <motion.div layout>
+                <PersonChatFilled className="size-4.5 icon-muted" aria-hidden="true" />
+              </motion.div>
+            </MotionButton>
           </motion.div>
         ) : (
           <motion.div
@@ -178,7 +184,7 @@ export function FloatingAssistant({
             transition={{ duration: 0.2 }}
             className="flex flex-col h-full"
           >
-            <div className="flex items-center justify-between p-1.5 border-b border-gray-200">
+            <div className="flex items-center justify-between p-1.5 border-b border-black/8 bg-white/95 backdrop-blur-md">
               <div className="flex items-center gap-x-2">
                 <ConversationDropdown
                   conversationId={conversationId}
@@ -204,7 +210,7 @@ export function FloatingAssistant({
                 })}
               </div>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 bg-white">
               <FloatingAssistantChatContent
                 organizationId={organization.id}
                 currentDocumentId={currentDocumentId}

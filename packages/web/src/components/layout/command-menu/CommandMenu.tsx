@@ -34,7 +34,7 @@ import { SearchResults } from "./CommandMenuSearchResults";
 import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
 
 const modalStyles = cva({
-  base: "w-full max-w-lg max-h-full rounded-lg shadow-2xl bg-clip-padding ring ring-black/10 overflow-hidden",
+  base: "w-full max-w-lg max-h-full rounded-lg shadow-popover bg-clip-padding overflow-hidden",
   variants: {
     isEntering: {
       true: "animate-in fade-in duration-75 ease-out",
