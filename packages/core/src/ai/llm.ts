@@ -9,4 +9,4 @@ export const openAi = createOpenAI({ apiKey: Resource.OpenAiApiKey.value });
 export const embeddingModel = openAi.embedding("text-embedding-ada-002");
 
 export const chatModel =
-  Resource.App.stage === "production" ? openAi("gpt-5-mini") : openAi("gpt-5-mini");
+  Resource.App.stage === "production" ? openAi("gpt-5.2") : openAi("gpt-5-mini");
