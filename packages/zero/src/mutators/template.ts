@@ -123,16 +123,16 @@ export const templateMutators = {
         const templateDocId = createId()
         templateDocIdMap.set(i, templateDocId)
 
-        // Convert YJS state to JSON, then back to YJS for storage
-        // (template_documents stores YJS state)
-        const jsonContent = doc.yjsState ? convertYjsToJson(doc.yjsState) : null
-        const yjsState = jsonContent ? convertJsonToYjs(jsonContent) : null
+        // Convert YJS state to JSON for marketing site, and store both
+        const jsonContent = doc.yjsState ? convertYjsToJson(doc.yjsState) : { type: "doc", content: [] }
+        const yjsState = doc.yjsState ? convertJsonToYjs(jsonContent) : null
 
         await tx.mutate.template_documents.insert({
           id: templateDocId,
           template_id: templateId,
           title: doc.title,
           content: yjsState,
+          json_content: jsonContent, // Store pre-processed JSON for fast marketing site access
           parent_id: null, // Will be updated in second pass
           sort_order: doc.sortOrder,
           created_at: Date.now(),
@@ -157,6 +157,57 @@ export const templateMutators = {
           })
         }
       }
+
+      // Build preview data (document tree) for marketing site
+      const previewDocs: Array<{
+        id: string
+        title: string
+        content: any
+        children?: any[]
+      }> = []
+
+      const docMap = new Map<number, any>()
+
+      // First pass: create all document objects with JSON content
+      for (let i = 0; i < allDocuments.length; i++) {
+        const doc = allDocuments[i]
+        if (!doc) continue
+
+        const jsonContent = doc.yjsState ? convertYjsToJson(doc.yjsState) : { type: "doc", content: [] }
+        const templateDocId = templateDocIdMap.get(i)!
+
+        const previewDoc = {
+          id: templateDocId,
+          title: doc.title,
+          content: jsonContent,
+          children: [],
+        }
+        docMap.set(i, previewDoc)
+      }
+
+      // Second pass: build hierarchy
+      for (let i = 0; i < allDocuments.length; i++) {
+        const doc = allDocuments[i]
+        if (!doc) continue
+
+        const previewDoc = docMap.get(i)!
+        const parentId = doc.parentId
+
+        if (parentId && docIdToIndex.has(parentId)) {
+          const parentIndex = docIdToIndex.get(parentId)!
+          const parent = docMap.get(parentIndex)!
+          if (!parent.children) parent.children = []
+          parent.children.push(previewDoc)
+        } else {
+          previewDocs.push(previewDoc)
+        }
+      }
+
+      // Update template with preview data
+      await tx.mutate.templates.update({
+        id: templateId,
+        preview_data: previewDocs,
+      })
     },
   ),
 

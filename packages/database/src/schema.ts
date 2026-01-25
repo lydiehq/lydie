@@ -595,6 +595,7 @@ export const templateDocumentsTable = pgTable(
       .references(() => templatesTable.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     content: text("content"), // Serialized YJS state
+    jsonContent: jsonb("json_content"), // Pre-processed TipTap JSON for fast marketing site access
     parentId: text("parent_id").references((): PgColumn<any> => templateDocumentsTable.id, {
       onDelete: "set null",
     }),

@@ -8,8 +8,8 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
-    "@aws-sdk/client-scheduler": "^3.974.0",
-    "@aws-sdk/client-sesv2": "^3.974.0",
+    "@aws-sdk/client-scheduler": "^3.975.0",
+    "@aws-sdk/client-sesv2": "^3.975.0",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
