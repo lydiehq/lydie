@@ -262,6 +262,14 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
           return builder.empty();
         }
 
+        case "onboardingAssistantTask":
+        case "onboardingTextPractice":
+        case "onboardingCallout":
+        case "onboardingStep":
+        case "onboardingPlaceholder":
+          // Render children for onboarding nodes so their content is accessible
+          return builder.fragment(renderChildren(node));
+
         default:
           console.warn(`[Lydie] Unknown content node type: ${node.type}`);
           return builder.empty();

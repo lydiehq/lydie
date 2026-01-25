@@ -8,7 +8,7 @@ export interface OnboardingAssistantTaskOptions {
 export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOptions>({
   name: "onboardingAssistantTask",
   group: "block",
-  atom: true,
+  content: "block+",
 
   addOptions() {
     return {
@@ -18,11 +18,8 @@ export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOption
 
   addAttributes() {
     return {
-      completed: {
-        default: false,
-      },
-      prompt: {
-        default: "Please look at all our documents related to project apollo and organize them",
+      completedTasks: {
+        default: [],
       },
     }
   },
@@ -31,10 +28,12 @@ export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOption
     return [
       {
         tag: "div[data-type='onboarding-assistant-task']",
-        getAttrs: (node) => ({
-          completed: (node as HTMLElement).getAttribute("data-completed") === "true",
-          prompt: (node as HTMLElement).getAttribute("data-prompt") || "Please look at all our documents related to project apollo and organize them",
-        }),
+        getAttrs: (node) => {
+          const completedTasksAttr = (node as HTMLElement).getAttribute("data-completed-tasks");
+          return {
+            completedTasks: completedTasksAttr ? JSON.parse(completedTasksAttr) : [],
+          };
+        },
       },
     ]
   },
@@ -44,9 +43,9 @@ export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOption
       "div",
       {
         "data-type": "onboarding-assistant-task",
-        "data-completed": String(node.attrs.completed),
-        "data-prompt": node.attrs.prompt,
+        "data-completed-tasks": JSON.stringify(node.attrs.completedTasks),
       },
+      0, // 0 means "render the content here"
     ]
   },
 

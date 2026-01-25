@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import { demoContent } from "../../demo-content";
 import { mutators as sharedMutators } from "../../mutators/index";
-import { createOnboardingGuideContent } from "../../onboarding-guide-content";
+import { createOnboardingGuideContent } from "../../onboarding/guide-content";
 import { MutatorContext } from "../../server-mutators";
 
 export const createOrganizationMutation = ({ asyncTasks }: MutatorContext) =>
@@ -57,7 +57,7 @@ async function createOnboardingDocumentsWithEmbeddings(
   userId: string,
 ) {
   // Dynamically import the pre-computed embeddings
-  const { onboardingEmbeddings } = await import("../../onboarding-embeddings");
+  const { onboardingEmbeddings } = await import("../../onboarding/embeddings");
 
   // Create a map of demo document IDs
   const documentIdMap = new Map<string, string>();

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "zero-cache",
-    "generate:onboarding-embeddings": "sst shell bun run src/scripts/generate-onboarding-embeddings.ts"
+    "generate:onboarding-embeddings": "sst shell bun run src/onboarding/generate-embeddings.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.975.0",

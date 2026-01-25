@@ -1,5 +1,6 @@
 import type { OnboardingTextPracticeTask } from "@lydie/editor/extensions";
 
+import { motion } from "motion/react";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useEffect, useRef } from "react";
 
@@ -79,52 +80,70 @@ export function OnboardingTextPracticeView({ node, updateAttributes, editor }: N
 
   const completedTasks = tasks.filter((task) => task.completed).length;
   const totalTasks = tasks.length;
+  const allCompleted = completedTasks === totalTasks && totalTasks > 0;
 
   return (
     <NodeViewWrapper>
-      <div className="editor-content-reset rounded-xl p-6 flex flex-col gap-y-4 bg-linear-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm my-6">
-        <div className="flex flex-col gap-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-lg text-gray-900">📝 Text Editor Practice</span>
-            <span className="text-sm text-gray-600">
+      <motion.div className="p-1 bg-gray-100 rounded-[10px] my-4 relative">
+        <div className="p-1">
+          <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
+            <span>📝 Text Editor Practice</span>
+            <span className="text-gray-500">
               {completedTasks}/{totalTasks} completed
             </span>
-          </div>
-          <p className="text-sm text-gray-700">
-            Get familiar with basic text formatting. Try out the tasks below in the editor.
-          </p>
+          </motion.div>
         </div>
+        <div className="relative">
+          <motion.div
+            initial={{ rotate: 0 }}
+            animate={{ rotate: -2 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+            className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden absolute h-full left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[calc(100%-1rem)] z-0 opacity-80"
+          />
+          <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
+            <div className="p-2">
+              <p className="text-xs text-gray-600 mb-3">
+                Get familiar with basic text formatting. Try out the tasks below in the editor.
+              </p>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <NodeViewContent className="outline-none min-h-[120px] prose prose-sm max-w-none" />
-        </div>
+              <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 mb-3">
+                <NodeViewContent className="outline-none min-h-[80px] prose prose-sm max-w-none text-xs" />
+              </div>
 
-        <div className="flex flex-col gap-y-2">
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className="flex items-start gap-3 p-3 rounded-lg bg-white/60"
-            >
-              <Checkbox
-                isSelected={task.completed}
-                onChange={() => {}}
-                isDisabled={true}
-                className="mt-0.5"
-              >
-                <span className={task.completed ? "line-through text-gray-500" : "text-gray-700"}>
-                  {task.label}
-                </span>
-              </Checkbox>
+              <div className="flex flex-col gap-y-1.5 mb-2">
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-start gap-2 p-2 rounded-lg bg-gray-50/60"
+                  >
+                    <Checkbox
+                      isSelected={task.completed}
+                      onChange={() => {}}
+                      isDisabled={true}
+                      className="mt-0.5"
+                    >
+                      <span className={task.completed ? "line-through text-gray-500 text-xs" : "text-gray-700 text-xs"}>
+                        {task.label}
+                      </span>
+                    </Checkbox>
+                  </div>
+                ))}
+              </div>
+
+              {allCompleted && (
+                <motion.div
+                  className="p-2 bg-green-50 border border-green-200 rounded-lg"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="text-xs font-medium text-green-800">✓ Great job! You've mastered the basics!</p>
+                </motion.div>
+              )}
             </div>
-          ))}
-        </div>
-
-        {completedTasks === totalTasks && totalTasks > 0 && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm font-medium text-green-800">✓ Great job! You've mastered the basics!</p>
           </div>
-        )}
-      </div>
+        </div>
+      </motion.div>
     </NodeViewWrapper>
   );
 }

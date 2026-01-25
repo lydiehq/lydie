@@ -95,7 +95,7 @@ function MetadataDisclosureHeader() {
     >
       <CollapseArrow
         className={`size-3.5 text-gray-500 transition-transform duration-200 ${
-          isExpanded ? "rotate-0" : "rotate-180"
+          isExpanded ? "rotate-90" : "rotate-270"
         }`}
       />
     </RACButton>

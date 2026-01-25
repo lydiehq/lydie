@@ -69,10 +69,9 @@ export function CoverImageEditor({ documentId, organizationId, coverImage }: Pro
 
   if (coverImage) {
     return (
-      <div className="relative group -mb-40">
-        <div className="absolute bottom-0 inset-x-0 h-40 bg-linear-to-t from-surface"></div>
+      <div className="relative group">
         <div
-          className="h-80 rounded-xl bg-center bg-cover bg-no-repeat mx-4 mt-4"
+          className="w-full h-60 rounded-lg bg-center bg-cover bg-no-repeat"
           style={{ backgroundImage: `url(${coverImage})` }}
         />
         <Button
