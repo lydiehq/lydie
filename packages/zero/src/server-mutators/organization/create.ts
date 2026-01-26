@@ -2,12 +2,10 @@ import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { documentEmbeddingsTable, documentTitleEmbeddingsTable } from "@lydie/database";
-import { relations } from "@lydie/database/relations";
-import * as dbSchema from "@lydie/database/schema";
-import { defineMutator, ServerTransaction, Transaction } from "@rocicorp/zero";
-import { drizzle } from "drizzle-orm/postgres-js";
+import { defineMutator, Transaction } from "@rocicorp/zero";
 import { z } from "zod";
 
+import "../../db-types";
 import { mutators as sharedMutators } from "../../mutators/index";
 import { onboardingEmbeddings } from "../../onboarding/embeddings";
 import {
@@ -42,6 +40,7 @@ export const createOrganizationMutation = (_context: MutatorContext) =>
       // We don't do this with asyncTasks on purpose so users are not redirected
       // and presented an empty organization before the onboarding documents are
       // created.
+
       if (args.onboardingDocId) {
         await createOnboardingDocumentsWithEmbeddings(
           tx,
@@ -54,18 +53,17 @@ export const createOrganizationMutation = (_context: MutatorContext) =>
   );
 
 async function createOnboardingDocumentsWithEmbeddings(
-  tx: any, // todo: properly type this
+  tx: Transaction,
   organizationId: string,
   onboardingDocId: string,
   userId: string,
 ) {
-  // Use Zero's underlying transaction for Drizzle to ensure all operations run atomically
-  // TODO: cleaner interface for this?
-  const drizzleDb = drizzle({
-    client: tx.dbTransaction.wrappedTransaction,
-    schema: dbSchema,
-    relations,
-  });
+  // we need to narrow the type here, despite server mutators always being server-side
+  if (tx.location !== "server") {
+    throw new Error("This function can only be called on the server");
+  }
+
+  const drizzleDb = tx.dbTransaction.wrappedTransaction
 
   const documentIdMap = new Map<string, string>();
   for (const doc of demoContent) {
