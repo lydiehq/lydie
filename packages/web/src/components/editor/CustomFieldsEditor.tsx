@@ -1,4 +1,9 @@
-import { CalendarRegular, Dismiss12Filled, NumberSymbolRegular } from "@fluentui/react-icons";
+import {
+  CalendarRegular,
+  Dismiss12Filled,
+  NumberSymbolRegular,
+  TextAlignLeft16Filled,
+} from "@fluentui/react-icons";
 import { mutators } from "@lydie/zero/mutators";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { MenuTrigger } from "react-aria-components";
@@ -9,7 +14,6 @@ import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
 
 import { Button } from "../generic/Button";
-import { DocumentIcon } from "./icons/DocumentIcon";
 
 type CustomField = {
   key: string;
@@ -80,13 +84,13 @@ export const CustomFieldsEditor = forwardRef<CustomFieldsEditorRef, Props>(
     const getTypeIcon = (type: "string" | "number" | "date") => {
       switch (type) {
         case "string":
-          return DocumentIcon;
+          return TextAlignLeft16Filled;
         case "number":
           return NumberSymbolRegular;
         case "date":
           return CalendarRegular;
         default:
-          return DocumentIcon;
+          return TextAlignLeft16Filled;
       }
     };
 
@@ -174,7 +178,7 @@ function CustomFieldRow({
               }}
             >
               <div className="flex items-center gap-2">
-                <DocumentIcon className="size-4" />
+                <TextAlignLeft16Filled className="size-4" />
                 <span>Text</span>
               </div>
             </MenuItem>
