@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 
-import { SparkleRegular, TextStrikethroughFilled } from "@fluentui/react-icons";
+import { TextStrikethroughFilled } from "@fluentui/react-icons";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 
 import { Separator } from "../generic/Separator";
@@ -74,16 +74,6 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       />
 
       <Separator orientation="vertical" className="h-4 mx-1" />
-
-      <ToolbarButton
-        onPress={() => {
-          editor.commands.captureAndMarkSelection();
-        }}
-        title="Add to context"
-        icon={SparkleRegular}
-        editor={editor}
-        inverted
-      />
     </TiptapBubbleMenu>
   );
 }

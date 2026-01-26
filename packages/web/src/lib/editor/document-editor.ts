@@ -52,7 +52,6 @@ function getUserColor(userId: string): string {
 type UseDocumentEditorProps = {
   onUpdate?: () => void;
   onSave?: () => void;
-  onTextSelect?: (e: any) => void;
   onAddLink?: () => void;
   onCreate?: (editor: Editor) => void;
   onDestroy?: () => void;
@@ -64,7 +63,6 @@ const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001
 export function useDocumentEditor({
   doc,
   onUpdate,
-  onTextSelect,
   onAddLink,
   onCreate,
   onDestroy,
@@ -110,9 +108,6 @@ export function useDocumentEditor({
     );
     
     return getDocumentEditorExtensions({
-      textSelection: {
-        onSelect: onTextSelect,
-      },
       keyboardShortcuts: { onAddLink },
       documentComponent: {
         addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
@@ -148,7 +143,7 @@ export function useDocumentEditor({
       collaboration: { document: ydoc },
       collaborationCaret: { provider, user: userInfo },
     });
-  }, [ydoc, provider, userInfo, onTextSelect, onAddLink]);
+  }, [ydoc, provider, userInfo, onAddLink]);
 
   const editor = useEditor({
     autofocus: !isLocked,

@@ -227,7 +227,6 @@ export const AssistantRoute = new Hono<{
     const contextInfo = createContextInfo({
       contextDocuments: contextDocumentsWithMetadata,
       documentWordCount,
-      focusedContent: messageMetadata.focusedContent,
     });
 
     const enhancedLatestMessage =
@@ -345,13 +344,11 @@ export const AssistantRoute = new Hono<{
 function createContextInfo({
   contextDocuments,
   documentWordCount,
-  focusedContent,
 }: {
   contextDocuments: Array<{ id: string; title: string; current?: boolean }>;
   documentWordCount?: number;
-  focusedContent?: string;
 }) {
-  if (contextDocuments.length === 0 && !focusedContent && !documentWordCount) {
+  if (contextDocuments.length === 0 && !documentWordCount) {
     return "";
   }
 
@@ -382,15 +379,6 @@ function createContextInfo({
     for (const doc of otherDocuments) {
       parts.push(`- **${doc.title}** (ID: \`${doc.id}\`)`);
     }
-  }
-
-  // Focused Selection section
-  if (focusedContent && focusedContent.trim()) {
-    parts.push("\n## Focused Selection");
-    parts.push("The user has selected this content:\n");
-    parts.push("```");
-    parts.push(focusedContent);
-    parts.push("```");
   }
 
   return "\n---\n\n" + parts.join("\n") + "\n\n---";

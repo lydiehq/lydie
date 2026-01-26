@@ -14,7 +14,6 @@ import {
   pendingEditorChangeAtom,
   titleEditorAtom,
 } from "@/atoms/editor";
-import { SelectedContentProvider, useSelectedContent } from "@/context/selected-content.context";
 import { isDockedAtom, isOpenAtom } from "@/hooks/use-floating-assistant";
 import { useDocumentEditor } from "@/lib/editor/document-editor";
 import { useTitleEditor } from "@/lib/editor/title-editor";
@@ -33,17 +32,12 @@ type Props = {
 };
 
 export function Editor({ doc }: Props) {
-  return (
-    <SelectedContentProvider>
-      <EditorContainer doc={doc} />
-    </SelectedContentProvider>
-  );
+  return <EditorContainer doc={doc} />;
 }
 
 function EditorContainer({ doc }: Props) {
   const z = useZero();
   const [title, setTitle] = useState(doc.title || "");
-  const { setFocusedContent } = useSelectedContent();
   const openLinkDialogRef = useRef<(() => void) | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isLocked = doc.is_locked ?? false;
@@ -74,13 +68,8 @@ function EditorContainer({ doc }: Props) {
     openLinkDialogRef.current = callback;
   }, []);
 
-  const selectText = (selectedText: string) => {
-    setFocusedContent(selectedText);
-  };
-
   const contentEditor = useDocumentEditor({
     doc,
-    onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
     onCreate: setDocumentEditor,
     onDestroy: () => {
