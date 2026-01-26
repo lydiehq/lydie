@@ -144,7 +144,7 @@ export function AssistantInput({
   const containerClassName =
     variant === "rounded"
       ? "rounded-full bg-white text-sm shadow-surface flex flex-col gap-y-2 relative w-full"
-      : "rounded-lg flex flex-col z-10 relative bg-gray-100 shadow-inner p-0.5 border border-black/8";
+      : "rounded-lg flex flex-col z-10 relative bg-gray-100 p-1 gap-y-0.5";
 
   const formClassName = variant === "rounded" ? "relative flex flex-col" : "relative flex flex-col";
 

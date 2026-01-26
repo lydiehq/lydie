@@ -1,10 +1,11 @@
-import { AddRegular } from "@fluentui/react-icons";
+import { Add12Regular } from "@fluentui/react-icons";
 import { useCallback, useMemo, useState } from "react";
 import {
   Autocomplete,
   DialogTrigger,
   ListBox,
   Button as RACButton,
+  TooltipTrigger,
   useFilter,
 } from "react-aria-components";
 
@@ -14,6 +15,7 @@ import { SelectItem } from "@/components/generic/Select";
 
 import { DocumentIcon } from "../editor/icons/DocumentIcon";
 import { Button } from "../generic/Button";
+import { Tooltip } from "../generic/Tooltip";
 
 interface DocumentMultiSelectProps {
   availableDocuments: Array<{ id: string; title: string }>;
@@ -51,14 +53,14 @@ export function DocumentMultiSelect({
 
   return (
     <DialogTrigger>
-      <Button
-        intent="ghost"
-        size="icon-sm"
-        aria-label="Add documents to context"
-        className="shrink-0"
-      >
-        <AddRegular className="size-3.5 text-gray-500" />
-      </Button>
+      <TooltipTrigger delay={500}>
+        <Button size="icon-xs" intent="ghost" aria-label="Add documents to context">
+          <Add12Regular className="size-3.5 icon-muted" />
+        </Button>
+        <Tooltip placement="top" offset={8}>
+          Add documents to context
+        </Tooltip>
+      </TooltipTrigger>
       <Popover className="min-w-[320px] max-h-[500px] flex flex-col p-0" placement="top start">
         <Autocomplete filter={contains}>
           <div className="p-2 border-b border-gray-200">

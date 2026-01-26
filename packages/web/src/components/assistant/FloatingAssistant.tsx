@@ -1,23 +1,21 @@
 import {
   DocumentCopyFilled,
   EditRegular,
-  ExpandUpRight16Filled,
+  LayoutColumnTwoFocusRight16Filled as ExpandUpRight16Filled,
   PersonChatFilled,
   PictureInPictureEnterRegular,
   QuestionCircleRegular,
-  SubtractFilled,
+  Subtract12Regular as SubtractFilled,
   TextBulletListSquareEditRegular,
 } from "@fluentui/react-icons";
 import { createId } from "@lydie/core/id";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
 import { createPortal } from "react-dom";
-
-const MotionButton = motion.create(RACButton);
 
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
@@ -32,6 +30,12 @@ import {
   pendingMessageAtom,
   useFloatingAssistant,
 } from "@/hooks/use-floating-assistant";
+
+const LAYOUT_ID = {
+  container: "assistant-container",
+  icon: "assistant-icon",
+  content: "assistant-content",
+} as const;
 
 export function FloatingAssistant({
   currentDocumentId,
@@ -108,10 +112,88 @@ export function FloatingAssistant({
     [setMessages],
   );
 
+  const isExpanded = !assistant.isMinimized;
+
+  const content = (
+    <MotionConfig transition={{ type: "spring", bounce: 0, duration: 0.4 }}>
+      <AnimatePresence initial={false} mode="popLayout" propagate>
+        {!isExpanded && (
+          <motion.button
+            key="minimized"
+            onClick={assistant.open}
+            layoutId={LAYOUT_ID.container}
+            className="fixed right-4 bottom-4 z-30 rounded-2xl bg-white shadow-popover size-10 flex items-center justify-center hover:bg-gray-50"
+            aria-label="Open AI Assistant"
+            role="region"
+          >
+            <motion.div layoutId={LAYOUT_ID.icon}>
+              <PersonChatFilled className="size-4.5 icon-muted" aria-hidden="true" />
+            </motion.div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence initial={false} mode="popLayout" propagate>
+        {isExpanded && (
+          <AssistantPopup
+            assistant={assistant}
+            dockedContainer={dockedContainer}
+            floatingContainer={floatingContainer}
+            organizationId={organization.id}
+            currentDocumentId={currentDocumentId}
+            conversationId={conversationId}
+            messages={messages}
+            sendMessage={sendMessage}
+            stop={stop}
+            status={status}
+            selectedAgentId={selectedAgentId}
+            onSelectAgent={handleSelectAgent}
+            onNewChat={handleNewChat}
+            onSelectConversation={handleSelectConversation}
+          />
+        )}
+      </AnimatePresence>
+    </MotionConfig>
+  );
+
+  return content;
+}
+
+function AssistantPopup({
+  assistant,
+  dockedContainer,
+  floatingContainer,
+  organizationId,
+  currentDocumentId,
+  conversationId,
+  messages,
+  sendMessage,
+  stop,
+  status,
+  selectedAgentId,
+  onSelectAgent,
+  onNewChat,
+  onSelectConversation,
+}: {
+  assistant: ReturnType<typeof useFloatingAssistant>;
+  dockedContainer: HTMLDivElement | null;
+  floatingContainer: HTMLDivElement | null;
+  organizationId: string;
+  currentDocumentId: string | null;
+  conversationId: string;
+  messages: any[];
+  sendMessage: (options: { text: string; metadata?: any; agentId?: string | null }) => void;
+  stop: () => void;
+  status: string;
+  selectedAgentId: string | null;
+  onSelectAgent: (agentId: string) => void;
+  onNewChat: () => void;
+  onSelectConversation: (id: string) => void;
+}) {
   const headerButtons = useMemo(() => {
     return [
       {
-        onPress: handleNewChat,
+        onPress: onNewChat,
         ariaLabel: "New chat",
         tooltip: "New chat",
         icon: TextBulletListSquareEditRegular,
@@ -129,108 +211,79 @@ export function FloatingAssistant({
         icon: SubtractFilled,
       },
     ];
-  }, [assistant, handleNewChat]);
+  }, [assistant, onNewChat]);
+  const targetContainer = assistant.isDocked ? dockedContainer : floatingContainer;
 
-  const targetContainer = assistant.isMinimized
-    ? null
-    : assistant.isDocked
-      ? dockedContainer
-      : floatingContainer;
-
-  const content = (
+  const popup = (
     <motion.div
-      layoutId="assistant"
-      initial={false}
-      transition={{ type: "spring", stiffness: 400, damping: 35, mass: 1 }}
+      layoutId={LAYOUT_ID.container}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       role="region"
       aria-label="AI Assistant"
-      aria-labelledby="assistant-title"
       className={
-        assistant.isMinimized
-          ? "fixed right-4 bottom-4 z-30 bg-white shadow-popover rounded-full size-10"
-          : assistant.isDocked
-            ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
-            : "fixed right-4 bottom-4 w-[400px] h-[540px] rounded-xl shadow-popover flex flex-col overflow-hidden z-30"
+        assistant.isDocked
+          ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
+          : "fixed right-4 bottom-4 w-[400px] h-[540px] rounded-xl shadow-popover flex flex-col overflow-hidden z-30 bg-white"
       }
     >
-      <AnimatePresence initial={false}>
-        {assistant.isMinimized ? (
-          <motion.div
-            key="minimized"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.15, delay: 2 }}
-            className="flex justify-center items-center size-full"
-          >
-            <MotionButton
-              layout
-              onPress={assistant.toggle}
-              aria-label="Open AI Assistant"
-              className="size-full justify-center items-center flex hover:bg-gray-50 transition-colors rounded-full group"
-              style={{ borderRadius: 9999 }}
-            >
-              <motion.div layout>
-                <PersonChatFilled className="size-4.5 icon-muted" aria-hidden="true" />
-              </motion.div>
-            </MotionButton>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="expanded"
-            initial={{ opacity: 0, filter: "blur(4px)" }}
-            animate={{ opacity: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, filter: "blur(4px)" }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col h-full"
-          >
-            <div className="flex items-center justify-between p-1.5 border-b border-black/8 bg-white/95 backdrop-blur-md">
-              <div className="flex items-center gap-x-2">
-                <ConversationDropdown
-                  conversationId={conversationId}
-                  onSelectConversation={handleSelectConversation}
-                />
-              </div>
-              <div className="flex items-center gap-x-0.5">
-                {headerButtons.map((button) => {
-                  const Icon = button.icon;
-                  return (
-                    <TooltipTrigger key={button.ariaLabel} delay={500}>
-                      <Button
-                        onPress={button.onPress}
-                        size="icon-sm"
-                        intent="ghost"
-                        aria-label={button.ariaLabel}
-                      >
-                        <Icon className="size-4 icon-muted" aria-hidden="true" />
-                      </Button>
-                      <Tooltip placement="top">{button.tooltip}</Tooltip>
-                    </TooltipTrigger>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="flex-1 min-h-0 bg-white">
-              <FloatingAssistantChatContent
-                organizationId={organization.id}
-                currentDocumentId={currentDocumentId}
-                messages={messages}
-                sendMessage={sendMessage}
-                stop={stop}
-                status={status}
-                selectedAgentId={selectedAgentId}
-                onSelectAgent={handleSelectAgent}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="flex items-center justify-between p-1.5 border-b border-black/8 bg-white/95 backdrop-blur-md">
+        <div className="flex items-center gap-x-2">
+          <ConversationDropdown
+            conversationId={conversationId}
+            onSelectConversation={onSelectConversation}
+          />
+        </div>
+        <div className="flex items-center gap-x-0.5">
+          {headerButtons.map((button, index) => {
+            const Icon = button.icon;
+            const isCloseButton = index === headerButtons.length - 1;
+            return (
+              <TooltipTrigger key={button.ariaLabel} delay={500}>
+                <Button
+                  onPress={button.onPress}
+                  size="icon-sm"
+                  intent="ghost"
+                  aria-label={button.ariaLabel}
+                >
+                  {isCloseButton ? (
+                    <motion.div layoutId={LAYOUT_ID.icon}>
+                      <Icon className="size-4 icon-muted" aria-hidden="true" />
+                    </motion.div>
+                  ) : (
+                    <Icon className="size-4 icon-muted" aria-hidden="true" />
+                  )}
+                </Button>
+                <Tooltip placement="top">{button.tooltip}</Tooltip>
+              </TooltipTrigger>
+            );
+          })}
+        </div>
+      </div>
+      <motion.div
+        layoutId={LAYOUT_ID.content}
+        className="flex-1 min-h-0 bg-white"
+        initial={{ opacity: 0, filter: "blur(4px)" }}
+        animate={{ opacity: 1, filter: "blur(0px)" }}
+        exit={{ opacity: 0, filter: "blur(4px)" }}
+      >
+        <FloatingAssistantChatContent
+          organizationId={organizationId}
+          currentDocumentId={currentDocumentId}
+          messages={messages}
+          sendMessage={sendMessage}
+          stop={stop}
+          status={status}
+          selectedAgentId={selectedAgentId}
+          onSelectAgent={onSelectAgent}
+        />
+      </motion.div>
     </motion.div>
   );
 
-  if (assistant.isMinimized) return content;
   if (!targetContainer) return null;
-  return createPortal(content, targetContainer);
+  return createPortal(popup, targetContainer);
 }
 
 const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent({
