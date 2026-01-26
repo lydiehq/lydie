@@ -10,7 +10,11 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "url";
 
-import { createOnboardingGuideContent, demoContent } from "./guide-content";
+import {
+  createOnboardingGuideContent,
+  demoContent,
+  ONBOARDING_GUIDE_ID,
+} from "./guide-content";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -48,9 +52,7 @@ function normalizeContentForYjs(content: any): ContentNode {
   if (content.type === "onboardingAssistantTask") {
     return {
       type: "paragraph",
-      content: content.attrs?.prompt
-        ? [{ type: "text", text: content.attrs.prompt }]
-        : undefined,
+      content: content.attrs?.prompt ? [{ type: "text", text: content.attrs.prompt }] : undefined,
     };
   }
 
@@ -185,13 +187,14 @@ async function generateEmbeddingsForOnboardingContent() {
   // Generate embeddings for onboarding guide
   console.log("Processing: Welcome to Your Workspace (onboarding guide)");
   const guideContent = createOnboardingGuideContent();
+  const guideTitle = "👋 Welcome to Your Workspace!";
   const guideEmbeddings = await generateEmbeddingsForDocument(
-    "👋 Welcome to Your Workspace!",
+    guideTitle,
     guideContent,
   );
 
   if (guideEmbeddings) {
-    embeddings["👋 Welcome to Your Workspace!"] = guideEmbeddings;
+    embeddings[ONBOARDING_GUIDE_ID] = guideEmbeddings;
     console.log(
       `✅ Generated ${guideEmbeddings.contentEmbeddings.length} embeddings for onboarding guide`,
     );
@@ -203,8 +206,10 @@ async function generateEmbeddingsForOnboardingContent() {
     const docEmbeddings = await generateEmbeddingsForDocument(doc.title, doc.content);
 
     if (docEmbeddings) {
-      embeddings[doc.title] = docEmbeddings;
-      console.log(`✅ Generated ${docEmbeddings.contentEmbeddings.length} embeddings for ${doc.title}`);
+      embeddings[doc.id] = docEmbeddings;
+      console.log(
+        `✅ Generated ${docEmbeddings.contentEmbeddings.length} embeddings for ${doc.title} (${doc.id})`,
+      );
     }
   }
 
@@ -217,9 +222,12 @@ async function generateEmbeddingsForOnboardingContent() {
 // 
 // The embeddings are pre-computed to avoid regenerating them every time
 // a user creates a new organization, since the onboarding content is always the same.
+//
+// Keys are stable identifiers (not titles) to allow titles to change without breaking lookups.
+// See guide-content.ts for the ID constants.
 
 export interface OnboardingEmbeddings {
-  [title: string]: {
+  [id: string]: {
     contentEmbeddings: Array<{
       content: string;
       embedding: number[];

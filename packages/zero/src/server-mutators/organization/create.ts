@@ -11,7 +11,11 @@ import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
 
 import { mutators as sharedMutators } from "../../mutators/index";
-import { createOnboardingGuideContent, demoContent } from "../../onboarding/guide-content";
+import {
+  createOnboardingGuideContent,
+  demoContent,
+  ONBOARDING_GUIDE_ID,
+} from "../../onboarding/guide-content";
 import { MutatorContext } from "../../server-mutators";
 
 export const createOrganizationMutation = ({ asyncTasks }: MutatorContext) =>
@@ -65,9 +69,9 @@ async function createOnboardingDocumentsWithEmbeddings(
   // Create a map of demo document IDs
   const documentIdMap = new Map<string, string>();
   for (const doc of demoContent) {
-    documentIdMap.set(doc.title, createId());
+    documentIdMap.set(doc.id, createId());
   }
-  documentIdMap.set("Welcome to Your Workspace", onboardingDocId);
+  documentIdMap.set(ONBOARDING_GUIDE_ID, onboardingDocId);
 
   // Create onboarding guide content
   const guideContent = createOnboardingGuideContent();
@@ -100,7 +104,7 @@ async function createOnboardingDocumentsWithEmbeddings(
   });
 
   // Insert embeddings for onboarding guide
-  const guideEmbeddings = onboardingEmbeddings[guideTitle];
+  const guideEmbeddings = onboardingEmbeddings[ONBOARDING_GUIDE_ID];
   if (guideEmbeddings) {
     // Insert title embedding
     await db.insert(documentTitleEmbeddingsTable).values({
@@ -136,7 +140,7 @@ async function createOnboardingDocumentsWithEmbeddings(
     const doc = demoContent[i];
     if (!doc) continue;
 
-    const docId = documentIdMap.get(doc.title)!;
+    const docId = documentIdMap.get(doc.id)!;
     const yjsState = convertJsonToYjs(doc.content);
 
     // Insert document
@@ -158,7 +162,7 @@ async function createOnboardingDocumentsWithEmbeddings(
     });
 
     // Insert embeddings for demo document
-    const docEmbeddings = onboardingEmbeddings[doc.title];
+    const docEmbeddings = onboardingEmbeddings[doc.id];
     if (docEmbeddings) {
       // Insert title embedding
       await db.insert(documentTitleEmbeddingsTable).values({

@@ -1,12 +1,10 @@
+// Stable identifiers for onboarding documents
+export const ONBOARDING_GUIDE_ID = "onboarding-guide";
+
 export function createOnboardingGuideContent() {
   return {
     type: "doc",
     content: [
-      {
-        type: "heading",
-        attrs: { level: 1 },
-        content: [{ type: "text", text: "👋 Welcome to Your Workspace!" }],
-      },
       {
         type: "paragraph",
         content: [
@@ -107,7 +105,8 @@ export function createOnboardingGuideContent() {
         type: "onboardingPlaceholder",
         attrs: {
           title: "🚀 More Features Coming Soon",
-          description: "We're adding more onboarding steps to help you learn about linking documents, properties, and more!",
+          description:
+            "We're adding more onboarding steps to help you learn about linking documents, properties, and more!",
         },
       },
       {
@@ -140,6 +139,7 @@ export function createOnboardingGuideContent() {
 
 export const demoContent = [
   {
+    id: "demo-project-apollo-kickoff",
     title: "Project Apollo - Kickoff Notes",
     content: {
       type: "doc",
@@ -228,6 +228,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-apollo-technical-rqmts",
     title: "Apollo Technical Rqmts",
     content: {
       type: "doc",
@@ -291,6 +292,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-marketing-brainstorming",
     title: "Marketing Brainstorming",
     content: {
       type: "doc",
@@ -359,6 +361,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-user-interview-sarah",
     title: "User Interview - Sarah J.",
     content: {
       type: "doc",
@@ -408,6 +411,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-user-interview-mike",
     title: "User Interview - Mike T.",
     content: {
       type: "doc",
@@ -438,6 +442,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-competitor-analysis-2024",
     title: "Competitor Analysis 2024",
     content: {
       type: "doc",
@@ -488,6 +493,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-q1-goals-company-wide",
     title: "Q1 Goals - Company Wide",
     content: {
       type: "doc",
@@ -534,6 +540,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-office-wifi-misc",
     title: "Office WiFi & Misc",
     content: {
       type: "doc",
@@ -559,6 +566,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-friday-lunch-options",
     title: "Friday Lunch Options",
     content: {
       type: "doc",
@@ -608,6 +616,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-project-apollo-architecture",
     title: "Project Apollo - Architecture",
     content: {
       type: "doc",
@@ -640,6 +649,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-release-checklist-v1",
     title: "Release Checklist v1.0",
     content: {
       type: "doc",
@@ -698,6 +708,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-bug-report-login-failures",
     title: "Bug Report: Login failures",
     content: {
       type: "doc",
@@ -739,6 +750,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-newsletter-draft-feb",
     title: "Newsletter Draft - Feb",
     content: {
       type: "doc",
@@ -765,6 +777,7 @@ export const demoContent = [
     },
   },
   {
+    id: "demo-team-sync-jan-15",
     title: "Team Sync - Jan 15",
     content: {
       type: "doc",
