@@ -12,10 +12,10 @@ import { z } from "zod";
 
 import { mutators as sharedMutators } from "../../mutators/index";
 import {
-  createOnboardingGuideContent,
+  createOnboardingContent,
   demoContent,
   ONBOARDING_GUIDE_ID,
-} from "../../onboarding/guide-content";
+} from "../../onboarding/onboarding-content";
 import { MutatorContext } from "../../server-mutators";
 
 export const createOrganizationMutation = ({}: MutatorContext) =>
@@ -62,7 +62,7 @@ async function createOnboardingDocumentsWithEmbeddings(
   }
   documentIdMap.set(ONBOARDING_GUIDE_ID, onboardingDocId);
 
-  const guideContent = createOnboardingGuideContent();
+  const guideContent = createOnboardingContent();
   const guideYjsState = convertJsonToYjs(guideContent);
   const guideTitle = "👋 Welcome to Your Workspace!";
 

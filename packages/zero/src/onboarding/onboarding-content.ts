@@ -1,7 +1,6 @@
-// Stable identifiers for onboarding documents
 export const ONBOARDING_GUIDE_ID = "onboarding-guide";
 
-export function createOnboardingGuideContent() {
+export function createOnboardingContent() {
   return {
     type: "doc",
     content: [
@@ -48,6 +47,10 @@ export function createOnboardingGuideContent() {
           {
             type: "paragraph",
             content: [
+              {
+                type: "text",
+                text: "Get familiar with basic text formatting. Try out the tasks below in the editor.",
+              },
               {
                 type: "text",
                 text: "Try formatting this text! Select text and use ",

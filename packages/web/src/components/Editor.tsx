@@ -28,7 +28,6 @@ import { CoverImageEditor } from "./editor/CoverImageEditor";
 import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs";
 import { EditorToolbar } from "./editor/EditorToolbar";
 import { LinkPopover } from "./editor/LinkPopover";
-import { Separator } from "./generic/Separator";
 import { Surface } from "./layout/Surface";
 
 type Props = {
@@ -281,7 +280,7 @@ function EditorContainer({ doc }: Props) {
                 </div>
                 <div
                   className={clsx(
-                    "shrink-0 transition-[width] duration-500 ease-in-out",
+                    "shrink-0 transition-[width] duration-500 ease-in-out bg-",
                     shouldShiftContent ? "max-2xl:w-[170px]" : "w-0",
                   )}
                 />

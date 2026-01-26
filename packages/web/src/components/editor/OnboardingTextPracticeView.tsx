@@ -1,7 +1,7 @@
 import type { OnboardingTextPracticeTask } from "@lydie/editor/extensions";
 
-import { motion } from "motion/react";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
 
 import { Checkbox } from "@/components/generic/Checkbox";
@@ -17,7 +17,7 @@ export function OnboardingTextPracticeView({ node, updateAttributes, editor }: N
     const checkFormatting = () => {
       const currentNode = nodeRef.current;
       const currentTasks = (currentNode.attrs.tasks || []) as OnboardingTextPracticeTask[];
-      
+
       const doc = editor.state.doc;
       let hasBold = false;
       let hasItalic = false;
@@ -28,7 +28,7 @@ export function OnboardingTextPracticeView({ node, updateAttributes, editor }: N
       doc.descendants((node, pos) => {
         if (node.type.name === "onboardingTextPractice") {
           practiceNodePos = pos;
-          
+
           // Check content within this node
           node.descendants((childNode) => {
             if (childNode.marks.some((mark) => mark.type.name === "bold")) {
@@ -41,7 +41,7 @@ export function OnboardingTextPracticeView({ node, updateAttributes, editor }: N
               hasHeading = true;
             }
           });
-          
+
           return false; // Stop after finding our node
         }
       });
@@ -102,32 +102,39 @@ export function OnboardingTextPracticeView({ node, updateAttributes, editor }: N
           />
           <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
             <div className="p-2">
-              <p className="text-xs text-gray-600 mb-3">
-                Get familiar with basic text formatting. Try out the tasks below in the editor.
-              </p>
-
-              <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 mb-3">
-                <NodeViewContent className="outline-none min-h-[80px] prose prose-sm max-w-none text-xs" />
-              </div>
-
+              <NodeViewContent className="outline-none min-h-[80px] prose prose-sm max-w-none text-xs" />
               <div className="flex flex-col gap-y-1.5 mb-2">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-start gap-2 p-2 rounded-lg bg-gray-50/60"
-                  >
-                    <Checkbox
-                      isSelected={task.completed}
-                      onChange={() => {}}
-                      isDisabled={true}
-                      className="mt-0.5"
+                {tasks.map((task) => {
+                  let label = task.label;
+                  // Update heading task to urge using the slash menu
+                  if (task.id === "heading") {
+                    label = "Create a heading (type / to open menu)";
+                  }
+
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-start gap-2 p-2 rounded-lg bg-gray-50/60"
                     >
-                      <span className={task.completed ? "line-through text-gray-500 text-xs" : "text-gray-700 text-xs"}>
-                        {task.label}
-                      </span>
-                    </Checkbox>
-                  </div>
-                ))}
+                      <Checkbox
+                        isSelected={task.completed}
+                        onChange={() => {}}
+                        isDisabled={true}
+                        className="mt-0.5"
+                      >
+                        <span
+                          className={
+                            task.completed
+                              ? "line-through text-gray-500 text-xs"
+                              : "text-gray-700 text-xs"
+                          }
+                        >
+                          {label}
+                        </span>
+                      </Checkbox>
+                    </div>
+                  );
+                })}
               </div>
 
               {allCompleted && (
@@ -137,7 +144,9 @@ export function OnboardingTextPracticeView({ node, updateAttributes, editor }: N
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <p className="text-xs font-medium text-green-800">✓ Great job! You've mastered the basics!</p>
+                  <p className="text-xs font-medium text-green-800">
+                    ✓ Great job! You've mastered the basics!
+                  </p>
                 </motion.div>
               )}
             </div>

@@ -19,6 +19,7 @@ export interface GetDocumentEditorExtensionsOptions {
   onboardingTextPractice?: Partial<E.OnboardingTextPracticeOptions>;
   onboardingAssistantTask?: Partial<E.OnboardingAssistantTaskOptions>;
   onboardingPlaceholder?: Partial<E.OnboardingPlaceholderOptions>;
+  slashCommands?: Partial<E.SlashCommandsOptions>;
   collaboration?: Partial<CollaborationOptions>;
   collaborationCaret?: Partial<CollaborationCaretOptions>;
 }
@@ -51,6 +52,11 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.IndentHandlerExtension,
     E.ImageUpload,
   ];
+
+  // Add slash commands if configured
+  if (options?.slashCommands) {
+    extensions.push(E.SlashCommandsExtension.configure(options.slashCommands));
+  }
 
   // Add collaboration extensions if configured
   if (options?.collaboration) {

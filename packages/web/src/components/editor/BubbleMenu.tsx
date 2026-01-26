@@ -4,6 +4,7 @@ import { SparkleRegular, TextStrikethroughFilled } from "@fluentui/react-icons";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 
 import { Separator } from "../generic/Separator";
+import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
 import { BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "./wysiwyg-icons";
 
@@ -19,8 +20,13 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
       options={{
         placement: "bottom",
       }}
-      className="z-50 bg-black/85 text-white rounded-lg shadow-popover p-1 flex items-center gap-1"
+      className="z-100 bg-black/85 text-white rounded-lg shadow-popover p-1 flex items-center gap-1"
     >
+      {/* Block type dropdown */}
+      <BlockTypeDropdown editor={editor} variant="bubble" />
+
+      <Separator orientation="vertical" className="h-4 mx-1" />
+
       {/* Formatting buttons */}
       <ToolbarButton
         onPress={() => editor.chain().focus().toggleBold().run()}

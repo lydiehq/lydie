@@ -39,6 +39,7 @@
     "@tiptap/pm": "catalog:",
     "@tiptap/react": "catalog:",
     "@tiptap/starter-kit": "catalog:",
+    "@tiptap/suggestion": "^3.17.1",
     "ai": "catalog:",
     "better-auth": "catalog:",
     "clsx": "^2.1.1",

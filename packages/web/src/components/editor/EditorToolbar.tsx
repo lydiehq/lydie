@@ -18,17 +18,16 @@ import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-ar
 
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useImageUpload } from "@/hooks/use-image-upload";
+import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
 
 import { Button } from "../generic/Button";
 import { Menu, MenuItem } from "../generic/Menu";
 import { Tooltip } from "../generic/Tooltip";
+import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
 import {
   BoldIcon,
   CodeIcon,
-  H1Icon,
-  H2Icon,
-  H3Icon,
   ImageIcon,
   ItalicIcon,
   LinkIcon,
@@ -52,6 +51,23 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
     typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0;
   const mod = isMac ? "⌘" : "Ctrl";
 
+  const iconMap: Record<string, any> = {
+    bold: BoldIcon,
+    italic: ItalicIcon,
+    strike: TextStrikethroughFilled,
+    code: CodeIcon,
+    bulletList: ListFilled,
+    orderedList: TextNumberListLtrFilled,
+    taskList: TaskListIcon,
+  };
+
+  const hotkeyMap: Record<string, string[]> = {
+    bold: [mod, "B"],
+    italic: [mod, "I"],
+    strike: [mod, "Shift", "S"],
+    code: [mod, "E"],
+  };
+
   const handlePublish = async () => {
     publishDocument(doc.id);
   };
@@ -64,169 +80,59 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
       <Toolbar aria-label="Editor formatting" className="flex items-center">
         <div className="flex items-center">
-          {/* <Group aria-label="History" className="flex gap-1">
-            <ToolbarButton
-              onPress={() => editor.chain().focus().undo().run()}
-              title="Undo"
-              icon={Undo}
-              editor={editor}
-              isDisabled={!editor.can().undo()}
-              hotkeys={[mod, "Z"]}
-            />
-            <ToolbarButton
-              onPress={() => editor.chain().focus().redo().run()}
-              title="Redo"
-              icon={Redo}
-              editor={editor}
-              isDisabled={!editor.can().redo()}
-              hotkeys={[mod, "Shift", "Z"]}
-            />
-          </Group> */}
-
-          {/* <Separator
-            orientation="vertical"
-            className="mx-1 h-6 w-px bg-gray-200"
-          /> */}
-
-          <Group aria-label="Text style" className="flex items-center gap-1">
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleBold().run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Bold"
-                className={editor.isActive("bold") ? "bg-gray-200" : ""}
-              >
-                <BoldIcon className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom" hotkeys={[mod, "B"]}>
-                Bold
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleItalic().run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Italic"
-                className={editor.isActive("italic") ? "bg-gray-200" : ""}
-              >
-                <ItalicIcon className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom" hotkeys={[mod, "I"]}>
-                Italic
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleStrike().run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Strike"
-                className={editor.isActive("strike") ? "bg-gray-200" : ""}
-              >
-                <TextStrikethroughFilled className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom" hotkeys={[mod, "Shift", "S"]}>
-                Strike
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleCode().run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Code"
-                className={editor.isActive("code") ? "bg-gray-200" : ""}
-              >
-                <CodeIcon className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom" hotkeys={[mod, "E"]}>
-                Code
-              </Tooltip>
-            </TooltipTrigger>
+          <Group aria-label="Block type" className="flex items-center gap-1">
+            <BlockTypeDropdown editor={editor} />
           </Group>
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
-          <Group aria-label="Heading level" className="flex items-center gap-1">
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Heading 1"
-                className={editor.isActive("heading", { level: 1 }) ? "bg-gray-200" : ""}
-              >
-                <H1Icon className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom">Heading 1</Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Heading 2"
-                className={editor.isActive("heading", { level: 2 }) ? "bg-gray-200" : ""}
-              >
-                <H2Icon className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom">Heading 2</Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Heading 3"
-                className={editor.isActive("heading", { level: 3 }) ? "bg-gray-200" : ""}
-              >
-                <H3Icon className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom">Heading 3</Tooltip>
-            </TooltipTrigger>
+          <Group aria-label="Text style" className="flex items-center gap-1">
+            {textFormattingActions.map((action) => {
+              const Icon = iconMap[action.id];
+              const hotkeys = hotkeyMap[action.id];
+              const isActive = action.isActive?.(editor) || false;
+
+              return (
+                <TooltipTrigger key={action.id} delay={500}>
+                  <Button
+                    onPress={() => action.execute(editor)}
+                    intent="ghost"
+                    size="icon-sm"
+                    aria-label={action.label}
+                    className={isActive ? "bg-gray-200" : ""}
+                  >
+                    <Icon className="size-[15px] text-gray-700" />
+                  </Button>
+                  <Tooltip placement="bottom" hotkeys={hotkeys}>
+                    {action.label}
+                  </Tooltip>
+                </TooltipTrigger>
+              );
+            })}
           </Group>
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
           <Group aria-label="List format" className="flex items-center gap-1">
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleBulletList().run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Bullet List"
-                className={editor.isActive("bulletList") ? "bg-gray-200" : ""}
-              >
-                <ListFilled className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom">Bullet List</Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleOrderedList().run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Ordered List"
-                className={editor.isActive("orderedList") ? "bg-gray-200" : ""}
-              >
-                <TextNumberListLtrFilled className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom">Ordered List</Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => editor.chain().focus().toggleTaskList().run()}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Task List"
-                className={editor.isActive("taskList") ? "bg-gray-200" : ""}
-              >
-                <TaskListIcon className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom">Task List</Tooltip>
-            </TooltipTrigger>
+            {listFormattingActions.map((action) => {
+              const Icon = iconMap[action.id];
+              const isActive = action.isActive?.(editor) || false;
+
+              return (
+                <TooltipTrigger key={action.id} delay={500}>
+                  <Button
+                    onPress={() => action.execute(editor)}
+                    intent="ghost"
+                    size="icon-sm"
+                    aria-label={action.label}
+                    className={isActive ? "bg-gray-200" : ""}
+                  >
+                    <Icon className="size-[15px] text-gray-700" />
+                  </Button>
+                  <Tooltip placement="bottom">{action.label}</Tooltip>
+                </TooltipTrigger>
+              );
+            })}
           </Group>
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />

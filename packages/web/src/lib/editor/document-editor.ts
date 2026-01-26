@@ -8,7 +8,7 @@ import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import { getDocumentEditorExtensions } from "@lydie/editor/document-editor";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
@@ -17,6 +17,7 @@ import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
 import { OnboardingTextPracticeView } from "@/components/editor/OnboardingTextPracticeView";
 import { OnboardingAssistantTaskView } from "@/components/editor/OnboardingAssistantTaskView";
 import { OnboardingPlaceholderView } from "@/components/editor/OnboardingPlaceholderView";
+import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
 
@@ -67,6 +68,7 @@ export function useDocumentEditor({
   const { user } = useAuth();
   const { uploadImage } = useImageUpload();
   const isLocked = doc.is_locked ?? false;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { ydoc, provider } = useMemo(() => {
     if (!doc.id) return { ydoc: null, provider: null };
@@ -99,6 +101,10 @@ export function useDocumentEditor({
   }, [user?.id, user?.name, user]);
 
   const extensions = useMemo(() => {
+    const slashMenuSuggestion = createSlashMenuSuggestion(
+      fileInputRef as React.RefObject<HTMLInputElement | null>
+    );
+    
     return getDocumentEditorExtensions({
       textSelection: {
         onSelect: onTextSelect,
@@ -121,6 +127,19 @@ export function useDocumentEditor({
       },
       onboardingPlaceholder: {
         addNodeView: () => ReactNodeViewRenderer(OnboardingPlaceholderView),
+      },
+      slashCommands: {
+        suggestion: {
+          ...slashMenuSuggestion,
+          command: ({ editor, range, props }: any) => {
+            getSlashCommandAction(
+              props,
+              editor,
+              range,
+              fileInputRef as React.RefObject<HTMLInputElement | null>
+            )();
+          },
+        },
       },
       collaboration: { document: ydoc },
       collaborationCaret: { provider, user: userInfo },

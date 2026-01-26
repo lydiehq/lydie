@@ -26,3 +26,6 @@ export type { OnboardingAssistantTaskOptions } from "./onboarding-assistant-task
 
 export { OnboardingPlaceholder } from "./onboarding-placeholder";
 export type { OnboardingPlaceholderOptions } from "./onboarding-placeholder";
+
+export { SlashCommandsExtension } from "./slash-commands";
+export type { SlashCommandsOptions } from "./slash-commands";

@@ -10,11 +10,7 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "url";
 
-import {
-  createOnboardingGuideContent,
-  demoContent,
-  ONBOARDING_GUIDE_ID,
-} from "./guide-content";
+import { createOnboardingContent, demoContent, ONBOARDING_GUIDE_ID } from "./onboarding-content";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -175,12 +171,9 @@ async function generateEmbeddingsForOnboardingContent() {
 
   // Generate embeddings for onboarding guide
   console.log("Processing: Welcome to Your Workspace (onboarding guide)");
-  const guideContent = createOnboardingGuideContent();
+  const guideContent = createOnboardingContent();
   const guideTitle = "👋 Welcome to Your Workspace!";
-  const guideEmbeddings = await generateEmbeddingsForDocument(
-    guideTitle,
-    guideContent,
-  );
+  const guideEmbeddings = await generateEmbeddingsForDocument(guideTitle, guideContent);
 
   if (guideEmbeddings) {
     embeddings[ONBOARDING_GUIDE_ID] = guideEmbeddings;
