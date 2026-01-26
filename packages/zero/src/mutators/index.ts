@@ -9,7 +9,6 @@ import { feedbackMutators } from "./feedback";
 import { integrationMutators } from "./integration";
 import { integrationConnectionMutators } from "./integration-connection";
 import { organizationMutators } from "./organization";
-import { organizationSettingsMutators } from "./organization-settings";
 import { syncMetadataMutators } from "./sync-metadata";
 import { templateMutators } from "./template";
 import { userSettingsMutators } from "./user-settings";
@@ -20,7 +19,6 @@ export const mutators = defineMutators({
   assistantConversation: assistantMutators,
   apiKey: apiKeyMutators,
   userSettings: userSettingsMutators,
-  organizationSettings: organizationSettingsMutators,
   organization: organizationMutators,
   integration: integrationMutators,
   integrationConnection: integrationConnectionMutators,
