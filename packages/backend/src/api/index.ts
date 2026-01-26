@@ -32,6 +32,7 @@ export const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
   app,
 });
 
+// Support both legacy per-document URLs and new multiplexed endpoint
 app.get(
   "/yjs/:documentId",
   upgradeWebSocket((c) => {
@@ -43,6 +44,22 @@ app.get(
           throw new Error("WebSocket not available");
         }
         hocuspocus.handleConnection(ws.raw, c.req.raw as any, documentId);
+      },
+    };
+  }),
+);
+
+// Multiplexing endpoint - single connection for all documents
+app.get(
+  "/yjs",
+  upgradeWebSocket((c) => {
+    return {
+      onOpen(_evt, ws) {
+        if (!ws.raw) {
+          throw new Error("WebSocket not available");
+        }
+        // Don't pass documentId - let Hocuspocus extract it from the protocol
+        hocuspocus.handleConnection(ws.raw, c.req.raw as any);
       },
     };
   }),
