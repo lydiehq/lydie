@@ -1,8 +1,4 @@
-import {
-  ArrowClockwiseRegular,
-  ChevronDownRegular,
-  ChevronUpRegular,
-} from "@fluentui/react-icons";
+import { ArrowClockwiseRegular, ChevronDownRegular, ChevronUpRegular } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -14,12 +10,12 @@ import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
 
 import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
+import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { Button } from "@/components/generic/Button";
 import { Separator } from "@/components/generic/Separator";
-import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useDocumentEditor, useTitleEditor } from "@/hooks/useEditor";
+import { useDocumentEditor, useTitleEditor } from "@/hooks/use-editor";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
 import { applyContentChanges } from "@/utils/document-changes";
@@ -428,7 +424,12 @@ export function ReplaceInDocumentTool({
                   </Button>
                 )}
                 {replaceText && (
-                  <Button intent="secondary" size="xs" onPress={handleCreatePage} isDisabled={isStreaming}>
+                  <Button
+                    intent="secondary"
+                    size="xs"
+                    onPress={handleCreatePage}
+                    isDisabled={isStreaming}
+                  >
                     Create page with content
                   </Button>
                 )}

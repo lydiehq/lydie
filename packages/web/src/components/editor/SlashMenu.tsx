@@ -1,11 +1,7 @@
 import type { Editor, Range } from "@tiptap/core";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
 
-import {
-  AddFilled,
-  ListFilled,
-  TextNumberListLtrFilled,
-} from "@fluentui/react-icons";
+import { ListFilled, TextNumberListLtrFilled } from "@fluentui/react-icons";
 import { ReactRenderer } from "@tiptap/react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
@@ -156,7 +152,7 @@ export const SlashMenuList = forwardRef<
 SlashMenuList.displayName = "SlashMenuList";
 
 export function createSlashMenuSuggestion(
-  fileInputRef?: React.RefObject<HTMLInputElement> | React.RefObject<HTMLInputElement | null>
+  fileInputRef?: React.RefObject<HTMLInputElement> | React.RefObject<HTMLInputElement | null>,
 ) {
   return {
     items: ({ query }: { query: string }) => {
@@ -168,7 +164,8 @@ export function createSlashMenuSuggestion(
     render: () => {
       let component: ReactRenderer<
         React.ForwardRefExoticComponent<
-          SlashMenuProps & React.RefAttributes<{ onKeyDown: (props: SuggestionKeyDownProps) => boolean }>
+          SlashMenuProps &
+            React.RefAttributes<{ onKeyDown: (props: SuggestionKeyDownProps) => boolean }>
         >
       >;
       let popup: TippyInstance[];
@@ -239,11 +236,7 @@ export function getSlashCommandAction(
 ) {
   return () => {
     // Delete the slash character and any query text
-    editor
-      .chain()
-      .focus()
-      .deleteRange(range)
-      .run();
+    editor.chain().focus().deleteRange(range).run();
 
     // Execute the formatting action
     item.action.execute(editor);

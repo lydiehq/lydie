@@ -7,8 +7,8 @@ import { Form } from "react-aria-components";
 import { AgentSelector } from "@/components/assistant/AgentSelector";
 import { type ChatContextItem, ChatContextList } from "@/components/chat/ChatContextList";
 import { Button } from "@/components/generic/Button";
-import { useChatComposer } from "@/hooks/use-chat-composer";
 import { useDocumentContext } from "@/hooks/use-document-context";
+import { useAssistantEditor } from "@/lib/editor/assistant-editor";
 import { getReferenceDocumentIds } from "@/utils/parse-references";
 
 export interface AssistantInputProps {
@@ -60,7 +60,7 @@ export function AssistantInput({
 
   const handleSubmitRef = useRef<() => void>(() => {});
 
-  const chatEditor = useChatComposer({
+  const assistantEditor = useAssistantEditor({
     documents: availableDocuments,
     placeholder,
     editorClassName,
@@ -69,7 +69,7 @@ export function AssistantInput({
       setMentionedDocumentIds(getReferenceDocumentIds(textContent));
     },
     onEnter: () => {
-      const textContent = chatEditor.getTextContent();
+      const textContent = assistantEditor.getTextContent();
       if (textContent.trim()) {
         handleSubmitRef.current();
       }
@@ -77,19 +77,19 @@ export function AssistantInput({
   });
 
   useEffect(() => {
-    if (initialPrompt && chatEditor.editor && !chatEditor.getTextContent()) {
-      chatEditor.setContent(initialPrompt);
+    if (initialPrompt && assistantEditor.editor && !assistantEditor.getTextContent()) {
+      assistantEditor.setContent(initialPrompt);
     }
-  }, [initialPrompt, chatEditor]);
+  }, [initialPrompt, assistantEditor]);
 
   useEffect(() => {
-    if (content !== undefined && content !== null && chatEditor.editor) {
-      const currentContent = chatEditor.getTextContent();
+    if (content !== undefined && content !== null && assistantEditor.editor) {
+      const currentContent = assistantEditor.getTextContent();
       if (content !== currentContent) {
-        chatEditor.setContent(content);
+        assistantEditor.setContent(content);
       }
     }
-  }, [content, chatEditor]);
+  }, [content, assistantEditor]);
 
   // Enhance context items to mark manually selected documents
   const contextItems = useMemo(() => {
@@ -128,15 +128,15 @@ export function AssistantInput({
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
       e?.preventDefault();
-      const textContent = chatEditor.getTextContent();
+      const textContent = assistantEditor.getTextContent();
       if (!textContent.trim()) return;
 
       onSubmit(textContent, contextDocumentIds);
-      chatEditor.clearContent();
+      assistantEditor.clearContent();
       resetDismissal();
       setManuallySelectedDocumentIds([]);
     },
-    [chatEditor, onSubmit, contextDocumentIds, resetDismissal],
+    [assistantEditor, onSubmit, contextDocumentIds, resetDismissal],
   );
 
   handleSubmitRef.current = handleSubmit;
@@ -179,7 +179,7 @@ export function AssistantInput({
             />
           )}
           <EditorContent
-            editor={chatEditor.editor}
+            editor={assistantEditor.editor}
             className={variant === "rounded" ? "text-sm text-start" : ""}
           />
           {variant === "flat" ? (

@@ -5,7 +5,7 @@
   "exports": {
     "./document-editor": "./src/document-editor.ts",
     "./title": "./src/title.ts",
-    "./chat-editor": "./src/chat-editor.ts",
+    "./assistant-editor": "./src/assistant-editor.ts",
     "./extensions": "./src/extensions/index.ts",
     "./*": [
       "./src/*.ts",
