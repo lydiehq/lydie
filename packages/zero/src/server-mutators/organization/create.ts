@@ -1,24 +1,24 @@
 import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
-import {
-  db,
-  documentEmbeddingsTable,
-  documentTitleEmbeddingsTable,
-  documentsTable,
-} from "@lydie/database";
-import { defineMutator } from "@rocicorp/zero";
+import { documentEmbeddingsTable, documentTitleEmbeddingsTable } from "@lydie/database";
+import { relations } from "@lydie/database/relations";
+import * as dbSchema from "@lydie/database/schema";
+import { defineMutator, ServerTransaction, Transaction } from "@rocicorp/zero";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { z } from "zod";
 
 import { mutators as sharedMutators } from "../../mutators/index";
+import { onboardingEmbeddings } from "../../onboarding/embeddings";
 import {
   createOnboardingContent,
   demoContent,
   ONBOARDING_GUIDE_ID,
 } from "../../onboarding/onboarding-content";
 import { MutatorContext } from "../../server-mutators";
+import { withTimestamps } from "../../utils/timestamps";
 
-export const createOrganizationMutation = ({}: MutatorContext) =>
+export const createOrganizationMutation = (_context: MutatorContext) =>
   defineMutator(
     z.object({
       id: z.string(),
@@ -30,7 +30,6 @@ export const createOrganizationMutation = ({}: MutatorContext) =>
       onboardingDocId: z.string().optional(),
     }),
     async ({ tx, ctx, args }) => {
-      // Call the client mutator to create the organization (without onboarding docs)
       await sharedMutators.organization.create.fn({
         tx,
         ctx,
@@ -40,21 +39,33 @@ export const createOrganizationMutation = ({}: MutatorContext) =>
         },
       });
 
-      // If onboarding is requested, create onboarding documents with embeddings synchronously
-      // This blocks creation to ensure the organization is fully seeded before redirect
+      // We don't do this with asyncTasks on purpose so users are not redirected
+      // and presented an empty organization before the onboarding documents are
+      // created.
       if (args.onboardingDocId) {
-        await createOnboardingDocumentsWithEmbeddings(args.id, args.onboardingDocId, ctx.userId);
+        await createOnboardingDocumentsWithEmbeddings(
+          tx,
+          args.id,
+          args.onboardingDocId,
+          ctx.userId,
+        );
       }
     },
   );
 
 async function createOnboardingDocumentsWithEmbeddings(
+  tx: any, // todo: properly type this
   organizationId: string,
   onboardingDocId: string,
   userId: string,
 ) {
-  // Dynamically import the pre-computed embeddings
-  const { onboardingEmbeddings } = await import("../../onboarding/embeddings");
+  // Use Zero's underlying transaction for Drizzle to ensure all operations run atomically
+  // TODO: cleaner interface for this?
+  const drizzleDb = drizzle({
+    client: tx.dbTransaction.wrappedTransaction,
+    schema: dbSchema,
+    relations,
+  });
 
   const documentIdMap = new Map<string, string>();
   for (const doc of demoContent) {
@@ -66,43 +77,44 @@ async function createOnboardingDocumentsWithEmbeddings(
   const guideYjsState = convertJsonToYjs(guideContent);
   const guideTitle = "👋 Welcome to Your Workspace!";
 
-  const now = new Date();
+  const now = Date.now();
 
-  await db.insert(documentsTable).values({
-    id: onboardingDocId,
-    slug: `${slugify("Welcome to Your Workspace")}-${createId().slice(0, 6)}`,
-    title: guideTitle,
-    yjsState: guideYjsState,
-    userId: userId,
-    organizationId: organizationId,
-    integrationLinkId: null,
-    isLocked: false,
-    published: false,
-    parentId: null,
-    sortOrder: 0,
-    customFields: {
-      Description:
-        "These are custom fields that can be added to documents. They can be queried and filtered on via the REST API.",
-      Priority: "High",
-      Type: "Guide",
-    },
-    createdAt: now,
-    updatedAt: now,
-  });
+  await tx.mutate.documents.insert(
+    withTimestamps({
+      id: onboardingDocId,
+      slug: `${slugify("Welcome to Your Workspace")}-${createId().slice(0, 6)}`,
+      title: guideTitle,
+      yjs_state: guideYjsState,
+      user_id: userId,
+      organization_id: organizationId,
+      integration_link_id: null,
+      is_locked: false,
+      published: false,
+      parent_id: null,
+      sort_order: 0,
+      custom_fields: {
+        Description:
+          "These are custom fields that can be added to documents. They can be queried and filtered on via the REST API.",
+        Priority: "High",
+        Type: "Guide",
+      },
+    }),
+  );
 
+  // Use Drizzle for embeddings (not in Zero's schema but in same transaction)
   const guideEmbeddings = onboardingEmbeddings[ONBOARDING_GUIDE_ID];
   if (guideEmbeddings) {
-    await db.insert(documentTitleEmbeddingsTable).values({
+    await drizzleDb.insert(documentTitleEmbeddingsTable).values({
       id: createId(),
       documentId: onboardingDocId,
       title: guideTitle,
       embedding: guideEmbeddings.titleEmbedding,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: new Date(now),
+      updatedAt: new Date(now),
     });
 
     if (guideEmbeddings.contentEmbeddings.length > 0) {
-      await db.insert(documentEmbeddingsTable).values(
+      await drizzleDb.insert(documentEmbeddingsTable).values(
         guideEmbeddings.contentEmbeddings.map((embedding) => ({
           id: createId(),
           documentId: onboardingDocId,
@@ -112,8 +124,8 @@ async function createOnboardingDocumentsWithEmbeddings(
           heading: embedding.heading,
           headingLevel: embedding.headingLevel,
           headerBreadcrumb: embedding.headerBreadcrumb,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: new Date(now),
+          updatedAt: new Date(now),
         })),
       );
     }
@@ -126,36 +138,36 @@ async function createOnboardingDocumentsWithEmbeddings(
     const docId = documentIdMap.get(doc.id)!;
     const yjsState = convertJsonToYjs(doc.content);
 
-    await db.insert(documentsTable).values({
-      id: docId,
-      slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
-      title: doc.title,
-      yjsState: yjsState,
-      userId: userId,
-      organizationId: organizationId,
-      integrationLinkId: null,
-      isLocked: false,
-      published: false,
-      parentId: onboardingDocId,
-      sortOrder: i,
-      customFields: { isOnboarding: "true" },
-      createdAt: now,
-      updatedAt: now,
-    });
+    await tx.mutate.documents.insert(
+      withTimestamps({
+        id: docId,
+        slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
+        title: doc.title,
+        yjs_state: yjsState,
+        user_id: userId,
+        organization_id: organizationId,
+        integration_link_id: null,
+        is_locked: false,
+        published: false,
+        parent_id: onboardingDocId,
+        sort_order: i,
+        custom_fields: { isOnboarding: "true" },
+      }),
+    );
 
     const docEmbeddings = onboardingEmbeddings[doc.id];
     if (docEmbeddings) {
-      await db.insert(documentTitleEmbeddingsTable).values({
+      await drizzleDb.insert(documentTitleEmbeddingsTable).values({
         id: createId(),
         documentId: docId,
         title: doc.title,
         embedding: docEmbeddings.titleEmbedding,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: new Date(now),
+        updatedAt: new Date(now),
       });
 
       if (docEmbeddings.contentEmbeddings.length > 0) {
-        await db.insert(documentEmbeddingsTable).values(
+        await drizzleDb.insert(documentEmbeddingsTable).values(
           docEmbeddings.contentEmbeddings.map((embedding) => ({
             id: createId(),
             documentId: docId,
@@ -165,8 +177,8 @@ async function createOnboardingDocumentsWithEmbeddings(
             heading: embedding.heading,
             headingLevel: embedding.headingLevel,
             headerBreadcrumb: embedding.headerBreadcrumb,
-            createdAt: now,
-            updatedAt: now,
+            createdAt: new Date(now),
+            updatedAt: new Date(now),
           })),
         );
       }
