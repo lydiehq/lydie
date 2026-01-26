@@ -27,111 +27,110 @@ export type CustomFieldsEditorRef = {
   addField: () => void;
 };
 
-export const CustomFieldsEditor = forwardRef<CustomFieldsEditorRef, Props>(function CustomFieldsEditor(
-  { documentId, organizationId, initialFields = {} },
-  ref,
-) {
-  const z = useZero();
+export const CustomFieldsEditor = forwardRef<CustomFieldsEditorRef, Props>(
+  function CustomFieldsEditor({ documentId, organizationId, initialFields = {} }, ref) {
+    const z = useZero();
 
-  // Convert initial fields to array format
-  const initialFieldsArray = useMemo(() => {
-    return Object.entries(initialFields).map(([key, value]) => ({
-      key,
-      value,
-      type: typeof value === "number" ? ("number" as const) : ("string" as const),
-    }));
-  }, [initialFields]);
+    // Convert initial fields to array format
+    const initialFieldsArray = useMemo(() => {
+      return Object.entries(initialFields).map(([key, value]) => ({
+        key,
+        value,
+        type: typeof value === "number" ? ("number" as const) : ("string" as const),
+      }));
+    }, [initialFields]);
 
-  const form = useAppForm({
-    defaultValues: {
-      fields: initialFieldsArray,
-    },
-  });
+    const form = useAppForm({
+      defaultValues: {
+        fields: initialFieldsArray,
+      },
+    });
 
-  // Debounced save function
-  const debouncedSave = useDebounceCallback((fields: CustomField[]) => {
-    // Convert array back to object, filtering out empty keys
-    const customFields: Record<string, string | number> = {};
-    for (const field of fields) {
-      if (
-        field.key.trim() &&
-        field.value !== "" &&
-        field.value !== null &&
-        field.value !== undefined
-      ) {
-        customFields[field.key.trim()] = field.value;
+    // Debounced save function
+    const debouncedSave = useDebounceCallback((fields: CustomField[]) => {
+      // Convert array back to object, filtering out empty keys
+      const customFields: Record<string, string | number> = {};
+      for (const field of fields) {
+        if (
+          field.key.trim() &&
+          field.value !== "" &&
+          field.value !== null &&
+          field.value !== undefined
+        ) {
+          customFields[field.key.trim()] = field.value;
+        }
       }
-    }
 
-    // Only save if there are fields, otherwise set to empty object
-    z.mutate(
-      mutators.document.update({
-        documentId,
-        customFields:
-          Object.keys(customFields).length > 0 ? (customFields as Record<string, string>) : {},
-        organizationId,
-      }),
-    );
-  }, 500);
+      // Only save if there are fields, otherwise set to empty object
+      z.mutate(
+        mutators.document.update({
+          documentId,
+          customFields:
+            Object.keys(customFields).length > 0 ? (customFields as Record<string, string>) : {},
+          organizationId,
+        }),
+      );
+    }, 500);
 
-  const handleFieldChange = () => {
-    const fields = form.getFieldValue("fields") || [];
-    debouncedSave(fields);
-  };
-
-  const getTypeIcon = (type: "string" | "number" | "date") => {
-    switch (type) {
-      case "string":
-        return DocumentIcon;
-      case "number":
-        return NumberSymbolRegular;
-      case "date":
-        return CalendarRegular;
-      default:
-        return DocumentIcon;
-    }
-  };
-
-  useImperativeHandle(ref, () => ({
-    addField: () => {
+    const handleFieldChange = () => {
       const fields = form.getFieldValue("fields") || [];
-      form.setFieldValue("fields", [...fields, { key: "", value: "", type: "string" }]);
-    },
-  }));
+      debouncedSave(fields);
+    };
 
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
-      <div className="flex flex-col">
-        <form.Field name="fields" mode="array">
-          {(field) => (
-            <div className="flex flex-col gap-1">
-              {field.state.value.map((_, i) => {
-                const fieldType = field.state.value[i]?.type || "string";
-                return (
-                  <CustomFieldRow
-                    key={i}
-                    form={form}
-                    field={field}
-                    index={i}
-                    fieldType={fieldType}
-                    handleFieldChange={handleFieldChange}
-                    getTypeIcon={getTypeIcon}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </form.Field>
-      </div>
-    </form>
-  );
-});
+    const getTypeIcon = (type: "string" | "number" | "date") => {
+      switch (type) {
+        case "string":
+          return DocumentIcon;
+        case "number":
+          return NumberSymbolRegular;
+        case "date":
+          return CalendarRegular;
+        default:
+          return DocumentIcon;
+      }
+    };
+
+    useImperativeHandle(ref, () => ({
+      addField: () => {
+        const fields = form.getFieldValue("fields") || [];
+        form.setFieldValue("fields", [...fields, { key: "", value: "", type: "string" }]);
+      },
+    }));
+
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+      >
+        <div className="flex flex-col">
+          <form.Field name="fields" mode="array">
+            {(field) => (
+              <div className="flex flex-col gap-1">
+                {field.state.value.map((_, i) => {
+                  const fieldType = field.state.value[i]?.type || "string";
+                  return (
+                    <CustomFieldRow
+                      key={i}
+                      form={form}
+                      field={field}
+                      index={i}
+                      fieldType={fieldType}
+                      handleFieldChange={handleFieldChange}
+                      getTypeIcon={getTypeIcon}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </form.Field>
+        </div>
+      </form>
+    );
+  },
+);
 
 type CustomFieldRowProps = {
   form: any;
@@ -154,7 +153,7 @@ function CustomFieldRow({
   const TypeIcon = getTypeIcon(fieldType);
 
   return (
-    <div className="group flex items-start min-h-[28px] rounded-md text-sm font-medium transition-colors duration-75">
+    <div className="group flex items-start min-h-[28px] rounded-md text-sm transition-colors duration-75">
       <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
         {/* Type picker button with icon */}
         <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>

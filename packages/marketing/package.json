@@ -20,7 +20,7 @@
     "@lydie/editor": "workspace:*",
     "@lydie/integrations": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-form": "^1.27.7",
+    "@tanstack/react-form": "^1.28.0",
     "@tiptap/react": "catalog:",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",

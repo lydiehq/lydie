@@ -10,9 +10,8 @@ import {
 import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
 
-import { demoContent } from "../../demo-content";
 import { mutators as sharedMutators } from "../../mutators/index";
-import { createOnboardingGuideContent } from "../../onboarding/guide-content";
+import { createOnboardingGuideContent, demoContent } from "../../onboarding/guide-content";
 import { MutatorContext } from "../../server-mutators";
 
 export const createOrganizationMutation = ({ asyncTasks }: MutatorContext) =>
@@ -71,7 +70,7 @@ async function createOnboardingDocumentsWithEmbeddings(
   documentIdMap.set("Welcome to Your Workspace", onboardingDocId);
 
   // Create onboarding guide content
-  const guideContent = createOnboardingGuideContent(documentIdMap);
+  const guideContent = createOnboardingGuideContent();
   const guideYjsState = convertJsonToYjs(guideContent);
   const guideTitle = "👋 Welcome to Your Workspace!";
 

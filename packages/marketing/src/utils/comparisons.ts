@@ -453,6 +453,83 @@ export const comparisons: Comparison[] = [
       },
     ],
   },
+  {
+    slug: "nuclino",
+    name: "Nuclino",
+    description:
+      "Switch from Nuclino to Lydie for an open-source knowledge base alternative. While Nuclino excels at team wikis and knowledge management, Lydie offers the same collaborative documentation with integrated AI, self-hosting capabilities, and complete data ownership. Perfect for teams who want to break free from vendor lock-in.",
+    sections: [
+      {
+        id: "opensource",
+        title: "Open-source alternative to Nuclino",
+        description:
+          "Nuclino keeps your knowledge locked in their cloud with no self-hosting option. As an open-source Nuclino alternative, Lydie gives you complete control over your knowledge base. Self-host on your own infrastructure or use our cloud version - the choice is yours, without vendor lock-in.",
+      },
+      {
+        id: "ai",
+        title: "Built-in AI, not a separate add-on",
+        description:
+          "Nuclino's Sidekick AI is available on paid plans. Lydie includes powerful AI assistance built directly into the editor, available to everyone. Get writing help, generate content, and chat with your documents without paying extra for AI capabilities.",
+      },
+      {
+        id: "knowledgebase",
+        title: "Better knowledge base organization",
+        description:
+          "Like Nuclino, Lydie excels at organizing team knowledge with nested pages and intuitive structure. But with Lydie, you get the added benefits of open-source flexibility, self-hosting, and powerful integrations that Nuclino can't match.",
+      },
+      {
+        id: "collaboration",
+        title: "Real-time collaboration like Nuclino",
+        description:
+          "Get the same real-time collaboration you love from Nuclino, but with more control. See live cursors, instant updates, and seamless teamwork - all while maintaining ownership of your data and infrastructure.",
+      },
+    ],
+    features: [
+      {
+        name: "Real-time collaboration",
+        description: "Collaborate with your team in real-time on documents",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "Open-source",
+        description: "Self-host and customize the platform to your needs",
+        lydie: true,
+        competitor: false,
+      },
+      {
+        name: "Integrated AI",
+        description: "AI-powered features built directly into the editor",
+        lydie: true,
+        competitor: "Sidekick AI (available on paid plans only)",
+      },
+      {
+        name: "Version history",
+        description: "Track and restore previous versions of your documents",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "External platform sync",
+        description:
+          "Sync content to external platforms like GitHub repositories and Shopify blogs",
+        lydie: true,
+        competitor: "Limited to Nuclino's API and integrations",
+      },
+      {
+        name: "API access",
+        description: "Programmatic access to documents and data via API",
+        lydie: true,
+        competitor: true,
+      },
+      {
+        name: "Knowledge base organization",
+        description: "Organize content with nested pages and hierarchical structure",
+        lydie: true,
+        competitor: true,
+      },
+    ],
+  },
 ];
 
 export function getComparison(slug: string): Comparison | undefined {
