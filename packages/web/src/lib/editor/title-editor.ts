@@ -11,6 +11,7 @@ export interface UseTitleEditorOptions {
   initialTitle?: string;
   onUpdate?: (title: string) => void;
   onEnter?: () => void;
+  onBlur?: () => void;
   onCreate?: (editor: Editor) => void;
   onDestroy?: () => void;
   editable?: boolean;
@@ -21,6 +22,7 @@ export function useTitleEditor({
   initialTitle = "",
   onUpdate,
   onEnter,
+  onBlur,
   onCreate,
   onDestroy,
   editable = true,
@@ -69,6 +71,12 @@ export function useTitleEditor({
       attributes: {
         class:
           "focus:outline-none text-[1.75rem] leading-[calc(2/1.75)] font-medium text-gray-950 py-4",
+      },
+      handleDOMEvents: {
+        blur: () => {
+          onBlur?.();
+          return false;
+        },
       },
     },
   });

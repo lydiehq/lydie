@@ -85,17 +85,7 @@ function EditorContainer({ doc }: Props) {
         contentEditor.editor.commands.focus(0);
       }
     },
-    onCreate: setTitleEditor,
-    onDestroy: () => {
-      setTitleEditor(null);
-    },
-    editable: !isLocked,
-  });
-
-  useEffect(() => {
-    if (!titleEditor.editor) return;
-
-    const handleBlur = () => {
+    onBlur: () => {
       const finalTitle = title.trim();
       z.mutate(
         mutators.document.update({
@@ -104,15 +94,13 @@ function EditorContainer({ doc }: Props) {
           organizationId: doc.organization_id,
         }),
       );
-    };
-
-    const editorElement = titleEditor.editor.view.dom;
-    editorElement.addEventListener("blur", handleBlur);
-
-    return () => {
-      editorElement.removeEventListener("blur", handleBlur);
-    };
-  }, [titleEditor.editor, title, z, doc.id, doc.organization_id]);
+    },
+    onCreate: setTitleEditor,
+    onDestroy: () => {
+      setTitleEditor(null);
+    },
+    editable: !isLocked,
+  });
 
   useEffect(() => {
     if (!pendingChange) return;
