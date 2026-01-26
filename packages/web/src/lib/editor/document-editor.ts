@@ -8,8 +8,10 @@ import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import { getDocumentEditorExtensions } from "@lydie/editor/document-editor";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as Y from "yjs";
+
+import { getSharedWebSocket } from "./shared-websocket";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
@@ -57,7 +59,7 @@ type UseDocumentEditorProps = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
 };
 
-const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001";
+const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001/yjs";
 
 export function useDocumentEditor({
   doc,
@@ -70,29 +72,108 @@ export function useDocumentEditor({
   const isLocked = doc.is_locked ?? false;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { ydoc, provider } = useMemo(() => {
-    if (!doc.id) return { ydoc: null, provider: null };
-
+  // Use refs to persist provider and ydoc across React Strict Mode remounts
+  const ydocRef = useRef<Y.Doc | null>(null);
+  const providerRef = useRef<HocuspocusProvider | null>(null);
+  const lastDocIdRef = useRef<string | null>(null);
+  
+  // Create provider only once per document ID, persist across remounts
+  if (!ydocRef.current || !providerRef.current || lastDocIdRef.current !== doc.id) {
+    // Clean up old provider if document changed
+    if (lastDocIdRef.current && lastDocIdRef.current !== doc.id) {
+      console.log(`[DocumentEditor] 🔄 Document changed from ${lastDocIdRef.current} to ${doc.id}`);
+      if (providerRef.current) {
+        providerRef.current.destroy();
+      }
+      if (ydocRef.current) {
+        ydocRef.current.destroy();
+      }
+    }
+    
+    console.log(`[DocumentEditor] 📄 Initializing document: ${doc.id}`);
     const yjsState = new Y.Doc();
 
-    // Initialize document with existing state if available
+    // Apply initial state from database
     if (doc.yjs_state) {
       try {
         const bytes = base64ToUint8Array(doc.yjs_state);
+        console.log(`[DocumentEditor] 📥 Applying initial Yjs state (${bytes.length} bytes)`);
         Y.applyUpdate(yjsState, bytes);
+        console.log(`[DocumentEditor] ✅ Initial state applied`);
       } catch (error) {
-        console.error("[DocumentEditor] Error applying initial Yjs state:", error);
+        console.error("[DocumentEditor] ❌ Error applying initial Yjs state:", error);
       }
+    } else {
+      console.log("[DocumentEditor] ⚠️  No initial Yjs state found in document");
     }
 
+    // Use shared WebSocket connection for multiplexing
+    console.log(`[DocumentEditor] 🔌 Connecting to WebSocket: ${yjsServerUrl}`);
+    const sharedSocket = getSharedWebSocket(yjsServerUrl);
+
     const hocuspocusProvider = new HocuspocusProvider({
+      websocketProvider: sharedSocket,
       name: doc.id,
-      url: `${yjsServerUrl}/${doc.id}`,
       document: yjsState,
     });
 
-    return { ydoc: yjsState, provider: hocuspocusProvider };
-  }, [doc.id, doc.yjs_state]);
+    // Must call attach() when using shared socket
+    hocuspocusProvider.attach();
+    console.log(`[DocumentEditor] 🔗 Provider attached for document: ${doc.id}`);
+
+    ydocRef.current = yjsState;
+    providerRef.current = hocuspocusProvider;
+    lastDocIdRef.current = doc.id;
+  } else {
+    console.log(`[DocumentEditor] ♻️  Reusing existing provider for document: ${doc.id}`);
+  }
+  
+  const ydoc = ydocRef.current;
+  const provider = providerRef.current;
+
+  // Set up provider event listeners (only once)
+  useEffect(() => {
+    if (!provider || !ydoc) return;
+
+    console.log(`[DocumentEditor] 👂 Listening for provider events on document: ${doc.id}`);
+
+    // Provider event listeners for debugging
+    const statusHandler = ({ status }: { status: string }) => {
+      console.log(`[DocumentEditor] 📡 Provider status changed: ${status} (doc: ${doc.id})`);
+    };
+    
+    const syncedHandler = ({ synced }: { synced: boolean }) => {
+      console.log(`[DocumentEditor] ${synced ? "✅" : "⏳"} Provider synced: ${synced} (doc: ${doc.id})`);
+    };
+    
+    const connectHandler = () => {
+      console.log(`[DocumentEditor] 🔌 Provider connected (doc: ${doc.id})`);
+    };
+    
+    const disconnectHandler = () => {
+      console.log(`[DocumentEditor] 🔌 Provider disconnected (doc: ${doc.id})`);
+    };
+    
+    const authFailedHandler = ({ reason }: { reason: string }) => {
+      console.error(`[DocumentEditor] ❌ Authentication failed (doc: ${doc.id}):`, reason);
+    };
+
+    provider.on("status", statusHandler);
+    provider.on("synced", syncedHandler);
+    provider.on("connect", connectHandler);
+    provider.on("disconnect", disconnectHandler);
+    provider.on("authenticationFailed", authFailedHandler);
+
+    // Only remove event listeners on unmount, don't destroy provider
+    return () => {
+      console.log(`[DocumentEditor] 🧹 Removing event listeners for document: ${doc.id}`);
+      provider.off("status", statusHandler);
+      provider.off("synced", syncedHandler);
+      provider.off("connect", connectHandler);
+      provider.off("disconnect", disconnectHandler);
+      provider.off("authenticationFailed", authFailedHandler);
+    };
+  }, [provider, ydoc, doc.id]);
 
   const userInfo = useMemo(() => {
     return user
