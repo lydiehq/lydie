@@ -6,7 +6,6 @@ import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Group, Panel, useDefaultLayout } from "react-resizable-panels";
 import { toast } from "sonner";
 
 import {
@@ -28,7 +27,6 @@ import { CoverImageEditor } from "./editor/CoverImageEditor";
 import { DocumentMetadataTabs } from "./editor/DocumentMetadataTabs";
 import { EditorToolbar } from "./editor/EditorToolbar";
 import { LinkPopover } from "./editor/LinkPopover";
-import { Surface } from "./layout/Surface";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -49,11 +47,6 @@ function EditorContainer({ doc }: Props) {
   const openLinkDialogRef = useRef<(() => void) | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isLocked = doc.is_locked ?? false;
-
-  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
-    id: "editor-panel-group",
-    storage: localStorage,
-  });
 
   const setDocumentEditor = useSetAtom(documentEditorAtom);
   const setTitleEditor = useSetAtom(titleEditorAtom);
@@ -89,6 +82,10 @@ function EditorContainer({ doc }: Props) {
     doc,
     onTextSelect: selectText,
     onAddLink: handleOpenLinkDialog,
+    onCreate: setDocumentEditor,
+    onDestroy: () => {
+      setDocumentEditor(null);
+    },
   });
 
   const titleEditor = useTitleEditor({
@@ -99,22 +96,12 @@ function EditorContainer({ doc }: Props) {
         contentEditor.editor.commands.focus(0);
       }
     },
+    onCreate: setTitleEditor,
+    onDestroy: () => {
+      setTitleEditor(null);
+    },
     editable: !isLocked,
   });
-
-  useEffect(() => {
-    setDocumentEditor(contentEditor.editor);
-    return () => {
-      setDocumentEditor(null);
-    };
-  }, [contentEditor.editor, setDocumentEditor]);
-
-  useEffect(() => {
-    setTitleEditor(titleEditor.editor);
-    return () => {
-      setTitleEditor(null);
-    };
-  }, [titleEditor.editor, setTitleEditor]);
 
   useEffect(() => {
     if (!titleEditor.editor) return;
@@ -229,66 +216,53 @@ function EditorContainer({ doc }: Props) {
   }
 
   return (
-    <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Surface className="overflow-hidden">
-        <Group
-          orientation="horizontal"
-          defaultLayout={defaultLayout}
-          onLayoutChanged={onLayoutChanged}
-        >
-          <Panel minSize="400px" className="flex flex-col grow relative">
-            <EditorToolbar
-              editor={contentEditor.editor}
-              doc={doc}
-              onAddLink={handleOpenLinkDialog}
+    <div className="overflow-hidden flex flex-col grow relative">
+      <EditorToolbar editor={contentEditor.editor} doc={doc} onAddLink={handleOpenLinkDialog} />
+      {isLocked && (
+        <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
+          This page is managed by an integration and cannot be edited.
+        </div>
+      )}
+      <div
+        ref={scrollContainerRef}
+        className="flex overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative pt-12"
+      >
+        <div className="flex flex-row">
+          <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col shrink-0 px-4">
+            <CoverImageEditor
+              documentId={doc.id}
+              organizationId={doc.organization_id}
+              coverImage={doc.cover_image}
             />
-            {isLocked && (
-              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
-                This page is managed by an integration and cannot be edited.
-              </div>
+            <EditorContent
+              editor={titleEditor.editor}
+              aria-label="Document title"
+              className="my-2"
+            />
+            <DocumentMetadataTabs
+              doc={doc}
+              initialFields={(doc.custom_fields as Record<string, string | number>) || {}}
+            />
+            <LinkPopover
+              editor={contentEditor.editor}
+              onOpenLinkDialog={registerLinkDialogCallback}
+            />
+            <BubbleMenu editor={contentEditor.editor} onAddLink={handleOpenLinkDialog} />
+            <EditorContent
+              aria-label="Document content"
+              editor={contentEditor.editor}
+              className="block grow pb-8"
+            />
+          </div>
+          {/* Handles shifting content left when assistant is undocked and open */}
+          <div
+            className={clsx(
+              "shrink-0 transition-[width] duration-500 ease-in-out bg-",
+              shouldShiftContent ? "max-2xl:w-[170px]" : "w-0",
             )}
-            <div
-              ref={scrollContainerRef}
-              className="flex overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative pt-12"
-            >
-              <div className="flex flex-row">
-                <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col shrink-0 px-4">
-                  <CoverImageEditor
-                    documentId={doc.id}
-                    organizationId={doc.organization_id}
-                    coverImage={doc.cover_image}
-                  />
-                  <EditorContent
-                    editor={titleEditor.editor}
-                    aria-label="Document title"
-                    className="my-2"
-                  />
-                  <DocumentMetadataTabs
-                    doc={doc}
-                    initialFields={(doc.custom_fields as Record<string, string | number>) || {}}
-                  />
-                  <LinkPopover
-                    editor={contentEditor.editor}
-                    onOpenLinkDialog={registerLinkDialogCallback}
-                  />
-                  <BubbleMenu editor={contentEditor.editor} onAddLink={handleOpenLinkDialog} />
-                  <EditorContent
-                    aria-label="Document content"
-                    editor={contentEditor.editor}
-                    className="block grow pb-8"
-                  />
-                </div>
-                <div
-                  className={clsx(
-                    "shrink-0 transition-[width] duration-500 ease-in-out bg-",
-                    shouldShiftContent ? "max-2xl:w-[170px]" : "w-0",
-                  )}
-                />
-              </div>
-            </div>
-          </Panel>
-        </Group>
-      </Surface>
+          />
+        </div>
+      </div>
     </div>
   );
 }

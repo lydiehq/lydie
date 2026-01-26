@@ -1,4 +1,4 @@
-import { getTitleExtensions } from "@lydie/editor/title";
+import { getTitleExtensions } from "@lydie/editor";
 import { Editor, useEditor } from "@tiptap/react";
 import { useCallback, useMemo } from "react";
 
@@ -11,6 +11,8 @@ export interface UseTitleEditorOptions {
   initialTitle?: string;
   onUpdate?: (title: string) => void;
   onEnter?: () => void;
+  onCreate?: (editor: Editor) => void;
+  onDestroy?: () => void;
   editable?: boolean;
   placeholder?: string;
 }
@@ -19,6 +21,8 @@ export function useTitleEditor({
   initialTitle = "",
   onUpdate,
   onEnter,
+  onCreate,
+  onDestroy,
   editable = true,
   placeholder,
 }: UseTitleEditorOptions): TitleEditorHookResult {
@@ -54,6 +58,12 @@ export function useTitleEditor({
         },
     onUpdate: ({ editor }) => {
       onUpdate?.(editor.state.doc.textContent);
+    },
+    onCreate: ({ editor }) => {
+      onCreate?.(editor);
+    },
+    onDestroy: () => {
+      onDestroy?.();
     },
     editorProps: {
       attributes: {

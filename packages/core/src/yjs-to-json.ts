@@ -1,4 +1,4 @@
-import { getDocumentEditorExtensions } from "@lydie/editor/document-editor";
+import { getDocumentEditorExtensions } from "@lydie/editor";
 import { getSchema } from "@tiptap/core";
 import { prosemirrorJSONToYDoc, yXmlFragmentToProseMirrorRootNode } from "@tiptap/y-tiptap";
 import * as Y from "yjs";

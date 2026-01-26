@@ -63,7 +63,7 @@ async function createOnboardingDocumentsWithEmbeddings(
     throw new Error("This function can only be called on the server");
   }
 
-  const drizzleDb = tx.dbTransaction.wrappedTransaction
+  const drizzleDb = tx.dbTransaction.wrappedTransaction;
 
   const documentIdMap = new Map<string, string>();
   for (const doc of demoContent) {
@@ -149,7 +149,6 @@ async function createOnboardingDocumentsWithEmbeddings(
         published: false,
         parent_id: onboardingDocId,
         sort_order: i,
-        custom_fields: { isOnboarding: "true" },
       }),
     );
 

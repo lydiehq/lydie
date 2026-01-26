@@ -1,6 +1,7 @@
 import { Extension } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import { Mention } from "@tiptap/extension-mention";
+import Paragraph from "@tiptap/extension-paragraph";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 
@@ -31,6 +32,7 @@ export function getAssistantEditorExtensions(options?: GetAssistantEditorExtensi
   const extensions = [
     Document,
     Text,
+    Paragraph,
     Placeholder.configure({
       placeholder: options?.placeholder ?? "Ask anything. Use @ to refer to documents",
       emptyEditorClass: "is-editor-empty",

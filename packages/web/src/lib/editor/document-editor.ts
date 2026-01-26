@@ -5,7 +5,7 @@ import type { EditorView } from "@tiptap/pm/view";
 
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { base64ToUint8Array } from "@lydie/core/lib/base64";
-import { getDocumentEditorExtensions } from "@lydie/editor/document-editor";
+import { getDocumentEditorExtensions } from "@lydie/editor";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useCallback, useMemo, useRef } from "react";
@@ -54,6 +54,8 @@ type UseDocumentEditorProps = {
   onSave?: () => void;
   onTextSelect?: (e: any) => void;
   onAddLink?: () => void;
+  onCreate?: (editor: Editor) => void;
+  onDestroy?: () => void;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
 };
 
@@ -64,6 +66,8 @@ export function useDocumentEditor({
   onUpdate,
   onTextSelect,
   onAddLink,
+  onCreate,
+  onDestroy,
 }: UseDocumentEditorProps): DocumentEditorHookResult {
   const { user } = useAuth();
   const { uploadImage } = useImageUpload();
@@ -157,6 +161,12 @@ export function useDocumentEditor({
       handleDrop: isLocked ? undefined : createImageDropHandler(uploadImage),
     },
     onUpdate: isLocked ? undefined : onUpdate,
+    onCreate: ({ editor }) => {
+      onCreate?.(editor);
+    },
+    onDestroy: () => {
+      onDestroy?.();
+    },
   });
 
   const setContent = useCallback(

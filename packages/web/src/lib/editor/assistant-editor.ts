@@ -1,4 +1,4 @@
-import { getAssistantEditorExtensions } from "@lydie/editor/assistant-editor";
+import { getAssistantEditorExtensions } from "@lydie/editor";
 import { type Editor, useEditor } from "@tiptap/react";
 import { useCallback, useMemo } from "react";
 import tippy from "tippy.js";

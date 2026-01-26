@@ -371,40 +371,4 @@ export const documentMutators = {
       }
     },
   ),
-
-  deleteAllOnboarding: defineMutator(
-    z.object({
-      organizationId: z.string(),
-    }),
-    async ({ tx, ctx, args: { organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId);
-
-      // Find all onboarding documents
-      const onboardingDocs = await tx.run(
-        zql.documents.where("organization_id", organizationId).where("deleted_at", "IS", null),
-      );
-
-      // Filter to only onboarding documents (check custom_fields)
-      const onboardingDocumentIds = onboardingDocs
-        .filter(
-          (doc) =>
-            doc.custom_fields &&
-            typeof doc.custom_fields === "object" &&
-            "isOnboarding" in doc.custom_fields &&
-            doc.custom_fields.isOnboarding === "true",
-        )
-        .map((doc) => doc.id);
-
-      // Soft-delete all onboarding documents
-      const now = Date.now();
-      for (const docId of onboardingDocumentIds) {
-        await tx.mutate.documents.update(
-          withUpdatedTimestamp({
-            id: docId,
-            deleted_at: now,
-          }),
-        );
-      }
-    },
-  ),
 };

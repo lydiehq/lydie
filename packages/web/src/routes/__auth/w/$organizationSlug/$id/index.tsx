@@ -55,5 +55,11 @@ function RouteComponent() {
   }
   if (!doc) return null;
 
-  return <Editor doc={doc} key={id} />;
+  return (
+    <div className="h-screen py-1 pr-1 flex flex-col pl-1">
+      <Surface>
+        <Editor doc={doc} key={id} />
+      </Surface>
+    </div>
+  );
 }
