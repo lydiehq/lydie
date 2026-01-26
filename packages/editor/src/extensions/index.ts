@@ -18,9 +18,6 @@ export type { CodeBlockOptions } from "./code-block";
 export { OnboardingStep } from "./onboarding-step";
 export type { OnboardingStepOptions, OnboardingStepTask } from "./onboarding-step";
 
-export { OnboardingCallout } from "./onboarding-callout";
-export type { OnboardingCalloutOptions } from "./onboarding-callout";
-
 export { OnboardingTextPractice } from "./onboarding-text-practice";
 export type { OnboardingTextPracticeOptions, OnboardingTextPracticeTask } from "./onboarding-text-practice";
 

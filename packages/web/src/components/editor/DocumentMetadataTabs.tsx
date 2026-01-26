@@ -88,7 +88,7 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
     <Disclosure
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
-      className={isExpanded ? "mb-5 pb-5 border-b border-black/2" : "pb-5"}
+      className={isExpanded ? "mb-5 pb-5 border-b border-black/6" : "pb-5"}
     >
       <Tabs selectedKey={selectedKey} onSelectionChange={(key) => setSelectedKey(key as string)}>
         <div className="flex items-center justify-between">

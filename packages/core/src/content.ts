@@ -264,7 +264,6 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
 
         case "onboardingAssistantTask":
         case "onboardingTextPractice":
-        case "onboardingCallout":
         case "onboardingStep":
         case "onboardingPlaceholder":
           // Render children for onboarding nodes so their content is accessible

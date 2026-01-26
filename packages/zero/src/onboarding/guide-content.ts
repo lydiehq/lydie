@@ -15,14 +15,13 @@ export function createOnboardingGuideContent() {
         ],
       },
       {
-        type: "onboardingCallout",
-        attrs: {
-          type: "tip",
-          icon: "lightbulb",
-          title: "Learn by doing",
-          content:
-            "This onboarding happens right in the editor where you'll be working. Try out each feature as you go!",
-        },
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "💡 Tip: Learn by doing - This onboarding happens right in the editor where you'll be working. Try out each feature as you go!",
+          },
+        ],
       },
       {
         type: "onboardingTextPractice",
@@ -124,14 +123,13 @@ export function createOnboardingGuideContent() {
         ],
       },
       {
-        type: "onboardingCallout",
-        attrs: {
-          type: "success",
-          icon: "checkmark",
-          title: "Ready to start?",
-          content:
-            "Feel free to explore the demo documents, or delete this guide and start creating your own content!",
-        },
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "✓ Ready to start? Feel free to explore the demo documents, or delete this guide and start creating your own content!",
+          },
+        ],
       },
     ],
   };

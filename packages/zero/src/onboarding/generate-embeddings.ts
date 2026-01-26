@@ -31,17 +31,6 @@ function normalizeContentForYjs(content: any): ContentNode {
   }
 
   // Convert onboarding-specific nodes to regular nodes
-  if (content.type === "onboardingCallout") {
-    return {
-      type: "paragraph",
-      content: content.attrs?.content
-        ? [{ type: "text", text: content.attrs.content }]
-        : content.content
-          ? (content.content as any[]).map(normalizeContentForYjs)
-          : undefined,
-    };
-  }
-
   if (content.type === "onboardingTextPractice") {
     return {
       type: "paragraph",

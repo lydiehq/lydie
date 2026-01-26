@@ -13,7 +13,6 @@ import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
-import { OnboardingCalloutView } from "@/components/editor/OnboardingCalloutView";
 import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
 import { OnboardingTextPracticeView } from "@/components/editor/OnboardingTextPracticeView";
 import { OnboardingAssistantTaskView } from "@/components/editor/OnboardingAssistantTaskView";
@@ -113,9 +112,6 @@ export function useDocumentEditor({
       },
       onboardingStep: {
         addNodeView: () => ReactNodeViewRenderer(OnboardingStepView),
-      },
-      onboardingCallout: {
-        addNodeView: () => ReactNodeViewRenderer(OnboardingCalloutView),
       },
       onboardingTextPractice: {
         addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),
