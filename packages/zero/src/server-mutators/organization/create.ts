@@ -18,7 +18,7 @@ import {
 } from "../../onboarding/guide-content";
 import { MutatorContext } from "../../server-mutators";
 
-export const createOrganizationMutation = ({ asyncTasks }: MutatorContext) =>
+export const createOrganizationMutation = ({}: MutatorContext) =>
   defineMutator(
     z.object({
       id: z.string(),
@@ -40,20 +40,10 @@ export const createOrganizationMutation = ({ asyncTasks }: MutatorContext) =>
         },
       });
 
-      // If onboarding is requested, create an async task to insert onboarding documents with embeddings
+      // If onboarding is requested, create onboarding documents with embeddings synchronously
+      // This blocks creation to ensure the organization is fully seeded before redirect
       if (args.onboardingDocId) {
-        asyncTasks.push(async () => {
-          try {
-            await createOnboardingDocumentsWithEmbeddings(
-              args.id,
-              args.onboardingDocId!,
-              ctx.userId,
-            );
-          } catch (error) {
-            console.error(`Failed to create onboarding documents for org ${args.id}:`, error);
-            throw error;
-          }
-        });
+        await createOnboardingDocumentsWithEmbeddings(args.id, args.onboardingDocId, ctx.userId);
       }
     },
   );
@@ -66,21 +56,18 @@ async function createOnboardingDocumentsWithEmbeddings(
   // Dynamically import the pre-computed embeddings
   const { onboardingEmbeddings } = await import("../../onboarding/embeddings");
 
-  // Create a map of demo document IDs
   const documentIdMap = new Map<string, string>();
   for (const doc of demoContent) {
     documentIdMap.set(doc.id, createId());
   }
   documentIdMap.set(ONBOARDING_GUIDE_ID, onboardingDocId);
 
-  // Create onboarding guide content
   const guideContent = createOnboardingGuideContent();
   const guideYjsState = convertJsonToYjs(guideContent);
   const guideTitle = "👋 Welcome to Your Workspace!";
 
   const now = new Date();
 
-  // Insert onboarding guide document
   await db.insert(documentsTable).values({
     id: onboardingDocId,
     slug: `${slugify("Welcome to Your Workspace")}-${createId().slice(0, 6)}`,
@@ -103,10 +90,8 @@ async function createOnboardingDocumentsWithEmbeddings(
     updatedAt: now,
   });
 
-  // Insert embeddings for onboarding guide
   const guideEmbeddings = onboardingEmbeddings[ONBOARDING_GUIDE_ID];
   if (guideEmbeddings) {
-    // Insert title embedding
     await db.insert(documentTitleEmbeddingsTable).values({
       id: createId(),
       documentId: onboardingDocId,
@@ -116,7 +101,6 @@ async function createOnboardingDocumentsWithEmbeddings(
       updatedAt: now,
     });
 
-    // Insert content embeddings
     if (guideEmbeddings.contentEmbeddings.length > 0) {
       await db.insert(documentEmbeddingsTable).values(
         guideEmbeddings.contentEmbeddings.map((embedding) => ({
@@ -135,7 +119,6 @@ async function createOnboardingDocumentsWithEmbeddings(
     }
   }
 
-  // Create demo documents as children of the onboarding guide
   for (let i = 0; i < demoContent.length; i++) {
     const doc = demoContent[i];
     if (!doc) continue;
@@ -143,7 +126,6 @@ async function createOnboardingDocumentsWithEmbeddings(
     const docId = documentIdMap.get(doc.id)!;
     const yjsState = convertJsonToYjs(doc.content);
 
-    // Insert document
     await db.insert(documentsTable).values({
       id: docId,
       slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
@@ -161,10 +143,8 @@ async function createOnboardingDocumentsWithEmbeddings(
       updatedAt: now,
     });
 
-    // Insert embeddings for demo document
     const docEmbeddings = onboardingEmbeddings[doc.id];
     if (docEmbeddings) {
-      // Insert title embedding
       await db.insert(documentTitleEmbeddingsTable).values({
         id: createId(),
         documentId: docId,
@@ -174,7 +154,6 @@ async function createOnboardingDocumentsWithEmbeddings(
         updatedAt: now,
       });
 
-      // Insert content embeddings
       if (docEmbeddings.contentEmbeddings.length > 0) {
         await db.insert(documentEmbeddingsTable).values(
           docEmbeddings.contentEmbeddings.map((embedding) => ({
