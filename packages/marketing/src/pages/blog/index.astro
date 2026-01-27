@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import FormattedDate from "../../components/FormattedDate.astro";
@@ -45,10 +46,17 @@ const remainingPosts = sortedPosts.slice(1);
             <a href={`/blog/${featuredPost.slug}`} class="block group">
               <div class="rounded-xl bg-transparent group-hover:bg-gray-50 transition-colors duration-150 -m-2 p-2">
                 <div class="flex gap-x-4 items-center">
-                  <div
-                    class="rounded-lg shadow-surface h-60 aspect-video bg-center bg-cover bg-no-repeat"
-                    style={`background-image: url(${featuredPost.coverImage || "/blog.png"})`}
-                  />
+                  <div class="rounded-lg shadow-surface h-60 aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
+                    <Image
+                      src={featuredPost.coverImage ? new URL(featuredPost.coverImage, Astro.site).toString() : "/blog.png"}
+                      alt=""
+                      width={640}
+                      height={360}
+                      layout="constrained"
+                      fit="cover"
+                      class="w-full h-full"
+                    />
+                  </div>
                   <div class="flex flex-col gap-y-2 p-6">
                     <h2 class="text-xl font-medium text-gray-900">
                       {featuredPost.title}
@@ -82,10 +90,17 @@ const remainingPosts = sortedPosts.slice(1);
                   >
                     <div class="flex gap-x-4 items-center">
                       {post.coverImage ? (
-                        <div
-                          class="rounded-lg shadow-surface w-16 h-16 bg-center bg-cover bg-no-repeat shrink-0"
-                          style={`background-image: url(${post.coverImage})`}
-                        />
+                        <div class="rounded-lg shadow-surface w-16 h-16 overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
+                          <Image
+                            src={new URL(post.coverImage, Astro.site).toString()}
+                            alt=""
+                            width={64}
+                            height={64}
+                            layout="constrained"
+                            fit="cover"
+                            class="w-full h-full"
+                          />
+                        </div>
                       ) : (
                         <div class="p-2 rounded-lg ring ring-black/8 text-gray-300">
                           <svg

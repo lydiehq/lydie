@@ -22,6 +22,7 @@ export default defineConfig({
         limitInputPixels: false,
       },
     },
+    domains: ["lydie.co"],
     remotePatterns: [],
   },
 });

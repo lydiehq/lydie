@@ -1,5 +1,6 @@
 ---
 import { type Document } from "@lydie-app/sdk";
+import { Image } from "astro:assets";
 import BlogPost from "../../layouts/BlogPost.astro";
 import { lydieClient } from "../../utils/lydie-client";
 import FormattedDate from "../../components/FormattedDate.astro";
@@ -43,9 +44,10 @@ const blogPostProps = {
 };
 
 const articleUrl = new URL(`/blog/${document.slug}`, Astro.site);
-const imageUrl = document.coverImage 
-  ? new URL(document.coverImage, Astro.site) 
+const imageUrl = document.coverImage
+  ? new URL(document.coverImage, Astro.site)
   : new URL("/blog.png", Astro.site);
+const coverImageSrc = document.coverImage ? imageUrl.toString() : "/blog.png";
 const excerpt = (document as any).customFields?.excerpt || "";
 
 const structuredData = {
@@ -92,10 +94,16 @@ const structuredData = {
         <FormattedDate date={new Date(document.createdAt)} />
       </span>
     </header>
-    <div
-      class="rounded-lg bg-black/2 bg-center bg-cover bg-no-repeat h-80 ring ring-black/5 overflow-hidden"
-      style={`background-image: url(${document.coverImage || '/blog.png'})`}
-    >
+    <div class="rounded-lg ring ring-black/5 overflow-hidden h-80 [&>img]:object-cover [&>img]:w-full [&>img]:h-80">
+      <Image
+        src={coverImageSrc}
+        alt=""
+        width={672}
+        height={320}
+        layout="constrained"
+        fit="cover"
+        class="w-full h-80"
+      />
     </div>
     <div class="prose">
       <LydieContent
