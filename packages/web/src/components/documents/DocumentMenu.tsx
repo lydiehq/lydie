@@ -1,4 +1,3 @@
-import { Shield12Filled } from "@fluentui/react-icons";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";

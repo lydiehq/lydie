@@ -4,7 +4,7 @@ import { TextStrikethroughFilled } from "@fluentui/react-icons";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 
 import { Separator } from "../generic/Separator";
-import { BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "../icons/wyswyg-icons";
+import { BlockquoteIcon, BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "../icons/wyswyg-icons";
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
 
@@ -52,6 +52,13 @@ export function BubbleMenu({ editor }: Props) {
         onPress={() => editor.chain().focus().toggleCode().run()}
         title="Code"
         icon={CodeIcon}
+        editor={editor}
+        inverted
+      />
+      <ToolbarButton
+        onPress={() => editor.chain().focus().toggleBlockquote().run()}
+        title="Blockquote"
+        icon={BlockquoteIcon}
         editor={editor}
         inverted
       />

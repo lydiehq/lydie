@@ -1,16 +1,29 @@
+import { Blockquote } from "@tiptap/extension-blockquote";
+import { Bold } from "@tiptap/extension-bold";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { Collaboration, type CollaborationOptions } from "@tiptap/extension-collaboration";
 import CollaborationCaret, {
   type CollaborationCaretOptions,
 } from "@tiptap/extension-collaboration-caret";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { Document } from "@tiptap/extension-document";
+import { Dropcursor } from "@tiptap/extension-dropcursor";
+import { Gapcursor } from "@tiptap/extension-gapcursor";
+import { HardBreak } from "@tiptap/extension-hard-break";
+import { Heading, type HeadingOptions } from "@tiptap/extension-heading";
+import { HorizontalRule } from "@tiptap/extension-horizontal-rule";
+import { Italic } from "@tiptap/extension-italic";
+import { ListKit } from "@tiptap/extension-list";
+import { Paragraph } from "@tiptap/extension-paragraph";
+import { Strike } from "@tiptap/extension-strike";
 import { TableKit } from "@tiptap/extension-table";
-import { StarterKit, type StarterKitOptions } from "@tiptap/starter-kit";
+import { Text } from "@tiptap/extension-text";
+import { Underline } from "@tiptap/extension-underline";
+import { TrailingNode, Selection } from "@tiptap/extensions";
 
 import * as E from "./extensions";
 
 export interface GetDocumentEditorExtensionsOptions {
-  starterKit?: StarterKitOptions;
+  heading?: Partial<HeadingOptions>;
   documentComponent?: Partial<E.DocumentComponentOptions>;
   codeBlock?: Partial<E.CodeBlockOptions>;
   onboardingStep?: Partial<E.OnboardingStepOptions>;
@@ -23,20 +36,27 @@ export interface GetDocumentEditorExtensionsOptions {
 
 export function getDocumentEditorExtensions(options?: GetDocumentEditorExtensionsOptions) {
   const extensions = [
-    StarterKit.configure({
-      heading: options?.starterKit?.heading,
-      undoRedo: false,
-      code: false,
-      codeBlock: false,
-      link: false,
-    }),
+    Document,
+    Paragraph,
+    Text,
+    Heading.configure(options?.heading),
+    Blockquote,
+    HardBreak,
+    HorizontalRule,
+    Bold,
+    Italic,
+    Strike,
+    Underline,
+    Dropcursor,
+    Gapcursor,
+    ListKit,
+    TableKit,
+    TrailingNode,
+    Selection,
     E.Link.configure({
       openOnClick: false,
       protocols: ["internal"],
     }),
-    TableKit,
-    TaskList,
-    TaskItem,
     CharacterCount,
     E.KeyboardShortcutExtension,
     E.DocumentComponent.configure(options?.documentComponent),

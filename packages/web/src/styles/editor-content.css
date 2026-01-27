@@ -1384,3 +1384,13 @@
     margin-bottom: 0;
   }
 }
+
+.selection {
+  display: inline;
+  padding: 0.29em 0em;
+  background-color: var(--color-gray-200);
+  box-shadow:
+    0em 0 0 var(--color-gray-200),
+    0em 0 0 var(--color-gray-200);
+  box-decoration-break: clone;
+}

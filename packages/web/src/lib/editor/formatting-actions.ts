@@ -83,6 +83,13 @@ export const blockFormattingActions: FormattingAction[] = [
     execute: (editor) => editor.chain().focus().toggleHeading({ level: 5 }).run(),
     group: "block-type",
   },
+  {
+    id: "blockquote",
+    label: "Blockquote",
+    isActive: (editor) => editor.isActive("blockquote"),
+    execute: (editor) => editor.chain().focus().toggleBlockquote().run(),
+    group: "block-type",
+  },
 ];
 
 export const listFormattingActions: FormattingAction[] = [

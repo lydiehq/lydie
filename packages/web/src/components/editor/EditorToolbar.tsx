@@ -24,6 +24,7 @@ import { Button } from "../generic/Button";
 import { Menu, MenuItem } from "../generic/Menu";
 import { Tooltip } from "../generic/Tooltip";
 import {
+  BlockquoteIcon,
   BoldIcon,
   CodeIcon,
   ImageIcon,
@@ -55,6 +56,7 @@ export function EditorToolbar({ editor, doc }: Props) {
     italic: ItalicIcon,
     strike: TextStrikethroughFilled,
     code: CodeIcon,
+    blockquote: BlockquoteIcon,
     bulletList: ListFilled,
     orderedList: TextNumberListLtrFilled,
     taskList: TaskListIcon,
@@ -108,6 +110,23 @@ export function EditorToolbar({ editor, doc }: Props) {
                 </TooltipTrigger>
               );
             })}
+          </Group>
+
+          <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
+
+          <Group aria-label="Block format" className="flex items-center gap-1">
+            <TooltipTrigger delay={500}>
+              <Button
+                onPress={() => editor.chain().focus().toggleBlockquote().run()}
+                intent="ghost"
+                size="icon-sm"
+                aria-label="Blockquote"
+                className={editor.isActive("blockquote") ? "bg-gray-200" : ""}
+              >
+                <BlockquoteIcon className="size-[15px] text-gray-700" />
+              </Button>
+              <Tooltip placement="bottom">Blockquote</Tooltip>
+            </TooltipTrigger>
           </Group>
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />

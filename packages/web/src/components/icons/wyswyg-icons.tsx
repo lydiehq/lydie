@@ -152,3 +152,18 @@ export function TaskListIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function BlockquoteIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M6 15h15M6 9h15M3 15v-2c0-1 1-2 2-2M3 9V7c0-1 1-2 2-2"
+      />
+    </svg>
+  );
+}
