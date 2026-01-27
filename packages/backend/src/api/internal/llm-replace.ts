@@ -37,7 +37,7 @@ Rules:
 - If the search text is not found at all, return "NOT_FOUND"`;
 
     const { text } = await generateText({
-      model: google("gemini-2.5-flash-lite-preview-09-2025"),
+      model: google("gemini-2.5-flash-lite"),
       prompt,
       temperature: 0,
     });
