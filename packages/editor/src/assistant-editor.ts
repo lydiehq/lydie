@@ -1,9 +1,11 @@
 import { Extension } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
+import HardBreak from "@tiptap/extension-hard-break";
 import { Mention } from "@tiptap/extension-mention";
 import Paragraph from "@tiptap/extension-paragraph";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
+import { UndoRedo } from "@tiptap/extensions";
 
 export interface GetAssistantEditorExtensionsOptions {
   onEnter?: () => void;
@@ -33,6 +35,8 @@ export function getAssistantEditorExtensions(options?: GetAssistantEditorExtensi
     Document,
     Text,
     Paragraph,
+    HardBreak,
+    UndoRedo,
     Placeholder.configure({
       placeholder: options?.placeholder ?? "Ask anything. Use @ to refer to documents",
       emptyEditorClass: "is-editor-empty",

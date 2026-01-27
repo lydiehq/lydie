@@ -18,6 +18,7 @@
     "@tiptap/extension-collaboration": "^3.17.1",
     "@tiptap/extension-collaboration-caret": "^3.17.1",
     "@tiptap/extension-document": "^3.17.1",
+    "@tiptap/extension-hard-break": "^3.17.1",
     "@tiptap/extension-heading": "^3.17.1",
     "@tiptap/extension-image": "^3.17.1",
     "@tiptap/extension-link": "^3.17.1",
