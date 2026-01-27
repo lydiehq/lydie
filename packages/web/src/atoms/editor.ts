@@ -3,8 +3,6 @@ import type { Editor } from "@tiptap/react";
 import { atom } from "jotai";
 
 // Global atom to store the current document editor instance.
-// This allows any component in the app to access the editor without prop drilling,
-// while minimizing re-renders (only components that use this atom will re-render).
 export const documentEditorAtom = atom<Editor | null>(null);
 
 // Global atom to store the current title editor instance.
