@@ -1,6 +1,7 @@
 import {
   ArrowUploadFilled,
   CubeFilled,
+  DocumentCopyFilled,
   OpenFilled,
   PaymentFilled,
   PersonFilled,
@@ -79,6 +80,12 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationSlug/settings/components",
         label: "Components",
         icon: CubeFilled,
+        adminOnly: true,
+      },
+      {
+        path: "/w/$organizationSlug/settings/templates",
+        label: "Templates",
+        icon: DocumentCopyFilled,
         adminOnly: true,
       },
       {

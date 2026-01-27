@@ -11,6 +11,7 @@ import { integrationConnectionMutators } from "./integration-connection";
 import { organizationMutators } from "./organization";
 import { syncMetadataMutators } from "./sync-metadata";
 import { templateMutators } from "./template";
+import { templateCategoryMutators } from "./template-category";
 import { userSettingsMutators } from "./user-settings";
 
 export const mutators = defineMutators({
@@ -26,6 +27,7 @@ export const mutators = defineMutators({
   feedback: feedbackMutators,
   agents: agentMutators,
   template: templateMutators,
+  templateCategory: templateCategoryMutators,
 });
 
 export type Mutators = typeof mutators;

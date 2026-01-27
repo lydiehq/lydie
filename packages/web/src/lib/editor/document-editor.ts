@@ -99,63 +99,63 @@ export function useDocumentEditor({
       : { name: "Anonymous", color: "#808080" };
   }, [user?.id, user?.name, user]);
 
-  const extensions = useMemo(() => {
-    const slashMenuSuggestion = createSlashMenuSuggestion(
-      fileInputRef as React.RefObject<HTMLInputElement | null>,
-    );
+  const slashMenuSuggestion = createSlashMenuSuggestion(
+    fileInputRef as React.RefObject<HTMLInputElement | null>,
+  );
 
-    return getDocumentEditorExtensions({
-      documentComponent: {
-        addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
-      },
-      codeBlock: {
-        addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
-      },
-      onboardingStep: {
-        addNodeView: () => ReactNodeViewRenderer(OnboardingStepView),
-      },
-      onboardingTextPractice: {
-        addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),
-      },
-      onboardingAssistantTask: {
-        addNodeView: () => ReactNodeViewRenderer(OnboardingAssistantTaskView),
-      },
-      slashCommands: {
-        suggestion: {
-          ...slashMenuSuggestion,
-          command: ({ editor, range, props }: any) => {
-            getSlashCommandAction(
-              props,
-              editor,
-              range,
-              fileInputRef as React.RefObject<HTMLInputElement | null>,
-            )();
+  const editor = useEditor(
+    {
+      autofocus: !isLocked,
+      editable: !isLocked,
+      extensions: getDocumentEditorExtensions({
+        documentComponent: {
+          addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
+        },
+        codeBlock: {
+          addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
+        },
+        onboardingStep: {
+          addNodeView: () => ReactNodeViewRenderer(OnboardingStepView),
+        },
+        onboardingTextPractice: {
+          addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),
+        },
+        onboardingAssistantTask: {
+          addNodeView: () => ReactNodeViewRenderer(OnboardingAssistantTaskView),
+        },
+        slashCommands: {
+          suggestion: {
+            ...slashMenuSuggestion,
+            command: ({ editor, range, props }: any) => {
+              getSlashCommandAction(
+                props,
+                editor,
+                range,
+                fileInputRef as React.RefObject<HTMLInputElement | null>,
+              )();
+            },
           },
         },
+        collaboration: { document: ydoc },
+        collaborationCaret: { provider, user: userInfo },
+      }),
+      editorProps: {
+        attributes: {
+          class: "size-full outline-none editor-content pb-8",
+        },
+        handleDrop: isLocked ? undefined : createImageDropHandler(uploadImage),
       },
-      collaboration: { document: ydoc },
-      collaborationCaret: { provider, user: userInfo },
-    });
-  }, [ydoc, provider, userInfo]);
-
-  const editor = useEditor({
-    autofocus: !isLocked,
-    editable: !isLocked,
-    extensions,
-    editorProps: {
-      attributes: {
-        class: "size-full outline-none editor-content pb-8",
+      onUpdate: isLocked ? undefined : onUpdate,
+      onCreate: ({ editor }) => {
+        console.log("onCreate", editor);
+        onCreate?.(editor);
       },
-      handleDrop: isLocked ? undefined : createImageDropHandler(uploadImage),
+      onDestroy: () => {
+        onDestroy?.();
+      },
     },
-    onUpdate: isLocked ? undefined : onUpdate,
-    onCreate: ({ editor }) => {
-      onCreate?.(editor);
-    },
-    onDestroy: () => {
-      onDestroy?.();
-    },
-  });
+    [],
+  );
 
   const setContent = useCallback(
     (content: string) => {

@@ -15,6 +15,7 @@ import { memberQueries } from "./member";
 import { organizationQueries } from "./organization";
 import { settingsQueries } from "./settings";
 import { syncMetadataQueries } from "./sync-metadata";
+import { templateQueries } from "./template";
 import { templateCategoryQueries } from "./template-category";
 import { usageQueries } from "./usage";
 
@@ -35,5 +36,6 @@ export const queries = defineQueries({
   integrationLinks: integrationLinkQueries,
   syncMetadata: syncMetadataQueries,
   integrationActivityLogs: integrationActivityQueries,
+  templates: templateQueries,
   templateCategories: templateCategoryQueries,
 });

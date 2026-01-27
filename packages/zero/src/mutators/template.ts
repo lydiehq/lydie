@@ -216,6 +216,73 @@ export const templateMutators = {
     },
   ),
 
+  update: defineMutator(
+    z.object({
+      templateId: z.string(),
+      name: z.string().optional(),
+      description: z.string().optional(),
+      teaser: z.string().optional(),
+      detailedDescription: z.string().optional(),
+      categoryIds: z.array(z.string()).optional(),
+    }),
+    async ({ tx, ctx, args }) => {
+      requireAdmin(ctx);
+
+      const template = await tx.run(zql.templates.where("id", args.templateId).one());
+
+      if (!template) {
+        throw new Error("Template not found");
+      }
+
+      // Update template fields if provided
+      const updateData: Record<string, any> = {
+        id: args.templateId,
+        updated_at: Date.now(),
+      };
+
+      if (args.name !== undefined) {
+        updateData.name = args.name;
+        updateData.slug = `${slugify(args.name)}-${createId().slice(0, 6)}`;
+      }
+      if (args.description !== undefined) {
+        updateData.description = args.description || null;
+      }
+      if (args.teaser !== undefined) {
+        updateData.teaser = args.teaser || null;
+      }
+      if (args.detailedDescription !== undefined) {
+        updateData.detailed_description = args.detailedDescription || null;
+      }
+
+      await tx.mutate.templates.update(updateData);
+
+      // Update category assignments if provided
+      if (args.categoryIds !== undefined) {
+        // Delete existing assignments
+        const existingAssignments = await tx.run(
+          zql.template_category_assignments.where("template_id", args.templateId),
+        );
+
+        for (const assignment of existingAssignments) {
+          await tx.mutate.template_category_assignments.delete({
+            id: assignment.id,
+          });
+        }
+
+        // Create new assignments
+        for (const categoryId of args.categoryIds) {
+          await tx.mutate.template_category_assignments.insert({
+            id: createId(),
+            template_id: args.templateId,
+            category_id: categoryId,
+            created_at: Date.now(),
+            updated_at: Date.now(),
+          });
+        }
+      }
+    },
+  ),
+
   delete: defineMutator(
     z.object({
       templateId: z.string(),

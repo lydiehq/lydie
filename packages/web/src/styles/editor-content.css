@@ -1385,6 +1385,8 @@
   }
 }
 
+/* For TipTap's selection plugin, showing the editor selection when focus is not
+active. */
 .selection {
   display: inline;
   padding: 0.29em 0em;

@@ -53,11 +53,11 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     TableKit,
     TrailingNode,
     Selection,
+    CharacterCount,
     E.Link.configure({
       openOnClick: false,
       protocols: ["internal"],
     }),
-    CharacterCount,
     E.KeyboardShortcutExtension,
     E.DocumentComponent.configure(options?.documentComponent),
     E.CodeBlock.configure(options?.codeBlock),
