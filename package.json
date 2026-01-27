@@ -13,7 +13,7 @@
       "react": "^19.2.3",
       "react-dom": "^19.2.3",
       "yjs": "^13.6.29",
-      "drizzle-orm": "^1.0.0-beta.8-734e789",
+      "drizzle-orm": "^1.0.0-beta.12-a5629fb",
       "better-auth": "1.4.7-beta.2",
       "@polar-sh/better-auth": "^1.6.4",
       "@ai-sdk/google": "^3.0.1",
@@ -45,11 +45,12 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check"
   },
+  "dependencies": {},
   "devDependencies": {
     "@tsconfig/node20": "^20.1.8",
     "@types/bun": "^1.3.6",
-    "oxfmt": "^0.26.0",
-    "oxlint": "^1.41.0",
+    "oxfmt": "^0.27.0",
+    "oxlint": "^1.42.0",
     "sst": "catalog:",
     "typescript": "^5.9.3"
   },
