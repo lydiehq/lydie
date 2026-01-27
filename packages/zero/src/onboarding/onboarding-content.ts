@@ -104,14 +104,6 @@ export function createOnboardingContent() {
         ],
       },
       {
-        type: "onboardingPlaceholder",
-        attrs: {
-          title: "🚀 More Features Coming Soon",
-          description:
-            "We're adding more onboarding steps to help you learn about linking documents, properties, and more!",
-        },
-      },
-      {
         type: "heading",
         attrs: { level: 2 },
         content: [{ type: "text", text: "🎉 You're all set!" }],

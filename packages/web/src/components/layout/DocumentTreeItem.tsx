@@ -20,11 +20,11 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import { DocumentMenu } from "../documents/DocumentMenu";
-import { CollapseArrow } from "../editor/icons/CollapseArrow";
-import { DocumentIcon } from "../editor/icons/DocumentIcon";
 import { Menu, MenuItem } from "../generic/Menu";
 import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { CollapseArrow } from "../icons/CollapseArrow";
+import { DocumentIcon } from "../icons/DocumentIcon";
 import { sidebarItemIconStyles, sidebarItemStyles } from "./Sidebar";
 
 type Props = {

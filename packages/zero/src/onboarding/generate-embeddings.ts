@@ -41,15 +41,6 @@ function normalizeContentForYjs(content: any): ContentNode {
     };
   }
 
-  if (content.type === "onboardingPlaceholder") {
-    return {
-      type: "paragraph",
-      content: content.attrs?.description
-        ? [{ type: "text", text: content.attrs.description }]
-        : undefined,
-    };
-  }
-
   if (content.type === "taskList") {
     return {
       ...content,

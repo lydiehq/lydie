@@ -13,10 +13,9 @@ import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
-import { OnboardingAssistantTaskView } from "@/components/editor/OnboardingAssistantTaskView";
-import { OnboardingPlaceholderView } from "@/components/editor/OnboardingPlaceholderView";
-import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
-import { OnboardingTextPracticeView } from "@/components/editor/OnboardingTextPracticeView";
+import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/OnboardingAssistantTaskView";
+import { OnboardingStepView } from "@/components/editor/onboarding/OnboardingStepView";
+import { OnboardingTextPracticeView } from "@/components/editor/onboarding/OnboardingTextPracticeView";
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
@@ -120,9 +119,6 @@ export function useDocumentEditor({
       },
       onboardingAssistantTask: {
         addNodeView: () => ReactNodeViewRenderer(OnboardingAssistantTaskView),
-      },
-      onboardingPlaceholder: {
-        addNodeView: () => ReactNodeViewRenderer(OnboardingPlaceholderView),
       },
       slashCommands: {
         suggestion: {

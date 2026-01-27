@@ -16,7 +16,6 @@ export interface GetDocumentEditorExtensionsOptions {
   onboardingStep?: Partial<E.OnboardingStepOptions>;
   onboardingTextPractice?: Partial<E.OnboardingTextPracticeOptions>;
   onboardingAssistantTask?: Partial<E.OnboardingAssistantTaskOptions>;
-  onboardingPlaceholder?: Partial<E.OnboardingPlaceholderOptions>;
   slashCommands?: Partial<E.SlashCommandsOptions>;
   collaboration?: Partial<CollaborationOptions>;
   collaborationCaret?: Partial<CollaborationCaretOptions>;
@@ -45,7 +44,6 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.OnboardingStep.configure(options?.onboardingStep),
     E.OnboardingTextPractice.configure(options?.onboardingTextPractice),
     E.OnboardingAssistantTask.configure(options?.onboardingAssistantTask),
-    E.OnboardingPlaceholder.configure(options?.onboardingPlaceholder),
     E.IndentHandlerExtension,
     E.ImageUpload,
   ];

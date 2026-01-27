@@ -12,17 +12,17 @@ export type { DocumentComponentOptions } from "./document-component";
 export { CodeBlock } from "./code-block";
 export type { CodeBlockOptions } from "./code-block";
 
-export { OnboardingStep } from "./onboarding-step";
-export type { OnboardingStepOptions, OnboardingStepTask } from "./onboarding-step";
+export { OnboardingStep } from "./onboarding/onboarding-step";
+export type { OnboardingStepOptions, OnboardingStepTask } from "./onboarding/onboarding-step";
 
-export { OnboardingTextPractice } from "./onboarding-text-practice";
-export type { OnboardingTextPracticeOptions, OnboardingTextPracticeTask } from "./onboarding-text-practice";
+export { OnboardingTextPractice } from "./onboarding/onboarding-text-practice";
+export type {
+  OnboardingTextPracticeOptions,
+  OnboardingTextPracticeTask,
+} from "./onboarding/onboarding-text-practice";
 
-export { OnboardingAssistantTask } from "./onboarding-assistant-task";
-export type { OnboardingAssistantTaskOptions } from "./onboarding-assistant-task";
-
-export { OnboardingPlaceholder } from "./onboarding-placeholder";
-export type { OnboardingPlaceholderOptions } from "./onboarding-placeholder";
+export { OnboardingAssistantTask } from "./onboarding/onboarding-assistant-task";
+export type { OnboardingAssistantTaskOptions } from "./onboarding/onboarding-assistant-task";
 
 export { SlashCommandsExtension } from "./slash-commands";
 export type { SlashCommandsOptions } from "./slash-commands";

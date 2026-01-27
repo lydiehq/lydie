@@ -13,9 +13,9 @@ import { Popover } from "@/components/generic/Popover";
 import { SearchField } from "@/components/generic/SearchField";
 import { SelectItem } from "@/components/generic/Select";
 
-import { DocumentIcon } from "../editor/icons/DocumentIcon";
 import { Button } from "../generic/Button";
 import { Tooltip } from "../generic/Tooltip";
+import { DocumentIcon } from "../icons/DocumentIcon";
 
 interface DocumentMultiSelectProps {
   availableDocuments: Array<{ id: string; title: string }>;

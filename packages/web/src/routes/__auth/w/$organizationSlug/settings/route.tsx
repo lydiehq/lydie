@@ -12,9 +12,9 @@ import {
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 
 import { Eyebrow } from "@/components/generic/Eyebrow";
+import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { sidebarItemIconStyles, sidebarItemStyles } from "@/components/layout/Sidebar";
 import { Surface } from "@/components/layout/Surface";
-import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
 

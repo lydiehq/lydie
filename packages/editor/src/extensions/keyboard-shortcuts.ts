@@ -3,10 +3,7 @@ import { Extension } from "@tiptap/core";
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     keyboardShortcuts: {
-      /**
-       * Opens the link popover by setting an empty link mark.
-       * This triggers the LinkPopover component to show in edit mode.
-       */
+      // Open the link popover by setting an empty link mark.
       openLinkPopover: () => ReturnType;
     };
   }
@@ -36,7 +33,9 @@ export const KeyboardShortcutExtension = Extension.create({
 
         // If we're on a link (even without selection), select the entire link and open edit mode
         if (isLinkActive && !hasSelection) {
-          return this.editor.commands.extendMarkRange("link") && this.editor.commands.openLinkPopover();
+          return (
+            this.editor.commands.extendMarkRange("link") && this.editor.commands.openLinkPopover()
+          );
         }
 
         // If text is selected, open link popover

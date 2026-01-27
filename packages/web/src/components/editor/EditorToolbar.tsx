@@ -23,8 +23,6 @@ import { textFormattingActions, listFormattingActions } from "@/lib/editor/forma
 import { Button } from "../generic/Button";
 import { Menu, MenuItem } from "../generic/Menu";
 import { Tooltip } from "../generic/Tooltip";
-import { BlockTypeDropdown } from "./BlockTypeDropdown";
-import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
 import {
   BoldIcon,
   CodeIcon,
@@ -33,7 +31,9 @@ import {
   LinkIcon,
   TableIcon,
   TaskListIcon,
-} from "./wysiwyg-icons";
+} from "../icons/wyswyg-icons";
+import { BlockTypeDropdown } from "./BlockTypeDropdown";
+import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
 
 type Props = {
   editor: Editor;

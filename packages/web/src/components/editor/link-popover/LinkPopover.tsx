@@ -1,7 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import type { ComponentType, SVGProps } from "react";
 
-import { getMarkRange } from "@tiptap/core";
 import {
   FloatingFocusManager,
   FloatingPortal,
@@ -18,6 +17,7 @@ import { EditFilled, LinkDismissRegular, OpenRegular } from "@fluentui/react-ico
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
+import { getMarkRange } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Autocomplete,
@@ -32,24 +32,50 @@ import {
   useFilter,
 } from "react-aria-components";
 
-import { useOrganization } from "@/context/organization.context";
-
-import { Separator } from "../generic/Separator";
-import { Tooltip } from "../generic/Tooltip";
-import { DocumentIcon } from "./icons/DocumentIcon";
-
-// --- Types ---
-
-type Props = {
-  editor: Editor;
-};
+import { Separator } from "@/components/generic/Separator";
+import { Tooltip } from "@/components/generic/Tooltip";
+import { DocumentIcon } from "@/components/icons/DocumentIcon";
 
 type PopoverState =
   | { mode: "closed" }
   | { mode: "view"; href: string; text: string; linkElement: HTMLElement }
   | { mode: "edit"; href: string; text: string; linkElement: HTMLElement | null };
 
-// --- Utility Functions ---
+interface InternalDocument {
+  title: string | null;
+}
+
+interface SearchDocument {
+  id: string;
+  title: string | null;
+}
+
+interface LinkPopoverProps {
+  editor: Editor;
+  organizationId: string;
+  organizationSlug: string;
+  internalDocument: InternalDocument | null | undefined;
+  onNavigate: (documentId: string) => void;
+  searchResults?: SearchDocument[];
+  onSearchChange?: (searchTerm: string) => void;
+}
+
+interface ViewModeContentProps {
+  editor: Editor;
+  href: string;
+  internalDocument: InternalDocument | null | undefined;
+  onNavigate: (documentId: string) => void;
+  organizationSlug: string;
+}
+
+interface EditModeContentProps {
+  editor: Editor;
+  initialHref: string;
+  initialText: string;
+  organizationId: string;
+  searchResults?: SearchDocument[];
+  onSearchChange?: (searchTerm: string) => void;
+}
 
 function extractDomain(url: string): string {
   try {
@@ -81,10 +107,6 @@ function createInternalLink(documentId: string): string {
   return `internal://${documentId}`;
 }
 
-/**
- * Find the link element at the current selection position.
- * Uses coordinate-based matching to find the actual DOM element.
- */
 function findLinkElementAtSelection(editor: Editor): HTMLElement | null {
   const { from } = editor.state.selection;
   const coords = editor.view.coordsAtPos(from);
@@ -92,17 +114,18 @@ function findLinkElementAtSelection(editor: Editor): HTMLElement | null {
   const allLinks = editor.view.dom.querySelectorAll("a");
   for (const link of allLinks) {
     const rect = link.getBoundingClientRect();
-    if (coords.top >= rect.top && coords.top <= rect.bottom && coords.left >= rect.left && coords.left <= rect.right) {
+    if (
+      coords.top >= rect.top &&
+      coords.top <= rect.bottom &&
+      coords.left >= rect.left &&
+      coords.left <= rect.right
+    ) {
       return link as HTMLElement;
     }
   }
   return null;
 }
 
-/**
- * Get the current link state from the editor.
- * This is the single source of truth for determining popover state.
- */
 function getLinkStateFromEditor(editor: Editor): PopoverState {
   const { from, to } = editor.state.selection;
   const isCollapsed = from === to;
@@ -112,7 +135,7 @@ function getLinkStateFromEditor(editor: Editor): PopoverState {
   if (isLinkActive && !isCollapsed) {
     const linkAttrs = editor.getAttributes("link");
     const href = linkAttrs.href || "";
-    
+
     // Get link text from selection
     const text = editor.state.doc.textBetween(from, to);
     const linkElement = findLinkElementAtSelection(editor);
@@ -121,7 +144,7 @@ function getLinkStateFromEditor(editor: Editor): PopoverState {
     if (href === "") {
       return { mode: "edit", href, text, linkElement };
     }
-    
+
     // If the entire link is selected (selection matches link range), open in edit mode
     const { $from } = editor.state.selection;
     const linkMarkType = editor.schema.marks.link;
@@ -162,10 +185,10 @@ function getLinkStateFromEditor(editor: Editor): PopoverState {
   return { mode: "closed" };
 }
 
-/**
- * Custom hook to subscribe to editor link state changes.
- * Returns the current state of the link at the cursor position.
- */
+// ============================================================================
+// Hooks
+// ============================================================================
+
 function useLinkState(editor: Editor): PopoverState {
   const [state, setState] = useState<PopoverState>(() => getLinkStateFromEditor(editor));
 
@@ -201,27 +224,18 @@ function useLinkState(editor: Editor): PopoverState {
   return state;
 }
 
-// --- Main Component ---
-
-export function LinkPopover({ editor }: Props) {
+export function LinkPopoverBase({
+  editor,
+  organizationId,
+  organizationSlug,
+  internalDocument,
+  onNavigate,
+  searchResults = [],
+  onSearchChange,
+}: LinkPopoverProps) {
   const linkState = useLinkState(editor);
   const isOpen = linkState.mode !== "closed";
 
-  const { organization } = useOrganization();
-  const navigate = useNavigate({ from: "/w/$organizationSlug" });
-  const { contains } = useFilter({ sensitivity: "base" });
-
-  // Get document ID for internal links
-  const documentId = linkState.mode !== "closed" ? extractDocumentIdFromInternalLink(linkState.href) : null;
-
-  const [internalDocument] = useQuery(
-    queries.documents.byId({
-      organizationId: organization.id,
-      documentId: documentId || "",
-    }),
-  );
-
-  // Floating UI setup
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     placement: "top",
@@ -230,7 +244,6 @@ export function LinkPopover({ editor }: Props) {
   });
 
   const dismiss = useDismiss(context, {
-    // Close on escape or click outside
     escapeKey: true,
     outsidePress: true,
   });
@@ -266,28 +279,34 @@ export function LinkPopover({ editor }: Props) {
 
   return (
     <FloatingPortal>
-      <FloatingFocusManager context={context} modal={false} initialFocus={linkState.mode === "edit" ? 0 : -1}>
+      <FloatingFocusManager
+        context={context}
+        modal={false}
+        initialFocus={linkState.mode === "edit" ? 0 : -1}
+      >
         <div
           ref={refs.setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
-          className="z-50 bg-white ring ring-black/10 rounded-lg shadow-lg p-2 flex flex-col"
+          className="z-50 bg-white rounded-lg shadow-popover p-1 flex flex-col"
+          data-testid="link-popover"
         >
           {linkState.mode === "edit" ? (
             <EditModeContent
               editor={editor}
               initialHref={linkState.href}
               initialText={linkState.text}
-              organizationId={organization.id}
-              contains={contains}
+              organizationId={organizationId}
+              searchResults={searchResults}
+              onSearchChange={onSearchChange}
             />
           ) : linkState.mode === "view" ? (
             <ViewModeContent
               editor={editor}
               href={linkState.href}
               internalDocument={internalDocument}
-              navigate={navigate}
-              organizationSlug={organization.slug}
+              onNavigate={onNavigate}
+              organizationSlug={organizationSlug}
             />
           ) : null}
         </div>
@@ -296,28 +315,26 @@ export function LinkPopover({ editor }: Props) {
   );
 }
 
-// --- Edit Mode Component ---
+function EditModeContent({
+  editor,
+  initialHref,
+  initialText,
+  searchResults = [],
+  onSearchChange,
+}: EditModeContentProps) {
+  const { contains } = useFilter({ sensitivity: "base" });
 
-type EditModeContentProps = {
-  editor: Editor;
-  initialHref: string;
-  initialText: string;
-  organizationId: string;
-  contains: (a: string, b: string) => boolean;
-};
-
-function EditModeContent({ editor, initialHref, initialText, organizationId, contains }: EditModeContentProps) {
   // Local state for form inputs - initialized from link state
-  const [linkInputValue, setLinkInputValue] = useState(() => (isInternalLink(initialHref) ? "" : initialHref));
+  const [linkInputValue, setLinkInputValue] = useState(() =>
+    isInternalLink(initialHref) ? "" : initialHref,
+  );
   const [linkLabelValue, setLinkLabelValue] = useState(initialText);
   const linkInputRef = useRef<HTMLInputElement>(null);
 
-  const [searchResults] = useQuery(
-    queries.documents.search({
-      organizationId,
-      searchTerm: linkInputValue,
-    }),
-  );
+  // Notify parent of search changes
+  useEffect(() => {
+    onSearchChange?.(linkInputValue);
+  }, [linkInputValue, onSearchChange]);
 
   // Focus link input when creating a new link
   useEffect(() => {
@@ -442,18 +459,23 @@ function EditModeContent({ editor, initialHref, initialText, organizationId, con
           placeholder="Enter link text..."
           className="grow px-2 py-1 text-sm border border-gray-200 rounded w-full"
           onKeyDown={handleKeyDown}
+          data-testid="link-text-input"
         />
       </TextField>
       <Autocomplete inputValue={linkInputValue} onInputChange={setLinkInputValue} filter={contains}>
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-2 grow">
-            <TextField className="flex flex-col outline-none placeholder-gray-500" aria-label="Search or paste a link">
+            <TextField
+              className="flex flex-col outline-none placeholder-gray-500"
+              aria-label="Search or paste a link"
+            >
               <Label className="text-xs text-gray-600 px-1">Link</Label>
               <Input
                 ref={linkInputRef}
                 placeholder="Search or paste a link"
                 className="border-gray-200 p-1.5 border rounded-md leading-5 text-gray-900 bg-transparent outline-hidden text-sm"
                 onKeyDown={handleKeyDown}
+                data-testid="link-url-input"
               />
             </TextField>
           </div>
@@ -478,17 +500,7 @@ function EditModeContent({ editor, initialHref, initialText, organizationId, con
   );
 }
 
-// --- View Mode Component ---
-
-type ViewModeContentProps = {
-  editor: Editor;
-  href: string;
-  internalDocument: { title: string | null } | null | undefined;
-  navigate: ReturnType<typeof useNavigate>;
-  organizationSlug: string;
-};
-
-function ViewModeContent({ editor, href, internalDocument, navigate, organizationSlug }: ViewModeContentProps) {
+function ViewModeContent({ editor, href, internalDocument, onNavigate }: ViewModeContentProps) {
   const isInternal = isInternalLink(href);
   const domain = extractDomain(href);
 
@@ -502,15 +514,12 @@ function ViewModeContent({ editor, href, internalDocument, navigate, organizatio
     if (isInternal) {
       const documentId = extractDocumentIdFromInternalLink(href);
       if (documentId) {
-        navigate({
-          to: "/w/$organizationSlug/$id",
-          params: { organizationSlug, id: documentId },
-        });
+        onNavigate(documentId);
       }
     } else {
       window.open(href, "_blank", "noopener,noreferrer");
     }
-  }, [href, isInternal, navigate, organizationSlug]);
+  }, [href, isInternal, onNavigate]);
 
   const handleEditLink = useCallback(() => {
     // Set empty href to trigger edit mode
@@ -536,7 +545,11 @@ function ViewModeContent({ editor, href, internalDocument, navigate, organizatio
             }}
           />
         ) : null}
-        <div className="text-xs text-gray-700 truncate" title={displayText}>
+        <div
+          className="text-xs text-gray-700 truncate"
+          title={displayText}
+          data-testid="link-display-text"
+        >
           {displayText}
         </div>
       </div>
@@ -546,13 +559,24 @@ function ViewModeContent({ editor, href, internalDocument, navigate, organizatio
           title={isInternal ? "Open document" : "Open link in new tab"}
           icon={isInternal ? DocumentIcon : OpenRegular}
           onPress={handleOpenLink}
+          data-testid="link-open-button"
         >
           {isInternal ? "Open document" : "Open in new tab"}
         </LinkPopoverButton>
-        <LinkPopoverButton title="Edit link" icon={EditFilled} onPress={handleEditLink}>
+        <LinkPopoverButton
+          title="Edit link"
+          icon={EditFilled}
+          onPress={handleEditLink}
+          data-testid="link-edit-button"
+        >
           Edit link
         </LinkPopoverButton>
-        <LinkPopoverButton title="Remove link" icon={LinkDismissRegular} onPress={handleRemoveLink}>
+        <LinkPopoverButton
+          title="Remove link"
+          icon={LinkDismissRegular}
+          onPress={handleRemoveLink}
+          data-testid="link-remove-button"
+        >
           Remove link
         </LinkPopoverButton>
       </div>
@@ -560,23 +584,83 @@ function ViewModeContent({ editor, href, internalDocument, navigate, organizatio
   );
 }
 
-// --- Button Component ---
-
 type LinkPopoverButtonProps = ButtonProps & {
   title: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
+  "data-testid"?: string;
 };
 
 function LinkPopoverButton(props: LinkPopoverButtonProps) {
-  const { className: _className, isDisabled, ...rest } = props;
+  const { className: _className, isDisabled, "data-testid": testId, ...rest } = props;
   const defaultClassName = `p-1 flex rounded hover:bg-gray-100 ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`;
 
   return (
     <TooltipTrigger delay={500}>
-      <Button {...rest} className={defaultClassName} isDisabled={isDisabled}>
+      <Button {...rest} className={defaultClassName} isDisabled={isDisabled} data-testid={testId}>
         <props.icon className="size-4 text-gray-400" />
       </Button>
       <Tooltip>{props.title}</Tooltip>
     </TooltipTrigger>
+  );
+}
+
+interface LinkPopoverContainerProps {
+  editor: Editor;
+  organizationId: string;
+  organizationSlug: string;
+}
+
+export function LinkPopover({
+  editor,
+  organizationId,
+  organizationSlug,
+}: LinkPopoverContainerProps) {
+  const navigate = useNavigate({ from: "/w/$organizationSlug" });
+  const linkState = useLinkState(editor);
+
+  // Track search term for document search
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Get document ID for internal links
+  const documentId =
+    linkState.mode !== "closed" ? extractDocumentIdFromInternalLink(linkState.href) : null;
+
+  // Fetch internal document for view mode
+  const [internalDocument] = useQuery(
+    queries.documents.byId({
+      organizationId: organizationId,
+      documentId: documentId || "",
+    }),
+  );
+
+  // Fetch search results for edit mode
+  const [searchResults] = useQuery(
+    queries.documents.search({
+      organizationId: organizationId,
+      searchTerm: searchTerm,
+    }),
+  );
+
+  // Handle navigation to internal documents
+  const handleNavigate = useCallback(
+    (docId: string) => {
+      navigate({
+        to: "/w/$organizationSlug/$id",
+        params: { organizationSlug: organizationSlug, id: docId },
+      });
+    },
+    [navigate, organizationSlug],
+  );
+
+  return (
+    <LinkPopoverBase
+      editor={editor}
+      organizationId={organizationId}
+      organizationSlug={organizationSlug}
+      internalDocument={internalDocument}
+      searchResults={searchResults ?? []}
+      onNavigate={handleNavigate}
+      onSearchChange={setSearchTerm}
+    />
   );
 }

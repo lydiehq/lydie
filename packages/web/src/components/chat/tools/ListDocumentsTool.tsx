@@ -10,7 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Button, Disclosure, DisclosurePanel } from "react-aria-components";
 
-import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
+import { DocumentIcon } from "@/components/icons/DocumentIcon";
 
 import { ToolContainer } from "./ToolContainer";
 

@@ -10,7 +10,7 @@ import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
 import { Button } from "@/components/generic/Button";
-import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
+import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";
 

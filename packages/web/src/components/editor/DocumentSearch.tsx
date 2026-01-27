@@ -8,7 +8,7 @@ import { Input } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 
-import { DocumentIcon } from "./icons/DocumentIcon";
+import { DocumentIcon } from "../icons/DocumentIcon";
 
 interface DocumentSearchProps {
   onSelectDocument: (document: Document) => void;

@@ -10,9 +10,9 @@ import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
 
 import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
-import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { Button } from "@/components/generic/Button";
 import { Separator } from "@/components/generic/Separator";
+import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useDocumentEditor, useTitleEditor } from "@/hooks/use-editor";

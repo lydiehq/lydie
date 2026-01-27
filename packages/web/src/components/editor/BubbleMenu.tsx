@@ -4,9 +4,9 @@ import { TextStrikethroughFilled } from "@fluentui/react-icons";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 
 import { Separator } from "../generic/Separator";
+import { BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "../icons/wyswyg-icons";
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { ToolbarButton } from "./toolbar/ToolbarButton";
-import { BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "./wysiwyg-icons";
 
 type Props = {
   editor: Editor;

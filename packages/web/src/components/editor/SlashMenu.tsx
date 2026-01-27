@@ -18,7 +18,7 @@ import {
   ItalicIcon,
   TableIcon,
   TaskListIcon,
-} from "./wysiwyg-icons";
+} from "../icons/wyswyg-icons";
 
 type SlashMenuItem = {
   id: string;

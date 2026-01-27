@@ -12,9 +12,9 @@ import { focusRing } from "@/utils/focus-ring";
 
 import { Link } from "../generic/Link";
 import { composeTailwindRenderProps } from "../generic/utils";
+import { CollapseArrow } from "../icons/CollapseArrow";
+import { DocumentIcon } from "../icons/DocumentIcon";
 import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";
-import { CollapseArrow } from "./icons/CollapseArrow";
-import { DocumentIcon } from "./icons/DocumentIcon";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 

@@ -20,9 +20,9 @@ import { createPortal } from "react-dom";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
 import { ChatMessages } from "@/components/chat/ChatMessages";
-import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
 import { Button } from "@/components/generic/Button";
 import { Tooltip } from "@/components/generic/Tooltip";
+import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import {

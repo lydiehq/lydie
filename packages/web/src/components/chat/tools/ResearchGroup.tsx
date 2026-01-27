@@ -10,7 +10,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
-import { DocumentIcon } from "@/components/editor/icons/DocumentIcon";
+import { DocumentIcon } from "@/components/icons/DocumentIcon";
 
 export interface ResearchAction {
   type: "read" | "search" | "list" | "web_search" | "search_in_document";

@@ -5,7 +5,7 @@ import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { Checkbox } from "@/components/generic/Checkbox";
 import { CircularProgress } from "@/components/generic/CircularProgress";
 
-import { Button } from "../generic/Button";
+import { Button } from "../../generic/Button";
 
 export function OnboardingStepView({ node, updateAttributes }: NodeViewProps) {
   const stepNumber = node.attrs.stepNumber || 1;
