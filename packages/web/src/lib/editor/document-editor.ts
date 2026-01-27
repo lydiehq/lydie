@@ -13,10 +13,10 @@ import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
-import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
-import { OnboardingTextPracticeView } from "@/components/editor/OnboardingTextPracticeView";
 import { OnboardingAssistantTaskView } from "@/components/editor/OnboardingAssistantTaskView";
 import { OnboardingPlaceholderView } from "@/components/editor/OnboardingPlaceholderView";
+import { OnboardingStepView } from "@/components/editor/OnboardingStepView";
+import { OnboardingTextPracticeView } from "@/components/editor/OnboardingTextPracticeView";
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
@@ -104,9 +104,9 @@ export function useDocumentEditor({
 
   const extensions = useMemo(() => {
     const slashMenuSuggestion = createSlashMenuSuggestion(
-      fileInputRef as React.RefObject<HTMLInputElement | null>
+      fileInputRef as React.RefObject<HTMLInputElement | null>,
     );
-    
+
     return getDocumentEditorExtensions({
       keyboardShortcuts: { onAddLink },
       documentComponent: {
@@ -135,7 +135,7 @@ export function useDocumentEditor({
               props,
               editor,
               range,
-              fileInputRef as React.RefObject<HTMLInputElement | null>
+              fileInputRef as React.RefObject<HTMLInputElement | null>,
             )();
           },
         },
@@ -151,7 +151,7 @@ export function useDocumentEditor({
     extensions,
     editorProps: {
       attributes: {
-        class: "size-full outline-none editor-content",
+        class: "size-full outline-none editor-content pb-8",
       },
       handleDrop: isLocked ? undefined : createImageDropHandler(uploadImage),
     },

@@ -202,7 +202,7 @@ function EditorContainer({ doc }: Props) {
       )}
       <div
         ref={scrollContainerRef}
-        className="flex flex-row overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white "
+        className="flex flex-row grow overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white "
       >
         <div className="flex mx-auto grow max-w-[65ch] px-4 flex-col pt-12">
           <CoverImageEditor
@@ -223,7 +223,7 @@ function EditorContainer({ doc }: Props) {
           <EditorContent
             aria-label="Document content"
             editor={contentEditor.editor}
-            className="block grow pb-8"
+            className="block grow"
           />
         </div>
         {/* Handles shifting content left when assistant is undocked and open */}

@@ -293,9 +293,19 @@ export function LinkPopover({ editor, onOpenLinkDialog }: Props) {
 
     // Create link with URL
     if (isProgrammaticOpen) {
-      const label = hasSelection ? linkLabelValue : trimmedLabelValue;
+      const label = hasSelection ? trimmedLabelValue : trimmedLabelValue;
       if (hasSelection) {
-        editor.chain().focus().setLink({ href: trimmedUrlValue }).run();
+        // When there's a selection, delete it and insert the new text with link
+        editor
+          .chain()
+          .focus()
+          .deleteSelection()
+          .insertContent({
+            type: "text",
+            text: label,
+            marks: [{ type: "link", attrs: { href: trimmedUrlValue } }],
+          })
+          .run();
       } else {
         editor
           .chain()
