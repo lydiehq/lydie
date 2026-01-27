@@ -22,6 +22,11 @@
     --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
     --editor-content-blockquote-border-color: var(--color-gray-600);
   }
+
+  &:where(.dark, .dark *) :is(h1, h2, h3, h4)::before {
+    color: var(--color-gray-500);
+  }
+
   @media (prefers-color-scheme: dark) {
     &:where(.system, .system *) {
       --editor-content-color: var(--color-gray-300);
@@ -34,6 +39,10 @@
       --editor-content-td-borders: var(--color-gray-700);
       --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
       --editor-content-blockquote-border-color: var(--color-gray-600);
+    }
+
+    &:where(.system, .system *) :is(h1, h2, h3, h4)::before {
+      color: var(--color-gray-500);
     }
   }
 
@@ -97,7 +106,39 @@
   }
 
   :is(h1, h2, h3, h4) {
+    position: relative;
     scroll-margin-top: calc(var(--spacing) * 32);
+  }
+
+  :is(h1, h2, h3, h4)::before {
+    position: absolute;
+    left: -1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-mono);
+    color: var(--color-gray-400);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s ease-in;
+  }
+
+  :is(h1, h2, h3, h4):hover::before {
+    opacity: 1;
+  }
+
+  h1::before {
+    content: "H1";
+  }
+  h2::before {
+    content: "H2";
+  }
+  h3::before {
+    content: "H3";
+  }
+  h4::before {
+    content: "H4";
   }
 
   ul {
