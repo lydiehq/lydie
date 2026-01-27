@@ -193,7 +193,7 @@ function EditorContainer({ doc }: Props) {
   }
 
   return (
-    <div className="overflow-hidden flex flex-col grow relative">
+    <div className="overflow-hidden flex flex-col grow relative size-full">
       <EditorToolbar editor={contentEditor.editor} doc={doc} onAddLink={handleOpenLinkDialog} />
       {isLocked && (
         <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
@@ -201,6 +201,40 @@ function EditorContainer({ doc }: Props) {
         </div>
       )}
       <div
+        ref={scrollContainerRef}
+        className="flex flex-row overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white "
+      >
+        <div className="flex mx-auto grow max-w-[65ch] px-4 flex-col pt-12">
+          <CoverImageEditor
+            documentId={doc.id}
+            organizationId={doc.organization_id}
+            coverImage={doc.cover_image}
+          />
+          <EditorContent editor={titleEditor.editor} aria-label="Document title" className="my-2" />
+          <DocumentMetadataTabs
+            doc={doc}
+            initialFields={(doc.custom_fields as Record<string, string | number>) || {}}
+          />
+          <LinkPopover
+            editor={contentEditor.editor}
+            onOpenLinkDialog={registerLinkDialogCallback}
+          />
+          <BubbleMenu editor={contentEditor.editor} onAddLink={handleOpenLinkDialog} />
+          <EditorContent
+            aria-label="Document content"
+            editor={contentEditor.editor}
+            className="block grow pb-8"
+          />
+        </div>
+        {/* Handles shifting content left when assistant is undocked and open */}
+        <div
+          className={clsx(
+            "shrink-0 transition-[width] duration-500 ease-in-out bg-",
+            shouldShiftContent ? "max-2xl:w-[170px]" : "w-0",
+          )}
+        />
+      </div>
+      {/* <div
         ref={scrollContainerRef}
         className="flex overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative pt-12"
       >
@@ -231,7 +265,6 @@ function EditorContainer({ doc }: Props) {
               className="block grow pb-8"
             />
           </div>
-          {/* Handles shifting content left when assistant is undocked and open */}
           <div
             className={clsx(
               "shrink-0 transition-[width] duration-500 ease-in-out bg-",
@@ -239,7 +272,7 @@ function EditorContainer({ doc }: Props) {
             )}
           />
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
