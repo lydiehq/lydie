@@ -1,7 +1,6 @@
 export * from "./link";
 
 export { KeyboardShortcutExtension } from "./keyboard-shortcuts";
-export type { KeyboardShortcutOptions } from "./keyboard-shortcuts";
 
 export { IndentHandlerExtension } from "./indent-handler";
 

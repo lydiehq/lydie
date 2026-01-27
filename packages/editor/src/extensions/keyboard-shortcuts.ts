@@ -1,32 +1,28 @@
 import { Extension } from "@tiptap/core";
 
-export interface KeyboardShortcutOptions {
-  onAddLink?: () => void;
-}
-
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     keyboardShortcuts: {
-      openLinkDialog: () => ReturnType;
+      /**
+       * Opens the link popover by setting an empty link mark.
+       * This triggers the LinkPopover component to show in edit mode.
+       */
+      openLinkPopover: () => ReturnType;
     };
   }
 }
 
-export const KeyboardShortcutExtension = Extension.create<KeyboardShortcutOptions>({
+export const KeyboardShortcutExtension = Extension.create({
   name: "keyboardShortcuts",
-
-  addOptions() {
-    return {
-      onAddLink: undefined,
-    };
-  },
 
   addCommands() {
     return {
-      openLinkDialog: () => () => {
-        this.options.onAddLink?.();
-        return true;
-      },
+      openLinkPopover:
+        () =>
+        ({ commands }) => {
+          // Set an empty link mark to trigger the popover in edit mode
+          return commands.setLink({ href: "" });
+        },
     };
   },
 
@@ -36,12 +32,16 @@ export const KeyboardShortcutExtension = Extension.create<KeyboardShortcutOption
         const { state } = this.editor;
         const { from, to } = state.selection;
         const hasSelection = from !== to;
+        const isLinkActive = this.editor.isActive("link");
 
-        // Only handle if text is selected AND we have a link handler
-        if (hasSelection && this.options.onAddLink) {
-          this.options.onAddLink();
-          // Return true to prevent the command menu from opening
-          return true;
+        // If we're on a link (even without selection), select the entire link and open edit mode
+        if (isLinkActive && !hasSelection) {
+          return this.editor.commands.extendMarkRange("link") && this.editor.commands.openLinkPopover();
+        }
+
+        // If text is selected, open link popover
+        if (hasSelection) {
+          return this.editor.commands.openLinkPopover();
         }
 
         // Otherwise, return false to let the event bubble up

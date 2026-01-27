@@ -10,10 +10,9 @@ import { BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "./wysiwyg-icons";
 
 type Props = {
   editor: Editor;
-  onAddLink?: () => void;
 };
 
-export function BubbleMenu({ editor, onAddLink }: Props) {
+export function BubbleMenu({ editor }: Props) {
   return (
     <TiptapBubbleMenu
       editor={editor}
@@ -59,13 +58,9 @@ export function BubbleMenu({ editor, onAddLink }: Props) {
 
       <Separator orientation="vertical" className="h-4 mx-1" />
 
-      {/* Link button */}
+      {/* Link button - uses editor command to open link popover */}
       <ToolbarButton
-        onPress={() => {
-          if (onAddLink) {
-            onAddLink();
-          }
-        }}
+        onPress={() => editor.commands.openLinkPopover()}
         title="Add Link"
         icon={LinkIcon}
         editor={editor}

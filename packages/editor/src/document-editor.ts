@@ -11,7 +11,6 @@ import * as E from "./extensions";
 
 export interface GetDocumentEditorExtensionsOptions {
   starterKit?: StarterKitOptions;
-  keyboardShortcuts?: Partial<E.KeyboardShortcutOptions>;
   documentComponent?: Partial<E.DocumentComponentOptions>;
   codeBlock?: Partial<E.CodeBlockOptions>;
   onboardingStep?: Partial<E.OnboardingStepOptions>;
@@ -40,7 +39,7 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     TaskList,
     TaskItem,
     CharacterCount,
-    E.KeyboardShortcutExtension.configure(options?.keyboardShortcuts),
+    E.KeyboardShortcutExtension,
     E.DocumentComponent.configure(options?.documentComponent),
     E.CodeBlock.configure(options?.codeBlock),
     E.OnboardingStep.configure(options?.onboardingStep),

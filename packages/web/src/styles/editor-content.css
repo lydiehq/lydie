@@ -236,7 +236,7 @@
     text-decoration-thickness: 2px;
   }
 
-  a::before {
+  /* a::before {
     content: "";
     display: inline-block;
     width: 1em;
@@ -254,7 +254,7 @@
 
   a:not([data-internal])::before {
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>');
-  }
+  } */
 
   strong {
     color: var(--editor-content-strong-color);

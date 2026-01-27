@@ -38,10 +38,9 @@ import {
 type Props = {
   editor: Editor;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
-  onAddLink?: () => void;
 };
 
-export function EditorToolbar({ editor, doc, onAddLink }: Props) {
+export function EditorToolbar({ editor, doc }: Props) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { deleteDocument, publishDocument, unpublishDocument } = useDocumentActions();
   const { uploadImage } = useImageUpload();
@@ -141,14 +140,16 @@ export function EditorToolbar({ editor, doc, onAddLink }: Props) {
             <TooltipTrigger delay={500}>
               <Button
                 onPress={() => {
-                  if (onAddLink) {
-                    onAddLink();
+                  // If on a link without selection, select the entire link first
+                  if (editor.isActive("link") && editor.state.selection.empty) {
+                    editor.commands.extendMarkRange("link");
                   }
+                  editor.commands.openLinkPopover();
                 }}
                 intent="ghost"
                 size="icon-sm"
                 aria-label="Add Link"
-                isDisabled={editor.state.selection.empty}
+                isDisabled={editor.state.selection.empty && !editor.isActive("link")}
                 className={editor.isActive("link") ? "bg-gray-200" : ""}
               >
                 <LinkIcon className="size-[15px] text-gray-700" />

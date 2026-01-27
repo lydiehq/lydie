@@ -5,7 +5,7 @@ import { queries } from "@lydie/zero/queries";
 import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -38,7 +38,6 @@ export function Editor({ doc }: Props) {
 function EditorContainer({ doc }: Props) {
   const z = useZero();
   const [title, setTitle] = useState(doc.title || "");
-  const openLinkDialogRef = useRef<(() => void) | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isLocked = doc.is_locked ?? false;
 
@@ -58,19 +57,8 @@ function EditorContainer({ doc }: Props) {
     setTitle(finalTitle);
   };
 
-  const handleOpenLinkDialog = useCallback(() => {
-    if (openLinkDialogRef.current) {
-      openLinkDialogRef.current();
-    }
-  }, []);
-
-  const registerLinkDialogCallback = useCallback((callback: () => void) => {
-    openLinkDialogRef.current = callback;
-  }, []);
-
   const contentEditor = useDocumentEditor({
     doc,
-    onAddLink: handleOpenLinkDialog,
     onCreate: setDocumentEditor,
     onDestroy: () => {
       setDocumentEditor(null);
@@ -194,7 +182,7 @@ function EditorContainer({ doc }: Props) {
 
   return (
     <div className="overflow-hidden flex flex-col grow relative size-full">
-      <EditorToolbar editor={contentEditor.editor} doc={doc} onAddLink={handleOpenLinkDialog} />
+      <EditorToolbar editor={contentEditor.editor} doc={doc} />
       {isLocked && (
         <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
           This page is managed by an integration and cannot be edited.
@@ -215,11 +203,8 @@ function EditorContainer({ doc }: Props) {
             doc={doc}
             initialFields={(doc.custom_fields as Record<string, string | number>) || {}}
           />
-          <LinkPopover
-            editor={contentEditor.editor}
-            onOpenLinkDialog={registerLinkDialogCallback}
-          />
-          <BubbleMenu editor={contentEditor.editor} onAddLink={handleOpenLinkDialog} />
+          <LinkPopover editor={contentEditor.editor} />
+          <BubbleMenu editor={contentEditor.editor} />
           <EditorContent
             aria-label="Document content"
             editor={contentEditor.editor}
