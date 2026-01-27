@@ -2,7 +2,7 @@ import { Command } from "cmdk";
 import { cva } from "cva";
 
 const itemClassName = cva({
-  base: "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-3 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800 transition-colors duration-150",
+  base: "relative flex cursor-pointer select-none items-center rounded-lg px-3 py-3 text-sm outline-none data-[selected=true]:bg-gray-100 data-[selected=true]:text-gray-950 text-gray-800 transition-colors duration-150",
   variants: {
     destructive: {
       true: "data-[selected=true]:text-red-600 text-red-500",

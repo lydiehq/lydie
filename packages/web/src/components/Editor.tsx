@@ -28,7 +28,13 @@ type Props = {
 };
 
 export function Editor({ doc, organizationId, organizationSlug }: Props) {
-  return <EditorContainer doc={doc} organizationId={organizationId} organizationSlug={organizationSlug} />;
+  return (
+    <EditorContainer
+      doc={doc}
+      organizationId={organizationId}
+      organizationSlug={organizationSlug}
+    />
+  );
 }
 
 function EditorContainer({ doc, organizationId, organizationSlug }: Props) {

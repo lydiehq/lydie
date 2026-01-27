@@ -8,10 +8,13 @@
     "prebuild": "bun --filter=@lydie/scripts copy-integration-assets",
     "build": "vite build",
     "serve": "vite preview",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "bun sst shell playwright test -- --ui"
+    "test:e2e": "bun sst shell playwright test",
+    "test:e2e:ui": "bun sst shell playwright test -- --ui",
+    "test:e2e:debug": "bun sst shell playwright test -- --debug"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.52",

@@ -6,6 +6,7 @@ import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useRef } from "react";
 
+import { BottomBar } from "./BottomBar";
 import { BubbleMenu } from "./BubbleMenu";
 import { CoverImageEditor } from "./CoverImageEditor";
 import { DocumentMetadataTabs } from "./DocumentMetadataTabs";
@@ -53,7 +54,7 @@ export function EditorView({
 
       <div
         ref={scrollContainerRef}
-        className="flex flex-row grow overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white"
+        className="flex flex-row grow overflow-y-auto relative scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white"
       >
         <div className="flex mx-auto grow max-w-[65ch] px-4 flex-col pt-12">
           <CoverImageEditor
@@ -91,6 +92,8 @@ export function EditorView({
           )}
         />
       </div>
+
+      <BottomBar editor={contentEditor} />
     </div>
   );
 }
