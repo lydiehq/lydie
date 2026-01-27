@@ -56,7 +56,7 @@ export function EditorView({
         ref={scrollContainerRef}
         className="flex flex-row grow overflow-y-auto relative scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white"
       >
-        <div className="flex mx-auto grow max-w-[65ch] px-4 flex-col pt-12">
+        <div className="flex mx-auto grow max-w-[65ch] px-4 flex-col pt-12 shrink-0">
           <CoverImageEditor
             documentId={doc.id}
             organizationId={doc.organization_id}
