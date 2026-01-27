@@ -22,7 +22,7 @@ const { content, linkPrefix, linkResolver } = Astro.props;
 
 // Process code blocks with Shiki, then render the rest with the standard serializer
 async function processCodeBlocks(
-  node: ContentNode | any
+  node: ContentNode | any,
 ): Promise<ContentNode | any> {
   if (node.type === "codeBlock") {
     // Leave code blocks as-is, we'll process them separately
@@ -41,7 +41,7 @@ async function processCodeBlocks(
 
 // Render content, processing code blocks with Shiki
 async function renderContentWithShiki(
-  node: ContentNode | any
+  node: ContentNode | any,
 ): Promise<string> {
   const serializer = new ShikiHTMLSerializer({ linkPrefix, linkResolver });
 
@@ -73,23 +73,25 @@ async function renderContentWithShiki(
         return serializer.listItem(children);
       case "horizontalRule":
         return serializer.horizontalRule();
+      case "blockquote":
+        return serializer.blockquote(children);
       case "codeBlock": {
         // Extract raw code text and process with Shiki
         const rawCode = extractCodeText(n);
         return await serializer.codeBlockWithShiki(
           [rawCode],
-          n.attrs?.language
+          n.attrs?.language,
         );
       }
       case "customBlock":
         return serializer.customBlock(
           n.attrs?.name || "",
-          n.attrs?.properties || {}
+          n.attrs?.properties || {},
         );
       case "documentComponent":
         return serializer.customBlock(
           n.attrs?.name || "",
-          n.attrs?.properties || {}
+          n.attrs?.properties || {},
         );
       default:
         return serializer.empty();
@@ -103,7 +105,7 @@ async function renderContentWithShiki(
 function renderMarks(
   text: string,
   marks: any[] | undefined,
-  serializer: ShikiHTMLSerializer
+  serializer: ShikiHTMLSerializer,
 ): string {
   if (!marks || marks.length === 0) {
     return serializer.text(text);
@@ -124,14 +126,14 @@ function renderMarks(
           wrapped,
           mark.attrs?.href,
           mark.attrs?.rel,
-          mark.attrs?.target
+          mark.attrs?.target,
         );
       case "internal-link":
         return serializer.internalLink(
           wrapped,
           mark.attrs?.["document-id"],
           mark.attrs?.["document-slug"],
-          mark.attrs?.["document-title"]
+          mark.attrs?.["document-title"],
         );
       default:
         return wrapped;
