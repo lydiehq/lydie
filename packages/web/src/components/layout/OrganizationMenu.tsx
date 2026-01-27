@@ -1,4 +1,3 @@
-import { ChevronDown12Regular } from "@fluentui/react-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useState } from "react";
@@ -12,6 +11,7 @@ import { authClient } from "@/utils/auth";
 
 import { Popover } from "../generic/Popover";
 import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { CollapseArrow } from "../icons/CollapseArrow";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 import { OrganizationsDialog } from "./OrganizationsDialog";
 
@@ -24,6 +24,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
 
   const queryClient = useQueryClient();
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const signOut = async () => {
     await authClient.signOut();
@@ -34,12 +35,12 @@ export function OrganizationMenu({ isCollapsed }: Props) {
 
   return (
     <div>
-      <MenuTrigger>
+      <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <RACButton
           className={composeTailwindRenderProps(
             focusRing,
             clsx(
-              "flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-md overflow-hidden aria-expanded:bg-black/3",
+              "group flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-md overflow-hidden aria-expanded:bg-black/3",
               !isCollapsed && "px-1.5 py-0.5 -mx-1.5",
             ),
           )}
@@ -50,7 +51,9 @@ export function OrganizationMenu({ isCollapsed }: Props) {
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">
                 {organization?.name}
               </div>
-              <ChevronDown12Regular className="size-3 text-gray-500" />
+              <CollapseArrow
+                className={`size-3 text-gray-500 ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity rotate-90`}
+              />
             </>
           )}
         </RACButton>
