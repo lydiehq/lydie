@@ -2,7 +2,7 @@ import { cva } from "cva";
 import { Separator as RACSeparator, type SeparatorProps } from "react-aria-components";
 
 const styles = cva({
-  base: "bg-black/3 border-black/3",
+  base: "bg-black/3 border-black/3 dark:bg-white/10 dark:border-white/10",
   variants: {
     orientation: {
       horizontal: "h-px",

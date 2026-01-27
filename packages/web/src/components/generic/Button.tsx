@@ -23,7 +23,7 @@ const styles = cva({
       secondary:
         "dark:bg-black bg-white text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:bg-gray-100 dark:disabled:bg-gray-900 disabled:text-gray-500 dark:disabled:text-gray-400 shadow-surface",
       ghost:
-        "bg-transparent text-gray-700 hover:bg-black/5 dark:hover:bg-gray-900 border-transparent dark:border-transparent",
+        "bg-transparent text-gray-700 dark:text-white hover:bg-black/5 dark:hover:bg-white/20 border-transparent dark:border-transparent",
       danger: "bg-red-600 text-white hover:bg-red-700 border-red-600",
     },
     size: {

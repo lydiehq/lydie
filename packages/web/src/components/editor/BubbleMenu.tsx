@@ -2,11 +2,13 @@ import type { Editor } from "@tiptap/core";
 
 import { TextStrikethroughFilled } from "@fluentui/react-icons";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
+import { TooltipTrigger } from "react-aria-components";
 
+import { Button } from "../generic/Button";
 import { Separator } from "../generic/Separator";
+import { Tooltip } from "../generic/Tooltip";
 import { BlockquoteIcon, BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "../icons/wyswyg-icons";
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
-import { ToolbarButton } from "./toolbar/ToolbarButton";
 
 type Props = {
   editor: Editor;
@@ -19,63 +21,86 @@ export function BubbleMenu({ editor }: Props) {
       options={{
         placement: "bottom",
       }}
-      className="z-100 bg-black/85 text-white rounded-lg shadow-popover p-1 flex items-center gap-1"
+      className="dark z-100 bg-black/85 border border-white/20 rounded-lg shadow-popover p-1 flex items-center gap-1"
     >
-      {/* Block type dropdown */}
-      <BlockTypeDropdown editor={editor} variant="bubble" />
+      <BlockTypeDropdown editor={editor} />
+      <Separator orientation="vertical" className="h-4" />
+      <TooltipTrigger delay={500}>
+        <Button
+          onPress={() => editor.chain().focus().toggleBold().run()}
+          intent="ghost"
+          size="icon-sm"
+          aria-label="Bold"
+          className={editor.isActive("bold") ? "bg-white/30" : ""}
+        >
+          <BoldIcon className="size-[15px]" />
+        </Button>
+        <Tooltip placement="bottom">Bold</Tooltip>
+      </TooltipTrigger>
+      <TooltipTrigger delay={500}>
+        <Button
+          onPress={() => editor.chain().focus().toggleItalic().run()}
+          intent="ghost"
+          size="icon-sm"
+          aria-label="Italic"
+          className={editor.isActive("italic") ? "bg-white/30" : ""}
+        >
+          <ItalicIcon className="size-[15px]" />
+        </Button>
+        <Tooltip placement="bottom">Italic</Tooltip>
+      </TooltipTrigger>
+      <TooltipTrigger delay={500}>
+        <Button
+          onPress={() => editor.chain().focus().toggleStrike().run()}
+          intent="ghost"
+          size="icon-sm"
+          aria-label="Strike"
+          className={editor.isActive("strike") ? "bg-white/30" : ""}
+        >
+          <TextStrikethroughFilled className="size-[15px]" />
+        </Button>
+        <Tooltip placement="bottom">Strike</Tooltip>
+      </TooltipTrigger>
+      <TooltipTrigger delay={500}>
+        <Button
+          onPress={() => editor.chain().focus().toggleCode().run()}
+          intent="ghost"
+          size="icon-sm"
+          aria-label="Code"
+          className={editor.isActive("code") ? "bg-white/30" : ""}
+        >
+          <CodeIcon className="size-[15px]" />
+        </Button>
+        <Tooltip placement="bottom">Code</Tooltip>
+      </TooltipTrigger>
+      <TooltipTrigger delay={500}>
+        <Button
+          onPress={() => editor.chain().focus().toggleBlockquote().run()}
+          intent="ghost"
+          size="icon-sm"
+          aria-label="Blockquote"
+          className={editor.isActive("blockquote") ? "bg-white/30" : ""}
+        >
+          <BlockquoteIcon className="size-[15px]" />
+        </Button>
+        <Tooltip placement="bottom">Blockquote</Tooltip>
+      </TooltipTrigger>
 
-      <Separator orientation="vertical" className="h-4 mx-1" />
+      <Separator orientation="vertical" className="h-4" />
 
-      {/* Formatting buttons */}
-      <ToolbarButton
-        onPress={() => editor.chain().focus().toggleBold().run()}
-        title="Bold"
-        icon={BoldIcon}
-        editor={editor}
-        inverted
-      />
-      <ToolbarButton
-        onPress={() => editor.chain().focus().toggleItalic().run()}
-        title="Italic"
-        icon={ItalicIcon}
-        editor={editor}
-        inverted
-      />
-      <ToolbarButton
-        onPress={() => editor.chain().focus().toggleStrike().run()}
-        title="Strike"
-        icon={TextStrikethroughFilled}
-        editor={editor}
-        inverted
-      />
-      <ToolbarButton
-        onPress={() => editor.chain().focus().toggleCode().run()}
-        title="Code"
-        icon={CodeIcon}
-        editor={editor}
-        inverted
-      />
-      <ToolbarButton
-        onPress={() => editor.chain().focus().toggleBlockquote().run()}
-        title="Blockquote"
-        icon={BlockquoteIcon}
-        editor={editor}
-        inverted
-      />
-
-      <Separator orientation="vertical" className="h-4 mx-1" />
-
-      {/* Link button - uses editor command to open link popover */}
-      <ToolbarButton
-        onPress={() => editor.commands.openLinkPopover()}
-        title="Add Link"
-        icon={LinkIcon}
-        editor={editor}
-        isDisabled={editor.state.selection.empty}
-        inverted
-      />
-
-      <Separator orientation="vertical" className="h-4 mx-1" />
+      <TooltipTrigger delay={500}>
+        <Button
+          onPress={() => editor.commands.openLinkPopover()}
+          intent="ghost"
+          size="icon-sm"
+          aria-label="Add Link"
+          isDisabled={editor.state.selection.empty}
+          className={editor.isActive("link") ? "bg-white/30" : ""}
+        >
+          <LinkIcon className="size-[15px]" />
+        </Button>
+        <Tooltip placement="bottom">Add Link</Tooltip>
+      </TooltipTrigger>
     </TiptapBubbleMenu>
   );
 }
