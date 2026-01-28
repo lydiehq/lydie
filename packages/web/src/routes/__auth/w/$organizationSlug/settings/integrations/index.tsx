@@ -1,8 +1,8 @@
 import { queries } from "@lydie/zero/queries";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Heading } from "@/components/generic/Heading";
-import { Separator } from "@/components/generic/Separator";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { IntegrationsList } from "@/components/settings/integrations/IntegrationsList";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integrations/")({

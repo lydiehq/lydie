@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Heading } from "@/components/generic/Heading";
-import { SectionHeader } from "@/components/generic/SectionHeader";
-import { Separator } from "@/components/generic/Separator";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { ProfileForm } from "@/components/settings/profile/ProfileForm";
 import { useAuth } from "@/context/auth.context";
 

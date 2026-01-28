@@ -4,7 +4,7 @@ import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/re
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
 
-import { Checkbox } from "@/components/generic/Checkbox";
+import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
 
 export function OnboardingTextPracticeView({ node, updateAttributes, editor }: NodeViewProps) {
   const tasks = (node.attrs.tasks || []) as OnboardingTextPracticeTask[];

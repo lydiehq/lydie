@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Heading } from "./Heading";
+import { Heading } from "../generic/Heading";
 
 type SectionHeaderProps = {
   heading: ReactNode;

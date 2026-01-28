@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "./editor-content.css";
+@import "@lydie/ui/styles/editor-content.css";
 @import "tw-animate-css";
 
 @import "@fontsource-variable/inter";

@@ -12,7 +12,7 @@ import {
 } from "@fluentui/react-icons";
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { Eyebrow } from "@/components/generic/Eyebrow";
+import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { sidebarItemIconStyles, sidebarItemStyles } from "@/components/layout/Sidebar";
 import { Surface } from "@/components/layout/Surface";

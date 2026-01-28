@@ -2,7 +2,7 @@ import { BotRegular, SparkleRegular } from "@fluentui/react-icons";
 import { motion } from "motion/react";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { useFloatingAssistant } from "@/hooks/use-floating-assistant";
 
 const TASKS: Array<{

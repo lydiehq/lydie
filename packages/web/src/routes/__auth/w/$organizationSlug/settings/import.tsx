@@ -9,7 +9,7 @@ import { useCallback, useRef, useState } from "react";
 import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";

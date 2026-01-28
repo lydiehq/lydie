@@ -3,8 +3,8 @@ import { type IntegrationMetadata, integrationMetadata } from "@lydie/integratio
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 
-import { Eyebrow } from "@/components/generic/Eyebrow";
-import { Link } from "@/components/generic/Link";
+import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
+import { Link } from "@lydie/ui/components/generic/Link";
 import { cardStyles } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";

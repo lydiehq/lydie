@@ -9,11 +9,11 @@ import { DialogTrigger } from "react-aria-components";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Button } from "@/components/generic/Button";
-import { Dialog } from "@/components/generic/Dialog";
-import { Heading } from "@/components/generic/Heading";
-import { Link } from "@/components/generic/Link";
-import { Modal } from "@/components/generic/Modal";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { Link } from "@lydie/ui/components/generic/Link";
+import { Modal } from "@lydie/ui/components/generic/Modal";
 import { WordPressConnectionForm } from "@/components/settings/integrations/forms/wordpress-connection-form";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";

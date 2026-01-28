@@ -11,11 +11,11 @@ import { Form, Heading } from "react-aria-components";
 import { TextField } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
-import { Checkbox, CheckboxGroup } from "@/components/generic/Checkbox";
-import { Input, Label } from "@/components/generic/Field";
-import { SectionHeader } from "@/components/generic/SectionHeader";
-import { Separator } from "@/components/generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Checkbox, CheckboxGroup } from "@lydie/ui/components/generic/Checkbox";
+import { Input, Label } from "@lydie/ui/components/generic/Field";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Card } from "@/components/layout/Card";
 import { useAuth } from "@/context/auth.context";
 import { useZero } from "@/services/zero";

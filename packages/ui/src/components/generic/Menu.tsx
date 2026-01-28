@@ -16,7 +16,7 @@ import { twMerge } from "tailwind-merge";
 
 import { dropdownItemStyles } from "./ListBox";
 import { Popover, type PopoverProps } from "./Popover";
-import { Separator } from "./Separator";
+import { Separator } from "../layout/Separator";
 
 interface MenuProps<T> extends AriaMenuProps<T> {
   placement?: PopoverProps["placement"];

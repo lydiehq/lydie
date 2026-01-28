@@ -1,8 +1,8 @@
 import { Input } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
-import { Label } from "@/components/generic/Field";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Label } from "@lydie/ui/components/generic/Field";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useAuthenticatedApi } from "@/services/api";
 

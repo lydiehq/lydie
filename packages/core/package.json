@@ -13,7 +13,7 @@
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
-    "@polar-sh/sdk": "^0.42.2",
+    "@polar-sh/sdk": "^0.42.4",
     "@tiptap/core": "catalog:",
     "@tiptap/y-tiptap": "catalog:",
     "ai": "catalog:",

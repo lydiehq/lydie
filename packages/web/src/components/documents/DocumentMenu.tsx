@@ -10,15 +10,15 @@ import { Form, Heading } from "react-aria-components";
 import { TextField } from "react-aria-components";
 import { toast } from "sonner";
 
-import type { PopoverProps } from "@/components/generic/Popover";
+import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
 
-import { Button } from "@/components/generic/Button";
-import { Checkbox, CheckboxGroup } from "@/components/generic/Checkbox";
-import { Dialog } from "@/components/generic/Dialog";
-import { Input, Label } from "@/components/generic/Field";
-import { Menu, MenuItem, MenuSeparator } from "@/components/generic/Menu";
-import { Modal } from "@/components/generic/Modal";
-import { Separator } from "@/components/generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Checkbox, CheckboxGroup } from "@lydie/ui/components/generic/Checkbox";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Input, Label } from "@lydie/ui/components/generic/Field";
+import { Menu, MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";

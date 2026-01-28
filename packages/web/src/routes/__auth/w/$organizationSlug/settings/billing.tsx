@@ -15,11 +15,11 @@ import { useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
-import { Dialog } from "@/components/generic/Dialog";
-import { Heading } from "@/components/generic/Heading";
-import { Modal } from "@/components/generic/Modal";
-import { Separator } from "@/components/generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Card } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
 import { authClient } from "@/utils/auth";

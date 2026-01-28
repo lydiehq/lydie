@@ -7,7 +7,7 @@ import {
 } from "@fluentui/react-icons";
 import { formatDistanceToNow } from "date-fns";
 
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { Card } from "@/components/layout/Card";
 
 type Invitation = {

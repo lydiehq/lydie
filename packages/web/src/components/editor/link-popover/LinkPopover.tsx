@@ -32,8 +32,8 @@ import {
   useFilter,
 } from "react-aria-components";
 
-import { Separator } from "@/components/generic/Separator";
-import { Tooltip } from "@/components/generic/Tooltip";
+import { Separator } from "@lydie/ui/components/layout/Separator";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { DocumentIcon } from "@/components/icons/DocumentIcon";
 
 type PopoverState =

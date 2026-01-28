@@ -9,10 +9,10 @@ import JSZip from "jszip";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
-import { Heading } from "@/components/generic/Heading";
-import { SectionHeader } from "@/components/generic/SectionHeader";
-import { Separator } from "@/components/generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Card } from "@/components/layout/Card";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";

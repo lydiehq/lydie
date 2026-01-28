@@ -26,12 +26,14 @@ import { useZero } from "@/services/zero";
 import { commandMenuStateAtom } from "@/stores/command-menu";
 import { isAdmin } from "@/utils/admin";
 
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
+import { Separator } from "@lydie/ui/components/layout/Separator";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
+import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
+
 import { FeedbackWidget } from "../feedback/FeedbackWidget";
-import { Button } from "../generic/Button";
-import { Eyebrow } from "../generic/Eyebrow";
-import { Separator } from "../generic/Separator";
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { composeTailwindRenderProps, focusRing } from "../generic/utils";
 import { DocumentTree } from "./DocumentTree";
 import { OrganizationMenu } from "./OrganizationMenu";
 import { SidebarIcon } from "./SidebarIcon";
@@ -41,23 +43,6 @@ type Props = {
   isCollapsed: boolean;
   onToggle: () => void;
 };
-
-export const sidebarItemStyles = cva({
-  base: "group flex items-center h-[28px] rounded-md text-sm font-medium mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
-  variants: {
-    isCurrent: {
-      true: "bg-black/5",
-      false: "text-gray-600 hover:bg-black/3",
-    },
-  },
-  defaultVariants: {
-    isCurrent: false,
-  },
-});
-
-export const sidebarItemIconStyles = cva({
-  base: "icon-muted",
-});
 
 export function Sidebar({ isCollapsed, onToggle }: Props) {
   const { createDocument } = useDocumentActions();

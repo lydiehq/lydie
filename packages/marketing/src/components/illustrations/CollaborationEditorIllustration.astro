@@ -10,17 +10,21 @@ const { variant = "default", className = "" } = Astro.props;
 const containerClasses = {
   default: "bg-white/20 flex flex-col rounded-[14px] p-2 overflow-hidden",
   hero: "bg-white/20 flex flex-col rounded-[14px] p-2 overflow-hidden",
-  feature: "bg-white/10 z-20 pl-2 pt-2 h-full border-l border-t rounded-tl-xl border-white/20 relative transform transition-transform duration-300 mt-12",
+  feature:
+    "bg-white/10 z-20 pl-2 pt-2 h-full border-l border-t rounded-tl-xl border-white/20 relative transform transition-transform duration-300 mt-12",
 };
 
 const editorClasses = {
-  default: "bg-white rounded-lg flex items-center justify-center px-6 py-8 md:px-8 md:py-10 shadow-surface",
+  default:
+    "bg-white rounded-lg flex items-center justify-center px-6 py-8 md:px-8 md:py-10 shadow-surface",
   hero: "bg-white rounded-lg flex items-center justify-center px-6 py-8 md:px-8 md:py-10 shadow-surface",
-  feature: "bg-white w-[600px] size-full rounded-tl-lg flex items-center justify-center px-10 py-12",
+  feature:
+    "bg-white w-[600px] size-full rounded-tl-lg flex items-center justify-center px-10 py-12",
 };
 
 const titleClasses = {
-  default: "text-xl md:text-2xl font-semibold text-gray-900 mb-4 md:mb-6 leading-tight",
+  default:
+    "text-xl md:text-2xl font-semibold text-gray-900 mb-4 md:mb-6 leading-tight",
   hero: "text-xl md:text-2xl font-semibold text-gray-900 mb-4 md:mb-6 leading-tight",
   feature: "text-2xl font-semibold text-gray-900 mb-6 leading-tight",
 };
@@ -41,110 +45,22 @@ const containerClass = containerClasses[variant] || containerClasses.default;
 const editorClass = editorClasses[variant] || editorClasses.default;
 const titleClass = titleClasses[variant] || titleClasses.default;
 const textClass = textClasses[variant] || textClasses.default;
-const presenceSizeClass = presenceSizeClasses[variant] || presenceSizeClasses.default;
+const presenceSizeClass =
+  presenceSizeClasses[variant] || presenceSizeClasses.default;
 
-const containerStyle = variant === "hero" || variant === "default"
-  ? "box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
-  : "";
+const containerStyle =
+  variant === "hero" || variant === "default"
+    ? "box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+    : "";
 
-const windowControlStyle = variant === "hero" || variant === "default"
-  ? "box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
-  : "";
+const windowControlStyle =
+  variant === "hero" || variant === "default"
+    ? "box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
+    : "";
 
-const presenceStyle = "box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);";
-
-const windowControls = Array(3).fill(null);
+const presenceStyle =
+  "box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);";
 ---
-
-<style>
-  /* Collaborative cursors */
-  .collab-cursor {
-    position: relative;
-    display: inline-block;
-    vertical-align: baseline;
-    pointer-events: none;
-  }
-
-  .collab-cursor-line {
-    position: absolute;
-    top: -1rem;
-    left: 0;
-    width: 2px;
-    height: 1.45em;
-    background: currentColor;
-  }
-
-  .collab-cursor-label {
-    position: absolute;
-    top: -2.45rem;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: 4px;
-    white-space: nowrap;
-    z-index: 10;
-  }
-
-  .collab-cursor-1 .collab-cursor-label {
-    background: #3b82f6;
-    color: white;
-  }
-
-  .collab-cursor-2 .collab-cursor-label {
-    background: #10b981;
-    color: white;
-  }
-
-  .collab-cursor-1 .collab-cursor-label::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid #3b82f6;
-  }
-
-  .collab-cursor-2 .collab-cursor-label::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid #10b981;
-  }
-
-  .collab-cursor-1 {
-    color: #3b82f6;
-  }
-
-  .collab-cursor-2 {
-    color: #10b981;
-  }
-
-  /* Text selection highlight */
-  .collab-selection {
-    padding: 0 2px;
-    border-radius: 2px;
-  }
-
-  .collab-selection.collab-cursor-1 {
-    background: rgba(59, 130, 246, 0.2);
-  }
-
-  .collab-selection.collab-cursor-2 {
-    background: rgba(16, 185, 129, 0.2);
-  }
-</style>
 
 <div
   class={`relative z-10 ${containerClass} ${className}`}
@@ -152,19 +68,16 @@ const windowControls = Array(3).fill(null);
   aria-hidden="true"
   aria-label="Mock editor showing collaborative editing with live cursors and text selection"
 >
-  {variant !== "feature" && (
-    <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
-      {
-        windowControls.map(() => (
-          <div
-            class="rounded-full size-[13px] bg-white/20"
-            style={windowControlStyle}
-          />
-        ))
-      }
-    </div>
-  )}
-
+  <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
+    {
+      [...Array(3)].map(() => (
+        <div
+          class="rounded-full size-[13px] bg-white/20"
+          style={windowControlStyle}
+        />
+      ))
+    }
+  </div>
   <div class={editorClass}>
     <div class="flex-1 max-w-full mx-auto relative">
       <div
@@ -188,47 +101,62 @@ const windowControls = Array(3).fill(null);
         </div>
       </div>
 
-      <h1 class={titleClass}>
-        Product Roadmap Q1 2026
-      </h1>
+      <h1 class={titleClass}>Product Roadmap Q1 2026</h1>
       <div
         class={`space-y-3 md:space-y-4 text-gray-700 leading-6 md:leading-7 relative`}
       >
         <p class={textClass}>
           This quarter we're focusing on enhancing our core
           <span
-            class="collab-cursor collab-cursor-1"
+            style="position: relative; display: inline-block; vertical-align: baseline; pointer-events: none; color: #3b82f6"
             aria-hidden="true"
             aria-label="Sarah's cursor"
           >
-            <span class="collab-cursor-line"></span>
-            <span class="collab-cursor-label">Sarah</span>
+            <span
+              style="position: absolute; top: -1rem; left: 0; width: 2px; height: 1.45em; background: currentColor"
+            ></span>
+            <span
+              style="position: absolute; top: -2.45rem; left: 50%; transform: translateX(-50%); padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 500; border-radius: 4px; white-space: nowrap; z-index: 10; background: #3b82f6; color: white"
+            >
+              Sarah
+              <span
+                style="position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid #3b82f6"
+              ></span>
+            </span>
           </span>
-          platform capabilities and expanding integrations with key tools
-          your team already uses.
+          platform capabilities and expanding integrations with key tools your team
+          already uses.
         </p>
         <p class={textClass}>
-          Our primary objectives include improving performance, adding
-          new
+          Our primary objectives include improving performance, adding new
           <span
-            class="collab-selection collab-cursor-2"
+            style="padding: 0 2px; border-radius: 2px; background: rgba(16, 185, 129, 0.2)"
             aria-hidden="true"
             aria-label="Alex's text selection">collaboration</span
           ><span
-            class="collab-cursor collab-cursor-2"
+            style="position: relative; display: inline-block; vertical-align: baseline; pointer-events: none; color: #10b981"
             aria-hidden="true"
             aria-label="Alex's cursor"
           >
-            <span class="collab-cursor-line"></span>
-            <span class="collab-cursor-label">Alex</span>
+            <span
+              style="position: absolute; top: -1rem; left: 0; width: 2px; height: 1.45em; background: currentColor"
+            ></span>
+            <span
+              style="position: absolute; top: -2.45rem; left: 50%; transform: translateX(-50%); padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 500; border-radius: 4px; white-space: nowrap; z-index: 10; background: #10b981; color: white"
+            >
+              Alex
+              <span
+                style="position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid #10b981"
+              ></span>
+            </span>
           </span>
-          features, and building out our API ecosystem to support more custom
-          workflows.
+          features, and building out our API ecosystem to support more custom workflows.
         </p>
-        <p class={`${variant === "feature" ? "text-[15px]" : "text-[13px] md:text-[15px]"} relative`}>
-          We're also investing heavily in AI-powered features that
-          will help teams work more efficiently and make better
-          decisions faster.
+        <p
+          class={`${variant === "feature" ? "text-[15px]" : "text-[13px] md:text-[15px]"} relative`}
+        >
+          We're also investing heavily in AI-powered features that will help
+          teams work more efficiently and make better decisions faster.
         </p>
       </div>
     </div>

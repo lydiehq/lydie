@@ -9,9 +9,9 @@ import {
   useFilter,
 } from "react-aria-components";
 
-import { Popover } from "@/components/generic/Popover";
-import { SearchField } from "@/components/generic/SearchField";
-import { SelectItem } from "@/components/generic/Select";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { SearchField } from "@lydie/ui/components/generic/SearchField";
+import { SelectItem } from "@lydie/ui/components/generic/Select";
 
 import { Button } from "../generic/Button";
 import { Tooltip } from "../generic/Tooltip";

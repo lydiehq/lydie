@@ -1,10 +1,10 @@
 import { CopyRegular, EyeOffRegular, EyeRegular } from "@fluentui/react-icons";
 import { DialogTrigger, Form } from "react-aria-components";
 
-import { Button } from "@/components/generic/Button";
-import { Dialog } from "@/components/generic/Dialog";
-import { Heading } from "@/components/generic/Heading";
-import { Modal } from "@/components/generic/Modal";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { Modal } from "@lydie/ui/components/generic/Modal";
 
 type ApiKeyDialogStep = "create" | "success";
 

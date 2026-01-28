@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { StickToBottom } from "use-stick-to-bottom";
 
-import { Button } from "@/components/generic/Button";
-import { Separator } from "@/components/generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { useOrganization } from "@/context/organization.context";
 import { countWords } from "@/utils/text";
 

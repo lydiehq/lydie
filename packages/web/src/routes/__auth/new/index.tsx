@@ -10,8 +10,8 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
 import z from "zod";
 
-import { Button } from "@/components/generic/Button";
-import { Heading } from "@/components/generic/Heading";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
 import { useAppForm } from "@/hooks/use-app-form";
 import { revalidateSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";

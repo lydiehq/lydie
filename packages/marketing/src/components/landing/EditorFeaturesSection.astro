@@ -1,9 +1,9 @@
 ---
+import { EditorDemo } from "./EditorDemo";
 import { InteractiveMockEditor } from "./InteractiveMockEditor";
 import { Eyebrow } from "./Eyebrow";
 import { Container } from "../Container";
 import { HeroBackground } from "./HeroBackground";
-import CollaborationEditorIllustration from "../illustrations/CollaborationEditorIllustration.astro";
 import "../../styles/grainy-gradient.css";
 import { Search } from "lucide-react";
 ---
@@ -27,51 +27,32 @@ import { Search } from "lucide-react";
     </p>
   </div>
   <div class="grid grid-cols-1 gap-4 w-full">
-    <div class="overflow-hidden rounded-xl ring ring-black/10">
-      <HeroBackground className="flex">
-        <div
-          class="relative z-10 flex flex-col gap-y-1 justify-center shrink-0 p-6 grow"
-        >
-          <div
-            class="inline-flex items-center gap-2 mb-1"
-            aria-hidden="true"
-            aria-label="Collaborative editing presence indicators showing two users"
-          >
-            <div class="flex -space-x-2">
-              <div
-                class="size-7 rounded-full bg-blue-500/25 flex items-center justify-center text-white text-xs font-medium"
-                style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
-              >
-                S
-              </div>
-              <div
-                class="size-7 rounded-full bg-green-500/25 flex items-center justify-center text-white text-xs font-medium"
-                style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
-              >
-                A
-              </div>
-            </div>
-          </div>
-          <div class="flex flex-col max-w-md gap-y-4">
-            <h3 class="text-3xl font-semibold text-white drop-shadow-text">
-              Collaborative editing
-            </h3>
-            <p class="text-sm text-white/80">
-              Work together in real-time with live cursors, presence indicators,
-              and seamless synchronization.
-            </p>
-            <div class="mt-2">
-              <a
-                href="/features/collaborative-editing"
-                class="inline-flex items-center justify-center h-7 px-2 text-[0.8125rem] font-medium rounded-md bg-transparent text-white hover:bg-white/10 transition-colors duration-150 no-underline"
-              >
-                Learn more &raquo;
-              </a>
-            </div>
+    <div class="overflow-hidden rounded-xl flex bg-gray-100">
+      <div
+        class="relative z-10 flex flex-col gap-y-1 justify-center shrink-0 p-6 grow"
+      >
+        <div class="flex flex-col max-w-md gap-y-4">
+          <h3 class="text-3xl font-semibold text-gray-950">
+            Collaborative editing
+          </h3>
+          <p class="text-sm text-gray-600">
+            Work together in real-time with live cursors, presence indicators,
+            and seamless synchronization.
+          </p>
+          <div class="mt-2">
+            <a
+              href="/features/collaborative-editing"
+              class="inline-flex items-center justify-center h-7 px-2 text-[0.8125rem] font-medium rounded-md bg-transparent text-white hover:bg-white/10 transition-colors duration-150 no-underline"
+            >
+              Learn more &raquo;
+            </a>
           </div>
         </div>
-        <CollaborationEditorIllustration variant="feature" />
-      </HeroBackground>
+      </div>
+
+      <div class="relative">
+        <EditorDemo client:visible />
+      </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">

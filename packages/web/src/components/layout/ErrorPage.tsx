@@ -2,7 +2,7 @@ import { ArrowClockwiseRegular, ErrorCircleRegular } from "@fluentui/react-icons
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { Logo } from "@/components/layout/Logo";
 import { authClient } from "@/utils/auth";
 
