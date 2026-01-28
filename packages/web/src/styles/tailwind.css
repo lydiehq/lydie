@@ -6,6 +6,13 @@
 
 @source "../../node_modules/streamdown/dist/*.js";
 
+/* Scan UI package so Tailwind generates classes used by shared components */
+@source "../../../ui/src/**/*.{tsx,ts,jsx,js}";
+@source not "../../../ui/src/**/*.test.{tsx,ts}";
+@source not "../../../ui/src/**/*.spec.{tsx,ts}";
+@source not "../../../ui/src/**/*.config.{js,ts}";
+@source not "../../../ui/src/**/*.d.ts";
+
 @plugin "tailwind-scrollbar";
 @plugin "tailwindcss-react-aria-components";
 
