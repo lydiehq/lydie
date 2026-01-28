@@ -1,17 +1,18 @@
 import type { QueryResultType } from "@rocicorp/zero";
 
 import { AddRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Link } from "@lydie/ui/components/generic/Link";
+import { composeTailwindRenderProps } from "@lydie/ui/components/generic/utils";
 import { queries } from "@lydie/zero/queries";
+import { motion } from "motion/react";
 import { useContext, useRef, useState } from "react";
 import { DisclosureStateContext, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "react-aria-components";
 
-import { Button } from "@lydie/ui/components/generic/Button";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { focusRing } from "@/utils/focus-ring";
 
-import { Link } from "@lydie/ui/components/generic/Link";
-import { composeTailwindRenderProps } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "../icons/CollapseArrow";
 import { DocumentIcon } from "../icons/DocumentIcon";
 import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";
@@ -94,26 +95,58 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
         <div className="flex items-center justify-between">
           <TabList
             aria-label="Metadata tabs"
-            className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center w-fit"
+            className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center w-fit relative"
           >
             <Tab
               id="fields"
               className={composeTailwindRenderProps(
                 focusRing,
-                "rounded-full px-3 py-0.5 text-sm font-medium selected:bg-white selected:shadow-surface selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5",
+                "rounded-full px-3 py-0.5 text-sm font-medium relative z-10 selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5 transition-colors",
               )}
             >
-              Fields
+              {({ isSelected }) => (
+                <>
+                  {isSelected && (
+                    <motion.span
+                      layoutId="active-tab-background"
+                      className="absolute inset-0 bg-white shadow-surface rounded-full"
+                      style={{ zIndex: -1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  Fields
+                </>
+              )}
             </Tab>
             <Tab
               id="documents"
               className={composeTailwindRenderProps(
                 focusRing,
-                "rounded-full px-3 py-0.5 text-sm font-medium flex items-center gap-x-1.5 selected:bg-white selected:shadow-surface selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5",
+                "rounded-full px-3 py-0.5 text-sm font-medium flex items-center gap-x-1.5 relative z-10 selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5 transition-colors",
               )}
             >
-              <span>Documents</span>
-              <span className="text-[10px]/none -mb-px text-gray-400">{documentCount}</span>
+              {({ isSelected }) => (
+                <>
+                  {isSelected && (
+                    <motion.span
+                      layoutId="active-tab-background"
+                      className="absolute inset-0 bg-white shadow-surface rounded-full"
+                      style={{ zIndex: -1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  <span>Documents</span>
+                  <span className="text-[10px]/none -mb-px text-gray-400">{documentCount}</span>
+                </>
+              )}
             </Tab>
           </TabList>
           <div className="flex gap-x-1">
