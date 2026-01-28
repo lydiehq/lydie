@@ -10,11 +10,11 @@ import {
   SparkleFilled,
   TabDesktopMultiple16Filled,
 } from "@fluentui/react-icons";
+import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/editor/styles";
+import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { DocumentIcon } from "@/components/icons/DocumentIcon";
-import { sidebarItemIconStyles, sidebarItemStyles } from "@/components/layout/Sidebar";
 import { Surface } from "@/components/layout/Surface";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";

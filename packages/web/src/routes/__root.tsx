@@ -8,16 +8,18 @@ import {
   redirect,
   useRouter,
 } from "@tanstack/react-router";
+import { useAtomValue } from "jotai";
+import { useEffect } from "react";
 import { RouterProvider } from "react-aria-components";
 
 import type { RouterContext } from "@/main";
 
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { ErrorPage } from "@/components/layout/ErrorPage";
-import { FontSizeSync } from "@/components/layout/FontSizeSync";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { loadSession } from "@/lib/auth/session";
 import { getZeroInstance } from "@/lib/zero/instance";
+import { getFontSizePixels, rootFontSizeAtom } from "@/stores/font-size";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -91,12 +93,21 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => {
     const router = useRouter();
     const { zero } = Route.useRouteContext();
+    const fontSizeOption = useAtomValue(rootFontSizeAtom);
+
+    useEffect(() => {
+      if (fontSizeOption === "default") {
+        document.documentElement.style.removeProperty("font-size");
+      } else {
+        document.documentElement.style.fontSize = `${getFontSizePixels(fontSizeOption)}px`;
+      }
+    }, [fontSizeOption]);
+
     return (
       <>
         <HeadContent />
         <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
           <ZeroProvider zero={zero}>
-            <FontSizeSync />
             <ConfirmDialog />
             <Outlet />
           </ZeroProvider>

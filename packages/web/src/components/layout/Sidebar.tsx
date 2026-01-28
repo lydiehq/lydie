@@ -10,10 +10,15 @@ import {
   Wifi4Regular,
   WifiOffRegular,
 } from "@fluentui/react-icons";
+import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
+import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { useConnectionState } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
-import { cva } from "cva";
 import { useSetAtom } from "jotai";
 import { useCallback } from "react";
 import { useMemo } from "react";
@@ -25,13 +30,6 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useZero } from "@/services/zero";
 import { commandMenuStateAtom } from "@/stores/command-menu";
 import { isAdmin } from "@/utils/admin";
-
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
-import { Separator } from "@lydie/ui/components/layout/Separator";
-import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
-import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
-import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 
 import { FeedbackWidget } from "../feedback/FeedbackWidget";
 import { DocumentTree } from "./DocumentTree";
