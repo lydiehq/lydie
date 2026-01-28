@@ -6,7 +6,7 @@ import { useContext, useRef, useState } from "react";
 import { DisclosureStateContext, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "react-aria-components";
 
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { focusRing } from "@/utils/focus-ring";
 

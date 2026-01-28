@@ -9,7 +9,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { Card } from "@/components/layout/Card";
 import { authClient } from "@/utils/auth";
 

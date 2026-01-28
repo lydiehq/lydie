@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Input, Label } from "@/components/generic/Field";
-import { Radio, RadioGroup } from "@/components/generic/RadioGroup";
+import { Input, Label } from "@lydie/ui/components/generic/Field";
+import { Radio, RadioGroup } from "@lydie/ui/components/generic/RadioGroup";
 import { useAuthenticatedApi } from "@/services/api";
 
 export type ShopifyLinkConfig = {

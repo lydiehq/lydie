@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import { AssistantChat } from "@/components/assistant/AssistantChat";
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { Surface } from "@/components/layout/Surface";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { useOrganization } from "@/context/organization.context";

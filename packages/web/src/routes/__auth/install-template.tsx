@@ -4,8 +4,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
-import { Heading } from "@/components/generic/Heading";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
 import { OrganizationAvatar } from "@/components/layout/OrganizationAvatar";
 import { useZero } from "@/services/zero";
 

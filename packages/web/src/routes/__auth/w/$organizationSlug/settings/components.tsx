@@ -6,9 +6,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
-import { Heading } from "@/components/generic/Heading";
-import { Separator } from "@/components/generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";

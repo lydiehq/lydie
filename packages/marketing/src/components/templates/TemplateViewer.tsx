@@ -9,6 +9,7 @@ import {
   TreeItem,
   TreeItemContent,
 } from "react-aria-components";
+import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 
 // SVG Icon Components
 const CollectionsIcon = ({ className }: { className?: string }) => (
@@ -56,12 +57,6 @@ const ChevronRightIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const sidebarItemStyles = (isCurrent: boolean = false) =>
-  `group flex items-center h-[28px] rounded-md text-[0.8125rem] font-medium mb-0.5 transition-colors duration-75 cursor-pointer ${
-    isCurrent ? "bg-black/5" : "text-gray-600 hover:bg-black/3"
-  }`;
-
-const sidebarItemIconStyles = "text-gray-500";
 
 type DocumentTreeItem = {
   id: string;
@@ -182,7 +177,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
         id={item.id}
         textValue={item.name}
         onAction={() => handleItemAction(item.id)}
-        className={sidebarItemStyles(isCurrentDocument)}
+        className={sidebarItemStyles({ isCurrent: isCurrentDocument })}
         style={{
           paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
           paddingRight: "0.5rem",
@@ -199,7 +194,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
                     className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative"
                   >
                     <CollectionsIcon
-                      className={`size-4 shrink-0 ${sidebarItemIconStyles} transition-[opacity_100ms,transform_200ms] group-hover:opacity-0`}
+                      className={`size-4 shrink-0 ${sidebarItemIconStyles()} transition-[opacity_100ms,transform_200ms] group-hover:opacity-0`}
                     />
                     <ChevronRightIcon
                       className={`size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
@@ -209,7 +204,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
                   </Button>
                 ) : (
                   <div className="text-gray-500 p-1 -ml-1">
-                    <DocumentIcon className={`size-4 shrink-0 ${sidebarItemIconStyles}`} />
+                    <DocumentIcon className={`size-4 shrink-0 ${sidebarItemIconStyles()}`} />
                   </div>
                 )}
 

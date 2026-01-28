@@ -9,7 +9,7 @@ import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { MenuTrigger } from "react-aria-components";
 import { useDebounceCallback } from "usehooks-ts";
 
-import { Menu, MenuItem } from "@/components/generic/Menu";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
 

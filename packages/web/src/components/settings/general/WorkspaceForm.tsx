@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { useAppForm } from "@/hooks/use-app-form";
 import { revalidateSession } from "@/lib/auth/session";
 import { useZero } from "@/services/zero";

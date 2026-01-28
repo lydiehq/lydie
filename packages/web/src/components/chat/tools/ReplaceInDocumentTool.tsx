@@ -10,8 +10,8 @@ import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
 
 import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
-import { Button } from "@/components/generic/Button";
-import { Separator } from "@/components/generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";

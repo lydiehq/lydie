@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { useState } from "react";
 import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
 
-import { MenuItem, MenuItemLink, MenuSeparator } from "@/components/generic/Menu";
+import { MenuItem, MenuItemLink, MenuSeparator } from "@lydie/ui/components/generic/Menu";
 import { useOrganization } from "@/context/organization.context";
 import { clearSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";

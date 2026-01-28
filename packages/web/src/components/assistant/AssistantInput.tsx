@@ -6,7 +6,7 @@ import { Form } from "react-aria-components";
 
 import { AgentSelector } from "@/components/assistant/AgentSelector";
 import { type ChatContextItem, ChatContextList } from "@/components/chat/ChatContextList";
-import { Button } from "@/components/generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { useDocumentContext } from "@/hooks/use-document-context";
 import { useAssistantEditor } from "@/lib/editor/assistant-editor";
 import { getReferenceDocumentIds } from "@/utils/parse-references";

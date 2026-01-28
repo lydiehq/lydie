@@ -2,8 +2,8 @@ import type { OnboardingStepTask } from "@lydie/editor/extensions";
 
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 
-import { Checkbox } from "@/components/generic/Checkbox";
-import { CircularProgress } from "@/components/generic/CircularProgress";
+import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
+import { CircularProgress } from "@lydie/ui/components/generic/CircularProgress";
 
 import { Button } from "../../generic/Button";
 

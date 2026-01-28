@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { Button } from "@/components/generic/Button";
-import { Heading } from "@/components/generic/Heading";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
 import { authClient } from "@/utils/auth";
 import "@/styles/grainy-gradient.css";
 

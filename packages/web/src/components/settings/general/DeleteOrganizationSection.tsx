@@ -1,9 +1,9 @@
 import { DialogTrigger } from "react-aria-components";
 
-import { AlertDialog } from "@/components/generic/AlertDialog";
-import { Button } from "@/components/generic/Button";
-import { Modal } from "@/components/generic/Modal";
-import { SectionHeader } from "@/components/generic/SectionHeader";
+import { AlertDialog } from "@lydie/ui/components/generic/AlertDialog";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
 
 type DeleteOrganizationSectionProps = {
   isDeleteDialogOpen: boolean;

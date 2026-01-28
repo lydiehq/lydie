@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "./typography.css";
-@import "./editor-content.css";
+@import "@lydie/ui/styles/editor-content.css";
 
 @import "@fontsource-variable/inter";
 

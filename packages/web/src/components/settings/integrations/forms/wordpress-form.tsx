@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
-import { Label } from "@/components/generic/Field";
-import { Radio, RadioGroup } from "@/components/generic/RadioGroup";
+import { Label } from "@lydie/ui/components/generic/Field";
+import { Radio, RadioGroup } from "@lydie/ui/components/generic/RadioGroup";
 import { useAppForm } from "@/hooks/use-app-form";
 
 export type WordPressLinkConfig = {
