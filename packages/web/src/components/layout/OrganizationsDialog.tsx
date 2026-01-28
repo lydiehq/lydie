@@ -5,10 +5,10 @@ import { Heading, Button as RACButton } from "react-aria-components";
 import { useOrganization } from "@/context/organization.context";
 import { authClient } from "@/utils/auth";
 
-import { Button } from "../generic/Button";
-import { Dialog } from "../generic/Dialog";
-import { Modal } from "../generic/Modal";
-import { Separator } from "../generic/Separator";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 
 export function OrganizationsDialog({

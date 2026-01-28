@@ -10,9 +10,9 @@ import { useOrganization } from "@/context/organization.context";
 import { setActiveOrganizationAndNavigate } from "@/lib/organization/setActiveAndNavigate";
 import { useZero } from "@/services/zero";
 
-import { Dialog } from "../generic/Dialog";
-import { Modal } from "../generic/Modal";
-import { Separator } from "../generic/Separator";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { OrganizationAvatar } from "../layout/OrganizationAvatar";
 
 export function InstallTemplateDialog({

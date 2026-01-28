@@ -8,11 +8,11 @@ import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
 
-import { Button } from "../generic/Button";
-import { Dialog } from "../generic/Dialog";
-import { Modal } from "../generic/Modal";
-import { Separator } from "../generic/Separator";
-import { sidebarItemIconStyles, sidebarItemStyles } from "../layout/Sidebar";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 
 export function FeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false);

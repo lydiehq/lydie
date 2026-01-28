@@ -6,9 +6,9 @@ import { ListBox, Select as AriaSelect, SelectValue } from "react-aria-component
 
 import { blockFormattingActions, getActiveBlockType } from "@/lib/editor/formatting-actions";
 
-import { Button } from "../generic/Button";
-import { DropdownItem } from "../generic/ListBox";
-import { Popover } from "../generic/Popover";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { DropdownItem } from "@lydie/ui/components/generic/ListBox";
+import { Popover } from "@lydie/ui/components/generic/Popover";
 
 type Props = {
   editor: Editor;

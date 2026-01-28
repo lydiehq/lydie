@@ -18,7 +18,7 @@ import { SearchField } from "@lydie/ui/components/generic/SearchField";
 import { SelectItem, SelectSection } from "@lydie/ui/components/generic/Select";
 import { useOrganization } from "@/context/organization.context";
 
-import { Button } from "../generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 
 type ConversationGroup = {
   title: string;

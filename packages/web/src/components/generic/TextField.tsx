@@ -6,8 +6,8 @@ import {
 
 import { useFieldContext } from "@/hooks/use-app-form";
 
-import { Description, FieldError, Input, Label, TextArea } from "./Field";
-import { composeTailwindRenderProps, focusRing } from "./utils";
+import { Description, FieldError, Input, Label, TextArea } from "@lydie/ui/components/generic/Field";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 
 export interface TextFieldProps extends Omit<AriaTextFieldProps, "name"> {
   label?: string;

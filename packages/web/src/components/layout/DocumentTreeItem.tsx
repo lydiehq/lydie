@@ -20,9 +20,9 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import { DocumentMenu } from "../documents/DocumentMenu";
-import { Menu, MenuItem } from "../generic/Menu";
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
-import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "../icons/CollapseArrow";
 import { DocumentIcon } from "../icons/DocumentIcon";
 import { sidebarItemIconStyles, sidebarItemStyles } from "./Sidebar";

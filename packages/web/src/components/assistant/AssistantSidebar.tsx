@@ -9,7 +9,7 @@ import { Button } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { SidebarIcon } from "../layout/SidebarIcon";
 
 type Props = {

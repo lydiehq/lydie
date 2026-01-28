@@ -7,9 +7,9 @@ import { TooltipTrigger } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 
-import { CircularProgress } from "../generic/CircularProgress";
-import { Link } from "../generic/Link";
-import { Tooltip } from "../generic/Tooltip";
+import { CircularProgress } from "@lydie/ui/components/generic/CircularProgress";
+import { Link } from "@lydie/ui/components/generic/Link";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 
 export function UsageStats() {
   const { organization } = useOrganization();

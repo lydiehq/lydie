@@ -11,7 +11,7 @@ import { useCallback } from "react";
 
 import { useZero } from "@/services/zero";
 
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 
 export function ZeroConnectionStatus() {
   const state = useConnectionState();

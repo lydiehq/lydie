@@ -20,9 +20,9 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
 
-import { Button } from "../generic/Button";
-import { Menu, MenuItem } from "../generic/Menu";
-import { Tooltip } from "../generic/Tooltip";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import {
   BlockquoteIcon,
   BoldIcon,

@@ -4,9 +4,11 @@
   "type": "module",
   "exports": {
     "./styles/editor-content.css": "./src/styles/editor-content.css",
-    "./components/editor/*": "./src/components/editor/*",
-    "./components/generic/*": "./src/components/generic/*",
-    "./components/layout/*": "./src/components/layout/*"
+    "./components/editor/styles": "./src/components/editor/styles.ts",
+    "./components/editor/*": "./src/components/editor/*.tsx",
+    "./components/generic/utils": "./src/components/generic/utils.ts",
+    "./components/generic/*": "./src/components/generic/*.tsx",
+    "./components/layout/*": "./src/components/layout/*.tsx"
   },
   "dependencies": {
     "@fluentui/react-icons": "^2.0.317",
