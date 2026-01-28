@@ -1,4 +1,4 @@
-import { Heading } from "../generic/Heading";
+import { Heading } from "@lydie/ui/components/generic/Heading";
 
 export function SettingsSectionLayout({
   heading,

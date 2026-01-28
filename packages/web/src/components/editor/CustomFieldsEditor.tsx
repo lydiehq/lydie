@@ -13,7 +13,7 @@ import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
 
-import { Button } from "../generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 
 type CustomField = {
   key: string;

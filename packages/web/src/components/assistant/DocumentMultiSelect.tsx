@@ -13,8 +13,8 @@ import { Popover } from "@lydie/ui/components/generic/Popover";
 import { SearchField } from "@lydie/ui/components/generic/SearchField";
 import { SelectItem } from "@lydie/ui/components/generic/Select";
 
-import { Button } from "../generic/Button";
-import { Tooltip } from "../generic/Tooltip";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { DocumentIcon } from "../icons/DocumentIcon";
 
 interface DocumentMultiSelectProps {

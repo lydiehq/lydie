@@ -10,8 +10,8 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { focusRing } from "@/utils/focus-ring";
 
-import { Link } from "../generic/Link";
-import { composeTailwindRenderProps } from "../generic/utils";
+import { Link } from "@lydie/ui/components/generic/Link";
+import { composeTailwindRenderProps } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "../icons/CollapseArrow";
 import { DocumentIcon } from "../icons/DocumentIcon";
 import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";

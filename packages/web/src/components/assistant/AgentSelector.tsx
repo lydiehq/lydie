@@ -8,7 +8,7 @@ import { Popover } from "@lydie/ui/components/generic/Popover";
 import { SelectItem } from "@lydie/ui/components/generic/Select";
 import { useOrganization } from "@/context/organization.context";
 
-import { Button } from "../generic/Button";
+import { Button } from "@lydie/ui/components/generic/Button";
 
 interface AgentSelectorProps {
   selectedAgentId: string | null;

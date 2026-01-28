@@ -9,8 +9,8 @@ import { clearSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";
 import { authClient } from "@/utils/auth";
 
-import { Popover } from "../generic/Popover";
-import { composeTailwindRenderProps, focusRing } from "../generic/utils";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "../icons/CollapseArrow";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 import { OrganizationsDialog } from "./OrganizationsDialog";
