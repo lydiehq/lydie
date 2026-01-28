@@ -41,7 +41,7 @@
     "test:e2e": "bun --filter=@lydie/web test:e2e",
     "test": "bun --filter=@lydie/web test",
     "copy-integration-assets": "bun --filter=@lydie/scripts copy-integration-assets",
-    "lint": "oxlint",
+    "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check"
@@ -55,6 +55,7 @@
     "jsdom": "^27.4.0",
     "oxfmt": "^0.27.0",
     "oxlint": "^1.42.0",
+    "oxlint-tsgolint": "^0.11.2",
     "sst": "catalog:",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

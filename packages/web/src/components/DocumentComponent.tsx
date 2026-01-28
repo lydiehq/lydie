@@ -1,9 +1,8 @@
 import { AddRegular, DeleteRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Input, Label } from "@lydie/ui/components/generic/Field";
 import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { NumberField as AriaNumberField, TextField as AriaTextField } from "react-aria-components";
-
-import { Button } from "./generic/Button";
-import { Input, Label } from "./generic/Field";
 
 type ObjectArrayField = {
   name: string;
