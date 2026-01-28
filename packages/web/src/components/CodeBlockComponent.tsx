@@ -1,4 +1,5 @@
 import { ChevronDownRegular } from "@fluentui/react-icons";
+import { ListBox, ListBoxItem } from "@lydie/ui/components/generic/ListBox";
 import { NodeViewContent, type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { type Key, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -11,8 +12,6 @@ import {
   SelectValue,
   useFilter,
 } from "react-aria-components";
-
-import { ListBox, ListBoxItem } from "./generic/ListBox";
 
 type LanguageItem = {
   id: string;
