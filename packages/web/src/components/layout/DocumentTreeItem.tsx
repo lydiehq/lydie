@@ -10,6 +10,10 @@ import {
   MoreHorizontalRegular,
   ReOrderRegular,
 } from "@fluentui/react-icons";
+import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/editor/styles";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { queries } from "@lydie/zero/queries";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { type ReactElement, useState } from "react";
@@ -20,12 +24,8 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import { DocumentMenu } from "../documents/DocumentMenu";
-import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
-import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
-import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "../icons/CollapseArrow";
 import { DocumentIcon } from "../icons/DocumentIcon";
-import { sidebarItemIconStyles, sidebarItemStyles } from "./Sidebar";
 
 type Props = {
   item: {

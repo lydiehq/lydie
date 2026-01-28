@@ -27,8 +27,8 @@ import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import type { MenuItem } from "./CommandMenuItem";
 
-import { Dialog } from "../../generic/Dialog";
-import { overlayStyles } from "../../generic/Modal";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { overlayStyles } from "@lydie/ui/components/generic/Modal";
 import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
 import { SearchResults } from "./CommandMenuSearchResults";
 import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
