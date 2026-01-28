@@ -3,7 +3,12 @@ import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
 import { getComparison } from "../../utils/comparisons";
 import { getSections } from "../../utils/comparison-sections";
-import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+  CheckmarkRegular,
+  ChevronLeftRegular,
+  ChevronRightRegular,
+  DismissRegular,
+} from "@fluentui/react-icons";
 import { Button } from "../../components/generic/Button";
 import { Logo } from "../../components/Logo";
 import FeatureSection from "../../components/comparison/FeatureSection.astro";
@@ -49,7 +54,7 @@ const sections = comparison.sections ? getSections(comparison.sections) : [];
             <Button href="https://app.lydie.co/auth" size="lg">
               <div class="flex items-center gap-x-1">
                 <span>Get started</span>
-                <ChevronRight
+                <ChevronRightRegular
                   className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
                 />
               </div>
@@ -106,13 +111,13 @@ const sections = comparison.sections ? getSections(comparison.sections) : [];
                         feature.lydie ? (
                           <div class="flex justify-center">
                             <div class="rounded-full bg-green-100 p-1">
-                              <Check className="size-4 text-green-600" />
+                              <CheckmarkRegular className="size-4 text-green-600" />
                             </div>
                           </div>
                         ) : (
                           <div class="flex justify-center">
                             <div class="rounded-full bg-red-100 p-1">
-                              <X className="size-4 text-red-600" />
+                              <DismissRegular className="size-4 text-red-600" />
                             </div>
                           </div>
                         )
@@ -127,13 +132,13 @@ const sections = comparison.sections ? getSections(comparison.sections) : [];
                         feature.competitor ? (
                           <div class="flex justify-center">
                             <div class="rounded-full bg-green-100 p-1">
-                              <Check className="size-4 text-green-600" />
+                              <CheckmarkRegular className="size-4 text-green-600" />
                             </div>
                           </div>
                         ) : (
                           <div class="flex justify-center">
                             <div class="rounded-full bg-red-100 p-1">
-                              <X className="size-4 text-red-600" />
+                              <DismissRegular className="size-4 text-red-600" />
                             </div>
                           </div>
                         )
@@ -183,7 +188,7 @@ const sections = comparison.sections ? getSections(comparison.sections) : [];
         >
           <div class="flex items-center gap-x-1">
             <span>Start writing</span>
-            <ChevronRight
+            <ChevronRightRegular
               className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
             />
           </div>

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { Menu, X } from "lucide-react";
+import { DismissRegular, LineHorizontal3Regular as MenuRegular } from "@fluentui/react-icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -85,7 +85,7 @@ export function Header() {
           className="md:hidden z-50 relative text-gray-600"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          {isMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
+          {isMenuOpen ? <DismissRegular className="size-6" /> : <MenuRegular className="size-6" />}
         </button>
 
         {/* Mobile Navigation Overlay */}

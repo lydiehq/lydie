@@ -2,7 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 import { Container } from "../components/Container";
 import { Eyebrow } from "../components/landing/Eyebrow";
-import { Check, Circle, Clock } from "lucide-react";
+import {
+  CheckmarkRegular,
+  CircleRegular,
+  ClockRegular,
+} from "@fluentui/react-icons";
 
 type RoadmapItem = {
   title: string;
@@ -72,11 +76,11 @@ const roadmapItems: RoadmapItem[] = [
 function getStatusIcon(status: string) {
   switch (status) {
     case "completed":
-      return Check;
+      return CheckmarkRegular;
     case "in-progress":
-      return Clock;
+      return ClockRegular;
     default:
-      return Circle;
+      return CircleRegular;
   }
 }
 

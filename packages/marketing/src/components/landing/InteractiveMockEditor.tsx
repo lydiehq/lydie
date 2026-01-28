@@ -1,4 +1,4 @@
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDownRegular } from "@fluentui/react-icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -323,7 +323,7 @@ function CustomFieldsSection({
           </div>
         </div>
         <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="size-4 text-gray-500" />
+          <ChevronDownRegular className="size-4 text-gray-500" />
         </motion.div>
       </button>
 
@@ -428,13 +428,13 @@ function LinkPopoverMock({ onClose }: { onClose: () => void }) {
     >
       <div className="flex gap-x-1 items-center">
         <div className="flex gap-x-2 overflow-hidden text-ellipsis whitespace-nowrap px-1 items-center">
-          <FileText className="size-3.5 text-gray-500 shrink-0" />
+          <DocumentRegular className="size-3.5 text-gray-500 shrink-0" />
           <div className="text-xs text-gray-700 truncate">API Documentation</div>
         </div>
         <div className="h-4 w-px bg-gray-200 mx-1"></div>
         <div className="flex gap-x-0.5">
           <PopoverButton title="Open document">
-            <FileText className="size-3.5 text-gray-700" />
+            <DocumentRegular className="size-3.5 text-gray-700" />
           </PopoverButton>
           <PopoverButton title="Edit link">
             <EditIcon className="size-3.5 text-gray-700" />

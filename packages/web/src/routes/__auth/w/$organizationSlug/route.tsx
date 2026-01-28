@@ -120,43 +120,46 @@ function RouteLayout() {
   return (
     <div className="flex h-screen flex-col">
       <CommandMenu />
-      <Group
-        orientation="horizontal"
-        defaultLayout={defaultLayout}
-        onLayoutChanged={onLayoutChanged}
-      >
-        <Panel
-          className="h-full flex flex-col overflow-hidden"
-          panelRef={sidebarPanelRef}
-          id="left-sidebar"
-          collapsible
-          collapsedSize="50px"
-          minSize="200px"
-          maxSize="400px"
-          defaultSize="280px"
-          onResize={(nextSize) => setSize(nextSize.inPixels)}
+      <div className="panel-group-collapse-animated flex h-full min-h-0 flex-1">
+        <Group
+          orientation="horizontal"
+          defaultLayout={defaultLayout}
+          onLayoutChanged={onLayoutChanged}
+          className="flex-1"
         >
-          <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
-        </Panel>
-        <PanelResizer />
-        <Panel>
-          <Outlet />
-        </Panel>
-        {shouldShowDockedPanel && (
-          <>
-            <PanelResizer />
-            <Panel
-              panelRef={assistantPanelRef}
-              id="assistant-panel"
-              defaultSize="400px"
-              minSize="300px"
-              maxSize="600px"
-            >
-              <div ref={dockedAssistantContainerRef} className="h-full pr-1 py-1 pl-px" />
-            </Panel>
-          </>
-        )}
-      </Group>
+          <Panel
+            className="h-full flex flex-col overflow-hidden"
+            panelRef={sidebarPanelRef}
+            id="left-sidebar"
+            collapsible
+            collapsedSize="50px"
+            minSize="200px"
+            maxSize="400px"
+            defaultSize="280px"
+            onResize={(nextSize) => setSize(nextSize.inPixels)}
+          >
+            <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
+          </Panel>
+          <PanelResizer />
+          <Panel>
+            <Outlet />
+          </Panel>
+          {shouldShowDockedPanel && (
+            <>
+              <PanelResizer />
+              <Panel
+                panelRef={assistantPanelRef}
+                id="assistant-panel"
+                defaultSize="400px"
+                minSize="300px"
+                maxSize="600px"
+              >
+                <div ref={dockedAssistantContainerRef} className="h-full pr-1 py-1 pl-px" />
+              </Panel>
+            </>
+          )}
+        </Group>
+      </div>
       <div ref={floatingAssistantContainerRef} />
       <FloatingAssistant
         currentDocumentId={currentDocumentId}

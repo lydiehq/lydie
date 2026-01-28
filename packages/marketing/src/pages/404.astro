@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import { Container } from "../components/Container";
 import { Button } from "../components/generic/Button";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRightRegular, HomeRegular } from "@fluentui/react-icons";
 ---
 
 <Layout
@@ -30,9 +30,9 @@ import { ChevronRight, Home } from "lucide-react";
       <div class="flex justify-center mt-4">
         <Button href="/" size="lg">
           <div class="flex items-center gap-x-1">
-            <Home className="size-4" />
+            <HomeRegular className="size-4" />
             <span>Go to homepage</span>
-            <ChevronRight
+            <ChevronRightRegular
               className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
             />
           </div>

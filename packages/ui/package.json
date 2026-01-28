@@ -4,11 +4,7 @@
   "type": "module",
   "exports": {
     "./styles/editor-content.css": "./src/styles/editor-content.css",
-    "./components/editor/styles": "./src/components/editor/styles.ts",
-    "./components/editor/*": "./src/components/editor/*.tsx",
-    "./components/generic/utils": "./src/components/generic/utils.ts",
-    "./components/generic/*": "./src/components/generic/*.tsx",
-    "./components/layout/*": "./src/components/layout/*.tsx"
+    "./*": "./src/*"
   },
   "dependencies": {
     "@fluentui/react-icons": "^2.0.317",
@@ -30,7 +26,7 @@
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.0.4",
+    "react-dom": "^19.0.4"
   }
 }

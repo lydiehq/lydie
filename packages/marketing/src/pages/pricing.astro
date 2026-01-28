@@ -3,7 +3,12 @@ import Layout from "../layouts/Layout.astro";
 import { Container } from "../components/Container";
 import { Button } from "../components/generic/Button";
 import { Eyebrow } from "../components/landing/Eyebrow";
-import { Check, ChevronRight, Github, Server } from "lucide-react";
+import {
+  CheckmarkRegular,
+  ChevronRightRegular,
+  CodeRegular as GithubRegular,
+  ServerRegular,
+} from "@fluentui/react-icons";
 
 const pricingTiers = [
   {
@@ -84,14 +89,14 @@ const pricingTiers = [
               >
                 <div class="flex items-center justify-center gap-x-1">
                   <span>{tier.cta}</span>
-                  <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
+                  <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
                 </div>
               </Button>
               <hr class="border-gray-200" />
               <ul class="flex flex-col gap-y-3">
                 {tier.features.map((feature) => (
                   <li class="flex items-start gap-x-2">
-                    <Check className="size-4 text-gray-700 mt-0.5 shrink-0" />
+                    <CheckmarkRegular className="size-4 text-gray-700 mt-0.5 shrink-0" />
                     <span class="text-sm text-gray-700">{feature}</span>
                   </li>
                 ))}
@@ -107,7 +112,7 @@ const pricingTiers = [
         class="flex flex-col gap-y-6 p-8 rounded-2xl border border-gray-200 bg-linear-to-br from-gray-50 to-white"
       >
         <div class="flex items-center justify-center gap-x-2 mb-2">
-          <Server className="size-5 text-gray-700" />
+          <ServerRegular className="size-5 text-gray-700" />
           <h2
             class="text-2xl font-heading font-medium tracking-tight text-gray-800"
           >
@@ -131,7 +136,7 @@ const pricingTiers = [
             target="_blank"
           >
             <div class="flex items-center gap-x-1.5">
-              <Github className="size-3.5" />
+              <GithubRegular className="size-3.5" />
               <span>View on GitHub</span>
             </div>
           </Button>
@@ -143,7 +148,7 @@ const pricingTiers = [
           >
             <div class="flex items-center gap-x-1">
               <span>Documentation</span>
-              <ChevronRight
+              <ChevronRightRegular
                 className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
               />
             </div>

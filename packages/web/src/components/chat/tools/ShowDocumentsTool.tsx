@@ -2,7 +2,7 @@ import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 
-import { DocumentIcon } from "@/components/icons/DocumentIcon";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 export interface ShowDocumentsToolProps {
   tool: {

@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRightRegular } from "@fluentui/react-icons";
 
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
@@ -18,7 +18,7 @@ export function CTASection() {
             <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
               <div className="flex items-center gap-x-1">
                 <span>Get started for free</span>
-                <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
+                <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
               </div>
             </Button>
           </div>

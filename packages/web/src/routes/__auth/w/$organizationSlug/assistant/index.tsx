@@ -53,7 +53,7 @@ function PageComponent() {
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Surface className="overflow-hidden size-full">
+      <Surface className="panel-group-collapse-animated overflow-hidden size-full">
         <Group
           orientation="horizontal"
           defaultLayout={defaultLayout}

@@ -13,8 +13,8 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from "react-aria-components";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { focusRing } from "@/utils/focus-ring";
 
-import { CollapseArrow } from "../icons/CollapseArrow";
-import { DocumentIcon } from "../icons/DocumentIcon";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;

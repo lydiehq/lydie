@@ -1,4 +1,4 @@
-import { Pause, Play } from "lucide-react";
+import { PauseRegular, PlayRegular } from "@fluentui/react-icons";
 import { type RefObject, useEffect, useState } from "react";
 import { Button } from "react-aria-components";
 
@@ -57,7 +57,11 @@ export function PreviewPlayButton({ videoRef }: { videoRef: RefObject<HTMLVideoE
           playback.progress,
         )} seconds of ${Math.round(playback.duration)} seconds`}
       >
-        {playback.isPlaying ? <Pause size={16} /> : <Play size={16} />}
+        {playback.isPlaying ? (
+          <PauseRegular className="size-4" />
+        ) : (
+          <PlayRegular className="size-4" />
+        )}
       </Button>
       <div className="relative w-10 h-1 rounded-full bg-black/5">
         <div

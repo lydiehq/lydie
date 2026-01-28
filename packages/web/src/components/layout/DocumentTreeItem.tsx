@@ -24,8 +24,8 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import { DocumentMenu } from "../documents/DocumentMenu";
-import { CollapseArrow } from "../icons/CollapseArrow";
-import { DocumentIcon } from "../icons/DocumentIcon";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 type Props = {
   item: {

@@ -1,3 +1,4 @@
+import { Button } from "@lydie/ui/components/generic/Button";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
@@ -7,7 +8,6 @@ import { z } from "zod";
 
 import { AssistantChat } from "@/components/assistant/AssistantChat";
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
-import { Button } from "@lydie/ui/components/generic/Button";
 import { Surface } from "@/components/layout/Surface";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { useOrganization } from "@/context/organization.context";
@@ -127,7 +127,7 @@ function PageComponent() {
 
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Surface className="overflow-hidden size-full">
+      <Surface className="panel-group-collapse-animated overflow-hidden size-full">
         <Group
           orientation="horizontal"
           defaultLayout={defaultLayout}

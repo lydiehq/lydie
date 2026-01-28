@@ -1,6 +1,6 @@
 ---
 import DocumentationLayout from "../../../layouts/DocumentationLayout.astro";
-import { Code, ExternalLink, Github } from "lucide-react";
+import { CodeRegular } from "@fluentui/react-icons";
 import { getAllTemplates } from "../../../data/templates";
 
 const recentTemplates = await getAllTemplates();
@@ -82,7 +82,7 @@ const examples = recentTemplates.slice(0, 3).map(template => ({
 
       <div class="flex flex-col gap-y-4 pt-8 border-t border-gray-200">
         <div class="flex items-center gap-x-2">
-          <Code className="size-5 text-gray-700" />
+          <CodeRegular className="size-5 text-gray-700" />
           <h2
             class="text-2xl font-heading font-medium tracking-tight text-gray-800"
           >

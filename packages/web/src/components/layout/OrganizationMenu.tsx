@@ -11,7 +11,7 @@ import { authClient } from "@/utils/auth";
 
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
-import { CollapseArrow } from "../icons/CollapseArrow";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 import { OrganizationsDialog } from "./OrganizationsDialog";
 

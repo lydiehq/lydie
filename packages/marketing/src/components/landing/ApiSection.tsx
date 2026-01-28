@@ -1,4 +1,9 @@
-import { BookOpen, ChevronRight, Code, Zap } from "lucide-react";
+import {
+  BookRegular,
+  ChevronRightRegular,
+  CodeRegular,
+  FlashRegular,
+} from "@fluentui/react-icons";
 
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
@@ -10,19 +15,19 @@ const points = [
     title: "Ready-to-deploy examples",
     description:
       "Get started quickly with pre-built blog templates for Next.js and other popular frameworks.",
-    icon: BookOpen,
+    icon: BookRegular,
   },
   {
     title: "REST API",
     description:
       "Low-level API access for complete control. Simple HTTP endpoints with full type safety.",
-    icon: Code,
+    icon: CodeRegular,
   },
   {
     title: "TypeScript SDK",
     description:
       "Official SDK with React hooks, HTML rendering, and full TypeScript support for advanced integrations.",
-    icon: Zap,
+    icon: FlashRegular,
   },
 ];
 
@@ -53,7 +58,7 @@ export function ApiSection() {
               <div className="rounded-[10px] ring ring-black/8 shadow-legit bg-gray-900 p-6 h-full overflow-hidden">
                 <div className="flex flex-col gap-y-4 h-full">
                   <div className="flex items-center gap-x-2">
-                    <Code className="size-4 text-gray-400" />
+                    <CodeRegular className="size-4 text-gray-400" />
                     <span className="text-xs font-medium text-gray-400">REST API</span>
                   </div>
                   <pre className="text-xs text-gray-300 font-mono overflow-x-auto">
@@ -63,7 +68,7 @@ curl https://api.lydie.co/v1/your-org/documents/getting-started \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</code>
                   </pre>
                   <div className="flex items-center gap-x-2 mt-4 pt-4 border-t border-gray-800">
-                    <Code className="size-4 text-gray-400" />
+                    <CodeRegular className="size-4 text-gray-400" />
                     <span className="text-xs font-medium text-gray-400">TypeScript SDK</span>
                   </div>
                   <pre className="text-xs text-gray-300 font-mono overflow-x-auto flex-1">
@@ -93,7 +98,7 @@ const doc = await client.getDocument("getting-started");`}</code>
               <Button href="https://app.lydie.co/auth" size="lg" className="self-start">
                 <div className="flex items-center gap-x-1">
                   <span>Get started</span>
-                  <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
+                  <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
                 </div>
               </Button>
               <Button
@@ -104,7 +109,7 @@ const doc = await client.getDocument("getting-started");`}</code>
               >
                 <div className="flex items-center gap-x-1">
                   <span>View examples</span>
-                  <ChevronRight className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
+                  <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
                 </div>
               </Button>
             </div>

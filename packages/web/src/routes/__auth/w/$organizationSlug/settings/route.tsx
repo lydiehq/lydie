@@ -11,10 +11,10 @@ import {
   TabDesktopMultiple16Filled,
 } from "@fluentui/react-icons";
 import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/editor/styles";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { DocumentIcon } from "@/components/icons/DocumentIcon";
 import { Surface } from "@/components/layout/Surface";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";

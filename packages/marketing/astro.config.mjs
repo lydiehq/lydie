@@ -13,6 +13,9 @@ export default defineConfig({
   adapter: aws(),
   vite: {
     plugins: [tailwindcss()],
+    ssr: {
+      noExternal: ["@fluentui/react-icons"],
+    }
   },
   trailingSlash: "never",
   image: {

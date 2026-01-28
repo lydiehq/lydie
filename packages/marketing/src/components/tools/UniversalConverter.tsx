@@ -1,4 +1,9 @@
-import { AlertCircle, Download, FileText, Upload } from "lucide-react";
+import {
+  ArrowDownloadRegular,
+  ArrowUploadRegular,
+  DocumentRegular,
+  ErrorCircleRegular,
+} from "@fluentui/react-icons";
 import React, { useState } from "react";
 
 import type { ConversionConfig } from "../../data/conversions";
@@ -146,7 +151,7 @@ export function UniversalConverter({ config }: Props) {
                 className="hidden"
               />
               <span className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <Upload className="w-4 h-4" />
+                <ArrowUploadRegular className="w-4 h-4" />
                 Upload File
               </span>
             </label>
@@ -187,7 +192,7 @@ export function UniversalConverter({ config }: Props) {
             </>
           ) : (
             <>
-              <Download className="w-5 h-5" />
+              <ArrowDownloadRegular className="w-5 h-5" />
               Convert to {config.toFormat}
             </>
           )}
@@ -196,7 +201,7 @@ export function UniversalConverter({ config }: Props) {
         {/* Error message */}
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <ErrorCircleRegular className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
@@ -204,7 +209,7 @@ export function UniversalConverter({ config }: Props) {
         {/* Info box */}
         <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-start gap-3">
-            <FileText className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+            <DocumentRegular className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-blue-900">How it works</h3>
               <p className="text-sm text-blue-800">

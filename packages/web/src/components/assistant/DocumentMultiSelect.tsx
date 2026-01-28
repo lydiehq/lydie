@@ -15,7 +15,7 @@ import { SelectItem } from "@lydie/ui/components/generic/Select";
 
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
-import { DocumentIcon } from "../icons/DocumentIcon";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 interface DocumentMultiSelectProps {
   availableDocuments: Array<{ id: string; title: string }>;

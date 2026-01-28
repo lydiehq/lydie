@@ -2,12 +2,6 @@ import type { Editor, Range } from "@tiptap/core";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
 
 import { ListFilled, TextNumberListLtrFilled } from "@fluentui/react-icons";
-import { ReactRenderer } from "@tiptap/react";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import tippy, { type Instance as TippyInstance } from "tippy.js";
-
-import { allFormattingActions, type FormattingAction } from "@/lib/editor/formatting-actions";
-
 import {
   BoldIcon,
   CodeIcon,
@@ -18,7 +12,12 @@ import {
   ItalicIcon,
   TableIcon,
   TaskListIcon,
-} from "../icons/wyswyg-icons";
+} from "@lydie/ui/components/icons/wysiwyg-icons";
+import { ReactRenderer } from "@tiptap/react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import tippy, { type Instance as TippyInstance } from "tippy.js";
+
+import { allFormattingActions, type FormattingAction } from "@/lib/editor/formatting-actions";
 
 type SlashMenuItem = {
   id: string;

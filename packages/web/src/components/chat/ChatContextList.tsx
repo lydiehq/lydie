@@ -3,7 +3,7 @@ import { Button } from "react-aria-components";
 
 import { DocumentMultiSelect } from "@/components/assistant/DocumentMultiSelect";
 
-import { DocumentIcon } from "../icons/DocumentIcon";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 export type ChatContextItem = {
   id: string;

@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRightRegular } from "@fluentui/react-icons";
 import React, { useContext } from "react";
 import {
   Button,
@@ -63,7 +63,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
 function ChevronIcon() {
   const { isExpanded } = useContext(DisclosureStateContext)!;
   return (
-    <ChevronRight
+    <ChevronRightRegular
       className={`w-5 h-5 text-gray-600 shrink-0 transition-transform duration-200 ${
         isExpanded ? "rotate-90" : ""
       }`}

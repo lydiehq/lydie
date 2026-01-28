@@ -1,13 +1,19 @@
 import type { Editor } from "@tiptap/core";
 
 import { TextStrikethroughFilled } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import {
+  BlockquoteIcon,
+  BoldIcon,
+  CodeIcon,
+  ItalicIcon,
+  LinkIcon,
+} from "@lydie/ui/components/icons/wysiwyg-icons";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 import { TooltipTrigger } from "react-aria-components";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Separator } from "@lydie/ui/components/layout/Separator";
-import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
-import { BlockquoteIcon, BoldIcon, CodeIcon, ItalicIcon, LinkIcon } from "../icons/wyswyg-icons";
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
 
 type Props = {

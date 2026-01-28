@@ -2,7 +2,7 @@
 import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
 import { getIntegration } from "../../utils/integrations";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeftRegular } from "@fluentui/react-icons";
 
 export async function getStaticPaths() {
   const { integrations } = await import("../../utils/integrations");
@@ -31,7 +31,7 @@ if (!integration) {
       href="/integrations"
       class="flex items-center gap-x-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors w-fit"
     >
-      <ChevronLeft className="size-4" />
+      <ChevronLeftRegular className="size-4" />
       Back to Integrations
     </a>
 

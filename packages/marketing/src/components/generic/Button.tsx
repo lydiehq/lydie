@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { type VariantProps, cva } from "cva";
-import { Loader } from "lucide-react";
+import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 import {
@@ -179,7 +179,7 @@ function ButtonChildren({
               className="shrink-0"
               style={{ width: spinnerSize, height: spinnerSize }}
             >
-              <Loader className={clsx(loaderSize.className, "text-gray-500")} />
+              <ArrowClockwiseRegular className={clsx(loaderSize.className, "text-gray-500")} />
             </motion.div>
             <div style={{ width: gapSize }} className="shrink-0" />
           </motion.div>

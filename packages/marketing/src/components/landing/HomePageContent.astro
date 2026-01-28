@@ -8,7 +8,7 @@ import UseCasesSection from "./UseCasesSection.astro";
 import EditorFeaturesSection from "./EditorFeaturesSection.astro";
 import { Hero } from "./Hero";
 import { CTASection } from "./CTASection";
-import { Globe, Search, Share2 } from "lucide-react";
+import { GlobeRegular, SearchRegular, ShareRegular } from "@fluentui/react-icons";
 import { Container } from "../Container";
 import screenshot from "../../../public/screenshot3.png";
 import { Logo } from "../Logo";
@@ -33,18 +33,18 @@ const keyBenefits = [
   {
     title: "Find information instantly",
     description: "Search across all your documents with AI-powered search.",
-    icon: Search,
+    icon: SearchRegular,
   },
   {
     title: "Collaborate in real-time",
     description: "Stay in sync with your team or across devices with ease.",
-    icon: Share2,
+    icon: ShareRegular,
   },
   {
     title: "Open-source",
     description:
       "Free to use, modify, and contribute. No hidden fees or vendor lock-in.",
-    icon: Globe,
+    icon: GlobeRegular,
   },
 ];
 ---

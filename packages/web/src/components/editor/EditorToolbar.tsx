@@ -11,15 +11,6 @@ import {
   TextNumberListLtrFilled,
   TextStrikethroughFilled,
 } from "@fluentui/react-icons";
-import { queries } from "@lydie/zero/queries";
-import { Editor } from "@tiptap/react";
-import { useRef, useState } from "react";
-import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
-
-import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useImageUpload } from "@/hooks/use-image-upload";
-import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
-
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
@@ -32,7 +23,16 @@ import {
   LinkIcon,
   TableIcon,
   TaskListIcon,
-} from "../icons/wyswyg-icons";
+} from "@lydie/ui/components/icons/wysiwyg-icons";
+import { queries } from "@lydie/zero/queries";
+import { Editor } from "@tiptap/react";
+import { useRef, useState } from "react";
+import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
+
+import { useDocumentActions } from "@/hooks/use-document-actions";
+import { useImageUpload } from "@/hooks/use-image-upload";
+import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
+
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
 

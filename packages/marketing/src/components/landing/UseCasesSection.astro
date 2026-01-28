@@ -1,6 +1,6 @@
 ---
 import { Container } from "../Container";
-import { BookOpen, FileText, Newspaper } from "lucide-react";
+import { BookRegular, DocumentRegular, DocumentBulletListRegular as NewsRegular } from "@fluentui/react-icons";
 ---
 
 <section class="py-12 md:py-16">
@@ -21,15 +21,15 @@ import { BookOpen, FileText, Newspaper } from "lucide-react";
       <!-- Tab buttons -->
       <div class="tabs-container">
         <button class="tab-button active" data-tab="wiki">
-          <BookOpen className="size-4" />
+          <BookRegular className="size-4" />
           <span>Public Wiki</span>
         </button>
         <button class="tab-button" data-tab="blog">
-          <Newspaper className="size-4" />
+          <NewsRegular className="size-4" />
           <span>Personal Blog</span>
         </button>
         <button class="tab-button" data-tab="docs">
-          <FileText className="size-4" />
+          <DocumentRegular className="size-4" />
           <span>Product Docs</span>
         </button>
       </div>

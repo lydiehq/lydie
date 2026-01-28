@@ -1,21 +1,21 @@
 ---
 import DocumentationLayout from "../../layouts/DocumentationLayout.astro";
 import { Eyebrow } from "../../components/landing/Eyebrow";
-import { Book, ChevronRight, Code } from "lucide-react";
+import { BookRegular, CodeRegular } from "@fluentui/react-icons";
 
 const quickLinks = [
   {
     title: "GitHub Repository",
     description: "View the source code and contribute",
     href: "https://github.com/lydiehq/lydie",
-    icon: Code,
+    icon: CodeRegular,
     external: true,
   },
   {
     title: "Blog",
     description: "Read the latest updates and tutorials",
     href: "/blog",
-    icon: Book,
+    icon: BookRegular,
     external: false,
   },
 ];
