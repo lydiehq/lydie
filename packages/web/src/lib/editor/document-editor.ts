@@ -19,6 +19,7 @@ import { OnboardingTextPracticeView } from "@/components/editor/onboarding/Onboa
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
+import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 
 export type DocumentEditorHookResult = {
   editor: Editor | null;
@@ -137,7 +138,7 @@ export function useDocumentEditor({
           },
         },
         collaboration: { document: ydoc },
-        collaborationCaret: { provider, user: userInfo },
+        collaborationCaret: { provider, user: userInfo, render: renderCollaborationCaret },
       }),
       editorProps: {
         attributes: {

@@ -23,6 +23,7 @@ export function getZeroInstance(auth: any): Zero<Schema> {
   }
 
   const newInstance = new Zero({
+    hiddenTabDisconnectDelay: 5 * 60 * 1000, // 5 minutes
     userID,
     schema,
     context: auth?.session,

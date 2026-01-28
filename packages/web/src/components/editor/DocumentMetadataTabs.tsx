@@ -1,19 +1,14 @@
 import type { QueryResultType } from "@rocicorp/zero";
 
-import { AddRegular } from "@fluentui/react-icons";
-import { Button } from "@lydie/ui/components/generic/Button";
 import { Link } from "@lydie/ui/components/generic/Link";
-import { composeTailwindRenderProps } from "@lydie/ui/components/generic/utils";
+import { MetadataTabsShell } from "@lydie/ui/components/editor/MetadataTabsShell";
 import { queries } from "@lydie/zero/queries";
-import { motion } from "motion/react";
-import { useContext, useRef, useState } from "react";
-import { DisclosureStateContext, Disclosure, DisclosurePanel } from "react-aria-components";
-import { Tabs, TabList, Tab, TabPanels, TabPanel } from "react-aria-components";
+import { useRef, useState } from "react";
+import { TabPanel } from "react-aria-components";
 
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { focusRing } from "@/utils/focus-ring";
 
-import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";
 
@@ -56,20 +51,6 @@ function SubDocuments({ doc }: { doc: DocumentType }) {
   );
 }
 
-function MetadataDisclosureHeader() {
-  const { isExpanded } = useContext(DisclosureStateContext)!;
-
-  return (
-    <Button slot="trigger" intent="ghost" size="icon-sm">
-      <CollapseArrow
-        className={`size-3.5 text-gray-500 transition-transform duration-200 ${
-          isExpanded ? "rotate-90" : "rotate-270"
-        }`}
-      />
-    </Button>
-  );
-}
-
 export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
   const documentCount = doc?.children?.length || 0;
   const { createDocument } = useDocumentActions();
@@ -86,93 +67,27 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
   };
 
   return (
-    <Disclosure
+    <MetadataTabsShell
+      selectedKey={selectedKey}
+      onSelectionChange={setSelectedKey}
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
-      className={isExpanded ? "mb-5 pb-5 border-b border-black/6" : "pb-5"}
+      documentCount={documentCount}
+      onAdd={handleAdd}
+      addButtonLabel={selectedKey === "fields" ? "Add field" : "Add document"}
+      focusRing={focusRing}
     >
-      <Tabs selectedKey={selectedKey} onSelectionChange={(key) => setSelectedKey(key as string)}>
-        <div className="flex items-center justify-between">
-          <TabList
-            aria-label="Metadata tabs"
-            className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center w-fit relative"
-          >
-            <Tab
-              id="fields"
-              className={composeTailwindRenderProps(
-                focusRing,
-                "rounded-full px-3 py-0.5 text-sm font-medium relative z-10 selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5 transition-colors",
-              )}
-            >
-              {({ isSelected }) => (
-                <>
-                  {isSelected && (
-                    <motion.span
-                      layoutId="active-tab-background"
-                      className="absolute inset-0 bg-white shadow-surface rounded-full"
-                      style={{ zIndex: -1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                  Fields
-                </>
-              )}
-            </Tab>
-            <Tab
-              id="documents"
-              className={composeTailwindRenderProps(
-                focusRing,
-                "rounded-full px-3 py-0.5 text-sm font-medium flex items-center gap-x-1.5 relative z-10 selected:text-gray-600 data-hovered:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5 transition-colors",
-              )}
-            >
-              {({ isSelected }) => (
-                <>
-                  {isSelected && (
-                    <motion.span
-                      layoutId="active-tab-background"
-                      className="absolute inset-0 bg-white shadow-surface rounded-full"
-                      style={{ zIndex: -1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                  <span>Documents</span>
-                  <span className="text-[10px]/none -mb-px text-gray-400">{documentCount}</span>
-                </>
-              )}
-            </Tab>
-          </TabList>
-          <div className="flex gap-x-1">
-            <Button size="sm" intent="ghost" onPress={handleAdd}>
-              <AddRegular className="size-4 mr-1" />
-              {selectedKey === "fields" ? "Add field" : "Add document"}
-            </Button>
-            <MetadataDisclosureHeader />
-          </div>
-        </div>
-        <DisclosurePanel className="mt-2">
-          <TabPanels>
-            <TabPanel id="fields">
-              <CustomFieldsEditor
-                ref={customFieldsEditorRef}
-                documentId={doc.id}
-                organizationId={doc.organization_id}
-                initialFields={initialFields}
-              />
-            </TabPanel>
-            <TabPanel id="documents">
-              <SubDocuments doc={doc} />
-            </TabPanel>
-          </TabPanels>
-        </DisclosurePanel>
-      </Tabs>
-    </Disclosure>
+      <TabPanel id="fields">
+        <CustomFieldsEditor
+          ref={customFieldsEditorRef}
+          documentId={doc.id}
+          organizationId={doc.organization_id}
+          initialFields={initialFields}
+        />
+      </TabPanel>
+      <TabPanel id="documents">
+        <SubDocuments doc={doc} />
+      </TabPanel>
+    </MetadataTabsShell>
   );
 }
