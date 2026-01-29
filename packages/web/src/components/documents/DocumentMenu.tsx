@@ -1,3 +1,12 @@
+import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
+
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Checkbox, CheckboxGroup } from "@lydie/ui/components/generic/Checkbox";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Input, Label } from "@lydie/ui/components/generic/Field";
+import { Menu, MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -10,15 +19,6 @@ import { Form, Heading } from "react-aria-components";
 import { TextField } from "react-aria-components";
 import { toast } from "sonner";
 
-import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
-
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Checkbox, CheckboxGroup } from "@lydie/ui/components/generic/Checkbox";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Input, Label } from "@lydie/ui/components/generic/Field";
-import { Menu, MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
-import { Modal } from "@lydie/ui/components/generic/Modal";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -171,11 +171,32 @@ export function DocumentMenu({
     }
   };
 
+  const handleToggleFavorite = () => {
+    if (!document) return;
+
+    try {
+      z.mutate(
+        mutators.document.toggleFavorite({
+          documentId,
+          organizationId: organization.id,
+          isFavorited: !document.is_favorited,
+        }),
+      );
+
+      toast.success(document.is_favorited ? "Removed from favorites" : "Added to favorites");
+    } catch {
+      toast.error("Failed to update favorite status");
+    }
+  };
+
   return (
     <>
       <Menu placement={placement}>
         <MenuItem onAction={() => setIsInfoDialogOpen(true)}>Info</MenuItem>
         <MenuItem onAction={() => setIsRenameDialogOpen(true)}>Rename</MenuItem>
+        <MenuItem onAction={handleToggleFavorite}>
+          {document?.is_favorited ? "Unfavorite" : "Favorite"}
+        </MenuItem>
         {document?.integration_link_id && !document?.published && (
           <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
         )}

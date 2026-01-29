@@ -33,6 +33,7 @@ import { isAdmin } from "@/utils/admin";
 
 import { FeedbackWidget } from "../feedback/FeedbackWidget";
 import { DocumentTree } from "./DocumentTree";
+import { FavoritesTree } from "./FavoritesTree";
 import { OrganizationMenu } from "./OrganizationMenu";
 import { SidebarIcon } from "./SidebarIcon";
 import { UsageStats } from "./UsageStats";
@@ -177,7 +178,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </div>
         <Separator className="mx-2" />
         <div className="flex flex-col grow min-h-0">
-          <div className="flex items-center justify-between shrink-0 px-3">
+          <FavoritesSection />
+          <div className="flex items-center justify-between shrink-0 px-3 pt-2">
             <Eyebrow>Documents</Eyebrow>
             <TooltipTrigger delay={500}>
               <Button
@@ -201,6 +203,19 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         <BottomBar />
       </div>
     </div>
+  );
+}
+
+function FavoritesSection() {
+  return (
+    <>
+      <div className="flex items-center justify-between shrink-0 px-3 py-2">
+        <Eyebrow>Favorites</Eyebrow>
+      </div>
+      <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2">
+        <FavoritesTree />
+      </div>
+    </>
   );
 }
 

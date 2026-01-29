@@ -6,6 +6,7 @@ import {
   ArrowRightRegular,
   CollectionsEmpty16Filled,
   CubeRegular,
+  DocumentHeart24Filled,
   FolderSyncRegular,
   MoreHorizontalRegular,
   ReOrderRegular,
@@ -14,6 +15,8 @@ import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/e
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { type ReactElement, useState } from "react";
@@ -24,8 +27,6 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import { DocumentMenu } from "../documents/DocumentMenu";
-import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 type Props = {
   item: {
@@ -33,6 +34,7 @@ type Props = {
     name: string;
     type: "document" | "integration-link" | "integration-group";
     isLocked?: boolean;
+    isFavorited?: boolean;
     children?: Array<{
       id: string;
       name: string;
@@ -42,6 +44,7 @@ type Props = {
       integrationType?: string;
       syncStatus?: string | null;
       isLocked?: boolean;
+      isFavorited?: boolean;
     }>;
     integrationLinkId?: string | null;
     integrationType?: string;
@@ -146,6 +149,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                   isExpanded={isExpanded}
                   hasChildren={item.children !== undefined && item.children.length > 0}
                   isMenuOpen={isMenuOpen}
+                  isFavorited={item.isFavorited ?? false}
                 />
               )}
 
@@ -281,23 +285,35 @@ function DocumentTreeItemIcon({
   isExpanded,
   hasChildren,
   isMenuOpen,
+  isFavorited,
 }: {
   isExpanded: boolean;
   hasChildren: boolean;
   isMenuOpen: boolean;
+  isFavorited: boolean;
 }) {
-  // If no children, just show the icon (not interactive)
+  // If no children, show document icon (heart when favorited, default otherwise)
   if (!hasChildren) {
     return (
       <div className="text-gray-500 p-1 -ml-1 flex">
-        <DocumentIcon
-          className={sidebarItemIconStyles({
-            className: "size-4 shrink-0",
-          })}
-        />
+        {isFavorited ? (
+          <DocumentHeart24Filled
+            className={sidebarItemIconStyles({
+              className: "size-4 shrink-0",
+            })}
+          />
+        ) : (
+          <DocumentIcon
+            className={sidebarItemIconStyles({
+              className: "size-4 shrink-0",
+            })}
+          />
+        )}
       </div>
     );
   }
+
+  // Collections always use the same icon regardless of favorite status
 
   return (
     <Button

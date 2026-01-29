@@ -371,4 +371,23 @@ export const documentMutators = {
       }
     },
   ),
+
+  toggleFavorite: defineMutator(
+    z.object({
+      documentId: z.string(),
+      organizationId: z.string(),
+      isFavorited: z.boolean(),
+    }),
+    async ({ tx, ctx, args: { documentId, organizationId, isFavorited } }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      await verifyDocumentAccess(tx, documentId, organizationId);
+
+      await tx.mutate.documents.update(
+        withUpdatedTimestamp({
+          id: documentId,
+          is_favorited: isFavorited,
+        }),
+      );
+    },
+  ),
 };

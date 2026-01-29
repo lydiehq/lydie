@@ -189,6 +189,7 @@ export const documentsTable = pgTable(
     sectionHashes: jsonb("section_hashes").$type<Record<string, string>>(), // Track which sections have changed for incremental updates
     deletedAt: timestamp("deleted_at"),
     isLocked: boolean("is_locked").notNull().default(false),
+    isFavorited: boolean("is_favorited").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     ...timestamps,
   },

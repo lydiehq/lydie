@@ -80,6 +80,7 @@ const documents = table("documents")
     published: boolean(),
     deleted_at: number().optional(),
     is_locked: boolean(),
+    is_favorited: boolean(),
     sort_order: number(),
     ...timestamps,
   })
