@@ -41,6 +41,7 @@ try {
 
 const blogPostProps = {
   title: document.title,
+  description: (document as any).customFields?.excerpt || "",
 };
 
 const articleUrl = new URL(`/blog/${document.slug}`, Astro.site);
@@ -94,7 +95,9 @@ const structuredData = {
         <FormattedDate date={new Date(document.createdAt)} />
       </span>
     </header>
-    <div class="rounded-lg ring ring-black/5 overflow-hidden h-80 [&>img]:object-cover [&>img]:w-full [&>img]:h-80">
+    <div
+      class="rounded-lg ring ring-black/5 overflow-hidden h-80 [&>img]:object-cover [&>img]:w-full [&>img]:h-80"
+    >
       <Image
         src={coverImageSrc}
         alt=""
@@ -131,12 +134,24 @@ const structuredData = {
             <a
               href={`/blog/${post.slug}`}
               class="rounded-lg bg-black/2 p-4 flex md:h-32 flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline bg-center bg-cover bg-no-repeat"
-              style={post.coverImage ? `background-image: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(${post.coverImage})` : ''}
+              style={
+                post.coverImage
+                  ? `background-image: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(${post.coverImage})`
+                  : ""
+              }
             >
-              <span class="text-base font-medium text-ellipsis overflow-hidden whitespace-nowrap" class:list={[post.coverImage ? 'text-white' : 'text-gray-900']}>
+              <span
+                class="text-base font-medium text-ellipsis overflow-hidden whitespace-nowrap"
+                class:list={[post.coverImage ? "text-white" : "text-gray-900"]}
+              >
                 {post.title}
               </span>
-              <p class="text-sm" class:list={[post.coverImage ? 'text-white/80' : 'text-gray-500']}>
+              <p
+                class="text-sm"
+                class:list={[
+                  post.coverImage ? "text-white/80" : "text-gray-500",
+                ]}
+              >
                 <FormattedDate date={new Date(post.createdAt)} />
               </p>
             </a>
