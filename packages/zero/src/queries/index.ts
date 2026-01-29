@@ -17,7 +17,6 @@ import { settingsQueries } from "./settings";
 import { syncMetadataQueries } from "./sync-metadata";
 import { templateQueries } from "./template";
 import { templateCategoryQueries } from "./template-category";
-import { usageQueries } from "./usage";
 
 export type QueryContext = Context;
 
@@ -30,7 +29,6 @@ export const queries = defineQueries({
   organizations: organizationQueries,
   assistant: assistantQueries,
   agents: agentQueries,
-  usage: usageQueries,
   settings: settingsQueries,
   integrations: integrationQueries,
   integrationLinks: integrationLinkQueries,

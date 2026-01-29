@@ -8,6 +8,11 @@ import {
   SparkleRegular,
 } from "@fluentui/react-icons";
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute, useParams } from "@tanstack/react-router";
@@ -15,11 +20,6 @@ import { useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Heading } from "@lydie/ui/components/generic/Heading";
-import { Modal } from "@lydie/ui/components/generic/Modal";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Card } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
 import { authClient } from "@/utils/auth";
@@ -49,10 +49,16 @@ function RouteComponent() {
       return PLAN_TYPES.FREE;
     }
 
-    const hasProAccess =
-      billingData.subscription_plan === "pro" && billingData.subscription_status === "active";
+    if (billingData.subscription_status === "active") {
+      if (billingData.subscription_plan === "monthly") {
+        return PLAN_TYPES.MONTHLY;
+      }
+      if (billingData.subscription_plan === "yearly") {
+        return PLAN_TYPES.YEARLY;
+      }
+    }
 
-    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE;
+    return PLAN_TYPES.FREE;
   }, [billingData]);
 
   const planInfo = PLAN_LIMITS[currentPlan];
@@ -61,28 +67,34 @@ function RouteComponent() {
   const usageStats = useMemo(() => {
     if (!billingData?.llmUsage) {
       return {
-        totalTokens: 0,
+        totalCredits: 0,
         totalRequests: 0,
       };
     }
 
-    const totalTokens =
-      billingData.llmUsage.reduce((sum: any, usage: any) => sum + usage.total_tokens, 0) || 0;
+    const totalCredits =
+      billingData.llmUsage.reduce((sum: any, usage: any) => sum + (usage.credits_used || 0), 0) ||
+      0;
     const totalRequests = billingData.llmUsage.length || 0;
 
     return {
-      totalTokens,
+      totalCredits,
       totalRequests,
     };
   }, [billingData]);
 
-  const handleUpgrade = async () => {
+  const creditBalance = billingData?.credit_balance || 0;
+  const paidSeats = billingData?.paid_seats || 0;
+  const memberCount = billingData?.members?.length || 1;
+
+  const handleUpgrade = async (planType: "monthly" | "yearly") => {
     setIsUpgrading(true);
 
     try {
       await authClient.checkout({
-        slug: "pro",
+        slug: planType,
         referenceId: organization.id,
+        quantity: memberCount, // Initial seat count
       });
     } catch (error: any) {
       console.error("Upgrade error:", error);
@@ -110,220 +122,133 @@ function RouteComponent() {
       </div>
       <Separator />
 
-      {/* Free Plan Upgrade Section */}
-      {currentPlan === PLAN_TYPES.FREE && (
-        <Card className="p-8 text-center">
-          <ErrorCircleRegular className="size-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Plan</h3>
-          <p className="text-sm text-gray-600 mb-6">
-            You're currently on the free plan. Upgrade to Pro to unlock unlimited AI features.
-          </p>
-          <DialogTrigger>
-            <Button>
-              <SparkleRegular className="size-4 mr-2" />
-              Upgrade to Pro
-            </Button>
-            <Modal isDismissable>
-              <Dialog>
-                <div className="p-6">
-                  <Heading level={2} className="text-xl font-semibold mb-2">
-                    Upgrade to Pro
-                  </Heading>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Unlock unlimited AI features with Pro plan.
-                  </p>
-
-                  {/* Pro Plan Card */}
-                  <div className="max-w-md mx-auto">
-                    <div className="relative rounded-lg border-2 p-6 transition-all border-blue-500 hover:border-blue-600">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">Pro Plan</h3>
-                          <p className="text-2xl font-bold text-gray-900 mt-1">
-                            $20
-                            <span className="text-sm font-normal text-gray-500">/mo</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      <ul className="space-y-2 mb-4">
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Unlimited tokens</span>
-                        </li>
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Unlimited requests</span>
-                        </li>
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Background processing</span>
-                        </li>
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Priority support</span>
-                        </li>
-                      </ul>
-
-                      <Button
-                        onPress={() => {
-                          handleUpgrade();
-                        }}
-                        isDisabled={isUpgrading}
-                        className="w-full"
-                        intent="primary"
-                      >
-                        {isUpgrading ? (
-                          "Processing..."
-                        ) : (
-                          <>
-                            Upgrade to Pro
-                            <ArrowRightRegular className="size-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-900">
-                      <strong>✨ Pro Features</strong> - Get unlimited AI usage, priority support,
-                      and advanced features.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      <strong>Need custom limits?</strong> Contact us for Enterprise pricing with
-                      unlimited usage, dedicated support, and advanced features.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800">
-                      <strong>⚠️ Early Alpha Disclaimer:</strong> The PRO plan may be subject to
-                      changes in terms of token limitations and pricing as we are still figuring out
-                      our monetization model during this early alpha phase.
-                    </p>
-                  </div>
-
-                  <div className="flex justify-end gap-2 mt-6">
-                    <Button intent="secondary" isDisabled={isUpgrading}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </Dialog>
-            </Modal>
-          </DialogTrigger>
-        </Card>
-      )}
-
-      {/* Current Plan - Only show for Pro users */}
-      {currentPlan === PLAN_TYPES.PRO && (
-        <Card className="p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-gray-900">{planInfo.name} Plan</h2>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    billingData?.subscription_status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {billingData?.subscription_status || "active"}
-                </span>
-              </div>
-              {planInfo.price.monthly !== null && (
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  ${(planInfo.price.monthly / 100).toFixed(0)}
-                  <span className="text-sm font-normal text-gray-500">/month</span>
+      {/* Current Plan Card */}
+      <Card className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-900">{planInfo.name}</h2>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  billingData?.subscription_status === "active"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {billingData?.subscription_status || "free"}
+              </span>
+            </div>
+            <div className="mt-2">
+              <p className="text-sm text-gray-600">
+                Credits: <span className="font-semibold text-gray-900">{creditBalance}</span>{" "}
+                remaining
+              </p>
+              {currentPlan !== PLAN_TYPES.FREE && (
+                <p className="text-sm text-gray-600">
+                  Seats: <span className="font-semibold text-gray-900">{paidSeats}</span> × $
+                  {planInfo.price}/seat = ${(paidSeats * planInfo.price).toFixed(2)}/month
                 </p>
               )}
             </div>
-            <div className="flex gap-2">
-              <Button intent="secondary" onPress={handleManageSubscription} size="sm">
-                Manage Subscription
-              </Button>
-              <DialogTrigger>
-                <Button intent="secondary" size="sm">
-                  <SparkleRegular className="size-4 mr-2" />
-                  Change Plan
+          </div>
+          {currentPlan !== PLAN_TYPES.FREE && (
+            <Button intent="secondary" onPress={handleManageSubscription} size="sm">
+              Manage Subscription
+            </Button>
+          )}
+        </div>
+
+        {/* Upgrade Options for Free Plan */}
+        {currentPlan === PLAN_TYPES.FREE && (
+          <div className="mt-4 pt-4 border-t">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Upgrade Options</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Monthly Plan */}
+              <div className="border-2 border-blue-500 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Monthly</h4>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      ${PLAN_LIMITS[PLAN_TYPES.MONTHLY].price}
+                      <span className="text-sm font-normal text-gray-500">/seat/mo</span>
+                    </p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 mb-4">
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>{PLAN_LIMITS[PLAN_TYPES.MONTHLY].creditsPerSeat} credits/seat/month</span>
+                  </li>
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>
+                      Starting with {memberCount} seat{memberCount > 1 ? "s" : ""}
+                    </span>
+                  </li>
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>Priority support</span>
+                  </li>
+                </ul>
+                <Button
+                  onPress={() => handleUpgrade("monthly")}
+                  isDisabled={isUpgrading}
+                  className="w-full"
+                  intent="primary"
+                >
+                  {isUpgrading ? "Processing..." : "Upgrade to Monthly"}
                 </Button>
-                <Modal isDismissable>
-                  <Dialog>
-                    <div className="p-6">
-                      <Heading level={2} className="text-xl font-semibold mb-2">
-                        Manage Subscription
-                      </Heading>
-                      <p className="text-sm text-gray-600 mb-6">
-                        Use the customer portal to manage your subscription, view invoices, and
-                        update payment methods.
-                      </p>
-
-                      <div className="flex justify-end gap-2 mt-6">
-                        <Button intent="secondary" size="sm">
-                          Cancel
-                        </Button>
-                        <Button
-                          onPress={() => {
-                            handleManageSubscription();
-                          }}
-                          intent="primary"
-                        >
-                          Open Customer Portal
-                        </Button>
-                      </div>
-                    </div>
-                  </Dialog>
-                </Modal>
-              </DialogTrigger>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <CalendarRegular className="size-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Plan Status</p>
-                <p className="text-sm font-medium text-gray-900">Active</p>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FlashRegular className="size-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Total Requests</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {!billingData?.llmUsage ? (
-                    <span className="text-gray-400">Loading...</span>
-                  ) : (
-                    usageStats.totalRequests.toLocaleString()
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <ArrowTrendingRegular className="size-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Total Tokens</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {!billingData?.llmUsage ? (
-                    <span className="text-gray-400">Loading...</span>
-                  ) : (
-                    usageStats.totalTokens.toLocaleString()
-                  )}
-                </p>
+
+              {/* Yearly Plan */}
+              <div className="border-2 border-purple-500 rounded-lg p-4 relative">
+                <span className="absolute -top-2 right-4 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                  Save 22%
+                </span>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Yearly</h4>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      ${PLAN_LIMITS[PLAN_TYPES.YEARLY].price}
+                      <span className="text-sm font-normal text-gray-500">/seat/mo</span>
+                    </p>
+                    <p className="text-xs text-gray-500">Billed annually</p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 mb-4">
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>{PLAN_LIMITS[PLAN_TYPES.YEARLY].creditsPerSeat} credits/seat/month</span>
+                  </li>
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>
+                      Starting with {memberCount} seat{memberCount > 1 ? "s" : ""}
+                    </span>
+                  </li>
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>Priority support</span>
+                  </li>
+                </ul>
+                <Button
+                  onPress={() => handleUpgrade("yearly")}
+                  isDisabled={isUpgrading}
+                  className="w-full"
+                  intent="primary"
+                >
+                  {isUpgrading ? "Processing..." : "Upgrade to Yearly"}
+                </Button>
               </div>
             </div>
           </div>
-        </Card>
-      )}
-      {/* AI Usage */}
+        )}
+      </Card>
+
+      {/* AI Usage Statistics */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-md font-semibold text-gray-900">AI Usage</h3>
+          <h3 className="text-md font-semibold text-gray-900">AI Usage This Period</h3>
           {billingData?.llmUsage && billingData.llmUsage.length > 0 && (
             <span className="text-xs text-gray-500">
               {billingData.llmUsage.length} total requests
@@ -343,18 +268,33 @@ function RouteComponent() {
             </p>
           </div>
         ) : (
-          <div className="flex justify-between items-center py-4">
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">Total Requests</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {usageStats.totalRequests.toLocaleString()}
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <SparkleRegular className="size-5 text-gray-500" />
+              <div>
+                <p className="text-xs text-gray-500">Credits Used</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {usageStats.totalCredits.toLocaleString()}
+                </p>
+              </div>
             </div>
-            <div className="space-y-1 text-right">
-              <p className="text-sm text-gray-600">Total Tokens</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {usageStats.totalTokens.toLocaleString()}
-              </p>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <FlashRegular className="size-5 text-gray-500" />
+              <div>
+                <p className="text-xs text-gray-500">Total Requests</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {usageStats.totalRequests.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <ArrowTrendingRegular className="size-5 text-gray-500" />
+              <div>
+                <p className="text-xs text-gray-500">Credits Remaining</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {creditBalance.toLocaleString()}
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -366,9 +306,9 @@ function RouteComponent() {
           <div>
             <h3 className="text-sm font-semibold text-amber-800 mb-1">Early Alpha Disclaimer</h3>
             <p className="text-sm text-amber-700">
-              The PRO plan may be subject to changes in terms of token limitations, pricing, and
-              features as we are still figuring out our monetization model during this early alpha
-              phase. We'll notify you of any significant changes in advance.
+              Our pricing plans may be subject to changes in terms of credit allocations, pricing,
+              and features as we continue to optimize our offering during this early phase. We'll
+              notify you of any significant changes in advance.
             </p>
           </div>
         </div>

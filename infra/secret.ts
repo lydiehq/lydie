@@ -12,7 +12,10 @@ export const secret = {
   lydieApiKey: new sst.Secret("LydieApiKey"),
   zeroAdminPassword: new sst.Secret("ZeroAdminPassword"),
   polarApiKey: new sst.Secret("PolarApiKey"),
-  polarProProductId: new sst.Secret("PolarProProductId"),
+  polarProductSlugFree: new sst.Secret("PolarProductSlugFree"),
+  polarProductSlugMonthly: new sst.Secret("PolarProductSlugMonthly"),
+  polarProductSlugYearly: new sst.Secret("PolarProductSlugYearly"),
+  polarMeterName: new sst.Secret("PolarMeterName"), // "ai_credits"
   polarWebhookSecret: new sst.Secret("PolarWebhookSecret"),
 
   // GitHub integration

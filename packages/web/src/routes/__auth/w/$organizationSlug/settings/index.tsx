@@ -1,4 +1,8 @@
 import { AddRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -6,10 +10,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Heading } from "@lydie/ui/components/generic/Heading";
-import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Card } from "@/components/layout/Card";
 import { ApiKeyDialog } from "@/components/settings/general/ApiKeyDialog";
 import { ApiKeysList } from "@/components/settings/general/ApiKeysList";
@@ -195,9 +195,23 @@ function RouteComponent() {
       return;
     }
 
+    // Check if this is a paid workspace
+    const isPaidWorkspace =
+      organization.subscriptionStatus === "active" &&
+      (organization.subscriptionPlan === "monthly" || organization.subscriptionPlan === "yearly");
+
+    let billingMessage = "";
+    if (isPaidWorkspace) {
+      const pricePerSeat =
+        organization.subscriptionPlan === "yearly"
+          ? 14 // PLAN_LIMITS[PLAN_TYPES.YEARLY].price
+          : 18; // PLAN_LIMITS[PLAN_TYPES.MONTHLY].price
+      billingMessage = `\n\nBilling Impact:\n• This will free 1 seat\n• Your next bill will be reduced by $${pricePerSeat} (prorated)`;
+    }
+
     confirmDialog({
       title: `Remove Member`,
-      message: `Are you sure you want to remove ${memberName} from this organization?`,
+      message: `Are you sure you want to remove ${memberName} from this organization?${billingMessage}`,
       onConfirm: async () => {
         try {
           await authClient.organization.removeMember({
@@ -300,6 +314,7 @@ function RouteComponent() {
         isOpen={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         invitationForm={invitationForm}
+        organization={organization}
       />
     </div>
   );

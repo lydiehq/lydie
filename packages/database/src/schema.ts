@@ -106,8 +106,14 @@ export const organizationsTable = pgTable("organizations", {
   color: text("color"),
   // Subscription info synced from Polar via webhooks
   subscriptionStatus: text("subscription_status").default("free"), // 'free', 'active', 'canceled', 'past_due'
-  subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'pro'
+  subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'monthly', 'yearly'
   polarSubscriptionId: text("polar_subscription_id"),
+  // Seat-based billing
+  paidSeats: integer("paid_seats").default(0).notNull(),
+  // Credit tracking (cached from Polar)
+  creditBalance: integer("credit_balance").default(0).notNull(),
+  creditBalanceUpdatedAt: timestamp("credit_balance_updated_at"),
+  polarMeterId: text("polar_meter_id"),
   ...timestamps,
 });
 
@@ -379,9 +385,8 @@ export const llmUsageTable = pgTable(
     }),
     source: text("source").notNull(), // 'document' or 'assistant'
     model: text("model").notNull(),
-    promptTokens: integer("prompt_tokens").notNull(),
-    completionTokens: integer("completion_tokens").notNull(),
-    totalTokens: integer("total_tokens").notNull(),
+    // Credit-based tracking
+    creditsUsed: integer("credits_used").notNull(),
     finishReason: text("finish_reason"),
     toolCalls: jsonb("tool_calls"),
     ...timestamps,
