@@ -212,7 +212,7 @@ function FavoritesSection() {
       <div className="flex items-center justify-between shrink-0 px-3 py-2">
         <Eyebrow>Favorites</Eyebrow>
       </div>
-      <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2">
+      <div className="px-2 pb-2">
         <FavoritesTree />
       </div>
     </>
