@@ -1,4 +1,4 @@
-FROM mirror.gcr.io/oven/bun:1.3.7
+FROM mirror.gcr.io/oven/bun:1.3.8
 
 RUN apt-get update && apt-get install -y \
     pandoc \
