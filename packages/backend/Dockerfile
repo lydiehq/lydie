@@ -5,8 +5,6 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-base \
     texlive-latex-recommended \
     texlive-fonts-recommended \
-    texlive-fonts-extra \
-    texlive-latex-extra \
     && rm -rf /var/lib/apt/lists/*
 
 ADD ./package.json .
