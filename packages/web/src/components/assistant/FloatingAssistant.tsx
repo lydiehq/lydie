@@ -9,6 +9,9 @@ import {
   TextBulletListSquareEditRegular,
 } from "@fluentui/react-icons";
 import { createId } from "@lydie/core/id";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -20,9 +23,6 @@ import { createPortal } from "react-dom";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
 import { ChatMessages } from "@/components/chat/ChatMessages";
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import {
@@ -434,7 +434,6 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
           placeholder="Ask anything. Use @ to refer to documents"
           canStop={canStop}
           currentDocumentId={currentDocumentId}
-          variant="flat"
           editorClassName="focus:outline-none min-h-[80px] max-h-[200px] overflow-y-auto text-sm text-gray-700"
           content={pendingContent}
           selectedAgentId={selectedAgentId}
