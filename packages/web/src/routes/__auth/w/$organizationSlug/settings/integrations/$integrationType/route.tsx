@@ -1,4 +1,8 @@
 import { getIntegrationMetadata } from "@lydie/integrations/client";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { Modal } from "@lydie/ui/components/generic/Modal";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery, useZero } from "@rocicorp/zero/react";
@@ -9,11 +13,7 @@ import { DialogTrigger } from "react-aria-components";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Heading } from "@lydie/ui/components/generic/Heading";
-import { Link } from "@lydie/ui/components/generic/Link";
-import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Link } from "@/components/generic/Link";
 import { WordPressConnectionForm } from "@/components/settings/integrations/forms/wordpress-connection-form";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";

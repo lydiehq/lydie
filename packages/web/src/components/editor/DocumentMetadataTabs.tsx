@@ -1,15 +1,15 @@
 import type { QueryResultType } from "@rocicorp/zero";
 
-import { Link } from "@lydie/ui/components/generic/Link";
 import { MetadataTabsShell } from "@lydie/ui/components/editor/MetadataTabsShell";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useRef, useState } from "react";
 import { TabPanel } from "react-aria-components";
 
+import { Link } from "@/components/generic/Link";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { focusRing } from "@/utils/focus-ring";
 
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;

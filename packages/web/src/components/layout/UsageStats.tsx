@@ -1,15 +1,14 @@
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
+import { CircularProgress } from "@lydie/ui/components/generic/CircularProgress";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import { useMemo } from "react";
 import { TooltipTrigger } from "react-aria-components";
 
+import { Link } from "@/components/generic/Link";
 import { useOrganization } from "@/context/organization.context";
-
-import { CircularProgress } from "@lydie/ui/components/generic/CircularProgress";
-import { Link } from "@lydie/ui/components/generic/Link";
-import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 
 export function UsageStats() {
   const { organization } = useOrganization();

@@ -1,4 +1,9 @@
 import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Label } from "@lydie/ui/components/generic/Field";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -7,12 +12,7 @@ import { useMemo, useState } from "react";
 import { Input, TextArea } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Label } from "@lydie/ui/components/generic/Field";
-import { Heading } from "@lydie/ui/components/generic/Heading";
-import { Link } from "@lydie/ui/components/generic/Link";
-import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
-import { Separator } from "@lydie/ui/components/layout/Separator";
+import { Link } from "@/components/generic/Link";
 import { Card } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
 import { useZero } from "@/services/zero";
