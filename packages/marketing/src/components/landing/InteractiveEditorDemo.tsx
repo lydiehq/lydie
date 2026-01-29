@@ -150,17 +150,29 @@ export function InteractiveEditorDemo() {
                 <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">To bring</h2>
                 <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
                   <li>
-                    <strong>Firewood + matches</strong>
+                    <p>
+                      <strong>Firewood + matches</strong>
+                    </p>
                   </li>
-                  <li>Ingredients for s'mores (chocolate, marshmallows, graham crackers)</li>
-                  <li>Board games — Catan? Or something lighter</li>
-                  <li>Bluetooth speaker for the deck</li>
-                  <li>Coffee and filters (we'll need a lot)</li>
                   <li>
-                    First aid kit + bug spray
-                    {showCollaboration && (
-                      <CollaborationCaret userName="Jordan" userColor={collaborators[2].color} />
-                    )}
+                    <p>Ingredients for s'mores (chocolate, marshmallows, graham crackers)</p>
+                  </li>
+                  <li>
+                    <p>Board games — Catan? Or something lighter</p>
+                  </li>
+                  <li>
+                    <p>Bluetooth speaker for the deck</p>
+                  </li>
+                  <li>
+                    <p>Coffee and filters (we'll need a lot)</p>
+                  </li>
+                  <li>
+                    <p>
+                      First aid kit + bug spray
+                      {showCollaboration && (
+                        <CollaborationCaret userName="Jordan" userColor={collaborators[2].color} />
+                      )}
+                    </p>
                   </li>
                 </ul>
 
