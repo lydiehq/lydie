@@ -12,6 +12,12 @@ export const freeTools = [
     href: "/tools/outline-generator",
   },
   {
+    title: "AI Title Generator",
+    description:
+      "Generate compelling titles for your content using AI. Perfect for blog posts, articles, videos, and social media.",
+    href: "/tools/title-generator",
+  },
+  {
     title: "AI Text Summarizer",
     description: "Summarize text quickly and easily. Perfect for articles, essays, and reports.",
     href: "/tools/text-summarizer",
