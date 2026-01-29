@@ -2,8 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import HomePageContent from "../../components/landing/HomePageContent.astro";
 
-// Set canonical URL to root domain to avoid duplicate content
-const canonicalURL = new URL("/", Astro.site);
+const canonicalURL = new URL(Astro.site ?? "").origin;
 ---
 
 <Layout
