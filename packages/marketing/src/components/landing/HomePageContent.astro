@@ -10,6 +10,7 @@ import { Hero } from "./Hero";
 import ProblemSolutionSection from "./ProblemSolutionSection.astro";
 import { CTASection } from "./CTASection";
 import {
+  ChevronRightRegular,
   GlobeRegular,
   SearchRegular,
   ShareRegular,
@@ -18,6 +19,8 @@ import { Container } from "../Container";
 import screenshot from "../../../public/screenshot3.png";
 import { Logo } from "../Logo";
 import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
+import { Button } from "../generic/Button";
+import { Eyebrow } from "./Eyebrow";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -85,10 +88,24 @@ const keyBenefits = [
   </div>
   <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
 </Container> -->
-<div class="relative">
-  <hr class="border-gray-100 w-full max-w-5xl mx-auto my-12" />
+
+<div class="max-w-4xl relative">
+  <!-- 768px internal width, centered (w-1 = 4px each side) -->
   <div
-    class="rounded-full bg-white px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+    class="fixed inset-y-0 w-1 border-r border-black/4"
+    style="left: calc(50% - 388px)"
+  >
+  </div>
+  <div
+    class="fixed inset-y-0 w-1 border-r border-black/4"
+    style="right: calc(50% - 388px)"
+  >
+  </div>
+</div>
+<div class="relative">
+  <hr class="border-black/4 w-full max-w-5xl mx-auto" />
+  <div
+    class="rounded-full bg-[rgb(248_248_248)] px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
   >
     <Logo className="text-gray-200 size-3.5" />
   </div>
@@ -109,13 +126,30 @@ const keyBenefits = [
   <!-- <CollaborationSection /> -->
 </Container>
 <div class="relative">
-  <hr class="border-gray-100 w-full max-w-5xl mx-auto my-24" />
+  <hr class="border-black/4 w-full max-w-5xl mx-auto" />
   <div
-    class="rounded-full bg-white px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+    class="rounded-full bg-[rgb(248_248_248)] px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
   >
     <Logo className="text-gray-200 size-3.5" />
   </div>
 </div>
+<Container size="sm">
+  <div class="flex flex-col gap-y-3 p-16 items-center text-center">
+    <h2 class="text-3xl tracking-tight font-medium text-gray-900">
+      Ready to try it yourself?
+    </h2>
+    <p class="text-sm/relaxed text-gray-600 text-balance">
+      Create your first document in seconds. No credit card required.
+    </p>
+    <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
+      <span>Get started for free</span>
+      <ChevronRightRegular
+        className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
+      />
+    </Button>
+  </div>
+</Container>
+
 <!-- <ChatSection
   client:load
   imageSrc={chatDefaultImage.src}
@@ -128,4 +162,4 @@ const keyBenefits = [
 <!-- <UseCasesSection />
 <PerformanceSection />
 <IntegrationsSection /> -->
-<CTASection client:load />
+<!-- <CTASection client:load /> -->

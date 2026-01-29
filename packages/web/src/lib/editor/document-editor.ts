@@ -6,6 +6,7 @@ import type { EditorView } from "@tiptap/pm/view";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import { getDocumentEditorExtensions } from "@lydie/editor";
+import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useCallback, useMemo, useRef } from "react";
@@ -19,7 +20,6 @@ import { OnboardingTextPracticeView } from "@/components/editor/onboarding/Onboa
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
-import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 
 export type DocumentEditorHookResult = {
   editor: Editor | null;
@@ -148,7 +148,6 @@ export function useDocumentEditor({
       },
       onUpdate: isLocked ? undefined : onUpdate,
       onCreate: ({ editor }) => {
-        console.log("onCreate", editor);
         onCreate?.(editor);
       },
       onDestroy: () => {

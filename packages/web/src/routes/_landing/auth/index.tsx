@@ -1,9 +1,9 @@
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Heading } from "@lydie/ui/components/generic/Heading";
 import { authClient } from "@/utils/auth";
 import "@/styles/grainy-gradient.css";
 
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/_landing/auth/")({
 function RouteComponent() {
   return (
     <div className="min-h-screen relative grainy-gradient-container custom-inner-shadow overflow-hidden">
-      <div className="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20"></div>
       <svg className="grainy-gradient-svg">
         <filter id="noiseFilter">
           <feTurbulence

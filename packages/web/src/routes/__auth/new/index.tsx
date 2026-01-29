@@ -1,6 +1,8 @@
 import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
 import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery as useZeroQuery } from "@rocicorp/zero/react";
@@ -10,8 +12,6 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
 import z from "zod";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Heading } from "@lydie/ui/components/generic/Heading";
 import { useAppForm } from "@/hooks/use-app-form";
 import { revalidateSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";
@@ -98,7 +98,6 @@ function RouteComponent() {
 
   return (
     <div className="min-h-screen relative grainy-gradient-container custom-inner-shadow overflow-hidden">
-      <div className="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20"></div>
       <svg className="grainy-gradient-svg">
         <filter id="noiseFilter">
           <feTurbulence

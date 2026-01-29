@@ -90,7 +90,9 @@ export function InteractiveEditorDemo() {
     <section className="flex flex-col items-center py-8 pb-36 overflow-visible">
       <div className="flex flex-col gap-y-2 col-span-1 items-center text-center">
         <Eyebrow>Best-in-class editor</Eyebrow>
-        <h2 className="text-3xl font-medium text-gray-900">Experience the delight of writing</h2>
+        <h2 className="text-3xl tracking-tight font-medium text-gray-900">
+          Experience the delight of writing
+        </h2>
         <p className="text-base/relaxed text-gray-600 max-w-sm text-balance">
           Lydie's editor is built with the latest technology to provide you with the best editing
           experience.
@@ -99,13 +101,18 @@ export function InteractiveEditorDemo() {
 
       <div className="h-[640px] w-full max-w-5xl mt-16 relative long-shadow">
         {/* Shadow layer */}
-        <div className="absolute inset-0" style={{ filter: "blur(3px)" }}>
+        <div className="absolute inset-0 overflow-visible clip" style={{ filter: "blur(3px)" }}>
           <div className="long-shadow-layer" />
+          <div className="inset-0 rounded-2xl shadow-legit overflow-visible absolute z-0"></div>
         </div>
 
-        {/* Content layer */}
-        <div className="long-shadow-content flex flex-col ring ring-black/8 rounded-2xl overflow-hidden bg-white p-2">
-          <div className="flex ring ring-black/8 rounded-xl relative z-10 flex-col size-full">
+        <div className="long-shadow-content flex flex-col ring ring-black/8 rounded-2xl overflow-hidden bg-white">
+          <div className="flex items-center gap-x-1.5 px-2 pt-2 ">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-full size-3 bg-black/10 shrink-0" />
+            ))}
+          </div>
+          <div className="flex relative z-10 flex-col flex-1 min-h-0 p-2 m-1.5 rounded-b-xl rounded-t-lg ring-black/4 ring overflow-hidden bg-white shadow-legit">
             <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white z-100 flex items-end justify-center pb-4 pt-20">
               <FeatureButtons
                 features={FEATURES}
@@ -126,8 +133,29 @@ export function InteractiveEditorDemo() {
                   ),
                 )}
               </div>
-
-              {/* {activeFeature === "collaboration" && <CollaborationPresence />} */}
+              {activeFeature === "collaboration" && (
+                <div className="-space-x-2 flex">
+                  {collaborators.map((c, i) => (
+                    <motion.div
+                      key={c.name}
+                      initial={{ opacity: 0, scale: 0.6 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        delay: 0.08 * i,
+                        duration: 0.3,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                      }}
+                      className="rounded-full size-6 border-2 border-white shrink-0 flex items-center justify-center text-[0.65rem] font-semibold text-white select-none"
+                      style={{
+                        backgroundColor: c.color,
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      {c.name[0]}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
@@ -292,7 +320,7 @@ function FeatureButtons({
   const showRing = (id: Exclude<FeatureType, null>) => isActive(id);
 
   return (
-    <div className="rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay bg-black/75 text-white backdrop-blur-sm">
+    <div className="rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay bg-black/85 text-white backdrop-blur-sm">
       {features.map(({ id, label, icon: Icon }) => (
         <button
           type="button"
