@@ -4,6 +4,7 @@ import { Container } from "../../components/Container";
 import { OutlineGenerator as OutlineGeneratorTool } from "../../components/tools/OutlineGenerator";
 import { HowToSection } from "../../components/tools/HowToSection";
 import { FAQSection } from "../../components/tools/FAQSection";
+import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
 
@@ -230,5 +231,6 @@ const faqData = {
       </p>
     </div>
     <FAQSection faqs={faqs} client:load />
+    <OtherToolsSection currentHref="/tools/outline-generator" />
   </Container>
 </Layout>

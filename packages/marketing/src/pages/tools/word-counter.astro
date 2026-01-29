@@ -4,6 +4,7 @@ import { Container } from "../../components/Container";
 import { WordCounter as WordCounterTool } from "../../components/tools/WordCounter";
 import { HowToSection } from "../../components/tools/HowToSection";
 import { FAQSection } from "../../components/tools/FAQSection";
+import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
 
@@ -292,5 +293,6 @@ const faqData = {
       </p>
     </div>
     <FAQSection faqs={faqs} client:load />
+    <OtherToolsSection currentHref="/tools/word-counter" />
   </Container>
 </Layout>

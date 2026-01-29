@@ -2,6 +2,7 @@
 import Layout from "../../../layouts/Layout.astro";
 import { Container } from "../../../components/Container";
 import { conversionConfigs } from "../../../data/conversions";
+import OtherToolsSection from "../../../components/tools/OtherToolsSection.astro";
 
 const groupedConfigs = conversionConfigs.reduce(
   (acc, config) => {
@@ -97,6 +98,8 @@ const groupedConfigs = conversionConfigs.reduce(
           developers, and anyone working with documentation.
         </p>
       </div>
+
+      <OtherToolsSection currentHref="/tools/convert" />
     </div>
   </Container>
 </Layout>

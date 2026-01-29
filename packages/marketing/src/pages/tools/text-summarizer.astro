@@ -4,6 +4,7 @@ import { Container } from "../../components/Container";
 import { TextSummarizer as TextSummarizerTool } from "../../components/tools/TextSummarizer";
 import { HowToSection } from "../../components/tools/HowToSection";
 import { FAQSection } from "../../components/tools/FAQSection";
+import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
 
@@ -242,5 +243,6 @@ const faqData = {
       </p>
     </div>
     <FAQSection faqs={faqs} client:load />
+    <OtherToolsSection currentHref="/tools/text-summarizer" />
   </Container>
 </Layout>
