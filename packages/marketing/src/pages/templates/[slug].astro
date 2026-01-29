@@ -130,7 +130,10 @@ if (template.detailedDescription) {
         </header>
       </div>
 
-      <TemplateViewer client:load documents={template.documents} />
+      <!-- data-nosnippet: prevent template boilerplate from being used in search snippets (aria-hidden only affects screen readers, not crawlers) -->
+      <div data-nosnippet>
+        <TemplateViewer client:load documents={template.documents} />
+      </div>
 
       <div class="max-w-3xl flex flex-col gap-y-8 mt-12">
         {
