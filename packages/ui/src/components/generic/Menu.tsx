@@ -1,5 +1,4 @@
 import { CheckmarkRegular, ChevronRightRegular } from "@fluentui/react-icons";
-import { createLink } from "@tanstack/react-router";
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
@@ -14,9 +13,9 @@ import {
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
 
+import { Separator } from "../layout/Separator";
 import { dropdownItemStyles } from "./ListBox";
 import { Popover, type PopoverProps } from "./Popover";
-import { Separator } from "../layout/Separator";
 
 interface MenuProps<T> extends AriaMenuProps<T> {
   placement?: PopoverProps["placement"];
@@ -51,8 +50,6 @@ export function MenuItem(props: MenuItemProps) {
     </AriaMenuItem>
   );
 }
-
-export const MenuItemLink = createLink(MenuItem);
 
 export function MenuSeparator({ className, ...props }: SeparatorProps) {
   return <Separator {...props} className={twMerge("my-1 -mx-1", className)} />;

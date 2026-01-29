@@ -1,19 +1,22 @@
+import { MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { useQueryClient } from "@tanstack/react-query";
+import { createLink } from "@tanstack/react-router";
 import clsx from "clsx";
 import { useState } from "react";
 import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
 
-import { MenuItem, MenuItemLink, MenuSeparator } from "@lydie/ui/components/generic/Menu";
 import { useOrganization } from "@/context/organization.context";
 import { clearSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";
 import { authClient } from "@/utils/auth";
 
-import { Popover } from "@lydie/ui/components/generic/Popover";
-import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
-import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { OrganizationAvatar } from "./OrganizationAvatar";
 import { OrganizationsDialog } from "./OrganizationsDialog";
+
+const MenuItemLink = createLink(MenuItem);
 
 type Props = {
   isCollapsed: boolean;
