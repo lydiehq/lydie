@@ -98,22 +98,20 @@ export function InteractiveEditorDemo() {
           experience.
         </p>
       </div>
-
-      <div className="h-[640px] w-full max-w-5xl mt-16 relative long-shadow">
-        {/* Shadow layer */}
-        <div className="absolute inset-0 overflow-visible clip" style={{ filter: "blur(3px)" }}>
-          <div className="long-shadow-layer" />
-          <div className="inset-0 rounded-2xl shadow-legit overflow-visible absolute z-0"></div>
+      <div className="rounded-2xl ring ring-black/6 flex flex-col w-full max-w-5xl mt-16 p-2 bg-gray-100 z-50 relative">
+        <div className="flex items-center gap-x-1.5 mb-1.5">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-full size-3 ring ring-black/12 shrink-0" />
+          ))}
         </div>
-
-        <div className="long-shadow-content flex flex-col ring ring-black/8 rounded-2xl overflow-hidden bg-white">
-          <div className="flex items-center gap-x-1.5 px-2 pt-2 ">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="rounded-full size-3 bg-black/10 shrink-0" />
-            ))}
+        <div className="w-full relative long-shadow">
+          {/* Shadow layer */}
+          <div className="absolute inset-0 overflow-visible clip" style={{ filter: "blur(3px)" }}>
+            <div className="long-shadow-layer" />
+            <div className="inset-0 rounded-2xl shadow-legit overflow-visible absolute z-0"></div>
           </div>
-          <div className="flex relative z-10 flex-col flex-1 min-h-0 p-2 m-1.5 rounded-b-xl rounded-t-lg ring-black/4 ring overflow-hidden bg-white shadow-legit">
-            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white z-100 flex items-end justify-center pb-4 pt-20">
+          <div className="flex relative z-10 flex-col flex-1 h-[620px] ring-black/3 ring rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit">
+            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20">
               <FeatureButtons
                 features={FEATURES}
                 activeFeature={activeFeature}

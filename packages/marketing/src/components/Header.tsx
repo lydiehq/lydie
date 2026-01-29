@@ -1,5 +1,5 @@
-import clsx from "clsx";
 import { DismissRegular, LineHorizontal3Regular as MenuRegular } from "@fluentui/react-icons";
+import clsx from "clsx";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -50,7 +50,7 @@ export function Header() {
   return (
     <header
       className={clsx(
-        "py-4 sticky top-0 z-40 bg-white backdrop-blur-md border-b transition-colors duration-1000",
+        "py-4 sticky top-0 z-200 bg-white backdrop-blur-md border-b transition-colors duration-1000",
         isScrolled ? "border-black/8" : "border-transparent",
       )}
     >
