@@ -27,7 +27,7 @@ export function BubbleMenu({ editor }: Props) {
       options={{
         placement: "bottom",
       }}
-      className="dark z-100 bg-black/95 border border-white/20 rounded-full shadow-popover p-1 flex items-center gap-1"
+      className="dark z-100 bg-black/95 border border-white/20 rounded-lg shadow-popover p-1 flex items-center gap-1"
     >
       <BlockTypeDropdown editor={editor} />
       <Separator orientation="vertical" className="h-4" />
