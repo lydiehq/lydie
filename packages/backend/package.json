@@ -11,8 +11,8 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
-    "@aws-sdk/client-s3": "^3.975.0",
-    "@aws-sdk/s3-request-presigner": "^3.975.0",
+    "@aws-sdk/client-s3": "^3.978.0",
+    "@aws-sdk/s3-request-presigner": "^3.978.0",
     "@hocuspocus/extension-database": "^3.4.4",
     "@hocuspocus/extension-logger": "^3.4.4",
     "@hocuspocus/server": "^3.4.4",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.160",
-    "@types/node": "^25.0.10",
+    "@types/node": "^25.1.0",
     "@types/ws": "^8.18.1",
     "sst": "catalog:"
   }

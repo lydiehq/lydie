@@ -23,7 +23,7 @@
     "postgres": "^3.4.8"
   },
   "devDependencies": {
-    "@types/node": "^25.0.10",
+    "@types/node": "^25.1.0",
     "sst": "catalog:"
   }
 }
