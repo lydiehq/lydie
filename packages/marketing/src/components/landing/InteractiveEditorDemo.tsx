@@ -93,9 +93,9 @@ export function InteractiveEditorDemo() {
         <h2 className="text-3xl tracking-tight font-medium text-gray-900">
           Experience the delight of writing
         </h2>
-        <p className="text-base/relaxed text-gray-600 max-w-sm text-balance">
-          Lydie's editor is built with the latest technology to provide you with the best editing
-          experience.
+        <p className="text-base/relaxed text-gray-600 max-w-xl text-balance">
+          At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick
+          notes or deep documentation.
         </p>
       </div>
       <div className="rounded-2xl ring ring-black/6 flex flex-col w-full max-w-5xl mt-16 p-2 bg-gray-100 z-50 relative">
@@ -351,8 +351,8 @@ function FeatureButtons({
                   strokeWidth={RING_STROKE}
                   strokeLinecap="round"
                   strokeDasharray={RING_CIRCUMFERENCE}
-                  initial={{ strokeDashoffset: 0 }}
-                  animate={{ strokeDashoffset: RING_CIRCUMFERENCE }}
+                  initial={{ strokeDashoffset: RING_CIRCUMFERENCE }}
+                  animate={{ strokeDashoffset: 0 }}
                   transition={{
                     duration: countdownMs / 1000,
                     ease: "linear",
@@ -415,8 +415,8 @@ function LinkingOverlay() {
             <Document48Filled className="size-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-gray-900 truncate">Team Goals</p>
-            <p className="text-xs text-gray-500">Internal document</p>
+            <div className="text-sm font-medium text-gray-900 truncate">Team Goals</div>
+            <div className="text-xs text-gray-500">Internal document</div>
           </div>
         </div>
       </div>

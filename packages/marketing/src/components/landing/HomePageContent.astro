@@ -17,7 +17,7 @@ import {
 } from "@fluentui/react-icons";
 import { Container } from "../Container";
 import screenshot from "../../../public/screenshot3.png";
-import { Logo } from "../Logo";
+import Divider from "./Divider.astro";
 import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
 import { Button } from "../generic/Button";
 import { Eyebrow } from "./Eyebrow";
@@ -68,8 +68,38 @@ const keyBenefits = [
   imageHeight={heroDefaultImage.options.height}
 />
 <ProblemSolutionSection />
-<!-- <Container className="flex flex-col gap-y-12 relative">
-  <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
+
+<div class="max-w-4xl relative">
+  <!-- 768px internal width, centered (w-1 = 4px each side) -->
+  <div
+    class="fixed inset-y-0 w-1 border-r border-black/6"
+    style="left: calc(50% - 388px)"
+  >
+  </div>
+  <div
+    class="fixed inset-y-0 w-1 border-r border-black/6"
+    style="right: calc(50% - 388px)"
+  >
+  </div>
+</div>
+<Divider logo />
+
+<Container className="py-12">
+  <InteractiveEditorDemo client:visible />
+</Container>
+
+<Container>
+  <div class="rounded-2xl bg-gray-100 relative grid grid-cols-2">
+    <div class="col-span-1"></div>
+
+    <div class="col-span-1 relative"></div>
+  </div>
+  <!-- <EditorFeaturesSection /> -->
+  <!-- <CollaborationSection /> -->
+</Container>
+<Divider />
+<Container className="flex flex-col gap-y-12 relative" size="sm">
+  <div class="grid md:grid-cols-2 grid-cols-1 gap-6">
     {
       keyBenefits.map((benefit) => (
         <div class="flex flex-col gap-y-2">
@@ -87,52 +117,9 @@ const keyBenefits = [
     }
   </div>
   <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
-</Container> -->
-
-<div class="max-w-4xl relative">
-  <!-- 768px internal width, centered (w-1 = 4px each side) -->
-  <div
-    class="fixed inset-y-0 w-1 border-r border-black/6"
-    style="left: calc(50% - 388px)"
-  >
-  </div>
-  <div
-    class="fixed inset-y-0 w-1 border-r border-black/6"
-    style="right: calc(50% - 388px)"
-  >
-  </div>
-</div>
-<div class="relative">
-  <hr class="border-black/4 w-full max-w-5xl mx-auto" />
-  <div
-    class="rounded-full bg-[rgb(248_248_248)] px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
-  >
-    <Logo className="text-gray-200 size-3.5" />
-  </div>
-</div>
-<div class="bg-linear-to-t from-gray-100 mx-4 rounded-xl my-4">
-  <Container className="py-12">
-    <InteractiveEditorDemo client:visible />
-  </Container>
-</div>
-
-<Container>
-  <div class="rounded-2xl bg-gray-100 relative grid grid-cols-2">
-    <div class="col-span-1"></div>
-
-    <div class="col-span-1 relative"></div>
-  </div>
-  <!-- <EditorFeaturesSection /> -->
-  <!-- <CollaborationSection /> -->
 </Container>
-<div class="relative">
-  <hr class="border-black/4 w-full max-w-5xl mx-auto" />
-  <div
-    class="rounded-full bg-page-bg px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
-  >
-    <Logo className="text-gray-200 size-3.5" />
-  </div>
-</div>
+
+<Divider logo />
 <Container size="sm">
   <div class="flex flex-col gap-y-3 p-16 items-center text-center">
     <h2 class="text-3xl tracking-tight font-medium text-gray-900">

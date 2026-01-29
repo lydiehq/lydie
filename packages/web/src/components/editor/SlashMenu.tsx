@@ -108,14 +108,14 @@ export const SlashMenuList = forwardRef<
 
   if (props.items.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px]">
+      <div className="bg-white rounded-lg shadow-popover border border-gray-200 p-2 min-w-[200px]">
         <div className="text-xs text-gray-500 px-2 py-1">No results</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-1 min-w-[280px] max-h-[400px] overflow-y-auto">
+    <div className="bg-white rounded-lg shadow-popover border border-gray-200 p-1 min-w-[280px] max-h-[400px] overflow-y-auto">
       {props.items.map((item, index) => {
         const Icon = item.icon;
         return (

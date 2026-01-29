@@ -45,7 +45,6 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   notFoundComponent: () => <div>Organization not found</div>,
   gcTime: Infinity,
   staleTime: Infinity,
-  ssr: false,
 });
 
 const COLLAPSED_SIZE = 50; // pixels

@@ -138,15 +138,6 @@ body {
   @apply text-black/50 group-hover:text-black/58;
 }
 
-/* Smooth collapse/expand animation for resizable panels (e.g. sidebar) */
-.panel-group-collapse-animated [data-panel] {
-  transition: flex-grow 0.2s ease-out;
-}
-/* Disable transition during drag so resizing feels direct */
-.panel-group-collapse-animated:has([data-separator]:active) [data-panel] {
-  transition: none;
-}
-
 @media (forced-colors: active) {
   .checkbox-checkmark {
     stroke: HighlightText;

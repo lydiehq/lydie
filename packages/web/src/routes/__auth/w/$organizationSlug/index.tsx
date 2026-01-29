@@ -4,7 +4,6 @@ import { Surface } from "@/components/layout/Surface";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
   component: PageComponent,
-  ssr: false,
 });
 
 function PageComponent() {

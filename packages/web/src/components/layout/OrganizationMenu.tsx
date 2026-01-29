@@ -43,7 +43,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
           className={composeTailwindRenderProps(
             focusRing,
             clsx(
-              "group flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-md overflow-hidden aria-expanded:bg-black/3",
+              "group flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-lg overflow-hidden aria-expanded:bg-black/3",
               !isCollapsed && "px-1.5 py-0.5 -mx-1.5",
             ),
           )}

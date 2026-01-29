@@ -15,7 +15,7 @@ export interface PopoverProps extends Omit<AriaPopoverProps, "children"> {
 }
 
 const styles = cva({
-  base: "bg-white shadow-2xl rounded-lg bg-clip-padding border border-black/10 text-slate-700",
+  base: "bg-white shadow-popover rounded-lg bg-clip-padding text-gray-700",
   variants: {
     isEntering: {
       true: "animate-in fade-in placement-bottom:slide-in-from-top-1 placement-top:slide-in-from-bottom-1 placement-left:slide-in-from-right-1 placement-right:slide-in-from-left-1 ease-out duration-200",

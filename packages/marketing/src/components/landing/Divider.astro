@@ -1,0 +1,18 @@
+---
+import { Logo } from "../Logo";
+
+interface Props {
+  logo?: boolean;
+}
+
+const { logo = false } = Astro.props;
+---
+
+<div
+  class="flex items-center gap-2 w-full max-w-5xl mx-auto"
+  role="presentation"
+>
+  <hr class="flex-1 border-0 h-px bg-black/6" />
+  {logo && <Logo className="text-gray-200 size-3.5 shrink-0" />}
+  <hr class="flex-1 border-0 h-px bg-black/6" />
+</div>
