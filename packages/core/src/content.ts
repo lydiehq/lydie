@@ -121,6 +121,8 @@ export interface NodeBuilder<T> {
   bulletList(children: T[]): T;
   orderedList(children: T[], start?: number): T;
   listItem(children: T[]): T;
+  taskList(children: T[]): T;
+  taskItem(children: T[], checked?: boolean): T;
   blockquote(children: T[]): T;
   horizontalRule(): T;
   codeBlock(children: T[], language?: string | null): T;
@@ -218,6 +220,14 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
         case "listItem":
           return builder.listItem(renderChildren(node));
 
+        case "taskList":
+          return builder.taskList(renderChildren(node));
+
+        case "taskItem": {
+          const checked = node.attrs?.checked === true;
+          return builder.taskItem(renderChildren(node), checked);
+        }
+
         case "blockquote":
           return builder.blockquote(renderChildren(node));
 
@@ -265,6 +275,9 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
         case "onboardingAssistantTask":
         case "onboardingTextPractice":
         case "onboardingStep":
+          // Onboarding blocks: render inner content when present (e.g. onboardingAssistantTask)
+          if (node.content?.length) return builder.doc(renderChildren(node));
+          return builder.empty();
 
         default:
           console.warn(`[Lydie] Unknown content node type: ${node.type}`);
