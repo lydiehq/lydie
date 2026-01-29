@@ -1,0 +1,204 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { OutlineGenerator as OutlineGeneratorTool } from "../../components/tools/OutlineGenerator";
+import { HowToSection } from "../../components/tools/HowToSection";
+import { FAQSection } from "../../components/tools/FAQSection";
+
+export const prerender = true;
+
+const breadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "Tools", href: "/tools" },
+  { label: "AI Outline Generator", href: null },
+];
+
+const howToSteps = [
+  "Choose your outline type: article, essay, or report. Each type generates a structure optimized for that format.",
+  "Enter your main topic or title. Be specific to get the most relevant outline.",
+  "Add optional context like target audience, key points to cover, or specific requirements.",
+  "Click generate to create your outline. Download it as Markdown or copy to use in your writing tool.",
+];
+
+const faqs = [
+  {
+    q: "What types of outlines can I generate?",
+    a: "You can generate outlines for articles, essays, and reports. Each type is structured differently - articles focus on engagement and flow, essays on argumentative structure, and reports on comprehensive analysis.",
+  },
+  {
+    q: "How detailed are the generated outlines?",
+    a: "The AI generates hierarchical outlines with main sections and subsections. The level of detail depends on your topic complexity and the context you provide.",
+  },
+  {
+    q: "Is my data stored or used for training?",
+    a: "No, we don't store your topics or generated outlines. All processing is done in real-time and data is discarded immediately after generation.",
+  },
+  {
+    q: "Can I customize the outline after it's generated?",
+    a: "Yes! The outline is generated in Markdown format, making it easy to edit in any text editor. You can add, remove, or modify sections as needed.",
+  },
+  {
+    q: "Are there any usage limits?",
+    a: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 outlines per hour.",
+  },
+  {
+    q: "What's the difference between article, essay, and report outlines?",
+    a: "Articles are structured for readability and engagement with a focus on hooks and flow. Essays follow academic structure with introduction, body paragraphs, and conclusion. Reports are comprehensive with executive summaries, methodology, and findings.",
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "AI Outline Generator",
+  description:
+    "Generate structured outlines for your content using AI. Perfect for articles, essays, and reports.",
+  applicationCategory: "UtilityApplication",
+  operatingSystem: "Web Browser",
+  featureList: [
+    "Free to use",
+    "No sign-up required",
+    "Powered by Google Gemini AI",
+    "Multiple outline formats",
+    "Instant generation",
+  ],
+};
+
+const breadcrumbData = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://lydie.co",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Tools",
+      item: "https://lydie.co/tools",
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: "AI Outline Generator",
+      item: "https://lydie.co/tools/outline-generator",
+    },
+  ],
+};
+
+const faqData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+};
+---
+
+<Layout
+  title="Free AI Outline Generator | Create Structured Outlines for Articles, Essays, and Reports"
+  description="Generate structured outlines for your content using AI. Perfect for articles, essays, and reports. No sign-up required, powered by Google Gemini."
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbData)}
+  />
+  <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
+  <Container className="py-12">
+    <div class="class flex flex-col gap-y-4">
+      <nav class="flex text-[13px] text-gray-600" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center gap-x-1.5">
+          {
+            breadcrumbs.map((crumb, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              const isFirst = index === 0;
+              return (
+                <li
+                  class={isFirst ? "inline-flex items-center" : ""}
+                  aria-current={isLast ? "page" : undefined}
+                >
+                  <div class="flex items-center gap-x-1.5">
+                    {!isFirst && (
+                      <svg
+                        class="size-4 text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    )}
+                    {crumb.href ? (
+                      <a href={crumb.href} class="hover:text-gray-900">
+                        {crumb.label}
+                      </a>
+                    ) : (
+                      <span class="text-gray-900">{crumb.label}</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })
+          }
+        </ol>
+      </nav>
+      <OutlineGeneratorTool client:load />
+    </div>
+    <HowToSection steps={howToSteps} />
+
+    <div class="prose max-w-none">
+      <h2>About AI Outline Generator</h2>
+      <p>
+        Our free AI outline generator helps you create structured outlines for
+        any type of content. Whether you're writing an article, essay, or
+        report, our tool generates a comprehensive outline tailored to your
+        needs.
+      </p>
+
+      <h3>Features</h3>
+      <ul>
+        <li>Free to use - no sign-up required</li>
+        <li>Powered by Google Gemini 2.5 Flash</li>
+        <li>Multiple outline formats (articles, essays, reports)</li>
+        <li>Fast generation in seconds</li>
+        <li>Download as Markdown or copy to clipboard</li>
+        <li>Privacy-focused - no data storage</li>
+      </ul>
+
+      <h3>Use Cases</h3>
+      <p>Perfect for:</p>
+      <ul>
+        <li>Content creators planning blog posts and articles</li>
+        <li>Students organizing essays and research papers</li>
+        <li>Business professionals structuring reports and presentations</li>
+        <li>Writers overcoming writer's block</li>
+        <li>Anyone needing a structured approach to content creation</li>
+      </ul>
+
+      <h3>Why Use an Outline?</h3>
+      <p>
+        Creating an outline before writing helps you organize your thoughts,
+        maintain a logical flow, and ensure you cover all important points. It
+        saves time during the writing process and results in more coherent,
+        well-structured content.
+      </p>
+    </div>
+    <FAQSection faqs={faqs} client:load />
+  </Container>
+</Layout>

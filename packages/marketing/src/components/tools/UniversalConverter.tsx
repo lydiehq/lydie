@@ -68,7 +68,7 @@ export function UniversalConverter({ config }: Props) {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/public/convert`, {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/public/tools/convert`, {
         method: "POST",
         credentials: "include",
         headers: {
