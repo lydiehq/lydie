@@ -37,14 +37,16 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { title: "Lydie" },
         {
           name: "description",
-          content: "A minimal, powerful writing environment supercharged with AI.",
+          content:
+            "Lydie is a modern writing workspace for structured documents, notes, and knowledge.",
         },
         { name: "robots", content: "noindex, nofollow" },
         { property: "og:type", content: "website" },
         { property: "og:title", content: "Lydie" },
         {
           property: "og:description",
-          content: "A minimal, powerful writing environment supercharged with AI.",
+          content:
+            "Lydie is a modern writing workspace for structured documents, notes, and knowledge.",
         },
         {
           property: "og:image",
@@ -54,7 +56,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { property: "twitter:title", content: "Lydie" },
         {
           property: "twitter:description",
-          content: "A minimal, powerful writing environment supercharged with AI.",
+          content:
+            "Lydie is a modern writing workspace for structured documents, notes, and knowledge.",
         },
         {
           property: "twitter:image",

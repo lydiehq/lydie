@@ -1,3 +1,4 @@
+import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
@@ -9,7 +10,6 @@ import {
   TreeItem,
   TreeItemContent,
 } from "react-aria-components";
-import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 
 // SVG Icon Components
 const CollectionsIcon = ({ className }: { className?: string }) => (
@@ -56,7 +56,6 @@ const ChevronRightIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
 
 type DocumentTreeItem = {
   id: string;
@@ -182,6 +181,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
           paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
           paddingRight: "0.5rem",
         }}
+        data-nosnippet
       >
         <TreeItemContent>
           {({ isExpanded }) => (

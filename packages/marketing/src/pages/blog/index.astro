@@ -28,7 +28,7 @@ const remainingPosts = sortedPosts.slice(1);
 
 <Layout
   title="Blog - Lydie"
-  description="A minimal, powerful writing environment supercharged with AI."
+  description="Resources on writing, working in teams, and technical insights into Lydie."
 >
   <div class="py-8">
     <Container>
@@ -48,7 +48,14 @@ const remainingPosts = sortedPosts.slice(1);
                 <div class="flex gap-x-4 items-center">
                   <div class="rounded-lg shadow-surface h-60 aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
                     <Image
-                      src={featuredPost.coverImage ? new URL(featuredPost.coverImage, Astro.site).toString() : "/blog.png"}
+                      src={
+                        featuredPost.coverImage
+                          ? new URL(
+                              featuredPost.coverImage,
+                              Astro.site,
+                            ).toString()
+                          : "/blog.png"
+                      }
                       alt=""
                       width={640}
                       height={360}
@@ -92,7 +99,10 @@ const remainingPosts = sortedPosts.slice(1);
                       {post.coverImage ? (
                         <div class="rounded-lg shadow-surface w-16 h-16 overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
                           <Image
-                            src={new URL(post.coverImage, Astro.site).toString()}
+                            src={new URL(
+                              post.coverImage,
+                              Astro.site,
+                            ).toString()}
                             alt=""
                             width={64}
                             height={64}
