@@ -3,9 +3,11 @@ import {
   LinkRegular,
   PeopleTeamRegular,
   FormNewRegular,
+  SendRegular,
+  PersonChatFilled,
+  Document48Filled,
 } from "@fluentui/react-icons";
 import { CollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret.tsx";
-import { MetadataTabsShell } from "@lydie/ui/components/editor/MetadataTabsShell.tsx";
 import {
   BoldIcon,
   CodeIcon,
@@ -18,8 +20,7 @@ import {
   TableIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons.tsx";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
-import { TabPanel } from "react-aria-components";
+import { useEffect, useState } from "react";
 
 import { Eyebrow } from "./Eyebrow";
 
@@ -55,7 +56,7 @@ const FEATURES: {
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
   { id: "collaboration", label: "Collaboration", icon: PeopleTeamRegular },
-  { id: "fields", label: "Custom Fields", icon: FormNewRegular },
+  { id: "fields", label: "AI Assistant", icon: FormNewRegular },
   { id: "linking", label: "Internal Linking", icon: LinkRegular },
 ];
 
@@ -65,14 +66,29 @@ const collaborators = [
   { name: "Jordan", color: "#ffbc42" },
 ];
 
+const COUNTDOWN_MS = 9000;
+const FEATURE_ORDER: Exclude<FeatureType, null>[] = ["collaboration", "fields", "linking"];
+
+function getNextFeature(current: Exclude<FeatureType, null>): Exclude<FeatureType, null> {
+  const i = FEATURE_ORDER.indexOf(current);
+  return FEATURE_ORDER[(i + 1) % FEATURE_ORDER.length];
+}
+
 export function InteractiveEditorDemo() {
   const [activeFeature, setActiveFeature] = useState<FeatureType>("collaboration");
+
+  // Auto-advance when active; countdown only runs after hydration (client:visible in Astro)
+  useEffect(() => {
+    if (!activeFeature) return;
+    const t = setTimeout(() => setActiveFeature(getNextFeature(activeFeature)), COUNTDOWN_MS);
+    return () => clearTimeout(t);
+  }, [activeFeature]);
 
   const showCollaboration = activeFeature === "collaboration";
 
   return (
     <section className="flex flex-col items-center py-8 pb-36 overflow-visible">
-      <div className="flex flex-col gap-y-2 col-span-1 w-2xl items-center text-center">
+      <div className="flex flex-col gap-y-2 col-span-1 items-center text-center">
         <Eyebrow>Best-in-class editor</Eyebrow>
         <h2 className="text-3xl font-medium text-gray-900">Experience the delight of writing</h2>
         <p className="text-base/relaxed text-gray-600 max-w-sm text-balance">
@@ -81,7 +97,7 @@ export function InteractiveEditorDemo() {
         </p>
       </div>
 
-      <div className="h-[580px] w-full max-w-4xl mt-16 relative long-shadow">
+      <div className="h-[640px] w-full max-w-5xl mt-16 relative long-shadow">
         {/* Shadow layer */}
         <div className="absolute inset-0" style={{ filter: "blur(3px)" }}>
           <div className="long-shadow-layer" />
@@ -90,11 +106,14 @@ export function InteractiveEditorDemo() {
         {/* Content layer */}
         <div className="long-shadow-content flex flex-col ring ring-black/8 rounded-2xl overflow-hidden bg-white p-2">
           <div className="flex ring ring-black/8 rounded-xl relative z-10 flex-col size-full">
-            <FeatureButtons
-              features={FEATURES}
-              activeFeature={activeFeature}
-              onFeatureChange={setActiveFeature}
-            />
+            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white z-100 flex items-end justify-center pb-4 pt-20">
+              <FeatureButtons
+                features={FEATURES}
+                activeFeature={activeFeature}
+                onFeatureChange={setActiveFeature}
+                countdownMs={COUNTDOWN_MS}
+              />
+            </div>
             <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
               <div className="flex items-center gap-1">
                 {TOOLBAR_ITEMS.map((item, i) =>
@@ -113,98 +132,152 @@ export function InteractiveEditorDemo() {
 
             <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
               <h1 className="text-[1.75rem] font-medium text-gray-900 mt-0 mb-4 select-none">
-                Ideas for the cabin trip
+                Q1 Planning Notes
               </h1>
 
-              <CustomFields isExpanded={activeFeature === "fields"} />
               <div className="prose prose-sm editor-content ">
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  We're heading up{" "}
+                  Kicking off the quarter — we should align on priorities and success metrics.{" "}
                   {showCollaboration ? (
                     <>
                       <span
                         className="rounded-sm pointer-events-none"
                         style={{ backgroundColor: `${collaborators[1].color}33` }}
                       >
-                        next Friday
+                        Sarah will share the deck
                       </span>
-                      <CollaborationCaret userName="Alex" userColor={collaborators[1].color} />
+                      <motion.span
+                        initial={{ opacity: 0, y: 6, scale: 1.1 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: 0, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        style={{ display: "inline" }}
+                      >
+                        <CollaborationCaret userName="Alex" userColor={collaborators[1].color} />
+                      </motion.span>
                     </>
                   ) : (
-                    "next Friday"
+                    "Sarah will share the deck"
                   )}{" "}
-                  — can't wait. Still need to decide who's bringing the grill and whether we're
-                  doing the hike Saturday or Sunday. <em>Check the weather before we go.</em>
+                  by EOD. <em>Review the roadmap before the sync.</em>
                 </p>
 
-                <p className="text-gray-700 leading-relaxed mb-4">
-                  The cabin has a full kitchen and a fire pit out back. We should plan at least one
-                  big group dinner — maybe bur
-                  {showCollaboration && (
-                    <CollaborationCaret userName="Sarah" userColor={collaborators[0].color} />
-                  )}
-                  gers the first night? I'll bring the cooler if someone else can grab ice on the
-                  way.
-                </p>
+                <div className="relative">
+                  <p
+                    className={`text-gray-700 leading-relaxed mb-4 ${
+                      activeFeature === "fields"
+                        ? "rounded-sm bg-blue-100/50 ring-2 ring-blue-400/40 px-2 py-1"
+                        : ""
+                    }`}
+                  >
+                    For objectives and key results, we're anchoring to the
+                    {showCollaboration && (
+                      <motion.span
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: 0.15,
+                          duration: 0.35,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        }}
+                        style={{ display: "inline" }}
+                      >
+                        <CollaborationCaret userName="Sarah" userColor={collaborators[0].color} />
+                      </motion.span>
+                    )}{" "}
+                    team goals doc. I'll draft the sprint plan once that's locked.
+                  </p>
+                  <AnimatePresence>
+                    {activeFeature === "fields" && <AIAssistantPopover />}
+                  </AnimatePresence>
+                </div>
 
-                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">To bring</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Action items</h2>
                 <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
                   <li>
                     <p>
-                      <strong>Firewood + matches</strong>
+                      <strong>Finalize Q1 roadmap</strong> — share with stakeholders by Friday
                     </p>
                   </li>
                   <li>
-                    <p>Ingredients for s'mores (chocolate, marshmallows, graham crackers)</p>
-                  </li>
-                  <li>
-                    <p>Board games — Catan? Or something lighter</p>
-                  </li>
-                  <li>
-                    <p>Bluetooth speaker for the deck</p>
-                  </li>
-                  <li>
-                    <p>Coffee and filters (we'll need a lot)</p>
+                    <p>Schedule follow-up with design on the new dashboard</p>
                   </li>
                   <li>
                     <p>
-                      First aid kit + bug spray
+                      For priorities and key results, see{" "}
+                      <span className="relative inline">
+                        <span className="font-medium underline decoration-blue-600 decoration-2 text-blue-600">
+                          Team Goals
+                        </span>
+                        <AnimatePresence>
+                          {activeFeature === "linking" && <LinkingOverlay />}
+                        </AnimatePresence>
+                      </span>
+                      .
+                    </p>
+                  </li>
+                  <li>
+                    <p>Send calendar invite for the retro</p>
+                  </li>
+                  <li>
+                    <p>Update the project brief with latest scope</p>
+                  </li>
+                  <li>
+                    <p>
+                      Loop in engineering on the API timeline
                       {showCollaboration && (
-                        <CollaborationCaret userName="Jordan" userColor={collaborators[2].color} />
+                        <motion.span
+                          initial={{ opacity: 0, y: 6, scale: 1.1 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{
+                            delay: 0.3,
+                            duration: 0.35,
+                            ease: [0.25, 0.46, 0.45, 0.94],
+                          }}
+                          style={{ display: "inline" }}
+                        >
+                          <CollaborationCaret
+                            userName="Jordan"
+                            userColor={collaborators[2].color}
+                          />
+                        </motion.span>
                       )}
                     </p>
                   </li>
                 </ul>
 
-                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Saturday</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Next steps</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  Morning hike to the overlook, then lazy afternoon by the lake. If we're up for it
-                  we could do a late campfire and stargazing — the sky should be clear.
+                  We'll review the draft in the Monday standup and sync with leadership by
+                  Wednesday. Ping me if anything needs to move.
                 </p>
                 <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
-                  <li>Leave by 9am for the trailhead</li>
-                  <li>Pack lunches and plenty of water</li>
-                  <li>Back by 3pm for chill time / games</li>
+                  <li>Prep slides for the all-hands</li>
+                  <li>Confirm budget numbers with finance</li>
+                  <li>Share the doc link in #planning when ready</li>
                 </ul>
 
                 <p className="text-gray-700 leading-relaxed mb-0">
-                  That's the rough plan. Add anything I missed.
+                  That's the plan for now. Add anything I missed.
                 </p>
               </div>
             </div>
           </div>
-
-          <AnimatePresence>{activeFeature === "linking" && <LinkingOverlay />}</AnimatePresence>
         </div>
       </div>
     </section>
   );
 }
 
+const RING_SIZE = 20;
+const RING_STROKE = 2;
+const RING_R = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
+
 function FeatureButtons({
   features,
   activeFeature,
   onFeatureChange,
+  countdownMs,
 }: {
   features: {
     id: Exclude<FeatureType, null>;
@@ -213,22 +286,59 @@ function FeatureButtons({
   }[];
   activeFeature: FeatureType;
   onFeatureChange: (feature: FeatureType) => void;
+  countdownMs: number;
 }) {
   const isActive = (id: Exclude<FeatureType, null>) => activeFeature === id;
+  const showRing = (id: Exclude<FeatureType, null>) => isActive(id);
+
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 z-100 bottom-4 rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay bg-black/75 text-white backdrop-blur-sm">
+    <div className="rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay bg-black/75 text-white backdrop-blur-sm">
       {features.map(({ id, label, icon: Icon }) => (
         <button
           type="button"
           key={id}
           onClick={() => onFeatureChange(activeFeature === id ? null : id)}
-          className={`flex items-center gap-2 px-2 py-1 rounded-xl text-[0.8125rem]/0 font-medium transition-colors ${
-            isActive(id)
-              ? "bg-white/30 text-white"
-              : "text-white/90 hover:bg-white/20 hover:text-white"
-          }`}
+          className="relative flex items-center gap-2 px-2 py-1 rounded-full text-[0.8125rem]/0 font-medium transition-colors text-white/90 hover:text-white z-0 data-active:text-white [&:not([data-active])]:hover:bg-white/15"
+          data-active={isActive(id) ? "" : undefined}
         >
-          <Icon className="size-4 shrink-0" />
+          {isActive(id) && (
+            <motion.div
+              layoutId="feature-tab-highlight"
+              className="absolute inset-0 rounded-full bg-white/30"
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              style={{ zIndex: -1 }}
+            />
+          )}
+          <span className="relative inline-flex items-center justify-center size-5 shrink-0">
+            {showRing(id) && (
+              <svg
+                className="absolute inset-0 size-full -rotate-90"
+                viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+                aria-hidden
+              >
+                <motion.circle
+                  cx={RING_SIZE / 2}
+                  cy={RING_SIZE / 2}
+                  r={RING_R}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={RING_STROKE}
+                  strokeLinecap="round"
+                  strokeDasharray={RING_CIRCUMFERENCE}
+                  initial={{ strokeDashoffset: 0 }}
+                  animate={{ strokeDashoffset: RING_CIRCUMFERENCE }}
+                  transition={{
+                    duration: countdownMs / 1000,
+                    ease: "linear",
+                  }}
+                  className="text-white/20"
+                />
+              </svg>
+            )}
+            <Icon
+              className={`shrink-0 size-4 relative z-1 ${isActive(id) ? "scale-60" : "scale-100"} transition-transform duration-250 ease-in-out`}
+            />
+          </span>
           <span>{label}</span>
         </button>
       ))}
@@ -236,97 +346,55 @@ function FeatureButtons({
   );
 }
 
-function CollaborationPresence() {
+function AIAssistantPopover() {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex items-center gap-2 mt-4"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 flex items-center gap-2"
     >
-      {collaborators.map((user) => (
-        <CollaboratorAvatar key={user.name} name={user.name} color={user.color} />
-      ))}
-      <span className="text-xs text-gray-600 ml-1">{collaborators.length} people editing</span>
+      <div className="rounded-full size-4 flex items-center justify-center bg-gray-100 text-gray-500">
+        <PersonChatFilled className="size-3" />
+      </div>
+      <div className="rounded-full p-2 ring ring-black/8 shadow-popover bg-white ">
+        <span className="text-sm whitespace-nowrap">
+          Please make this paragraph more concise and professional
+        </span>
+      </div>
     </motion.div>
-  );
-}
-
-function CustomFields({ isExpanded }: { isExpanded: boolean }) {
-  const [selectedKey, setSelectedKey] = useState<string>("fields");
-
-  return (
-    <MetadataTabsShell
-      selectedKey={selectedKey}
-      onSelectionChange={setSelectedKey}
-      isExpanded={isExpanded}
-      onExpandedChange={() => null}
-      documentCount={2}
-      onAdd={() => {}}
-      addButtonLabel={selectedKey === "fields" ? "Add field" : "Add document"}
-    >
-      <TabPanel id="fields">
-        <div className="space-y-2">
-          <CustomFieldDisplay label="Status" value="In Progress" />
-          <CustomFieldDisplay label="Priority" value="High" />
-          <CustomFieldDisplay label="Owner" value="Engineering Team" />
-          <CustomFieldDisplay label="Target Date" value="March 31, 2026" />
-        </div>
-      </TabPanel>
-      <TabPanel id="documents">
-        <div className="ring ring-black/4 rounded-xl p-4 flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <DocumentRegular className="size-4" />
-            <span>Q4 2025 Roadmap</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <DocumentRegular className="size-4" />
-            <span>Team Goals</span>
-          </div>
-        </div>
-      </TabPanel>
-    </MetadataTabsShell>
   );
 }
 
 function LinkingOverlay() {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="absolute left-1/2 bottom-[calc(100%+1rem)] -translate-x-1/2 z-30"
     >
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
-        <p className="text-sm text-gray-600">
-          Internal linking feature demonstration will be available soon.
-        </p>
+      {/* Connector line + arrow pointing from card back to the linked text */}
+      <div
+        className="absolute right-full top-1/2 -translate-y-1/2 h-px bg-gray-200 w-2"
+        aria-hidden
+      />
+      <div
+        className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-y-4 border-y-transparent border-l-[6px] border-l-gray-200 -mr-2"
+        aria-hidden
+      />
+      <div className="bg-white rounded-lg shadow-popover border border-gray-100 overflow-hidden w-[220px]">
+        <div className="flex items-center gap-2.5 p-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500">
+            <Document48Filled className="size-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-900 truncate">Team Goals</p>
+            <p className="text-xs text-gray-500">Internal document</p>
+          </div>
+        </div>
       </div>
     </motion.div>
-  );
-}
-
-// Collaborator Avatar Component
-function CollaboratorAvatar({ name, color }: { name: string; color: string }) {
-  return (
-    <div
-      className="size-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
-      style={{ backgroundColor: color }}
-      title={name}
-    >
-      {name[0]}
-    </div>
-  );
-}
-
-// Custom Field Display
-function CustomFieldDisplay({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-gray-50">
-      <span className="text-xs font-medium text-gray-600">{label}</span>
-      <span className="text-xs text-gray-900">{value}</span>
-    </div>
   );
 }
 
