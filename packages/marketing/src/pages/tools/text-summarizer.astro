@@ -1,0 +1,246 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { TextSummarizer as TextSummarizerTool } from "../../components/tools/TextSummarizer";
+import { HowToSection } from "../../components/tools/HowToSection";
+import { FAQSection } from "../../components/tools/FAQSection";
+
+export const prerender = true;
+
+const breadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "Tools", href: "/tools" },
+  { label: "AI Text Summarizer", href: null },
+];
+
+const howToSteps = [
+  "Choose your summary length: short for quick highlights, medium for balanced coverage, or detailed for comprehensive summaries.",
+  "Paste the text you want to summarize. Works with articles, reports, research papers, blog posts, and more.",
+  "Click generate to create your AI text summary. The AI will analyze the content and extract the key points.",
+  "Download as Markdown or copy to clipboard to use the summary in your work.",
+];
+
+const faqs = [
+  {
+    q: "What types of text can I summarize?",
+    a: "You can summarize any type of written content including articles, blog posts, research papers, reports, essays, news stories, documentation, and more. The AI works best with well-structured text that has clear main points.",
+  },
+  {
+    q: "What's the difference between summary lengths?",
+    a: "Short summaries provide 1-2 sentences capturing the main point. Medium summaries give a paragraph with key points and context. Detailed summaries offer multiple paragraphs with comprehensive coverage of the main ideas.",
+  },
+  {
+    q: "Is my text stored or used for training?",
+    a: "No, we don't store your text or generated summaries. All processing is done in real-time and data is discarded immediately after generation. Your privacy is our priority.",
+  },
+  {
+    q: "How accurate are the AI text summaries?",
+    a: "Our AI text summary tool uses advanced language models to identify and extract key information accurately. However, we recommend reviewing the summary to ensure it captures what's most important for your specific needs.",
+  },
+  {
+    q: "Are there any usage limits?",
+    a: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 summaries per hour. Text must be between 100 and 50,000 characters.",
+  },
+  {
+    q: "Can I summarize text in different languages?",
+    a: "Currently, the tool works best with English text. Support for additional languages may be added in the future based on user demand.",
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "AI Text Summarizer",
+  description:
+    "Free AI text summary tool that generates concise summaries of any text. Perfect for articles, reports, and research papers.",
+  applicationCategory: "UtilityApplication",
+  operatingSystem: "Web Browser",
+  featureList: [
+    "Free to use",
+    "No sign-up required",
+    "Powered by Google Gemini AI",
+    "Multiple summary lengths",
+    "Instant generation",
+    "AI text summary",
+  ],
+};
+
+const breadcrumbData = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://lydie.co",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Tools",
+      item: "https://lydie.co/tools",
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: "AI Text Summarizer",
+      item: "https://lydie.co/tools/text-summarizer",
+    },
+  ],
+};
+
+const faqData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+};
+---
+
+<Layout
+  title="Free AI Text Summarizer | Generate Concise Summaries Instantly"
+  description="Generate concise AI text summaries of any content using AI. Perfect for articles, reports, and research papers. No sign-up required, powered by Google Gemini."
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbData)}
+  />
+  <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
+  <Container className="py-12">
+    <div class="class flex flex-col gap-y-4">
+      <nav class="flex text-[13px] text-gray-600" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center gap-x-1.5">
+          {
+            breadcrumbs.map((crumb, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              const isFirst = index === 0;
+              return (
+                <li
+                  class={isFirst ? "inline-flex items-center" : ""}
+                  aria-current={isLast ? "page" : undefined}
+                >
+                  <div class="flex items-center gap-x-1.5">
+                    {!isFirst && (
+                      <svg
+                        class="size-4 text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    )}
+                    {crumb.href ? (
+                      <a href={crumb.href} class="hover:text-gray-900">
+                        {crumb.label}
+                      </a>
+                    ) : (
+                      <span class="text-gray-900">{crumb.label}</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })
+          }
+        </ol>
+      </nav>
+      <TextSummarizerTool client:load />
+    </div>
+    <HowToSection steps={howToSteps} />
+
+    <div class="prose max-w-none">
+      <h2>About AI Text Summarizer</h2>
+      <p>
+        Our free AI text summarizer helps you quickly extract key information
+        from long documents. Whether you're processing research papers, news
+        articles, reports, or blog posts, this AI text summary tool generates
+        concise, accurate summaries that capture the essential points.
+      </p>
+
+      <h3>Why Use an AI Text Summary Tool?</h3>
+      <p>
+        In today's information-rich world, we're constantly bombarded with
+        content. An AI text summary tool helps you quickly understand the main
+        ideas without reading every word. This is particularly valuable for:
+      </p>
+      <ul>
+        <li>Researchers reviewing multiple papers and articles</li>
+        <li>Students studying and taking notes from lengthy materials</li>
+        <li>Professionals staying informed on industry news and reports</li>
+        <li>Content creators analyzing competitor content</li>
+        <li>Anyone looking to save time while staying informed</li>
+      </ul>
+
+      <h3>How to Get the Best AI Text Summary Results</h3>
+      <p>
+        While our AI text summarizer automatically identifies key points, you
+        can optimize your results by:
+      </p>
+      <ul>
+        <li>
+          Choosing the right summary length for your needs - short for quick
+          overviews, detailed for comprehensive understanding
+        </li>
+        <li>
+          Ensuring the source text is well-structured with clear main points
+        </li>
+        <li>
+          Reviewing the AI text summary and adjusting as needed for your
+          specific context
+        </li>
+        <li>
+          Using the summary as a starting point for deeper analysis when needed
+        </li>
+      </ul>
+
+      <h3>Features</h3>
+      <ul>
+        <li>Free AI text summary generation - no sign-up required</li>
+        <li>Powered by Google Gemini 2.5 Flash for accurate results</li>
+        <li>Multiple summary lengths (short, medium, detailed)</li>
+        <li>Fast generation in seconds</li>
+        <li>Download as Markdown or copy to clipboard</li>
+        <li>Privacy-focused - no data storage</li>
+        <li>Supports up to 50,000 characters of input text</li>
+      </ul>
+
+      <h3>Use Cases for AI Text Summaries</h3>
+      <p>Perfect for:</p>
+      <ul>
+        <li>Academic research and literature reviews</li>
+        <li>Business intelligence and market research</li>
+        <li>News monitoring and current events tracking</li>
+        <li>Content curation and newsletter creation</li>
+        <li>Meeting notes and documentation review</li>
+        <li>Learning and study materials preparation</li>
+        <li>Time-efficient information processing</li>
+      </ul>
+
+      <h3>Understanding AI Text Summary Quality</h3>
+      <p>
+        Our AI text summary tool uses advanced natural language processing to
+        identify the most important information in your text. The algorithm
+        analyzes sentence importance, topic relevance, and information density
+        to create summaries that are both concise and informative. While AI text
+        summaries are highly accurate, we recommend reviewing them to ensure
+        they align with your specific needs and context.
+      </p>
+    </div>
+    <FAQSection faqs={faqs} client:load />
+  </Container>
+</Layout>
