@@ -23,6 +23,8 @@
     "@lydie/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-form": "^1.28.0",
+    "@tiptap/core": "catalog:",
+    "@tiptap/pm": "catalog:",
     "@tiptap/react": "catalog:",
     "@tiptap/starter-kit": "catalog:",
     "@types/react": "^19.2.10",

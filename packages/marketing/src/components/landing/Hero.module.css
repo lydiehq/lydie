@@ -1,9 +1,9 @@
 .embossedLogo {
   position: absolute;
-  top: 20%;
+  top: 25%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 240%;
+  width: 260%;
   pointer-events: none;
   z-index: 2;
   color: rgba(0, 0, 0, 0.2);
@@ -81,59 +81,11 @@
 
 /* Badge comes in last */
 .heroBadge {
-  animation: hero-fade-in-up 0.6s ease-out 1.3s both;
+  animation: hero-fade-in-up 0.6s ease-out 1s both;
 }
 
 .heroImage {
   animation: hero-image-fade-in-up 1s ease-out 0.8s both;
-}
-
-/* Shimmer effect for screenshot container */
-.shimmerContainer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.shimmerContainer::before {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 14px;
-}
-
-.shimmerContainer::before {
-  top: -10%;
-  left: 0;
-  width: 40%;
-  height: 30%;
-  background: radial-gradient(
-    ellipse,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
-  );
-  filter: blur(20px);
-  animation: shimmer-sweep 8s ease-in-out infinite;
-}
-
-@keyframes shimmer-sweep {
-  0% {
-    transform: translateX(0);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translateX(calc(100% - 40%));
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 0.4;
-  }
 }
 
 /* Demo button shimmer and particles */

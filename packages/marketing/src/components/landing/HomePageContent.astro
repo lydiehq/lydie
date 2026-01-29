@@ -7,11 +7,17 @@ import PerformanceSection from "./PerformanceSection.astro";
 import UseCasesSection from "./UseCasesSection.astro";
 import EditorFeaturesSection from "./EditorFeaturesSection.astro";
 import { Hero } from "./Hero";
+import ProblemSolutionSection from "./ProblemSolutionSection.astro";
 import { CTASection } from "./CTASection";
-import { GlobeRegular, SearchRegular, ShareRegular } from "@fluentui/react-icons";
+import {
+  GlobeRegular,
+  SearchRegular,
+  ShareRegular,
+} from "@fluentui/react-icons";
 import { Container } from "../Container";
 import screenshot from "../../../public/screenshot3.png";
 import { Logo } from "../Logo";
+import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -58,6 +64,7 @@ const keyBenefits = [
   imageWidth={heroDefaultImage.options.width}
   imageHeight={heroDefaultImage.options.height}
 />
+<ProblemSolutionSection />
 <!-- <Container className="flex flex-col gap-y-12 relative">
   <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
     {
@@ -78,6 +85,19 @@ const keyBenefits = [
   </div>
   <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
 </Container> -->
+<div class="relative">
+  <hr class="border-gray-100 w-full max-w-5xl mx-auto my-12" />
+  <div
+    class="rounded-full bg-white px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+  >
+    <Logo className="text-gray-200 size-3.5" />
+  </div>
+</div>
+<div class="bg-linear-to-t from-gray-100 mx-4 rounded-xl my-4">
+  <Container className="py-12">
+    <InteractiveEditorDemo client:visible />
+  </Container>
+</div>
 
 <Container>
   <div class="rounded-2xl bg-gray-100 relative grid grid-cols-2">
@@ -85,7 +105,7 @@ const keyBenefits = [
 
     <div class="col-span-1 relative"></div>
   </div>
-  <EditorFeaturesSection />
+  <!-- <EditorFeaturesSection /> -->
   <!-- <CollaborationSection /> -->
 </Container>
 <div class="relative">
