@@ -3,7 +3,8 @@ import { Polar } from "@polar-sh/sdk";
 import { eq, and } from "drizzle-orm";
 import { Resource } from "sst";
 
-import { assignSeat, syncSeatsFromPolar } from "./seat-management";
+import { assignSeat, getSeatInfo, syncSeatsFromPolar } from "./seat-management";
+import { createId } from "../id";
 
 /**
  * Polar client instance for billing operations
@@ -227,6 +228,213 @@ export async function handleBenefitGrantRevoked(payload: any) {
     console.log("Credits reset for revoked benefits on subscription:", data.subscriptionId);
   } catch (error) {
     console.error("Error resetting credits from benefit revoke:", error);
+  }
+}
+
+/**
+ * Sync members from claimed seats
+ * Called after syncing seats from Polar to ensure all claimed seat holders are organization members
+ * This creates the link between billing (seats) and access control (members)
+ */
+export async function syncMembersFromSeats(organizationId: string, subscriptionId?: string) {
+  console.log("Syncing members from seats for org:", organizationId);
+
+  try {
+    // Get all claimed seats for this organization
+    const seats = await db
+      .select()
+      .from(schema.seatsTable)
+      .where(
+        and(
+          eq(schema.seatsTable.organizationId, organizationId),
+          eq(schema.seatsTable.status, "claimed"),
+        ),
+      );
+
+    for (const seat of seats) {
+      // Skip seats without a claimed user
+      if (!seat.claimedByUserId) continue;
+
+      // Check if the user is already a member
+      const existingMember = await db
+        .select()
+        .from(schema.membersTable)
+        .where(
+          and(
+            eq(schema.membersTable.organizationId, organizationId),
+            eq(schema.membersTable.userId, seat.claimedByUserId),
+          ),
+        )
+        .limit(1);
+
+      if (existingMember.length === 0) {
+        // User has a claimed seat but is not a member - add them
+        const role = (seat.seatMetadata?.role as string) || "member";
+
+        await db.insert(schema.membersTable).values({
+          id: createId(),
+          organizationId,
+          userId: seat.claimedByUserId,
+          role,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        console.log(`Added member ${seat.claimedByUserId} to org ${organizationId} from claimed seat`);
+      }
+    }
+
+    console.log(`Synced ${seats.length} claimed seats to members for org ${organizationId}`);
+  } catch (error) {
+    console.error("Error syncing members from seats:", error);
+    throw error;
+  }
+}
+
+/**
+ * Handle when a seat is claimed in Polar
+ * This is called from the seat claim flow or webhooks
+ * It ensures the user becomes a member of the organization
+ */
+export async function handleSeatClaimed(
+  organizationId: string,
+  seatEmail: string,
+  claimingUserId?: string,
+) {
+  console.log("Handling seat claimed:", { organizationId, seatEmail, claimingUserId });
+
+  try {
+    // Find the seat by email
+    const seat = await db
+      .select()
+      .from(schema.seatsTable)
+      .where(
+        and(
+          eq(schema.seatsTable.organizationId, organizationId),
+          eq(schema.seatsTable.assignedEmail, seatEmail),
+          eq(schema.seatsTable.status, "claimed"),
+        ),
+      )
+      .limit(1);
+
+    const seatRecord = seat[0];
+    if (!seatRecord) {
+      console.warn("No claimed seat found for email:", seatEmail);
+      return { success: false, error: "No claimed seat found" };
+    }
+
+    const userId = claimingUserId || seatRecord.claimedByUserId;
+
+    if (!userId) {
+      // Store pending member for when user signs up
+      await db.insert(schema.pendingSeatMembersTable).values({
+        id: createId(),
+        organizationId,
+        seatId: seatRecord.id,
+        email: seatEmail,
+        role: (seatRecord.seatMetadata?.role as string) || "member",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      console.log(`Stored pending member for ${seatEmail} in org ${organizationId}`);
+      return { success: true, pending: true };
+    }
+
+    // Check if user is already a member
+    const existingMember = await db
+      .select()
+      .from(schema.membersTable)
+      .where(
+        and(
+          eq(schema.membersTable.organizationId, organizationId),
+          eq(schema.membersTable.userId, userId),
+        ),
+      )
+      .limit(1);
+
+    if (existingMember.length > 0) {
+      console.log(`User ${userId} is already a member of org ${organizationId}`);
+      return { success: true, alreadyMember: true };
+    }
+
+    // Add as member
+    const role = (seatRecord.seatMetadata?.role as string) || "member";
+
+    await db.insert(schema.membersTable).values({
+      id: createId(),
+      organizationId,
+      userId,
+      role,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Update seat with claimedByUserId if not set
+    if (!seatRecord.claimedByUserId) {
+      await db
+        .update(schema.seatsTable)
+        .set({
+          claimedByUserId: userId,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.seatsTable.id, seatRecord.id));
+    }
+
+    console.log(`Added user ${userId} as ${role} to org ${organizationId} from claimed seat`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error handling seat claimed:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Process pending seat members when a user signs up
+ * Called from the user creation hook
+ */
+export async function processPendingSeatMembers(userId: string, userEmail: string) {
+  console.log("Processing pending seat members for:", userEmail);
+
+  try {
+    // Find all pending seat members for this email
+    const pendingMembers = await db
+      .select()
+      .from(schema.pendingSeatMembersTable)
+      .where(eq(schema.pendingSeatMembersTable.email, userEmail));
+
+    for (const pending of pendingMembers) {
+      // Add user as member
+      await db.insert(schema.membersTable).values({
+        id: createId(),
+        organizationId: pending.organizationId,
+        userId,
+        role: pending.role,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // Update the seat to link to this user
+      await db
+        .update(schema.seatsTable)
+        .set({
+          claimedByUserId: userId,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.seatsTable.id, pending.seatId));
+
+      // Remove pending record
+      await db
+        .delete(schema.pendingSeatMembersTable)
+        .where(eq(schema.pendingSeatMembersTable.id, pending.id));
+
+      console.log(`Processed pending member for ${userEmail} in org ${pending.organizationId}`);
+    }
+
+    return { success: true, processed: pendingMembers.length };
+  } catch (error) {
+    console.error("Error processing pending seat members:", error);
+    return { success: false, error: String(error) };
   }
 }
 

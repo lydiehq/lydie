@@ -1,4 +1,5 @@
 import { claimSeat, getSeatClaimInfo } from "@lydie/core/billing/seat-management";
+import { handleSeatClaimed } from "@lydie/core/billing/billing-sync";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -70,6 +71,26 @@ export const SeatClaimRoute = new Hono()
         throw new HTTPException(400, {
           message: result.error || "Failed to claim seat",
         });
+      }
+
+      // After claiming the seat, ensure the user becomes a member
+      // This links the billing seat to the organization membership
+      if (result.seat) {
+        try {
+          const membershipResult = await handleSeatClaimed(
+            result.seat.organizationId,
+            result.seat.assignedEmail,
+            userId
+          );
+          
+          if (!membershipResult.success) {
+            console.warn("Failed to add member after seat claim:", membershipResult.error);
+            // Don't fail the claim if membership fails - they can be added later
+          }
+        } catch (memberError) {
+          console.error("Error adding member after seat claim:", memberError);
+          // Don't fail the claim if membership creation fails
+        }
       }
 
       return c.json({

@@ -141,7 +141,8 @@ function RouteComponent() {
               </p>
               {currentPlan !== PLAN_TYPES.FREE && (
                 <p className="text-sm text-gray-600">
-                  Cost per seat: <span className="font-semibold text-gray-900">${planInfo.price}</span>/month
+                  Cost per seat:{" "}
+                  <span className="font-semibold text-gray-900">${planInfo.price}</span>/month
                 </p>
               )}
             </div>

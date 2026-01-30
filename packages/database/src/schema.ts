@@ -226,6 +226,37 @@ export const seatsTable = pgTable(
   ],
 );
 
+/**
+ * PENDING SEAT MEMBERS TABLE
+ *
+ * Stores pending member records for users who have claimed a seat
+ * but don't have a user account yet. When they sign up, they're
+ * automatically added as members to these organizations.
+ */
+export const pendingSeatMembersTable = pgTable(
+  "pending_seat_members",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    seatId: text("seat_id")
+      .notNull()
+      .references(() => seatsTable.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role").notNull().default("member"),
+    ...timestamps,
+  },
+  (table) => [
+    index("pending_seat_members_organization_id_idx").on(table.organizationId),
+    index("pending_seat_members_email_idx").on(table.email),
+    uniqueIndex("pending_seat_members_seat_id_idx").on(table.seatId),
+  ],
+);
+
 export const documentsTable = pgTable(
   "documents",
   {

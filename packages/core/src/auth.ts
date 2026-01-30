@@ -10,7 +10,9 @@ import {
   handleBenefitGrantCreated,
   handleBenefitGrantRevoked,
   polarClient,
+  processPendingSeatMembers,
   syncBillingFromCustomerState,
+  syncMembersFromSeats,
   syncSeatsFromPolar,
 } from "./billing";
 import { sendEmail } from "./email";
@@ -103,6 +105,17 @@ export const authClient = betterAuth({
               persistDocumentTreeExpansion: true,
             });
           }
+
+          // Process any pending seat memberships for this user
+          // This handles users who claimed a seat before signing up
+          if (user.email) {
+            try {
+              await processPendingSeatMembers(user.id, user.email);
+            } catch (error) {
+              console.error("Error processing pending seat members for new user:", error);
+              // Don't throw - we don't want to block user creation
+            }
+          }
         },
       },
     },
@@ -113,22 +126,127 @@ export const authClient = betterAuth({
       adminRoles: ["admin"],
     }),
     organization({
-      sendInvitationEmail: async (data) => {
-        const frontendUrl =
-          process.env.FRONTEND_URL ||
-          (Resource.App.stage === "production" ? "https://app.lydie.co" : "http://localhost:3000");
-        const invitationUrl = `${frontendUrl}/invitations/${data.invitation.id}`;
+      // NOTE: We don't use Better-Auth's invitation system.
+      // Invitations are handled by Polar's seat-based pricing:
+      // 1. When you want to invite someone, assign them a seat via Polar
+      // 2. Polar sends the invitation email
+      // 3. When they claim the seat, we add them as a member via webhook
+      sendInvitationEmail: async () => {
+        // No-op: Polar handles invitations via seat assignments
+        // This is called when using authClient.organization.inviteMember
+        // but we should use seat assignment instead
+        console.warn(
+          "Better-Auth inviteMember called - use Polar seat assignment instead"
+        );
+      },
 
-        await sendEmail({
-          to: data.email,
-          subject: `You've been invited to join ${data.organization.name}`,
-          html: `
-            <p>You've been invited to join <strong>${data.organization.name}</strong> on Lydie.</p>
-            <p>Click the link below to accept the invitation:</p>
-            <p><a href="${invitationUrl}">${invitationUrl}</a></p>
-            <p>This invitation will expire in 48 hours.</p>
-          `,
-        });
+      // Enforce seat-based access control
+      organizationHooks: {
+        // Before adding a member, check if they have a claimed seat
+        beforeAddMember: async ({ member, organization }) => {
+          // Validate that we have a userId
+          const userId = member.userId;
+          if (!userId) {
+            throw new Error("Cannot add member without a user ID");
+          }
+
+          // Check if this user already has a claimed seat in this org
+          const existingSeat = await db
+            .select()
+            .from(schema.seatsTable)
+            .where(
+              eq(schema.seatsTable.claimedByUserId, userId)
+            )
+            .limit(1);
+
+          if (existingSeat.length === 0) {
+            // User doesn't have a claimed seat - check if there's a pending seat for their email
+            const user = await db
+              .select({ email: schema.usersTable.email })
+              .from(schema.usersTable)
+              .where(eq(schema.usersTable.id, userId))
+              .limit(1);
+
+            if (user[0]?.email) {
+              const pendingSeat = await db
+                .select()
+                .from(schema.seatsTable)
+                .where(
+                  eq(schema.seatsTable.assignedEmail, user[0].email)
+                )
+                .limit(1);
+
+              const seatToClaim = pendingSeat[0];
+              if (seatToClaim) {
+                // There's a pending seat - auto-claim it for this user
+                await db
+                  .update(schema.seatsTable)
+                  .set({
+                    status: "claimed",
+                    claimedByUserId: userId,
+                    claimedAt: new Date(),
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(schema.seatsTable.id, seatToClaim.id));
+
+                console.log(
+                  `Auto-claimed pending seat for user ${userId} in org ${organization.id}`
+                );
+                return;
+              }
+            }
+
+            // No seat available - block the member addition
+            throw new Error(
+              "No available seat for this user. Please assign a seat in Polar first."
+            );
+          }
+        },
+
+        // After removing a member, revoke their seat
+        afterRemoveMember: async ({ member, organization }) => {
+          const userId = member.userId;
+          if (!userId) {
+            console.warn("Cannot revoke seats for member without userId");
+            return;
+          }
+
+          // Find and revoke any claimed seats for this user
+          const seats = await db
+            .select()
+            .from(schema.seatsTable)
+            .where(
+              eq(schema.seatsTable.claimedByUserId, userId)
+            );
+
+          for (const seat of seats) {
+            // Revoke the seat in Polar
+            try {
+              const customerSeats = (polarClient as any).customerSeats;
+              if (customerSeats) {
+                await customerSeats.revokeSeat({
+                  seatId: seat.polarSeatId,
+                });
+
+                // Update local seat record
+                await db
+                  .update(schema.seatsTable)
+                  .set({
+                    status: "revoked",
+                    revokedAt: new Date(),
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(schema.seatsTable.id, seat.id));
+
+                console.log(
+                  `Revoked seat ${seat.id} for removed member ${userId}`
+                );
+              }
+            } catch (error) {
+              console.error("Error revoking seat after member removal:", error);
+            }
+          }
+        },
       },
     }),
     customSession(async ({ user, session }) => {
@@ -188,17 +306,45 @@ export const authClient = betterAuth({
           // This webhook fires when: subscriptions change, benefits granted/revoked, meters updated
           onCustomerStateChanged: async (payload) => {
             console.log("Customer state changed:", payload);
-            await syncBillingFromCustomerState(payload);
+            await syncBillingFromCustomerState(payload as any);
+
+            // Sync members from seats after billing sync
+            const data = (payload as any).data;
+            const subscriptions =
+              data?.activeSubscriptions ||
+              data?.subscriptions ||
+              [];
+            for (const subscription of subscriptions) {
+              const organizationId = subscription.metadata?.referenceId;
+              if (organizationId && typeof organizationId === "string") {
+                await syncMembersFromSeats(organizationId, subscription.id);
+              }
+            }
           },
           // Benefit grant created - sync credits when seat is claimed
           onBenefitGrantCreated: async (payload) => {
             console.log("Benefit grant created:", payload);
-            await handleBenefitGrantCreated(payload);
+            await handleBenefitGrantCreated(payload as any);
+
+            // Sync members from seats after benefit grant (seat claimed)
+            const subscriptionId = (payload as any).data?.subscriptionId;
+            if (subscriptionId) {
+              const seat = await db
+                .select({ organizationId: schema.seatsTable.organizationId })
+                .from(schema.seatsTable)
+                .where(
+                  eq(schema.seatsTable.polarSubscriptionId, subscriptionId),
+                )
+                .limit(1);
+              if (seat[0]?.organizationId) {
+                await syncMembersFromSeats(seat[0].organizationId, subscriptionId);
+              }
+            }
           },
           // Benefit grant revoked - remove credits when seat is revoked
           onBenefitGrantRevoked: async (payload) => {
             console.log("Benefit grant revoked:", payload);
-            await handleBenefitGrantRevoked(payload);
+            await handleBenefitGrantRevoked(payload as any);
           },
           // Keep order.created for one-time purchases (not covered by customer.state_changed)
           onOrderCreated: async (payload) => {
