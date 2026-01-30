@@ -19,8 +19,6 @@ type TreeItem = {
   isFavorited?: boolean;
 };
 
-type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documents>>;
-
 export function FavoritesTree() {
   const { organization } = useOrganization();
 
@@ -65,7 +63,6 @@ export function FavoritesTree() {
       selectionMode="single"
       className="flex flex-col focus:outline-none"
       items={treeItems}
-      // No drag and drop hooks for favorites tree
     >
       {renderItem}
     </Tree>

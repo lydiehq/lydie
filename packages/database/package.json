@@ -11,7 +11,6 @@
     "db:studio": "bun sst shell bunx drizzle-kit studio",
     "db:seed:agents": "bun sst shell bun run src/seed-agents.ts",
     "db:sync-zero-publication": "bun sst shell bun run src/sync-zero-publication.ts",
-    "db:delete-user": "sst shell bun run src/scripts/delete-user.ts",
     "db:upgrade-user": "sst shell bun run src/scripts/upgrade-user.ts",
     "db:embed-all-documents": "sst shell bun run src/scripts/embed-all-documents.ts",
     "db:seed:template-categories": "sst shell bun run src/scripts/seed-template-categories.ts"

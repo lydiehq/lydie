@@ -41,6 +41,17 @@ export const organizationQueries = {
     },
   ),
 
+  seats: defineQuery(
+    z.object({ organizationSlug: z.string() }),
+    ({ args: { organizationSlug }, ctx }) => {
+      hasOrganizationAccessBySlug(ctx, organizationSlug);
+      return zql.organizations
+        .where("slug", organizationSlug)
+        .one()
+        .related("seats", (q) => q.orderBy("created_at", "desc"));
+    },
+  ),
+
   documents: defineQuery(
     z.object({ organizationSlug: z.string() }),
     ({ args: { organizationSlug }, ctx }) => {

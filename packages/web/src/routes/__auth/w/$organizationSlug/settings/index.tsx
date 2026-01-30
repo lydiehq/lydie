@@ -314,7 +314,6 @@ function RouteComponent() {
         isOpen={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         invitationForm={invitationForm}
-        organization={organization}
       />
     </div>
   );

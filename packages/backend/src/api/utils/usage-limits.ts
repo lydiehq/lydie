@@ -1,4 +1,4 @@
-import { getCreditBalance } from "@lydie/core/polar-credits";
+import { checkSeatCreditBalance, getOrganizationCreditBalance } from "@lydie/core/billing/polar-credits";
 import { PLAN_TYPES, type PlanType } from "@lydie/database/billing-types";
 
 // Get the current plan for an organization
@@ -19,13 +19,12 @@ function getCurrentPlan(
 }
 
 /**
- * Check if an organization has sufficient credits for AI operations
- * @param organization - The organization to check
- * @param requiredCredits - Minimum credits required (default: 1)
- * @returns Object with allowed status and credit info
+ * Check if a user has sufficient credits for AI operations
+ * This is the per-seat version that checks the specific user's credit balance
  */
-export async function checkCreditBalance(organization: {
-  id: string;
+export async function checkCreditBalance(params: {
+  organizationId: string;
+  userId: string;
   subscriptionPlan?: string | null;
   subscriptionStatus?: string | null;
 }): Promise<{
@@ -35,21 +34,29 @@ export async function checkCreditBalance(organization: {
   currentPlan: PlanType;
 }> {
   const currentPlan = getCurrentPlan(
-    organization.subscriptionPlan,
-    organization.subscriptionStatus,
+    params.subscriptionPlan,
+    params.subscriptionStatus,
   );
 
-  // Get the current credit balance from Polar (with sync)
-  const creditsAvailable = await getCreditBalance(organization.id, true);
-
-  // Require at least 1 credit for AI operations
-  const creditsRequired = 1;
-  const allowed = creditsAvailable >= creditsRequired;
+  // Get the current credit balance from Polar for this specific seat/user
+  const creditCheck = await checkSeatCreditBalance(
+    params.organizationId,
+    params.userId,
+    1 // Require at least 1 credit
+  );
 
   return {
-    allowed,
-    creditsAvailable,
-    creditsRequired,
+    allowed: creditCheck.allowed,
+    creditsAvailable: creditCheck.creditsAvailable,
+    creditsRequired: creditCheck.creditsRequired,
     currentPlan,
   };
+}
+
+/**
+ * Get the total organization credit balance across all seats
+ * This is useful for organization-level reporting
+ */
+export async function getOrganizationTotalCredits(organizationId: string): Promise<number> {
+  return getOrganizationCreditBalance(organizationId);
 }

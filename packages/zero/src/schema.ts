@@ -21,6 +21,8 @@ const users = table("users")
     email: string(),
     image: string().optional(),
     role: string(),
+    // Polar Customer ID for billing (one per user, can have multiple subscriptions)
+    polar_customer_id: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -37,12 +39,8 @@ const organizations = table("organizations")
     subscription_status: string(),
     subscription_plan: string(), // 'free', 'monthly', 'yearly'
     polar_subscription_id: string().optional(),
-    // Seat-based billing
-    paid_seats: number(),
-    // Credit tracking (cached from Polar)
-    credit_balance: number(),
-    credit_balance_updated_at: number().optional(),
-    polar_meter_id: string().optional(),
+    // Billing owner (user who pays for this workspace, references users.polar_customer_id)
+    billing_owner_user_id: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -66,6 +64,26 @@ const invitations = table("invitations")
     status: string(),
     expires_at: number(),
     inviter_id: string(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const seats = table("seats")
+  .columns({
+    id: string(),
+    organization_id: string(),
+    polar_seat_id: string(),
+    polar_subscription_id: string().optional(),
+    polar_order_id: string().optional(),
+    status: string(), // 'pending', 'claimed', 'revoked'
+    assigned_email: string(),
+    claimed_by_user_id: string().optional(),
+    invitation_token: string().optional(),
+    seat_metadata: json().optional(),
+    assigned_at: number(),
+    claimed_at: number().optional(),
+    revoked_at: number().optional(),
+    expires_at: number().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -290,6 +308,11 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     destField: ["organization_id"],
     destSchema: invitations,
   }),
+  seats: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: seats,
+  }),
   documentComponents: many({
     sourceField: ["id"],
     destField: ["organization_id"],
@@ -320,6 +343,11 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     destField: ["organization_id"],
     destSchema: integrationConnections,
   }),
+  billingOwner: one({
+    sourceField: ["billing_owner_user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
   settings: one({
     sourceField: ["id"],
     destField: ["organization_id"],
@@ -348,6 +376,19 @@ const invitationsRelations = relationships(invitations, ({ one }) => ({
   }),
   inviter: one({
     sourceField: ["inviter_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
+const seatsRelations = relationships(seats, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  claimedBy: one({
+    sourceField: ["claimed_by_user_id"],
     destField: ["id"],
     destSchema: users,
   }),
@@ -712,6 +753,7 @@ export const schema = createSchema({
     organizations,
     members,
     invitations,
+    seats,
     documentComponents,
     assistantAgents,
     assistantConversations,
@@ -737,6 +779,7 @@ export const schema = createSchema({
     organizationsRelations,
     membersRelations,
     invitationsRelations,
+    seatsRelations,
     usersRelations,
     documentComponentsRelations,
     assistantAgentsRelations,

@@ -9,7 +9,7 @@ import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
 import { searchInDocument } from "@lydie/core/ai/tools/search-in-document";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
 import { VisibleError } from "@lydie/core/error";
-import { deductCreditsInPolar } from "@lydie/core/polar-credits";
+import { ingestCreditUsage } from "@lydie/core/billing/polar-credits";
 import {
   assistantAgentsTable,
   assistantConversationsTable,
@@ -121,7 +121,8 @@ export const AssistantRoute = new Hono<{
     const isAdmin = (user as any)?.role === "admin";
     if (!isAdmin) {
       const creditCheck = await checkCreditBalance({
-        id: organization.id,
+        organizationId: organization.id,
+        userId: (user as any)?.id,
         subscriptionPlan: organization.subscriptionPlan,
         subscriptionStatus: organization.subscriptionStatus,
       });
@@ -318,12 +319,16 @@ export const AssistantRoute = new Hono<{
           // Calculate credits used based on output tokens
           const creditsUsed = calculateCreditsFromTokens(completionTokens, chatModel.modelId);
 
-          // Deduct credits from Polar
+          // Ingest usage to Polar to deduct credits from the user's seat
           try {
-            await deductCreditsInPolar(organizationId, creditsUsed);
+            await ingestCreditUsage(organizationId, userId, creditsUsed, {
+              documentId: conversationId,
+              model: chatModel.modelId,
+              operation: "assistant_chat",
+            });
           } catch (error) {
-            console.error("Error deducting credits from Polar:", error);
-            // Continue even if Polar deduction fails - we'll track it locally
+            console.error("Error ingesting credit usage to Polar:", error);
+            // Continue even if Polar ingestion fails - we'll track it locally
           }
 
           // Track usage locally with credits

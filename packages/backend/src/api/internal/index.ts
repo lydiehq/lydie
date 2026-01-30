@@ -10,6 +10,7 @@ import { LLMReplaceRoute } from "./llm-replace";
 import { MDXImportRoute } from "./mdx-import";
 import { authenticatedWithOrganization, internalRateLimit } from "./middleware";
 import { OrganizationRoute } from "./organization";
+import { SeatsRoute } from "./seats";
 import { ZeroRoute } from "./zero";
 
 const publicRouter = new Hono().on(["GET", "POST"], "/auth/*", async (c) => {
@@ -29,7 +30,8 @@ const organizationScopedRouter = new Hono<{
   .route("/assistant", AssistantRoute)
   .route("/mdx-import", MDXImportRoute)
   .route("/llm-replace", LLMReplaceRoute)
-  .route("/images", ImagesRoute);
+  .route("/images", ImagesRoute)
+  .route("/seats", SeatsRoute);
 
 export const InternalApi = new Hono()
   .route("/public", publicRouter)

@@ -83,7 +83,15 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "PolarProProductId": {
+    "PolarProductIdFree": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "PolarProductIdMonthly": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "PolarProductIdYearly": {
       "type": "sst.sst.Secret"
       "value": string
     }
@@ -98,11 +106,6 @@ declare module "sst" {
     "PostgresConnectionStringPooled": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "ReplicationManager": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
     }
     "ShopifyClientId": {
       "type": "sst.sst.Secret"

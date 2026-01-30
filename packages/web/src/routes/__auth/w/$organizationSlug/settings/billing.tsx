@@ -1,7 +1,5 @@
 import {
-  ArrowRightRegular,
   ArrowTrendingRegular,
-  CalendarRegular,
   CheckmarkRegular,
   ErrorCircleRegular,
   FlashRegular,
@@ -9,15 +7,12 @@ import {
 } from "@fluentui/react-icons";
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { Button } from "@lydie/ui/components/generic/Button";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Heading } from "@lydie/ui/components/generic/Heading";
-import { Modal } from "@lydie/ui/components/generic/Modal";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { DialogTrigger } from "react-aria-components";
 import { toast } from "sonner";
 
 import { Card } from "@/components/layout/Card";
@@ -84,8 +79,9 @@ function RouteComponent() {
   }, [billingData]);
 
   const creditBalance = billingData?.credit_balance || 0;
-  const paidSeats = billingData?.paid_seats || 0;
-  const memberCount = billingData?.members?.length || 1;
+
+  // For checkout, default to 1 seat (billing manager will assign later)
+  const defaultSeatCount = 1;
 
   const handleUpgrade = async (planType: "monthly" | "yearly") => {
     setIsUpgrading(true);
@@ -94,7 +90,7 @@ function RouteComponent() {
       await authClient.checkout({
         slug: planType,
         referenceId: organization.id,
-        quantity: memberCount, // Initial seat count
+        quantity: defaultSeatCount, // Start with 1 seat, assign later
       });
     } catch (error: any) {
       console.error("Upgrade error:", error);
@@ -145,8 +141,7 @@ function RouteComponent() {
               </p>
               {currentPlan !== PLAN_TYPES.FREE && (
                 <p className="text-sm text-gray-600">
-                  Seats: <span className="font-semibold text-gray-900">{paidSeats}</span> × $
-                  {planInfo.price}/seat = ${(paidSeats * planInfo.price).toFixed(2)}/month
+                  Cost per seat: <span className="font-semibold text-gray-900">${planInfo.price}</span>/month
                 </p>
               )}
             </div>
@@ -181,9 +176,11 @@ function RouteComponent() {
                   </li>
                   <li className="text-sm text-gray-600 flex items-start gap-2">
                     <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                    <span>
-                      Starting with {memberCount} seat{memberCount > 1 ? "s" : ""}
-                    </span>
+                    <span>Start with 1 seat, add more anytime</span>
+                  </li>
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>Assign seats to team members</span>
                   </li>
                   <li className="text-sm text-gray-600 flex items-start gap-2">
                     <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
@@ -222,9 +219,11 @@ function RouteComponent() {
                   </li>
                   <li className="text-sm text-gray-600 flex items-start gap-2">
                     <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                    <span>
-                      Starting with {memberCount} seat{memberCount > 1 ? "s" : ""}
-                    </span>
+                    <span>Start with 1 seat, add more anytime</span>
+                  </li>
+                  <li className="text-sm text-gray-600 flex items-start gap-2">
+                    <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>Assign seats to team members</span>
                   </li>
                   <li className="text-sm text-gray-600 flex items-start gap-2">
                     <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />

@@ -17,6 +17,7 @@
       "drizzle-orm": "^1.0.0-beta.12-a5629fb",
       "better-auth": "1.4.7-beta.2",
       "@polar-sh/better-auth": "^1.6.4",
+      "@polar-sh/sdk": "^0.42.5",
       "@ai-sdk/google": "^3.0.1",
       "@ai-sdk/openai": "^3.0.1",
       "ai": "^6.0.3",

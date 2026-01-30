@@ -33,6 +33,8 @@ export const usersTable = pgTable("users", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  // Polar Customer ID for billing (one per user, can have multiple subscriptions)
+  polarCustomerId: text("polar_customer_id"),
   ...timestamps,
 });
 
@@ -108,12 +110,11 @@ export const organizationsTable = pgTable("organizations", {
   subscriptionStatus: text("subscription_status").default("free"), // 'free', 'active', 'canceled', 'past_due'
   subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'monthly', 'yearly'
   polarSubscriptionId: text("polar_subscription_id"),
-  // Seat-based billing
-  paidSeats: integer("paid_seats").default(0).notNull(),
-  // Credit tracking (cached from Polar)
-  creditBalance: integer("credit_balance").default(0).notNull(),
-  creditBalanceUpdatedAt: timestamp("credit_balance_updated_at"),
-  polarMeterId: text("polar_meter_id"),
+  // Billing owner (the user who pays for this workspace)
+  // References the user's polarCustomerId for billing
+  billingOwnerUserId: text("billing_owner_user_id").references(() => usersTable.id, {
+    onDelete: "set null",
+  }),
   ...timestamps,
 });
 
@@ -161,6 +162,64 @@ export const invitationsTable = pgTable(
   (table) => [
     index("invitations_email_idx").on(table.email),
     index("invitations_organization_id_idx").on(table.organizationId),
+  ],
+);
+
+/**
+ * SEAT-BASED PRICING SCHEMA
+ *
+ * This table tracks seat assignments from Polar's seat-based pricing system.
+ * Key differences from members:
+ * - A seat is a billing unit purchased from Polar
+ * - Members can exist without a seat (free tier, or invited but not claimed)
+ * - Seats can be assigned to emails before the user joins
+ * - Seats have a lifecycle: pending -> claimed -> revoked
+ */
+export const seatsTable = pgTable(
+  "seats",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    // Polar seat ID (from customerSeats.assign response)
+    polarSeatId: text("polar_seat_id").notNull(),
+    // Subscription or Order this seat belongs to
+    polarSubscriptionId: text("polar_subscription_id"),
+    polarOrderId: text("polar_order_id"),
+    // Seat status from Polar
+    status: text("status").notNull().default("pending"), // 'pending', 'claimed', 'revoked'
+    // Email the seat was assigned to
+    assignedEmail: text("assigned_email").notNull(),
+    // User who claimed the seat (null until claimed)
+    claimedByUserId: text("claimed_by_user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
+    // Invitation token for claim flow
+    invitationToken: text("invitation_token"),
+    // Metadata stored with the seat assignment
+    seatMetadata: jsonb("seat_metadata").$type<{
+      role?: string;
+      department?: string;
+      [key: string]: any;
+    }>(),
+    // Timestamps
+    assignedAt: timestamp("assigned_at").notNull().defaultNow(),
+    claimedAt: timestamp("claimed_at"),
+    revokedAt: timestamp("revoked_at"),
+    expiresAt: timestamp("expires_at"), // When invitation expires
+    ...timestamps,
+  },
+  (table) => [
+    index("seats_organization_id_idx").on(table.organizationId),
+    index("seats_polar_seat_id_idx").on(table.polarSeatId),
+    index("seats_assigned_email_idx").on(table.assignedEmail),
+    index("seats_claimed_by_user_id_idx").on(table.claimedByUserId),
+    index("seats_status_idx").on(table.status),
+    uniqueIndex("seats_invitation_token_idx").on(table.invitationToken),
   ],
 );
 
@@ -386,7 +445,7 @@ export const llmUsageTable = pgTable(
     source: text("source").notNull(), // 'document' or 'assistant'
     model: text("model").notNull(),
     // Credit-based tracking
-    creditsUsed: integer("credits_used").notNull(),
+    creditsUsed: integer("credits_used").notNull().default(0),
     finishReason: text("finish_reason"),
     toolCalls: jsonb("tool_calls"),
     ...timestamps,

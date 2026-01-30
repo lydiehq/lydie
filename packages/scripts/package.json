@@ -1,9 +1,16 @@
 {
   "name": "@lydie/scripts",
   "scripts": {
-    "copy-integration-assets": "bun run src/copy-integration-assets.ts"
+    "copy-integration-assets": "bun run src/copy-integration-assets.ts",
+    "delete-user": "bun sst shell bun run src/delete-user.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@lydie/core": "workspace:*",
+    "@lydie/database": "workspace:*",
+    "@polar-sh/sdk": "catalog:",
+    "drizzle-orm": "catalog:",
+    "sst": "catalog:"
+  },
   "devDependencies": {
     "@types/node": "^25.0.10"
   }
