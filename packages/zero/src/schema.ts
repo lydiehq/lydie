@@ -582,6 +582,7 @@ const templateDocuments = table("template_documents")
     template_id: string(),
     title: string(),
     content: string().optional(),
+    json_content: json().optional(), // Pre-processed TipTap JSON for fast marketing site access
     parent_id: string().optional(),
     sort_order: number(),
     ...timestamps,
