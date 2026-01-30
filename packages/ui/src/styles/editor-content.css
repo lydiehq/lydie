@@ -1421,3 +1421,56 @@ active. */
     0em 0 0 var(--color-gray-200);
   box-decoration-break: clone;
 }
+
+/* Placeholder mark styles for template fields */
+.editor-content .placeholder,
+.editor-content-sm .placeholder {
+  border-radius: 2px;
+  padding: 0.1em 0.2em;
+  transition: all 0.15s ease;
+}
+
+.editor-content .placeholder--empty,
+.editor-content-sm .placeholder--empty {
+  color: var(--color-gray-400);
+  background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
+  font-style: italic;
+}
+
+.editor-content .placeholder--empty:hover,
+.editor-content-sm .placeholder--empty:hover {
+  background-color: color-mix(in oklab, var(--color-gray-300) 50%, transparent);
+  cursor: text;
+}
+
+.editor-content .placeholder--filled,
+.editor-content-sm .placeholder--filled {
+  color: inherit;
+  background-color: transparent;
+  font-style: normal;
+}
+
+/* Dark mode support for placeholders */
+.editor-content:where(.dark, .dark *) .placeholder--empty,
+.editor-content-sm:where(.dark, .dark *) .placeholder--empty {
+  color: var(--color-gray-500);
+  background-color: color-mix(in oklab, var(--color-gray-700) 50%, transparent);
+}
+
+.editor-content:where(.dark, .dark *) .placeholder--empty:hover,
+.editor-content-sm:where(.dark, .dark *) .placeholder--empty:hover {
+  background-color: color-mix(in oklab, var(--color-gray-600) 50%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .editor-content:where(.system, .system *) .placeholder--empty,
+  .editor-content-sm:where(.system, .system *) .placeholder--empty {
+    color: var(--color-gray-500);
+    background-color: color-mix(in oklab, var(--color-gray-700) 50%, transparent);
+  }
+
+  .editor-content:where(.system, .system *) .placeholder--empty:hover,
+  .editor-content-sm:where(.system, .system *) .placeholder--empty:hover {
+    background-color: color-mix(in oklab, var(--color-gray-600) 50%, transparent);
+  }
+}
