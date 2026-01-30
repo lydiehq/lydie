@@ -347,10 +347,12 @@
     margin-bottom: 2em;
     font-size: 0.875rem;
     line-height: 1.4;
+    border-collapse: collapse;
   }
 
   thead {
     border-bottom-width: 1px;
+    border-bottom-style: solid;
     border-bottom-color: var(--editor-content-th-borders);
   }
 
@@ -373,6 +375,7 @@
 
   tbody tr {
     border-bottom-width: 1px;
+    border-bottom-style: solid;
     border-bottom-color: var(--editor-content-td-borders);
   }
 
@@ -401,6 +404,11 @@
   th,
   td {
     text-align: start;
+    border: 1px solid var(--editor-content-td-borders);
+  }
+
+  thead th {
+    border-color: var(--editor-content-th-borders);
   }
 
   td code {
@@ -749,6 +757,18 @@
   --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
+  & table {
+    border-collapse: collapse;
+  }
+
+  & thead {
+    border-bottom-style: solid;
+  }
+
+  & tbody tr {
+    border-bottom-style: solid;
+  }
+
   &:where(.dark, .dark *) {
     --editor-content-color: var(--color-gray-300);
     --editor-content-heading-color: var(--color-white);
@@ -1048,6 +1068,11 @@
   th,
   td {
     text-align: start;
+    border: 1px solid var(--editor-content-td-borders);
+  }
+
+  thead th {
+    border-color: var(--editor-content-th-borders);
   }
 
   td code {
