@@ -163,5 +163,74 @@ export const authClient = betterAuth({
         },
       };
     }),
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: false,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: Resource.PolarProProductId.value,
+              slug: "pro",
+            },
+          ],
+          successUrl: "/",
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+        usage(),
+        webhooks({
+          secret: Resource.PolarWebhookSecret?.value || "",
+          onSubscriptionActive: async (payload) => {
+            console.log("Subscription active:", payload);
+            const organizationId = payload.data.metadata?.referenceId;
+            if (!organizationId || typeof organizationId !== "string") {
+              console.warn("No valid organization ID in subscription metadata");
+              return;
+            }
+
+            await db
+              .update(schema.organizationsTable)
+              .set({
+                subscriptionStatus: "active",
+                subscriptionPlan: "pro",
+                polarSubscriptionId: payload.data.id,
+              })
+              .where(eq(schema.organizationsTable.id, organizationId));
+          },
+          onSubscriptionCanceled: async (payload) => {
+            console.log("Subscription canceled:", payload);
+            const organizationId = payload.data.metadata?.referenceId;
+            if (!organizationId || typeof organizationId !== "string") {
+              console.warn("No valid organization ID in subscription metadata");
+              return;
+            }
+
+            await db
+              .update(schema.organizationsTable)
+              .set({
+                subscriptionStatus: "canceled",
+                subscriptionPlan: "free",
+              })
+              .where(eq(schema.organizationsTable.id, organizationId));
+          },
+          onSubscriptionUpdated: async (payload) => {
+            console.log("Subscription updated:", payload);
+            const organizationId = payload.data.metadata?.referenceId;
+            if (!organizationId || typeof organizationId !== "string") {
+              console.warn("No valid organization ID in subscription metadata");
+              return;
+            }
+
+            await db
+              .update(schema.organizationsTable)
+              .set({
+                subscriptionStatus: payload.data.status,
+              })
+              .where(eq(schema.organizationsTable.id, organizationId));
+          },
+        }),
+      ],
+    }),
   ],
 });
