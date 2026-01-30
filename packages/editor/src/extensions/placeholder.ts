@@ -14,9 +14,6 @@ export interface PlaceholderAttributes {
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     placeholder: {
-      /**
-       * Insert a placeholder at the current position
-       */
       insertPlaceholder: (attributes: PlaceholderAttributes) => ReturnType;
     };
   }

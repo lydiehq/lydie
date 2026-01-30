@@ -1,0 +1,167 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { Container } from "../../../components/Container";
+import {
+  getCategoriesFromDb,
+  getCategoryByPath,
+  flattenCategories,
+  getCategoryTreeFromDb,
+} from "../../../data/categories";
+import { getAllTemplates } from "../../../data/templates";
+import TemplateThumbnail from "../../../components/templates/TemplateThumbnail.astro";
+import CategoryThumbnail from "../../../components/templates/CategoryThumbnail.astro";
+
+export async function getStaticPaths() {
+  const allCategories = await getCategoriesFromDb();
+
+  return allCategories.map((category) => {
+    // Remove the /templates/categories/ prefix to get just the path segments
+    const path = category.path?.replace("/templates/categories/", "") || category.slug;
+    return {
+      params: { path },
+    };
+  });
+}
+
+const { path } = Astro.params;
+const allCategories = await getCategoriesFromDb();
+const category = getCategoryByPath(path || "", allCategories);
+
+if (!category) {
+  return new Response(null, { status: 404 });
+}
+
+// Find subcategories (direct children)
+const subcategories = allCategories.filter((cat) => cat.parentId === category.id);
+
+// Get all templates
+const allTemplates = await getAllTemplates();
+
+// Get templates that belong to this category or any of its descendants
+function getCategoryAndDescendantIds(catId: string, allCats: typeof allCategories): string[] {
+  const ids = [catId];
+  const children = allCats.filter((cat) => cat.parentId === catId);
+  for (const child of children) {
+    ids.push(...getCategoryAndDescendantIds(child.id, allCats));
+  }
+  return ids;
+}
+
+const relevantCategoryIds = getCategoryAndDescendantIds(category.id, allCategories);
+
+// Filter templates that belong to this category or any descendant
+const categoryTemplates = allTemplates.filter((template) =>
+  template.categories.some((cat) => relevantCategoryIds.includes(cat.id)),
+);
+
+// Build breadcrumb trail
+const breadcrumbs: { name: string; href: string }[] = [];
+let currentCat = category;
+const ancestors: typeof category[] = [];
+
+// Build ancestors list
+while (currentCat) {
+  ancestors.unshift(currentCat);
+  const parent = allCategories.find((cat) => cat.id === currentCat.parentId);
+  currentCat = parent as typeof currentCat;
+}
+
+// Create breadcrumbs
+for (const ancestor of ancestors) {
+  breadcrumbs.push({
+    name: ancestor.name,
+    href: ancestor.path || `/templates/categories/${ancestor.slug}`,
+  });
+}
+---
+
+<Layout
+  title={`${category.name} Templates - Lydie`}
+  description={`Browse ${category.name.toLowerCase()} templates.`}
+>
+  <div class="py-8">
+    <Container className="flex flex-col gap-y-8">
+      <div class="flex flex-col gap-y-8">
+        <!-- Breadcrumbs -->
+        <div class="flex items-center gap-x-2 text-sm">
+          <a href="/templates/categories" class="text-gray-500 hover:text-gray-900"
+            >All categories</a
+          >
+          {
+            breadcrumbs.map((crumb, index) => (
+              <>
+                <span class="text-gray-400">/</span>
+                {index === breadcrumbs.length - 1 ? (
+                  <span class="text-gray-900 font-medium">{crumb.name}</span>
+                ) : (
+                  <a href={crumb.href} class="text-gray-500 hover:text-gray-900">
+                    {crumb.name}
+                  </a>
+                )}
+              </>
+            ))
+          }
+        </div>
+
+        <header class="">
+          <div class="max-w-lg flex flex-col gap-y-3">
+            <h1 class="text-4xl font-medium text-gray-900">{category.name}</h1>
+            <span class="text-base/relaxed text-gray-600"
+              >Browse our collection of {category.name.toLowerCase()} templates to find
+              the perfect one for your needs.</span
+            >
+          </div>
+        </header>
+      </div>
+
+      <!-- Subcategories -->
+      {
+        subcategories.length > 0 && (
+          <div class="flex flex-col gap-y-4">
+            <div class="max-w-lg flex flex-col gap-y-3">
+              <h2 class="text-2xl font-medium text-gray-900">Subcategories</h2>
+              <span class="text-base/relaxed text-gray-600">
+                Explore specific areas within {category.name.toLowerCase()}.
+              </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subcategories.map((subcat) => (
+                <CategoryThumbnail category={subcat} />
+              ))}
+            </div>
+          </div>
+        )
+      }
+
+      <!-- Templates -->
+      <div class="flex flex-col gap-y-4">
+        <div class="max-w-lg flex flex-col gap-y-3">
+          <h2 class="text-2xl font-medium text-gray-900">Templates</h2>
+          <span class="text-base/relaxed text-gray-600"
+            >{categoryTemplates.length}
+            {category.name.toLowerCase()} template{
+              categoryTemplates.length !== 1 ? "s" : ""
+            } available.</span
+          >
+        </div>
+        {
+          categoryTemplates.length > 0 ? (
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {categoryTemplates.map((template) => (
+                <TemplateThumbnail
+                  name={template.name}
+                  description={template.teaser || template.description}
+                  href={`/templates/${template.slug}`}
+                />
+              ))}
+            </div>
+          ) : (
+            <div class="text-gray-500 text-sm">
+              No templates available in this category yet.
+            </div>
+          )
+        }
+      </div>
+    </Container>
+  </div>
+</Layout>

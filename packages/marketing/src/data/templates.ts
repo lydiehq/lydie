@@ -35,10 +35,41 @@ async function fetchCategories(templateId: string): Promise<Category[]> {
   const categoryIds = assignments.map((a) => a.categoryId);
   if (categoryIds.length === 0) return [];
 
-  return db
+  const dbCategories = await db
     .select()
     .from(templateCategoriesTable)
     .where(inArray(templateCategoriesTable.id, categoryIds));
+
+  // Fetch all categories to build paths
+  const allCategories = await db.select().from(templateCategoriesTable);
+
+  // Generate paths for each category
+  return dbCategories.map((cat) => {
+    const path = generateCategoryPath(cat, allCategories);
+    return {
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      parentId: cat.parentId,
+      path,
+    };
+  });
+}
+
+// Generate full path for nested categories
+function generateCategoryPath(
+  category: { id: string; slug: string; parentId: string | null },
+  allCategories: { id: string; slug: string; parentId: string | null }[],
+): string {
+  const pathSegments: string[] = [];
+  let current: typeof category | undefined = category;
+
+  while (current) {
+    pathSegments.unshift(current.slug);
+    current = allCategories.find((cat) => cat.id === current?.parentId);
+  }
+
+  return `/templates/categories/${pathSegments.join("/")}`;
 }
 
 export async function getTemplate(slug: string): Promise<Template | undefined> {

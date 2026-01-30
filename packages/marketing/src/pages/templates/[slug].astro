@@ -107,7 +107,7 @@ if (template.detailedDescription) {
                 <div class="flex flex-wrap gap-2">
                   {categories.map((category) => (
                     <a
-                      href={`/templates/categories/${category.slug}`}
+                      href={category.path || `/templates/categories/${category.slug}`}
                       class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                     >
                       {category.name}

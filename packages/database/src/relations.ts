@@ -272,6 +272,11 @@ export const relations = defineRelations(schema, (r) => ({
   },
   templateCategoriesTable: {
     assignments: r.many.templateCategoryAssignmentsTable(),
+    parent: r.one.templateCategoriesTable({
+      from: r.templateCategoriesTable.parentId,
+      to: r.templateCategoriesTable.id,
+    }),
+    children: r.many.templateCategoriesTable(),
   },
   templateCategoryAssignmentsTable: {
     template: r.one.templatesTable({

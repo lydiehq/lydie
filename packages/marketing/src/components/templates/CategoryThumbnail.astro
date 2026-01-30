@@ -9,7 +9,7 @@ const { category } = Astro.props;
 ---
 
 <a
-  href={`/templates/categories/${category.slug}`}
+  href={category.path || `/templates/categories/${category.slug}`}
   class="group flex flex-col gap-y-3 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
 >
   <div class="flex items-center gap-x-3">

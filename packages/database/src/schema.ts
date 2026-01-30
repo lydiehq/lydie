@@ -1,6 +1,7 @@
 import { createId } from "@lydie/core/id";
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   PgColumn,
   boolean,
   index,
@@ -644,6 +645,7 @@ export const templateCategoriesTable = pgTable("template_categories", {
     .$default(() => createId()),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  parentId: text("parent_id").references((): AnyPgColumn => templateCategoriesTable.id, { onDelete: "cascade" }),
   ...timestamps,
 });
 
