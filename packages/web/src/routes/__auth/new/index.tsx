@@ -38,13 +38,13 @@ function RouteComponent() {
   const form = useAppForm({
     defaultValues: {
       name: defaultName,
-      slug: slugify(defaultName),
     },
     onSubmit: async (values) => {
       try {
         const id = createId();
         const onboardingDocId = createId();
-        const slug = values.value.slug || slugify(values.value.name);
+        // Generate slug with unique suffix to avoid clashes
+        const slug = `${slugify(values.value.name)}-${id.slice(0, 8)}`;
 
         const write = z.mutate(
           mutators.organization.create({
@@ -159,25 +159,7 @@ function RouteComponent() {
                         labelClassName="text-white"
                         descriptionClassName="text-white/70"
                         className="text-white"
-                        onChange={(v) => {
-                          field.handleChange(v);
-                          const newSlug = slugify(v);
-                          form.setFieldValue("slug", newSlug);
-                        }}
-                      />
-                    )}
-                  />
 
-                  <form.AppField
-                    name="slug"
-                    children={(field) => (
-                      <field.TextField
-                        label="Workspace Slug"
-                        placeholder="my-workspace"
-                        description="This will be the URL of your workspace"
-                        labelClassName="text-white"
-                        descriptionClassName="text-white/70"
-                        className="text-white"
                       />
                     )}
                   />
