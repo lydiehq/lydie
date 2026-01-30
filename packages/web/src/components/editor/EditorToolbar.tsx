@@ -8,6 +8,7 @@ import {
   MoreVerticalRegular,
   RowChildFilled,
   SubtractFilled,
+  TextFieldFilled,
   TextNumberListLtrFilled,
   TextStrikethroughFilled,
 } from "@fluentui/react-icons";
@@ -271,6 +272,27 @@ export function EditorToolbar({ editor, doc }: Props) {
                 <ImageIcon className="size-[15px] text-gray-700" />
               </Button>
               <Tooltip placement="bottom">Insert Image</Tooltip>
+            </TooltipTrigger>
+          </Group>
+
+          <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
+
+          <Group aria-label="Placeholder" className="flex gap-1">
+            <TooltipTrigger delay={500}>
+              <Button
+                onPress={() => {
+                  const label = prompt("Enter placeholder label (e.g., 'Company name'):");
+                  if (label && label.trim()) {
+                    editor.commands.insertPlaceholder({ label: label.trim(), filled: false });
+                  }
+                }}
+                intent="ghost"
+                size="icon-sm"
+                aria-label="Insert Placeholder"
+              >
+                <TextFieldFilled className="size-[15px] text-gray-700" />
+              </Button>
+              <Tooltip placement="bottom">Insert Placeholder</Tooltip>
             </TooltipTrigger>
           </Group>
 

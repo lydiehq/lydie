@@ -44,12 +44,18 @@ const iconMap: Record<string, any> = {
   image: ImageIcon,
 };
 
-const slashMenuItems: SlashMenuItem[] = allFormattingActions.map((action) => ({
-  id: action.id,
-  label: action.label,
-  icon: iconMap[action.id],
-  action,
-}));
+// Filter out text formatting actions (bold, italic, strike, code) from slash menu
+// These should only be accessible via toolbar or keyboard shortcuts
+const excludedSlashMenuIds = new Set(["bold", "italic", "strike", "code"]);
+
+const slashMenuItems: SlashMenuItem[] = allFormattingActions
+  .filter((action) => !excludedSlashMenuIds.has(action.id))
+  .map((action) => ({
+    id: action.id,
+    label: action.label,
+    icon: iconMap[action.id],
+    action,
+  }));
 
 type SlashMenuProps = {
   items: SlashMenuItem[];
