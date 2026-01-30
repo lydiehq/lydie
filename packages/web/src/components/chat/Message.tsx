@@ -4,7 +4,6 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { motion } from "motion/react";
 import { useMemo } from "react";
 import { Streamdown } from "streamdown";
 
@@ -41,12 +40,7 @@ export function UserMessage({
   className?: string;
 }) {
   return (
-    <motion.div
-      className={`flex justify-end ${className}`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-    >
+    <div className={`flex justify-end ${className}`}>
       <div className="flex flex-col items-end max-w-[80%]">
         <div className="bg-black/4 text-gray-700 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
           {message.parts?.map((part: any, index: number) => {
@@ -67,7 +61,7 @@ export function UserMessage({
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -85,12 +79,7 @@ export function AssistantMessage({
   const shouldShowMetadata = status === "ready" || !isLastMessage;
 
   return (
-    <motion.div
-      className={`flex justify-start w-full gap-y-1 flex-col ${className}`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-    >
+    <div className={`flex justify-start w-full gap-y-1 flex-col ${className}`}>
       <div className="flex flex-col gap-y-2 max-w-[80%]">
         <div className="bg-gray-100 text-gray-900 rounded-r-lg rounded-bl-lg rounded-tl-sm p-2 whitespace-pre-wrap">
           {message.parts?.map((part: any, index: number) => {
@@ -119,7 +108,7 @@ export function AssistantMessage({
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 

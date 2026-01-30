@@ -67,16 +67,21 @@ IMPORTANT:
         const slug = `${slugify(title)}-${createId().slice(0, 6)}`;
 
         // Prepare content
-        let yjsState;
+        let yjsState: string | null = null;
         if (content) {
           try {
             const jsonContent = deserializeFromHTML(content);
             yjsState = convertJsonToYjs(jsonContent);
+            
+            if (!yjsState) {
+              throw new Error("Failed to convert content to Yjs format");
+            }
           } catch (contentError: any) {
             console.error("Failed to parse content:", contentError);
-            // Create document with empty content if parsing fails
-            const emptyContent = { type: "doc", content: [] };
-            yjsState = convertJsonToYjs(emptyContent);
+            return {
+              state: "error",
+              error: `Failed to process document content: ${contentError.message || "Unknown error"}`,
+            };
           }
         } else {
           const emptyContent = { type: "doc", content: [] };

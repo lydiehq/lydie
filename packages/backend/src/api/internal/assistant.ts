@@ -88,6 +88,7 @@ export const AssistantRoute = new Hono<{
       const [newConversation] = await db
         .insert(assistantConversationsTable)
         .values({
+          id: conversationId,
           userId,
           organizationId,
           agentId: agentId || null,

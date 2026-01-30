@@ -126,6 +126,7 @@ export function ConversationDropdown({
           onSelectConversation(key);
         }
       }}
+      aria-label="Select conversation"
       className="group flex flex-col gap-1 min-w-[200px]"
     >
       <Button intent="ghost" size="sm" className="justify-start">

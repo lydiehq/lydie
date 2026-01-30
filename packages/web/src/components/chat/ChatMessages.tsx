@@ -2,7 +2,6 @@ import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-
 
 import { MoreVerticalRegular } from "@fluentui/react-icons";
 import { format } from "date-fns";
-import { AnimatePresence, motion } from "motion/react";
 import { memo } from "react";
 import { Button, DialogTrigger } from "react-aria-components";
 import { Streamdown } from "streamdown";
@@ -44,23 +43,21 @@ export function ChatMessages({ messages, status, organizationId, onApplyContent 
       initial={{ damping: 1, stiffness: 1 }}
     >
       <StickToBottom.Content className="flex flex-col gap-y-2 p-3">
-        <AnimatePresence initial={false}>
-          {messages.map((message, index) => (
-            <div key={message.id}>
-              {message.role === "user" ? (
-                <UserMessage message={message} />
-              ) : (
-                <AssistantMessageWithTools
-                  message={message}
-                  onApplyContent={onApplyContent}
-                  status={status}
-                  isLastMessage={index === messages.length - 1}
-                  organizationId={organizationId}
-                />
-              )}
-            </div>
-          ))}
-        </AnimatePresence>
+        {messages.map((message, index) => (
+          <div key={message.id}>
+            {message.role === "user" ? (
+              <UserMessage message={message} />
+            ) : (
+              <AssistantMessageWithTools
+                message={message}
+                onApplyContent={onApplyContent}
+                status={status}
+                isLastMessage={index === messages.length - 1}
+                organizationId={organizationId}
+              />
+            )}
+          </div>
+        ))}
         {shouldShowLoading && <ThinkingIndicator />}
       </StickToBottom.Content>
     </StickToBottom>
@@ -69,20 +66,14 @@ export function ChatMessages({ messages, status, organizationId, onApplyContent 
 
 function ThinkingIndicator() {
   return (
-    <motion.div
-      className="flex justify-start w-full"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="flex justify-start w-full">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-x-2 text-gray-600 text-sm">
           <ThinkingAnimation />
           <span>Thinking</span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -137,12 +128,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   };
 
   return (
-    <motion.div
-      className="flex justify-start w-full gap-y-1 flex-col"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-    >
+    <div className="flex justify-start w-full gap-y-1 flex-col">
       <div className="flex flex-col">
         {groupMessageParts(message.parts).map((group, index) => {
           if (group.type === "research-group") {
@@ -203,7 +189,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 });
 

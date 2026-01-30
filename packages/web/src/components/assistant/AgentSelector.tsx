@@ -46,6 +46,7 @@ export function AgentSelector({ selectedAgentId, onSelectAgent }: AgentSelectorP
           onSelectAgent(key);
         }
       }}
+      aria-label="Select AI agent"
       className="group flex flex-col gap-1"
     >
       <Button intent="ghost" size="sm">

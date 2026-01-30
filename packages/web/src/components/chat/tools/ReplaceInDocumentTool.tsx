@@ -24,6 +24,7 @@ import { applyTitleChange } from "@/utils/title-changes";
 
 export interface ReplaceInDocumentToolProps {
   tool: {
+    toolCallId: string;
     state:
       | "input-streaming"
       | "input-available"
@@ -78,6 +79,14 @@ export function ReplaceInDocumentTool({
   const newTitle = tool.input?.title || tool.output?.title;
   const replaceText = tool.input?.replace || tool.output?.replace || "";
   const searchText = tool.input?.search || tool.output?.search || "";
+
+  // Reset state when a new tool call starts
+  useEffect(() => {
+    setIsApplied(false);
+    setIsApplying(false);
+    setIsUsingLLM(false);
+    setApplyStatus("");
+  }, [tool.toolCallId]);
 
   useEffect(() => {
     const isMatchingPendingChange =
@@ -140,7 +149,11 @@ export function ReplaceInDocumentTool({
       : null,
   );
 
-  const isStreaming = tool.state === "input-streaming";
+  // Only disable during input streaming (when AI is generating the tool parameters)
+  // Don't disable during call-streaming or after output is available
+  const isInputStreaming = tool.state === "input-streaming";
+  const isCallStreaming = tool.state === "call-streaming";
+  const hasOutput = tool.state === "output-available" || tool.output != null;
   const isFullReplacement = searchText === "";
 
   useLayoutEffect(() => {
@@ -283,7 +296,11 @@ export function ReplaceInDocumentTool({
       toolError: tool.errorText,
       searchLength: searchText.length,
       replaceLength: replaceText.length,
-      isStreaming,
+      isInputStreaming,
+      isCallStreaming,
+      hasOutput,
+      isApplied,
+      isApplying,
       timestamp: new Date().toISOString(),
     };
 
@@ -291,7 +308,11 @@ export function ReplaceInDocumentTool({
     console.log("Tool object:", tool);
     console.log("Search text:", searchText);
     console.log("Replace text:", replaceText);
-    console.log("Is streaming:", isStreaming);
+    console.log("isInputStreaming:", isInputStreaming);
+    console.log("isCallStreaming:", isCallStreaming);
+    console.log("hasOutput:", hasOutput);
+    console.log("isApplied:", isApplied);
+    console.log("isApplying:", isApplying);
     console.log("Debug summary:", debugInfo);
     console.groupEnd();
   };
@@ -315,7 +336,7 @@ export function ReplaceInDocumentTool({
     if (isError) return "Failed to modify document";
     if (isApplied) return "Changes applied";
     if (isApplying) return "Applying changes";
-    if (isStreaming) return "Generating content";
+    if (isInputStreaming) return "Generating content";
     if (isFullReplacement) return "Replace entire document";
     return "Modify document";
   };
@@ -324,7 +345,7 @@ export function ReplaceInDocumentTool({
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}>
       <div className="p-1">
         <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
-          {isStreaming && <ArrowClockwiseRegular className="size-3 animate-spin text-blue-500" />}
+          {isInputStreaming && <ArrowClockwiseRegular className="size-3 animate-spin text-blue-500" />}
           <motion.span
             key={getStatusText()}
             initial={{ opacity: 0 }}
@@ -428,7 +449,7 @@ export function ReplaceInDocumentTool({
                     intent="secondary"
                     size="xs"
                     onPress={handleCreatePage}
-                    isDisabled={isStreaming}
+                    isDisabled={isInputStreaming}
                   >
                     Create page with content
                   </Button>
@@ -437,7 +458,7 @@ export function ReplaceInDocumentTool({
                   intent="secondary"
                   size="xs"
                   onPress={handleApply}
-                  isDisabled={isApplied || isApplying || isStreaming}
+                  isDisabled={isApplied || isApplying || isInputStreaming}
                   isPending={isApplying || isUsingLLM}
                 >
                   {isApplying ? applyStatus || "Applying..." : isApplied ? "Applied" : "Apply"}
