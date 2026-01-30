@@ -12,8 +12,6 @@ import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { RouterProvider } from "react-aria-components";
 
-import interWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
-
 import type { RouterContext } from "@/main";
 
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
@@ -67,13 +65,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         },
       ],
       links: [
-        {
-          rel: "preload",
-          as: "font",
-          type: "font/woff2",
-          href: interWoff2,
-          crossOrigin: "anonymous" as const,
-        },
         ...(zeroCacheURL
           ? [
               {
