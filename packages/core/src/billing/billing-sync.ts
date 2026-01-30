@@ -3,7 +3,7 @@ import { Polar } from "@polar-sh/sdk";
 import { eq, and } from "drizzle-orm";
 import { Resource } from "sst";
 
-import { assignSeat, getSeatInfo, syncSeatsFromPolar } from "./seat-management";
+import { assignSeat, claimSeat, getSeatInfo, syncSeatsFromPolar } from "./seat-management";
 import { createId } from "../id";
 
 /**
@@ -569,8 +569,17 @@ export async function setupOrganizationBilling(
           email,
           { role: "owner", isOwner: true }
         );
-        if (seatResult.success) {
+        if (seatResult.success && seatResult.seat?.invitationToken) {
           console.log("Seat assigned to owner:", ownerUserId, "for organization:", organizationId);
+          
+          // Auto-claim the owner's seat immediately so they get benefits (credits)
+          // This avoids requiring the owner to click a claim link for their own workspace
+          const claimResult = await claimSeat(seatResult.seat.invitationToken, ownerUserId);
+          if (claimResult.success) {
+            console.log("Owner's seat auto-claimed:", ownerUserId);
+          } else {
+            console.error("Failed to auto-claim owner seat:", claimResult.error);
+          }
         } else {
           console.error("Failed to assign seat to owner:", seatResult.error);
         }
