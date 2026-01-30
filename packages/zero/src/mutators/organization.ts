@@ -1,5 +1,4 @@
 import { createId } from "@lydie/core/id";
-import { slugify } from "@lydie/core/utils";
 import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
 
@@ -21,28 +20,12 @@ export const organizationMutators = {
     async ({ tx, ctx, args: { id, name, slug, logo, metadata, color, onboardingDocId } }) => {
       isAuthenticated(ctx);
 
-      // Verify slug doesn't already exist and make it unique if needed
-      let finalSlug = slug;
-      let existingOrg = await tx.run(zql.organizations.where("slug", finalSlug).one());
-
-      // If slug exists, try with a longer suffix
-      if (existingOrg) {
-        const baseSlug = slugify(name);
-        finalSlug = `${baseSlug}-${createId().slice(0, 8)}`;
-        existingOrg = await tx.run(zql.organizations.where("slug", finalSlug).one());
-      }
-
-      // If still exists, use organization ID as suffix (guaranteed unique)
-      if (existingOrg) {
-        const baseSlug = slugify(name);
-        finalSlug = `${baseSlug}-${id.slice(0, 8)}`;
-      }
-
+      // Client generates unique slug (baseSlug-createId) so redirect goes to correct workspace
       await tx.mutate.organizations.insert(
         withTimestamps({
           id,
           name,
-          slug: finalSlug,
+          slug,
           logo: logo || null,
           metadata: metadata || null,
           color: color || null,

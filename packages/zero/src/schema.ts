@@ -80,6 +80,7 @@ const seats = table("seats")
     claimed_by_user_id: string().optional(),
     invitation_token: string().optional(),
     seat_metadata: json().optional(),
+    credit_balance: number(),
     assigned_at: number(),
     claimed_at: number().optional(),
     revoked_at: number().optional(),

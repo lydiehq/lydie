@@ -206,6 +206,9 @@ export const seatsTable = pgTable(
       department?: string;
       [key: string]: any;
     }>(),
+    // Credit balance for this seat (synced from Polar meters)
+    // Each seat gets credits when claimed, deducted on usage
+    creditBalance: integer("credit_balance").default(0),
     // Timestamps
     assignedAt: timestamp("assigned_at").notNull().defaultNow(),
     claimedAt: timestamp("claimed_at"),

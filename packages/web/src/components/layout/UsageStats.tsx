@@ -1,6 +1,8 @@
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { CircularProgress } from "@lydie/ui/components/generic/CircularProgress";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import { useMemo } from "react";
 import { TooltipTrigger } from "react-aria-components";
@@ -11,16 +13,24 @@ import { useOrganization } from "@/context/organization.context";
 export function UsageStats() {
   const { organization } = useOrganization();
 
+  const [seat] = useQuery(
+    queries.seats.forUser({
+      organizationId: organization.id,
+    }),
+  );
+
+  const creditBalance = seat?.credit_balance ?? 0;
+
   const currentPlan = useMemo(() => {
     if (!organization) {
       return PLAN_TYPES.FREE;
     }
 
-    if (organization.subscriptionStatus === "active") {
-      if (organization.subscriptionPlan === "monthly") {
+    if (organization.subscription_status === "active") {
+      if (organization.subscription_plan === "monthly") {
         return PLAN_TYPES.MONTHLY;
       }
-      if (organization.subscriptionPlan === "yearly") {
+      if (organization.subscription_plan === "yearly") {
         return PLAN_TYPES.YEARLY;
       }
     }
@@ -29,7 +39,6 @@ export function UsageStats() {
   }, [organization]);
 
   const planInfo = PLAN_LIMITS[currentPlan];
-  const creditBalance = organization?.creditBalance || 0;
   const maxCredits = planInfo.creditsPerMonth;
 
   const isLowCredits = creditBalance <= maxCredits * 0.2; // Less than 20% remaining

@@ -132,7 +132,7 @@ export async function getAllOrganizationSeats(organizationId: string): Promise<S
  * and the latest beta version of @polar-sh/sdk
  */
 interface PolarCustomerSeats {
-  assign(params: {
+  assignSeat(params: {
     subscriptionId?: string;
     orderId?: string;
     email: string;
@@ -146,9 +146,9 @@ interface PolarCustomerSeats {
     metadata?: Record<string, any>;
   }>;
 
-  revoke(params: { seatId: string }): Promise<void>;
+  revokeSeat(params: { seatId: string }): Promise<void>;
 
-  resend(params: { seatId: string }): Promise<{
+  resendInvitation(params: { seatId: string }): Promise<{
     id: string;
     invitationToken?: string;
     expiresAt?: string;
@@ -161,7 +161,7 @@ interface PolarCustomerSeats {
     customerEmail?: string;
   }>;
 
-  claim(params: { invitationToken: string }): Promise<{
+  claimSeat(params: { invitationToken: string }): Promise<{
     seat: {
       id: string;
       status: SeatStatus;
@@ -170,21 +170,23 @@ interface PolarCustomerSeats {
     customerSessionToken: string;
   }>;
 
-  list(params: {
+  listSeats(params: {
     subscriptionId?: string;
     orderId?: string;
   }): Promise<{
-    items: Array<{
+    seats: Array<{
       id: string;
       status: SeatStatus;
       customerEmail: string;
       invitationToken?: string;
-      metadata?: Record<string, any>;
-      assignedAt?: string;
-      claimedAt?: string;
-      revokedAt?: string;
-      expiresAt?: string;
+      seatMetadata?: Record<string, any>;
+      assignedAt?: Date;
+      claimedAt?: Date;
+      revokedAt?: Date;
+      expiresAt?: Date;
     }>;
+    availableSeats: number;
+    totalSeats: number;
   }>;
 }
 
@@ -247,7 +249,7 @@ export async function assignSeat(
 
     // Assign seat in Polar
     const customerSeats = getCustomerSeatsApi();
-    const polarSeat = await customerSeats.assign({
+    const polarSeat = await customerSeats.assignSeat({
       ...(params.subscriptionId
         ? { subscriptionId: params.subscriptionId }
         : { orderId: params.orderId! }),
@@ -269,6 +271,7 @@ export async function assignSeat(
       claimedByUserId: null,
       invitationToken: polarSeat.invitationToken || null,
       seatMetadata: metadata || null,
+      creditBalance: 0,
       assignedAt: now,
       claimedAt: null,
       revokedAt: null,
@@ -336,7 +339,7 @@ export async function revokeSeat(
 
     // Revoke in Polar
     const customerSeats = getCustomerSeatsApi();
-    await customerSeats.revoke({
+    await customerSeats.revokeSeat({
       seatId: seat[0].polarSeatId,
     });
 
@@ -403,7 +406,7 @@ export async function resendSeatInvitation(
 
     // Resend in Polar
     const customerSeats = getCustomerSeatsApi();
-    const updatedPolarSeat = await customerSeats.resend({
+    const updatedPolarSeat = await customerSeats.resendInvitation({
       seatId: seat[0].polarSeatId,
     });
 
@@ -492,7 +495,7 @@ export async function claimSeat(
   try {
     // Claim in Polar
     const customerSeats = getCustomerSeatsApi();
-    const claimResult = await customerSeats.claim({
+    const claimResult = await customerSeats.claimSeat({
       invitationToken: invitationToken,
     });
 
@@ -565,7 +568,7 @@ export async function syncSeatsFromPolar(
 
     // Get seats from Polar
     const customerSeats = getCustomerSeatsApi();
-    const polarSeats = await customerSeats.list({
+    const polarSeats = await customerSeats.listSeats({
       ...(params.subscriptionId
         ? { subscriptionId: params.subscriptionId }
         : { orderId: params.orderId! }),
@@ -588,7 +591,7 @@ export async function syncSeatsFromPolar(
     const existingSeatsMap = new Map(existingSeats.map((s) => [s.polarSeatId, s]));
 
     // Process each seat from Polar
-    for (const polarSeat of polarSeats.items || []) {
+    for (const polarSeat of polarSeats.seats) {
       const existingSeat = existingSeatsMap.get(polarSeat.id);
 
       if (existingSeat) {
@@ -617,7 +620,8 @@ export async function syncSeatsFromPolar(
           assignedEmail: polarSeat.customerEmail,
           claimedByUserId: null, // Will be updated when user claims via our UI
           invitationToken: polarSeat.invitationToken || null,
-          seatMetadata: polarSeat.metadata || null,
+          seatMetadata: polarSeat.seatMetadata || null,
+          creditBalance: 0,
           assignedAt: polarSeat.assignedAt ? new Date(polarSeat.assignedAt) : now,
           claimedAt: polarSeat.claimedAt ? new Date(polarSeat.claimedAt) : null,
           revokedAt: polarSeat.revokedAt ? new Date(polarSeat.revokedAt) : null,

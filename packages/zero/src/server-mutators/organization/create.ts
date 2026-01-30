@@ -59,7 +59,7 @@ export const createOrganizationMutation = (context: MutatorContext) =>
           await setupOrganizationBilling(
             args.id,
             args.name,
-            ctx.userId
+            ctx.userId,
             // Email and name will be fetched by setupOrganizationBilling
           );
         } catch (error) {

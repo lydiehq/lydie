@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
 import {
+  handleBenefitGrantCreated,
+  handleBenefitGrantRevoked,
   polarClient,
   syncBillingFromCustomerState,
   syncSeatsFromPolar,
@@ -187,6 +189,16 @@ export const authClient = betterAuth({
           onCustomerStateChanged: async (payload) => {
             console.log("Customer state changed:", payload);
             await syncBillingFromCustomerState(payload);
+          },
+          // Benefit grant created - sync credits when seat is claimed
+          onBenefitGrantCreated: async (payload) => {
+            console.log("Benefit grant created:", payload);
+            await handleBenefitGrantCreated(payload);
+          },
+          // Benefit grant revoked - remove credits when seat is revoked
+          onBenefitGrantRevoked: async (payload) => {
+            console.log("Benefit grant revoked:", payload);
+            await handleBenefitGrantRevoked(payload);
           },
           // Keep order.created for one-time purchases (not covered by customer.state_changed)
           onOrderCreated: async (payload) => {

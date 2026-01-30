@@ -6,6 +6,7 @@ import { agentQueries } from "./agent";
 import { apiKeyQueries } from "./api-key";
 import { assistantQueries } from "./assistant";
 import { componentQueries } from "./component";
+import { seatQueries } from "./seat";
 import { documentQueries } from "./document";
 import { integrationQueries } from "./integration";
 import { integrationActivityQueries } from "./integration-activity";
@@ -25,6 +26,7 @@ export const queries = defineQueries({
   components: componentQueries,
   apiKeys: apiKeyQueries,
   members: memberQueries,
+  seats: seatQueries,
   invitations: invitationQueries,
   organizations: organizationQueries,
   assistant: assistantQueries,
