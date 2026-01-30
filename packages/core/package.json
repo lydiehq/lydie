@@ -8,8 +8,8 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
-    "@aws-sdk/client-scheduler": "^3.975.0",
-    "@aws-sdk/client-sesv2": "^3.975.0",
+    "@aws-sdk/client-scheduler": "^3.978.0",
+    "@aws-sdk/client-sesv2": "^3.978.0",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
@@ -25,7 +25,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^25.0.10",
+    "@types/node": "^25.1.0",
     "sst": "catalog:"
   }
 }
