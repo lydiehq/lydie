@@ -1,29 +1,19 @@
-import { Mark } from "@tiptap/core";
+import type { NodeViewRenderer } from "@tiptap/core";
+
+import { Node } from "@tiptap/core";
 
 export interface PlaceholderOptions {
+  addNodeView?: () => NodeViewRenderer;
   HTMLAttributes?: Record<string, string>;
 }
 
 export interface PlaceholderAttributes {
   label: string;
-  filled?: boolean;
 }
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     placeholder: {
-      /**
-       * Set a placeholder mark
-       */
-      setPlaceholder: (attributes: PlaceholderAttributes) => ReturnType;
-      /**
-       * Toggle a placeholder mark
-       */
-      togglePlaceholder: (attributes: PlaceholderAttributes) => ReturnType;
-      /**
-       * Unset a placeholder mark
-       */
-      unsetPlaceholder: () => ReturnType;
       /**
        * Insert a placeholder at the current position
        */
@@ -32,11 +22,18 @@ declare module "@tiptap/core" {
   }
 }
 
-export const Placeholder = Mark.create<PlaceholderOptions>({
+export const Placeholder = Node.create<PlaceholderOptions>({
   name: "fieldPlaceholder",
+
+  inline: true,
+  group: "inline",
+  content: "text*",
+  atom: false,
+  selectable: true,
 
   addOptions() {
     return {
+      addNodeView: undefined,
       HTMLAttributes: {},
     };
   },
@@ -55,18 +52,6 @@ export const Placeholder = Mark.create<PlaceholderOptions>({
           };
         },
       },
-      filled: {
-        default: false,
-        parseHTML: (element) => element.getAttribute("data-filled") === "true",
-        renderHTML: (attributes) => {
-          if (!attributes.filled) {
-            return {};
-          }
-          return {
-            "data-filled": "true",
-          };
-        },
-      },
     };
   },
 
@@ -74,6 +59,9 @@ export const Placeholder = Mark.create<PlaceholderOptions>({
     return [
       {
         tag: "span[data-placeholder]",
+        getAttrs: (element) => ({
+          label: (element as HTMLElement).getAttribute("data-label") || "",
+        }),
       },
     ];
   },
@@ -83,7 +71,7 @@ export const Placeholder = Mark.create<PlaceholderOptions>({
       "span",
       {
         "data-placeholder": "",
-        class: `placeholder ${HTMLAttributes.filled ? "placeholder--filled" : "placeholder--empty"}`,
+        class: "placeholder",
         ...HTMLAttributes,
       },
       0,
@@ -92,40 +80,28 @@ export const Placeholder = Mark.create<PlaceholderOptions>({
 
   addCommands() {
     return {
-      setPlaceholder:
-        (attributes) =>
-        ({ commands }) => {
-          return commands.setMark(this.name, attributes);
-        },
-      togglePlaceholder:
-        (attributes) =>
-        ({ commands }) => {
-          return commands.toggleMark(this.name, attributes);
-        },
-      unsetPlaceholder:
-        () =>
-        ({ commands }) => {
-          return commands.unsetMark(this.name);
-        },
       insertPlaceholder:
         (attributes) =>
         ({ chain }) => {
           return chain()
             .insertContent({
-              type: "text",
-              text: attributes.label,
-              marks: [
+              type: this.name,
+              attrs: {
+                label: attributes.label,
+              },
+              content: [
                 {
-                  type: this.name,
-                  attrs: {
-                    label: attributes.label,
-                    filled: false,
-                  },
+                  type: "text",
+                  text: attributes.label,
                 },
               ],
             })
             .run();
         },
     };
+  },
+
+  addNodeView() {
+    return this.options.addNodeView?.() ?? null;
   },
 });

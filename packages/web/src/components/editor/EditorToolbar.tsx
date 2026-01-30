@@ -30,9 +30,11 @@ import { Editor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
 
+import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
+import { isAdmin } from "@/utils/admin";
 
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
@@ -57,6 +59,8 @@ type ActiveStates = {
 };
 
 export function EditorToolbar({ editor, doc }: Props) {
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeStates, setActiveStates] = useState<ActiveStates>({
     bold: false,
@@ -275,26 +279,51 @@ export function EditorToolbar({ editor, doc }: Props) {
             </TooltipTrigger>
           </Group>
 
-          <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
+          {userIsAdmin && (
+            <>
+              <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
-          <Group aria-label="Placeholder" className="flex gap-1">
-            <TooltipTrigger delay={500}>
-              <Button
-                onPress={() => {
-                  const label = prompt("Enter placeholder label (e.g., 'Company name'):");
-                  if (label && label.trim()) {
-                    editor.commands.insertPlaceholder({ label: label.trim(), filled: false });
-                  }
-                }}
-                intent="ghost"
-                size="icon-sm"
-                aria-label="Insert Placeholder"
-              >
-                <TextFieldFilled className="size-[15px] text-gray-700" />
-              </Button>
-              <Tooltip placement="bottom">Insert Placeholder</Tooltip>
-            </TooltipTrigger>
-          </Group>
+              <Group aria-label="Placeholder" className="flex gap-1">
+                <TooltipTrigger delay={500}>
+                  <Button
+                    onPress={() => {
+                      const { state } = editor;
+                      const { from, to } = state.selection;
+                      const hasSelection = from !== to;
+
+                      if (hasSelection) {
+                        // Convert selected text to placeholder
+                        const selectedText = state.doc.textBetween(from, to);
+                        editor
+                          .chain()
+                          .focus()
+                          .deleteRange({ from, to })
+                          .insertContent({
+                            type: "fieldPlaceholder",
+                            attrs: { label: selectedText },
+                            content: [{ type: "text", text: selectedText }],
+                          })
+                          .run();
+                      } else {
+                        // Insert new placeholder with prompt
+                        const label = prompt("Enter placeholder label (e.g., 'Company name'):");
+                        if (label && label.trim()) {
+                          editor.commands.insertPlaceholder({ label: label.trim() });
+                        }
+                      }
+                    }}
+                    intent="ghost"
+                    size="icon-sm"
+                    aria-label="Convert to Placeholder"
+                    isDisabled={activeStates.selectionEmpty}
+                  >
+                    <TextFieldFilled className="size-[15px] text-gray-700" />
+                  </Button>
+                  <Tooltip placement="bottom">Convert to Placeholder</Tooltip>
+                </TooltipTrigger>
+              </Group>
+            </>
+          )}
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 

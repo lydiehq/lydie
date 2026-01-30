@@ -18,6 +18,7 @@ import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/Onbo
 import { OnboardingStepView } from "@/components/editor/onboarding/OnboardingStepView";
 import { OnboardingTextPracticeView } from "@/components/editor/onboarding/OnboardingTextPracticeView";
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
+import { PlaceholderComponent } from "@/components/PlaceholderComponent";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
 
@@ -123,6 +124,9 @@ export function useDocumentEditor({
         },
         onboardingAssistantTask: {
           addNodeView: () => ReactNodeViewRenderer(OnboardingAssistantTaskView),
+        },
+        placeholder: {
+          addNodeView: () => ReactNodeViewRenderer(PlaceholderComponent, { as: "span" }),
         },
         slashCommands: {
           suggestion: {
