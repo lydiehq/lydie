@@ -99,7 +99,7 @@ export const test = baseTest.extend<
       const baseURL = workerInfo.project.use?.baseURL || "http://localhost:3000";
       const url = new URL(baseURL);
       const isSecure = url.protocol === "https:";
-      const domain = isSecure ? ".lydie.co" : ".localhost";
+      const domain = isSecure ? ".lydie.co" : "localhost";
 
       const sessionToken = workerData.session.token;
       const expiresAt = new Date(workerData.session.expiresAt);
