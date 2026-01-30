@@ -670,3 +670,24 @@ export const templateCategoryAssignmentsTable = pgTable(
     uniqueIndex("template_category_assignments_unique_idx").on(table.templateId, table.categoryId),
   ],
 );
+
+export const templateFaqsTable = pgTable(
+  "template_faqs",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    question: text("question").notNull(),
+    answer: text("answer").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_faqs_template_id_idx").on(table.templateId),
+    index("template_faqs_sort_order_idx").on(table.sortOrder),
+  ],
+);

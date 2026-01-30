@@ -1,3 +1,4 @@
+import { AddRegular, DeleteRegular } from "@fluentui/react-icons";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -15,6 +16,7 @@ import { Input, Label } from "@lydie/ui/components/generic/Field";
 import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Card } from "@/components/layout/Card";
+import { SimpleEditorToolbar } from "@/components/editor/SimpleEditorToolbar";
 import { useAuth } from "@/context/auth.context";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
@@ -53,6 +55,9 @@ function RouteComponent() {
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateDetailedDescription, setTemplateDetailedDescription] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [faqs, setFaqs] = useState<{ id?: string; question: string; answer: string; sort_order: number }[]>([]);
+  const [newFaqQuestion, setNewFaqQuestion] = useState("");
+  const [newFaqAnswer, setNewFaqAnswer] = useState("");
 
   const detailedDescriptionEditor = useEditor({
     extensions: [StarterKit],

@@ -618,6 +618,17 @@ const templateCategoryAssignments = table("template_category_assignments")
   })
   .primaryKey("id");
 
+const templateFaqs = table("template_faqs")
+  .columns({
+    id: string(),
+    template_id: string(),
+    question: string(),
+    answer: string(),
+    sort_order: number(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
 const templatesRelations = relationships(templates, ({ many }) => ({
   documents: many({
     sourceField: ["id"],
@@ -633,6 +644,11 @@ const templatesRelations = relationships(templates, ({ many }) => ({
     sourceField: ["id"],
     destField: ["template_id"],
     destSchema: templateCategoryAssignments,
+  }),
+  faqs: many({
+    sourceField: ["id"],
+    destField: ["template_id"],
+    destSchema: templateFaqs,
   }),
 }));
 
@@ -701,6 +717,14 @@ const templateCategoryAssignmentsRelations = relationships(
   }),
 );
 
+const templateFaqsRelations = relationships(templateFaqs, ({ one }) => ({
+  template: one({
+    sourceField: ["template_id"],
+    destField: ["id"],
+    destSchema: templates,
+  }),
+}));
+
 export const schema = createSchema({
   tables: [
     users,
@@ -727,6 +751,7 @@ export const schema = createSchema({
     templateInstallations,
     templateCategories,
     templateCategoryAssignments,
+    templateFaqs,
   ],
   relationships: [
     documentsRelations,
@@ -753,6 +778,7 @@ export const schema = createSchema({
     templateInstallationsRelations,
     templateCategoriesRelations,
     templateCategoryAssignmentsRelations,
+    templateFaqsRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,

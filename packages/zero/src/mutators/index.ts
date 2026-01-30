@@ -12,6 +12,7 @@ import { organizationMutators } from "./organization";
 import { syncMetadataMutators } from "./sync-metadata";
 import { templateMutators } from "./template";
 import { templateCategoryMutators } from "./template-category";
+import { templateFaqMutators } from "./template-faq";
 import { userSettingsMutators } from "./user-settings";
 
 export const mutators = defineMutators({
@@ -28,6 +29,7 @@ export const mutators = defineMutators({
   agents: agentMutators,
   template: templateMutators,
   templateCategory: templateCategoryMutators,
+  templateFaq: templateFaqMutators,
 });
 
 export type Mutators = typeof mutators;
