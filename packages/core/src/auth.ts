@@ -26,6 +26,7 @@ export const authClient = betterAuth({
   session: {
     cookieCache: {
       enabled: true,
+      maxAge: 5 * 60,
     },
   },
   baseURL:
@@ -63,7 +64,7 @@ export const authClient = betterAuth({
             sameSite: "none",
           }),
       partitioned: true,
-      secure: Resource.App.stage !== "production",
+      secure: Resource.App.stage === "production",
     },
     crossSubDomainCookies: {
       enabled: true,
