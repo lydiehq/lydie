@@ -66,6 +66,7 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.OnboardingAssistantTask.configure(options?.onboardingAssistantTask),
     E.IndentHandlerExtension,
     E.ImageUpload,
+    E.Placeholder,
   ];
 
   // Add slash commands if configured
