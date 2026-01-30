@@ -35,8 +35,14 @@ const organizations = table("organizations")
     color: string().optional(),
     // Subscription info synced from Polar via webhooks
     subscription_status: string(),
-    subscription_plan: string(),
+    subscription_plan: string(), // 'free', 'monthly', 'yearly'
     polar_subscription_id: string().optional(),
+    // Seat-based billing
+    paid_seats: number(),
+    // Credit tracking (cached from Polar)
+    credit_balance: number(),
+    credit_balance_updated_at: number().optional(),
+    polar_meter_id: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -174,9 +180,8 @@ const llmUsage = table("llm_usage")
     organization_id: string().optional(),
     source: string(), // 'document' or 'assistant'
     model: string(),
-    prompt_tokens: number(),
-    completion_tokens: number(),
-    total_tokens: number(),
+    // Credit-based tracking
+    credits_used: number(),
     finish_reason: string().optional(),
     tool_calls: json().optional(),
     ...timestamps,

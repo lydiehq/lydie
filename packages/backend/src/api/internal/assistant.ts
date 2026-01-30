@@ -9,6 +9,7 @@ import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
 import { searchInDocument } from "@lydie/core/ai/tools/search-in-document";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
 import { VisibleError } from "@lydie/core/error";
+import { deductCreditsInPolar } from "@lydie/core/polar-credits";
 import {
   assistantAgentsTable,
   assistantConversationsTable,
@@ -17,6 +18,7 @@ import {
   documentsTable,
   llmUsageTable,
 } from "@lydie/database";
+import { calculateCreditsFromTokens } from "@lydie/database/billing-types";
 import { ToolLoopAgent, createAgentUIStreamResponse, smoothStream, validateUIMessages } from "ai";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { Hono } from "hono";
@@ -25,7 +27,7 @@ import { z } from "zod";
 
 import { buildAssistantSystemPrompt } from "../utils/ai/assistant/system-prompt";
 import { generateConversationTitle } from "../utils/conversation";
-import { checkDailyMessageLimit } from "../utils/usage-limits";
+import { checkCreditBalance } from "../utils/usage-limits";
 
 export const messageMetadataSchema = z
   .object({
@@ -118,16 +120,16 @@ export const AssistantRoute = new Hono<{
 
     const isAdmin = (user as any)?.role === "admin";
     if (!isAdmin) {
-      const limitCheck = await checkDailyMessageLimit({
+      const creditCheck = await checkCreditBalance({
         id: organization.id,
         subscriptionPlan: organization.subscriptionPlan,
         subscriptionStatus: organization.subscriptionStatus,
       });
 
-      if (!limitCheck.allowed) {
+      if (!creditCheck.allowed) {
         throw new VisibleError(
-          "usage_limit_exceeded",
-          `Daily message limit reached. You've used ${limitCheck.messagesUsed} of ${limitCheck.messageLimit} messages today. Upgrade to Pro for unlimited messages.`,
+          "insufficient_credits",
+          `You've run out of AI credits. You have ${creditCheck.creditsAvailable} credits remaining. Upgrade your plan or wait for your credits to reset next billing cycle.`,
           429,
         );
       }
@@ -310,18 +312,28 @@ export const AssistantRoute = new Hono<{
         const totalTokens = (assistantMessage.metadata as MessageMetadata)?.usage || 0;
 
         if (totalTokens > 0) {
-          const promptTokens = Math.floor(totalTokens * 0.7);
-          const completionTokens = totalTokens - promptTokens;
+          // Calculate completion tokens (estimate 30% of total)
+          const completionTokens = Math.floor(totalTokens * 0.3);
 
+          // Calculate credits used based on output tokens
+          const creditsUsed = calculateCreditsFromTokens(completionTokens, chatModel.modelId);
+
+          // Deduct credits from Polar
+          try {
+            await deductCreditsInPolar(organizationId, creditsUsed);
+          } catch (error) {
+            console.error("Error deducting credits from Polar:", error);
+            // Continue even if Polar deduction fails - we'll track it locally
+          }
+
+          // Track usage locally with credits
           await db.insert(llmUsageTable).values({
             conversationId,
             messageId: savedMessage.id,
             organizationId,
             source: "assistant",
             model: chatModel.modelId,
-            promptTokens,
-            completionTokens,
-            totalTokens,
+            creditsUsed,
             finishReason: "stop",
             toolCalls: null,
           });

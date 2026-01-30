@@ -10,6 +10,8 @@ import { Resource } from "sst";
 import { sendEmail } from "./email";
 import { createId } from "./id";
 import { scheduleOnboardingEmails } from "./onboarding";
+import { syncCreditBalanceFromPolar } from "./polar-credits";
+import { onMemberAdded, onMemberRemoved } from "./seat-management";
 
 const polarClient = new Polar({
   accessToken: Resource.PolarApiKey.value,
@@ -105,6 +107,28 @@ export const authClient = betterAuth({
         },
       },
     },
+    member: {
+      create: {
+        async after(member) {
+          // Sync seat count with Polar when a member is added
+          try {
+            await onMemberAdded(member.organizationId);
+          } catch (error) {
+            console.error("Error handling member addition:", error);
+          }
+        },
+      },
+      delete: {
+        async after(member) {
+          // Sync seat count with Polar when a member is removed
+          try {
+            await onMemberRemoved(member.organizationId);
+          } catch (error) {
+            console.error("Error handling member removal:", error);
+          }
+        },
+      },
+    },
   },
   plugins: [
     admin({
@@ -169,8 +193,12 @@ export const authClient = betterAuth({
         checkout({
           products: [
             {
-              productId: Resource.PolarProProductId.value,
-              slug: "pro",
+              productId: Resource.PolarProductSlugMonthly.value,
+              slug: "monthly",
+            },
+            {
+              productId: Resource.PolarProductSlugYearly.value,
+              slug: "yearly",
             },
           ],
           successUrl: "/",
@@ -180,6 +208,47 @@ export const authClient = betterAuth({
         usage(),
         webhooks({
           secret: Resource.PolarWebhookSecret?.value || "",
+          onSubscriptionCreated: async (payload) => {
+            console.log("Subscription created:", payload);
+            const organizationId = payload.data.metadata?.referenceId;
+            if (!organizationId || typeof organizationId !== "string") {
+              console.warn("No valid organization ID in subscription metadata");
+              return;
+            }
+
+            // Determine plan type from product
+            const productId = payload.data.productId;
+            let planType = "free";
+            if (productId === Resource.PolarProductSlugMonthly.value) {
+              planType = "monthly";
+            } else if (productId === Resource.PolarProductSlugYearly.value) {
+              planType = "yearly";
+            }
+
+            // Get quantity (number of seats)
+            const quantity =
+              payload.data.recurringInterval === "month" ||
+              payload.data.recurringInterval === "year"
+                ? payload.data.quantity || 1
+                : 1;
+
+            await db
+              .update(schema.organizationsTable)
+              .set({
+                subscriptionStatus: payload.data.status,
+                subscriptionPlan: planType,
+                polarSubscriptionId: payload.data.id,
+                paidSeats: planType !== "free" ? quantity : 0,
+              })
+              .where(eq(schema.organizationsTable.id, organizationId));
+
+            // Sync credit balance from Polar
+            try {
+              await syncCreditBalanceFromPolar(organizationId);
+            } catch (error) {
+              console.error("Error syncing credit balance on subscription created:", error);
+            }
+          },
           onSubscriptionActive: async (payload) => {
             console.log("Subscription active:", payload);
             const organizationId = payload.data.metadata?.referenceId;
@@ -188,14 +257,38 @@ export const authClient = betterAuth({
               return;
             }
 
+            // Determine plan type from product
+            const productId = payload.data.productId;
+            let planType = "free";
+            if (productId === Resource.PolarProductSlugMonthly.value) {
+              planType = "monthly";
+            } else if (productId === Resource.PolarProductSlugYearly.value) {
+              planType = "yearly";
+            }
+
+            // Get quantity (number of seats)
+            const quantity =
+              payload.data.recurringInterval === "month" ||
+              payload.data.recurringInterval === "year"
+                ? payload.data.quantity || 1
+                : 1;
+
             await db
               .update(schema.organizationsTable)
               .set({
                 subscriptionStatus: "active",
-                subscriptionPlan: "pro",
+                subscriptionPlan: planType,
                 polarSubscriptionId: payload.data.id,
+                paidSeats: planType !== "free" ? quantity : 0,
               })
               .where(eq(schema.organizationsTable.id, organizationId));
+
+            // Sync credit balance from Polar
+            try {
+              await syncCreditBalanceFromPolar(organizationId);
+            } catch (error) {
+              console.error("Error syncing credit balance on subscription active:", error);
+            }
           },
           onSubscriptionCanceled: async (payload) => {
             console.log("Subscription canceled:", payload);
@@ -210,8 +303,16 @@ export const authClient = betterAuth({
               .set({
                 subscriptionStatus: "canceled",
                 subscriptionPlan: "free",
+                paidSeats: 0,
               })
               .where(eq(schema.organizationsTable.id, organizationId));
+
+            // Sync credit balance to reflect free tier credits
+            try {
+              await syncCreditBalanceFromPolar(organizationId);
+            } catch (error) {
+              console.error("Error syncing credit balance on subscription canceled:", error);
+            }
           },
           onSubscriptionUpdated: async (payload) => {
             console.log("Subscription updated:", payload);
@@ -221,12 +322,62 @@ export const authClient = betterAuth({
               return;
             }
 
+            // Determine plan type from product
+            const productId = payload.data.productId;
+            let planType = "free";
+            if (productId === Resource.PolarProductSlugMonthly.value) {
+              planType = "monthly";
+            } else if (productId === Resource.PolarProductSlugYearly.value) {
+              planType = "yearly";
+            }
+
+            // Get quantity (number of seats)
+            const quantity =
+              payload.data.recurringInterval === "month" ||
+              payload.data.recurringInterval === "year"
+                ? payload.data.quantity || 1
+                : 1;
+
             await db
               .update(schema.organizationsTable)
               .set({
                 subscriptionStatus: payload.data.status,
+                subscriptionPlan: planType,
+                paidSeats: planType !== "free" ? quantity : 0,
               })
               .where(eq(schema.organizationsTable.id, organizationId));
+
+            // Sync credit balance from Polar
+            try {
+              await syncCreditBalanceFromPolar(organizationId);
+            } catch (error) {
+              console.error("Error syncing credit balance on subscription updated:", error);
+            }
+          },
+          onBenefitGranted: async (payload) => {
+            console.log("Benefit granted:", payload);
+
+            // Credits benefit was granted, sync the balance
+            const subscriptionId = payload.data.subscriptionId;
+            if (!subscriptionId) {
+              console.warn("No subscription ID in benefit granted event");
+              return;
+            }
+
+            // Find the organization by subscription ID
+            const org = await db
+              .select()
+              .from(schema.organizationsTable)
+              .where(eq(schema.organizationsTable.polarSubscriptionId, subscriptionId))
+              .limit(1);
+
+            if (org[0]) {
+              try {
+                await syncCreditBalanceFromPolar(org[0].id);
+              } catch (error) {
+                console.error("Error syncing credit balance on benefit granted:", error);
+              }
+            }
           },
         }),
       ],
