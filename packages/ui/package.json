@@ -2,7 +2,7 @@
   "name": "@lydie/ui",
   "version": "0.0.0",
   "type": "module",
-"exports": {
+  "exports": {
     "./styles/editor-content.css": "./src/styles/editor-content.css",
     "./*": "./src/*"
   },
