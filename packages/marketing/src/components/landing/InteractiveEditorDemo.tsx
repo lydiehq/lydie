@@ -1,9 +1,7 @@
 import {
-  DocumentRegular,
   LinkRegular,
   PeopleTeamRegular,
   FormNewRegular,
-  SendRegular,
   PersonChatFilled,
   Document48Filled,
 } from "@fluentui/react-icons";
@@ -22,6 +20,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
+import { CastShadow } from "../generic/CastShadow";
 import { Eyebrow } from "./Eyebrow";
 
 type FeatureType = "collaboration" | "fields" | "linking" | null;
@@ -104,13 +103,8 @@ export function InteractiveEditorDemo() {
             <div key={i} className="rounded-full size-3 ring ring-black/12 shrink-0" />
           ))}
         </div>
-        <div className="w-full relative long-shadow">
-          {/* Shadow layer */}
-          <div className="absolute inset-0 overflow-visible clip" style={{ filter: "blur(3px)" }}>
-            <div className="long-shadow-layer" />
-            <div className="inset-0 rounded-2xl shadow-legit overflow-visible absolute z-0"></div>
-          </div>
-          <div className="flex relative z-10 flex-col flex-1 h-[620px] ring-black/3 ring rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit">
+        <CastShadow className="w-full" strength={0.2} blur={3}>
+          <div className="flex flex-col flex-1 h-[620px] ring-black/3 ring rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit">
             <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20">
               <FeatureButtons
                 features={FEATURES}
@@ -288,7 +282,7 @@ export function InteractiveEditorDemo() {
               </div>
             </div>
           </div>
-        </div>
+        </CastShadow>
       </div>
     </section>
   );
