@@ -1,10 +1,16 @@
 type Props = {
   className?: string;
+  style?: React.CSSProperties;
 };
 
-export function Logo({ className }: Props) {
+export function Logo({ className, style }: Props) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 256 256"
+      className={className}
+      style={style}
+    >
       <path
         fill="currentColor"
         fillRule="evenodd"

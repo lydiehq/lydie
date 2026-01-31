@@ -21,6 +21,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { CastShadow } from "../generic/CastShadow";
+import { Logo } from "../Logo";
 import { Eyebrow } from "./Eyebrow";
 
 type FeatureType = "collaboration" | "fields" | "linking" | null;
@@ -89,15 +90,15 @@ export function InteractiveEditorDemo() {
     <section className="flex flex-col items-center py-8 pb-36 overflow-visible">
       <div className="flex flex-col gap-y-2 col-span-1 items-center text-center">
         <Eyebrow>Best-in-class editor</Eyebrow>
-        <h2 className="text-3xl tracking-tight font-medium text-gray-900">
+        <h2 className="text-3xl tracking-tight font-medium text-black/85">
           Experience the delight of writing
         </h2>
-        <p className="text-base/relaxed text-gray-600 max-w-xl text-balance">
+        <p className="text-base/relaxed text-black/60 max-w-xl text-balance">
           At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick
           notes or deep documentation.
         </p>
       </div>
-      <div className="rounded-2xl ring ring-black/6 flex flex-col w-full max-w-5xl mt-16 p-2 bg-gray-100 z-50 relative">
+      <div className="rounded-2xl ring ring-black/6 flex flex-col w-full max-w-5xl mt-16 p-2 relative bg-white grain-bg">
         <div className="flex items-center gap-x-1.5 mb-1.5">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="rounded-full size-3 ring ring-black/12 shrink-0" />

@@ -1,7 +1,6 @@
 ---
 import type { Category } from "../../data/categories";
-import { FolderRegular } from "@fluentui/react-icons";
-import { categoryIconMap } from "./categoryIcons";
+import { categoryIconMap } from "./category-icons";
 
 interface Props {
   category: Category;
@@ -94,7 +93,7 @@ const hasIcon = !!CategoryIcon;
       </div>
     </div>
     <div
-      class="inset-x-1 z-10 top-10 bottom-1 absolute group-hover:-skew-x-2 group-hover:translate-x-0.5 transition-all duration-200 ease-out group-hover:shadow-surface"
+      class="inset-x-1 z-10 top-9 bottom-1 absolute group-hover:-skew-x-2 group-hover:translate-x-0.5 transition-all duration-200 ease-out group-hover:shadow-surface rounded-xl"
     >
       <div
         class="h-full w-full bg-linear-to-br from-[#f8d4a8] to-[#f4c28e] rounded-b-lg rounded-t-xl ring ring-black/8 relative shadow-surface"

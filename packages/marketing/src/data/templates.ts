@@ -153,10 +153,7 @@ export async function getAllTemplates(): Promise<Template[]> {
       .orderBy(asc(templateFaqsTable.sortOrder));
 
     // Group FAQs by template
-    const faqsByTemplate = new Map<
-      string,
-      Array<{ question: string; answer: string }>
-    >();
+    const faqsByTemplate = new Map<string, Array<{ question: string; answer: string }>>();
     for (const faq of allFaqs) {
       const existing = faqsByTemplate.get(faq.templateId) || [];
       existing.push({ question: faq.question, answer: faq.answer });

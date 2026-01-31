@@ -11,6 +11,7 @@
     "@aws-sdk/client-s3": "^3.980.0",
     "@aws-sdk/client-scheduler": "^3.980.0",
     "@aws-sdk/client-sesv2": "^3.980.0",
+    "@hocuspocus/provider": "3",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
     "@polar-sh/better-auth": "catalog:",
@@ -23,6 +24,7 @@
     "nanoid": "^5.1.6",
     "node-html-parser": "^7.0.2",
     "sharp": "^0.34.5",
+    "ws": "^8.18.0",
     "yjs": "catalog:",
     "zod": "catalog:"
   },
