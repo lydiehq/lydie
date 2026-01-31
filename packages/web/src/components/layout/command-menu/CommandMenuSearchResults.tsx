@@ -1,7 +1,6 @@
 import { PlugConnectedRegular } from "@fluentui/react-icons";
-import { Command } from "cmdk";
-
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { Command } from "cmdk";
 
 function getIntegrationIcon(integrationType: string | null | undefined) {
   if (!integrationType) return null;

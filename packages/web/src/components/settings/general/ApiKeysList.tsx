@@ -1,8 +1,8 @@
 import { ClockRegular, KeyRegular, MoreHorizontalRegular } from "@fluentui/react-icons";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { formatDistanceToNow } from "date-fns";
 import { MenuTrigger, Button as RACButton } from "react-aria-components";
 
-import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Card } from "@/components/layout/Card";
 
 type ApiKey = {

@@ -1,10 +1,9 @@
 import type { OnboardingStepTask } from "@lydie/editor/extensions";
 
-import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
 import { CircularProgress } from "@lydie/ui/components/generic/CircularProgress";
+import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 
 export function OnboardingStepView({ node, updateAttributes }: NodeViewProps) {
   const stepNumber = node.attrs.stepNumber || 1;

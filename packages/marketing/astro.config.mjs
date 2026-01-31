@@ -15,7 +15,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     ssr: {
       noExternal: ["@fluentui/react-icons"],
-    }
+    },
   },
   trailingSlash: "never",
   image: {

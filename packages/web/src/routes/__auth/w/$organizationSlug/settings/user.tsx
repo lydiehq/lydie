@@ -1,10 +1,10 @@
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Heading } from "@lydie/ui/components/generic/Heading";
-import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { PendingInvitationsSection } from "@/components/settings/user/PendingInvitationsSection";
 import { PreferencesSection } from "@/components/settings/user/PreferencesSection";
 import { useAuth } from "@/context/auth.context";

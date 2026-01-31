@@ -1,6 +1,6 @@
+import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 import clsx from "clsx";
 import { type VariantProps, cva } from "cva";
-import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 import {

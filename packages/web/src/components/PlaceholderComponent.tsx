@@ -31,10 +31,13 @@ export function PlaceholderComponent(props: NodeViewProps) {
         editor
           .chain()
           .focus()
-          .insertContentAt({ from: pos + 1, to: pos + node.nodeSize - 1 }, {
-            type: "text",
-            text: label,
-          })
+          .insertContentAt(
+            { from: pos + 1, to: pos + node.nodeSize - 1 },
+            {
+              type: "text",
+              text: label,
+            },
+          )
           .run();
       } else if (currentContent !== label) {
         // Has content different from label - unwrap and convert to plain text
@@ -67,7 +70,10 @@ export function PlaceholderComponent(props: NodeViewProps) {
 
       // If content equals the label, select all so typing replaces it
       if (node.textContent === label) {
-        editor.chain().setTextSelection({ from: pos, to: pos + node.nodeSize }).run();
+        editor
+          .chain()
+          .setTextSelection({ from: pos, to: pos + node.nodeSize })
+          .run();
       }
     },
     [editor, getPos, node.textContent, node.nodeSize, label],

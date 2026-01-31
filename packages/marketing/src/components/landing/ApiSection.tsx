@@ -1,9 +1,4 @@
-import {
-  BookRegular,
-  ChevronRightRegular,
-  CodeRegular,
-  FlashRegular,
-} from "@fluentui/react-icons";
+import { BookRegular, ChevronRightRegular, CodeRegular, FlashRegular } from "@fluentui/react-icons";
 
 import { Container } from "../Container";
 import { Button } from "../generic/Button";

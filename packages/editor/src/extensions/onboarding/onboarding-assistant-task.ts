@@ -1,8 +1,9 @@
-import { Node } from "@tiptap/core"
-import type { NodeViewRenderer } from "@tiptap/core"
+import type { NodeViewRenderer } from "@tiptap/core";
+
+import { Node } from "@tiptap/core";
 
 export interface OnboardingAssistantTaskOptions {
-  addNodeView?: () => NodeViewRenderer
+  addNodeView?: () => NodeViewRenderer;
 }
 
 export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOptions>({
@@ -13,7 +14,7 @@ export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOption
   addOptions() {
     return {
       addNodeView: undefined,
-    }
+    };
   },
 
   addAttributes() {
@@ -21,7 +22,7 @@ export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOption
       completedTasks: {
         default: [],
       },
-    }
+    };
   },
 
   parseHTML() {
@@ -35,7 +36,7 @@ export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOption
           };
         },
       },
-    ]
+    ];
   },
 
   renderHTML({ node }) {
@@ -46,10 +47,10 @@ export const OnboardingAssistantTask = Node.create<OnboardingAssistantTaskOption
         "data-completed-tasks": JSON.stringify(node.attrs.completedTasks),
       },
       0, // 0 means "render the content here"
-    ]
+    ];
   },
 
   addNodeView() {
-    return this.options.addNodeView?.()
+    return this.options.addNodeView?.();
   },
-})
+});

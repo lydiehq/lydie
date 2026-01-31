@@ -130,10 +130,7 @@ export function useAssistantEditor({
     }));
   }, [documents]);
 
-  const mentionSuggestion = useMemo(
-    () => createMentionSuggestion(mentionItems),
-    [mentionItems],
-  );
+  const mentionSuggestion = useMemo(() => createMentionSuggestion(mentionItems), [mentionItems]);
 
   const extensions = useMemo(() => {
     return getAssistantEditorExtensions({

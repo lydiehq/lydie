@@ -1,4 +1,7 @@
 import { ArrowClockwiseRegular, ChevronRightRegular, DocumentRegular } from "@fluentui/react-icons";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { motion } from "motion/react";
@@ -10,9 +13,6 @@ import { useOrganization } from "@/context/organization.context";
 import { setActiveOrganizationAndNavigate } from "@/lib/organization/setActiveAndNavigate";
 import { useZero } from "@/services/zero";
 
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Modal } from "@lydie/ui/components/generic/Modal";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { OrganizationAvatar } from "../layout/OrganizationAvatar";
 
 export function InstallTemplateDialog({

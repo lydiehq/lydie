@@ -1,4 +1,10 @@
 import { Add12Regular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { SearchField } from "@lydie/ui/components/generic/SearchField";
+import { SelectItem } from "@lydie/ui/components/generic/Select";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { useCallback, useMemo, useState } from "react";
 import {
   Autocomplete,
@@ -8,14 +14,6 @@ import {
   TooltipTrigger,
   useFilter,
 } from "react-aria-components";
-
-import { Popover } from "@lydie/ui/components/generic/Popover";
-import { SearchField } from "@lydie/ui/components/generic/SearchField";
-import { SelectItem } from "@lydie/ui/components/generic/Select";
-
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 interface DocumentMultiSelectProps {
   availableDocuments: Array<{ id: string; title: string }>;

@@ -1,8 +1,8 @@
 import { BotRegular, SparkleRegular } from "@fluentui/react-icons";
-import { motion } from "motion/react";
-import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-
 import { Button } from "@lydie/ui/components/generic/Button";
+import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+import { motion } from "motion/react";
+
 import { useFloatingAssistant } from "@/hooks/use-floating-assistant";
 
 const TASKS: Array<{
@@ -17,15 +17,16 @@ const TASKS: Array<{
     title: "Organize Project Apollo documents",
     description: "Ask the assistant to help organize demo documents",
     prompt: "Please look at all our documents related to project apollo and organize them",
-    hasContent: false
+    hasContent: false,
   },
   {
     id: "change-text",
     title: "Transform a story",
     description: "See how the assistant can rewrite and adapt content",
-    prompt: "Please rewrite this story but change the setting from a modern newsroom to a 1920s detective agency",
-    hasContent: true
-  }
+    prompt:
+      "Please rewrite this story but change the setting from a modern newsroom to a 1920s detective agency",
+    hasContent: true,
+  },
 ];
 
 export function OnboardingAssistantTaskView({ node, updateAttributes }: NodeViewProps) {
@@ -33,15 +34,15 @@ export function OnboardingAssistantTaskView({ node, updateAttributes }: NodeView
   const assistant = useFloatingAssistant();
 
   const handleTaskClick = (taskId: string, prompt: string) => {
-    const newCompletedTasks = completedTasks.includes(taskId) 
-      ? completedTasks 
+    const newCompletedTasks = completedTasks.includes(taskId)
+      ? completedTasks
       : [...completedTasks, taskId];
     updateAttributes({ completedTasks: newCompletedTasks });
-    
+
     assistant.openAndSendMessage(prompt);
   };
 
-  const allCompleted = TASKS.every(task => completedTasks.includes(task.id));
+  const allCompleted = TASKS.every((task) => completedTasks.includes(task.id));
 
   return (
     <NodeViewWrapper>
@@ -65,15 +66,19 @@ export function OnboardingAssistantTaskView({ node, updateAttributes }: NodeView
           <div className="bg-white rounded-lg shadow-surface p-0.5 overflow-hidden relative z-10">
             <div className="p-2">
               <p className="text-xs text-gray-600 mb-3">
-                The AI assistant can help you organize, create, and improve your documents. Try these tasks:
+                The AI assistant can help you organize, create, and improve your documents. Try
+                these tasks:
               </p>
 
               {TASKS.map((task, index) => {
                 const isCompleted = completedTasks.includes(task.id);
                 const isFirstTask = index === 0;
-                
+
                 return (
-                  <div key={task.id} className="bg-gray-50 rounded-lg p-2.5 flex flex-col gap-y-2 mb-2 last:mb-0">
+                  <div
+                    key={task.id}
+                    className="bg-gray-50 rounded-lg p-2.5 flex flex-col gap-y-2 mb-2 last:mb-0"
+                  >
                     <div className="flex items-center justify-between gap-x-3">
                       <div className="flex items-start gap-x-2 flex-1">
                         <div className="p-1 bg-purple-50 rounded mt-0.5 shrink-0">
@@ -81,9 +86,7 @@ export function OnboardingAssistantTaskView({ node, updateAttributes }: NodeView
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-gray-900">{task.title}</p>
-                          <p className="text-[11px] text-gray-600 mt-0.5">
-                            {task.description}
-                          </p>
+                          <p className="text-[11px] text-gray-600 mt-0.5">{task.description}</p>
                         </div>
                       </div>
                       <Button
@@ -95,7 +98,7 @@ export function OnboardingAssistantTaskView({ node, updateAttributes }: NodeView
                         {isCompleted ? "✓ Try again" : "Try it"}
                       </Button>
                     </div>
-                    
+
                     {task.hasContent && !isFirstTask && (
                       <div className="bg-white rounded-lg border border-gray-200 p-2">
                         <NodeViewContent className="outline-none prose prose-sm max-w-none text-xs" />
@@ -113,7 +116,8 @@ export function OnboardingAssistantTaskView({ node, updateAttributes }: NodeView
                   transition={{ duration: 0.3 }}
                 >
                   <p className="text-xs font-medium text-green-800">
-                    ✓ Great! You've tried all the tasks. Check the assistant panel to see the responses.
+                    ✓ Great! You've tried all the tasks. Check the assistant panel to see the
+                    responses.
                   </p>
                 </motion.div>
               )}

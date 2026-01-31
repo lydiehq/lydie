@@ -5,11 +5,11 @@ import {
   DismissRegular,
   PersonRegular,
 } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
-import { Button } from "@lydie/ui/components/generic/Button";
 import { Card } from "@/components/layout/Card";
 import { authClient } from "@/utils/auth";
 

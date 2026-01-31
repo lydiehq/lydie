@@ -1,8 +1,7 @@
 import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors";
-import { Radio, RadioGroup } from "react-aria-components";
-
 import { Label } from "@lydie/ui/components/generic/Field";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { Radio, RadioGroup } from "react-aria-components";
 
 type OrganizationColorPickerProps = {
   selectedColor: string;

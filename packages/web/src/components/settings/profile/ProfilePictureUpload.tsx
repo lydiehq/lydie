@@ -1,7 +1,7 @@
 import { CameraRegular, DismissRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { useRef } from "react";
 
-import { Button } from "@lydie/ui/components/generic/Button";
 import { Card } from "@/components/layout/Card";
 
 type ProfilePictureUploadProps = {

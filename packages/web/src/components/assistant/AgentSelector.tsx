@@ -1,14 +1,13 @@
 import { ChevronDownRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { SelectItem } from "@lydie/ui/components/generic/Select";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useMemo } from "react";
 import { Select as AriaSelect, ListBox, SelectValue } from "react-aria-components";
 
-import { Popover } from "@lydie/ui/components/generic/Popover";
-import { SelectItem } from "@lydie/ui/components/generic/Select";
 import { useOrganization } from "@/context/organization.context";
-
-import { Button } from "@lydie/ui/components/generic/Button";
 
 interface AgentSelectorProps {
   selectedAgentId: string | null;

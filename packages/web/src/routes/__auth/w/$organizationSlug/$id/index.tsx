@@ -1,9 +1,9 @@
+import { Button } from "@lydie/ui/components/generic/Button";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Editor } from "@/components/Editor";
-import { Button } from "@lydie/ui/components/generic/Button";
 import { Surface } from "@/components/layout/Surface";
 import { useOrganization } from "@/context/organization.context";
 

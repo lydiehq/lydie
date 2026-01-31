@@ -22,10 +22,7 @@ import StarterKit from "@tiptap/starter-kit";
  * editor.destroy();
  * ```
  */
-export function createTestEditor(
-  content = "",
-  extensions: Extensions = [],
-): Editor {
+export function createTestEditor(content = "", extensions: Extensions = []): Editor {
   return new TiptapEditor({
     content,
     extensions: [
@@ -63,11 +60,7 @@ export function createTestEditor(
  * setEditorSelection(editor, 1, 6); // Select "Hello"
  * ```
  */
-export function setEditorSelection(
-  editor: Editor,
-  from: number,
-  to: number = from,
-): void {
+export function setEditorSelection(editor: Editor, from: number, to: number = from): void {
   editor.commands.setTextSelection({ from, to });
 }
 
@@ -132,10 +125,7 @@ export function isMarkActive(editor: Editor, markName: string): boolean {
 /**
  * Gets attributes of a mark at current selection.
  */
-export function getMarkAttributes(
-  editor: Editor,
-  markName: string,
-): Record<string, unknown> {
+export function getMarkAttributes(editor: Editor, markName: string): Record<string, unknown> {
   return editor.getAttributes(markName);
 }
 
@@ -154,13 +144,8 @@ export function destroyEditor(editor: Editor): void {
  * @param href - The link URL
  * @returns Editor with cursor inside the link
  */
-export function createEditorWithLink(
-  text: string,
-  href: string,
-): Editor {
-  const editor = createTestEditor(
-    `<p><a href="${href}">${text}</a></p>`,
-  );
+export function createEditorWithLink(text: string, href: string): Editor {
+  const editor = createTestEditor(`<p><a href="${href}">${text}</a></p>`);
   // Position cursor inside the link
   editor.commands.setTextSelection(2);
   return editor;
@@ -173,9 +158,6 @@ export function createEditorWithLink(
  * @param documentId - The document ID
  * @returns Editor with cursor inside the link
  */
-export function createEditorWithInternalLink(
-  text: string,
-  documentId: string,
-): Editor {
+export function createEditorWithInternalLink(text: string, documentId: string): Editor {
   return createEditorWithLink(text, `internal://${documentId}`);
 }

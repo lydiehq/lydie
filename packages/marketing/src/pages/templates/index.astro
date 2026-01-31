@@ -82,7 +82,7 @@ const templates = await getAllTemplates();
               {templates.map((template) => (
                 <TemplateThumbnail
                   name={template.name}
-                  description={template.description}
+                  teaser={template.teaser}
                   href={`/templates/${template.slug}`}
                 />
               ))}

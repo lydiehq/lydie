@@ -645,7 +645,9 @@ export const templateCategoriesTable = pgTable("template_categories", {
     .$default(() => createId()),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
-  parentId: text("parent_id").references((): AnyPgColumn => templateCategoriesTable.id, { onDelete: "cascade" }),
+  parentId: text("parent_id").references((): AnyPgColumn => templateCategoriesTable.id, {
+    onDelete: "cascade",
+  }),
   ...timestamps,
 });
 

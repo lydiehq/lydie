@@ -14,6 +14,9 @@ import {
   useRole,
 } from "@floating-ui/react";
 import { EditFilled, LinkDismissRegular, OpenRegular } from "@fluentui/react-icons";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
@@ -31,10 +34,6 @@ import {
   TooltipTrigger,
   useFilter,
 } from "react-aria-components";
-
-import { Separator } from "@lydie/ui/components/layout/Separator";
-import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 type PopoverState =
   | { mode: "closed" }

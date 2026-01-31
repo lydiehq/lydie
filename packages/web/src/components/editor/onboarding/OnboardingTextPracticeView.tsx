@@ -1,10 +1,9 @@
 import type { OnboardingTextPracticeTask } from "@lydie/editor/extensions";
 
+import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
-
-import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
 
 export function OnboardingTextPracticeView({ node, updateAttributes, editor }: NodeViewProps) {
   const tasks = (node.attrs.tasks || []) as OnboardingTextPracticeTask[];

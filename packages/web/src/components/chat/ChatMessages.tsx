@@ -1,13 +1,13 @@
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 
 import { MoreVerticalRegular } from "@fluentui/react-icons";
+import { Popover } from "@lydie/ui/components/generic/Popover";
 import { format } from "date-fns";
 import { memo } from "react";
 import { Button, DialogTrigger } from "react-aria-components";
 import { Streamdown } from "streamdown";
 import { StickToBottom } from "use-stick-to-bottom";
 
-import { Popover } from "@lydie/ui/components/generic/Popover";
 import { UserMessage } from "./Message";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
 import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";

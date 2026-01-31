@@ -1,6 +1,6 @@
+import { EditorShell } from "@lydie/ui/components/editor/EditorShell";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { EditorShell } from "@lydie/ui/components/editor/EditorShell";
 
 const sampleContent = {
   type: "doc",

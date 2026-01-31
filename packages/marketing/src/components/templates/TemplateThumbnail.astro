@@ -1,11 +1,11 @@
 ---
 interface Props {
   name: string;
-  description?: string;
+  teaser?: string;
   href?: string;
 }
 
-const { name, description, href = "#" } = Astro.props;
+const { name, teaser, href = "#" } = Astro.props;
 ---
 
 <a href={href} class="flex flex-col gap-y-3 group">
@@ -16,9 +16,9 @@ const { name, description, href = "#" } = Astro.props;
     <h3 class="text-lg font-medium text-gray-900 group-hover:text-gray-700 transition-colors">
       {name}
     </h3>
-    {description && (
+    {teaser && (
       <p class="text-sm text-gray-600 line-clamp-2">
-        {description}
+        {teaser}
       </p>
     )}
   </div>

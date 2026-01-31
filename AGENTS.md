@@ -41,13 +41,16 @@ bun run deploy:prod                  # Deploy to production
 ## Code Style Guidelines
 
 ### TypeScript & Types
+
 - **Target:** ES2022, strict mode enabled
 - **Import style:** `import type { X }` for type-only imports
 - **Indexed access:** Enable `noUncheckedIndexedAccess` where possible
 - **No emit:** All packages use `noEmit: true` with bundler module resolution
 
 ### Import Ordering
+
 Imports are grouped with newlines between (configured in `.oxfmtrc.json`):
+
 1. External dependencies (React, etc.)
 2. Workspace packages (`@lydie/*`)
 3. Internal aliases (`@/*`)
@@ -55,6 +58,7 @@ Imports are grouped with newlines between (configured in `.oxfmtrc.json`):
 5. Type imports
 
 Example:
+
 ```typescript
 import type { ReactNode } from "react";
 
@@ -66,6 +70,7 @@ import { reportWebVitals } from "./reportWebVitals";
 ```
 
 ### Naming Conventions
+
 - **Components:** PascalCase (e.g., `LinkPopover.tsx`)
 - **Utilities:** camelCase (e.g., `slugify.ts`, `formatDate.ts`)
 - **Test files:** Co-located `.test.tsx` for unit, `tests/e2e/*.spec.ts` for e2e
@@ -73,12 +78,14 @@ import { reportWebVitals } from "./reportWebVitals";
 - **Types/Interfaces:** PascalCase, prefer `type` over `interface`
 
 ### React Components
+
 - Use React 19 with React Compiler (`babel-plugin-react-compiler`)
 - Use `react-jsx` transform (no `React` import needed)
 - Prefer function declarations for components
 - Use `type` for props: `type Props = { ... }`
 
 ### Error Handling
+
 - Use standard try/catch with typed errors
 - Always cleanup in tests (use `afterEach`)
 - Playwright fixtures handle auth state automatically
@@ -86,6 +93,7 @@ import { reportWebVitals } from "./reportWebVitals";
 ### Testing Patterns
 
 **Unit Tests (Vitest):**
+
 ```typescript
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -105,6 +113,7 @@ describe("Component", () => {
 ```
 
 **E2E Tests (Playwright):**
+
 ```typescript
 import { test, testUnauthenticated } from "./fixtures/auth.fixture";
 
@@ -118,6 +127,7 @@ testUnauthenticated("public page", async ({ page }) => {
 ```
 
 ### File Organization
+
 ```
 packages/web/src/
   components/           # React components
@@ -135,11 +145,13 @@ tests/e2e/              # Playwright tests
 ```
 
 ### Path Aliases
+
 - `@/*` → `packages/web/src/*` (web app)
 - `@lydie/*` → Other workspace packages
 - `@lydie/ui/*` → UI components
 
 ### Workspace Structure
+
 - `@lydie/core` - Shared logic, AI utilities
 - `@lydie/database` - Drizzle ORM schema
 - `@lydie/backend` - Hono API
@@ -151,22 +163,27 @@ tests/e2e/              # Playwright tests
 - `@lydie/marketing` - Astro marketing site
 
 ### Secrets & Environment
+
 - Use SST Secrets (access via `Resource.SecretName.value`)
 - Never commit secrets or `.env` files
 - Use `sst-env.d.ts` for type-safe resource access
 
 ### Database
+
 - Use Drizzle ORM with explicit schema
 - Prefer pooled connection for serverless
 - Run `db:push` after schema changes
 - E2E tests create/destroy test data via factories
 
 ### Editor Extensions
+
 TipTap extensions live in `packages/editor/extensions/`:
+
 - Each extension in its own file
 - Export from `packages/editor/extensions/index.ts`
 
 ## AI SDK Usage
+
 - Use Vercel AI SDK with Google/OpenAI providers
 - Streaming responses with `streamText()`
 - AI features in `packages/core/src/ai/`

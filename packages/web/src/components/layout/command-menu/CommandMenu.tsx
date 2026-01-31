@@ -9,6 +9,8 @@ import {
   SettingsRegular,
 } from "@fluentui/react-icons";
 import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { overlayStyles } from "@lydie/ui/components/generic/Modal";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -27,8 +29,6 @@ import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import type { MenuItem } from "./CommandMenuItem";
 
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { overlayStyles } from "@lydie/ui/components/generic/Modal";
 import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
 import { SearchResults } from "./CommandMenuSearchResults";
 import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";

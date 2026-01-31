@@ -202,6 +202,7 @@
     "packages/scripts": {
       "name": "@lydie/scripts",
       "devDependencies": {
+        "@types/bun": "^1.3.8",
         "@types/node": "^25.1.0",
       },
     },
@@ -214,6 +215,20 @@
       },
       "devDependencies": {
         "@types/react": "^19.2.10",
+      },
+    },
+    "packages/templates": {
+      "name": "@lydie/template-generator",
+      "dependencies": {
+        "@lydie/core": "workspace:*",
+        "@lydie/database": "workspace:*",
+        "ai": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.3.8",
+        "@types/node": "^25.1.0",
+        "sst": "catalog:",
       },
     },
     "packages/ui": {
@@ -840,6 +855,8 @@
     "@lydie/marketing": ["@lydie/marketing@workspace:packages/marketing"],
 
     "@lydie/scripts": ["@lydie/scripts@workspace:packages/scripts"],
+
+    "@lydie/template-generator": ["@lydie/template-generator@workspace:packages/templates"],
 
     "@lydie/ui": ["@lydie/ui@workspace:packages/ui"],
 

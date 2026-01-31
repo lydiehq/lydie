@@ -1,4 +1,8 @@
 import { AddRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -6,10 +10,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Heading } from "@lydie/ui/components/generic/Heading";
-import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Card } from "@/components/layout/Card";
 import { ApiKeyDialog } from "@/components/settings/general/ApiKeyDialog";
 import { ApiKeysList } from "@/components/settings/general/ApiKeysList";

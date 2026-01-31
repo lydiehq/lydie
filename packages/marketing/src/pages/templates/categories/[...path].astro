@@ -150,7 +150,7 @@ for (const ancestor of ancestors) {
               {categoryTemplates.map((template) => (
                 <TemplateThumbnail
                   name={template.name}
-                  description={template.teaser || template.description}
+                  teaser={template.teaser}
                   href={`/templates/${template.slug}`}
                 />
               ))}

@@ -1,6 +1,10 @@
 import type { QueryResultType } from "@rocicorp/zero";
 
 import { slugify } from "@lydie/core/utils";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { Form, Heading } from "react-aria-components";
@@ -8,11 +12,6 @@ import { Form, Heading } from "react-aria-components";
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
-
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Modal } from "@lydie/ui/components/generic/Modal";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 
 type Props = {
   isOpen: boolean;

@@ -1,4 +1,5 @@
 import { ChatRegular, EditRegular } from "@fluentui/react-icons";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
@@ -9,7 +10,6 @@ import { Button } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 
-import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { SidebarIcon } from "../layout/SidebarIcon";
 
 type Props = {

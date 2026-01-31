@@ -2,9 +2,10 @@ import {
   db,
   templateCategoriesTable,
   templateCategoryAssignmentsTable,
+  templateFaqsTable,
   templatesTable,
 } from "@lydie/database";
-import { desc, eq, inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 
 import type { Category } from "./categories";
 
@@ -24,6 +25,7 @@ export type Template = {
   detailedDescription: string;
   categories: Category[];
   documents: TemplateDocument[];
+  faqs: Array<{ question: string; answer: string }>;
 };
 
 async function fetchCategories(templateId: string): Promise<Category[]> {
@@ -72,6 +74,19 @@ function generateCategoryPath(
   return `/templates/categories/${pathSegments.join("/")}`;
 }
 
+async function fetchFaqs(templateId: string): Promise<Array<{ question: string; answer: string }>> {
+  const faqs = await db
+    .select({
+      question: templateFaqsTable.question,
+      answer: templateFaqsTable.answer,
+    })
+    .from(templateFaqsTable)
+    .where(eq(templateFaqsTable.templateId, templateId))
+    .orderBy(asc(templateFaqsTable.sortOrder));
+
+  return faqs;
+}
+
 export async function getTemplate(slug: string): Promise<Template | undefined> {
   const [template] = await db
     .select()
@@ -91,6 +106,7 @@ export async function getTemplate(slug: string): Promise<Template | undefined> {
     detailedDescription: template.detailedDescription || "",
     categories,
     documents: (template.previewData as TemplateDocument[]) || [],
+    faqs: await fetchFaqs(template.id),
   };
 }
 
@@ -106,7 +122,7 @@ export async function getAllTemplates(): Promise<Template[]> {
       teaser: template.teaser || "",
       detailedDescription: template.detailedDescription || "",
       categories: await fetchCategories(template.id),
-      documents: (template.previewData as TemplateDocument[]) || [],
+      faqs: await fetchFaqs(template.id),
     })),
   );
 }

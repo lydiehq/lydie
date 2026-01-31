@@ -1,10 +1,12 @@
 {
   "name": "@lydie/scripts",
+  "type": "module",
   "scripts": {
     "copy-integration-assets": "bun run src/copy-integration-assets.ts"
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "^25.1.0"
+    "@types/node": "^25.1.0",
+    "@types/bun": "^1.3.8"
   }
 }

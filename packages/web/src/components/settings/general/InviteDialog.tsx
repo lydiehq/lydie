@@ -1,9 +1,8 @@
-import { DialogTrigger, Form } from "react-aria-components";
-
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { Modal } from "@lydie/ui/components/generic/Modal";
+import { DialogTrigger, Form } from "react-aria-components";
 
 type InviteDialogProps = {
   isOpen: boolean;

@@ -6,11 +6,10 @@ import {
   ListRegular,
   OpenRegular,
 } from "@fluentui/react-icons";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Button, Disclosure, DisclosurePanel } from "react-aria-components";
-
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 import { ToolContainer } from "./ToolContainer";
 

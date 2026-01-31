@@ -72,7 +72,7 @@ IMPORTANT:
           try {
             const jsonContent = deserializeFromHTML(content);
             yjsState = convertJsonToYjs(jsonContent);
-            
+
             if (!yjsState) {
               throw new Error("Failed to convert content to Yjs format");
             }

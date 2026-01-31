@@ -7,10 +7,9 @@ import {
   ListRegular,
   SearchRegular,
 } from "@fluentui/react-icons";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 export interface ResearchAction {
   type: "read" | "search" | "list" | "web_search" | "search_in_document";

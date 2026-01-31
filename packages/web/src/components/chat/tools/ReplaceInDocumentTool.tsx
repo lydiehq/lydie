@@ -1,4 +1,7 @@
 import { ArrowClockwiseRegular, ChevronDownRegular, ChevronUpRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -10,9 +13,6 @@ import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
 
 import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Separator } from "@lydie/ui/components/layout/Separator";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useDocumentEditor, useTitleEditor } from "@/hooks/use-editor";
@@ -345,7 +345,9 @@ export function ReplaceInDocumentTool({
     <motion.div className={`p-1 bg-gray-100 rounded-[10px] my-4 relative ${className}`}>
       <div className="p-1">
         <motion.div className="text-[11px] text-gray-700 flex items-center gap-1.5">
-          {isInputStreaming && <ArrowClockwiseRegular className="size-3 animate-spin text-blue-500" />}
+          {isInputStreaming && (
+            <ArrowClockwiseRegular className="size-3 animate-spin text-blue-500" />
+          )}
           <motion.span
             key={getStatusText()}
             initial={{ opacity: 0 }}

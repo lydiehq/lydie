@@ -1,6 +1,5 @@
-import { eq } from "drizzle-orm";
-
 import { db, templateCategoriesTable } from "@lydie/database";
+import { eq } from "drizzle-orm";
 
 export interface Category {
   id: string;
@@ -109,9 +108,12 @@ export const getCategoryBySlug = (slug: string): Category | undefined => {
   return categories.find((cat) => cat.slug === slug);
 };
 
-export const getCategoryByPath = (path: string, allCategories: Category[]): Category | undefined => {
+export const getCategoryByPath = (
+  path: string,
+  allCategories: Category[],
+): Category | undefined => {
   const slugs = path.split("/").filter(Boolean);
-  
+
   // Find category by matching the full path
   for (const cat of allCategories) {
     const catPath = generateCategoryPath(cat, allCategories);

@@ -23,10 +23,8 @@ export const templateFaqMutators = {
       }
 
       // Get max sort order for this template
-      const existingFaqs = await tx.run(
-        zql.template_faqs.where("template_id", args.templateId)
-      );
-      
+      const existingFaqs = await tx.run(zql.template_faqs.where("template_id", args.templateId));
+
       let maxSortOrder = -1;
       for (const faq of existingFaqs) {
         const sortOrder = (faq as { sort_order?: number }).sort_order ?? 0;
@@ -110,7 +108,7 @@ export const templateFaqMutators = {
       for (let i = 0; i < args.faqIds.length; i++) {
         const faqId = args.faqIds[i];
         if (!faqId) continue;
-        
+
         await tx.mutate.template_faqs.update({
           id: faqId,
           sort_order: i,

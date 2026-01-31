@@ -5,13 +5,12 @@ import {
   Wifi4Regular,
   WifiOffRegular,
 } from "@fluentui/react-icons";
+import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { useConnectionState } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import { useCallback } from "react";
 
 import { useZero } from "@/services/zero";
-
-import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 
 export function ZeroConnectionStatus() {
   const state = useConnectionState();

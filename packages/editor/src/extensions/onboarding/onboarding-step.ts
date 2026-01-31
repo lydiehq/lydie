@@ -1,14 +1,15 @@
-import { Node } from "@tiptap/core"
-import type { NodeViewRenderer } from "@tiptap/core"
+import type { NodeViewRenderer } from "@tiptap/core";
+
+import { Node } from "@tiptap/core";
 
 export interface OnboardingStepTask {
-  id: string
-  label: string
-  completed: boolean
+  id: string;
+  label: string;
+  completed: boolean;
 }
 
 export interface OnboardingStepOptions {
-  addNodeView?: () => NodeViewRenderer
+  addNodeView?: () => NodeViewRenderer;
 }
 
 export const OnboardingStep = Node.create<OnboardingStepOptions>({
@@ -19,7 +20,7 @@ export const OnboardingStep = Node.create<OnboardingStepOptions>({
   addOptions() {
     return {
       addNodeView: undefined,
-    }
+    };
   },
 
   addAttributes() {
@@ -36,7 +37,7 @@ export const OnboardingStep = Node.create<OnboardingStepOptions>({
       tasks: {
         default: [],
       },
-    }
+    };
   },
 
   parseHTML() {
@@ -50,7 +51,7 @@ export const OnboardingStep = Node.create<OnboardingStepOptions>({
           tasks: JSON.parse((node as HTMLElement).getAttribute("data-tasks") || "[]"),
         }),
       },
-    ]
+    ];
   },
 
   renderHTML({ node }) {
@@ -63,10 +64,10 @@ export const OnboardingStep = Node.create<OnboardingStepOptions>({
         "data-description": node.attrs.description,
         "data-tasks": JSON.stringify(node.attrs.tasks),
       },
-    ]
+    ];
   },
 
   addNodeView() {
-    return this.options.addNodeView?.()
+    return this.options.addNodeView?.();
   },
-})
+});

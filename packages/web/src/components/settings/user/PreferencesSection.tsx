@@ -1,10 +1,10 @@
+import { Label } from "@lydie/ui/components/generic/Field";
+import { Select, SelectItem } from "@lydie/ui/components/generic/Select";
+import { Switch } from "@lydie/ui/components/generic/Switch";
 import { mutators } from "@lydie/zero/mutators";
 import { useAtom } from "jotai";
 import { toast } from "sonner";
 
-import { Label } from "@lydie/ui/components/generic/Field";
-import { Select, SelectItem } from "@lydie/ui/components/generic/Select";
-import { Switch } from "@lydie/ui/components/generic/Switch";
 import { Card } from "@/components/layout/Card";
 import { useZero } from "@/services/zero";
 import { FONT_SIZE_MAP, type FontSizeOption, rootFontSizeAtom } from "@/stores/font-size";

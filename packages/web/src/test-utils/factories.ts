@@ -36,9 +36,7 @@ export interface MockOrganization {
 /**
  * Creates a mock document for testing.
  */
-export function createMockDocument(
-  overrides: Partial<MockDocument> = {},
-): MockDocument {
+export function createMockDocument(overrides: Partial<MockDocument> = {}): MockDocument {
   const id = overrides.id ?? `doc-${Math.random().toString(36).slice(2, 11)}`;
   return {
     id,
@@ -119,18 +117,14 @@ export function createMockSearchResults(
 /**
  * Creates mock internal document data (for link popover).
  */
-export function createMockInternalDocument(
-  title = "Linked Document",
-): { title: string | null } {
+export function createMockInternalDocument(title = "Linked Document"): { title: string | null } {
   return { title };
 }
 
 /**
  * Creates a mock auth context for testing.
  */
-export function createMockAuthContext(
-  overrides: Partial<MockAuthContext> = {},
-): MockAuthContext {
+export function createMockAuthContext(overrides: Partial<MockAuthContext> = {}): MockAuthContext {
   return {
     user: createMockUser(),
     session: {
@@ -163,9 +157,7 @@ export function createMockNavigate() {
  */
 export function createMockFilter() {
   return {
-    contains: (a: string, b: string) =>
-      a.toLowerCase().includes(b.toLowerCase()),
-    startsWith: (a: string, b: string) =>
-      a.toLowerCase().startsWith(b.toLowerCase()),
+    contains: (a: string, b: string) => a.toLowerCase().includes(b.toLowerCase()),
+    startsWith: (a: string, b: string) => a.toLowerCase().startsWith(b.toLowerCase()),
   };
 }

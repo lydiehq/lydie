@@ -1,5 +1,5 @@
-import { type ReactNode } from "react";
 import clsx from "clsx";
+import { type ReactNode } from "react";
 
 export interface EditorShellProps {
   toolbar?: ReactNode;
@@ -20,14 +20,11 @@ export function EditorShell({
 }: EditorShellProps) {
   return (
     <div
-      className={clsx(
-        "overflow-hidden flex flex-col grow relative size-full",
-        className
-      )}
+      className={clsx("overflow-hidden flex flex-col grow relative size-full", className)}
       data-testid="editor-shell"
     >
       {toolbar}
-      
+
       {isLocked && (
         <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
           {lockedNotice || "This page is locked and cannot be edited."}
@@ -43,7 +40,7 @@ export function EditorShell({
         <div
           className={clsx(
             "shrink-0 transition-[width] duration-500 ease-in-out",
-            shouldShiftContent ? "max-2xl:w-[170px]" : "w-0"
+            shouldShiftContent ? "max-2xl:w-[170px]" : "w-0",
           )}
         />
       </div>

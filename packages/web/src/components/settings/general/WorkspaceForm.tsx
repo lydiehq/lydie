@@ -1,5 +1,6 @@
 import { slugify } from "@lydie/core/utils";
 import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { mutators } from "@lydie/zero/mutators";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -7,7 +8,6 @@ import { useState } from "react";
 import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
-import { Button } from "@lydie/ui/components/generic/Button";
 import { useAppForm } from "@/hooks/use-app-form";
 import { revalidateSession } from "@/lib/auth/session";
 import { useZero } from "@/services/zero";
