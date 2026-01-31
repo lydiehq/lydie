@@ -56,9 +56,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
           <ChevronIcon />
         </Button>
       </Heading>
-      <DisclosurePanel className="text-[0.875rem]/relaxed pb-4 text-black/80">
-        {answer}
-      </DisclosurePanel>
+      <DisclosurePanel className="text-sm/relaxed pb-4 text-black/70">{answer}</DisclosurePanel>
     </Disclosure>
   );
 }

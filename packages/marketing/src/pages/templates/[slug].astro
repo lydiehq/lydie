@@ -35,7 +35,7 @@ const teaser = template.teaser || template.description || "";
 
 let relatedTemplates: Awaited<ReturnType<typeof findRelatedTemplates>> = [];
 try {
-  relatedTemplates = await findRelatedTemplates(template.id, 4);
+  relatedTemplates = await findRelatedTemplates(template.id, 3);
 } catch (error) {
   console.error("Failed to fetch related templates:", error);
 }

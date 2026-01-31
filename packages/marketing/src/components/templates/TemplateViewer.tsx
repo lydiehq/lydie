@@ -131,7 +131,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: "prose prose-lg max-w-none focus:outline-none font-semibold text-4xl",
+        class: "text-3xl font-medium text-gray-950 mb-6",
       },
     },
   });
@@ -191,7 +191,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
                 {hasChildren ? (
                   <Button
                     slot="chevron"
-                    className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative"
+                    className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative cursor-default"
                   >
                     <CollectionsIcon
                       className={`size-4 shrink-0 ${sidebarItemIconStyles()} transition-[opacity_100ms,transform_200ms] group-hover:opacity-0`}
@@ -223,7 +223,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
   return (
     <div className="flex gap-x-1 bg-[#f8f8f8] rounded-xl border border-black/10 shadow-inner p-1.5">
       {/* Sidebar */}
-      <div className="shrink-0 flex w-[240px] flex-col bg-white rounded-lg shadow-surface">
+      <div className="shrink-0 flex w-[240px] flex-col rounded-lg">
         <div className="flex flex-col grow min-h-0">
           <div className="flex items-center justify-between shrink-0 px-3 pt-3">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -250,11 +250,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
           <div className="overflow-hidden flex flex-col grow">
             <div className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4">
               <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
-                <EditorContent
-                  editor={titleEditor}
-                  aria-label="Document title"
-                  className="mb-6 editor-content prose prose-lg max-w-none focus:outline-none font-semibold text-4xl"
-                />
+                <EditorContent editor={titleEditor} aria-label="Document title" />
                 <EditorContent
                   aria-label="Document content"
                   editor={contentEditor}

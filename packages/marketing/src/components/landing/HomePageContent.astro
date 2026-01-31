@@ -5,7 +5,6 @@ import CollaborationSection from "./CollaborationSection.astro";
 import IntegrationsSection from "./IntegrationsSection.astro";
 import PerformanceSection from "./PerformanceSection.astro";
 import UseCasesSection from "./UseCasesSection.astro";
-import EditorFeaturesSection from "./EditorFeaturesSection.astro";
 import { Hero } from "./Hero";
 import ProblemSolutionSection from "./ProblemSolutionSection.astro";
 import { CTASection } from "./CTASection";
@@ -21,6 +20,7 @@ import Divider from "./Divider.astro";
 import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
 import { Button } from "../generic/Button";
 import { Eyebrow } from "./Eyebrow";
+import { FAQ } from "../generic/FAQ";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -54,6 +54,29 @@ const keyBenefits = [
     description:
       "Free to use, modify, and contribute. No hidden fees or vendor lock-in.",
     icon: GlobeRegular,
+  },
+];
+
+const faqItems = [
+  {
+    question: "What is Lydie?",
+    answer:
+      "Lydie is a modern writing workspace designed for structured documents, notes, and knowledge management. It combines a powerful WYSIWYG editor with AI-powered search and real-time collaboration features to help you organize and find information effortlessly.",
+  },
+  {
+    question: "Is Lydie free to use?",
+    answer:
+      "Yes! Lydie is open-source and free to use. There are no hidden fees or vendor lock-in. You can self-host it or use our managed service. You're also welcome to modify and contribute to the codebase.",
+  },
+  {
+    question: "Can I collaborate with my team in real-time?",
+    answer:
+      "Absolutely. Lydie supports real-time collaboration, allowing you and your team to work on documents simultaneously. Changes are synced instantly across all devices, so everyone stays up to date.",
+  },
+  {
+    question: "How does the AI-powered search work?",
+    answer:
+      "Lydie uses advanced AI to understand your documents and help you find information quickly. Instead of just matching keywords, the search understands the meaning and context of your content, making it easy to discover relevant information even when you don't remember the exact words.",
   },
 ];
 ---
@@ -120,6 +143,13 @@ const keyBenefits = [
 </Container> -->
 
 <Divider logo />
+<Container size="sm" className="py-16">
+  <div class="px-12">
+    <FAQ items={faqItems} client:load />
+  </div>
+</Container>
+
+<Divider />
 <Container size="sm">
   <div class="flex flex-col gap-y-3 p-16 items-center text-center">
     <h2 class="text-3xl tracking-tight font-medium text-black/85">
