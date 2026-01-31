@@ -49,9 +49,7 @@
   },
   "dependencies": {
     "@fontsource/reenie-beanie": "^5.2.8",
-    "@hocuspocus/provider": "^3.4.4",
-    "@types/ws": "^8.18.1",
-    "ws": "^8.19.0"
+    "@hocuspocus/provider": "^3.4.4"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

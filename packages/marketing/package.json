@@ -42,7 +42,7 @@
     "react": "catalog:",
     "react-aria-components": "^1.14.0",
     "react-dom": "catalog:",
-    "react-resizable-panels": "^4.5.6",
+    "react-resizable-panels": "^4.5.7",
     "sharp": "^0.34.5",
     "shiki": "^3.22.0",
     "sonner": "^2.0.7",

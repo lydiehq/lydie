@@ -32,7 +32,6 @@
     "hono": "^4.11.7",
     "hono-rate-limiter": "^0.5.3",
     "postgres": "^3.4.8",
-    "ws": "^8.19.0",
     "yjs": "catalog:",
     "zod": "catalog:"
   },

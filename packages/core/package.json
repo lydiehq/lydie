@@ -24,7 +24,6 @@
     "nanoid": "^5.1.6",
     "node-html-parser": "^7.0.2",
     "sharp": "^0.34.5",
-    "ws": "^8.18.0",
     "yjs": "catalog:",
     "zod": "catalog:"
   },
