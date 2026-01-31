@@ -48,7 +48,7 @@ function calculateBoxShadow(
   angle: number,
   height: number,
   strength: number,
-  shadowColor: string
+  shadowColor: string,
 ): string {
   const normalizedAngle = ((angle % 360) + 360) % 360;
   const shadowAngle = normalizedAngle + 180;
@@ -75,7 +75,7 @@ function calculateBoxShadow(
 /**
  * Calculate clip-path polygon for the shadow based on light angle.
  */
-function calculateClipPath(angle: number): string {
+export function calculateClipPath(angle: number): string {
   const normalizedAngle = ((angle % 360) + 360) % 360;
   const shadowRadians = ((normalizedAngle + 180) * Math.PI) / 180;
   const shadowDx = Math.cos(shadowRadians);
@@ -101,18 +101,14 @@ function calculateClipPath(angle: number): string {
   const minPerpProj = Math.min(...projections.map((p) => p.perpProj));
   const maxPerpProj = Math.max(...projections.map((p) => p.perpProj));
 
-  const minPerpCorners = projections.filter(
-    (p) => Math.abs(p.perpProj - minPerpProj) < 0.001
-  );
+  const minPerpCorners = projections.filter((p) => Math.abs(p.perpProj - minPerpProj) < 0.001);
   const c1 = minPerpCorners.reduce((best, curr) =>
-    curr.shadowProj > best.shadowProj ? curr : best
+    curr.shadowProj > best.shadowProj ? curr : best,
   ).idx;
 
-  const maxPerpCorners = projections.filter(
-    (p) => Math.abs(p.perpProj - maxPerpProj) < 0.001
-  );
+  const maxPerpCorners = projections.filter((p) => Math.abs(p.perpProj - maxPerpProj) < 0.001);
   const c2 = maxPerpCorners.reduce((best, curr) =>
-    curr.shadowProj > best.shadowProj ? curr : best
+    curr.shadowProj > best.shadowProj ? curr : best,
   ).idx;
 
   const clockwiseSteps = (c2 - c1 + 4) % 4;
@@ -124,8 +120,7 @@ function calculateClipPath(angle: number): string {
   } else {
     const clockwiseMid = (c1 + 1) % 4;
     const counterMid = (c1 - 1 + 4) % 4;
-    goClockwise =
-      projections[clockwiseMid].shadowProj > projections[counterMid].shadowProj;
+    goClockwise = projections[clockwiseMid].shadowProj > projections[counterMid].shadowProj;
   }
 
   const polygon: string[] = [];
@@ -186,13 +181,10 @@ export function CastShadow({
 }: CastShadowProps) {
   const boxShadow = useMemo(
     () => calculateBoxShadow(lightAngle, height, strength, shadowColor),
-    [lightAngle, height, strength, shadowColor]
+    [lightAngle, height, strength, shadowColor],
   );
 
-  const clipPath = useMemo(
-    () => calculateClipPath(lightAngle),
-    [lightAngle]
-  );
+  const clipPath = useMemo(() => calculateClipPath(lightAngle), [lightAngle]);
 
   return (
     <div

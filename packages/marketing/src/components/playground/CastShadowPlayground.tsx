@@ -34,7 +34,9 @@ function ClipPathDebugOverlay({ lightAngle, boxSize }: ClipPathDebugOverlayProps
   }, [lightAngle, boxSize]);
 
   const boxPoints = useMemo(() => {
-    return DEBUG_BOX_CORNERS.map((c) => `${(c.x / 100) * boxSize},${(c.y / 100) * boxSize}`).join(" ");
+    return DEBUG_BOX_CORNERS.map((c) => `${(c.x / 100) * boxSize},${(c.y / 100) * boxSize}`).join(
+      " ",
+    );
   }, [boxSize]);
 
   return (
@@ -86,7 +88,8 @@ function Control({
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-slate-700">{label}</label>
         <span className="text-sm font-semibold text-indigo-600 tabular-nums">
-          {value.toFixed(step < 1 ? 2 : 0)}{unit}
+          {value.toFixed(step < 1 ? 2 : 0)}
+          {unit}
         </span>
       </div>
       <input
@@ -118,7 +121,7 @@ export function CastShadowPlayground() {
     <div className="min-h-[calc(100vh-12rem)] flex flex-col lg:flex-row gap-8 items-start">
       {/* Preview Area */}
       <div className="flex-1 w-full">
-        <div 
+        <div
           className="relative bg-gradient-to-br from-slate-50 via-white to-slate-100 rounded-2xl border border-slate-200/60 shadow-sm"
           style={{ minHeight: Math.max(500, boxSize + 120) }}
         >
@@ -162,7 +165,7 @@ export function CastShadowPlayground() {
           <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
             <div className="relative">
               <CastShadow height={height} lightAngle={lightAngle} strength={strength}>
-                <div 
+                <div
                   className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-300"
                   style={{ width: boxSize, height: boxSize }}
                 >

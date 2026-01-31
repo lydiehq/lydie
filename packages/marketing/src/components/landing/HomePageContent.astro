@@ -20,7 +20,7 @@ import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
 import { Button } from "../generic/Button";
 import { CastShadow } from "../generic/CastShadow";
 import CollaborationIllustration from "./CollaborationIllustration.astro";
-import KeyboardSection from "./KeyboardSection.astro";
+import { KeyboardSection } from "./KeyboardSection";
 import { FAQSection } from "../tools/FAQSection";
 import { GradientOutline } from "../generic/GradientOutline";
 import { DarkModeSection } from "./DarkModeSection";
@@ -159,7 +159,7 @@ const faqItems = [
 
 <Divider logo />
 
-<KeyboardSection />
+<KeyboardSection client:visible />
 
 <Divider />
 
