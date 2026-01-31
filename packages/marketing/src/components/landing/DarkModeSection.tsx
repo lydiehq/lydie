@@ -8,13 +8,13 @@ export function DarkModeSection() {
 
   // Light mode: angle 45°, height 50, strength 0.2, black shadows
   // Dark mode: angle 225° (opposite), height 80, strength 0.35, black shadows (but longer)
-  const lightAngle = isDarkMode ? 135 : 45;
-  const height = isDarkMode ? 80 : 50;
-  const strength = isDarkMode ? 0.35 : 0.2;
+  const lightAngle = isDarkMode ? 45 : 135;
+  const height = isDarkMode ? 20 : 80;
+  const strength = isDarkMode ? 0.5 : undefined;
 
   return (
     <div
-      className={`transition-colors h-screen duration-1000 ${isDarkMode ? "bg-black/10" : "bg-white"}`}
+      className={`transition-colors h-screen duration-[4.5s] ${isDarkMode ? "bg-black/20" : "bg-white"}`}
     >
       <Container className="py-16">
         <div className="flex flex-col items-center gap-y-8">
@@ -32,7 +32,7 @@ export function DarkModeSection() {
                 isDarkMode ? "text-white" : "text-black/85"
               }`}
             >
-              See it in action
+              As the shadows grow long
             </h2>
             <p
               className={`text-base/relaxed max-w-md text-balance transition-colors duration-500 ${
@@ -110,72 +110,11 @@ export function DarkModeSection() {
               <div
                 className={`
                   flex flex-col w-full ring rounded-xl shadow-legit overflow-hidden relative
-                  transition-colors duration-500
-                  ${isDarkMode ? "bg-gray-800 ring-white/10" : "bg-white ring-black/6"}
+                  transition-colors duration-[4.5s]
+                  ${isDarkMode ? "bg-gray-200 ring-white/10" : "bg-white ring-black/6"}
                 `}
               >
-                {/* Mock UI Card */}
-                <div className="p-6">
-                  {/* Card Header */}
-                  <div className="flex items-center gap-x-3 mb-4">
-                    <div
-                      className={`w-10 h-10 rounded-full transition-colors duration-500 ${
-                        isDarkMode ? "bg-gray-700" : "bg-gray-100"
-                      }`}
-                    />
-                    <div className="flex flex-col gap-y-1">
-                      <div
-                        className={`h-3 w-32 rounded transition-colors duration-500 ${
-                          isDarkMode ? "bg-gray-600" : "bg-gray-200"
-                        }`}
-                      />
-                      <div
-                        className={`h-2 w-20 rounded transition-colors duration-500 ${
-                          isDarkMode ? "bg-gray-700" : "bg-gray-100"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Card Content */}
-                  <div className="space-y-2 mb-4">
-                    <div
-                      className={`h-2 w-full rounded transition-colors duration-500 ${
-                        isDarkMode ? "bg-gray-700" : "bg-gray-100"
-                      }`}
-                    />
-                    <div
-                      className={`h-2 w-5/6 rounded transition-colors duration-500 ${
-                        isDarkMode ? "bg-gray-700" : "bg-gray-100"
-                      }`}
-                    />
-                    <div
-                      className={`h-2 w-4/5 rounded transition-colors duration-500 ${
-                        isDarkMode ? "bg-gray-700" : "bg-gray-100"
-                      }`}
-                    />
-                  </div>
-
-                  {/* Card Footer */}
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="flex items-center gap-x-2">
-                      <span
-                        className={`text-xs transition-colors duration-500 ${
-                          isDarkMode ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      >
-                        Shadow angle: {lightAngle}°
-                      </span>
-                    </div>
-                    <div
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-500 ${
-                        isDarkMode ? "bg-blue-900/50 text-blue-300" : "bg-blue-50 text-blue-600"
-                      }`}
-                    >
-                      {isDarkMode ? "🌙 Night" : "☀️ Day"}
-                    </div>
-                  </div>
-                </div>
+                <div className="h-[300px]"></div>
               </div>
             </CastShadow>
           </div>
