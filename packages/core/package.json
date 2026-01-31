@@ -22,7 +22,7 @@
     "drizzle-orm": "catalog:",
     "nanoid": "^5.1.6",
     "node-html-parser": "^7.0.2",
-    "sharp": "^0.33.0",
+    "sharp": "^0.34.5",
     "yjs": "catalog:",
     "zod": "catalog:"
   },

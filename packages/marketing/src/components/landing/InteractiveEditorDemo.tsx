@@ -105,7 +105,7 @@ export function InteractiveEditorDemo() {
         </div>
         <CastShadow className="w-full" strength={0.2} blur={3}>
           <div className="flex flex-col flex-1 h-[620px] ring-black/3 ring rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit">
-            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20">
+            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20 rounded-b-xl">
               <FeatureButtons
                 features={FEATURES}
                 activeFeature={activeFeature}
