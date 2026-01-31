@@ -23,6 +23,7 @@ export type Template = {
   description: string;
   teaser: string;
   detailedDescription: string;
+  thumbnailSrc: string | null;
   categories: Category[];
   documents: TemplateDocument[];
   faqs: Array<{ question: string; answer: string }>;
@@ -104,6 +105,7 @@ export async function getTemplate(slug: string): Promise<Template | undefined> {
     description: template.description || "",
     teaser: template.teaser || "",
     detailedDescription: template.detailedDescription || "",
+    thumbnailSrc: template.thumbnailSrc || null,
     categories,
     documents: (template.previewData as TemplateDocument[]) || [],
     faqs: await fetchFaqs(template.id),
@@ -121,6 +123,7 @@ export async function getAllTemplates(): Promise<Template[]> {
       description: template.description || "",
       teaser: template.teaser || "",
       detailedDescription: template.detailedDescription || "",
+      thumbnailSrc: template.thumbnailSrc || null,
       categories: await fetchCategories(template.id),
       documents: (template.previewData as TemplateDocument[]) || [],
       faqs: await fetchFaqs(template.id),

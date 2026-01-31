@@ -16,7 +16,8 @@ export async function getStaticPaths() {
 
   return allCategories.map((category) => {
     // Remove the /templates/categories/ prefix to get just the path segments
-    const path = category.path?.replace("/templates/categories/", "") || category.slug;
+    const path =
+      category.path?.replace("/templates/categories/", "") || category.slug;
     return {
       params: { path },
     };
@@ -32,13 +33,18 @@ if (!category) {
 }
 
 // Find subcategories (direct children)
-const subcategories = allCategories.filter((cat) => cat.parentId === category.id);
+const subcategories = allCategories.filter(
+  (cat) => cat.parentId === category.id
+);
 
 // Get all templates
 const allTemplates = await getAllTemplates();
 
 // Get templates that belong to this category or any of its descendants
-function getCategoryAndDescendantIds(catId: string, allCats: typeof allCategories): string[] {
+function getCategoryAndDescendantIds(
+  catId: string,
+  allCats: typeof allCategories
+): string[] {
   const ids = [catId];
   const children = allCats.filter((cat) => cat.parentId === catId);
   for (const child of children) {
@@ -47,17 +53,20 @@ function getCategoryAndDescendantIds(catId: string, allCats: typeof allCategorie
   return ids;
 }
 
-const relevantCategoryIds = getCategoryAndDescendantIds(category.id, allCategories);
+const relevantCategoryIds = getCategoryAndDescendantIds(
+  category.id,
+  allCategories
+);
 
 // Filter templates that belong to this category or any descendant
 const categoryTemplates = allTemplates.filter((template) =>
-  template.categories.some((cat) => relevantCategoryIds.includes(cat.id)),
+  template.categories.some((cat) => relevantCategoryIds.includes(cat.id))
 );
 
 // Build breadcrumb trail
 const breadcrumbs: { name: string; href: string }[] = [];
 let currentCat = category;
-const ancestors: typeof category[] = [];
+const ancestors: (typeof category)[] = [];
 
 // Build ancestors list
 while (currentCat) {
@@ -76,7 +85,7 @@ for (const ancestor of ancestors) {
 ---
 
 <Layout
-  title={`${category.name} Templates - Lydie`}
+  title={`${category.name} templates - Lydie`}
   description={`Browse ${category.name.toLowerCase()} templates.`}
 >
   <div class="py-8">
@@ -84,8 +93,9 @@ for (const ancestor of ancestors) {
       <div class="flex flex-col gap-y-8">
         <!-- Breadcrumbs -->
         <div class="flex items-center gap-x-2 text-sm">
-          <a href="/templates/categories" class="text-gray-500 hover:text-gray-900"
-            >All categories</a
+          <a
+            href="/templates/categories"
+            class="text-gray-500 hover:text-gray-900">All categories</a
           >
           {
             breadcrumbs.map((crumb, index) => (
@@ -94,7 +104,10 @@ for (const ancestor of ancestors) {
                 {index === breadcrumbs.length - 1 ? (
                   <span class="text-gray-900 font-medium">{crumb.name}</span>
                 ) : (
-                  <a href={crumb.href} class="text-gray-500 hover:text-gray-900">
+                  <a
+                    href={crumb.href}
+                    class="text-gray-500 hover:text-gray-900"
+                  >
                     {crumb.name}
                   </a>
                 )}
@@ -107,8 +120,8 @@ for (const ancestor of ancestors) {
           <div class="max-w-lg flex flex-col gap-y-3">
             <h1 class="text-4xl font-medium text-gray-900">{category.name}</h1>
             <span class="text-base/relaxed text-gray-600"
-              >Browse our collection of {category.name.toLowerCase()} templates to find
-              the perfect one for your needs.</span
+              >Browse our collection of {category.name.toLowerCase()} templates to
+              find the perfect one for your needs.</span
             >
           </div>
         </header>
@@ -152,6 +165,7 @@ for (const ancestor of ancestors) {
                   name={template.name}
                   teaser={template.teaser}
                   href={`/templates/${template.slug}`}
+                  slug={template.slug}
                 />
               ))}
             </div>

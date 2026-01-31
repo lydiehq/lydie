@@ -1,22 +1,74 @@
 ---
 import type { Category } from "../../data/categories";
+import { FolderRegular } from "@fluentui/react-icons";
+import { categoryIconMap } from "./categoryIcons";
 
 interface Props {
   category: Category;
 }
 
 const { category } = Astro.props;
+
+// Get the appropriate icon for this category
+const CategoryIcon = categoryIconMap[category.slug];
+const hasIcon = !!CategoryIcon;
 ---
 
 <a
   href={category.path || `/templates/categories/${category.slug}`}
-  class="group flex flex-col gap-y-3 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+  class="group relative block"
 >
-  <div class="flex items-center gap-x-3">
-    <div class="flex-1 min-w-0">
-      <h3 class="text-base font-medium text-gray-900 truncate">
-        {category.name}
-      </h3>
+  <div
+    class="relative transition-all duration-300 ease-out group-hover:-translate-y-2"
+  >
+    {/* Folder Back - slides out on hover */}
+    <div
+      class="absolute inset-0 bg-gray-400 rounded-2xl transition-all duration-300 ease-out -translate-y-2 group-hover:-translate-y-5 group-hover:translate-x-1"
+      style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);"
+    >
+      {/* Curved tab on the back folder */}
+      <div
+        class="absolute -top-6 left-0 w-32 h-10 bg-gray-400 rounded-t-2xl"
+        style="clip-path: path('M0,40 L0,10 Q0,0 10,0 L40,0 Q60,0 80,20 Q100,40 120,40 L128,40 L128,40 L0,40 Z');"
+      >
+      </div>
     </div>
+
+    {/* Folder Front/Body */}
+    <div
+      class="relative z-10 bg-gray-500 rounded-2xl overflow-hidden transition-all duration-300 ease-out group-hover:shadow-xl"
+    >
+      {/* Curved tab on the front folder */}
+      <div
+        class="absolute -top-6 left-0 w-32 h-10 bg-gray-500 z-0"
+        style="clip-path: path('M0,40 L0,10 Q0,0 10,0 L40,0 Q60,0 80,20 Q100,40 120,40 L128,40 L128,40 L0,40 Z');"
+      >
+      </div>
+
+      <div class="relative z-10 p-5 pt-8">
+        <h3 class="text-base font-medium text-white truncate">
+          {category.name}
+        </h3>
+      </div>
+
+      {/* Icon at the bottom */}
+      {
+        hasIcon && (
+          <div class="relative z-10 px-5 pb-5">
+            <div class="flex items-center justify-end">
+              <div class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
+                <CategoryIcon className="size-5 text-white" />
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </div>
+
+  {/* Soft shadow underneath */}
+  <div
+    class="absolute -bottom-2 left-4 right-4 h-4 bg-black/20 rounded-full blur-md transition-all duration-300 group-hover:blur-lg group-hover:bg-black/25 group-hover:left-2 group-hover:right-2 group-hover:-bottom-1"
+  >
   </div>
 </a>

@@ -63,11 +63,9 @@ if (template.detailedDescription) {
 ---
 
 <Layout
-  title={templateName + " - Lydie"}
+  title={`${templateName} Template - Lydie`}
   description={template.description ??
-    "Use this " +
-      templateName.toLowerCase() +
-      " template to get started quickly with your project."}
+    `Use the ${templateName} template to get started quickly with your project.`}
 >
   <div class="py-8">
     <Container className="flex flex-col gap-y-8">
@@ -207,6 +205,7 @@ if (template.detailedDescription) {
                     name={relatedTemplate.name}
                     teaser={relatedTemplate.teaser ?? undefined}
                     href={`/templates/${relatedTemplate.slug}`}
+                    slug={relatedTemplate.slug}
                   />
                 ))}
               </div>

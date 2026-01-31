@@ -575,6 +575,7 @@ export const templatesTable = pgTable(
     teaser: text("teaser"),
     detailedDescription: text("detailed_description"),
     previewData: jsonb("preview_data"), // Serialized document tree for preview
+    thumbnailSrc: text("thumbnail_src"), // S3 URL for template thumbnail
     titleEmbedding: vector("title_embedding", { dimensions: 1536 }),
     ...timestamps,
   },
