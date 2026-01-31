@@ -466,12 +466,6 @@ export const comparisons: Comparison[] = [
           "Nuclino keeps your knowledge locked in their cloud with no self-hosting option. As an open-source Nuclino alternative, Lydie gives you complete control over your knowledge base. Self-host on your own infrastructure or use our cloud version - the choice is yours, without vendor lock-in.",
       },
       {
-        id: "ai",
-        title: "Built-in AI, not a separate add-on",
-        description:
-          "Nuclino's Sidekick AI is available on paid plans. Lydie includes powerful AI assistance built directly into the editor, available to everyone. Get writing help, generate content, and chat with your documents without paying extra for AI capabilities.",
-      },
-      {
         id: "knowledgebase",
         title: "Better knowledge base organization",
         description:
@@ -501,7 +495,7 @@ export const comparisons: Comparison[] = [
         name: "Integrated AI",
         description: "AI-powered features built directly into the editor",
         lydie: true,
-        competitor: "Sidekick AI (available on paid plans only)",
+        competitor: true,
       },
       {
         name: "Version history",

@@ -89,7 +89,11 @@ export function InteractiveEditorDemo() {
   return (
     <section className="flex flex-col items-center py-8 pb-36 overflow-visible">
       <div className="flex flex-col gap-y-2 col-span-1 items-center text-center">
-        <Eyebrow>Best-in-class editor</Eyebrow>
+        <Eyebrow>
+          <span className="font-handwritten font-semibold text-blue-500/70 text-2xl">
+            Best-in-class editor
+          </span>
+        </Eyebrow>
         <h2 className="text-3xl tracking-tight font-medium text-black/85">
           Experience the delight of writing
         </h2>
@@ -98,7 +102,17 @@ export function InteractiveEditorDemo() {
           notes or deep documentation.
         </p>
       </div>
-      <div className="rounded-2xl ring ring-black/6 flex flex-col w-full max-w-5xl mt-16 p-2 relative bg-white grain-bg">
+      <div className="rounded-2xl ring ring-black/4 flex flex-col w-full max-w-5xl mt-16 p-2 relative bg-white grain-bg">
+        <span
+          className="absolute -top-8 -right-8 text-xl text-black/12 font-handwritten"
+          aria-hidden="true"
+        >
+          90°
+        </span>
+        <div className="absolute -top-px bg-linear-to-r h-px from-transparent via-black/6 to-transparent from-2% to-98% -left-100 -right-100"></div>
+        <div className="absolute -bottom-px bg-linear-to-r h-px from-transparent via-black/6 to-transparent from-2% to-98% -left-100 -right-100"></div>
+        <div className="absolute -right-px bg-linear-to-t w-px from-transparent via-black/6 to-transparent from-2% to-98% -top-100 -bottom-100"></div>
+        <div className="absolute -left-px bg-linear-to-b w-px from-transparent via-black/6 to-transparent from-2% to-98% -top-100 -bottom-100"></div>
         <div className="flex items-center gap-x-1.5 mb-1.5">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="rounded-full size-3 ring ring-black/12 shrink-0" />
@@ -153,19 +167,20 @@ export function InteractiveEditorDemo() {
 
             <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
               <h1 className="text-[1.75rem] font-medium text-gray-900 mt-0 mb-4 select-none">
-                Q1 Planning Notes
+                Japan Trip Planning
               </h1>
 
               <div className="prose prose-sm editor-content ">
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  Kicking off the quarter — we should align on priorities and success metrics.{" "}
+                  So excited for our two-week adventure! We should finalize the itinerary and book
+                  the remaining stays.{" "}
                   {showCollaboration ? (
                     <>
                       <span
                         className="rounded-sm pointer-events-none"
                         style={{ backgroundColor: `${collaborators[1].color}33` }}
                       >
-                        Sarah will share the deck
+                        Sarah will research Tokyo neighborhoods
                       </span>
                       <motion.span
                         initial={{ opacity: 0, y: 6, scale: 1.1 }}
@@ -177,9 +192,9 @@ export function InteractiveEditorDemo() {
                       </motion.span>
                     </>
                   ) : (
-                    "Sarah will share the deck"
+                    "Sarah will research Tokyo neighborhoods"
                   )}{" "}
-                  by EOD. <em>Review the roadmap before the sync.</em>
+                  by tomorrow. <em>Check the weather forecast before we pack.</em>
                 </p>
 
                 <div className="relative">
@@ -190,7 +205,7 @@ export function InteractiveEditorDemo() {
                         : ""
                     }`}
                   >
-                    For objectives and key results, we're anchoring to the
+                    For must-see spots and hidden gems, we're building off the
                     {showCollaboration && (
                       <motion.span
                         initial={{ opacity: 0, y: 6 }}
@@ -205,46 +220,44 @@ export function InteractiveEditorDemo() {
                         <CollaborationCaret userName="Sarah" userColor={collaborators[0].color} />
                       </motion.span>
                     )}{" "}
-                    team goals doc. I'll draft the sprint plan once that's locked.
+                    recommendations doc. I'll add the restaurant reservations once that's ready.
                   </p>
                   <AnimatePresence>
                     {activeFeature === "fields" && <AIAssistantPopover />}
                   </AnimatePresence>
                 </div>
 
-                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Action items</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Things to book</h2>
                 <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
                   <li>
                     <p>
-                      <strong>Finalize Q1 roadmap</strong> — share with stakeholders by Friday
+                      <strong>JR Pass</strong> — order online by end of week
                     </p>
                   </li>
                   <li>
-                    <p>Schedule follow-up with design on the new dashboard</p>
+                    <p>Reserve that ryokan in Kyoto with the onsen</p>
                   </li>
-                  <li>
-                    <p>
-                      For priorities and key results, see{" "}
-                      <span className="relative inline">
-                        <span className="font-medium underline decoration-blue-600 decoration-2 text-blue-600">
-                          Team Goals
-                        </span>
-                        <AnimatePresence>
-                          {activeFeature === "linking" && <LinkingOverlay />}
-                        </AnimatePresence>
+                  <li className="text-gray-700">
+                    For the full itinerary and daily schedule, see{" "}
+                    <span className="relative inline">
+                      <span className="font-medium underline decoration-blue-600 decoration-2 text-blue-600">
+                        Trip Master Plan
                       </span>
-                      .
-                    </p>
+                      <AnimatePresence>
+                        {activeFeature === "linking" && <LinkingOverlay />}
+                      </AnimatePresence>
+                    </span>
+                    .
                   </li>
                   <li>
-                    <p>Send calendar invite for the retro</p>
+                    <p>Book teamLab tickets in advance</p>
                   </li>
                   <li>
-                    <p>Update the project brief with latest scope</p>
+                    <p>Confirm Airbnb check-in details for Osaka</p>
                   </li>
                   <li>
                     <p>
-                      Loop in engineering on the API timeline
+                      Look up luggage forwarding service options
                       {showCollaboration && (
                         <motion.span
                           initial={{ opacity: 0, y: 6, scale: 1.1 }}
@@ -266,19 +279,19 @@ export function InteractiveEditorDemo() {
                   </li>
                 </ul>
 
-                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Next steps</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Packing checklist</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  We'll review the draft in the Monday standup and sync with leadership by
-                  Wednesday. Ping me if anything needs to move.
+                  We'll do a final gear check the night before we leave. Make sure everyone has
+                  comfortable walking shoes!
                 </p>
                 <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
-                  <li>Prep slides for the all-hands</li>
-                  <li>Confirm budget numbers with finance</li>
-                  <li>Share the doc link in #planning when ready</li>
+                  <li>Portable chargers and universal adapters</li>
+                  <li>Pocket WiFi or SIM cards</li>
+                  <li>Cash for places that don't take cards</li>
                 </ul>
 
                 <p className="text-gray-700 leading-relaxed mb-0">
-                  That's the plan for now. Add anything I missed.
+                  Can't wait! Drop any other ideas or spots we shouldn't miss.
                 </p>
               </div>
             </div>
@@ -380,7 +393,7 @@ function AIAssistantPopover() {
       </div>
       <div className="rounded-full p-2 ring ring-black/8 shadow-popover bg-white ">
         <span className="text-sm whitespace-nowrap">
-          Please make this paragraph more concise and professional
+          Help me make this sound more exciting and fun
         </span>
       </div>
     </motion.div>
@@ -410,8 +423,8 @@ function LinkingOverlay() {
             <Document48Filled className="size-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-gray-900 truncate">Team Goals</div>
-            <div className="text-xs text-gray-500">Internal document</div>
+            <div className="text-sm font-medium text-gray-900 truncate">Trip Master Plan</div>
+            <div className="text-xs text-gray-500">Shared document</div>
           </div>
         </div>
       </div>

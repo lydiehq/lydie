@@ -3,6 +3,7 @@
 @import "@lydie/ui/styles/editor-content.css";
 
 @import "@fontsource-variable/inter";
+@import "@fontsource/reenie-beanie";
 
 /* Scan UI package so Tailwind generates classes used by shared components */
 @source "../../../ui/src/**/*.{tsx,ts,jsx,js}";
@@ -13,6 +14,7 @@
 
 @theme {
   --font-sans: Inter Variable, sans-serif;
+  --font-handwritten: "Reenie Beanie", cursive;
   --shadow-surface: 0px 0px 8px -4px rgba(0, 0, 0, 0.2), 0 0 1.5px 0 rgba(0, 0, 0, 0.2);
   --shadow-legit:
     0px 4px 20px 0px rgba(15, 12, 12, 0.08), 0px 8px 12px -4px rgba(15, 12, 12, 0.08),
