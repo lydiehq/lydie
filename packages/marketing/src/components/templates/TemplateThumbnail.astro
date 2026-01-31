@@ -4,11 +4,10 @@ interface Props {
   teaser?: string;
   href?: string;
   slug: string;
+  thumbnailSrc?: string | null;
 }
 
-const { name, teaser, href = "#", slug } = Astro.props;
-
-const thumbnailPath = `/templates/thumbnails/${slug}.png`;
+const { name, teaser, href = "#", thumbnailSrc } = Astro.props;
 ---
 
 <article>
@@ -21,18 +20,20 @@ const thumbnailPath = `/templates/thumbnails/${slug}.png`;
       <div 
         class="relative w-full aspect-video bg-gray-100 rounded-lg border border-gray-200 overflow-hidden transition-colors duration-150 group-hover:border-gray-300"
       >
-        <img
-          src={thumbnailPath}
-          alt={`Preview of ${name} template`}
-          width="800"
-          height="450"
-          loading="lazy"
-          decoding="async"
-          class="w-full h-full object-cover"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-        />
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={`Preview of ${name} template`}
+            width="800"
+            height="450"
+            loading="lazy"
+            decoding="async"
+            class="w-full h-full object-cover"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          />
+        ) : null}
         <div 
-          class="absolute inset-0 flex items-center justify-center hidden"
+          class={`absolute inset-0 flex items-center justify-center ${thumbnailSrc ? 'hidden' : ''}`}
           data-fallback
         >
           <span class="text-sm text-gray-400">Preview</span>

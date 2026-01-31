@@ -33,6 +33,7 @@ new sst.aws.Astro("Marketing", {
   path: "./packages/marketing",
   environment: {
     PUBLIC_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
+    PUBLIC_ASSETS_DOMAIN: assetsRouter.url,
   },
   link: [secret.lydieApiKey, secret.postgresConnectionStringDirect, secret.openAiApiKey],
   ...($dev ? {} : { domain: "lydie.co" }),
