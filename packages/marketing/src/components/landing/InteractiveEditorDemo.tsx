@@ -234,7 +234,7 @@ export function InteractiveEditorDemo() {
                   <li className="text-gray-700">
                     For the full itinerary and daily schedule, see{" "}
                     <span className="relative inline">
-                      <span className="text-sm font-medium underline decoration-blue-600 decoration-2 text-blue-600">
+                      <span className="text-sm font-medium decoration-2 text-gray-900">
                         Trip Master Plan
                       </span>
                       <AnimatePresence>
@@ -387,7 +387,7 @@ function AIAssistantPopover() {
       </div>
       <div className="rounded-full p-2 ring ring-black/8 shadow-popover bg-white ">
         <span className="text-sm whitespace-nowrap">
-          Help me make this sound more exciting and fun
+          Help me make this sound more exciting and fun (needs redesign)
         </span>
       </div>
     </motion.div>
@@ -419,6 +419,7 @@ function LinkingOverlay() {
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium text-gray-900 truncate">Trip Master Plan</div>
             <div className="text-xs text-gray-500">Shared document</div>
+            Needs redesign
           </div>
         </div>
       </div>

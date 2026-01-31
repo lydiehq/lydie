@@ -35,13 +35,15 @@ const baseClasses = [
   className="w-full"
   height={10}
   strength={1}
+  borderRadius={20}
   lightAngle={145 + rotate}
   style={rotate !== 0 ? { transform: `rotate(${rotate}deg)` } : undefined}
 >
   <div class={baseClasses}>
     <div
       class={`absolute inset-1.5 rounded-lg ring ring-black/3 ${isHighlighted ? "bg-blue-400" : "bg-white"}`}
-    ></div>
+    >
+    </div>
     <span class="relative z-10">{label}</span>
     {
       isHighlighted && (

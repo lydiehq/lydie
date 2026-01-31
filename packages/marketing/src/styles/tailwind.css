@@ -290,7 +290,6 @@ body {
 
 .cast-shadow {
   position: relative;
-  --cast-shadow-strength: 0.2;
   --cast-shadow-border-radius: 0;
 }
 
@@ -310,7 +309,6 @@ body {
   inset: 0;
   border-radius: var(--cast-shadow-border-radius);
   background: transparent;
-  box-shadow: var(--cast-shadow-box-shadow);
 }
 
 .cast-shadow__content {

@@ -23,7 +23,7 @@ import CollaborationIllustration from "./CollaborationIllustration.astro";
 import KeyboardSection from "./KeyboardSection.astro";
 import { FAQSection } from "../tools/FAQSection";
 import { GradientOutline } from "../generic/GradientOutline";
-import { ShadowDemoSection } from "./ShadowDemoSection";
+import { DarkModeSection } from "./DarkModeSection";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -165,7 +165,7 @@ const faqItems = [
 
 <Divider />
 
-<ShadowDemoSection client:load />
+<DarkModeSection client:load />
 
 <Container size="sm" className="py-16">
   <div class="px-12">
