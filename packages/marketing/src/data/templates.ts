@@ -122,6 +122,7 @@ export async function getAllTemplates(): Promise<Template[]> {
       teaser: template.teaser || "",
       detailedDescription: template.detailedDescription || "",
       categories: await fetchCategories(template.id),
+      documents: (template.previewData as TemplateDocument[]) || [],
       faqs: await fetchFaqs(template.id),
     })),
   );

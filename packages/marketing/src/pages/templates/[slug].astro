@@ -25,6 +25,8 @@ export async function getStaticPaths() {
 
 const { template } = Astro.props;
 
+console.log(template);
+
 if (!template) {
   return new Response(null, { status: 404 });
 }
@@ -108,7 +110,10 @@ if (template.detailedDescription) {
                 <div class="flex flex-wrap gap-2">
                   {categories.map((category) => (
                     <a
-                      href={category.path || `/templates/categories/${category.slug}`}
+                      href={
+                        category.path ||
+                        `/templates/categories/${category.slug}`
+                      }
                       class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                     >
                       {category.name}
@@ -130,11 +135,19 @@ if (template.detailedDescription) {
           </div>
         </header>
       </div>
-      <figure class="template-preview" itemscope itemtype="https://schema.org/VisualArtwork">
+      <figure
+        class="template-preview"
+        itemscope
+        itemtype="https://schema.org/VisualArtwork"
+      >
         <figcaption class="sr-only">
           Preview of the {templateName} template structure and layout
         </figcaption>
-        <div role="img" aria-label="Visual preview of {templateName} template" data-template-preview="true">
+        <div
+          role="img"
+          aria-label="Visual preview of {templateName} template"
+          data-template-preview="true"
+        >
           <TemplateViewer client:load documents={template.documents} />
         </div>
       </figure>
@@ -170,11 +183,11 @@ if (template.detailedDescription) {
       {
         template.faqs && template.faqs.length > 0 && (
           <section class="max-w-3xl mt-12">
-            <h2 class="text-2xl font-semibold text-gray-900 mb-4">
-              Frequently Asked Questions
-            </h2>
             <FAQSection
-              faqs={template.faqs.map((faq) => ({ q: faq.question, a: faq.answer }))}
+              faqs={template.faqs.map((faq) => ({
+                q: faq.question,
+                a: faq.answer,
+              }))}
               client:load
             />
           </section>
