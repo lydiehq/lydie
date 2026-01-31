@@ -1,0 +1,27 @@
+/**
+ * CastShadow component styles
+ * Shadow values are computed in JS and applied via inline styles
+ * This file only provides base layout and animation support
+ */
+
+.cast-shadow {
+  position: relative;
+  display: inline-block;
+}
+
+.cast-shadow__layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cast-shadow--animate .cast-shadow__layer {
+  transition:
+    clip-path 1500ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 1500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cast-shadow__content {
+  position: relative;
+  z-index: 1;
+}

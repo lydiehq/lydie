@@ -8,8 +8,8 @@ export function DarkModeSection() {
 
   // Light mode: angle 45°, height 50, strength 0.2, black shadows
   // Dark mode: angle 225° (opposite), height 80, strength 0.35, black shadows (but longer)
-  const lightAngle = isDarkMode ? 45 : 135;
-  const height = isDarkMode ? 20 : 80;
+  const lightAngle = isDarkMode ? 100 : 135;
+  const height = isDarkMode ? 20 : 90;
   const strength = isDarkMode ? 0.5 : undefined;
 
   return (
