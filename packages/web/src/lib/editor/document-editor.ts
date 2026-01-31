@@ -4,6 +4,7 @@ import type { Slice } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
 
 import { HocuspocusProvider } from "@hocuspocus/provider";
+import { COLORS } from "@lydie/core/colors";
 import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import { getDocumentEditorExtensions } from "@lydie/editor";
 import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
@@ -30,24 +31,12 @@ export type DocumentEditorHookResult = {
 };
 
 function getUserColor(userId: string): string {
-  const colors = [
-    "#30bced",
-    "#6eeb83",
-    "#ffbc42",
-    "#ecd444",
-    "#ee6352",
-    "#9ac2c9",
-    "#8acb88",
-    "#1be7ff",
-    "#ff006e",
-    "#8338ec",
-  ];
-
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return colors[Math.abs(hash) % colors.length];
+  const color = COLORS[Math.abs(hash) % COLORS.length];
+  return color.value;
 }
 
 type UseDocumentEditorProps = {

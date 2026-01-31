@@ -1,4 +1,4 @@
-import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors";
+import { getRandomColor } from "@lydie/core/colors";
 import { type VariantProps, cva } from "cva";
 
 import { useOrganization } from "@/context/organization.context";
@@ -31,7 +31,7 @@ export function OrganizationAvatar({
 }: OrganizationAvatarProps) {
   const { organization: organizationFromContext } = useOrganization();
   const organization = organizationProp ?? organizationFromContext;
-  const color = organization?.color || WORKSPACE_COLORS[0].value;
+  const color = organization?.color || getRandomColor().value;
 
   return (
     <div

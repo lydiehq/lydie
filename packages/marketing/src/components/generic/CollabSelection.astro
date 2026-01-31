@@ -1,0 +1,85 @@
+---
+interface Props {
+  text: string;
+  name: string;
+  color: string;
+  delay?: number;
+  position?: "top" | "right" | "bottom" | "left";
+  class?: string;
+}
+
+const { text, name, color, delay = 0, position = "top", class: className = "" } = Astro.props;
+
+const uniqueId = Math.random().toString(36).substring(2, 9);
+---
+
+<style>
+  .collab-selection {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    opacity: 0;
+    border-radius: 2px;
+    pointer-events: none;
+    animation: selection-expand 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  
+  @keyframes selection-expand {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: 100%;
+      opacity: 1;
+    }
+  }
+  
+  @keyframes cursor-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .cursor-animate {
+    animation: cursor-pop 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+  }
+</style>
+
+<span class={`relative inline-block ${className}`}>
+  <!-- Text is always visible -->
+  <span class="relative z-10">{text}</span>
+  
+  <!-- Animated background highlight -->
+  <span 
+    class="collab-selection" 
+    style={`background-color: ${color}33; animation-delay: ${delay}s;`}
+  ></span>
+  
+  <!-- Cursor that appears after selection -->
+  <span 
+    class="absolute -right-3 top-0 cursor-animate"
+    style={`animation-delay: ${delay + 0.6}s;`}
+  >
+    <span class="relative inline-flex items-center justify-center" style={`color: ${color};`}>
+      <span 
+        class="border-l border-r h-5 w-0 -ml-px pointer-events-none"
+        style={`border-color: ${color};`}
+      ></span>
+      <span 
+        class="absolute bottom-full mb-1 left-[-1px] rounded-[3px] rounded-bl-none text-[12px] font-semibold leading-normal px-[0.3rem] py-[0.1rem] select-none whitespace-nowrap text-[#0d0d0d]"
+        style={`background-color: ${color};`}
+      >
+        {name}
+      </span>
+    </span>
+  </span>
+</span>

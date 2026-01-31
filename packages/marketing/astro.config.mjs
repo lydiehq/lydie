@@ -8,7 +8,13 @@ import { defineConfig } from "astro/config";
 // https://astro.build/config
 export default defineConfig({
   site: "https://lydie.co",
-  integrations: [mdx(), sitemap(), react()],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !page.includes("/playground/"),
+    }),
+    react(),
+  ],
   output: "static",
   adapter: aws(),
   vite: {

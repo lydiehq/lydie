@@ -1,0 +1,97 @@
+---
+// Static collaboration illustration showing multiple users editing together
+// Displays text content with colored cursors indicating real-time collaboration
+import Cursor from "../generic/Cursor.astro";
+---
+
+<style>
+  @keyframes selection-expand {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: 100%;
+      opacity: 1;
+    }
+  }
+  
+  .selection-animate {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: selection-expand 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    width: 0;
+    opacity: 0;
+  }
+</style>
+
+<div class="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden">
+  <h1 class="text-[1.75rem] font-medium text-gray-900 mt-0 mb-4 select-none">
+    Q3 Product Roadmap
+  </h1>
+
+  <div class="prose prose-sm">
+    <p class="text-gray-700 leading-relaxed mb-4">
+      Focus areas for the upcoming quarter based on user feedback and growth targets.
+      <span class="selection-animate rounded-sm relative inline-block" style="background-color: #6eeb8333; animation-delay: 0.5s;">
+        The analytics dashboard redesign is our top priority
+        <Cursor name="Alex" colorId="green" position="top" class="absolute -right-3 top-0" delay={0.5} />
+      </span>
+      {" "}and should ship by mid-July. <em>Performance improvements are blocking the release.</em>
+    </p>
+
+    <p class="text-gray-700 leading-relaxed mb-4">
+      Key initiatives for this quarter include mobile responsiveness and
+      <span class="relative inline-block">
+        <Cursor name="Sarah" colorId="cyan" position="top" class="absolute -right-3 top-0" delay={0} />
+      </span>
+      {" "}the new onboarding flow. I'll update the timeline once we get design approvals.
+    </p>
+
+    <h2 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Milestone Timeline</h2>
+    <ul class="list-disc pl-6 space-y-1 mb-4 text-gray-700">
+      <li>
+        <p>
+          <strong>July 15</strong> — Analytics v2 beta launch
+        </p>
+      </li>
+      <li>
+        <p>August 1 — Mobile app soft launch to 10% of users</p>
+      </li>
+      <li>
+        <p>
+          For detailed technical specs, see{" "}
+          <span class="font-medium underline decoration-blue-600 decoration-2 text-blue-600">
+            Engineering Specs Q3
+          </span>.
+        </p>
+      </li>
+      <li>
+        <p>September 1 — Full mobile rollout</p>
+      </li>
+      <li>
+        <p>
+          Documentation and API updates for partner integrations
+          <Cursor name="Jordan" colorId="gold" />
+        </p>
+      </li>
+    </ul>
+
+    <h2 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Open Questions</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">
+      Need to finalize vendor selection for the new hosting provider. Budget review
+      scheduled for next Tuesday with the finance team.
+    </p>
+    <ul class="list-disc pl-6 space-y-1 mb-4 text-gray-700">
+      <li>Migration timeline and rollback strategy</li>
+      <li>Compliance requirements for EU users</li>
+      <li>Team capacity during August vacation period</li>
+    </ul>
+
+    <p class="text-gray-700 leading-relaxed mb-0">
+      Please add any blockers or dependencies I might have missed. Looking forward to
+      shipping these improvements!
+    </p>
+  </div>
+</div>

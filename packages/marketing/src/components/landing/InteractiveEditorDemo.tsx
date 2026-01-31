@@ -5,6 +5,7 @@ import {
   PersonChatFilled,
   Document48Filled,
 } from "@fluentui/react-icons";
+import { getColorById } from "@lydie/core/colors";
 import { CollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret.tsx";
 import {
   BoldIcon,
@@ -21,7 +22,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { CastShadow } from "../generic/CastShadow";
-import { Logo } from "../Logo";
+import { GradientOutline } from "../generic/GradientOutline";
 import { Eyebrow } from "./Eyebrow";
 
 type FeatureType = "collaboration" | "fields" | "linking" | null;
@@ -61,9 +62,9 @@ const FEATURES: {
 ];
 
 const collaborators = [
-  { name: "Sarah", color: "#30bced" },
-  { name: "Alex", color: "#6eeb83" },
-  { name: "Jordan", color: "#ffbc42" },
+  { name: "Sarah", color: getColorById("cyan")?.value ?? "#7DBCD6" },
+  { name: "Alex", color: getColorById("green")?.value ?? "#90C9AA" },
+  { name: "Jordan", color: getColorById("gold")?.value ?? "#E8B974" },
 ];
 
 const COUNTDOWN_MS = 9000;
@@ -77,7 +78,6 @@ function getNextFeature(current: Exclude<FeatureType, null>): Exclude<FeatureTyp
 export function InteractiveEditorDemo() {
   const [activeFeature, setActiveFeature] = useState<FeatureType>("collaboration");
 
-  // Auto-advance when active; countdown only runs after hydration (client:visible in Astro)
   useEffect(() => {
     if (!activeFeature) return;
     const t = setTimeout(() => setActiveFeature(getNextFeature(activeFeature)), COUNTDOWN_MS);
@@ -87,12 +87,12 @@ export function InteractiveEditorDemo() {
   const showCollaboration = activeFeature === "collaboration";
 
   return (
-    <section className="flex flex-col items-center py-8 pb-36 overflow-visible">
-      <div className="flex flex-col gap-y-2 col-span-1 items-center text-center">
+    <section className="flex flex-col items-center overflow-visible">
+      <div className="flex flex-col gap-y-2 items-center text-center">
         <Eyebrow>
-          <span className="font-handwritten font-semibold text-blue-500/70 text-2xl">
-            Best-in-class editor
-          </span>
+          {/* <span className="font-handwritten font-semibold text-blue-500/70 text-2xl"> */}
+          Best-in-class editor
+          {/* </span> */}
         </Eyebrow>
         <h2 className="text-3xl tracking-tight font-medium text-black/85">
           Experience the delight of writing
@@ -102,23 +102,17 @@ export function InteractiveEditorDemo() {
           notes or deep documentation.
         </p>
       </div>
-      <div className="rounded-2xl ring ring-black/4 flex flex-col w-full max-w-5xl mt-16 p-2 relative bg-white grain-bg">
-        <span
-          className="absolute -top-8 -right-8 text-xl text-black/12 font-handwritten"
-          aria-hidden="true"
-        >
+      <div className="rounded-2xl ring ring-black/4 flex flex-col w-full max-w-5xl mt-16 p-2 relative bg-grain">
+        <span className="absolute -top-6 -right-8 text-xs text-black/12" aria-hidden="true">
           90°
         </span>
-        <div className="absolute -top-px bg-linear-to-r h-px from-transparent via-black/6 to-transparent from-2% to-98% -left-100 -right-100"></div>
-        <div className="absolute -bottom-px bg-linear-to-r h-px from-transparent via-black/6 to-transparent from-2% to-98% -left-100 -right-100"></div>
-        <div className="absolute -right-px bg-linear-to-t w-px from-transparent via-black/6 to-transparent from-2% to-98% -top-100 -bottom-100"></div>
-        <div className="absolute -left-px bg-linear-to-b w-px from-transparent via-black/6 to-transparent from-2% to-98% -top-100 -bottom-100"></div>
+        <GradientOutline />
         <div className="flex items-center gap-x-1.5 mb-1.5">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="rounded-full size-3 ring ring-black/12 shrink-0" />
           ))}
         </div>
-        <CastShadow className="w-full" strength={0.2} blur={3}>
+        <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={100} borderRadius={0.25}>
           <div className="flex flex-col flex-1 h-[620px] ring-black/3 ring rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit">
             <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20 rounded-b-xl">
               <FeatureButtons
@@ -240,7 +234,7 @@ export function InteractiveEditorDemo() {
                   <li className="text-gray-700">
                     For the full itinerary and daily schedule, see{" "}
                     <span className="relative inline">
-                      <span className="font-medium underline decoration-blue-600 decoration-2 text-blue-600">
+                      <span className="text-sm font-medium underline decoration-blue-600 decoration-2 text-blue-600">
                         Trip Master Plan
                       </span>
                       <AnimatePresence>

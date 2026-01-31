@@ -1,5 +1,5 @@
+import { getRandomColor } from "@lydie/core/colors";
 import { slugify } from "@lydie/core/utils";
-import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { mutators } from "@lydie/zero/mutators";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedColor, setSelectedColor] = useState<string>(
-    organization.color || WORKSPACE_COLORS[0].value,
+    organization.color || getRandomColor().value,
   );
 
   const workspaceForm = useAppForm({

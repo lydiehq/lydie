@@ -1,0 +1,427 @@
+---
+import { Container } from "../Container";
+import { CastShadow } from "../generic/CastShadow";
+import Key from "./Key.astro";
+---
+
+<Container className="py-16">
+  <div class="flex flex-col items-center gap-y-6">
+    <!-- Eyebrow and heading -->
+    <div class="flex flex-col items-center text-center gap-y-3">
+      <span class="text-[0.8125rem] font-medium text-black/50">
+        Keyboard shortcuts
+      </span>
+      <h2 class="text-3xl tracking-tight font-medium text-black/85">
+        Everything at your fingertips
+      </h2>
+      <p class="text-base/relaxed text-black/60 max-w-md text-balance">
+        Press <span class="font-medium text-black/80">⌘K</span> to search, navigate,
+        and access any feature instantly.
+      </p>
+    </div>
+
+    <!-- Keyboard visualization - exploded/scattered effect with fixed width -->
+    <div class="relative w-[1200px] h-[500px] overflow-visible">
+      <div class="relative w-full h-full">
+        {/* Center UI element */}
+        <div
+          class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+        >
+          <CastShadow className="w-full" strength={0.2}>
+            <div
+              class="flex flex-col w-[440px] h-[320px] ring-black/3 ring rounded-xl shadow-legit bg-gray-50 overflow-hidden relative"
+            >
+              {/* Search input */}
+              <div
+                class="flex items-center border-b border-gray-200 px-3 bg-white"
+              >
+                <svg
+                  class="size-4 text-gray-400 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Type a command or search..."
+                  class="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400"
+                  readonly
+                />
+              </div>
+
+              {/* Menu items */}
+              <div class="flex-1 overflow-y-auto p-2">
+                {/* Favorites section */}
+                <div class="px-2 py-1.5 text-xs font-medium text-gray-500">
+                  Favorites
+                </div>
+                <div
+                  class="flex items-center rounded-lg px-3 py-2.5 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
+                >
+                  <svg
+                    class="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  <span>Create new document</span>
+                </div>
+                <div
+                  class="flex items-center rounded-lg px-3 py-2.5 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
+                >
+                  <svg
+                    class="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                    ></path>
+                  </svg>
+                  <span>Publish document</span>
+                </div>
+
+                {/* Navigation section */}
+                <div class="px-2 py-1.5 text-xs font-medium text-gray-500 mt-2">
+                  Navigation
+                </div>
+                <div
+                  class="flex items-center rounded-lg px-3 py-2.5 text-sm text-gray-800 bg-gray-100"
+                >
+                  <svg
+                    class="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                  <span>Search documents</span>
+                </div>
+                <div
+                  class="flex items-center rounded-lg px-3 py-2.5 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
+                >
+                  <svg
+                    class="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                    ></path>
+                  </svg>
+                  <span>Go home</span>
+                </div>
+                <div
+                  class="flex items-center rounded-lg px-3 py-2.5 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
+                >
+                  <svg
+                    class="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    ></path>
+                  </svg>
+                  <span>Go to assistant</span>
+                </div>
+                <div
+                  class="flex items-center rounded-lg px-3 py-2.5 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
+                >
+                  <svg
+                    class="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    ></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <span>Go to settings</span>
+                </div>
+                <div
+                  class="flex items-center rounded-lg px-3 py-2.5 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
+                >
+                  <svg
+                    class="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                  <span>Go to integrations</span>
+                </div>
+              </div>
+
+              {/* Keyboard help footer */}
+              <div
+                class="flex items-center justify-between border-t border-gray-200 px-3 py-2 bg-white text-xs text-gray-500"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="flex items-center gap-1">
+                    <kbd
+                      class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans"
+                      >↵</kbd
+                    >
+                    <span>to select</span>
+                  </span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="flex items-center gap-1">
+                    <kbd
+                      class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans"
+                      >↑↓</kbd
+                    >
+                    <span>to navigate</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CastShadow>
+        </div>
+
+        {
+          /* Scattered keys around CMD+K - positioned to avoid overlapping with center element */
+        }
+
+        {/* CMD+K - highlighted in center */}
+        <div
+          class="absolute z-10"
+          style="left: 415px; top: 230px; transform: scale(1.1);"
+        >
+          <Key label="⌘" width="cmd" isHighlighted={true} rotate={-5} />
+        </div>
+        <div
+          class="absolute z-10"
+          style="left: 500px; top: 215px; transform: scale(1.1);"
+        >
+          <Key label="K" isHighlighted={true} rotate={3} />
+        </div>
+
+        {/* Top row - spread wide */}
+        <div class="absolute" style="left: -80px; top: -180px;">
+          <Key label="Q" rotate={-15} />
+        </div>
+        <div class="absolute" style="left: -20px; top: -120px;">
+          <Key label="W" rotate={8} />
+        </div>
+        <div class="absolute" style="left: 40px; top: -80px;">
+          <Key label="E" rotate={-12} />
+        </div>
+        <div class="absolute" style="left: 100px; top: -40px;">
+          <Key label="R" rotate={15} />
+        </div>
+        <div class="absolute" style="left: 160px; top: -20px;">
+          <Key label="T" rotate={-8} />
+        </div>
+        <div class="absolute" style="left: 860px; top: -40px;">
+          <Key label="Y" rotate={10} />
+        </div>
+        <div class="absolute" style="left: 920px; top: -20px;">
+          <Key label="U" rotate={-18} />
+        </div>
+        <div class="absolute" style="left: 980px; top: 20px;">
+          <Key label="I" rotate={12} />
+        </div>
+        <div class="absolute" style="left: 1040px; top: 60px;">
+          <Key label="O" rotate={-6} />
+        </div>
+        <div class="absolute" style="left: 1100px; top: 100px;">
+          <Key label="P" rotate={20} />
+        </div>
+
+        {/* Number row - spread out */}
+        <div class="absolute" style="left: -60px; top: -60px;">
+          <Key label="1" rotate={25} />
+        </div>
+        <div class="absolute" style="left: 10px; top: -20px;">
+          <Key label="2" rotate={-10} />
+        </div>
+        <div class="absolute" style="left: 70px; top: 20px;">
+          <Key label="3" rotate={18} />
+        </div>
+        <div class="absolute" style="left: 130px; top: 50px;">
+          <Key label="4" rotate={-14} />
+        </div>
+        <div class="absolute" style="left: 880px; top: 60px;">
+          <Key label="7" rotate={8} />
+        </div>
+        <div class="absolute" style="left: 960px; top: 100px;">
+          <Key label="8" rotate={-22} />
+        </div>
+        <div class="absolute" style="left: 1020px; top: 140px;">
+          <Key label="9" rotate={14} />
+        </div>
+        <div class="absolute" style="left: 1080px; top: 180px;">
+          <Key label="0" rotate={-6} />
+        </div>
+
+        {/* Home row - left side */}
+        <div class="absolute" style="left: -100px; top: 20px;">
+          <Key label="Tab" width="cmd" rotate={-20} />
+        </div>
+        <div class="absolute" style="left: -40px; top: 60px;">
+          <Key label="A" rotate={12} />
+        </div>
+        <div class="absolute" style="left: 20px; top: 100px;">
+          <Key label="S" rotate={-8} />
+        </div>
+        <div class="absolute" style="left: 80px; top: 140px;">
+          <Key label="D" rotate={16} />
+        </div>
+        <div class="absolute" style="left: 140px; top: 160px;">
+          <Key label="F" rotate={-12} />
+        </div>
+        <div class="absolute" style="left: 200px; top: 170px;">
+          <Key label="G" rotate={8} />
+        </div>
+
+        {/* Home row - right side */}
+        <div class="absolute" style="left: 840px; top: 160px;">
+          <Key label="H" rotate={-10} />
+        </div>
+        <div class="absolute" style="left: 900px; top: 180px;">
+          <Key label="J" rotate={14} />
+        </div>
+        <div class="absolute" style="left: 960px; top: 210px;">
+          <Key label="K" rotate={-6} />
+        </div>
+        <div class="absolute" style="left: 1020px; top: 240px;">
+          <Key label="L" rotate={18} />
+        </div>
+        <div class="absolute" style="left: 1080px; top: 280px;">
+          <Key label=";" rotate={-14} />
+        </div>
+        <div class="absolute" style="left: 1140px; top: 320px;">
+          <Key label="'" rotate={10} />
+        </div>
+
+        {/* Bottom row - spread wide */}
+        <div class="absolute" style="left: -120px; top: 200px;">
+          <Key label="Shift" width="shift" rotate={-8} />
+        </div>
+        <div class="absolute" style="left: -60px; top: 240px;">
+          <Key label="Z" rotate={15} />
+        </div>
+        <div class="absolute" style="left: 0px; top: 280px;">
+          <Key label="X" rotate={-12} />
+        </div>
+        <div class="absolute" style="left: 60px; top: 310px;">
+          <Key label="C" rotate={20} />
+        </div>
+        <div class="absolute" style="left: 120px; top: 330px;">
+          <Key label="V" rotate={-6} />
+        </div>
+        <div class="absolute" style="left: 180px; top: 340px;">
+          <Key label="B" rotate={10} />
+        </div>
+        <div class="absolute" style="left: 860px; top: 340px;">
+          <Key label="N" rotate={-14} />
+        </div>
+        <div class="absolute" style="left: 920px; top: 330px;">
+          <Key label="M" rotate={8} />
+        </div>
+        <div class="absolute" style="left: 980px; top: 310px;">
+          <Key label="," rotate={-18} />
+        </div>
+        <div class="absolute" style="left: 1040px; top: 280px;">
+          <Key label="." rotate={12} />
+        </div>
+        <div class="absolute" style="left: 1100px; top: 240px;">
+          <Key label="/" rotate={-10} />
+        </div>
+        <div class="absolute" style="left: 1160px; top: 200px;">
+          <Key label="Enter" width="wide" rotate={6} />
+        </div>
+
+        {/* Bottom edge modifiers */}
+        <div class="absolute" style="left: -60px; top: 380px;">
+          <Key label="Ctrl" width="cmd" rotate={-15} />
+        </div>
+        <div class="absolute" style="left: 20px; top: 400px;">
+          <Key label="Alt" width="cmd" rotate={10} />
+        </div>
+        <div class="absolute" style="left: 1000px; top: 400px;">
+          <Key label="Alt" width="cmd" rotate={-8} />
+        </div>
+        <div class="absolute" style="left: 1080px; top: 380px;">
+          <Key label="Ctrl" width="cmd" rotate={15} />
+        </div>
+        <div class="absolute" style="left: 560px; top: 420px;">
+          <Key label="Space" width="space" rotate={0} />
+        </div>
+
+        {/* Extra scattered keys for fullness */}
+        <div class="absolute" style="left: 220px; top: -100px;">
+          <Key label="Esc" width="fn" rotate={-25} />
+        </div>
+        <div class="absolute" style="left: 280px; top: -140px;">
+          <Key label="`" rotate={20} />
+        </div>
+        <div class="absolute" style="left: 340px; top: -100px;">
+          <Key label="-" rotate={-8} />
+        </div>
+        <div class="absolute" style="left: 740px; top: -140px;">
+          <Key label="=" rotate={15} />
+        </div>
+        <div class="absolute" style="left: 800px; top: -100px;">
+          <Key label="Backspace" width="xwide" rotate={-12} />
+        </div>
+        <div class="absolute" style="left: 1180px; top: 60px;">
+          <Key label="]" rotate={22} />
+        </div>
+        <div class="absolute" style="left: 1220px; top: 120px;">
+          <Key label="\" width="cmd" rotate={-18} />
+        </div>
+        <div class="absolute" style="left: 320px; top: 360px;">
+          <Key label="Caps" width="cmd" rotate={-5} />
+        </div>
+        <div class="absolute" style="left: 1180px; top: 280px;">
+          <Key label="Fn" width="fn" rotate={18} />
+        </div>
+      </div>
+    </div>
+  </div>
+</Container>

@@ -7,6 +7,7 @@ import CategoryThumbnail from "../../components/templates/CategoryThumbnail.astr
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
 import { getMostPopularCategories } from "../../data/categories";
 import { getAllTemplates } from "../../data/templates";
+import { GradientOutline } from "src/components/generic/GradientOutline";
 
 const popularCategories = getMostPopularCategories(4);
 const templates = await getAllTemplates();
@@ -26,8 +27,8 @@ const templates = await getAllTemplates();
           <div class="max-w-lg flex flex-col gap-y-3">
             <h1 class="text-4xl font-medium text-gray-900">Templates</h1>
             <span class="text-base/relaxed text-gray-600 text-balance"
-              >Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut vel
-              quia officia nemo at ex sed deserunt qui eos molestiae.</span
+              >Ready-made starting points for blog posts, docs, and more. Pick a
+              template, customize it, and start writing in seconds.</span
             >
           </div>
           <div class="flex gap-x-1">
@@ -41,20 +42,24 @@ const templates = await getAllTemplates();
       </div>
       <div class="flex flex-col gap-y-12">
         <div class="flex flex-col md:flex-row gap-4">
-          <div class="max-w-lg flex flex-col gap-y-3">
-            <h2 class="text-2xl font-medium text-gray-900">Categories</h2>
-            <span class="text-base/relaxed text-gray-600 text-balance"
-              >Browse our most popular template categories to find exactly what
-              you need.</span
-            >
-            <a
-              href="/templates/categories"
-              class="text-sm font-medium text-gray-700 hover:text-gray-900"
-            >
-              View all categories →
-            </a>
+          <div class="flex flex-col gap-y-3 grow">
+            <div class="flex flex-col gap-y-2 justify-center max-w-sm">
+              <h2 class="text-3xl tracking-tight font-medium text-black/85">
+                Categories
+              </h2>
+              <p class="text-base/relaxed text-black/60 max-w-xl text-balance">
+                Browse our most popular template categories to find exactly what
+                you need.
+              </p>
+              <a
+                href="/templates/categories"
+                class="text-sm font-medium text-gray-700 hover:text-gray-900"
+              >
+                View all categories →
+              </a>
+            </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 grow">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {
               popularCategories.map((category) => (
                 <CategoryThumbnail category={category} />

@@ -1,6 +1,6 @@
+import { getRandomColor } from "@lydie/core/colors";
 import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
-import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { mutators } from "@lydie/zero/mutators";
@@ -51,7 +51,7 @@ function RouteComponent() {
             id,
             name: values.value.name,
             slug,
-            color: getRandomWorkspaceColor(),
+            color: getRandomColor().value,
             onboardingDocId,
           }),
         );
