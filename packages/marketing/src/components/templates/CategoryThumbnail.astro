@@ -8,67 +8,112 @@ interface Props {
 }
 
 const { category } = Astro.props;
+const categoryHref = category.path ?? `/templates/categories/${category.slug}`;
 
 // Get the appropriate icon for this category
 const CategoryIcon = categoryIconMap[category.slug];
 const hasIcon = !!CategoryIcon;
 ---
 
+<style>
+  .document-card {
+    transform: translateX(var(--rest-x)) translateY(var(--rest-y))
+      rotate(var(--rest-deg));
+  }
+
+  .group:hover .document-card {
+    transform: translateX(var(--hover-x)) translateY(var(--hover-y))
+      rotate(var(--hover-deg));
+  }
+
+  .embossed-icon :global(svg) {
+    filter: drop-shadow(1px 1px 0px rgba(255, 255, 255, 0.5))
+      drop-shadow(-1px -1px 0px rgba(0, 0, 0, 0.15));
+    opacity: 0.7;
+    color: #d4a574;
+  }
+</style>
+
 <a
-  href={category.path || `/templates/categories/${category.slug}`}
-  class="group relative block"
+  href={categoryHref}
+  class="flex flex-col group/link no-underline text-inherit hover:text-inherit"
 >
-  <div
-    class="relative transition-all duration-300 ease-out group-hover:-translate-y-2"
-  >
-    {/* Folder Back - slides out on hover */}
-    <div
-      class="absolute inset-0 bg-gray-400 rounded-2xl transition-all duration-300 ease-out -translate-y-2 group-hover:-translate-y-5 group-hover:translate-x-1"
-      style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);"
-    >
-      {/* Curved tab on the back folder */}
+  <div class="relative group">
+    <div class="flex flex-col relative">
       <div
-        class="absolute -top-6 left-0 w-32 h-10 bg-gray-400 rounded-t-2xl"
-        style="clip-path: path('M0,40 L0,10 Q0,0 10,0 L40,0 Q60,0 80,20 Q100,40 120,40 L128,40 L128,40 L0,40 Z');"
+        class="rounded-t-xl bg-[#e8ad84] h-6 w-30 border-t border-x border-black/8 relative -mb-0.5"
+      >
+      </div>
+      <div
+        class="h-32 w-full bg-[#e8ad84] rounded-r-xl rounded-b-xl border border-black/8"
       >
       </div>
     </div>
-
-    {/* Folder Front/Body */}
     <div
-      class="relative z-10 bg-gray-500 rounded-2xl overflow-hidden transition-all duration-300 ease-out group-hover:shadow-xl"
+      class="inset-x-0 top-8 bottom-0 absolute flex items-end justify-center"
     >
-      {/* Curved tab on the front folder */}
+      <div class="relative h-32 w-28">
+        {
+          [
+            {
+              restDeg: -8,
+              hoverDeg: -12,
+              index: 0,
+              restX: "-1.5rem",
+              restY: "0.25rem",
+              hoverX: "-1.75rem",
+              hoverY: "-0.5rem",
+            },
+            {
+              restDeg: 0,
+              hoverDeg: 0,
+              index: 1,
+              restX: "0",
+              restY: "0",
+              hoverX: "0",
+              hoverY: "-1.25rem",
+            },
+            {
+              restDeg: 8,
+              hoverDeg: 12,
+              index: 2,
+              restX: "1.5rem",
+              restY: "0.25rem",
+              hoverX: "1.75rem",
+              hoverY: "-0.25rem",
+            },
+          ].map(
+            ({ restDeg, hoverDeg, index, restX, restY, hoverX, hoverY }) => (
+              <div
+                class="document-card absolute bottom-4 left-1/2 -translate-x-1/2 transition-all duration-300 ease-out rounded-lg ring ring-black/8 h-32 w-32 bg-white shadow-surface"
+                style={`z-index: ${index}; --rest-x: ${restX}; --rest-y: ${restY}; --hover-x: ${hoverX}; --hover-y: ${hoverY}; --rest-deg: ${restDeg}deg; --hover-deg: ${hoverDeg}deg; transform-origin: center bottom;`}
+              />
+            )
+          )
+        }
+      </div>
+    </div>
+    <div
+      class="inset-x-1 z-10 top-10 bottom-1 absolute group-hover:-skew-x-2 group-hover:translate-x-0.5 transition-all duration-200 ease-out group-hover:shadow-surface"
+    >
       <div
-        class="absolute -top-6 left-0 w-32 h-10 bg-gray-500 z-0"
-        style="clip-path: path('M0,40 L0,10 Q0,0 10,0 L40,0 Q60,0 80,20 Q100,40 120,40 L128,40 L128,40 L0,40 Z');"
+        class="h-full w-full bg-linear-to-br from-[#f8d4a8] to-[#f4c28e] rounded-b-lg rounded-t-xl ring ring-black/8 relative shadow-surface"
       >
-      </div>
-
-      <div class="relative z-10 p-5 pt-8">
-        <h3 class="text-base font-medium text-white truncate">
-          {category.name}
-        </h3>
-      </div>
-
-      {/* Icon at the bottom */}
-      {
-        hasIcon && (
-          <div class="relative z-10 px-5 pb-5">
-            <div class="flex items-center justify-end">
-              <div class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                <CategoryIcon className="size-5 text-white" />
-              </div>
+        <div
+          class="absolute inset-1 border border-[#e8ad84] border-dashed rounded-lg"
+        >
+        </div>
+        {
+          hasIcon && (
+            <div class="absolute inset-0 flex items-center justify-center embossed-icon">
+              <CategoryIcon className="size-7" />
             </div>
-          </div>
-        )
-      }
+          )
+        }
+      </div>
     </div>
   </div>
-
-  {/* Soft shadow underneath */}
-  <div
-    class="absolute -bottom-2 left-4 right-4 h-4 bg-black/20 rounded-full blur-md transition-all duration-300 group-hover:blur-lg group-hover:bg-black/25 group-hover:left-2 group-hover:right-2 group-hover:-bottom-1"
-  >
+  <div class="flex mt-2">
+    <div class="text-sm font-medium text-gray-700">{category.name}</div>
   </div>
 </a>

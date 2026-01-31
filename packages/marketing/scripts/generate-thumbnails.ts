@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import sharp from "sharp";
 
 import { getAllTemplates } from "../src/data/templates";
-
-import sharp from "sharp";
 
 const THUMBNAIL_WIDTH = 800;
 const THUMBNAIL_HEIGHT = 450;
@@ -45,7 +44,10 @@ function getContrastColor(backgroundColor: string): string {
 }
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function extractTextFromContent(content: unknown): string {
@@ -131,9 +133,7 @@ async function generateThumbnail(
     </svg>
   `;
 
-  await sharp(Buffer.from(svg))
-    .png({ compressionLevel: 9, quality: 90 })
-    .toFile(outputPath);
+  await sharp(Buffer.from(svg)).png({ compressionLevel: 9, quality: 90 }).toFile(outputPath);
 }
 
 function generateTextLines(text: string, color: string): string {
@@ -201,12 +201,7 @@ async function main(): Promise<void> {
     }
 
     try {
-      await generateThumbnail(
-        template.name,
-        rootDoc.title,
-        rootDoc.content,
-        outputPath,
-      );
+      await generateThumbnail(template.name, rootDoc.title, rootDoc.content, outputPath);
       console.log(`✅ Generated thumbnail for ${template.slug}`);
       generated++;
     } catch (error) {

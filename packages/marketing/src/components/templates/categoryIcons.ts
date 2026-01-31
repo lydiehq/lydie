@@ -39,17 +39,14 @@ import {
   TagRegular,
 } from "@fluentui/react-icons";
 
-export const categoryIconMap: Record<
-  string,
-  React.ComponentType<{ className?: string }>
-> = {
+export const categoryIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   // Career and hiring
   "career-hiring": BriefcaseRegular,
   "cover-letters": DocumentCopyRegular,
-  "interviewing": ChatRegular,
+  interviewing: ChatRegular,
   "job-search": SearchRegular,
   "people-management": PeopleRegular,
-  "resume": DocumentRegular,
+  resume: DocumentRegular,
 
   // Writing and publishing
   "blogging-seo": EditRegular,
@@ -57,7 +54,7 @@ export const categoryIconMap: Record<
   "editorial-publishing-ops": LayoutColumnFourRegular,
   "newsletters-email": MailRegular,
   "pr-media": NewsRegular,
-  "scripts": TextBulletListSquareRegular,
+  scripts: TextBulletListSquareRegular,
   "writing-publishing": BookRegular,
 
   // Business and operations
@@ -66,12 +63,12 @@ export const categoryIconMap: Record<
   "consulting-services": PersonSupportRegular,
   "customer-support": HeadsetRegular,
   "funding-grants": MoneyRegular,
-  "marketing": MegaphoneRegular,
+  marketing: MegaphoneRegular,
   "meeting-notes": NotepadRegular,
-  "operations": SettingsRegular,
+  operations: SettingsRegular,
   "partnerships-sponsorships": PeopleSwapRegular,
   "project-management": BoxMultipleRegular,
-  "sales": TagRegular,
+  sales: TagRegular,
   "strategy-planning": MapRegular,
 
   // Education and learning
@@ -79,18 +76,18 @@ export const categoryIconMap: Record<
   "education-learning": HatGraduationRegular,
   "learning-systems": BookOpenRegular,
   "research-writing": SearchRegular,
-  "teaching": PersonSquareRegular,
+  teaching: PersonSquareRegular,
 
   // Personal finance
-  "budget": CalculatorRegular,
+  budget: CalculatorRegular,
   "expense-tracker": ReceiptRegular,
   "personal-finance": WalletRegular,
   "subscription-tracker": CalendarSyncRegular,
-  "taxes": DocumentRegular,
+  taxes: DocumentRegular,
 
   // Health
-  "fitness": HeartPulseRegular,
-  "health": HeartPulseRegular,
+  fitness: HeartPulseRegular,
+  health: HeartPulseRegular,
   "mental-health": BrainCircuitRegular,
   "sleep-tracking": BedRegular,
 
@@ -98,5 +95,5 @@ export const categoryIconMap: Record<
   "home-family": HomeRegular,
   "personal-life": HeartRegular,
   "planning-productivity": CalendarCheckmarkRegular,
-  "travel": VehicleCarRegular,
+  travel: VehicleCarRegular,
 };

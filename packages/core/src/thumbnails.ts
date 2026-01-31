@@ -41,7 +41,10 @@ function getContrastColor(backgroundColor: string): string {
 }
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function extractTextFromContent(content: unknown): string {
@@ -199,9 +202,7 @@ export async function generateAndUploadThumbnail(
 
   // Construct public URL
   const routerUrl = Resource.AssetsRouter.url;
-  const assetDomain = routerUrl.startsWith("http")
-    ? new URL(routerUrl).hostname
-    : routerUrl;
+  const assetDomain = routerUrl.startsWith("http") ? new URL(routerUrl).hostname : routerUrl;
   const publicUrl = `https://${assetDomain}/${s3Key}`;
 
   return {
