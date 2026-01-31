@@ -220,6 +220,7 @@ export function CastShadow({
   lightAngle = 135,
   borderRadius = 0,
 }: CastShadowProps) {
+
   // Calculate dynamic styles
   const clipPath = calculateClipPath(lightAngle, borderRadius);
   const boxShadow = calculateShadows(lightAngle, height, strength);

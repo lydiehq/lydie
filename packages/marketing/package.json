@@ -36,6 +36,7 @@
     "cva": "^1.0.0-beta.4",
     "drizzle-orm": "catalog:",
     "html2canvas-pro": "^1.6.6",
+    "jotai": "^2.17.0",
     "jspdf": "^4.0.0",
     "motion": "^12.29.2",
     "react": "catalog:",

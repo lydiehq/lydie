@@ -21,13 +21,12 @@ const widthClasses: Record<string, string> = {
 };
 
 const baseClasses = [
-  "relative h-[60px] rounded-lg flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-200 flex-shrink-0 shadow-sm",
-  "bg-white",
-  "ring ring-black/3",
+  "relative h-[60px] ring-black/5 ring rounded-xl shadow-legit flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-200 flex-shrink-0 shadow-sm relative",
+  "",
   widthClasses[width] || widthClasses.normal,
   isHighlighted
     ? "bg-gradient-to-b from-[#3b82f6] to-[#2563eb] text-white border-[#1d4ed8] border-t-blue-400 "
-    : "text-black/60",
+    : "text-black/60 bg-linear-to-t from-gray-200 to-gray-100",
   className,
 ].join(" ");
 ---
@@ -40,6 +39,9 @@ const baseClasses = [
   style={rotate !== 0 ? { transform: `rotate(${rotate}deg)` } : undefined}
 >
   <div class={baseClasses}>
+    <div
+      class={`absolute inset-1.5 rounded-lg ring ring-black/3 ${isHighlighted ? "bg-blue-400" : "bg-white"}`}
+    ></div>
     <span class="relative z-10">{label}</span>
     {
       isHighlighted && (
