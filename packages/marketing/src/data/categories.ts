@@ -1,5 +1,8 @@
 import { db, templateCategoriesTable } from "@lydie/database";
-import { eq } from "drizzle-orm";
+
+// Cache for categories to avoid repeated DB queries during build
+let categoriesCache: Category[] | null = null;
+let categoriesCachePromise: Promise<Category[]> | null = null;
 
 export interface Category {
   id: string;
@@ -126,26 +129,52 @@ export const getCategoryByPath = (
 };
 
 export async function getCategoriesFromDb(): Promise<Category[]> {
-  try {
-    const dbCategories = await db.select().from(templateCategoriesTable);
-    const flatCategories: Category[] = dbCategories.map((cat) => ({
-      id: cat.id,
-      name: cat.name,
-      slug: cat.slug,
-      parentId: cat.parentId,
-    }));
-
-    // Add paths to all categories
-    for (const cat of flatCategories) {
-      cat.path = generateCategoryPath(cat, flatCategories);
-    }
-
-    return flatCategories;
-  } catch (error) {
-    console.error("Error fetching categories from database:", error);
-    // Fallback to hardcoded categories
-    return categories;
+  // Return cached result if available
+  if (categoriesCache) {
+    return categoriesCache;
   }
+
+  // Return in-flight promise if one exists (deduplicate concurrent calls)
+  if (categoriesCachePromise) {
+    return categoriesCachePromise;
+  }
+
+  // Create the fetch promise
+  categoriesCachePromise = (async () => {
+    try {
+      const dbCategories = await db.select().from(templateCategoriesTable);
+      const flatCategories: Category[] = dbCategories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        parentId: cat.parentId,
+      }));
+
+      // Add paths to all categories
+      for (const cat of flatCategories) {
+        cat.path = generateCategoryPath(cat, flatCategories);
+      }
+
+      categoriesCache = flatCategories;
+      return flatCategories;
+    } catch (error) {
+      console.error("Error fetching categories from database:", error);
+      // Fallback to hardcoded categories
+      categoriesCache = categories;
+      return categories;
+    } finally {
+      // Clear the promise so future calls after cache clear can work
+      categoriesCachePromise = null;
+    }
+  })();
+
+  return categoriesCachePromise;
+}
+
+// Clear the cache (useful for testing or if data changes)
+export function clearCategoriesCache(): void {
+  categoriesCache = null;
+  categoriesCachePromise = null;
 }
 
 export async function getCategoryTreeFromDb(): Promise<Category[]> {
