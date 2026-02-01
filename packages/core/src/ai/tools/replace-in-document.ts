@@ -17,10 +17,21 @@ export const replaceInDocument = () =>
 - If you want to set or change the document title, use the optional \`title\` parameter
 - The content should start with H2 headings or paragraphs, never H1
 
+**CRITICAL: Atomic Changes Required**
+For ANY non-empty document with targeted changes, use atomic search/replace operations. Full document replacement is wasteful in tokens and creates poor UX. NEVER replace the entire document for small edits.
+
 **How to Use:**
-- **To replace entire document**: Use empty string for search (search: ""). This will replace all content in the document. Use for empty documents (wordCount = 0) or when task requires rewriting entire document.
-- **To modify specific content**: Provide search text to find the content you want to replace. Use targeted search strings to identify the exact location.
+- **To modify specific content** (PREFERRED): Provide search text (10-30 words) that uniquely identifies the exact location. Break multi-part tasks into separate replaceInDocument calls.
+- **To replace entire document**: ONLY use search "" for empty documents (wordCount = 0) OR when the task explicitly requires rewriting the entire document from scratch.
 - **To change the title**: Provide the \`title\` parameter with the new title (plain text, no HTML)
+
+**Avoid Full Document Replacement:**
+- ✗ BAD: User says "remove the last 2 chapters" → Replacing entire document
+- ✓ GOOD: User says "remove the last 2 chapters" → Search for chapter boundaries, replace with empty string or remaining content
+- ✗ BAD: User says "fix this typo" → Replacing entire document  
+- ✓ GOOD: User says "fix this typo" → Search for specific sentence, replace with corrected version
+
+Always prefer 2-3 targeted replacements over 1 full document replacement.
 
 **Search Text Rules:**
 - Empty document (wordCount = 0): Use search "" to replace entire document
