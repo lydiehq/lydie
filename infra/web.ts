@@ -37,6 +37,11 @@ new sst.aws.Astro("Marketing", {
   },
   link: [secret.lydieApiKey, secret.postgresConnectionStringDirect, secret.openAiApiKey],
   ...($dev ? {} : { domain: "lydie.co" }),
+  // Cache static assets for 1 year
+  assets: {
+    versionedFilesCacheHeader: "public,max-age=31536000,immutable",
+    nonVersionedFilesCacheHeader: "public,max-age=0,s-maxage=86400,stale-while-revalidate=604800",
+  },
   ...($dev
     ? {}
     : {

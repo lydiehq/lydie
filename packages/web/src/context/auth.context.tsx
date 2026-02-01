@@ -1,9 +1,19 @@
-import { useRouteContext } from "@tanstack/react-router";
+import { useAuth as useAuthStore } from "@/lib/auth/store";
 
+/**
+ * @deprecated Use `useAuth` from `@/lib/auth/store` instead.
+ * This wrapper maintains backward compatibility during migration.
+ */
 export function useAuth() {
-  const { auth } = useRouteContext({
-    from: "/__auth",
-  });
+  const { user, session, isAuthenticated, isValidating, access, refresh, logout } = useAuthStore();
 
-  return auth;
+  return {
+    user,
+    session,
+    isAuthenticated,
+    isLoading: isValidating,
+    access,
+    refresh,
+    logout,
+  };
 }

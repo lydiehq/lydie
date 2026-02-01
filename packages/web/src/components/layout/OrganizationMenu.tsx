@@ -2,16 +2,14 @@ import { MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
-import { useQueryClient } from "@tanstack/react-query";
 import { createLink } from "@tanstack/react-router";
 import clsx from "clsx";
 import { useState } from "react";
 import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
-import { clearSession } from "@/lib/auth/session";
+import { useAuth } from "@/lib/auth/store";
 import { clearZeroInstance } from "@/lib/zero/instance";
-import { authClient } from "@/utils/auth";
 
 import { OrganizationAvatar } from "./OrganizationAvatar";
 import { OrganizationsDialog } from "./OrganizationsDialog";
@@ -24,14 +22,13 @@ type Props = {
 
 export function OrganizationMenu({ isCollapsed }: Props) {
   const { organization } = useOrganization();
+  const { logout } = useAuth();
 
-  const queryClient = useQueryClient();
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const signOut = async () => {
-    await authClient.signOut();
-    await clearSession(queryClient);
+    await logout();
     clearZeroInstance();
     window.location.href = import.meta.env.DEV ? "http://localhost:3000" : "https://lydie.co";
   };

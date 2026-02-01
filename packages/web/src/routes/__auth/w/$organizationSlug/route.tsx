@@ -1,177 +1,92 @@
 import {
-  Outlet,
-  createFileRoute,
-  notFound,
-  useNavigate,
-  useRouterState,
+	Outlet,
+	createFileRoute,
+	notFound,
+	useNavigate,
 } from "@tanstack/react-router";
-import { useAtomValue } from "jotai";
-import { useCallback, useMemo, useState } from "react";
-import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
+import { useEffect, useState } from "react";
 import { z } from "zod";
+import { useZero } from "@rocicorp/zero/react";
 
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { PanelResizer } from "@/components/panels/PanelResizer";
+import { OrganizationProvider } from "@/context/organization-provider";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
-import { isDockedAtom } from "@/hooks/use-floating-assistant";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
 
 const organizationSearchSchema = z.object({
-  installTemplate: z.string().optional().catch(undefined),
+	installTemplate: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug")({
-  component: RouteComponent,
-  validateSearch: (search) => organizationSearchSchema.parse(search),
-  beforeLoad: async ({ context, params }) => {
-    try {
-      const { zero, queryClient } = context;
-      const { organizationSlug } = params;
-
-      const organization = await loadOrganization(queryClient, zero, organizationSlug);
-
-      // await authClient.organization.setActive({
-      //   organizationId: organization.id,
-      // })
-
-      return { organization };
-    } catch (error) {
-      console.error(error);
-      throw notFound();
-    }
-  },
-  notFoundComponent: () => <div>Organization not found</div>,
-  gcTime: Infinity,
-  staleTime: Infinity,
+	component: RouteComponent,
+	validateSearch: (search) => organizationSearchSchema.parse(search),
+	beforeLoad: async ({ params }) => {
+		return { organizationSlug: params.organizationSlug };
+	},
+	notFoundComponent: () => <div>Organization not found</div>,
+	gcTime: Infinity,
+	staleTime: Infinity,
 });
 
-const COLLAPSED_SIZE = 50; // pixels
-
 function RouteComponent() {
-  return <RouteLayout />;
-}
+	const navigate = useNavigate();
+	const { organizationSlug } = Route.useParams();
+	const { installTemplate } = Route.useSearch();
+	const { queryClient } = Route.useRouteContext();
 
-function RouteLayout() {
-  const sidebarPanelRef = usePanelRef();
-  const assistantPanelRef = usePanelRef();
-  const [dockedAssistantContainer, setDockedAssistantContainer] = useState<HTMLDivElement | null>(
-    null,
-  );
-  const [floatingAssistantContainer, setFloatingAssistantContainer] =
-    useState<HTMLDivElement | null>(null);
-  const [size, setSize] = useState(280); // pixels
-  const routerState = useRouterState();
-  const isDocked = useAtomValue(isDockedAtom);
-  const navigate = useNavigate();
-  const search = Route.useSearch();
-  const params = Route.useParams();
+	// Load organization using Zero
+	const zero = useZero();
+	const [organization, setOrganization] = useState<any>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
-  const dockedAssistantContainerRef = useCallback((node: HTMLDivElement | null) => {
-    setDockedAssistantContainer(node);
-  }, []);
+	useEffect(() => {
+		const load = async () => {
+			if (!zero || !queryClient) return;
+			
+			try {
+				const org = await loadOrganization(queryClient, zero, organizationSlug);
+				setOrganization(org);
+			} catch (error) {
+				console.error(error);
+				throw notFound();
+			} finally {
+				setIsLoading(false);
+			}
+		};
 
-  const floatingAssistantContainerRef = useCallback((node: HTMLDivElement | null) => {
-    setFloatingAssistantContainer(node);
-  }, []);
+		load();
+	}, [zero, queryClient, organizationSlug]);
 
-  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
-    id: "main-panel-group",
-    storage: localStorage,
-  });
+	if (isLoading || !organization) {
+		return <div>Loading...</div>;
+	}
 
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(!!search.installTemplate);
-
-  const handleTemplateDialogClose = (isOpen: boolean) => {
-    setIsTemplateDialogOpen(isOpen);
-
-    if (!isOpen && search.installTemplate) {
-      navigate({
-        to: "/w/$organizationSlug",
-        params: { organizationSlug: params.organizationSlug },
-        search: {},
-        replace: true,
-      });
-    }
-  };
-
-  const toggleSidebar = () => {
-    if (!sidebarPanelRef.current) return;
-    if (sidebarPanelRef.current.isCollapsed()) {
-      sidebarPanelRef.current.expand();
-    } else {
-      sidebarPanelRef.current.collapse();
-    }
-  };
-
-  const currentDocumentId = useMemo(() => {
-    const params = routerState.location.pathname.split("/");
-    const orgSlugIndex = params.indexOf("w");
-    if (orgSlugIndex !== -1 && params[orgSlugIndex + 2]) {
-      return params[orgSlugIndex + 2];
-    }
-    return null;
-  }, [routerState.location.pathname]);
-
-  const shouldShowDockedPanel = isDocked;
-
-  return (
-    <div className="flex h-screen flex-col">
-      <CommandMenu />
-      <div className="panel-group-collapse-animated flex h-full min-h-0 flex-1">
-        <Group
-          orientation="horizontal"
-          defaultLayout={defaultLayout}
-          onLayoutChanged={onLayoutChanged}
-          className="flex-1"
-        >
-          <Panel
-            className="h-full flex flex-col overflow-hidden"
-            panelRef={sidebarPanelRef}
-            id="left-sidebar"
-            collapsible
-            collapsedSize="50px"
-            minSize="200px"
-            maxSize="400px"
-            defaultSize="280px"
-            onResize={(nextSize) => setSize(nextSize.inPixels)}
-          >
-            <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
-          </Panel>
-          <PanelResizer />
-          <Panel>
-            <Outlet />
-          </Panel>
-          {shouldShowDockedPanel && (
-            <>
-              <PanelResizer />
-              <Panel
-                panelRef={assistantPanelRef}
-                id="assistant-panel"
-                defaultSize="400px"
-                minSize="300px"
-                maxSize="600px"
-              >
-                <div ref={dockedAssistantContainerRef} className="h-full pr-1 py-1 pl-px" />
-              </Panel>
-            </>
-          )}
-        </Group>
-      </div>
-      <div ref={floatingAssistantContainerRef} />
-      <FloatingAssistant
-        currentDocumentId={currentDocumentId}
-        dockedContainer={dockedAssistantContainer}
-        floatingContainer={floatingAssistantContainer}
-      />
-      {search.installTemplate && (
-        <InstallTemplateDialog
-          isOpen={isTemplateDialogOpen}
-          onOpenChange={handleTemplateDialogClose}
-          templateSlug={search.installTemplate}
-        />
-      )}
-    </div>
-  );
+	return (
+		<OrganizationProvider organization={organization}>
+			<div className="h-screen flex flex-col overflow-hidden">
+				<CommandMenu />
+				<div className="flex-1 flex overflow-hidden">
+					<Sidebar organization={organization} />
+					<Outlet />
+				</div>
+				<FloatingAssistant />
+				{installTemplate && (
+					<InstallTemplateDialog
+						organizationSlug={organizationSlug}
+						templateId={installTemplate}
+						isOpen={true}
+						onClose={() => {
+							navigate({
+								to: "/w/$organizationSlug",
+								params: { organizationSlug },
+								search: {},
+							});
+						}}
+					/>
+				)}
+			</div>
+		</OrganizationProvider>
+	);
 }

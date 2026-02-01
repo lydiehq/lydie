@@ -10,10 +10,15 @@ export const authClient = createAuthClient({
   plugins: [organizationClient(), customSessionClient(), polarClient(), adminClient()],
 });
 
-export const listOrganizationsQuery = {
-  queryKey: ["auth", "listOrganizations"],
-  queryFn: async () => {
-    const response = await authClient.organization.list();
-    return response.data;
-  },
+export type SessionData = Awaited<ReturnType<typeof authClient.getSession>>["data"];
+
+export type ExtendedSession = SessionData & {
+  session?: {
+    organizations?: Array<{
+      id: string;
+      name: string;
+      slug: string;
+      [key: string]: any;
+    }>;
+  };
 };

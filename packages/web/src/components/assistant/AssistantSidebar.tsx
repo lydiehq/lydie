@@ -16,10 +16,7 @@ type Props = {
   conversationId: string;
 };
 
-export function AssistantSidebar({
-  isOpen,
-  conversationId,
-}: Props) {
+export function AssistantSidebar({ isOpen, conversationId }: Props) {
   const navigate = useNavigate();
   const { organization } = useOrganization();
   const [conversations] = useQuery(
@@ -75,9 +72,8 @@ export function AssistantSidebar({
                 {conversations.map((conversation) => {
                   const isActive = conversation.id === conversationId;
                   const messages = conversation.messages;
-                  const firstMessage = Array.isArray(messages) && messages.length > 0
-                    ? messages[0]
-                    : null;
+                  const firstMessage =
+                    Array.isArray(messages) && messages.length > 0 ? messages[0] : null;
                   const preview =
                     firstMessage?.role === "user"
                       ? typeof firstMessage.parts === "string"
@@ -99,7 +95,9 @@ export function AssistantSidebar({
                       <div className="flex items-start gap-2">
                         <ChatRegular className="size-4 text-gray-400 shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 line-clamp-2 break-words">{preview}</p>
+                          <p className="text-sm text-gray-900 line-clamp-2 break-words">
+                            {preview}
+                          </p>
                           <p className="text-xs text-gray-500 mt-1">
                             {formatDistanceToNow(new Date(conversation.updated_at), {
                               addSuffix: true,

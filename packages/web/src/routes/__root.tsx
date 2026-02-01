@@ -1,13 +1,12 @@
-import { ZeroProvider } from "@rocicorp/zero/react";
 import {
   HeadContent,
   type NavigateOptions,
   Outlet,
   type ToOptions,
   createRootRouteWithContext,
-  redirect,
   useRouter,
 } from "@tanstack/react-router";
+import { authClient } from "@/utils/auth";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { RouterProvider } from "react-aria-components";
@@ -17,8 +16,8 @@ import type { RouterContext } from "@/main";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
-import { loadSession } from "@/lib/auth/session";
-import { getZeroInstance } from "@/lib/zero/instance";
+import { AuthProvider } from "@/lib/auth/provider";
+import { useAuth } from "@/lib/auth/store";
 import { getFontSizePixels, rootFontSizeAtom } from "@/stores/font-size";
 
 declare module "react-aria-components" {
@@ -27,6 +26,7 @@ declare module "react-aria-components" {
     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
   }
 }
+
 export const Route = createRootRouteWithContext<RouterContext>()({
   ssr: false,
   head: () => {
@@ -78,26 +78,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   },
   pendingComponent: LoadingScreen,
   errorComponent: ErrorPage,
+  // Load auth in beforeLoad so it's available in context for child routes
   beforeLoad: async ({ context: { queryClient } }) => {
-    const { auth, organizations } = await loadSession(queryClient);
-    const zeroInstance = getZeroInstance(auth);
-
-    if (
-      auth?.user &&
-      organizations.length === 0 &&
-      !location.pathname.startsWith("/new") &&
-      !location.pathname.startsWith("/invitations")
-    ) {
-      throw redirect({
-        to: "/new",
-      });
-    }
-
-    return { auth, organizations, zero: zeroInstance };
+    const session = await authClient.getSession();
+    return { queryClient, session: session.data };
   },
   component: () => {
     const router = useRouter();
-    const { zero } = Route.useRouteContext();
+    const { queryClient } = Route.useRouteContext();
     const fontSizeOption = useAtomValue(rootFontSizeAtom);
 
     useEffect(() => {
@@ -112,12 +100,42 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       <>
         <HeadContent />
         <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
-          <ZeroProvider zero={zero}>
+          <AuthProvider queryClient={queryClient} fallback={<LoadingScreen />}>
+            <AuthSync />
             <ConfirmDialog />
             <Outlet />
-          </ZeroProvider>
+          </AuthProvider>
         </RouterProvider>
       </>
     );
   },
 });
+
+/**
+ * AuthSync - Handles post-auth redirects
+ */
+function AuthSync() {
+  const router = useRouter();
+  const { access } = useAuth();
+
+  useEffect(() => {
+    const syncAuth = async () => {
+      const auth = await access();
+
+      // Handle redirects for users without organizations
+      if (
+        auth?.user &&
+        auth?.session?.organizations?.length === 0 &&
+        !location.pathname.startsWith("/new") &&
+        !location.pathname.startsWith("/invitations") &&
+        !location.pathname.startsWith("/auth")
+      ) {
+        await router.navigate({ to: "/new" });
+      }
+    };
+
+    syncAuth();
+  }, [access, router]);
+
+  return null;
+}

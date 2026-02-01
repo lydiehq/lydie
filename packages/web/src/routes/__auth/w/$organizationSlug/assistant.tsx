@@ -54,10 +54,7 @@ function AssistantLayout() {
           sidebarOpen={sidebarOpen}
         />
         <div className="flex flex-1 overflow-hidden">
-          <AssistantSidebar
-            isOpen={sidebarOpen}
-            conversationId={conversationId}
-          />
+          <AssistantSidebar isOpen={sidebarOpen} conversationId={conversationId} />
           <div className="flex-1 flex flex-col h-full mx-auto w-full max-w-xl px-4">
             <Outlet />
           </div>

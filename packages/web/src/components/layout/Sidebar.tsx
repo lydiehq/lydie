@@ -26,7 +26,6 @@ import { useMemo } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 
 import { useAuth } from "@/context/auth.context";
-import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useZero } from "@/services/zero";
 import { commandMenuStateAtom } from "@/stores/command-menu";
@@ -42,11 +41,11 @@ import { UsageStats } from "./UsageStats";
 type Props = {
   isCollapsed: boolean;
   onToggle: () => void;
+  organization: any; // Passed from parent route to avoid context timing issues
 };
 
-export function Sidebar({ isCollapsed, onToggle }: Props) {
+export function Sidebar({ isCollapsed, onToggle, organization }: Props) {
   const { createDocument } = useDocumentActions();
-  const { organization } = useOrganization();
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
   const setCommandMenuState = useSetAtom(commandMenuStateAtom);

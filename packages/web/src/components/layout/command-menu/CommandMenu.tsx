@@ -51,6 +51,11 @@ export function CommandMenu() {
   const { organization } = useOrganization();
   const [search, setSearch] = useState("");
 
+  // Guard against undefined organization during loading
+  if (!organization) {
+    return null;
+  }
+
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
     currentDocumentId

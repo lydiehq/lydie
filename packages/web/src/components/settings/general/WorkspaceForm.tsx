@@ -2,14 +2,13 @@ import { getRandomColor } from "@lydie/core/colors";
 import { slugify } from "@lydie/core/utils";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { mutators } from "@lydie/zero/mutators";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/hooks/use-app-form";
-import { revalidateSession } from "@/lib/auth/session";
+import { useAuth } from "@/lib/auth/store";
 import { useZero } from "@/services/zero";
 
 import { OrganizationColorPicker } from "./OrganizationColorPicker";
@@ -26,7 +25,7 @@ type WorkspaceFormProps = {
 export function WorkspaceForm({ organization }: WorkspaceFormProps) {
   const z = useZero();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { refresh } = useAuth();
   const [selectedColor, setSelectedColor] = useState<string>(
     organization.color || getRandomColor().value,
   );
@@ -85,7 +84,7 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
 
         if (slugChanged && mutationSucceeded) {
           try {
-            await revalidateSession(queryClient);
+            await refresh();
           } catch (sessionError) {
             // If session refresh fails, log but don't block navigation
             console.error("Failed to refresh session:", sessionError);

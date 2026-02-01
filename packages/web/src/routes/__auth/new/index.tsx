@@ -5,17 +5,15 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
-import { useQuery as useZeroQuery } from "@rocicorp/zero/react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery as useZeroQuery, useZero } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
 import z from "zod";
 
 import { useAppForm } from "@/hooks/use-app-form";
-import { revalidateSession } from "@/lib/auth/session";
+import { useAuth } from "@/lib/auth/store";
 import { clearZeroInstance } from "@/lib/zero/instance";
-import { useZero } from "@/services/zero";
 import { authClient } from "@/utils/auth";
 
 export const Route = createFileRoute("/__auth/new/")({
@@ -27,13 +25,10 @@ function RouteComponent() {
   const z = useZero();
   const navigate = useNavigate();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { auth } = Route.useRouteContext();
+  const { user, refresh } = useAuth();
   const search = Route.useSearch();
 
-  const defaultName = auth?.user?.name
-    ? `${auth.user.name.split(" ")[0]}'s Workspace`
-    : "My Workspace";
+  const defaultName = user?.name ? `${user.name.split(" ")[0]}'s Workspace` : "My Workspace";
 
   const form = useAppForm({
     defaultValues: {
@@ -58,7 +53,8 @@ function RouteComponent() {
 
         await write.server;
 
-        await revalidateSession(queryClient);
+        // Refresh auth to get new organization
+        await refresh();
         clearZeroInstance();
         await router.invalidate();
 
@@ -81,16 +77,16 @@ function RouteComponent() {
     },
   });
 
-  const [invitations] = useZeroQuery(
-    queries.invitations.byUser({ email: auth?.user?.email || "" }),
-  );
+  // Zero query can run immediately - parent __auth route ensures context is ready
+  const [invitations] = useZeroQuery(queries.invitations.byUser({ email: user?.email || "" }));
 
   const acceptInvitation = async (invitationId: string) => {
     try {
       await authClient.organization.acceptInvitation({
         invitationId,
       });
-      await revalidateSession(queryClient);
+      // Refresh auth to get updated organizations
+      await refresh();
       await router.invalidate();
       navigate({ to: "/" });
     } catch {}
@@ -182,10 +178,9 @@ function RouteComponent() {
               {invitations && invitations.length > 0 && (
                 <div className="border-t border-white/10 pt-8">
                   <div className="gap-y-2 flex flex-col mb-4">
-                    <Heading className="text-white text-lg">Detailed Invitations</Heading>
+                    <Heading className="text-white text-lg">Pending Invitations</Heading>
                     <p className="text-white/90 text-sm">
-                      You have been invited to join the following workspaces using{" "}
-                      {auth?.user?.email}.
+                      You have been invited to join the following workspaces using {user?.email}.
                     </p>
                   </div>
                   <div className="flex flex-col gap-2">

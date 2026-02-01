@@ -1,5 +1,3 @@
-import type { Zero } from "@rocicorp/zero";
-
 import { QueryClient, type QueryClient as QueryClientType } from "@tanstack/react-query";
 import {
   CatchBoundary,
@@ -14,16 +12,16 @@ import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 
-import type { authClient } from "./utils/auth.ts";
-
 import { ErrorPage } from "./components/layout/ErrorPage.tsx";
 import reportWebVitals from "./reportWebVitals.ts";
 import { routeTree } from "./routeTree.gen";
+import type { authClient } from "./utils/auth";
 
 export interface RouterContext {
   queryClient: QueryClientType;
-  zero: Zero;
-  auth: Awaited<ReturnType<typeof authClient.getSession>>["data"];
+  zero?: any;
+  session?: Awaited<ReturnType<typeof authClient.getSession>>["data"];
+  organization?: any; // Set by $organizationSlug route for useOrganization hook
 }
 
 function createRouter() {
@@ -33,8 +31,8 @@ function createRouter() {
       routeTree,
       context: {
         queryClient,
-        zero: undefined as unknown as Zero,
-        auth: undefined as unknown as ReturnType<typeof authClient.getSession>,
+        // Zero is initialized in __auth route, not here
+        // Auth is accessed lazily via useAuth() hook
       } satisfies RouterContext,
       defaultPreload: "viewport",
       // https://github.com/rocicorp/ztunes/blob/main/app/router.tsx

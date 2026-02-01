@@ -11,24 +11,14 @@ import { useOrganization } from "@/context/organization.context";
 export const Route = createFileRoute("/__auth/w/$organizationSlug/$id/")({
   component: RouteComponent,
   ssr: false,
-  loader: async ({ context, params }) => {
-    const { zero, organization } = context;
-    const { id } = params;
-
-    const doc = zero.run(
-      queries.documents.byId({
-        organizationId: organization.id,
-        documentId: id,
-      }),
-    );
-
-    return { doc };
-  },
+  // Note: We don't use a loader here because zero is only available after ZeroProvider renders
+  // Data fetching happens in the component via useQuery
 });
 
 function RouteComponent() {
   const { id } = Route.useParams();
   const { organization } = useOrganization();
+
   const [doc, status] = useQuery(
     queries.documents.byId({
       organizationId: organization.id,
