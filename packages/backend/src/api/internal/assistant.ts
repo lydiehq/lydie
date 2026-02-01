@@ -278,8 +278,8 @@ export const AssistantRoute = new Hono<{
     return createAgentUIStreamResponse({
       agent,
       experimental_transform: smoothStream({
-        delayInMs: 10,
-        chunking: "line",
+        delayInMs: 3,
+        chunking: "word",
       }),
       uiMessages: await validateUIMessages({
         messages: enhancedMessages,
