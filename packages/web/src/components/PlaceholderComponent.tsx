@@ -1,24 +1,21 @@
 import type { NodeViewProps } from "@tiptap/react";
 
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export function PlaceholderComponent(props: NodeViewProps) {
   const { node, editor, getPos, selected } = props;
   const label = node.attrs.label as string;
-  const [content, setContent] = useState(node.textContent || "");
-  const [wasSelected, setWasSelected] = useState(false);
+  const wasSelectedRef = useRef(false);
 
-  // Check if placeholder is empty (no content or just the label)
-  const isEmpty = !content || content === "" || content === label;
-
-  // Update content when node changes
-  useEffect(() => {
-    setContent(node.textContent || "");
-  }, [node.textContent]);
+  const content = node.textContent || "";
+  const isEmpty = !content || content === label;
+  const showPlaceholder = isEmpty && !selected;
 
   // Handle selection changes to track when user leaves the placeholder
   useEffect(() => {
+    const wasSelected = wasSelectedRef.current;
+
     // If previously selected and now not selected, check if we need to restore
     if (wasSelected && !selected) {
       const pos = getPos();
@@ -26,7 +23,7 @@ export function PlaceholderComponent(props: NodeViewProps) {
 
       const currentContent = node.textContent || "";
 
-      if (!currentContent || currentContent === "") {
+      if (!currentContent) {
         // Empty - restore the placeholder label inside this node
         editor
           .chain()
@@ -53,62 +50,57 @@ export function PlaceholderComponent(props: NodeViewProps) {
       }
     }
 
-    setWasSelected(selected);
-  }, [selected, wasSelected, editor, getPos, node, label]);
+    wasSelectedRef.current = selected;
+  }, [selected, editor, getPos, node.nodeSize, node.textContent, label]);
 
-  // Handle click - focus and select all text
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+      // Only handle clicks directly on the placeholder content, not on empty space after it
+      // Check if the click target is the actual content span or the wrapper itself
+      const target = e.target as HTMLElement;
+      const wrapper = e.currentTarget as HTMLElement;
+
+      // If clicking on the wrapper but not on the actual content (empty space to the right),
+      // let the editor handle it naturally - this allows clicking after the placeholder
+      if (target === wrapper) {
+        const rect = wrapper.getBoundingClientRect();
+        // Check if click is in the right 20% of the wrapper (likely after the content)
+        if (e.clientX > rect.left + rect.width * 0.8) {
+          return; // Let the editor place cursor after the placeholder
+        }
+      }
 
       const pos = getPos();
       if (typeof pos !== "number") return;
 
-      // Focus the editor at this position
-      editor.chain().focus().setTextSelection(pos).run();
+      // When clicking on placeholder or when content equals label,
+      // select all content so typing replaces it
+      if (showPlaceholder || node.textContent === label) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      // If content equals the label, select all so typing replaces it
-      if (node.textContent === label) {
         editor
           .chain()
+          .focus()
           .setTextSelection({ from: pos, to: pos + node.nodeSize })
           .run();
       }
+      // Otherwise, let the default TipTap behavior handle cursor placement
     },
-    [editor, getPos, node.textContent, node.nodeSize, label],
+    [editor, getPos, node.textContent, node.nodeSize, label, showPlaceholder],
   );
-
-  // Subscribe to editor updates to track content changes
-  useEffect(() => {
-    const updateHandler = () => {
-      setContent(node.textContent || "");
-    };
-
-    editor.on("update", updateHandler);
-    return () => {
-      editor.off("update", updateHandler);
-    };
-  }, [editor, node.textContent]);
-
-  // Show placeholder label when empty and not currently selected
-  const showPlaceholder = isEmpty && !selected;
 
   return (
     <NodeViewWrapper
       data-placeholder="true"
       data-label={label}
-      className={`placeholder ${showPlaceholder ? "placeholder--empty" : "placeholder--filled"}`}
+      className={`group relative isolate inline cursor-text rounded-sm px-1 py-0.5 transition-all hover:bg-gray-100 ${showPlaceholder ? "bg-gray-200" : "bg-transparent"}`}
       onClick={handleClick}
-      style={{
-        cursor: "text",
-        display: "inline",
-      }}
     >
       {showPlaceholder ? (
-        <span className="placeholder-label">{label}</span>
+        <span className="inline text-gray-600">{label}</span>
       ) : (
-        <NodeViewContent style={{ display: "inline" }} />
+        <NodeViewContent className="inline" />
       )}
     </NodeViewWrapper>
   );

@@ -1,5 +1,6 @@
+import { Placeholder } from "@lydie/editor/extensions";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 import {
@@ -10,6 +11,8 @@ import {
   TreeItem,
   TreeItemContent,
 } from "react-aria-components";
+
+import { PlaceholderComponent } from "./PlaceholderComponent";
 
 // SVG Icon Components
 const CollectionsIcon = ({ className }: { className?: string }) => (
@@ -137,7 +140,12 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
   });
 
   const contentEditor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        addNodeView: () => ReactNodeViewRenderer(PlaceholderComponent, { as: "span" }),
+      }),
+    ],
     content: selectedDoc?.content || { type: "doc", content: [] },
     editable: false,
     immediatelyRender: false,

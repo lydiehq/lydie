@@ -88,7 +88,7 @@ export const organizationQueries = {
             .where("deleted_at", "IS", null)
             .where("title", "ILIKE", searchPattern)
             .orderBy("updated_at", "desc")
-            .limit(20),
+            .limit(10),
         );
     },
   ),

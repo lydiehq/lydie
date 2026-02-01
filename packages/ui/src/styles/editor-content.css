@@ -1428,7 +1428,6 @@ active. */
   display: inline;
   border-radius: 3px;
   padding: 0.1em 0.2em;
-  transition: all 0.15s ease;
 }
 
 /* The placeholder label shown when empty */

@@ -12,9 +12,6 @@ export type { DocumentComponentOptions } from "./document-component";
 export { CodeBlock } from "./code-block";
 export type { CodeBlockOptions } from "./code-block";
 
-export { OnboardingStep } from "./onboarding/onboarding-step";
-export type { OnboardingStepOptions, OnboardingStepTask } from "./onboarding/onboarding-step";
-
 export { OnboardingTextPractice } from "./onboarding/onboarding-text-practice";
 export type {
   OnboardingTextPracticeOptions,

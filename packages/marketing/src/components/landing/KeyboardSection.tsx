@@ -15,7 +15,17 @@ interface KeyProps {
   isNightSkyVisible?: boolean;
 }
 
-function Star({ delay, top, left, size }: { delay: number; top: number; left: number; size: number }) {
+function Star({
+  delay,
+  top,
+  left,
+  size,
+}: {
+  delay: number;
+  top: number;
+  left: number;
+  size: number;
+}) {
   return (
     <div
       className="absolute rounded-full bg-white animate-pulse"
@@ -42,21 +52,22 @@ function NightSky({ isVisible }: { isVisible: boolean }) {
   return (
     <div className="absolute inset-0 rounded-xl overflow-hidden">
       {/* Dark night sky gradient - deep blues with slight orange at bottom */}
-      <div 
+      <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(to bottom, #0a0a1a 0%, #0f172a 15%, #1e1b4b 40%, #312e81 60%, #4c1d95 80%, #7c2d12 95%, #9a3412 100%)'
+          background:
+            "linear-gradient(to bottom, #0a0a1a 0%, #0f172a 15%, #1e1b4b 40%, #312e81 60%, #4c1d95 80%, #7c2d12 95%, #9a3412 100%)",
         }}
       />
-      
+
       {/* Subtle noise/texture overlay for that photo quality */}
-      <div 
+      <div
         className="absolute inset-0 opacity-20"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}
       />
-      
+
       {/* Stars scattered throughout */}
       <div className="absolute inset-0">
         {stars.map((star, i) => (
@@ -79,10 +90,10 @@ function NightSky({ isVisible }: { isVisible: boolean }) {
       </div>
 
       {/* Subtle horizon glow */}
-      <div 
+      <div
         className="absolute bottom-0 left-0 right-0 h-1/3"
         style={{
-          background: 'linear-gradient(to top, rgba(251,113,133,0.3) 0%, transparent 100%)'
+          background: "linear-gradient(to top, rgba(251,113,133,0.3) 0%, transparent 100%)",
         }}
       />
     </div>
@@ -288,7 +299,7 @@ export function KeyboardSection() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative w-full md:w-[440px] h-[320px] rounded-xl overflow-hidden">
                 <NightSky isVisible={showNightSky} />
-                
+
                 {/* CTA Content - always present but behind menu */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10">
                   <p className="text-amber-100/80 text-sm font-medium mb-2 tracking-wide uppercase">
@@ -305,7 +316,11 @@ export function KeyboardSection() {
                     </div>
                   </Button>
                   <p className="text-xs text-white/60 mt-4">
-                    Press <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-white/80 font-sans">⌘K</kbd> to return
+                    Press{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-white/80 font-sans">
+                      ⌘K
+                    </kbd>{" "}
+                    to return
                   </p>
                 </div>
               </div>
@@ -429,7 +444,6 @@ export function KeyboardSection() {
                 rotate={-15}
                 dataKey="meta"
                 isPressed={isKeyPressed("meta")}
-
               />
             </div>
             <div className="absolute z-10" style={{ right: "520px", top: "405px" }}>
@@ -439,23 +453,46 @@ export function KeyboardSection() {
                 rotate={9}
                 dataKey="k"
                 isPressed={isKeyPressed("k")}
-
               />
             </div>
 
             {/* Scattered keys – L Y D I E . C O */}
             <div className="absolute" style={{ left: "-60px", top: "-150px" }}>
-              <Key label="L" rotate={-15} dataKey="l" isPressed={isKeyPressed("l")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="L"
+                rotate={-15}
+                dataKey="l"
+                isPressed={isKeyPressed("l")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
             <div className="absolute" style={{ left: "180px", top: "-120px" }}>
-              <Key label="Y" rotate={-8} dataKey="y" isPressed={isKeyPressed("y")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="Y"
+                rotate={-8}
+                dataKey="y"
+                isPressed={isKeyPressed("y")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
             <div className="absolute" style={{ left: "1040px", top: "-100px" }}>
-              <Key label="N" rotate={20} dataKey="n" isPressed={isKeyPressed("n")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="N"
+                rotate={20}
+                dataKey="n"
+                isPressed={isKeyPressed("n")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
 
             <div className="absolute" style={{ right: "-100px", top: "10px" }}>
-              <Key label="X" rotate={-6} dataKey="x" isPressed={isKeyPressed("x")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="X"
+                rotate={-6}
+                dataKey="x"
+                isPressed={isKeyPressed("x")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
 
             <div className="absolute" style={{ left: "220px", top: "30px" }}>
@@ -465,24 +502,53 @@ export function KeyboardSection() {
                 rotate={-20}
                 dataKey="tab"
                 isPressed={isKeyPressed("tab")}
-
               />
             </div>
             <div className="absolute" style={{ left: "120px", top: "120px" }}>
-              <Key label="D" rotate={-16} dataKey="d" isPressed={isKeyPressed("d")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="D"
+                rotate={-16}
+                dataKey="d"
+                isPressed={isKeyPressed("d")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
             <div className="absolute" style={{ left: "280px", top: "130px" }}>
-              <Key label="I" rotate={8} dataKey="i" isPressed={isKeyPressed("i")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="I"
+                rotate={8}
+                dataKey="i"
+                isPressed={isKeyPressed("i")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
 
             <div className="absolute" style={{ right: "260px", top: "110px" }}>
-              <Key label="C" rotate={-14} dataKey="c" isPressed={isKeyPressed("c")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="C"
+                rotate={-14}
+                dataKey="c"
+                isPressed={isKeyPressed("c")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
             <div className="absolute" style={{ right: "80px", top: "180px" }}>
-              <Key label="O" rotate={-28} dataKey="o" isPressed={isKeyPressed("o")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="O"
+                rotate={-28}
+                dataKey="o"
+                isPressed={isKeyPressed("o")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
             <div className="absolute" style={{ left: "100px", top: "280px" }}>
-              <Key label="E" rotate={15} dataKey="e" isPressed={isKeyPressed("e")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="E"
+                rotate={15}
+                dataKey="e"
+                isPressed={isKeyPressed("e")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
             <div className="absolute" style={{ right: "-100px", top: "160px" }}>
               <Key
@@ -491,7 +557,6 @@ export function KeyboardSection() {
                 rotate={6}
                 dataKey="enter"
                 isPressed={isKeyPressed("enter")}
-
               />
             </div>
 
@@ -502,7 +567,6 @@ export function KeyboardSection() {
                 rotate={-15}
                 dataKey="control"
                 isPressed={isKeyPressed("control")}
-
               />
             </div>
             <div className="absolute" style={{ left: "1020px", top: "360px" }}>
@@ -512,11 +576,17 @@ export function KeyboardSection() {
                 rotate={-8}
                 dataKey="alt"
                 isPressed={isKeyPressed("alt")}
-
               />
             </div>
             <div className="absolute" style={{ left: "1120px", top: "260px" }}>
-              <Key label="Fn" width="fn" rotate={18} dataKey="fn" isPressed={isKeyPressed("fn")} isNightSkyVisible={showNightSky} />
+              <Key
+                label="Fn"
+                width="fn"
+                rotate={18}
+                dataKey="fn"
+                isPressed={isKeyPressed("fn")}
+                isNightSkyVisible={showNightSky}
+              />
             </div>
           </div>
         </div>

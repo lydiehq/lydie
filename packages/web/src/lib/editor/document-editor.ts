@@ -16,7 +16,6 @@ import * as Y from "yjs";
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
 import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/OnboardingAssistantTaskView";
-import { OnboardingStepView } from "@/components/editor/onboarding/OnboardingStepView";
 import { OnboardingTextPracticeView } from "@/components/editor/onboarding/OnboardingTextPracticeView";
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { PlaceholderComponent } from "@/components/PlaceholderComponent";
@@ -104,9 +103,6 @@ export function useDocumentEditor({
         },
         codeBlock: {
           addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
-        },
-        onboardingStep: {
-          addNodeView: () => ReactNodeViewRenderer(OnboardingStepView),
         },
         onboardingTextPractice: {
           addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),

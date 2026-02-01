@@ -274,7 +274,6 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
 
         case "onboardingAssistantTask":
         case "onboardingTextPractice":
-        case "onboardingStep":
           // Onboarding blocks: render inner content when present (e.g. onboardingAssistantTask)
           if (node.content?.length) return builder.doc(renderChildren(node));
           return builder.empty();

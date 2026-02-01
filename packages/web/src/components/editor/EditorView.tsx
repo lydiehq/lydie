@@ -57,6 +57,7 @@ export function EditorView({
         className="flex flex-row grow overflow-y-auto relative scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white"
       >
         <div className="flex mx-auto grow max-w-[65ch] px-4 flex-col pt-12 shrink-0">
+          <BubbleMenu editor={contentEditor} />
           <CoverImageEditor
             documentId={doc.id}
             organizationId={doc.organization_id}
@@ -75,7 +76,6 @@ export function EditorView({
             organizationId={organizationId}
             organizationSlug={organizationSlug}
           />
-          <BubbleMenu editor={contentEditor} />
 
           <EditorContent
             aria-label="Document content"

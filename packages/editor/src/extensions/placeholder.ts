@@ -1,6 +1,6 @@
 import type { NodeViewRenderer } from "@tiptap/core";
 
-import { Node } from "@tiptap/core";
+import { Node, nodeInputRule } from "@tiptap/core";
 
 export interface PlaceholderOptions {
   addNodeView?: () => NodeViewRenderer;
@@ -96,6 +96,20 @@ export const Placeholder = Node.create<PlaceholderOptions>({
             .run();
         },
     };
+  },
+
+  addInputRules() {
+    return [
+      // Match [text] pattern and convert to placeholder
+      // Text inside brackets cannot contain [ or ] characters
+      nodeInputRule({
+        find: /\[([^[\]]+)\]$/,
+        type: this.type,
+        getAttributes: (match) => ({
+          label: `[${match[1]}]`,
+        }),
+      }),
+    ];
   },
 
   addNodeView() {
