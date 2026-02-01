@@ -22,19 +22,18 @@ import { Modal, ModalOverlay } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useZero } from "@/services/zero";
-import { commandMenuOpenAtom, commandMenuStateAtom } from "@/stores/command-menu";
+import { commandMenuOpenAtom } from "@/stores/command-menu";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 import type { MenuItem } from "./CommandMenuItem";
 
+import { CommandMenuDocumentItem } from "./CommandMenuDocumentItem";
 import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
-import { SearchResults } from "./CommandMenuSearchResults";
 import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
 
 const modalStyles = cva({
-  base: "w-full max-w-lg max-h-full rounded-xl shadow-popover bg-clip-padding overflow-hidden",
+  base: "w-full max-w-xl max-h-full rounded-xl shadow-popover bg-clip-padding overflow-hidden",
   variants: {
     isEntering: {
       true: "animate-in fade-in duration-75 ease-out",
@@ -50,10 +49,7 @@ export function CommandMenu() {
   const params = useParams({ strict: false });
   const navigate = useNavigate();
   const { organization } = useOrganization();
-  const z = useZero();
   const [search, setSearch] = useState("");
-  const [pages, setPages] = useState<string[]>([]);
-  const currentPage = pages[pages.length - 1];
 
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
@@ -68,47 +64,26 @@ export function CommandMenu() {
         }),
   );
 
+  // Always search documents based on current search input
   const [searchData] = useQuery(
-    currentPage === "search"
-      ? queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: search,
-        })
-      : queries.organizations.searchDocuments({
-          organizationId: organization.id,
-          searchTerm: "",
-        }),
+    queries.organizations.searchDocuments({
+      organizationId: organization.id,
+      searchTerm: search,
+    }),
   );
 
   const searchDocuments = searchData?.documents || [];
 
-  const [integrationLinks] = useQuery(
-    queries.integrationLinks.byOrganization({
-      organizationId: organization.id,
-    }),
-  );
-
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
-  const [commandMenuState, setCommandMenuState] = useAtom(commandMenuStateAtom);
 
   const handleOpenChange = useCallback(
     (newIsOpen: boolean) => {
-      if (newIsOpen && !isOpen) {
-        if (commandMenuState.initialPage) {
-          setPages([commandMenuState.initialPage]);
-          setCommandMenuState({
-            ...commandMenuState,
-            initialPage: undefined,
-          });
-        }
-      } else if (!newIsOpen && isOpen) {
-        setPages([]);
+      if (!newIsOpen && isOpen) {
         setSearch("");
       }
-
       setOpen(newIsOpen);
     },
-    [isOpen, commandMenuState, setCommandMenuState, setOpen],
+    [isOpen, setOpen],
   );
 
   useEffect(() => {
@@ -164,6 +139,7 @@ export function CommandMenu() {
         id: "delete-document",
         label: "Delete document",
         icon: AddRegular,
+        destructive: true,
         action: () => {
           if (currentDocumentId) {
             const documentTitle = currentDocument.title || "Untitled Document";
@@ -180,15 +156,6 @@ export function CommandMenu() {
     }
 
     const navigationItems: MenuItem[] = [
-      {
-        id: "search",
-        label: "Search documents…",
-        icon: SearchFilled,
-        action: () => {
-          setPages([...pages, "search"]);
-          setSearch(""); // Clear search when entering search page
-        },
-      },
       {
         id: "go-home",
         label: "Go home",
@@ -313,11 +280,30 @@ export function CommandMenu() {
     navigate,
     organization.id,
     organization.slug,
-    pages,
-    z,
-    handleOpenChange,
     publishDocument,
   ]);
+
+  // Create document menu items from search results
+  // Only show if search has at least 2 characters, capped at 10 results
+  const documentItems = useMemo(() => {
+    if (search.length < 2) {
+      return [];
+    }
+    return searchDocuments.slice(0, 10).map((doc) => ({
+      id: `doc-${doc.id}`,
+      documentId: doc.id,
+      label: doc.title || "Untitled Document",
+      action: () => {
+        navigate({
+          to: "/w/$organizationSlug/$id",
+          params: {
+            organizationSlug: organization.slug,
+            id: doc.id,
+          },
+        });
+      },
+    }));
+  }, [searchDocuments, navigate, organization.slug, search.length]);
 
   return (
     <ModalOverlay
@@ -328,63 +314,52 @@ export function CommandMenu() {
     >
       <Modal className={modalStyles}>
         <Dialog className="flex flex-col bg-gray-50">
-          <Command
-            onKeyDown={(e) => {
-              if (e.key === "Escape" || (e.key === "Backspace" && !search)) {
-                e.preventDefault();
-                setPages((pages) => pages.slice(0, -1));
-              }
-            }}
-          >
+          <Command>
             <div className="flex items-center border-b border-gray-100 px-3">
               <SearchFilled className="size-4 text-gray-400 mr-2" />
               <Command.Input
                 autoFocus
                 value={search}
                 onValueChange={setSearch}
-                placeholder={
-                  currentPage === "search" ? "Search documents..." : "Type a command or search..."
-                }
+                placeholder="Type a command or search..."
                 className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
-            <Command.List className="max-h-72 overflow-y-auto overflow-x-hidden p-2">
+            <Command.List className="max-h-80 overflow-y-auto overflow-x-hidden p-2">
               <Command.Empty className="py-6 text-center text-sm text-gray-500">
                 No results found.
               </Command.Empty>
 
-              {/* Main page */}
-              {!currentPage && (
-                <>
-                  {/* Menu sections */}
-                  {menuSections.map((section) => (
-                    <CommandMenuSection
-                      key={section.id}
-                      section={section}
-                      onSelect={(item) => {
-                        if (item.id === "search") {
-                          item.action();
-                        } else {
-                          handleCommand(item.action);
-                        }
-                      }}
+              {/* Menu sections - always shown */}
+              {menuSections.map((section) => (
+                <CommandMenuSection
+                  key={section.id}
+                  section={section}
+                  onSelect={(item) => handleCommand(item.action)}
+                />
+              ))}
+
+              {/* Quick results - document search results at the bottom */}
+              {documentItems.length > 0 && (
+                <Command.Group
+                  heading={
+                    <div className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 text-left">
+                      Quick results
+                    </div>
+                  }
+                >
+                  {documentItems.map((item) => (
+                    <CommandMenuDocumentItem
+                      key={item.id}
+                      item={item}
+                      onSelect={(docItem) => handleCommand(docItem.action)}
                     />
                   ))}
-                </>
-              )}
-
-              {/* Search page */}
-              {currentPage === "search" && (
-                <SearchResults
-                  searchDocuments={[...searchDocuments]}
-                  integrationLinks={integrationLinks}
-                  organizationId={organization.id}
-                  onNavigate={(options) => handleCommand(() => navigate(options))}
-                />
+                </Command.Group>
               )}
             </Command.List>
           </Command>
-          <CommandMenuKeyboardHelp showBack={pages.length > 0} />
+          <CommandMenuKeyboardHelp />
         </Dialog>
       </Modal>
     </ModalOverlay>

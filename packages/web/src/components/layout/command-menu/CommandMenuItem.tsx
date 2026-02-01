@@ -31,6 +31,7 @@ export function CommandMenuItem({ item, onSelect }: CommandMenuItemProps) {
   return (
     <Command.Item
       key={item.id}
+      value={`${item.label} ${item.id}`}
       onSelect={() => onSelect?.(item)}
       className={item.customClassName || itemClassName({ destructive: item.destructive })}
     >
