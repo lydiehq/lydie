@@ -409,7 +409,6 @@ export const userSettingsTable = pgTable("user_settings", {
     .notNull()
     .unique()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  persistDocumentTreeExpansion: boolean("persist_document_tree_expansion").notNull().default(true),
   ...timestamps,
 });
 

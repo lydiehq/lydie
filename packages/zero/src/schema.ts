@@ -187,7 +187,6 @@ const userSettings = table("user_settings")
   .columns({
     id: string(),
     user_id: string(),
-    persist_document_tree_expansion: boolean(),
     ...timestamps,
   })
   .primaryKey("id");

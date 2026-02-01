@@ -1,4 +1,5 @@
 import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
 import { type Schema, schema } from "@lydie/zero/schema";
 import { Zero } from "@rocicorp/zero";
 
@@ -42,4 +43,14 @@ export function clearZeroInstance(): void {
     console.log("Clearing Zero instance");
     delete globalWithZero[ZERO_INSTANCE_KEY];
   }
+}
+
+export function preloadSidebarData(
+  zero: Zero<Schema>,
+  organizationSlug: string,
+  _organizationId: string,
+): void {
+  zero.preload(queries.organizations.documents({ organizationSlug }), {
+    ttl: "1m",
+  });
 }

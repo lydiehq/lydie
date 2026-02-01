@@ -49,7 +49,7 @@ function RouteComponent() {
           description="Customize your personal preferences and settings."
           descriptionClassName="text-sm/relaxed text-gray-700"
         />
-        <PreferencesSection userSettings={userSettings} />
+        <PreferencesSection />
       </div>
 
       <Separator />

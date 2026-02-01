@@ -59,7 +59,9 @@ export const zero = new sst.aws.Service("Zero", {
   environment: {
     ...commonEnv,
     ZERO_NUM_SYNC_WORKERS: "4",
-    ...($dev ? {} : { ZERO_LITESTREAM_BACKUP_URL: $interpolate`s3://${replicationBucket.name}/backup` }),
+    ...($dev
+      ? {}
+      : { ZERO_LITESTREAM_BACKUP_URL: $interpolate`s3://${replicationBucket.name}/backup` }),
   },
   logging: {
     retention: "1 month",
