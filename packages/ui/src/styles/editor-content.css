@@ -71,7 +71,7 @@
 
   h1 {
     font-size: var(--text-2xl);
-    line-height: 1;
+    line-height: var(--text-2xl--line-height);
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
@@ -80,7 +80,7 @@
 
   h2 {
     font-size: var(--text-xl);
-    line-height: 1;
+    line-height: var(--text-xl--line-height);
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
@@ -89,7 +89,7 @@
 
   h3 {
     font-size: var(--text-lg);
-    line-height: 1;
+    line-height: var(--text-lg--line-height);
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
@@ -98,7 +98,7 @@
 
   h4 {
     font-size: var(--text-base);
-    line-height: 1;
+    line-height: var(--text-base--line-height);
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
