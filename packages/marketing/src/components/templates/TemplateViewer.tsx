@@ -77,9 +77,10 @@ type TemplateDocument = {
 
 type TemplateViewerProps = {
   documents: TemplateDocument[];
+  templateInstallUrl: string;
 };
 
-export function TemplateViewer({ documents }: TemplateViewerProps) {
+export function TemplateViewer({ documents, templateInstallUrl }: TemplateViewerProps) {
   const [selectedDocId, setSelectedDocId] = useState<string>(documents[0]?.id || "");
 
   // Convert template documents to tree items
@@ -153,7 +154,8 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
       attributes: {
         class: "prose prose-lg max-w-none focus:outline-none",
       },
-    },
+      templateInstallUrl,
+    } as Record<string, unknown>,
   });
 
   // Update editor content when selected document changes

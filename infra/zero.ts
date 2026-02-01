@@ -38,54 +38,6 @@ const commonEnv = {
     : "https://api.lydie.co/internal/zero/queries",
 };
 
-// oxlint-disable-next-line no-unused-expressions
-!$dev
-  ? new sst.aws.Service("ReplicationManager", {
-      wait: true,
-      cluster,
-      cpu: "0.25 vCPU",
-      memory: "0.5 GB",
-      architecture: "arm64",
-      capacity: "spot",
-      image: commonEnv.ZERO_IMAGE_URL,
-      link: [replicationBucket],
-      health: {
-        command: ["CMD-SHELL", "curl -f http://localhost:4849/ || exit 1"],
-        interval: "5 seconds",
-        retries: 3,
-        startPeriod: "300 seconds",
-      },
-      environment: {
-        ...commonEnv,
-        ZERO_LITESTREAM_BACKUP_URL: $interpolate`s3://${replicationBucket.name}/backup`,
-      },
-      loadBalancer: {
-        public: false,
-        ports: [
-          {
-            listen: "80/http",
-            forward: "4849/http",
-          },
-        ],
-      },
-      transform: {
-        service: {
-          healthCheckGracePeriodSeconds: 900000,
-        },
-        target: {
-          healthCheck: {
-            enabled: true,
-            path: "/keepalive",
-            protocol: "HTTP",
-            interval: 5,
-            healthyThreshold: 2,
-            timeout: 3,
-          },
-        },
-      },
-    })
-  : undefined;
-
 export const zero = new sst.aws.Service("Zero", {
   cluster,
   ...($app.stage === "production"
@@ -106,8 +58,8 @@ export const zero = new sst.aws.Service("Zero", {
   },
   environment: {
     ...commonEnv,
-    ZERO_NUM_SYNC_WORKERS: "4", // Must be <= (ZERO_UPSTREAM_MAX_CONNS - 1) for replication stream
-    ...($dev ? {} : { ZERO_CHANGE_STREAMER_MODE: "discover" }),
+    ZERO_NUM_SYNC_WORKERS: "4",
+    ...($dev ? {} : { ZERO_LITESTREAM_BACKUP_URL: $interpolate`s3://${replicationBucket.name}/backup` }),
   },
   logging: {
     retention: "1 month",
