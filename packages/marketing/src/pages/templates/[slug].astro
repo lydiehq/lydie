@@ -1,29 +1,22 @@
 ---
+export const prerender = false;
+
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import { Button } from "../../components/generic/Button";
 import { FAQSection } from "../../components/tools/FAQSection";
 import { TemplateViewer } from "../../components/templates/TemplateViewer";
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
-import { getAllTemplates } from "../../data/templates";
+import { getAllTemplates, type Template } from "../../data/templates";
+import type { Category } from "../../data/categories";
 import { findRelatedTemplates } from "@lydie/core/embedding/search";
 import { serializeToHTML } from "@lydie/core/content";
 
-export async function getStaticPaths() {
-  try {
-    const templates = await getAllTemplates();
-    return templates.map((template) => ({
-      params: { slug: template.slug },
-      props: { template },
-    }));
-  } catch (error) {
-    console.error("Failed to fetch documents for static paths:", error);
-    // Return empty array to prevent build failure
-    return [];
-  }
-}
+const { slug } = Astro.params;
 
-const { template } = Astro.props;
+// Fetch the template by slug
+const templates = await getAllTemplates();
+const template = templates.find((t: Template) => t.slug === slug);
 
 if (!template) {
   return new Response(null, { status: 404 });
@@ -85,7 +78,7 @@ try {
             {
               categories && categories.length > 0 && (
                 <div class="flex flex-wrap gap-2">
-                  {categories.map((category) => (
+                  {categories.map((category: Category) => (
                     <a
                       href={
                         category.path ||
@@ -144,7 +137,7 @@ try {
         template.faqs && template.faqs.length > 0 && (
           <section class="max-w-2xl mt-12">
             <FAQSection
-              faqs={template.faqs.map((faq) => ({
+              faqs={template.faqs.map((faq: { question: string; answer: string }) => ({
                 q: faq.question,
                 a: faq.answer,
               }))}

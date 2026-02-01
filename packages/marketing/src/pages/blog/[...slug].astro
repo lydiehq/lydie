@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 import { type Document } from "@lydie-app/sdk";
 import { Image } from "astro:assets";
 import BlogPost from "../../layouts/BlogPost.astro";
@@ -6,19 +8,6 @@ import { lydieClient } from "../../utils/lydie-client";
 import FormattedDate from "../../components/FormattedDate.astro";
 import { Heading } from "../../components/generic/Heading";
 import LydieContent from "../../components/LydieContent.astro";
-
-export async function getStaticPaths() {
-  try {
-    const { documents } = await lydieClient.getDocuments();
-    return documents.map((doc) => ({
-      params: { slug: doc.slug },
-    }));
-  } catch (error) {
-    console.error("Failed to fetch documents for static paths:", error);
-    // Return empty array to prevent build failure
-    return [];
-  }
-}
 
 // Get the slug from the URL parameters
 const { slug } = Astro.params;

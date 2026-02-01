@@ -15,7 +15,7 @@ export default defineConfig({
     }),
     react(),
   ],
-  output: "static",
+  output: "hybrid",
   adapter: aws(),
   vite: {
     plugins: [tailwindcss()],

@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 import Layout from "../../../layouts/Layout.astro";
 import { Container } from "../../../components/Container";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
@@ -11,19 +13,6 @@ import {
 import { getAllTemplates } from "../../../data/templates";
 import TemplateThumbnail from "../../../components/templates/TemplateThumbnail.astro";
 import CategoryThumbnail from "../../../components/templates/CategoryThumbnail.astro";
-
-export async function getStaticPaths() {
-  const allCategories = await getCategoriesFromDb();
-
-  return allCategories.map((category) => {
-    // Remove the /templates/categories/ prefix to get just the path segments
-    const path =
-      category.path?.replace("/templates/categories/", "") || category.slug;
-    return {
-      params: { path },
-    };
-  });
-}
 
 const { path } = Astro.params;
 const allCategories = await getCategoriesFromDb();
