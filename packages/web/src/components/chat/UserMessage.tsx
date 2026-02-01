@@ -5,40 +5,16 @@ import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { useMemo } from "react";
-import { Streamdown } from "streamdown";
 
 import { useOrganization } from "@/context/organization.context";
 import { type ParsedTextSegment, parseReferences } from "@/utils/parse-references";
 
-export interface MessageProps {
-  message: DocumentChatAgentUIMessage;
-  status: "submitted" | "streaming" | "ready" | "error";
-  isLastMessage: boolean;
-  className?: string;
-}
-
-export function Message({ message, status, isLastMessage, className = "" }: MessageProps) {
-  if (message.role === "user") {
-    return <UserMessage message={message} className={className} />;
-  }
-
-  return (
-    <AssistantMessage
-      message={message}
-      status={status}
-      isLastMessage={isLastMessage}
-      className={className}
-    />
-  );
-}
-
-export function UserMessage({
-  message,
-  className = "",
-}: {
+type UserMessageProps = {
   message: DocumentChatAgentUIMessage;
   className?: string;
-}) {
+};
+
+export function UserMessage({ message, className = "" }: UserMessageProps) {
   return (
     <div className={`flex justify-end ${className}`}>
       <div className="flex flex-col items-end max-w-[80%]">
@@ -65,56 +41,9 @@ export function UserMessage({
   );
 }
 
-export function AssistantMessage({
-  message,
-  status,
-  isLastMessage,
-  className = "",
-}: {
-  message: DocumentChatAgentUIMessage;
-  status: "submitted" | "streaming" | "ready" | "error";
-  isLastMessage: boolean;
-  className?: string;
-}) {
-  const shouldShowMetadata = status === "ready" || !isLastMessage;
-
-  return (
-    <div className={`flex justify-start w-full gap-y-1 flex-col ${className}`}>
-      <div className="flex flex-col gap-y-2 max-w-[80%]">
-        <div className="bg-gray-100 text-gray-900 rounded-r-lg rounded-bl-lg rounded-tl-sm p-2 whitespace-pre-wrap">
-          {message.parts?.map((part: any, index: number) => {
-            if (part.type === "text") {
-              return (
-                <Streamdown
-                  key={index}
-                  isAnimating={status === "streaming" && isLastMessage}
-                  parseIncompleteMarkdown={true}
-                >
-                  {part.text}
-                </Streamdown>
-              );
-            }
-            return null;
-          })}
-        </div>
-        {shouldShowMetadata && (
-          <div className="flex flex-col gap-y-1">
-            {message.role === "user" && <MessageContext message={message} align="left" />}
-            {message.metadata?.createdAt && (
-              <span className="text-xs text-gray-400">
-                {format(new Date(message.metadata.createdAt), "HH:mm")}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Renders text with inline reference pills
 // Optimized to only parse when references are detected
-export function TextWithReferences({ text, className = "" }: { text: string; className?: string }) {
+function TextWithReferences({ text, className = "" }: { text: string; className?: string }) {
   const segments = useMemo(() => parseReferences(text), [text]);
 
   return (

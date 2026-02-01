@@ -8,7 +8,8 @@ import { Button, DialogTrigger } from "react-aria-components";
 import { Streamdown } from "streamdown";
 import { StickToBottom } from "use-stick-to-bottom";
 
-import { UserMessage } from "./Message";
+import { streamdownHeadings } from "./streamdown/headings";
+import { UserMessage } from "./UserMessage";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
 import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";
 import { ReplaceInDocumentTool } from "./tools/ReplaceInDocumentTool";
@@ -210,6 +211,7 @@ const MessagePart = memo(function MessagePart({
         isAnimating={status === "streaming" && isLastMessage}
         parseIncompleteMarkdown={true}
         components={{
+          ...streamdownHeadings,
           p: ({ children }) => <p className="text-gray-700 text-sm/relaxed">{children}</p>,
           li: ({ children }) => <li className="text-gray-700 text-sm/relaxed">{children}</li>,
         }}
