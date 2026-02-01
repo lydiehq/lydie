@@ -20,13 +20,22 @@ type Props = {
   messages: DocumentChatAgentUIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   organizationId: string;
+  user?: { name?: string | null; email?: string | null } | null;
+  agentName?: string | null;
   onApplyContent?: (
     edits: any,
     onProgress?: (current: number, total: number, usedLLM: boolean) => void,
   ) => void;
 };
 
-export function ChatMessages({ messages, status, organizationId, onApplyContent }: Props) {
+export function ChatMessages({
+  messages,
+  status,
+  organizationId,
+  user,
+  agentName,
+  onApplyContent,
+}: Props) {
   const lastMessage = messages[messages.length - 1];
   const isSubmitting =
     status === "submitted" && messages.length > 0 && lastMessage?.role === "user";
@@ -43,11 +52,11 @@ export function ChatMessages({ messages, status, organizationId, onApplyContent 
       resize="smooth"
       initial={{ damping: 1, stiffness: 1 }}
     >
-      <StickToBottom.Content className="flex flex-col gap-y-2 p-3">
+      <StickToBottom.Content className="flex flex-col gap-y-4 p-3">
         {messages.map((message, index) => (
           <div key={message.id}>
             {message.role === "user" ? (
-              <UserMessage message={message} />
+              <UserMessage message={message} user={user} />
             ) : (
               <AssistantMessageWithTools
                 message={message}
@@ -55,21 +64,31 @@ export function ChatMessages({ messages, status, organizationId, onApplyContent 
                 status={status}
                 isLastMessage={index === messages.length - 1}
                 organizationId={organizationId}
+                agentName={agentName}
               />
             )}
           </div>
         ))}
-        {shouldShowLoading && <ThinkingIndicator />}
+        {shouldShowLoading && <ThinkingIndicator agentName={agentName} />}
       </StickToBottom.Content>
     </StickToBottom>
   );
 }
 
-function ThinkingIndicator() {
+function ThinkingIndicator({ agentName }: { agentName?: string | null }) {
+  const displayName = agentName || "Assistant";
+
   return (
     <div className="flex justify-start w-full">
       <div className="flex items-center gap-3">
+        {/* Assistant Avatar */}
+        <div className="size-5 rounded bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+          <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
         <div className="flex items-center gap-x-2 text-gray-600 text-sm">
+          <span className="font-medium text-gray-900">{displayName}</span>
           <ThinkingAnimation />
           <span>Thinking</span>
         </div>
@@ -84,6 +103,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   status,
   isLastMessage,
   organizationId,
+  agentName,
 }: {
   message: DocumentChatAgentUIMessage;
   onApplyContent?: (
@@ -93,6 +113,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   status: "submitted" | "streaming" | "ready" | "error";
   isLastMessage: boolean;
   organizationId: string;
+  agentName?: string | null;
 }) {
   const formatDuration = (duration?: number) => {
     if (!duration) return "";
@@ -105,6 +126,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   );
 
   const shouldShowMetadata = status === "ready" || !isLastMessage;
+  const displayName = agentName || "Assistant";
 
   const handleApplyAll = async () => {
     if (!onApplyContent || replaceTools.length === 0) {
@@ -129,67 +151,86 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   };
 
   return (
-    <div className="flex justify-start w-full gap-y-1 flex-col">
-      <div className="flex flex-col">
-        {groupMessageParts(message.parts).map((group, index) => {
-          if (group.type === "research-group") {
-            const actions = group.parts
-              .map(extractActionFromToolPart)
-              .filter((a): a is NonNullable<typeof a> => a !== null);
-            const isLoading = actions.some((a) => a.status === "loading");
-            return <ResearchGroup key={index} actions={actions} isLoading={isLoading} />;
-          }
-          return (
-            <MessagePart
-              key={index}
-              part={group.part}
-              status={status}
-              isLastMessage={isLastMessage}
-              organizationId={organizationId}
-            />
-          );
-        })}
-      </div>
-      {shouldShowMetadata && (
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col gap-y-1">
-            {message.metadata?.createdAt && (
-              <span className="text-gray-400 text-[11px]">
-                {format(new Date(message.metadata.createdAt), "HH:mm")}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-x-1">
-            <DialogTrigger>
-              <Button className="p-0.5 hover:bg-gray-100 rounded">
-                <MoreVerticalRegular className="size-3" />
-              </Button>
-              <Popover>
-                <div className="flex flex-col gap-y-1 text-[11px] text-gray-500 divide-y divide-gray-200">
-                  {message.metadata?.duration && (
-                    <span className="p-0.5">
-                      Response time: {formatDuration(message.metadata.duration)}
-                    </span>
-                  )}
-                  {message.metadata?.usage && (
-                    <span className="p-0.5">Tokens used: {message.metadata.usage}</span>
-                  )}
-                  {onApplyContent && replaceTools.length > 0 && (
-                    <div className="p-0.5 pt-1">
-                      <Button
-                        onPress={handleApplyAll}
-                        className="text-[11px] text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded w-full text-left"
-                      >
-                        Apply all changes ({replaceTools.length})
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Popover>
-            </DialogTrigger>
-          </div>
+    <div className="flex flex-col gap-y-1.5">
+      {/* Header with avatar and name */}
+      <div className="flex items-center gap-x-2">
+        {/* Assistant Avatar */}
+        <div className="size-5 rounded bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+          <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
         </div>
-      )}
+        <span className="text-sm font-medium text-gray-900">{displayName}</span>
+        {message.metadata?.createdAt && (
+          <span className="text-xs text-gray-400">
+            {format(new Date(message.metadata.createdAt), "HH:mm")}
+          </span>
+        )}
+      </div>
+
+      {/* Message content */}
+      <div className="flex justify-start w-full gap-y-1 flex-col">
+        <div className="flex flex-col">
+          {groupMessageParts(message.parts).map((group, index) => {
+            if (group.type === "research-group") {
+              const actions = group.parts
+                .map(extractActionFromToolPart)
+                .filter((a): a is NonNullable<typeof a> => a !== null);
+              const isLoading = actions.some((a) => a.status === "loading");
+              return <ResearchGroup key={index} actions={actions} isLoading={isLoading} />;
+            }
+            return (
+              <MessagePart
+                key={index}
+                part={group.part}
+                status={status}
+                isLastMessage={isLastMessage}
+                organizationId={organizationId}
+              />
+            );
+          })}
+        </div>
+        {shouldShowMetadata && (
+          <div className="flex justify-between items-center mt-1">
+            <div className="flex flex-col gap-y-1">
+              {message.metadata?.createdAt && (
+                <span className="text-gray-400 text-[11px]">
+                  {format(new Date(message.metadata.createdAt), "HH:mm")}
+                </span>
+              )}
+            </div>
+            <div className="flex gap-x-1">
+              <DialogTrigger>
+                <Button className="p-0.5 hover:bg-gray-100 rounded">
+                  <MoreVerticalRegular className="size-3" />
+                </Button>
+                <Popover>
+                  <div className="flex flex-col gap-y-1 text-[11px] text-gray-500 divide-y divide-gray-200">
+                    {message.metadata?.duration && (
+                      <span className="p-0.5">
+                        Response time: {formatDuration(message.metadata.duration)}
+                      </span>
+                    )}
+                    {message.metadata?.usage && (
+                      <span className="p-0.5">Tokens used: {message.metadata.usage}</span>
+                    )}
+                    {onApplyContent && replaceTools.length > 0 && (
+                      <div className="p-0.5 pt-1">
+                        <Button
+                          onPress={handleApplyAll}
+                          className="text-[11px] text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded w-full text-left"
+                        >
+                          Apply all changes ({replaceTools.length})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Popover>
+              </DialogTrigger>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 });

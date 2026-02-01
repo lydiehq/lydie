@@ -23,6 +23,7 @@ import { createPortal } from "react-dom";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
 import { ChatMessages } from "@/components/chat/ChatMessages";
+import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import {
@@ -305,6 +306,16 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   selectedAgentId: string | null;
   onSelectAgent: (agentId: string) => void;
 }) {
+  const { user } = useAuth();
+  const [selectedAgent] = useQuery(
+    selectedAgentId
+      ? queries.agents.byId({
+          organizationId,
+          agentId: selectedAgentId,
+        })
+      : null,
+  );
+
   const pendingMessage = useAtomValue(pendingMessageAtom);
   const clearPendingMessage = useSetAtom(clearPendingMessageAtom);
   const [pendingContent, setPendingContent] = useState<string | undefined>(undefined);
@@ -406,6 +417,8 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
         messages={messages}
         status={status as "submitted" | "streaming" | "ready" | "error"}
         organizationId={organizationId}
+        user={user}
+        agentName={selectedAgent?.name}
       />
       <div className="p-1.5 relative">
         {isChatEmpty && (

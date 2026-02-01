@@ -6,35 +6,48 @@ import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { useMemo } from "react";
 
+import { UserAvatar } from "@/components/layout/UserAvatar";
 import { useOrganization } from "@/context/organization.context";
 import { type ParsedTextSegment, parseReferences } from "@/utils/parse-references";
 
-type UserMessageProps = {
+export type UserMessageProps = {
   message: DocumentChatAgentUIMessage;
   className?: string;
+  user?: { name?: string | null; email?: string | null } | null;
 };
 
-export function UserMessage({ message, className = "" }: UserMessageProps) {
+export function UserMessage({ message, className = "", user }: UserMessageProps) {
+  const userName = user?.name || user?.email || "You";
+
   return (
-    <div className={`flex justify-end ${className}`}>
-      <div className="flex flex-col items-end max-w-[80%]">
-        <div className="bg-black/4 text-gray-700 rounded-l-lg rounded-br-lg rounded-tr-sm p-2 flex flex-col gap-y-1">
-          {message.parts?.map((part: any, index: number) => {
-            if (part.type === "text") {
-              return (
-                <TextWithReferences key={index} text={part.text} className="text-sm/relaxed" />
-              );
-            }
-            return null;
-          })}
-        </div>
-        <div className="flex flex-col items-end gap-y-1 mt-1">
-          <MessageContext message={message} align="right" />
-          {message.metadata?.createdAt && (
-            <span className="text-xs text-gray-400">
-              {format(new Date(message.metadata.createdAt), "HH:mm")}
-            </span>
-          )}
+    <div className={`flex flex-col gap-y-1.5 ${className}`}>
+      {/* Header with avatar and name */}
+      <div className="flex items-center gap-x-2">
+        <UserAvatar user={user} size="sm" />
+        <span className="text-sm font-medium text-gray-900">{userName}</span>
+        {message.metadata?.createdAt && (
+          <span className="text-xs text-gray-400">
+            {format(new Date(message.metadata.createdAt), "HH:mm")}
+          </span>
+        )}
+      </div>
+
+      {/* Message content */}
+      <div className="flex">
+        <div className="flex flex-col max-w-[80%]">
+          <div className="bg-black/4 text-gray-700 rounded-lg rounded-tl-sm p-2.5 flex flex-col gap-y-1">
+            {message.parts?.map((part: any, index: number) => {
+              if (part.type === "text") {
+                return (
+                  <TextWithReferences key={index} text={part.text} className="text-sm/relaxed" />
+                );
+              }
+              return null;
+            })}
+          </div>
+          <div className="flex flex-col items-start gap-y-1 mt-1">
+            <MessageContext message={message} align="left" />
+          </div>
         </div>
       </div>
     </div>
