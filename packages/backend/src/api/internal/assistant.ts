@@ -284,6 +284,7 @@ export const AssistantRoute = new Hono<{
       uiMessages: await validateUIMessages({
         messages: enhancedMessages,
       }),
+      abortSignal: c.req.raw.signal,
       messageMetadata: ({ part }): MessageMetadata | undefined => {
         if (part.type === "start") {
           return {
@@ -298,7 +299,12 @@ export const AssistantRoute = new Hono<{
         }
         return undefined;
       },
-      onFinish: async ({ messages: finalMessages }) => {
+      onFinish: async ({ messages: finalMessages, isAborted }) => {
+        if (isAborted) {
+          console.log("Stream was aborted - skipping DB save");
+          return;
+        }
+
         const assistantMessage = finalMessages[finalMessages.length - 1];
 
         const savedMessage = await saveMessage({

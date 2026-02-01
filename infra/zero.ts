@@ -113,7 +113,6 @@ export const zero = new sst.aws.Service("Zero", {
     retention: "1 month",
   },
   loadBalancer: {
-    public: true,
     ...($dev ? {} : { domain: "zero.lydie.co" }),
     rules: [
       { listen: "80/http", forward: "4848/http" },
