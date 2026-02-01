@@ -330,6 +330,12 @@ function EditModeContent({
   const [linkLabelValue, setLinkLabelValue] = useState(initialText);
   const linkInputRef = useRef<HTMLInputElement>(null);
 
+  // Filter the search results to determine if menu is effectively open
+  const filteredResults = searchResults?.filter((doc) =>
+    contains(doc.title || "Untitled document", linkInputValue),
+  );
+  const isMenuOpen = filteredResults && filteredResults.length > 0;
+
   // Notify parent of search changes
   useEffect(() => {
     onSearchChange?.(linkInputValue);
@@ -438,6 +444,11 @@ function EditModeContent({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter") {
+        // Don't submit if the autocomplete menu is open with results
+        // Let the Autocomplete handle Enter for menu item selection
+        if (isMenuOpen && searchResults && searchResults.length > 0) {
+          return;
+        }
         e.preventDefault();
         handleSubmit();
       } else if (e.key === "Escape") {
@@ -445,7 +456,7 @@ function EditModeContent({
         handleClose();
       }
     },
-    [handleSubmit, handleClose],
+    [handleSubmit, handleClose, isMenuOpen, searchResults],
   );
 
   return (
@@ -480,7 +491,10 @@ function EditModeContent({
           </div>
         </div>
         <span className="text-xs text-gray-500">Documents</span>
-        <Menu className="h-32 overflow-y-auto" aria-label="Search documents">
+        <Menu
+          className="h-32 overflow-y-auto"
+          aria-label="Search documents"
+        >
           {searchResults?.map((doc) => (
             <MenuItem
               key={doc.id}
