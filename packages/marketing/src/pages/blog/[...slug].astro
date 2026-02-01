@@ -1,6 +1,12 @@
 ---
 export const prerender = false;
 
+// ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+);
+
 import { type Document } from "@lydie-app/sdk";
 import { Image } from "astro:assets";
 import BlogPost from "../../layouts/BlogPost.astro";
