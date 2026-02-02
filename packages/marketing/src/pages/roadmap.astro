@@ -1,7 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Container from "../components/Container.astro";
-import SectionHeader from "../components/landing/SectionHeader";
 import { GradientOutline } from "../components/generic/GradientOutline";
 import Divider from "../components/landing/Divider.astro";
 import {
@@ -9,6 +8,7 @@ import {
   CircleRegular,
   ClockRegular,
 } from "@fluentui/react-icons";
+import { SectionHeader } from "src/components/landing/SectionHeader";
 
 type RoadmapItem = {
   title: string;
@@ -119,13 +119,12 @@ function getStatusLabel(status: string) {
   <Container
     className="flex flex-col items-center justify-center min-h-[40vh] py-16 gap-y-32"
   >
-    <div class="text-center relative py-12 size-full">
+    <div class="p-4 relative size-full">
       <GradientOutline client:load />
       <SectionHeader
         eyebrow="Roadmap"
         title="What we're building"
         description="Our roadmap shows what we've shipped, what we're working on, and what's coming next."
-        centered
       />
     </div>
 

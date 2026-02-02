@@ -12,8 +12,9 @@ import BlogPost from "../../layouts/BlogPost.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { lydieClient } from "../../utils/lydie-client";
 import FormattedDate from "../../components/FormattedDate.astro";
-import Heading from "../../components/generic/Heading";
 import LydieContent from "../../components/LydieContent.astro";
+import { Heading } from "src/components/generic/Heading";
+import { Container } from "src/components/Container";
 
 const { slug } = Astro.params;
 
@@ -70,86 +71,97 @@ const structuredData = {
     type="application/ld+json"
     set:html={JSON.stringify(structuredData)}
   />
-  <article class="max-w-2xl mx-auto flex flex-col gap-y-4">
-    <Breadcrumbs
-      items={[{ label: "Blog", href: "/blog" }, { label: document.title }]}
-    />
-    <header class="flex flex-col gap-y-4 mb-4">
-      <Heading>{document.title}</Heading>
-      {
-        (document as any).customFields?.excerpt && (
-          <p class="text-base text-gray-600">
-            {(document as any).customFields.excerpt}
-          </p>
-        )
-      }
-      <span class="text-gray-500 text-sm">
-        <FormattedDate date={new Date(document.createdAt)} />
-      </span>
-    </header>
-    <div
-      class="rounded-lg ring ring-black/5 overflow-hidden h-80 [&>img]:object-cover [&>img]:w-full [&>img]:h-80"
-    >
-      <Image
-        src={coverImageSrc}
-        alt=""
-        width={672}
-        height={320}
-        layout="constrained"
-        fit="cover"
-        class="w-full h-80"
-      />
-    </div>
-    <div class="prose mt-12">
-      <LydieContent
-        content={document.jsonContent}
-        linkResolver={(ref) => {
-          // Resolve internal links to /blog/[slug]
-          // The slug is now embedded in the internal-link mark attrs
-          if (ref.type === "internal" && ref.slug) {
-            return `/blog/${ref.slug}`;
-          }
-          // Fallback to document ID if slug not available
-          if (ref.type === "internal" && ref.id) {
-            return `/blog/${ref.id}`;
-          }
-          return ref.href || "#";
-        }}
-      />
-    </div>
-    <hr class="my-8 border-gray-200" />
-    <div class="flex flex-col gap-y-4">
-      <span class="text-gray-500 text-sm"> Related posts </span>
-      <div class="grid md:grid-cols-2 grid-cols-1 gap-2">
-        {
-          document.related?.map((post: any) => (
-            <a
-              href={`/blog/${post.slug}`}
-              class="rounded-lg bg-black/2 p-4 flex md:h-32 flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline bg-center bg-cover bg-no-repeat"
-              style={
-                post.coverImage
-                  ? `background-image: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(${post.coverImage})`
-                  : ""
+  <div class="py-16">
+    <Container>
+      <div class="mx-auto">
+        <article class="max-w-2xl mx-auto flex flex-col gap-y-4">
+          <Breadcrumbs
+            items={[
+              { label: "Blog", href: "/blog" },
+              { label: document.title },
+            ]}
+          />
+          <header class="flex flex-col gap-y-4 mb-4">
+            <Heading>{document.title}</Heading>
+            {
+              (document as any).customFields?.excerpt && (
+                <p class="text-base text-gray-600">
+                  {(document as any).customFields.excerpt}
+                </p>
+              )
+            }
+            <span class="text-gray-500 text-sm">
+              <FormattedDate date={new Date(document.createdAt)} />
+            </span>
+          </header>
+          <div
+            class="rounded-lg ring ring-black/5 overflow-hidden h-80 [&>img]:object-cover [&>img]:w-full [&>img]:h-80"
+          >
+            <Image
+              src={coverImageSrc}
+              alt=""
+              width={672}
+              height={320}
+              layout="constrained"
+              fit="cover"
+              class="w-full h-80"
+            />
+          </div>
+          <div class="prose mt-12">
+            <LydieContent
+              content={document.jsonContent}
+              linkResolver={(ref) => {
+                // Resolve internal links to /blog/[slug]
+                // The slug is now embedded in the internal-link mark attrs
+                if (ref.type === "internal" && ref.slug) {
+                  return `/blog/${ref.slug}`;
+                }
+                // Fallback to document ID if slug not available
+                if (ref.type === "internal" && ref.id) {
+                  return `/blog/${ref.id}`;
+                }
+                return ref.href || "#";
+              }}
+            />
+          </div>
+          <hr class="my-8 border-gray-200" />
+          <div class="flex flex-col gap-y-4">
+            <span class="text-gray-500 text-sm"> Related posts </span>
+            <div class="grid md:grid-cols-2 grid-cols-1 gap-2">
+              {
+                document.related?.map((post: any) => (
+                  <a
+                    href={`/blog/${post.slug}`}
+                    class="rounded-lg bg-black/2 p-4 flex md:h-32 flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline bg-center bg-cover bg-no-repeat"
+                    style={
+                      post.coverImage
+                        ? `background-image: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(${post.coverImage})`
+                        : ""
+                    }
+                  >
+                    <span
+                      class="text-base font-medium text-ellipsis overflow-hidden whitespace-nowrap"
+                      class:list={[
+                        post.coverImage ? "text-white" : "text-gray-900",
+                      ]}
+                    >
+                      {post.title}
+                    </span>
+                    <p
+                      class="text-sm"
+                      class:list={[
+                        post.coverImage ? "text-white/80" : "text-gray-500",
+                      ]}
+                    >
+                      <FormattedDate date={new Date(post.createdAt)} />
+                    </p>
+                  </a>
+                ))
               }
-            >
-              <span
-                class="text-base font-medium text-ellipsis overflow-hidden whitespace-nowrap"
-                class:list={[post.coverImage ? "text-white" : "text-gray-900"]}
-              >
-                {post.title}
-              </span>
-              <p
-                class="text-sm"
-                class:list={[
-                  post.coverImage ? "text-white/80" : "text-gray-500",
-                ]}
-              >
-                <FormattedDate date={new Date(post.createdAt)} />
-              </p>
-            </a>
-          ))
-        }
+            </div>
+          </div>
+        </article>
       </div>
-    </div>
-  </article>
+    </Container>
+  </div>
 </BlogPost>

@@ -34,7 +34,13 @@ export async function GET() {
 
   // Feature pages (includes main feature pages and subpages)
   for (const featurePath of getAllFeaturePaths()) {
-    urls.push(generateUrlEntry(featurePath));
+    urls.push(
+      generateUrlEntry({
+        ...featurePath,
+        priority: "0.7",
+        changefreq: "monthly",
+      }),
+    );
   }
 
   // Integration pages
