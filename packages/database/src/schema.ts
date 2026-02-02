@@ -201,7 +201,6 @@ export const documentsTable = pgTable(
     uniqueIndex("documents_integration_organization_link_slug_key")
       .on(table.organizationId, table.integrationLinkId, table.slug)
       .where(sql`deleted_at IS NULL`),
-    index("documents_organization_id_idx").on(table.organizationId),
     index("documents_parent_id_idx").on(table.parentId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
     // Below indexes are important for performance, don't delete!
@@ -319,7 +318,13 @@ export const assistantConversationsTable = pgTable(
     }),
     ...timestamps,
   },
-  (table) => [index("assistant_conversations_organization_id_idx").on(table.organizationId)],
+  (table) => [
+    index("assistant_conversations_user_created_id_idx").on(
+      table.userId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
 );
 
 export const assistantMessagesTable = pgTable(
@@ -375,7 +380,6 @@ export const documentComponentsTable = pgTable("document_components", {
   ...timestamps,
 });
 
-// LLM usage tracking (unified for both document and assistant chat)
 export const llmUsageTable = pgTable(
   "llm_usage",
   {
@@ -440,7 +444,13 @@ export const integrationConnectionsTable = pgTable(
     statusMessage: text("status_message"), // Optional error/status details
     ...timestamps,
   },
-  (table) => [index("integration_connections_organization_id_idx").on(table.organizationId)],
+  (table) => [
+    index("integration_connections_organization_created_id_idx").on(
+      table.organizationId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
 );
 
 export const integrationLinksTable = pgTable(
@@ -467,8 +477,12 @@ export const integrationLinksTable = pgTable(
   },
   (table) => [
     index("integration_links_connection_id_idx").on(table.connectionId),
-    index("integration_links_organization_id_idx").on(table.organizationId),
     index("integration_links_integration_type_idx").on(table.integrationType),
+    index("integration_links_organization_created_id_idx").on(
+      table.organizationId,
+      table.createdAt,
+      table.id,
+    ),
   ],
 );
 
