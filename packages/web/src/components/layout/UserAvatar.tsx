@@ -29,7 +29,7 @@ function getColorFromSeed(seed: string): string {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     const char = seed.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
 
@@ -37,11 +37,7 @@ function getColorFromSeed(seed: string): string {
   return COLORS[index].value;
 }
 
-export function UserAvatar({
-  size,
-  className,
-  user,
-}: UserAvatarProps) {
+export function UserAvatar({ size, className, user }: UserAvatarProps) {
   // Generate a consistent color based on user's name or email
   const seed = user?.name || user?.email || "";
   const color = getColorFromSeed(seed);

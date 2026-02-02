@@ -16,24 +16,11 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user"
 function RouteComponent() {
   const { user } = useAuth();
 
-  const [userSettings] = useQuery(queries.settings.user({}));
   const [userInvitations] = useQuery(
     queries.invitations.byUser({
       email: user.email,
     }),
   );
-
-  if (!userSettings) {
-    return (
-      <div className="flex flex-col gap-y-6">
-        <div>
-          <Heading level={1}>User Settings</Heading>
-        </div>
-        <Separator />
-        <div className="text-sm text-gray-500">Loading settings...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-y-6">

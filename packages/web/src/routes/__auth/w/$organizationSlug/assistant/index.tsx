@@ -23,7 +23,7 @@ function NewConversationPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/__auth/w/$organizationSlug/assistant/" });
   const initialPrompt = (search as { prompt?: string })?.prompt;
-  
+
   // Eagerly generate the conversation ID that will be used
   const [conversationId] = useState(() => createId());
 

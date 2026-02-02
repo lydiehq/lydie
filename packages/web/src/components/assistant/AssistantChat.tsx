@@ -78,7 +78,14 @@ export function AssistantChat({
         onPromptUsed?.();
       }
     },
-    [sendMessage, currentInitialPrompt, onPromptUsed, isNewConversation, hasNavigated, onNavigateToChat],
+    [
+      sendMessage,
+      currentInitialPrompt,
+      onPromptUsed,
+      isNewConversation,
+      hasNavigated,
+      onNavigateToChat,
+    ],
   );
 
   const canStop = status === "submitted" || status === "streaming";
@@ -88,13 +95,13 @@ export function AssistantChat({
     <div className="flex flex-col h-full">
       <div className="flex flex-col flex-1 min-h-0 relative">
         {isChatEmpty && showEmptyState ? (
-          <motion.div 
+          <motion.div
             className="absolute inset-0 flex flex-col items-center justify-center px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <motion.div 
+            <motion.div
               className="flex flex-col gap-y-4 items-center w-full max-w-xl"
               layoutId="assistant-input-container"
             >
@@ -116,7 +123,7 @@ export function AssistantChat({
               status={status as "submitted" | "streaming" | "ready" | "error"}
               organizationId={organizationId}
             />
-            <motion.div 
+            <motion.div
               className="p-3 relative shrink-0"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

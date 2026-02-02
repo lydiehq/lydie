@@ -57,9 +57,7 @@ export function H5({ children, className }: HeadingProps) {
 
 export function H6({ children, className }: HeadingProps) {
   return (
-    <h6
-      className={`text-xs font-medium text-gray-500 mt-2 mb-1 italic ${className || ""}`}
-    >
+    <h6 className={`text-xs font-medium text-gray-500 mt-2 mb-1 italic ${className || ""}`}>
       {children}
     </h6>
   );

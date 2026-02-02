@@ -13,7 +13,7 @@ import { Tree } from "react-aria-components";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
-import { getUserStorage, removeUserStorage, setUserStorage } from "@/lib/user-storage";
+import { getUserStorage, setUserStorage } from "@/lib/user-storage";
 
 import { DocumentTreeItem } from "./DocumentTreeItem";
 
@@ -51,53 +51,28 @@ const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
 type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documents>>;
 
-function findParentDocumentIds(documentId: string, documents: QueryResult["documents"]): string[] {
-  const document = documents.find((doc) => doc.id === documentId);
-  if (!document || !document.parent_id) {
-    return [];
-  }
-
-  const parentIds: string[] = [];
-  let currentParentId: string | null = document.parent_id;
-
-  while (currentParentId) {
-    parentIds.push(currentParentId);
-    const parentDoc = documents.find((d) => d.id === currentParentId);
-    currentParentId = parentDoc?.parent_id ?? null;
-  }
-
-  return parentIds.reverse();
-}
-
 export function DocumentTree() {
   const { organization } = useOrganization();
 
   const { session } = useAuth();
   const userId = session?.userId;
 
-  const [userSettings] = useQuery(queries.settings.user({}));
-  const persistExpansion = userSettings?.persist_document_tree_expansion ?? true;
-
   const [initialized, setInitialized] = useState(false);
   const [expandedKeysArray, setExpandedKeysArray] = useAtom(documentTreeExpandedKeysAtom);
 
   useEffect(() => {
-    if (!initialized && persistExpansion) {
+    if (!initialized) {
       const stored = loadFromStorage(userId);
       setExpandedKeysArray(stored);
       setInitialized(true);
-    } else if (!initialized) {
-      setInitialized(true);
     }
-  }, [initialized, persistExpansion, userId, setExpandedKeysArray]);
+  }, [initialized, userId, setExpandedKeysArray]);
 
   useEffect(() => {
-    if (initialized && persistExpansion) {
+    if (initialized) {
       saveToStorage(userId, expandedKeysArray);
-    } else if (initialized && !persistExpansion) {
-      removeUserStorage(userId, STORAGE_KEY);
     }
-  }, [initialized, persistExpansion, userId, expandedKeysArray]);
+  }, [initialized, userId, expandedKeysArray]);
 
   const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
 

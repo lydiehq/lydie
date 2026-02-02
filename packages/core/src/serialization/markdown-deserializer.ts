@@ -70,7 +70,8 @@ export function deserializeFromMarkdown(
     }
 
     // Parse placeholder HTML first: <span data-placeholder data-label="...">...</span>
-    const placeholderPattern = /<span data-placeholder[^>]*data-label="([^"]*)"[^>]*>([^<]*)<\/span>/g;
+    const placeholderPattern =
+      /<span data-placeholder[^>]*data-label="([^"]*)"[^>]*>([^<]*)<\/span>/g;
     let lastIndex = 0;
     let match;
 

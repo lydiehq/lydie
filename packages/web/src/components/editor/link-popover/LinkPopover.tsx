@@ -491,10 +491,7 @@ function EditModeContent({
           </div>
         </div>
         <span className="text-xs text-gray-500">Documents</span>
-        <Menu
-          className="h-32 overflow-y-auto"
-          aria-label="Search documents"
-        >
+        <Menu className="h-32 overflow-y-auto" aria-label="Search documents">
           {searchResults?.map((doc) => (
             <MenuItem
               key={doc.id}

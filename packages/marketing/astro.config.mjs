@@ -1,6 +1,5 @@
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
-import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import aws from "astro-sst";
 import { defineConfig } from "astro/config";
@@ -8,13 +7,7 @@ import { defineConfig } from "astro/config";
 // https://astro.build/config
 export default defineConfig({
   site: "https://lydie.co",
-  integrations: [
-    mdx(),
-    sitemap({
-      filter: (page) => !page.includes("/playground/"),
-    }),
-    react(),
-  ],
+  integrations: [mdx(), react()],
   output: "static",
   adapter: aws(),
   vite: {

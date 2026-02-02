@@ -124,11 +124,7 @@ try {
           aria-label="Visual preview of {templateName} template"
           data-template-preview="true"
         >
-          <TemplateViewer 
-            client:load 
-            documents={template.documents} 
-            templateInstallUrl={`${import.meta.env.PUBLIC_API_URL}/public/template-install?template=${template.slug}`}
-          />
+          <TemplateViewer client:load documents={template.documents} />
         </div>
       </figure>
       <div class="max-w-2xl flex flex-col gap-y-8 mt-12">
