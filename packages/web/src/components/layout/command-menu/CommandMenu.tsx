@@ -10,7 +10,6 @@ import {
 } from "@fluentui/react-icons";
 import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { overlayStyles } from "@lydie/ui/components/generic/Modal";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -31,6 +30,18 @@ import type { MenuItem } from "./CommandMenuItem";
 import { CommandMenuDocumentItem } from "./CommandMenuDocumentItem";
 import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
 import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
+
+const commandMenuOverlayStyles = cva({
+  base: "fixed top-0 left-0 w-full h-(--visual-viewport-height) isolate z-40 bg-black/[15%] flex items-start justify-center p-4 pt-[20vh] text-center",
+  variants: {
+    isEntering: {
+      true: "animate-in fade-in duration-100 ease-out",
+    },
+    isExiting: {
+      true: "animate-out fade-out duration-100 ease-in",
+    },
+  },
+});
 
 const modalStyles = cva({
   base: "w-full max-w-xl max-h-full rounded-xl shadow-popover bg-clip-padding overflow-hidden",
@@ -310,7 +321,7 @@ export function CommandMenu() {
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
       isDismissable
-      className={overlayStyles}
+      className={commandMenuOverlayStyles}
     >
       <Modal className={modalStyles}>
         <Dialog className="flex flex-col bg-gray-50">
