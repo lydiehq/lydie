@@ -6,8 +6,6 @@ import { readFileSync } from "fs";
 import { cluster } from "./cluster";
 import { secret } from "./secret";
 
-const replicationBucket = new sst.aws.Bucket(`replication-bucket`);
-
 const conn = secret.postgresConnectionStringDirect;
 
 const tag = $dev
@@ -49,7 +47,6 @@ export const zero = new sst.aws.Service("Zero", {
       }
     : {}),
   image: commonEnv.ZERO_IMAGE_URL,
-  link: [replicationBucket],
   health: {
     command: ["CMD-SHELL", "curl -f http://localhost:4848/ || exit 1"],
     interval: "5 seconds",
@@ -59,9 +56,6 @@ export const zero = new sst.aws.Service("Zero", {
   environment: {
     ...commonEnv,
     ZERO_NUM_SYNC_WORKERS: "4",
-    ...($dev
-      ? {}
-      : { ZERO_LITESTREAM_BACKUP_URL: $interpolate`s3://${replicationBucket.name}/backup` }),
   },
   logging: {
     retention: "1 month",

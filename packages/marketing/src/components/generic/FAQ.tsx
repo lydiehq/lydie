@@ -1,5 +1,5 @@
-import { ChevronRightRegular } from "@fluentui/react-icons";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { AnimatePresence, motion } from "motion/react";
 import React, { useContext } from "react";
 import {
   Button,
@@ -20,10 +20,10 @@ interface FAQProps {
   className?: string;
 }
 
-export function FAQ({ title = "Frequently Asked Questions", items, className }: FAQProps) {
+export function FAQ({ items }: FAQProps) {
   return (
-    <div className={className}>
-      <h2 className="text-lg font-medium text-black/85">{title}</h2>
+    <div className="gap-y-2 flex flex-col">
+      <h2 className="text-lg font-medium text-black/85">Frequently Asked Questions</h2>
       <div className="space-y-2">
         {items.map((item, index) => (
           <FAQItem
@@ -44,19 +44,46 @@ interface FAQItemProps {
   isLast?: boolean;
 }
 
+// Create Motion wrapper for React Aria DisclosurePanel
+const MotionDisclosurePanel = motion.create(DisclosurePanel);
+
 function FAQItem({ question, answer }: FAQItemProps) {
   return (
     <Disclosure className="border-b border-black/6 last:border-b-0">
-      <Heading>
-        <Button
-          slot="trigger"
-          className="relative w-full flex items-center justify-between gap-4 py-2 text-left after:pointer-events-none after:absolute after:inset-y-0 after:-inset-x-3 after:rounded-lg after:bg-transparent after:content-[''] hover:after:bg-black/4 after:transition-colors after:duration-100 after:-z-10"
-        >
-          <span className="text-base font-medium text-black/85 pr-4">{question}</span>
-          <ChevronIcon />
-        </Button>
-      </Heading>
-      <DisclosurePanel className="text-sm/relaxed pb-4 text-black/70">{answer}</DisclosurePanel>
+      {({ isExpanded }) => (
+        <>
+          <Heading className="mb-2">
+            <Button
+              slot="trigger"
+              className="relative w-full flex items-center justify-between gap-4 py-1.5 text-left after:pointer-events-none after:absolute after:inset-y-0 after:-inset-x-2 after:rounded-lg after:bg-transparent after:content-[''] hover:after:bg-black/3 after:transition-colors after:duration-100 after:-z-10"
+            >
+              <span className="text-[0.9375rem] font-medium text-black/85 pr-4">{question}</span>
+              <ChevronIcon />
+            </Button>
+          </Heading>
+          <AnimatePresence initial={false}>
+            {isExpanded && (
+              <MotionDisclosurePanel
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                className="text-[0.9375rem]/relaxed text-black/70"
+              >
+                <motion.div
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -10, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1], delay: 0.05 }}
+                  className="pb-4 max-w-[65ch]"
+                >
+                  {answer}
+                </motion.div>
+              </MotionDisclosurePanel>
+            )}
+          </AnimatePresence>
+        </>
+      )}
     </Disclosure>
   );
 }

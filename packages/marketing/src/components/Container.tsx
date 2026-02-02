@@ -2,13 +2,14 @@ import { twMerge } from "tailwind-merge";
 
 const sizeClasses: Record<string, string> = {
   sm: "max-w-3xl",
+  xl: "max-w-xl",
   default: "max-w-5xl",
 };
 
 type Props = {
   children: React.ReactNode;
   className?: string;
-  size?: "sm";
+  size?: "sm" | "xl";
 };
 
 export function Container({ children, className, size }: Props) {

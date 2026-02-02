@@ -1,0 +1,210 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { Button } from "../../components/generic/Button";
+import { ChevronRightRegular } from "@fluentui/react-icons";
+import { CTASection } from "../../components/landing/CTASection";
+import { FAQSection } from "src/components/tools/FAQSection";
+import { GradientOutline } from "src/components/generic/GradientOutline";
+import { ComposableDemo } from "../../components/landing/ComposableDemo";
+import { SectionHeader } from "../../components/landing/SectionHeader";
+import Divider from "src/components/landing/Divider.astro";
+import "../../styles/grainy-gradient.css";
+
+const title = "Personal Knowledge Base Software | Lydie";
+const description =
+  "Looking for the best personal knowledge base software? Lydie helps you build a personal knowledge base that grows with you. Free to start, with AI features to organize your expertise.";
+
+const faqItems = [
+  {
+    q: "What is a personal knowledge base?",
+    a: "A personal knowledge base is your private repository of information, ideas, and expertise. It's where you capture what you learn, document your thoughts, and organize knowledge in a way that makes sense to you. Think of it as your second brain—a place to offload information so you can focus on thinking and creating. Unlike simple note-taking apps, a knowledge base helps you build connections between ideas over time.",
+  },
+  {
+    q: "How do I organize my personal knowledge base?",
+    a: "Start with broad categories that reflect your life and interests—work projects, learning notes, personal goals, hobbies. Use nested pages to drill down into specifics. Link related notes together to create connections. The key is to organize by action and context rather than just topic, so you can find what you need when you need it. Lydie makes it easy to reorganize as your system evolves.",
+  },
+  {
+    q: "How do you create a personal knowledge base?",
+    a: "Creating a personal knowledge base starts with choosing the right tool. Start small—create a few main categories that reflect your interests and work. Capture everything you want to remember: notes from meetings, book summaries, project ideas, and insights. The most important habit is consistent capture. Don't worry about perfect organization at first; you can always reorganize as patterns emerge. Link related notes together to build a web of connected knowledge.",
+  },
+  {
+    q: "Can I access my knowledge base across devices?",
+    a: "Yes! Lydie syncs your knowledge base across all your devices—desktop, tablet, and mobile. Start writing on your laptop at work, review on your phone during your commute, and expand on ideas from your tablet at home. Everything stays in sync automatically. Whether you use our web app, desktop app, or mobile app, your knowledge is always available.",
+  },
+  {
+    q: "What types of content can I store in my knowledge base?",
+    a: "Anything you want to remember or reference later: meeting notes, book summaries, project ideas, research findings, journal entries, goals and plans, code snippets, inspiration, and more. Lydie supports rich text, images, code blocks, and embeds so you can capture information in whatever format works best. Your knowledge base becomes a rich repository of everything you learn.",
+  },
+  {
+    q: "How is this different from note-taking apps?",
+    a: "Traditional note-taking apps are often just digital filing cabinets. A knowledge base is designed for connection and retrieval—you link ideas together, resurface relevant information when you need it, and build knowledge over time. It's not just storage; it's a thinking tool that helps you make sense of what you know. With features like internal linking, powerful search, and AI assistance, Lydie goes far beyond simple note-taking.",
+  },
+  {
+    q: "What are the best personal knowledge base apps?",
+    a: "The best personal knowledge base apps combine powerful organization, easy capture, and intelligent features. Lydie stands out with its ergonomic editor, AI-powered assistance, and seamless internal linking. While tools like Notion offer templates for knowledge bases, Lydie is purpose-built for deep thinking and knowledge management. We focus on making the writing experience delightful while providing powerful tools to organize and connect your ideas.",
+  },
+  {
+    q: "Is there a free personal knowledge base software option?",
+    a: "Yes! Lydie offers a generous free tier so you can start building your personal knowledge base without any cost. The free plan includes unlimited pages, powerful search, and core organization features. As your knowledge base grows, you can upgrade to access AI features and advanced capabilities. We're committed to making knowledge management accessible to everyone.",
+  },
+  {
+    q: "How does AI help with a personal knowledge base?",
+    a: "AI transforms how you interact with your knowledge base. Lydie's AI assistant can help summarize long notes, suggest connections between related ideas, expand on concepts you're developing, and even help you reorganize content. It's like having a research assistant that knows everything you've written. The AI personal knowledge base approach helps you discover insights you might have missed and accelerates your learning.",
+  },
+];
+---
+
+<style>
+  .kb-text {
+    position: relative;
+    display: inline-block;
+  }
+
+  .kb-highlight {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+    width: 0;
+    opacity: 0;
+    animation: highlight-grow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes highlight-grow {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: calc(100% + 4px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in-element {
+    animation: fade-in-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+  }
+</style>
+
+<Layout title={title} description={description}>
+  <div class="max-w-4xl relative">
+    <!-- 768px internal width, centered (w-1 = 4px each side) -->
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="left: calc(50% - 388px)"
+    >
+    </div>
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="right: calc(50% - 388px)"
+    >
+    </div>
+  </div>
+  <Container
+    className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
+  >
+    <div class="text-center relative py-12 size-full">
+      <GradientOutline />
+      <h1
+        class="text-3xl font-medium text-black/85 tracking-tight mb-6 leading-tight"
+      >
+        <span class="kb-text">
+          Personal Knowledge Base
+          <span
+            class="kb-highlight"
+            style="background-color: #a855f733; animation-delay: 0s;"
+          >
+          </span>
+        </span>
+      </h1>
+      <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
+        The best personal knowledge base software<br />
+        <span class="kb-text">
+          that grows with you
+          <span
+            class="kb-highlight"
+            style="background-color: #f59e0b33; animation-delay: 0.3s;"
+          >
+          </span>
+        </span>, from ideas to insights.
+      </p>
+      <div class="flex items-center justify-center gap-4">
+        <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
+          <span>Start for free</span>
+          <ChevronRightRegular className="size-4" />
+        </Button>
+      </div>
+    </div>
+
+    <!-- Interactive Demo -->
+    <div class="flex flex-col gap-y-2 items-center text-center mb-12">
+      <span class="text-[0.8125rem] font-medium text-gray-500">Interactive Demo</span>
+      <h2 class="text-3xl tracking-tight font-medium text-black/85">
+        Your knowledge, organized
+      </h2>
+      <p class="text-base/relaxed text-black/60 max-w-xl text-balance">
+        See how Lydie helps you capture, connect, and grow your personal knowledge base with
+        powerful features designed for deep thinking.
+      </p>
+    </div>
+    <div class="w-full px-4">
+      <ComposableDemo client:load />
+    </div>
+
+    <div class="max-w-xl mx-auto flex flex-col gap-y-8">
+      <div class="prose mx-auto">
+        <p class="fade-in-element" style="animation-delay: 0.4s;">
+          Your brain is for having ideas, not holding them. Lydie's personal
+          knowledge base app gives you a place to capture everything—notes,
+          ideas, learnings, and insights—so you can focus on thinking and
+          creating rather than trying to remember.
+        </p>
+        <p class="fade-in-element" style="animation-delay: 0.5s;">
+          Whether you're looking for an alternative to a Notion personal
+          knowledge base template or searching for the best personal knowledge
+          base software, Lydie offers a more focused experience. We believe in
+          building tools specifically designed for deep thinking and knowledge
+          management, not general-purpose workspaces.
+        </p>
+        <p class="fade-in-element" style="animation-delay: 0.6s;">
+          Build a system that works for you. Create nested pages to organize by
+          project, topic, or however you think. Link related ideas together to
+          build connections and discover patterns. Whether you're learning how
+          to build a personal knowledge base or looking to upgrade your
+          existing system, Lydie helps you compound knowledge over time.
+        </p>
+        <p class="fade-in-element" style="animation-delay: 0.7s;">
+          With powerful search, you can find anything in seconds. No more
+          digging through folders or wondering where you saved that note. Our
+          AI personal knowledge base features help you discover connections you
+          might have missed and summarize complex information. Your knowledge
+          is always at your fingertips, ready when inspiration strikes.
+        </p>
+        <p class="fade-in-element" style="animation-delay: 0.8s;">
+          Lydie is free personal knowledge base software that scales with you.
+          Start capturing today with no cost, and unlock AI features and
+          advanced capabilities as your knowledge base grows. Join thousands
+          who have made Lydie their second brain.
+        </p>
+      </div>
+      <Divider />
+      <FAQSection faqs={faqItems} client:load />
+    </div>
+  </Container>
+  <CTASection client:load />
+</Layout>

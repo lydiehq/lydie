@@ -23,7 +23,6 @@ import { useEffect, useState } from "react";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
-import { Eyebrow } from "./Eyebrow";
 
 type FeatureType = "collaboration" | "fields" | "linking" | null;
 
@@ -87,22 +86,8 @@ export function InteractiveEditorDemo() {
   const showCollaboration = activeFeature === "collaboration";
 
   return (
-    <section className="flex flex-col items-center overflow-visible">
-      <div className="flex flex-col gap-y-2 items-center text-center">
-        <Eyebrow>
-          {/* <span className="font-handwritten font-semibold text-blue-500/70 text-2xl"> */}
-          Best-in-class editor
-          {/* </span> */}
-        </Eyebrow>
-        <h2 className="text-3xl tracking-tight font-medium text-black/85">
-          Experience the delight of writing
-        </h2>
-        <p className="text-base/relaxed text-black/60 max-w-xl text-balance">
-          At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick
-          notes or deep documentation.
-        </p>
-      </div>
-      <div className="rounded-2xl ring ring-black/4 flex flex-col w-full max-w-5xl mt-16 p-2 relative bg-grain">
+    <section className="flex flex-col items-center overflow-visible w-full">
+      <div className="rounded-2xl ring ring-black/4 flex flex-col w-full max-w-5xl p-2 relative bg-grain">
         <span className="absolute -top-6 -right-8 text-xs text-black/12" aria-hidden="true">
           90°
         </span>
@@ -112,8 +97,10 @@ export function InteractiveEditorDemo() {
             <div key={i} className="rounded-full size-3 ring ring-black/12 shrink-0" />
           ))}
         </div>
-        <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={100} borderRadius={0.25}>
-          <div className="flex flex-col flex-1 h-[620px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit">
+        <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={100}>
+            <div className="flex flex-1 h-[620px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit">
+              {/* Main Editor Area */}
+              <div className="flex flex-col flex-1 min-w-0">
             <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20 rounded-b-xl">
               <FeatureButtons
                 features={FEATURES}
@@ -216,9 +203,7 @@ export function InteractiveEditorDemo() {
                     )}{" "}
                     recommendations doc. I'll add the restaurant reservations once that's ready.
                   </p>
-                  <AnimatePresence>
-                    {activeFeature === "fields" && <AIAssistantPopover />}
-                  </AnimatePresence>
+
                 </div>
 
                 <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Things to book</h2>
@@ -290,7 +275,13 @@ export function InteractiveEditorDemo() {
               </div>
             </div>
           </div>
-        </CastShadow>
+
+          {/* AI Assistant Sidebar */}
+          <AnimatePresence>
+            {activeFeature === "fields" && <AIAssistantSidebar />}
+          </AnimatePresence>
+        </div>
+      </CastShadow>
       </div>
     </section>
   );
@@ -374,21 +365,88 @@ function FeatureButtons({
   );
 }
 
-function AIAssistantPopover() {
+function AIAssistantSidebar() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 flex items-center gap-2"
+      initial={{ opacity: 0, x: 30, width: 0 }}
+      animate={{ opacity: 1, x: 0, width: 320 }}
+      exit={{ opacity: 0, x: 30, width: 0 }}
+      transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 35,
+        opacity: { duration: 0.2 },
+      }}
+      className="shrink-0 bg-white ring-1 ring-black/6 rounded-lg flex flex-col overflow-hidden ml-2 shadow-popover"
     >
-      <div className="rounded-full size-4 flex items-center justify-center bg-gray-100 text-gray-500">
-        <PersonChatFilled className="size-3" />
+      {/* Header */}
+      <div className="flex items-center justify-between p-2 border-b border-black/6 bg-white">
+        <div className="flex items-center gap-2">
+          <div className="rounded-full size-6 flex items-center justify-center bg-purple-100 text-purple-600">
+            <PersonChatFilled className="size-3.5" />
+          </div>
+          <span className="text-sm font-medium text-gray-900">AI Assistant</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button className="p-1 rounded hover:bg-black/5 text-gray-500" aria-label="New chat">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button className="p-1 rounded hover:bg-black/5 text-gray-500" aria-label="Close">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
-      <div className="rounded-full p-2 ring ring-black/8 shadow-popover bg-white ">
-        <span className="text-sm whitespace-nowrap">
-          Help me make this sound more exciting and fun (needs redesign)
-        </span>
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {/* User Message */}
+        <div className="flex gap-2">
+          <div className="rounded-full size-6 bg-gray-100 flex items-center justify-center shrink-0">
+            <span className="text-xs font-medium text-gray-600">You</span>
+          </div>
+          <div className="flex-1 bg-gray-50 rounded-lg p-2.5 text-sm text-gray-700">
+            Help me make this itinerary more exciting and fun
+          </div>
+        </div>
+
+        {/* AI Response */}
+        <div className="flex gap-2">
+          <div className="rounded-full size-6 bg-purple-100 flex items-center justify-center shrink-0">
+            <PersonChatFilled className="size-3 text-purple-600" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <div className="bg-purple-50 rounded-lg p-2.5 text-sm text-gray-700">
+              Here are some ways to make your Japan trip more exciting:
+            </div>
+            <div className="bg-purple-50/50 rounded-lg p-2.5 text-sm text-gray-700 space-y-1.5">
+              <p>🎌 Add a traditional tea ceremony experience in Kyoto</p>
+              <p>🍜 Include a ramen tour in Tokyo's best districts</p>
+              <p>🗻 Plan a sunrise hike at Mt. Fuji</p>
+              <p>🎮 Visit an arcade in Akihabara</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Input Area */}
+      <div className="p-2 border-t border-black/6 bg-white">
+        <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+          <input
+            type="text"
+            placeholder="Ask anything..."
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
+            readOnly
+          />
+          <button className="p-1 rounded hover:bg-black/5 text-gray-500">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </button>
+        </div>
       </div>
     </motion.div>
   );

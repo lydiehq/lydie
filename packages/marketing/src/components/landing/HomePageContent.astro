@@ -24,6 +24,7 @@ import { KeyboardSection } from "./KeyboardSection";
 import { FAQSection } from "../tools/FAQSection";
 import { GradientOutline } from "../generic/GradientOutline";
 import { DarkModeSection } from "./DarkModeSection";
+import { SectionHeader } from "./SectionHeader";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -33,8 +34,8 @@ const heroOptimizedImages = await Promise.all(
       width,
       format: "webp",
       quality: 100,
-    })
-  )
+    }),
+  ),
 );
 const heroSrcset = heroOptimizedImages
   .map((img) => `${img.src} ${img.options.width}w`)
@@ -106,8 +107,17 @@ const faqItems = [
 </div>
 <Divider logo />
 
-<Container className="pb-24 pt-16">
-  <InteractiveEditorDemo client:visible />
+<Container className="pb-24 pt-16 flex flex-col items-center">
+  <SectionHeader
+    client:load
+    eyebrow="Best-in-class editor"
+    title="Experience the delight of writing"
+    description="At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick notes or deep documentation."
+    centered
+  />
+  <div class="w-full mt-12">
+    <InteractiveEditorDemo client:visible />
+  </div>
 </Container>
 <Divider />
 <Container className="relative my-24">
@@ -173,13 +183,13 @@ const faqItems = [
 
 <Divider />
 <Container size="sm">
-  <div class="flex flex-col gap-y-3 p-16 items-center text-center">
-    <h2 class="text-3xl tracking-tight font-medium text-black/85">
-      Ready to try it yourself?
-    </h2>
-    <p class="text-sm/relaxed text-black/60 text-balance">
-      Create your first document in seconds. No credit card required.
-    </p>
+  <div class="flex flex-col gap-y-6 p-16 items-center text-center">
+    <SectionHeader
+      title="Ready to try it yourself?"
+      description="Create your first document in seconds. No credit card required."
+      centered
+      client:load
+    />
     <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
       <span>Get started for free</span>
       <ChevronRightRegular

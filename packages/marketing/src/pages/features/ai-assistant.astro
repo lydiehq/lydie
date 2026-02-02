@@ -1,116 +1,231 @@
 ---
-import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { HeroBackground } from "../../components/landing/HeroBackground";
 import { CTASection } from "../../components/landing/CTASection";
-import AIAssistantIllustration from "../../components/illustrations/AIAssistantIllustration.astro";
-import "../../styles/grainy-gradient.css";
+import { FAQSection } from "../../components/tools/FAQSection";
+import { GradientOutline } from "../../components/generic/GradientOutline";
+import Divider from "../../components/landing/Divider.astro";
 
 const title = "AI Assistant Built-In - Lydie";
 const description =
   "Get writing assistance, generate content, and chat with your documents using our integrated AI features. Built directly into the editor for seamless help.";
 
-const windowControls = Array(3).fill(null);
+const faqItems = [
+  {
+    q: "How does the AI assistant work in Lydie?",
+    a: "Lydie's AI assistant is integrated directly into the editor using advanced language models. You can access it through slash commands, selected text actions, or the chat sidebar. The AI understands your document context and provides relevant suggestions, completions, and answers based on what you're working on.",
+  },
+  {
+    q: "What can I use the AI assistant for?",
+    a: "The AI assistant can help with writing and editing tasks like expanding bullet points into full paragraphs, summarizing long sections, improving grammar and style, brainstorming ideas, generating outlines, and answering questions about your document content. It's designed to enhance your workflow without replacing your creativity.",
+  },
+  {
+    q: "Is my content secure when using AI features?",
+    a: "Yes. Lydie processes AI requests securely and does not use your private document content to train AI models. Your data is transmitted over encrypted connections and processed according to strict privacy policies. We only send the necessary context to provide helpful AI responses.",
+  },
+  {
+    q: "Do I need to pay extra for AI features?",
+    a: "AI features are included in all Lydie plans with generous usage limits. Free plans include a monthly allowance of AI requests, while paid plans offer significantly higher limits. You can check your current usage and limits in your account settings.",
+  },
+  {
+    q: "Can I use my own AI provider or API key?",
+    a: "Currently, Lydie uses managed AI providers to ensure quality and reliability. We may support custom API keys in the future for advanced users who want more control over their AI provider.",
+  },
+];
 ---
 
+<style>
+  .ai-text {
+    position: relative;
+    display: inline-block;
+  }
+
+  .ai-highlight {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+    width: 0;
+    opacity: 0;
+    animation: highlight-grow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .ai-highlight-rtl {
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+    width: 0;
+    opacity: 0;
+    animation: highlight-grow-rtl 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+      forwards;
+  }
+
+  @keyframes highlight-grow {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: calc(100% + 4px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes highlight-grow-rtl {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: calc(100% + 4px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sparkle-appear {
+    0% {
+      opacity: 0;
+      transform: scale(0.5) rotate(-20deg);
+    }
+    50% {
+      transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  .sparkle-wrapper {
+    animation: sparkle-appear 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sparkle-wrapper-right {
+    right: -24px;
+    top: -8px;
+  }
+
+  .sparkle-wrapper-left {
+    left: -24px;
+    top: -8px;
+  }
+
+  @keyframes typing-pulse {
+    0%, 100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .typing-indicator {
+    animation: typing-pulse 1.4s ease-in-out infinite;
+  }
+
+  .typing-indicator:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-indicator:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+</style>
+
 <Layout title={title} description={description}>
-  <!-- Hero Section -->
-  <div class="md:px-4">
-    <HeroBackground
-      client:load
-      className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4"
+  <div class="max-w-4xl relative">
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="left: calc(50% - 388px)"
     >
-      <Container className="relative z-20 pb-20 md:pb-16 md:pt-28 pt-20">
-        <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-          <!-- Text Content (Left) -->
-          <div class="flex flex-col gap-y-6">
-            <div
-              class="mb-2 rounded-full bg-white/15 self-start px-2.5 py-[3px] flex items-center gap-x-1.5"
-              style="box-shadow: 0 1px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.1), 0 1px 1.5px 0 rgba(0,0,0,0.05), 0 0 1.5px 0 rgba(0,0,0,0.1), 0 0 40px rgba(255,255,255,0.05), 0 0 80px rgba(255,255,255,0.02), 0 0 120px rgba(255,255,255,0.02);"
-            >
-              <span class="text-[12px] font-medium text-white">
-                AI-powered writing
-              </span>
-            </div>
-
-            <h1
-              class="text-4xl md:text-5xl lg:text-6xl font-heading font-medium tracking-tight text-white drop-shadow-text"
-            >
-              AI assistant built-in
-            </h1>
-            <p
-              class="text-[17px] md:text-lg text-white/90 text-balance leading-relaxed"
-            >
-              Get writing assistance, generate content, and chat with your
-              documents using our integrated AI features. Unlike add-ons or
-              extensions, Lydie's AI is built directly into the editor.
-            </p>
-
-            <div class="flex items-center gap-x-4 mt-2">
-              <Button
-                href="https://app.lydie.co/auth"
-                size="lg"
-                intent="primary"
-              >
-                <div class="flex items-center gap-x-1">
-                  <span>Get started for free</span>
-                  <ChevronRightRegular
-                    className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-                  />
-                </div>
-              </Button>
-            </div>
-          </div>
-
-          <!-- AI Assistant Illustration (Right) -->
-          <div
-            class="relative z-10 bg-white/20 flex flex-col rounded-[14px] p-2 overflow-hidden"
-            style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
-            aria-hidden="true"
-            aria-label="AI assistant illustration showing AI-powered features"
-          >
-            <div class="flex items-center gap-x-1.5 mb-2 relative z-10">
-              {windowControls.map(() => (
-                <div
-                  class="rounded-full size-[13px] bg-white/20"
-                  style="box-shadow: 0 1px rgba(255,255,255,0.3) inset, 0 1px 3px rgba(0,0,0,0.15), 0 1px 1.5px 0 rgba(0,0,0,0.08), 0 0 1.5px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.09), 0 0 80px rgba(255,255,255,0.06), 0 0 120px rgba(255,255,255,0.03);"
-                />
-              ))}
-            </div>
-
-            <div
-              class="bg-white rounded-lg flex items-center justify-center px-6 py-8 md:px-8 md:py-10 shadow-surface overflow-hidden"
-            >
-              <AIAssistantIllustration />
-            </div>
-          </div>
-        </div>
-      </Container>
-    </HeroBackground>
+    </div>
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="right: calc(50% - 388px)"
+    >
+    </div>
   </div>
-
-  <Container className="flex flex-col gap-y-16 pb-24 pt-24">
-    <!-- Description Section -->
-    <div class="max-w-3xl mx-auto w-full">
-      <div class="prose max-w-2xl mx-auto">
+  <Container
+    className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
+  >
+    <div class="text-center relative py-12 size-full">
+      <GradientOutline />
+      <h1
+        class="text-3xl font-medium text-black/85 tracking-tight mb-6 leading-tight"
+      >
+        <span class="ai-text">
+          AI Assistant Built-In
+          <span
+            class="ai-highlight"
+            style="background-color: #a855f733; animation-delay: 0s;"></span>
+          <span class="sparkle-wrapper sparkle-wrapper-right" style="animation-delay: 0.5s;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L13.09 8.26L19 7L15.74 10.26L22 12L15.74 13.74L19 17L13.09 15.74L12 22L10.91 15.74L5 17L8.26 13.74L2 12L8.26 10.26L5 7L10.91 8.26L12 2Z" fill="#a855f7" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </span>
+      </h1>
+      <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
+        Get writing assistance, generate content, and chat with your documents.
+        <br />
+        <span class="ai-text">
+          AI-powered writing help
+          <span
+            class="ai-highlight-rtl"
+            style="background-color: #ec489933; animation-delay: 0.2s;"></span>
+          <span class="sparkle-wrapper sparkle-wrapper-left" style="animation-delay: 0.7s;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L13.5 8.5L20 7L15 11L20 15L13.5 13.5L12 20L10.5 13.5L4 15L9 11L4 7L10.5 8.5L12 2Z" fill="#ec4899" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </span> that's always just a click away.
+      </p>
+      <div class="flex items-center justify-center gap-4">
+        <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
+          <span>Start writing with AI</span>
+          <ChevronRightRegular className="size-4" />
+        </Button>
+        <a
+          href="https://lydie.co/blog"
+          class="text-black/70 hover:text-black transition-colors text-sm font-medium"
+        >
+          Learn more
+        </a>
+      </div>
+    </div>
+    <div class="max-w-xl mx-auto flex flex-col gap-y-8">
+      <div class="prose mx-auto">
         <p class="">
           Lydie's AI assistant is built directly into the editor, providing
           seamless writing assistance, content generation, and document chat
           capabilities. Unlike browser extensions or add-ons, our AI features are
-          integrated at the core of the editing experience.
+          integrated at the core of the editing experience, giving you instant
+          access to powerful AI tools without leaving your document.
         </p>
         <p class="">
-          Get instant writing suggestions, generate drafts and outlines, and
-          chat with your documents to find information or get answers. Our AI
+          Get instant writing suggestions as you type, generate complete drafts
+          from outlines, expand bullet points into full paragraphs, and chat
+          with your documents to find information or get answers. Our AI
           understands context and provides relevant help whether you're writing
-          articles, documentation, or any other content. Perfect for content
-          creators, knowledge workers, and anyone who wants AI-powered writing
-          assistance without leaving their document.
+          articles, documentation, blog posts, or any other content. Perfect for
+          content creators, knowledge workers, and anyone who wants AI-powered
+          writing assistance that feels natural and unobtrusive.
         </p>
       </div>
+      <Divider />
+      <FAQSection faqs={faqItems} client:load />
     </div>
   </Container>
-  <CTASection client:load />
 </Layout>

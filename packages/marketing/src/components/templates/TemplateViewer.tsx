@@ -1,72 +1,13 @@
 import { Placeholder } from "@lydie/editor/extensions";
-import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
+import {
+  type DocumentItem,
+  ShowcaseSidebar,
+} from "@lydie/ui/components/editor/ShowcaseSidebar";
 import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { type ReactElement, useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  Collection,
-  type Key,
-  Tree,
-  TreeItem,
-  TreeItemContent,
-} from "react-aria-components";
+import { useEffect, useMemo, useState } from "react";
 
 import { PlaceholderComponent } from "./PlaceholderComponent";
-
-// SVG Icon Components
-const CollectionsIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    className={className}
-  >
-    <path
-      fill="currentColor"
-      d="M2.854 2.121a2.5 2.5 0 0 0-1.768 3.062L2.12 9.047A2.5 2.5 0 0 0 5 10.857V8a3 3 0 0 1 3-3h2.354L9.78 2.854a2.5 2.5 0 0 0-3.062-1.768zM6 8a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"
-    />
-  </svg>
-);
-
-const DocumentIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 48 48"
-    className={className}
-  >
-    <path
-      fill="currentColor"
-      d="M24 4H12.25A4.25 4.25 0 0 0 8 8.25v31.5A4.25 4.25 0 0 0 12.25 44h23.5A4.25 4.25 0 0 0 40 39.75V20H28.25A4.25 4.25 0 0 1 24 15.75zm15.626 13.5a4.3 4.3 0 0 0-.87-1.263L27.762 5.245a4.3 4.3 0 0 0-1.263-.871V15.75c0 .966.784 1.75 1.75 1.75z"
-    />
-  </svg>
-);
-
-const ChevronRightIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="12"
-    height="12"
-    viewBox="0 0 12 12"
-    className={className}
-  >
-    <path
-      fill="currentColor"
-      d="M2.22 4.47a.75.75 0 0 1 1.06 0L6 7.19l2.72-2.72a.75.75 0 0 1 1.06 1.06L6.53 8.78a.75.75 0 0 1-1.06 0L2.22 5.53a.75.75 0 0 1 0-1.06"
-    />
-  </svg>
-);
-
-type DocumentTreeItem = {
-  id: string;
-  name: string;
-  type: "document";
-  children?: DocumentTreeItem[];
-  isLocked?: boolean;
-};
 
 type TemplateDocument = {
   id: string;

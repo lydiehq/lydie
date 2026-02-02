@@ -1,0 +1,189 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { Button } from "../../components/generic/Button";
+import { ChevronRightRegular } from "@fluentui/react-icons";
+import { CTASection } from "../../components/landing/CTASection";
+import { FAQSection } from "src/components/tools/FAQSection";
+import { GradientOutline } from "src/components/generic/GradientOutline";
+import Divider from "src/components/landing/Divider.astro";
+import "../../styles/grainy-gradient.css";
+
+const title = "Team Knowledge Base & Wiki - Lydie";
+const description =
+  "Build a team wiki and knowledge base that scales with your company. Centralize documentation, streamline onboarding, and keep everyone aligned.";
+
+const faqItems = [
+  {
+    q: "What is a team knowledge base?",
+    a: "A team knowledge base is a centralized repository where your company stores and organizes important information—processes, documentation, policies, meeting notes, project specs, and more. It serves as a single source of truth that everyone can access, reducing information silos and ensuring everyone has the context they need to do their best work.",
+  },
+  {
+    q: "How does a knowledge base help with onboarding?",
+    a: "New team members can ramp up faster when all company knowledge is documented and accessible. Instead of asking questions repeatedly, they can find answers in the wiki—from company values and benefits info to technical documentation and team processes. This reduces onboarding time and helps new hires feel confident and independent from day one.",
+  },
+  {
+    q: "Can different teams have their own wikis?",
+    a: "Absolutely! While you can maintain company-wide knowledge bases for universal information like mission statements and goals, individual teams can create their own dedicated spaces. Engineering can have technical documentation, Marketing can store campaigns and brand guidelines, Product can maintain roadmaps and specs—each tailored to their specific needs while remaining discoverable.",
+  },
+  {
+    q: "How do we keep our knowledge base up to date?",
+    a: "Lydie makes it easy to maintain living documentation. Assign owners to key pages, use inline comments to suggest updates, and leverage version history to track changes. Regular reviews and a culture of 'documentation as code'—treating docs with the same care as code—help ensure your knowledge base stays current and valuable.",
+  },
+  {
+    q: "Is there a limit to how much we can store?",
+    a: "There's no practical limit on the amount of content you can store in your Lydie knowledge base. Create as many pages, nested hierarchies, and databases as your team needs. Our search and organization tools scale with your content, so you'll always be able to find what you need regardless of how large your knowledge base grows.",
+  },
+];
+---
+
+<style>
+  .kb-text {
+    position: relative;
+    display: inline-block;
+  }
+
+  .kb-highlight {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+    width: 0;
+    opacity: 0;
+    animation: highlight-grow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .kb-highlight-rtl {
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+    width: 0;
+    opacity: 0;
+    animation: highlight-grow-rtl 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes highlight-grow {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: calc(100% + 4px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes highlight-grow-rtl {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: calc(100% + 4px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in-element {
+    animation: fade-in-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+  }
+</style>
+
+<Layout title={title} description={description}>
+  <div class="max-w-4xl relative">
+    <!-- 768px internal width, centered (w-1 = 4px each side) -->
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="left: calc(50% - 388px)"
+    >
+    </div>
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="right: calc(50% - 388px)"
+    >
+    </div>
+  </div>
+  <Container
+    className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
+  >
+    <div class="text-center relative py-12 size-full">
+      <GradientOutline />
+      <h1
+        class="text-3xl font-medium text-black/85 tracking-tight mb-6 leading-tight"
+      >
+        <span class="kb-text">
+          Team Knowledge Base
+          <span
+            class="kb-highlight"
+            style="background-color: #3b82f633; animation-delay: 0s;"></span>
+        </span> & Wiki
+      </h1>
+      <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
+        Centralize your company's knowledge<br />
+        <span class="kb-text">
+          so everyone can find what they need
+          <span
+            class="kb-highlight-rtl"
+            style="background-color: #10b98133; animation-delay: 0.3s;"></span>
+        </span>, from day one.
+      </p>
+      <div class="flex items-center justify-center gap-4">
+        <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
+          <span>Create team wiki</span>
+          <ChevronRightRegular className="size-4" />
+        </Button>
+        <a
+          href="https://lydie.co/contact"
+          class="text-black/70 hover:text-black transition-colors text-sm font-medium"
+        >
+          Request a demo
+        </a>
+      </div>
+    </div>
+    <div class="max-w-xl mx-auto flex flex-col gap-y-8">
+      <div class="prose mx-auto">
+        <p class="fade-in-element" style="animation-delay: 0.4s;">
+          When all your company's information lives in one place, everything
+          becomes easier. Teams find what they need without hunting through
+          emails or chat threads. New hires get up to speed faster with
+          documented processes and historical context. Decisions get made with
+          better information.
+        </p>
+        <p class="fade-in-element" style="animation-delay: 0.5s;">
+          Lydie wikis are fully customizable, so they work for companies of any
+          size. Build company-wide knowledge bases for universal information
+          like goals, mission statements, and benefits. Let individual teams
+          create their own spaces—engineering wikis, marketing playbooks,
+          product documentation—tailored to their needs while remaining
+          connected to the bigger picture.
+        </p>
+        <p class="fade-in-element" style="animation-delay: 0.6s;">
+          Start with templates or build from scratch. Create org-wide databases
+          for meeting notes, project docs, and shared resources. With powerful
+          search, linking between pages, and collaborative editing, your team
+          wiki becomes a living document that evolves with your company.
+        </p>
+      </div>
+      <Divider />
+      <FAQSection faqs={faqItems} client:load />
+    </div>
+  </Container>
+  <CTASection client:load />
+</Layout>

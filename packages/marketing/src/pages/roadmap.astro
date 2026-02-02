@@ -1,7 +1,9 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { Container } from "../components/Container";
-import { Eyebrow } from "../components/landing/Eyebrow";
+import { SectionHeader } from "../components/landing/SectionHeader";
+import { GradientOutline } from "../components/generic/GradientOutline";
+import Divider from "../components/landing/Divider.astro";
 import {
   CheckmarkRegular,
   CircleRegular,
@@ -58,12 +60,12 @@ const roadmapItems: RoadmapItem[] = [
     title: "Cross-document referencing",
     description:
       "Allow referencing other documents in LLM-chats using '@'-mentions.",
-    status: "planned",
+    status: "completed",
   },
   {
     title: "LLM web search",
     description: "Allow LLM to search the web for information.",
-    status: "planned",
+    status: "completed",
   },
   {
     title: "Document history",
@@ -100,33 +102,56 @@ function getStatusLabel(status: string) {
   title="Roadmap - Lydie"
   description="See what we're building and what's coming next for Lydie."
 >
-  <div class="flex flex-col gap-y-10 py-8 md:py-12">
-    <Container className="flex flex-col gap-y-4 text-center">
-      <Eyebrow>Roadmap</Eyebrow>
-      <h1
-        class="text-4xl md:text-5xl font-heading font-medium tracking-tight text-gray-800"
-      >
-        What we're building
-      </h1>
-      <p
-        class="text-[15px]/relaxed text-gray-600 max-w-2xl mx-auto text-balance"
-      >
-        Our roadmap shows what we've shipped, what we're working on, and what's
-        coming next.
-      </p>
-    </Container>
-
-    <Container className="flex flex-col gap-y-4">
-      <div
-        class="flex flex-col divide-y divide-gray-200 border border-gray-200 rounded-xl"
-      >
+  <div class="max-w-4xl relative">
+    <!-- 768px internal width, centered (w-1 = 4px each side) -->
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="left: calc(50% - 388px)"
+    >
+    </div>
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="right: calc(50% - 388px)"
+    >
+    </div>
+  </div>
+  
+  <Container
+    className="flex flex-col items-center justify-center min-h-[40vh] py-16 gap-y-32"
+  >
+    <div class="text-center relative py-12 size-full">
+      <GradientOutline />
+      <SectionHeader
+        eyebrow="Roadmap"
+        title="What we're building"
+        description="Our roadmap shows what we've shipped, what we're working on, and what's coming next."
+        centered
+        client:load
+      />
+    </div>
+    
+    <div class="max-w-xl mx-auto flex flex-col gap-y-8 w-full">
+      <div class="prose mx-auto w-full">
+        <p class="">
+          We're building Lydie in the open. Our roadmap is public and constantly
+          evolving based on your feedback. Below you'll find features we've already
+          shipped, what we're actively working on, and what's planned for the future.
+        </p>
+      </div>
+      
+      <Divider />
+      
+      <div class="flex flex-col gap-y-6">
         {
           roadmapItems.map((item) => {
             const StatusIcon = getStatusIcon(item.status);
             const statusLabel = getStatusLabel(item.status);
 
             return (
-              <div class="flex items-start gap-4 p-3 first:rounded-t-xl last:rounded-b-xl">
+              <div class="flex items-start gap-4">
+                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 shrink-0 mt-0.5">
+                  <StatusIcon className="size-4 text-gray-600" />
+                </div>
                 <div class="flex-1 flex flex-col gap-y-1">
                   <div class="flex items-center gap-x-2">
                     {item.link ? (
@@ -134,23 +159,18 @@ function getStatusLabel(status: string) {
                         href={item.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="font-medium text-gray-900 hover:text-gray-700 underline"
+                        class="font-medium text-black/85 hover:text-black/70 underline"
                       >
                         {item.title}
                       </a>
                     ) : (
-                      <h3 class="font-medium text-gray-900">{item.title}</h3>
+                      <h3 class="font-medium text-black/85">{item.title}</h3>
                     )}
-                    <div class="w-px h-3 bg-gray-200" />
-                    <div class="flex items-center gap-x-1 shrink-0">
-                      <StatusIcon className="size-3" />
-                      <span class="text-xs font-medium text-gray-600 tracking-wide">
-                        {statusLabel}
-                      </span>
-                    </div>
+                    <span class="text-xs font-medium text-black/50 uppercase tracking-wide">
+                      {statusLabel}
+                    </span>
                   </div>
-
-                  <p class="text-[0.8125rem]/relaxed text-gray-600">
+                  <p class="text-base/relaxed text-black/60">
                     {item.description}
                   </p>
                 </div>
@@ -159,32 +179,26 @@ function getStatusLabel(status: string) {
           })
         }
       </div>
-    </Container>
-
-    <Container className="flex flex-col gap-y-4 text-center">
-      <div
-        class="flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-gray-50/50"
-      >
-        <h2
-          class="text-xl font-heading font-medium tracking-tight text-gray-800"
-        >
+      
+      <Divider />
+      
+      <div class="flex flex-col gap-y-3 text-center">
+        <h2 class="text-2xl tracking-tight font-medium text-black/85">
           Have a feature request?
         </h2>
-        <p class="text-sm text-gray-600 max-w-xl mx-auto text-balance">
+        <p class="text-base/relaxed text-black/60 text-balance">
           We'd love to hear your ideas. Share your feedback and help shape the
           future of Lydie.
         </p>
-        <div class="flex items-center justify-center">
-          <a
-            href="https://github.com/lydiehq/lydie/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-sm font-medium text-gray-700 hover:text-gray-900 underline"
-          >
-            Open an issue on GitHub
-          </a>
-        </div>
+        <a
+          href="https://github.com/lydiehq/lydie/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-base font-medium text-black/70 hover:text-black/90 underline"
+        >
+          Open an issue on GitHub
+        </a>
       </div>
-    </Container>
-  </div>
+    </div>
+  </Container>
 </Layout>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../generic/Button";
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
+import { SectionHeader } from "./SectionHeader";
 
 interface KeyProps {
   label: string;
@@ -281,17 +282,17 @@ export function KeyboardSection() {
   return (
     <div className="py-16">
       <div className="flex flex-col items-center gap-y-6">
-        {/* Eyebrow and heading */}
-        <div className="flex flex-col items-center text-center gap-y-3">
-          <span className="text-[0.8125rem] font-medium text-black/50">Keyboard shortcuts</span>
-          <h2 className="text-3xl tracking-tight font-medium text-black/85">
-            Everything at your fingertips
-          </h2>
-          <p className="text-base/relaxed text-black/60 max-w-md text-balance">
-            Press <span className="font-medium text-black/80">⌘K</span> to search, navigate, and
-            access any feature instantly.
-          </p>
-        </div>
+        <SectionHeader
+          eyebrow="Keyboard shortcuts"
+          title="Everything at your fingertips"
+          description={
+            <>
+              Press <span className="font-medium text-black/80">⌘K</span> to search, navigate, and
+              access any feature instantly.
+            </>
+          }
+          centered
+        />
 
         <div className="relative w-full md:w-[1200px] h-[400px] overflow-visible">
           <div className="relative w-full h-full">
