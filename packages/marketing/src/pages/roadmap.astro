@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Container } from "../components/Container";
-import { SectionHeader } from "../components/landing/SectionHeader";
+import Container from "../components/Container.astro";
+import SectionHeader from "../components/landing/SectionHeader.astro";
 import { GradientOutline } from "../components/generic/GradientOutline";
 import Divider from "../components/landing/Divider.astro";
 import {
@@ -120,13 +120,12 @@ function getStatusLabel(status: string) {
     className="flex flex-col items-center justify-center min-h-[40vh] py-16 gap-y-32"
   >
     <div class="text-center relative py-12 size-full">
-      <GradientOutline />
+      <GradientOutline client:load />
       <SectionHeader
         eyebrow="Roadmap"
         title="What we're building"
         description="Our roadmap shows what we've shipped, what we're working on, and what's coming next."
         centered
-        client:load
       />
     </div>
     

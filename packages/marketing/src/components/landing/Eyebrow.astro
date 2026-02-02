@@ -1,0 +1,9 @@
+---
+type Props = Record<string, any>;
+
+const props = Astro.props;
+---
+
+<div class="text-[0.8125rem] font-medium text-gray-500" {...props}>
+  <slot />
+</div>

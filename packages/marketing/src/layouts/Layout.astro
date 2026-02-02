@@ -2,7 +2,7 @@
 import BaseHead from "../components/BaseHead.astro";
 import "../styles/tailwind.css";
 import { Header } from "../components/Header";
-import { Container } from "../components/Container";
+import Container from "../components/Container.astro";
 import { Logo } from "../components/Logo";
 import { CodeRegular as GithubRegular } from "@fluentui/react-icons";
 
@@ -114,7 +114,9 @@ const linkGroups = [
       <div class="relative">
         <footer class="border-t border-black/5 bg-white backdrop-blur-sm">
           <Container className="flex justify-between py-12">
-            <Logo className="text-gray-200 size-6" />
+            <a href="/">
+              <Logo className="text-gray-200 size-6 hover:text-gray-300" />
+            </a>
             <nav
               class="grid grid-cols-1 md:grid-cols-3 gap-8"
               aria-label="Footer links"
@@ -126,19 +128,17 @@ const linkGroups = [
                       {group.title}
                     </h3>
                     <ul class="flex flex-col gap-y-1.5">
-                      {group.links
-                        .filter((link) => !link.comingSoon)
-                        .map((link) => (
-                          <li>
-                            <a
-                              href={link.href}
-                              class="text-[0.8125rem]/0 text-gray-700 hover:text-gray-800 py-1.5"
-                              target={link.target || undefined}
-                            >
-                              {link.label}
-                            </a>
-                          </li>
-                        ))}
+                      {group.links.map((link) => (
+                        <li>
+                          <a
+                            href={link.href}
+                            class="text-[0.8125rem]/0 text-gray-700 hover:text-gray-800 py-1.5"
+                            target={link.target || undefined}
+                          >
+                            {link.label}
+                          </a>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 ))

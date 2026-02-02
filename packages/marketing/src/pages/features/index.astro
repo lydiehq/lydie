@@ -1,10 +1,12 @@
 ---
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
 import Layout from "../../layouts/Layout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ArrowRightRegular, ChevronRightRegular } from "@fluentui/react-icons";
 import { Logo } from "../../components/Logo";
-import { CTASection } from "../../components/landing/CTASection";
+import CTASection from "../../components/landing/CTASection.astro";
+import Heading from "src/components/generic/Heading.astro";
 
 const title = "Features - Lydie";
 const description =
@@ -28,21 +30,19 @@ const features = [
 
 <Layout title={title} description={description}>
   <Container className="flex flex-col gap-y-16 pb-16">
-    <!-- Hero Section -->
-    <div class="max-w-4xl mx-auto flex flex-col gap-y-8 pt-8">
+    <div class="max-w-4xl mx-auto w-full pt-8">
+      <Breadcrumbs items={[{ label: "Features" }]} />
+    </div>
+    <div class="max-w-4xl mx-auto flex flex-col gap-y-8">
       <div class="flex flex-col gap-y-6 items-center text-center">
-        <Logo className="size-6 text-gray-200" />
-
         <div class="flex flex-col gap-y-4">
-          <h1
-            class="text-5xl font-heading font-medium tracking-tight text-gray-950 max-w-3xl"
+          <Heading level={1}
+            >Everything you need to write, think, and create</Heading
           >
-            Powerful features for modern teams
-          </h1>
           <p class="text-lg text-gray-600 max-w-2xl">
-            Discover all the features that make Lydie the perfect writing and
-            collaboration platform. From real-time collaboration to AI-powered
-            assistance, everything you need is built right in.
+            From solo writers to collaborative teams, Lydie adapts to how you
+            work. Real-time collaboration when you need it, powerful tools for
+            deep work when you don't.
           </p>
         </div>
 
@@ -59,7 +59,6 @@ const features = [
       </div>
     </div>
 
-    <!-- Features Grid -->
     <div class="max-w-6xl mx-auto w-full">
       <div class="grid md:grid-cols-3 gap-8">
         {

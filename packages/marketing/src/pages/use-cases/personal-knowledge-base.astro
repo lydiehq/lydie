@@ -1,19 +1,20 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { CTASection } from "../../components/landing/CTASection";
+import CTASection from "../../components/landing/CTASection.astro";
 import { FAQSection } from "src/components/tools/FAQSection";
 import { GradientOutline } from "src/components/generic/GradientOutline";
 import { ComposableDemo } from "../../components/landing/ComposableDemo";
-import { SectionHeader } from "../../components/landing/SectionHeader";
+import SectionHeader from "../../components/landing/SectionHeader.astro";
 import Divider from "src/components/landing/Divider.astro";
 import "../../styles/grainy-gradient.css";
 
 const title = "Personal Knowledge Base Software | Lydie";
 const description =
-  "Looking for the best personal knowledge base software? Lydie helps you build a personal knowledge base that grows with you. Free to start, with AI features to organize your expertise.";
+  "Stop losing your best ideas in scattered notes. Lydie helps you capture ideas when inspiration strikes and find them exactly when you need them. Free to start, with AI to organize your expertise.";
 
 const faqItems = [
   {
@@ -118,6 +119,14 @@ const faqItems = [
   <Container
     className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
   >
+    <div class="w-full max-w-4xl">
+      <Breadcrumbs
+        items={[
+          { label: "Use cases", href: "/use-cases" },
+          { label: "Personal Knowledge Base" },
+        ]}
+      />
+    </div>
     <div class="text-center relative py-12 size-full">
       <GradientOutline />
       <h1
@@ -133,15 +142,7 @@ const faqItems = [
         </span>
       </h1>
       <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
-        The best personal knowledge base software<br />
-        <span class="kb-text">
-          that grows with you
-          <span
-            class="kb-highlight"
-            style="background-color: #f59e0b33; animation-delay: 0.3s;"
-          >
-          </span>
-        </span>, from ideas to insights.
+        Stop losing your best ideas in a maze of scattered notes.
       </p>
       <div class="flex items-center justify-center gap-4">
         <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
@@ -153,13 +154,16 @@ const faqItems = [
 
     <!-- Interactive Demo -->
     <div class="flex flex-col gap-y-2 items-center text-center mb-12">
-      <span class="text-[0.8125rem] font-medium text-gray-500">Interactive Demo</span>
+      <span class="text-[0.8125rem] font-medium text-gray-500"
+        >Interactive Demo</span
+      >
       <h2 class="text-3xl tracking-tight font-medium text-black/85">
-        Your knowledge, organized
+        Your knowledge, actually findable
       </h2>
       <p class="text-base/relaxed text-black/60 max-w-xl text-balance">
-        See how Lydie helps you capture, connect, and grow your personal knowledge base with
-        powerful features designed for deep thinking.
+        Lydie helps you capture ideas when inspiration strikes and find them
+        exactly when you need them—no more digging through dozens of files or
+        forgetting what you wrote last week.
       </p>
     </div>
     <div class="w-full px-4">
@@ -185,21 +189,21 @@ const faqItems = [
           Build a system that works for you. Create nested pages to organize by
           project, topic, or however you think. Link related ideas together to
           build connections and discover patterns. Whether you're learning how
-          to build a personal knowledge base or looking to upgrade your
-          existing system, Lydie helps you compound knowledge over time.
+          to build a personal knowledge base or looking to upgrade your existing
+          system, Lydie helps you compound knowledge over time.
         </p>
         <p class="fade-in-element" style="animation-delay: 0.7s;">
           With powerful search, you can find anything in seconds. No more
-          digging through folders or wondering where you saved that note. Our
-          AI personal knowledge base features help you discover connections you
-          might have missed and summarize complex information. Your knowledge
-          is always at your fingertips, ready when inspiration strikes.
+          digging through folders or wondering where you saved that note. Our AI
+          personal knowledge base features help you discover connections you
+          might have missed and summarize complex information. Your knowledge is
+          always at your fingertips, ready when inspiration strikes.
         </p>
         <p class="fade-in-element" style="animation-delay: 0.8s;">
           Lydie is free personal knowledge base software that scales with you.
           Start capturing today with no cost, and unlock AI features and
-          advanced capabilities as your knowledge base grows. Join thousands
-          who have made Lydie their second brain.
+          advanced capabilities as your knowledge base grows. Join thousands who
+          have made Lydie their second brain.
         </p>
       </div>
       <Divider />

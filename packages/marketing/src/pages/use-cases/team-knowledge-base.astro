@@ -1,9 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { CTASection } from "../../components/landing/CTASection";
+import CTASection from "../../components/landing/CTASection.astro";
 import { FAQSection } from "src/components/tools/FAQSection";
 import { GradientOutline } from "src/components/generic/GradientOutline";
 import Divider from "src/components/landing/Divider.astro";
@@ -64,7 +65,8 @@ const faqItems = [
     z-index: -1;
     width: 0;
     opacity: 0;
-    animation: highlight-grow-rtl 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: highlight-grow-rtl 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+      forwards;
   }
 
   @keyframes highlight-grow {
@@ -123,6 +125,14 @@ const faqItems = [
   <Container
     className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
   >
+    <div class="w-full max-w-4xl">
+      <Breadcrumbs
+        items={[
+          { label: "Use cases", href: "/use-cases" },
+          { label: "Team Knowledge Base & Wiki" },
+        ]}
+      />
+    </div>
     <div class="text-center relative py-12 size-full">
       <GradientOutline />
       <h1

@@ -1,12 +1,44 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
-import { ChevronRightRegular } from "@fluentui/react-icons";
-import { CTASection } from "../../components/landing/CTASection";
+import { ChevronRightRegular, ArrowRightRegular } from "@fluentui/react-icons";
+import CTASection from "../../components/landing/CTASection.astro";
 import { FAQSection } from "../../components/tools/FAQSection";
 import { GradientOutline } from "../../components/generic/GradientOutline";
 import Divider from "../../components/landing/Divider.astro";
+
+const aiFeatures = [
+  {
+    title: "Writing Assistant",
+    description:
+      "Generate high-quality content, expand ideas into full drafts, and overcome writer's block with intelligent writing suggestions.",
+    href: "/features/ai-assistant/writing-assistant",
+    color: "#a855f7",
+  },
+  {
+    title: "Research Assistant",
+    description:
+      "Search the web, find information across your documents, and connect ideas with powerful research capabilities.",
+    href: "/features/ai-assistant/research-assistant",
+    color: "#06b6d4",
+  },
+  {
+    title: "Document Organization",
+    description:
+      "Let AI help organize your knowledge base, categorize documents, and maintain a clean workspace intelligently.",
+    href: "/features/ai-assistant/document-organization",
+    color: "#10b981",
+  },
+  {
+    title: "Chat with Documents",
+    description:
+      "Ask questions about your content, get instant answers from your knowledge base, and unlock insights through conversation.",
+    href: "/features/ai-assistant/chat-with-documents",
+    color: "#ec4899",
+  },
+];
 
 const title = "AI Assistant Built-In - Lydie";
 const description =
@@ -28,10 +60,6 @@ const faqItems = [
   {
     q: "Do I need to pay extra for AI features?",
     a: "AI features are included in all Lydie plans with generous usage limits. Free plans include a monthly allowance of AI requests, while paid plans offer significantly higher limits. You can check your current usage and limits in your account settings.",
-  },
-  {
-    q: "Can I use my own AI provider or API key?",
-    a: "Currently, Lydie uses managed AI providers to ensure quality and reliability. We may support custom API keys in the future for advanced users who want more control over their AI provider.",
   },
 ];
 ---
@@ -123,7 +151,8 @@ const faqItems = [
   }
 
   @keyframes typing-pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 0.4;
     }
     50% {
@@ -160,6 +189,14 @@ const faqItems = [
   <Container
     className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
   >
+    <div class="w-full max-w-4xl">
+      <Breadcrumbs
+        items={[
+          { label: "Features", href: "/features" },
+          { label: "AI Assistant" },
+        ]}
+      />
+    </div>
     <div class="text-center relative py-12 size-full">
       <GradientOutline />
       <h1
@@ -170,9 +207,24 @@ const faqItems = [
           <span
             class="ai-highlight"
             style="background-color: #a855f733; animation-delay: 0s;"></span>
-          <span class="sparkle-wrapper sparkle-wrapper-right" style="animation-delay: 0.5s;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L13.09 8.26L19 7L15.74 10.26L22 12L15.74 13.74L19 17L13.09 15.74L12 22L10.91 15.74L5 17L8.26 13.74L2 12L8.26 10.26L5 7L10.91 8.26L12 2Z" fill="#a855f7" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <span
+            class="sparkle-wrapper sparkle-wrapper-right"
+            style="animation-delay: 0.5s;"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L13.09 8.26L19 7L15.74 10.26L22 12L15.74 13.74L19 17L13.09 15.74L12 22L10.91 15.74L5 17L8.26 13.74L2 12L8.26 10.26L5 7L10.91 8.26L12 2Z"
+                fill="#a855f7"
+                stroke="#a855f7"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </span>
         </span>
@@ -185,9 +237,24 @@ const faqItems = [
           <span
             class="ai-highlight-rtl"
             style="background-color: #ec489933; animation-delay: 0.2s;"></span>
-          <span class="sparkle-wrapper sparkle-wrapper-left" style="animation-delay: 0.7s;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L13.5 8.5L20 7L15 11L20 15L13.5 13.5L12 20L10.5 13.5L4 15L9 11L4 7L10.5 8.5L12 2Z" fill="#ec4899" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <span
+            class="sparkle-wrapper sparkle-wrapper-left"
+            style="animation-delay: 0.7s;"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L13.5 8.5L20 7L15 11L20 15L13.5 13.5L12 20L10.5 13.5L4 15L9 11L4 7L10.5 8.5L12 2Z"
+                fill="#ec4899"
+                stroke="#ec4899"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </span>
         </span> that's always just a click away.
@@ -210,9 +277,9 @@ const faqItems = [
         <p class="">
           Lydie's AI assistant is built directly into the editor, providing
           seamless writing assistance, content generation, and document chat
-          capabilities. Unlike browser extensions or add-ons, our AI features are
-          integrated at the core of the editing experience, giving you instant
-          access to powerful AI tools without leaving your document.
+          capabilities. Unlike browser extensions or add-ons, our AI features
+          are integrated at the core of the editing experience, giving you
+          instant access to powerful AI tools without leaving your document.
         </p>
         <p class="">
           Get instant writing suggestions as you type, generate complete drafts
@@ -225,7 +292,53 @@ const faqItems = [
         </p>
       </div>
       <Divider />
+
+      <!-- AI Features Grid -->
+      <div class="flex flex-col gap-y-6">
+        <div class="text-center">
+          <h2 class="text-2xl font-medium text-black/85 tracking-tight mb-2">
+            Explore AI Capabilities
+          </h2>
+          <p class="text-sm text-black/60">
+            Discover how AI can help you with different aspects of your work
+          </p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          {
+            aiFeatures.map((feature) => {
+              return (
+                <a
+                  href={feature.href}
+                  class="group flex flex-col gap-y-3 p-5 rounded-xl border border-black/8 bg-white hover:border-black/12 hover:shadow-sm transition-all duration-200"
+                >
+                  <div class="flex items-start gap-x-3">
+                    <div
+                      class="size-2 rounded-full mt-1.5 shrink-0"
+                      style={`background-color: ${feature.color}`}
+                    />
+                    <div class="flex-1 min-w-0">
+                      <h3 class="text-base font-semibold text-black/85 group-hover:text-black/95 transition-colors mb-1">
+                        {feature.title}
+                      </h3>
+                      <p class="text-sm text-black/60 leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-x-1 text-xs font-medium text-black/60 group-hover:text-black/80 transition-colors pl-5">
+                    <span>Learn more</span>
+                    <ArrowRightRegular className="size-3 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </a>
+              );
+            })
+          }
+        </div>
+      </div>
+
+      <Divider />
       <FAQSection faqs={faqItems} client:load />
     </div>
   </Container>
+  <CTASection client:load />
 </Layout>

@@ -1,0 +1,15 @@
+---
+import Heading from "../generic/Heading.astro";
+
+type Props = {
+  title: string;
+  description: string;
+};
+
+const { title, description } = Astro.props;
+---
+
+<div class="flex flex-col gap-y-2">
+  <Heading>{title}</Heading>
+  <p class="text-gray-600 text-sm/relaxed max-w-[65ch]">{description}</p>
+</div>

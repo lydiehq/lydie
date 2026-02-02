@@ -1,35 +1,48 @@
 ---
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
 import Layout from "../../layouts/Layout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
-import { ArrowRightRegular, ChevronRightRegular } from "@fluentui/react-icons";
+import {
+  ArrowRightRegular,
+  ChevronRightRegular,
+  PersonRegular,
+  PeopleTeamRegular,
+} from "@fluentui/react-icons";
 import { Logo } from "../../components/Logo";
-import { CTASection } from "../../components/landing/CTASection";
+import CTASection from "../../components/landing/CTASection.astro";
 
-const title = "Features - Lydie";
+const title = "Use Cases - Lydie";
 const description =
-  "Discover all the powerful features that make Lydie the perfect writing and collaboration platform for modern teams.";
+  "Discover how Lydie adapts to your needs—whether you're building a personal knowledge base or managing team documentation.";
 
-const features = [
+const useCases = [
   {
     title: "Personal knowledge base",
     description:
       "Document and organize your expertise in one place that grows with you. Capture ideas, learnings, and insights to build your second brain.",
     href: "/use-cases/personal-knowledge-base",
+    icon: PersonRegular,
+    color: "#3b82f6",
   },
   {
     title: "Team knowledge base & wiki",
     description:
       "Centralize company knowledge for seamless onboarding and team alignment. Create customizable wikis that scale from startup to enterprise.",
     href: "/use-cases/team-knowledge-base",
+    icon: PeopleTeamRegular,
+    color: "#8b5cf6",
   },
 ];
 ---
 
 <Layout title={title} description={description}>
   <Container className="flex flex-col gap-y-16 pb-16">
+    <div class="max-w-4xl mx-auto w-full pt-8">
+      <Breadcrumbs items={[{ label: "Use cases" }]} />
+    </div>
     <!-- Hero Section -->
-    <div class="max-w-4xl mx-auto flex flex-col gap-y-8 pt-8">
+    <div class="max-w-4xl mx-auto flex flex-col gap-y-8">
       <div class="flex flex-col gap-y-6 items-center text-center">
         <Logo className="size-6 text-gray-200" />
 
@@ -39,7 +52,11 @@ const features = [
           >
             Use cases
           </h1>
-          <p class="text-lg text-gray-600 max-w-2xl"></p>
+          <p class="text-lg text-gray-600 max-w-2xl text-balance">
+            Lydie is incredibly flexible—whether you're capturing personal ideas
+            or building a team wiki, our platform adapts to your workflow and
+            scales with your needs.
+          </p>
         </div>
 
         <div class="flex gap-x-4 items-center">
@@ -55,25 +72,34 @@ const features = [
       </div>
     </div>
 
-    <!-- Features Grid -->
-    <div class="max-w-6xl mx-auto w-full">
-      <div class="grid md:grid-cols-3 gap-8">
+    <!-- Use Cases Grid -->
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="grid md:grid-cols-2 gap-6">
         {
-          features.map((feature) => {
+          useCases.map((useCase) => {
+            const Icon = useCase.icon;
             return (
               <a
-                href={feature.href}
-                class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+                href={useCase.href}
+                class="group flex flex-col gap-y-4 p-8 rounded-2xl border border-black/8 bg-white hover:border-black/12 hover:shadow-sm transition-all duration-200"
               >
-                <div class="flex flex-col gap-y-2">
-                  <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p class="text-gray-600 text-[15px]/relaxed">
-                    {feature.description}
-                  </p>
+                <div class="flex items-start gap-x-4">
+                  <div
+                    class="size-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                    style={`background-color: ${useCase.color}15`}
+                  >
+                    <Icon className="size-6" style={{ color: useCase.color }} />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-xl font-semibold text-black/85 group-hover:text-black/95 transition-colors mb-2">
+                      {useCase.title}
+                    </h3>
+                    <p class="text-black/60 text-[15px]/relaxed">
+                      {useCase.description}
+                    </p>
+                  </div>
                 </div>
-                <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto">
+                <div class="flex items-center gap-x-1 text-sm font-medium text-black/60 group-hover:text-black/80 transition-colors pl-16">
                   <span>Learn more</span>
                   <ArrowRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
                 </div>

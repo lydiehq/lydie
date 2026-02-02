@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Button } from "../generic/Button";
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
-import { SectionHeader } from "./SectionHeader";
 
 interface KeyProps {
   label: string;
@@ -13,7 +12,9 @@ interface KeyProps {
   rotate?: number;
   dataKey?: string;
   isPressed?: boolean;
-  isNightSkyVisible?: boolean;
+  shockwaveActive?: boolean;
+  centerX?: number;
+  centerY?: number;
 }
 
 function Star({
@@ -108,7 +109,9 @@ function Key({
   rotate = 0,
   dataKey,
   isPressed = false,
-  isNightSkyVisible = false,
+  shockwaveActive = false,
+  centerX = 600,
+  centerY = 200,
 }: KeyProps) {
   const widthClasses: Record<string, string> = {
     normal: "w-[60px]",
@@ -122,8 +125,35 @@ function Key({
 
   const showHighlighted = isHighlighted || isPressed;
 
+  // Calculate shockwave translation - push keys away from center
+  const getShockwaveTransform = () => {
+    if (!shockwaveActive) return "";
+    
+    // Get the key's approximate position from the parent element's style
+    const element = document.querySelector(`[data-key="${dataKey}"]`);
+    if (!element) return "";
+    
+    const rect = element.getBoundingClientRect();
+    const keyCenterX = rect.left + rect.width / 2;
+    const keyCenterY = rect.top + rect.height / 2;
+    
+    // Calculate direction away from center
+    const dx = keyCenterX - centerX;
+    const dy = keyCenterY - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance === 0) return "";
+    
+    // Normalize and scale
+    const pushDistance = 60; // pixels to push
+    const translateX = (dx / distance) * pushDistance;
+    const translateY = (dy / distance) * pushDistance;
+    
+    return `translate(${translateX}px, ${translateY}px)`;
+  };
+
   const baseClasses = clsx(
-    "relative h-[60px] ring-black/5 ring rounded-xl shadow-legit flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-200 flex-shrink-0 shadow-sm",
+    "relative h-[60px] ring-black/5 ring rounded-xl shadow-legit flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-500 flex-shrink-0 shadow-sm",
     widthClasses[width] || widthClasses.normal,
     showHighlighted
       ? "bg-gradient-to-b from-[#3b82f6] to-[#2563eb] text-white border-[#1d4ed8] border-t-blue-400"
@@ -132,13 +162,26 @@ function Key({
   );
 
   return (
-    <div data-key={dataKey}>
+    <div 
+      data-key={dataKey}
+      className={clsx(
+        "transition-transform duration-500 ease-out",
+        shockwaveActive && "translate-x-[var(--shockwave-x,0)] translate-y-[var(--shockwave-y,0)]"
+      )}
+      style={{
+        // Set CSS custom properties for the shockwave translation
+        ...(shockwaveActive ? {
+          transform: `translate(var(--shockwave-x, 0), var(--shockwave-y, 0)) rotate(${rotate}deg)`,
+        } : {
+          transform: rotate !== 0 ? `rotate(${rotate}deg)` : undefined,
+        }),
+      }}
+    >
       <CastShadow
         className="w-full"
         height={10}
         strength={1}
         lightAngle={145 + rotate}
-        style={rotate !== 0 ? { transform: `rotate(${rotate}deg)` } : undefined}
       >
         <div className={baseClasses}>
           <div
@@ -282,18 +325,6 @@ export function KeyboardSection() {
   return (
     <div className="py-16">
       <div className="flex flex-col items-center gap-y-6">
-        <SectionHeader
-          eyebrow="Keyboard shortcuts"
-          title="Everything at your fingertips"
-          description={
-            <>
-              Press <span className="font-medium text-black/80">⌘K</span> to search, navigate, and
-              access any feature instantly.
-            </>
-          }
-          centered
-        />
-
         <div className="relative w-full md:w-[1200px] h-[400px] overflow-visible">
           <div className="relative w-full h-full">
             {/* Night Sky Background */}

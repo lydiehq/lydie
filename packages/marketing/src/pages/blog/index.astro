@@ -4,12 +4,13 @@ export const prerender = false;
 // ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
 Astro.response.headers.set(
   "Cache-Control",
-  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
 import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import { lydieClient } from "../../utils/lydie-client";
 
@@ -40,7 +41,8 @@ const remainingPosts = sortedPosts.slice(1);
 >
   <div class="py-8">
     <Container>
-      <header class="flex flex-col gap-y-2 mb-12">
+      <Breadcrumbs items={[{ label: "Blog" }]} />
+      <header class="flex flex-col gap-y-2 mb-12 mt-4">
         <h1 class="text-2xl font-medium text-gray-900">Blog</h1>
         <span class="text-base text-gray-700"
           >Resources on writing, working in teams, and technical insights into

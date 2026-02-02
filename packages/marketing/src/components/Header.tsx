@@ -50,7 +50,7 @@ export function Header() {
   return (
     <header
       className={clsx(
-        "py-4 top-0 z-200 border-b transition-colors duration-1000",
+        "py-3 top-0 border-b transition-colors duration-400 sticky bg-grain bg-white! z-50",
         isScrolled ? "border-black/8" : "border-transparent",
       )}
     >

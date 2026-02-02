@@ -1,9 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { CTASection } from "../../components/landing/CTASection";
+import CTASection from "../../components/landing/CTASection.astro";
 import { FAQ } from "../../components/generic/FAQ";
 import Cursor from "../../components/generic/Cursor.astro";
 import { FAQSection } from "src/components/tools/FAQSection";
@@ -136,6 +137,14 @@ const faqItems = [
   <Container
     className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
   >
+    <div class="w-full max-w-4xl">
+      <Breadcrumbs
+        items={[
+          { label: "Features", href: "/features" },
+          { label: "Collaborative Editing" },
+        ]}
+      />
+    </div>
     <div class="text-center relative py-12 size-full">
       <GradientOutline />
       <h1

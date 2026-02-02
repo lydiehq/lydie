@@ -1,30 +1,27 @@
 ---
 import { getImage } from "astro:assets";
 import { ChatSection } from "./ChatSection";
-import CollaborationSection from "./CollaborationSection.astro";
 import IntegrationsSection from "./IntegrationsSection.astro";
 import PerformanceSection from "./PerformanceSection.astro";
 import UseCasesSection from "./UseCasesSection.astro";
 import { Hero } from "./Hero";
 import ProblemSolutionSection from "./ProblemSolutionSection.astro";
 import {
-  ChevronRightRegular,
   GlobeRegular,
   SearchRegular,
   ShareRegular,
 } from "@fluentui/react-icons";
-import { Container } from "../Container";
+import Container from "../Container.astro";
 import screenshot from "../../../public/screenshot3.png";
 import Divider from "./Divider.astro";
 import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
-import { Button } from "../generic/Button";
 import { CastShadow } from "../generic/CastShadow";
-import CollaborationIllustration from "./CollaborationIllustration.astro";
 import { KeyboardSection } from "./KeyboardSection";
 import { FAQSection } from "../tools/FAQSection";
 import { GradientOutline } from "../generic/GradientOutline";
 import { DarkModeSection } from "./DarkModeSection";
-import { SectionHeader } from "./SectionHeader";
+import SectionHeader from "./SectionHeader.astro";
+import CTASection from "./CTASection.astro";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -169,7 +166,17 @@ const faqItems = [
 
 <Divider logo />
 
-<KeyboardSection client:visible />
+<Container>
+  <div class="flex flex-col items-center gap-y-6">
+    <SectionHeader
+      eyebrow="Keyboard shortcuts"
+      title="Everything at your fingertips"
+      description="Press ⌘K to search, navigate, and access any feature instantly."
+      centered
+    />
+    <KeyboardSection client:visible />
+  </div>
+</Container>
 
 <Divider />
 
@@ -182,22 +189,7 @@ const faqItems = [
 </Container>
 
 <Divider />
-<Container size="sm">
-  <div class="flex flex-col gap-y-6 p-16 items-center text-center">
-    <SectionHeader
-      title="Ready to try it yourself?"
-      description="Create your first document in seconds. No credit card required."
-      centered
-      client:load
-    />
-    <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
-      <span>Get started for free</span>
-      <ChevronRightRegular
-        className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-      />
-    </Button>
-  </div>
-</Container>
+<CTASection client:load />
 
 <!-- <ChatSection
   client:load

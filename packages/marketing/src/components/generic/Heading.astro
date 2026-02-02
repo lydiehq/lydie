@@ -1,0 +1,29 @@
+---
+import type { VariantProps } from "cva";
+import { cva } from "cva";
+
+const styles = cva({
+  base: "text-black/85",
+  variants: {
+    level: {
+      1: "text-3xl font-medium",
+      2: "tracking-tight font-medium text-3xl",
+      3: "text-lg font-semibold",
+      4: "text-base font-semibold",
+    },
+  },
+});
+
+type Props = {
+  level?: 1 | 2 | 3 | 4;
+  className?: string;
+  [key: string]: any;
+};
+
+const { level = 1, className, ...rest } = Astro.props;
+const Tag = `h${level}` as "h1" | "h2" | "h3" | "h4";
+---
+
+<Tag class={styles({ level, className })} {...rest}>
+  <slot />
+</Tag>

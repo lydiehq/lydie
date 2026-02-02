@@ -6,7 +6,7 @@ import { HowToSection } from "../../../components/tools/HowToSection";
 import { FAQSection } from "../../../components/tools/FAQSection";
 import { RelatedConverters } from "../../../components/tools/RelatedConverters";
 import { conversionConfigs } from "../../../data/conversions";
-import { Container } from "../../../components/Container";
+import Container from "../../../components/Container.astro";
 
 export function getStaticPaths() {
   return conversionConfigs.map((config) => ({
