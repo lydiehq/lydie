@@ -14,7 +14,7 @@ import {
 import Container from "../Container.astro";
 import screenshot from "../../../public/screenshot3.png";
 import Divider from "./Divider.astro";
-import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
+import { ComposableDemo } from "./ComposableDemo";
 import { CastShadow } from "../generic/CastShadow";
 import { KeyboardSection } from "./KeyboardSection";
 import { FAQSection } from "../tools/FAQSection";
@@ -69,7 +69,7 @@ const faqItems = [
   },
   {
     q: "Can I collaborate with my team in real-time?",
-    a: "Absolutely. Lydie supports real-time collaboration, allowing you and your team to work on documents simultaneously. Changes are synced instantly across all devices, so everyone stays up to date.",
+    a: "Absolutely. Lydie supports real-time collaboration, allowing you and your team to work on documents simultaneously. Changes are synced instantly across all devices, so everyone stays up to date. [Learn more about collaborative editing.](/features/collaborative-editing)",
   },
   {
     q: "How does the AI-powered search work?",
@@ -113,7 +113,7 @@ const faqItems = [
     centered
   />
   <div class="w-full mt-12">
-    <InteractiveEditorDemo client:visible />
+    <ComposableDemo client:visible />
   </div>
 </Container>
 <Divider />

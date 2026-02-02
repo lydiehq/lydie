@@ -7,6 +7,8 @@ import { ArrowRightRegular, ChevronRightRegular } from "@fluentui/react-icons";
 import { Logo } from "../../components/Logo";
 import CTASection from "../../components/landing/CTASection.astro";
 import Heading from "src/components/generic/Heading.astro";
+import { GradientOutline } from "src/components/generic/GradientOutline";
+import SectionHeader from "src/components/landing/SectionHeader.astro";
 
 const title = "Features - Lydie";
 const description =
@@ -30,33 +32,14 @@ const features = [
 
 <Layout title={title} description={description}>
   <Container className="flex flex-col gap-y-16 pb-16">
-    <div class="max-w-4xl mx-auto w-full pt-8">
-      <Breadcrumbs items={[{ label: "Features" }]} />
-    </div>
-    <div class="max-w-4xl mx-auto flex flex-col gap-y-8">
-      <div class="flex flex-col gap-y-6 items-center text-center">
-        <div class="flex flex-col gap-y-4">
-          <Heading level={1}
-            >Everything you need to write, think, and create</Heading
-          >
-          <p class="text-lg text-gray-600 max-w-2xl">
-            From solo writers to collaborative teams, Lydie adapts to how you
-            work. Real-time collaboration when you need it, powerful tools for
-            deep work when you don't.
-          </p>
-        </div>
-
-        <div class="flex gap-x-4 items-center">
-          <Button href="https://app.lydie.co/auth" size="lg">
-            <div class="flex items-center gap-x-1">
-              <span>Get started for free</span>
-              <ChevronRightRegular
-                className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-              />
-            </div>
-          </Button>
-        </div>
-      </div>
+    <Breadcrumbs items={[{ label: "Features" }]} />
+    <div class="flex flex-col gap-y-6 relative p-4">
+      <GradientOutline />
+      <SectionHeader
+        className="max-w-lg"
+        title="Everything you need to write, think, and create"
+        description="From solo writers to collaborative teams, Lydie adapts to how you work. Real-time collaboration when you need it, powerful tools for deep work when you don't."
+      />
     </div>
 
     <div class="max-w-6xl mx-auto w-full">

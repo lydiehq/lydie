@@ -101,17 +101,6 @@ const settingsRoutes: SettingsSection[] = [
       },
     ],
   },
-  {
-    title: "Miscellaneous",
-    routes: [
-      {
-        path: "https://lydie.co/documentation",
-        external: true,
-        label: "Docs",
-        icon: DocumentIcon,
-      },
-    ],
-  },
 ];
 
 function RouteComponent() {

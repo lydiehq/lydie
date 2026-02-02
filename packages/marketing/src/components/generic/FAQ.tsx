@@ -9,6 +9,36 @@ import {
   Heading,
 } from "react-aria-components";
 
+/** Parses markdown-style links [text](href) in a string and returns React nodes with <a> elements. */
+function parseAnswerWithLinks(text: string): React.ReactNode {
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(
+      <a
+        key={match.index}
+        href={match[2]}
+        className="underline text-black/85 hover:text-black focus:outline-none focus:underline"
+      >
+        {match[1]}
+      </a>,
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length === 1 ? parts[0] : parts;
+}
+
 export interface FAQItem {
   question: string;
   answer: React.ReactNode;
@@ -22,7 +52,7 @@ interface FAQProps {
 
 export function FAQ({ items }: FAQProps) {
   return (
-    <div className="gap-y-2 flex flex-col">
+    <div className="gap-y-6 flex flex-col">
       <h2 className="text-lg font-medium text-black/85">Frequently Asked Questions</h2>
       <div className="space-y-2">
         {items.map((item, index) => (
@@ -48,6 +78,8 @@ interface FAQItemProps {
 const MotionDisclosurePanel = motion.create(DisclosurePanel);
 
 function FAQItem({ question, answer }: FAQItemProps) {
+  const resolvedAnswer = typeof answer === "string" ? parseAnswerWithLinks(answer) : answer;
+
   return (
     <Disclosure className="border-b border-black/6 last:border-b-0">
       {({ isExpanded }) => (
@@ -77,7 +109,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
                   transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1], delay: 0.05 }}
                   className="pb-4 max-w-[65ch]"
                 >
-                  {answer}
+                  {resolvedAnswer}
                 </motion.div>
               </MotionDisclosurePanel>
             )}

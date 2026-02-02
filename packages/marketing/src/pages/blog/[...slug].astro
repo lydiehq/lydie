@@ -1,7 +1,6 @@
 ---
 export const prerender = false;
 
-// ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
 Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
@@ -16,11 +15,8 @@ import FormattedDate from "../../components/FormattedDate.astro";
 import Heading from "../../components/generic/Heading.astro";
 import LydieContent from "../../components/LydieContent.astro";
 
-// Get the slug from the URL parameters
 const { slug } = Astro.params;
 
-// Fetch the specific document using getDocument(slug)
-// Internal links are automatically transformed to internal-link marks with metadata
 let document: Document;
 try {
   document = await lydieClient.getDocument(slug!, {

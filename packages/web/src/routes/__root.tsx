@@ -1,3 +1,4 @@
+import interWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import { ZeroProvider } from "@rocicorp/zero/react";
 import {
   HeadContent,
@@ -65,6 +66,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         },
       ],
       links: [
+        {
+          rel: "preload",
+          as: "font",
+          type: "font/woff2",
+          href: interWoff2,
+          crossOrigin: "anonymous",
+        },
         ...(zeroCacheURL
           ? [
               {

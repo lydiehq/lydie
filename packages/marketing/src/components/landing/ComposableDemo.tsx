@@ -1,303 +1,91 @@
 import {
-  SearchRegular,
   LinkRegular,
-  OrganizationRegular,
+  PeopleTeamRegular,
   BotRegular,
-  TextEditStyleRegular,
   DocumentRegular,
-  FolderRegular,
-  ChevronRightRegular,
-  AddRegular,
-  DismissRegular,
+  SearchRegular,
 } from "@fluentui/react-icons";
-import { AnimatePresence, motion, type Transition, type Variants } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { getColorById } from "@lydie/core/colors";
+import { CollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useState } from "react";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
 
-// =============================================================================
-// TYPES & STATE MACHINE
-// =============================================================================
-
-type DemoState = "writing" | "organization" | "linking" | "search" | "ai-assistant";
-
-type PageView = "document" | "settings";
+type DemoState = "collaboration" | "linking" | "ai-assistant" | "search";
 
 interface StateConfig {
   id: DemoState;
   label: string;
-  description: string;
   icon: React.ComponentType<{ className?: string }>;
   showSidebar: boolean;
-  showToolbar: boolean;
   sidebarWidth: number;
-  pageView: PageView;
 }
 
-// =============================================================================
-// CONFIGURATION
-// =============================================================================
-
 const STATE_CONFIG: Record<DemoState, StateConfig> = {
-  writing: {
-    id: "writing",
-    label: "Writing",
-    description: "Focus on your content with a clean, ergonomic editor",
-    icon: TextEditStyleRegular,
+  search: {
+    id: "search",
+    label: "Search",
+    icon: SearchRegular,
     showSidebar: false,
-    showToolbar: true,
     sidebarWidth: 0,
-    pageView: "document",
   },
-  organization: {
-    id: "organization",
-    label: "Organization",
-    description: "Structure your knowledge with nested pages and folders",
-    icon: OrganizationRegular,
-    showSidebar: true,
-    showToolbar: true,
-    sidebarWidth: 240,
-    pageView: "document",
+  collaboration: {
+    id: "collaboration",
+    label: "Collaboration",
+    icon: PeopleTeamRegular,
+    showSidebar: false,
+    sidebarWidth: 0,
   },
   linking: {
     id: "linking",
     label: "Internal Linking",
-    description: "Connect ideas and build a web of knowledge",
     icon: LinkRegular,
-    showSidebar: true,
-    showToolbar: true,
-    sidebarWidth: 200,
-    pageView: "document",
-  },
-  search: {
-    id: "search",
-    description: "Find anything in seconds with powerful search",
-    label: "Search",
-    icon: SearchRegular,
     showSidebar: false,
-    showToolbar: true,
     sidebarWidth: 0,
-    pageView: "document",
   },
   "ai-assistant": {
     id: "ai-assistant",
     label: "AI Assistant",
-    description: "Get help organizing, summarizing, and expanding your ideas",
     icon: BotRegular,
     showSidebar: true,
-    showToolbar: true,
-    sidebarWidth: 200,
-    pageView: "document",
+    sidebarWidth: 320,
   },
 };
 
-const STATE_ORDER: DemoState[] = ["writing", "organization", "linking", "search", "ai-assistant"];
+const STATE_ORDER: DemoState[] = ["search", "collaboration", "linking", "ai-assistant"];
 
-const AUTO_ADVANCE_MS = 8000;
+const AUTO_ADVANCE_MS = 9000;
 
-const TRANSITION_CONFIG: Transition = {
-  type: "spring",
-  stiffness: 300,
-  damping: 30,
-  mass: 0.8,
-};
-
-const SIDEBAR_VARIANTS: Variants = {
-  hidden: {
-    x: -20,
-    opacity: 0,
-    width: 0,
-  },
-  visible: (width: number) => ({
-    x: 0,
-    opacity: 1,
-    width,
-    transition: {
-      ...TRANSITION_CONFIG,
-      width: {
-        type: "spring",
-        stiffness: 400,
-        damping: 35,
-      },
-    },
-  }),
-  exit: {
-    x: -20,
-    opacity: 0,
-    width: 0,
-    transition: {
-      duration: 0.2,
-      ease: "easeInOut",
-    },
-  },
-};
-
-const CONTENT_VARIANTS: Variants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 20 : -20,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: TRANSITION_CONFIG,
-  },
-  exit: (direction: number) => ({
-    x: direction < 0 ? 20 : -20,
-    opacity: 0,
-    transition: { duration: 0.2 },
-  }),
-};
-
-// =============================================================================
-// DEMO CONTENT
-// =============================================================================
-
-const EDITOR_CONTENT = {
-  title: "Machine Learning Fundamentals",
-  paragraphs: [
-    {
-      id: "p1",
-      content:
-        "Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed. The core idea is to build algorithms that can receive input data and use statistical analysis to predict an output while updating outputs as new data becomes available.",
-      highlight: null as { text: string; color: string } | null,
-    },
-    {
-      id: "p2",
-      content:
-        "There are three main types of machine learning: supervised learning, where the algorithm learns from labeled training data; unsupervised learning, where the algorithm finds hidden patterns in unlabeled data; and reinforcement learning, where the algorithm learns by interacting with an environment and receiving rewards or penalties.",
-      highlight: { text: "supervised learning", color: "#7DBCD633" },
-    },
-    {
-      id: "p3",
-      content:
-        "For more detailed examples and code implementations, see the related resources and documentation. The practical applications span across numerous industries including healthcare, finance, autonomous vehicles, and natural language processing.",
-      highlight: null,
-    },
-  ],
-};
-
-interface SidebarDocItem {
-  id: string;
-  title: string;
-  type: "doc";
-  active: boolean;
-}
-
-interface SidebarFolderItem {
-  id: string;
-  title: string;
-  type: "folder";
-  expanded: boolean;
-  children: SidebarDocItem[];
-}
-
-const SIDEBAR_ITEMS: SidebarFolderItem[] = [
-  {
-    id: "1",
-    title: "Getting Started",
-    type: "folder",
-    expanded: true,
-    children: [
-      { id: "1-1", title: "Introduction to ML", type: "doc", active: false },
-      { id: "1-2", title: "Machine Learning Fundamentals", type: "doc", active: true },
-      { id: "1-3", title: "Setting Up Your Environment", type: "doc", active: false },
-    ],
-  },
-  {
-    id: "2",
-    title: "Core Concepts",
-    type: "folder",
-    expanded: false,
-    children: [
-      { id: "2-1", title: "Neural Networks", type: "doc", active: false },
-      { id: "2-2", title: "Deep Learning", type: "doc", active: false },
-      { id: "2-3", title: "Training & Validation", type: "doc", active: false },
-    ],
-  },
-  {
-    id: "3",
-    title: "Projects",
-    type: "folder",
-    expanded: false,
-    children: [
-      { id: "3-1", title: "Image Classification", type: "doc", active: false },
-      { id: "3-2", title: "Sentiment Analysis", type: "doc", active: false },
-    ],
-  },
-  { id: "4", title: "Resources", type: "folder", expanded: false, children: [] },
+const collaborators = [
+  { name: "Sarah", color: getColorById("cyan")?.value ?? "#7DBCD6" },
+  { name: "Alex", color: getColorById("green")?.value ?? "#90C9AA" },
+  { name: "Jordan", color: getColorById("gold")?.value ?? "#E8B974" },
 ];
-
-// =============================================================================
-// UTILITY FUNCTIONS
-// =============================================================================
 
 function getNextState(current: DemoState): DemoState {
   const idx = STATE_ORDER.indexOf(current);
   return STATE_ORDER[(idx + 1) % STATE_ORDER.length];
 }
 
-function getStateDirection(from: DemoState, to: DemoState): number {
-  const fromIdx = STATE_ORDER.indexOf(from);
-  const toIdx = STATE_ORDER.indexOf(to);
-  return toIdx > fromIdx ? 1 : -1;
-}
-
-// =============================================================================
-// MAIN COMPONENT
-// =============================================================================
-
 export function ComposableDemo() {
-  const [currentState, setCurrentState] = useState<DemoState>("writing");
-  const [previousState, setPreviousState] = useState<DemoState | null>(null);
+  const [currentState, setCurrentState] = useState<DemoState>("search");
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<string[]>([]);
-
-  const direction = useMemo(() => {
-    if (!previousState) return 1;
-    return getStateDirection(previousState, currentState);
-  }, [previousState, currentState]);
-
-  const config = STATE_CONFIG[currentState];
 
   // Auto-advance timer
   useEffect(() => {
     if (!isAutoPlaying) return;
     const timer = setTimeout(() => {
-      setPreviousState(currentState);
       setCurrentState(getNextState(currentState));
     }, AUTO_ADVANCE_MS);
     return () => clearTimeout(timer);
   }, [currentState, isAutoPlaying]);
 
-  // Simulate search when in search state
-  useEffect(() => {
-    if (currentState === "search") {
-      setSearchQuery("supervised learning");
-      const timer = setTimeout(() => {
-        setSearchResults([
-          "Machine Learning Fundamentals",
-          "Introduction to ML",
-          "Training & Validation",
-        ]);
-      }, 600);
-      return () => clearTimeout(timer);
-    } else {
-      setSearchQuery("");
-      setSearchResults([]);
-    }
-  }, [currentState]);
-
-  const handleStateChange = useCallback(
-    (newState: DemoState) => {
-      setPreviousState(currentState);
-      setCurrentState(newState);
-      setIsAutoPlaying(false);
-    },
-    [currentState],
-  );
+  const handleStateChange = useCallback((newState: DemoState) => {
+    setCurrentState(newState);
+    setIsAutoPlaying(false);
+  }, []);
 
   return (
     <section className="flex flex-col items-center overflow-visible w-full">
@@ -309,8 +97,8 @@ export function ComposableDemo() {
           ))}
         </div>
 
-        <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={80}>
-          <div className="flex flex-col flex-1 h-[600px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit relative">
+        <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={100}>
+          <div className="flex flex-1 h-[620px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit relative">
             {/* Feature Toggle Buttons */}
             <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20 rounded-b-xl z-20">
               <FeatureButtons
@@ -323,72 +111,50 @@ export function ComposableDemo() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex flex-1 overflow-hidden">
-              {/* Animated Sidebar */}
-              <AnimatePresence mode="wait" initial={false}>
-                {config.showSidebar && (
-                  <motion.div
-                    key="sidebar"
-                    custom={config.sidebarWidth}
-                    variants={SIDEBAR_VARIANTS}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="shrink-0 border-r border-gray-100 bg-gray-50/50 overflow-hidden"
-                  >
-                    <SidebarContent currentState={currentState} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Editor Area */}
+            <div className="flex flex-1 overflow-hidden relative">
+              {/* Main Editor Area */}
               <div className="flex-1 flex flex-col min-w-0">
                 {/* Toolbar */}
-                <AnimatePresence mode="wait">
-                  {config.showToolbar && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex justify-between items-center px-3 py-2 border-b border-gray-100"
-                    >
-                      <ToolbarItems />
-                      <div className="flex items-center gap-2">
-                        {currentState === "organization" && (
-                          <motion.button
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
-                          >
-                            <AddRegular className="size-3.5" />
-                            <span>New Page</span>
-                          </motion.button>
-                        )}
-                      </div>
-                    </motion.div>
+                <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
+                  <ToolbarItems />
+                  {currentState === "collaboration" && (
+                    <div className="-space-x-2 flex">
+                      {collaborators.map((c, i) => (
+                        <motion.div
+                          key={c.name}
+                          initial={{ opacity: 0, scale: 0.6 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{
+                            delay: 0.08 * i,
+                            duration: 0.3,
+                            ease: [0.25, 0.46, 0.45, 0.94],
+                          }}
+                          className="rounded-full size-6 border-2 border-white shrink-0 flex items-center justify-center text-[0.65rem] font-semibold text-white select-none"
+                          style={{
+                            backgroundColor: c.color,
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          {c.name[0]}
+                        </motion.div>
+                      ))}
+                    </div>
                   )}
-                </AnimatePresence>
-
-                {/* Search Overlay */}
-                <AnimatePresence>
-                  {currentState === "search" && (
-                    <SearchOverlay query={searchQuery} results={searchResults} />
-                  )}
-                </AnimatePresence>
+                </div>
 
                 {/* Document Content */}
-                <motion.div
-                  key={currentState}
-                  custom={direction}
-                  variants={CONTENT_VARIANTS}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  className="flex-1 px-8 py-6 max-w-[65ch] mx-auto overflow-y-auto"
-                >
+                <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
                   <DocumentContent currentState={currentState} />
-                </motion.div>
+                </div>
               </div>
+
+              {/* AI Assistant Sidebar */}
+              <AnimatePresence>
+                {currentState === "ai-assistant" && <AIAssistantSidebar />}
+              </AnimatePresence>
+
+              {/* Search Overlay */}
+              <AnimatePresence>{currentState === "search" && <SearchOverlay />}</AnimatePresence>
             </div>
           </div>
         </CastShadow>
@@ -397,9 +163,10 @@ export function ComposableDemo() {
   );
 }
 
-// =============================================================================
-// SUB-COMPONENTS
-// =============================================================================
+const RING_SIZE = 20;
+const RING_STROKE = 2;
+const RING_R = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
 
 function FeatureButtons({
   states,
@@ -414,36 +181,33 @@ function FeatureButtons({
   isAutoPlaying: boolean;
   countdownMs: number;
 }) {
-  const RING_SIZE = 20;
-  const RING_STROKE = 2;
-  const RING_R = (RING_SIZE - RING_STROKE) / 2;
-  const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
+  const isActive = (id: DemoState) => currentState === id;
+  const showRing = (id: DemoState) => isActive(id);
 
   return (
-    <div className="rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] bg-black/85 text-white backdrop-blur-sm">
-      {states.map((stateId) => {
-        const config = STATE_CONFIG[stateId];
+    <div className="rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay bg-black/85 text-white backdrop-blur-sm">
+      {states.map((id) => {
+        const config = STATE_CONFIG[id];
         const Icon = config.icon;
-        const isActive = currentState === stateId;
 
         return (
           <button
-            key={stateId}
             type="button"
-            onClick={() => onStateChange(stateId)}
-            className="relative flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.8125rem]/0 font-medium transition-colors text-white/90 hover:text-white z-0 data-active:text-white [&:not([data-active])]:hover:bg-white/15"
-            data-active={isActive ? "" : undefined}
+            key={id}
+            onClick={() => onStateChange(id)}
+            className="relative flex items-center gap-2 px-2 py-1 rounded-full text-[0.8125rem]/0 font-medium transition-colors text-white/90 hover:text-white z-0 data-active:text-white [&:not([data-active])]:hover:bg-white/15"
+            data-active={isActive(id) ? "" : undefined}
           >
-            {isActive && (
+            {isActive(id) && (
               <motion.div
-                layoutId="demo-tab-highlight"
+                layoutId="feature-tab-highlight"
                 className="absolute inset-0 rounded-full bg-white/30"
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 style={{ zIndex: -1 }}
               />
             )}
             <span className="relative inline-flex items-center justify-center size-5 shrink-0">
-              {isActive && isAutoPlaying && (
+              {showRing(id) && isAutoPlaying && (
                 <svg
                   className="absolute inset-0 size-full -rotate-90"
                   viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
@@ -465,7 +229,9 @@ function FeatureButtons({
                   />
                 </svg>
               )}
-              <Icon className="shrink-0 size-4 relative z-1" />
+              <Icon
+                className={`shrink-0 size-4 relative z-1 ${isActive(id) ? "scale-60" : "scale-100"} transition-transform duration-250 ease-in-out`}
+              />
             </span>
             <span>{config.label}</span>
           </button>
@@ -475,163 +241,104 @@ function FeatureButtons({
   );
 }
 
-function SidebarContent({ currentState }: { currentState: DemoState }) {
-  if (currentState === "organization") {
-    return (
-      <div className="w-full h-full flex flex-col">
-        <div className="px-3 py-3 border-b border-gray-100">
-          <div className="flex items-center gap-2 text-gray-500">
-            <FolderRegular className="size-4" />
-            <span className="text-xs font-medium">Knowledge Base</span>
+function AIAssistantSidebar() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 30, width: 0 }}
+      animate={{ opacity: 1, x: 0, width: 320 }}
+      exit={{ opacity: 0, x: 30, width: 0 }}
+      transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 35,
+        opacity: { duration: 0.2 },
+      }}
+      className="shrink-0 bg-white ring-1 ring-black/6 rounded-lg flex flex-col overflow-hidden ml-2 shadow-popover"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-2 border-b border-black/6 bg-white">
+        <div className="flex items-center gap-2">
+          <div className="rounded-full size-6 flex items-center justify-center bg-purple-100 text-purple-600">
+            <BotRegular className="size-3.5" />
           </div>
+          <span className="text-sm font-medium text-gray-900">AI Assistant</span>
         </div>
-        <div className="flex-1 overflow-y-auto py-2">
-          {SIDEBAR_ITEMS.map((item) => (
-            <SidebarFolder key={item.id} item={item} depth={0} />
-          ))}
-        </div>
-        <div className="px-3 py-2 border-t border-gray-100">
-          <button className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 w-full px-2 py-1.5 rounded hover:bg-gray-100">
-            <AddRegular className="size-3.5" />
-            <span>New Folder</span>
+        <div className="flex items-center gap-1">
+          <button className="p-1 rounded hover:bg-black/5 text-gray-500" aria-label="New chat">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+          <button className="p-1 rounded hover:bg-black/5 text-gray-500" aria-label="Close">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
       </div>
-    );
-  }
 
-  if (currentState === "linking") {
-    return (
-      <div className="w-full h-full flex flex-col">
-        <div className="px-3 py-3 border-b border-gray-100">
-          <span className="text-xs font-medium text-gray-500">Linked Pages</span>
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {/* User Message */}
+        <div className="flex gap-2">
+          <div className="rounded-full size-6 bg-gray-100 flex items-center justify-center shrink-0">
+            <span className="text-xs font-medium text-gray-600">You</span>
+          </div>
+          <div className="flex-1 bg-gray-50 rounded-lg p-2.5 text-sm text-gray-700">
+            Help me make this itinerary more exciting and fun
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto py-2 px-3">
-          <div className="space-y-1">
-            <LinkItem title="Introduction to ML" type="backlink" />
-            <LinkItem title="Neural Networks" type="related" />
-            <LinkItem title="Training & Validation" type="related" />
-            <LinkItem title="Supervised Learning Guide" type="mention" />
+
+        {/* AI Response */}
+        <div className="flex gap-2">
+          <div className="rounded-full size-6 bg-purple-100 flex items-center justify-center shrink-0">
+            <BotRegular className="size-3 text-purple-600" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <div className="bg-purple-50 rounded-lg p-2.5 text-sm text-gray-700">
+              Here are some ways to make your Japan trip more exciting:
+            </div>
+            <div className="bg-purple-50/50 rounded-lg p-2.5 text-sm text-gray-700 space-y-1.5">
+              <p>🎌 Add a traditional tea ceremony experience in Kyoto</p>
+              <p>🍜 Include a ramen tour in Tokyo's best districts</p>
+              <p>🗻 Plan a sunrise hike at Mt. Fuji</p>
+              <p>🎮 Visit an arcade in Akihabara</p>
+            </div>
           </div>
         </div>
       </div>
-    );
-  }
 
-  if (currentState === "ai-assistant") {
-    return (
-      <div className="w-full h-full flex flex-col">
-        <div className="px-3 py-3 border-b border-gray-100">
-          <span className="text-xs font-medium text-gray-500">AI Suggestions</span>
-        </div>
-        <div className="flex-1 overflow-y-auto py-3 px-3">
-          <div className="space-y-3">
-            <AISuggestionCard
-              type="summarize"
-              title="Summarize this page"
-              description="Create a brief summary of the key concepts"
-            />
-            <AISuggestionCard
-              type="expand"
-              title="Expand on neural networks"
-              description="Add more detail about activation functions"
-            />
-            <AISuggestionCard
-              type="connect"
-              title="Find related notes"
-              description="Discover connections to existing pages"
-            />
-          </div>
+      {/* Input Area */}
+      <div className="p-2 border-t border-black/6 bg-white">
+        <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+          <input
+            type="text"
+            placeholder="Ask anything..."
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
+            readOnly
+          />
+          <button className="p-1 rounded hover:bg-black/5 text-gray-500">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
+            </svg>
+          </button>
         </div>
       </div>
-    );
-  }
-
-  return null;
-}
-
-function SidebarFolder({ item, depth }: { item: SidebarFolderItem; depth: number }) {
-  const [expanded, setExpanded] = useState(item.expanded);
-
-  return (
-    <div>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded hover:bg-gray-100 text-gray-700"
-        style={{ paddingLeft: `${12 + depth * 12}px` }}
-      >
-        <ChevronRightRegular
-          className={`size-3.5 text-gray-400 transition-transform ${expanded ? "rotate-90" : ""}`}
-        />
-        <FolderRegular className="size-4 text-gray-400" />
-        <span className="truncate">{item.title}</span>
-      </button>
-      {expanded &&
-        item.children.map((child) => <SidebarDoc key={child.id} item={child} depth={depth + 1} />)}
-    </div>
-  );
-}
-
-function SidebarDoc({ item, depth }: { item: SidebarDocItem; depth: number }) {
-  return (
-    <button
-      className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded hover:bg-gray-100 ${
-        item.active ? "bg-blue-50 text-blue-700" : "text-gray-700"
-      }`}
-      style={{ paddingLeft: `${12 + depth * 12}px` }}
-    >
-      <DocumentRegular className="size-4 text-gray-500" />
-      <span className="truncate">{item.title}</span>
-    </button>
-  );
-}
-
-function LinkItem({ title, type }: { title: string; type: "backlink" | "related" | "mention" }) {
-  const typeLabels = {
-    backlink: "Links here",
-    related: "Related",
-    mention: "Mentioned",
-  };
-
-  const typeColors = {
-    backlink: "text-blue-600 bg-blue-50",
-    related: "text-gray-600 bg-gray-100",
-    mention: "text-purple-600 bg-purple-50",
-  };
-
-  return (
-    <div className="flex items-start gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer group">
-      <DocumentRegular className="size-4 text-gray-400 mt-0.5 shrink-0" />
-      <div className="min-w-0">
-        <div className="text-sm text-gray-700 truncate group-hover:text-gray-900">{title}</div>
-        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${typeColors[type]}`}>
-          {typeLabels[type]}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function AISuggestionCard({
-  type,
-  title,
-  description,
-}: {
-  type: "summarize" | "expand" | "connect";
-  title: string;
-  description: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-3 rounded-lg border border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all"
-    >
-      <div className="flex items-center gap-2 mb-1">
-        <BotRegular className="size-4 text-blue-500" />
-        <span className="text-sm font-medium text-gray-900">{title}</span>
-      </div>
-      <p className="text-xs text-gray-500">{description}</p>
     </motion.div>
   );
 }
@@ -639,84 +346,149 @@ function AISuggestionCard({
 function ToolbarItems() {
   return (
     <div className="flex items-center gap-1">
-      <ToolbarButton>Undo</ToolbarButton>
-      <ToolbarButton>Redo</ToolbarButton>
-      <div className="mx-1 h-4 w-px bg-gray-200" />
-      <ToolbarButton>B</ToolbarButton>
-      <ToolbarButton>I</ToolbarButton>
-      <ToolbarButton>U</ToolbarButton>
-      <div className="mx-1 h-4 w-px bg-gray-200" />
-      <ToolbarButton>H1</ToolbarButton>
-      <ToolbarButton>H2</ToolbarButton>
-      <div className="mx-1 h-4 w-px bg-gray-200" />
-      <ToolbarButton>Link</ToolbarButton>
+      {/* Simple toolbar buttons - using text for simplicity */}
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700" title="Bold">
+        <span className="text-xs font-bold">B</span>
+      </button>
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700" title="Italic">
+        <span className="text-xs italic">I</span>
+      </button>
+      <div className="mx-1 h-6 w-px bg-gray-200" />
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Heading 1">
+        H1
+      </button>
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Heading 2">
+        H2
+      </button>
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Heading 3">
+        H3
+      </button>
+      <div className="mx-1 h-6 w-px bg-gray-200" />
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Bullet List">
+        •
+      </button>
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Numbered List">
+        1.
+      </button>
+      <div className="mx-1 h-6 w-px bg-gray-200" />
+      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Link">
+        Link
+      </button>
     </div>
   );
 }
 
-function ToolbarButton({ children }: { children: React.ReactNode }) {
+function SearchOverlay() {
+  const menuSections = [
+    {
+      title: "Favorites",
+      items: [
+        { label: "Create new document", selected: false },
+        { label: "Publish document", selected: false },
+      ],
+    },
+    {
+      title: "Navigation",
+      items: [
+        { label: "Search documents", selected: true },
+        { label: "Go home", selected: false },
+        { label: "Go to assistant", selected: false },
+      ],
+    },
+  ];
+
   return (
-    <button className="px-2 py-1 rounded hover:bg-gray-100 text-gray-600 text-sm font-medium min-w-[28px]">
-      {children}
-    </button>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="absolute inset-0 z-30 flex items-start justify-center pt-16 px-4"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+
+      {/* Command Menu */}
+      <div className="relative w-full max-w-xl rounded-xl shadow-popover bg-gray-50 overflow-hidden">
+        <div className="flex items-center border-b border-gray-100 px-3 bg-white">
+          <SearchRegular className="size-4 text-gray-400 mr-2" />
+          <input
+            type="text"
+            placeholder="Type a command or search..."
+            className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400"
+            readOnly
+          />
+        </div>
+
+        <div className="max-h-80 overflow-y-auto p-2">
+          {menuSections.map((section, sectionIndex) => (
+            <div key={section.title}>
+              <div
+                className={`px-3 py-1 text-xs font-medium text-gray-500 text-left ${sectionIndex > 0 ? "mt-2" : ""}`}
+              >
+                {section.title}
+              </div>
+              {section.items.map((item) => (
+                <div
+                  key={item.label}
+                  className={`relative flex cursor-pointer select-none items-center rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 ${
+                    item.selected ? "bg-gray-100 text-gray-950" : "text-gray-800 hover:bg-gray-100"
+                  }`}
+                >
+                  <SearchRegular className="size-4 text-gray-400 mr-2" />
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Keyboard help footer */}
+        <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2 bg-white text-xs text-gray-500">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">↵</kbd>
+              <span>to select</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">↑↓</kbd>
+              <span>to navigate</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
-function SearchOverlay({ query, results }: { query: string; results: string[] }) {
+function LinkingOverlay() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="absolute inset-x-0 top-12 z-30 flex justify-center px-4"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="absolute left-1/2 bottom-[calc(100%+1rem)] -translate-x-1/2 z-30"
     >
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-popover border border-gray-200 overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
-          <SearchRegular className="size-5 text-gray-400" />
-          <input
-            type="text"
-            value={query}
-            readOnly
-            className="flex-1 text-base outline-none"
-            placeholder="Search your knowledge base..."
-          />
-          <button className="p-1 rounded hover:bg-gray-100">
-            <DismissRegular className="size-4 text-gray-400" />
-          </button>
-        </div>
-        <div className="py-2">
-          {results.length === 0 ? (
-            <div className="px-4 py-8 text-center text-gray-500">
-              <div className="animate-pulse">Searching...</div>
-            </div>
-          ) : (
-            <>
-              <div className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
-                Pages
-              </div>
-              {results.map((result, idx) => (
-                <motion.div
-                  key={result}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer"
-                >
-                  <DocumentRegular className="size-4 text-gray-400" />
-                  <span className="text-sm text-gray-700">{result}</span>
-                  {idx === 0 && (
-                    <span className="ml-auto text-[10px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
-                      Best match
-                    </span>
-                  )}
-                </motion.div>
-              ))}
-            </>
-          )}
-        </div>
-        <div className="px-4 py-2 bg-gray-50 text-xs text-gray-400 flex items-center justify-between">
-          <span>Press Enter to open</span>
-          <span>ESC to close</span>
+      {/* Connector line + arrow pointing from card back to the linked text */}
+      <div
+        className="absolute right-full top-1/2 -translate-y-1/2 h-px bg-gray-200 w-2"
+        aria-hidden
+      />
+      <div
+        className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-y-4 border-y-transparent border-l-[6px] border-l-gray-200 -mr-2"
+        aria-hidden
+      />
+      <div className="bg-white rounded-lg shadow-popover border border-gray-100 overflow-hidden w-[220px]">
+        <div className="flex items-center gap-2.5 p-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500">
+            <DocumentRegular className="size-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium text-gray-900 truncate">Trip Master Plan</div>
+            <div className="text-xs text-gray-500">Shared document</div>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -724,96 +496,130 @@ function SearchOverlay({ query, results }: { query: string; results: string[] })
 }
 
 function DocumentContent({ currentState }: { currentState: DemoState }) {
-  const isLinking = currentState === "linking";
-  const isAIAssistant = currentState === "ai-assistant";
+  const showCollaboration = currentState === "collaboration";
 
   return (
-    <div className="prose prose-sm editor-content">
-      <h1 className="text-[1.75rem] font-medium text-gray-900 mt-0 mb-4">{EDITOR_CONTENT.title}</h1>
+    <>
+      <h1 className="text-[1.75rem] font-medium text-gray-900 mt-0 mb-4 select-none">
+        Japan Trip Planning
+      </h1>
 
-      {EDITOR_CONTENT.paragraphs.map((para, idx) => (
-        <div key={para.id} className="relative mb-4">
-          <p className="text-gray-700 leading-relaxed">
-            {para.highlight ? (
-              <>
-                {para.content.split(para.highlight.text).map((part, partIdx, arr) => (
-                  <span key={partIdx}>
-                    {part}
-                    {partIdx < arr.length - 1 && (
-                      <span
-                        className="rounded-sm"
-                        style={{ backgroundColor: para.highlight!.color }}
-                      >
-                        {para.highlight!.text}
-                      </span>
-                    )}
-                  </span>
-                ))}
-              </>
-            ) : (
-              para.content
-            )}
+      <div className="prose prose-sm editor-content">
+        <p className="text-gray-700 leading-relaxed mb-4">
+          So excited for our two-week adventure! We should finalize the itinerary and book the
+          remaining stays.{" "}
+          {showCollaboration ? (
+            <>
+              <span
+                className="rounded-sm pointer-events-none"
+                style={{ backgroundColor: `${collaborators[1].color}33` }}
+              >
+                Sarah will research Tokyo neighborhoods
+              </span>
+              <motion.span
+                initial={{ opacity: 0, y: 6, scale: 1.1 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{ display: "inline" }}
+              >
+                <CollaborationCaret userName="Alex" userColor={collaborators[1].color} />
+              </motion.span>
+            </>
+          ) : (
+            "Sarah will research Tokyo neighborhoods"
+          )}{" "}
+          by tomorrow. <em>Check the weather forecast before we pack.</em>
+        </p>
+
+        <div className="relative">
+          <p
+            className={`text-gray-700 leading-relaxed mb-4 ${
+              currentState === "ai-assistant"
+                ? "rounded-sm bg-blue-100/50 ring-2 ring-blue-400/40 px-2 py-1"
+                : ""
+            }`}
+          >
+            For must-see spots and hidden gems, we're building off the
+            {showCollaboration && (
+              <motion.span
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: 0.15,
+                  duration: 0.35,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+                style={{ display: "inline" }}
+              >
+                <CollaborationCaret userName="Sarah" userColor={collaborators[0].color} />
+              </motion.span>
+            )}{" "}
+            recommendations doc. I'll add the restaurant reservations once that's ready.
           </p>
-
-          {/* Linking Overlay for paragraph 3 */}
-          {isLinking && idx === 2 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-20"
-            >
-              <div className="bg-white rounded-lg shadow-popover border border-gray-200 p-3 w-48">
-                <div className="text-xs font-medium text-gray-500 mb-2">Create link to...</div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50 cursor-pointer">
-                    <DocumentRegular className="size-3.5 text-gray-400" />
-                    <span className="text-xs text-gray-700">Related Resources</span>
-                  </div>
-                  <div className="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50 cursor-pointer">
-                    <DocumentRegular className="size-3.5 text-gray-400" />
-                    <span className="text-xs text-gray-700">Documentation</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* AI Assistant Popover for paragraph 2 */}
-          {isAIAssistant && idx === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute left-1/2 -translate-x-1/2 -top-12 z-20"
-            >
-              <div className="bg-white rounded-lg shadow-popover border border-gray-200 px-3 py-2 flex items-center gap-2">
-                <BotRegular className="size-4 text-blue-500" />
-                <span className="text-xs text-gray-600">Want me to expand on these types?</span>
-                <button className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                  Yes
-                </button>
-              </div>
-            </motion.div>
-          )}
         </div>
-      ))}
 
-      {/* Additional content for organization state */}
-      {currentState === "organization" && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-8 p-4 bg-blue-50/50 rounded-lg border border-blue-100"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <FolderRegular className="size-4 text-blue-500" />
-            <span className="text-sm font-medium text-blue-900">Organization Tip</span>
-          </div>
-          <p className="text-sm text-blue-700 m-0">
-            Use folders to group related topics. You can nest folders infinitely to create a
-            structure that matches how you think.
-          </p>
-        </motion.div>
-      )}
-    </div>
+        <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Things to book</h2>
+        <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
+          <li>
+            <p>
+              <strong>JR Pass</strong> — order online by end of week
+            </p>
+          </li>
+          <li>
+            <p>Reserve that ryokan in Kyoto with the onsen</p>
+          </li>
+          <li className="text-gray-700">
+            For the full itinerary and daily schedule, see{" "}
+            <span className="relative inline">
+              <span className="text-sm font-medium decoration-2 text-gray-900">
+                Trip Master Plan
+              </span>
+              <AnimatePresence>{currentState === "linking" && <LinkingOverlay />}</AnimatePresence>
+            </span>
+            .
+          </li>
+          <li>
+            <p>Book teamLab tickets in advance</p>
+          </li>
+          <li>
+            <p>Confirm Airbnb check-in details for Osaka</p>
+          </li>
+          <li>
+            <p>
+              Look up luggage forwarding service options
+              {showCollaboration && (
+                <motion.span
+                  initial={{ opacity: 0, y: 6, scale: 1.1 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{
+                    delay: 0.3,
+                    duration: 0.35,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                  }}
+                  style={{ display: "inline" }}
+                >
+                  <CollaborationCaret userName="Jordan" userColor={collaborators[2].color} />
+                </motion.span>
+              )}
+            </p>
+          </li>
+        </ul>
+
+        <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Packing checklist</h2>
+        <p className="text-gray-700 leading-relaxed mb-4">
+          We'll do a final gear check the night before we leave. Make sure everyone has comfortable
+          walking shoes!
+        </p>
+        <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
+          <li>Portable chargers and universal adapters</li>
+          <li>Pocket WiFi or SIM cards</li>
+          <li>Cash for places that don't take cards</li>
+        </ul>
+
+        <p className="text-gray-700 leading-relaxed mb-0">
+          Can't wait! Drop any other ideas or spots we shouldn't miss.
+        </p>
+      </div>
+    </>
   );
 }

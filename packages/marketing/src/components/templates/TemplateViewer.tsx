@@ -1,11 +1,15 @@
+import type { ReactElement } from "react";
+import type { Key } from "react-aria-components";
+
+import { CollectionsEmpty16Filled } from "@fluentui/react-icons";
 import { Placeholder } from "@lydie/editor/extensions";
-import {
-  type DocumentItem,
-  ShowcaseSidebar,
-} from "@lydie/ui/components/editor/ShowcaseSidebar";
+import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/editor/styles";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useState } from "react";
+import { Button, Collection, Tree, TreeItem, TreeItemContent } from "react-aria-components";
 
 import { PlaceholderComponent } from "./PlaceholderComponent";
 
@@ -14,6 +18,14 @@ type TemplateDocument = {
   title: string;
   content: any; // TipTap JSON content
   children?: TemplateDocument[];
+};
+
+type DocumentTreeItem = {
+  id: string;
+  name: string;
+  type: "document";
+  children?: DocumentTreeItem[];
+  isLocked: boolean;
 };
 
 type TemplateViewerProps = {
@@ -127,41 +139,48 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
         onAction={() => handleItemAction(item.id)}
         className={sidebarItemStyles({ isCurrent: isCurrentDocument })}
         style={{
-          paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
+          paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.5rem)`,
           paddingRight: "0.5rem",
         }}
         data-nosnippet
       >
         <TreeItemContent>
           {({ isExpanded }) => (
-            <>
-              <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
-                {/* Document icon with chevron on hover for items with children */}
-                {hasChildren ? (
-                  <Button
-                    slot="chevron"
-                    className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative cursor-default"
-                  >
-                    <CollectionsIcon
-                      className={`size-4 shrink-0 ${sidebarItemIconStyles()} transition-[opacity_100ms,transform_200ms] group-hover:opacity-0`}
-                    />
-                    <ChevronRightIcon
-                      className={`size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+            <div className="flex items-center gap-x-1 flex-1 min-w-0">
+              {/* Document icon with chevron on hover for items with children */}
+              {hasChildren ? (
+                <Button
+                  slot="chevron"
+                  className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/chevron relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center"
+                >
+                  <CollectionsEmpty16Filled
+                    className={sidebarItemIconStyles({
+                      className:
+                        "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+                    })}
+                  />
+                  <CollapseArrow
+                    className={sidebarItemIconStyles({
+                      className: `size-3 shrink-0 absolute opacity-0 group-hover:opacity-100 text-black/45! transition-[opacity_100ms,transform_200ms] ${
                         isExpanded ? "rotate-90" : ""
-                      }`}
-                    />
-                  </Button>
-                ) : (
-                  <div className="text-gray-500 p-1 -ml-1">
-                    <DocumentIcon className={`size-4 shrink-0 ${sidebarItemIconStyles()}`} />
-                  </div>
-                )}
+                      }`,
+                    })}
+                  />
+                </Button>
+              ) : (
+                <div className="text-gray-500 p-1 -ml-1 flex">
+                  <DocumentIcon
+                    className={sidebarItemIconStyles({
+                      className: "size-4 shrink-0",
+                    })}
+                  />
+                </div>
+              )}
 
-                <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>
-                  {item.name.trim() || "Untitled document"}
-                </span>
-              </div>
-            </>
+              <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>
+                {item.name.trim() || "Untitled document"}
+              </span>
+            </div>
           )}
         </TreeItemContent>
         {item.children && <Collection items={item.children}>{renderItem}</Collection>}
