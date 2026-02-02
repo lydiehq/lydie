@@ -1,4 +1,4 @@
-import type { SectionOverride } from "./comparison-sections";
+import type { SectionOverride } from "../utils/comparison-sections";
 
 export interface ComparisonFeature {
   name: string;

@@ -20,8 +20,8 @@ import { KeyboardSection } from "./KeyboardSection";
 import { FAQSection } from "../tools/FAQSection";
 import { GradientOutline } from "../generic/GradientOutline";
 import { DarkModeSection } from "./DarkModeSection";
-import SectionHeader from "./SectionHeader.astro";
-import CTASection from "./CTASection.astro";
+import { SectionHeader } from "./SectionHeader";
+import { CTASection } from "./CTASection";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -106,14 +106,16 @@ const faqItems = [
 
 <Container className="pb-24 pt-16 flex flex-col items-center">
   <SectionHeader
-    client:load
     eyebrow="Best-in-class editor"
     title="Experience the delight of writing"
     description="At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick notes or deep documentation."
     centered
   />
   <div class="w-full mt-12">
-    <ComposableDemo client:visible />
+    <ComposableDemo
+      client:visible
+      states={["collaboration", "linking", "ai-assistant"]}
+    />
   </div>
 </Container>
 <Divider />
@@ -167,20 +169,12 @@ const faqItems = [
 <Divider logo />
 
 <Container>
-  <div class="flex flex-col items-center gap-y-6">
-    <SectionHeader
-      eyebrow="Keyboard shortcuts"
-      title="Everything at your fingertips"
-      description="Press ⌘K to search, navigate, and access any feature instantly."
-      centered
-    />
-    <KeyboardSection client:visible />
-  </div>
+  <KeyboardSection client:visible />
 </Container>
 
 <Divider />
 
-<DarkModeSection client:load />
+<!-- <DarkModeSection client:load /> -->
 
 <Container size="sm" className="py-16">
   <div class="px-12">

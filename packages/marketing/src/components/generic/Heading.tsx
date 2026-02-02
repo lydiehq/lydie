@@ -1,4 +1,3 @@
----
 import { cva } from "cva";
 
 const styles = cva({
@@ -19,10 +18,7 @@ type Props = {
   [key: string]: any;
 };
 
-const { level = 1, className, ...rest } = Astro.props;
-const Tag = `h${level}` as "h1" | "h2" | "h3" | "h4";
----
-
-<Tag class={styles({ level, className })} {...rest}>
-  <slot />
-</Tag>
+export function Heading({ level = 1, className, ...rest }: Props) {
+  const Tag = `h${level}` as "h1" | "h2" | "h3" | "h4";
+  return <Tag className={styles({ level, className })} {...rest} />;
+}

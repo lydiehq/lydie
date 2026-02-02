@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
+import { SectionHeader } from "./SectionHeader";
 
 interface KeyProps {
   label: string;
@@ -182,7 +183,13 @@ export function KeyboardSection() {
   const isKeyPressed = (key: string) => pressedKeys.has(key);
 
   return (
-    <div className="py-16">
+    <div className="py-16 flex flex-col items-center gap-y-6">
+      <SectionHeader
+        eyebrow="Keyboard shortcuts"
+        title="Everything at your fingertips"
+        description="Press ⌘K to search, navigate, and access any feature instantly."
+        centered
+      />
       <div className="flex flex-col items-center gap-y-6">
         <div className="relative w-full md:w-[1200px] h-[400px] overflow-visible">
           <div className="relative w-full h-full">

@@ -1,6 +1,5 @@
 import {
   db,
-  templateCategoriesTable,
   templateCategoryAssignmentsTable,
   templateFaqsTable,
   templatesTable,

@@ -1,7 +1,7 @@
 ---
 import Container from "../../components/Container.astro";
 import Layout from "../../layouts/Layout.astro";
-import { getComparison } from "../../utils/comparisons";
+import { getComparison } from "../../data/comparisons";
 import { getSections } from "../../utils/comparison-sections";
 import {
   CheckmarkRegular,
@@ -14,7 +14,7 @@ import { Logo } from "../../components/Logo";
 import FeatureSection from "../../components/comparison/FeatureSection.astro";
 
 export async function getStaticPaths() {
-  const { comparisons } = await import("../../utils/comparisons");
+  const { comparisons } = await import("../../data/comparisons");
   return comparisons.map((comparison) => ({
     params: { slug: comparison.slug },
   }));

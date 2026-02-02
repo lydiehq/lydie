@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Container from "../components/Container.astro";
-import SectionHeader from "../components/landing/SectionHeader.astro";
+import SectionHeader from "../components/landing/SectionHeader";
 import { GradientOutline } from "../components/generic/GradientOutline";
 import Divider from "../components/landing/Divider.astro";
 import {
@@ -115,7 +115,7 @@ function getStatusLabel(status: string) {
     >
     </div>
   </div>
-  
+
   <Container
     className="flex flex-col items-center justify-center min-h-[40vh] py-16 gap-y-32"
   >
@@ -128,18 +128,19 @@ function getStatusLabel(status: string) {
         centered
       />
     </div>
-    
+
     <div class="max-w-xl mx-auto flex flex-col gap-y-8 w-full">
       <div class="prose mx-auto w-full">
         <p class="">
           We're building Lydie in the open. Our roadmap is public and constantly
-          evolving based on your feedback. Below you'll find features we've already
-          shipped, what we're actively working on, and what's planned for the future.
+          evolving based on your feedback. Below you'll find features we've
+          already shipped, what we're actively working on, and what's planned
+          for the future.
         </p>
       </div>
-      
+
       <Divider />
-      
+
       <div class="flex flex-col gap-y-6">
         {
           roadmapItems.map((item) => {
@@ -178,9 +179,9 @@ function getStatusLabel(status: string) {
           })
         }
       </div>
-      
+
       <Divider />
-      
+
       <div class="flex flex-col gap-y-3 text-center">
         <h2 class="text-2xl tracking-tight font-medium text-black/85">
           Have a feature request?

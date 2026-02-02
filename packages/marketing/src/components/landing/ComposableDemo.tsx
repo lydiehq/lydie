@@ -54,7 +54,7 @@ const STATE_CONFIG: Record<DemoState, StateConfig> = {
   },
 };
 
-const STATE_ORDER: DemoState[] = ["search", "collaboration", "linking", "ai-assistant"];
+const DEFAULT_STATE_ORDER: DemoState[] = ["search", "collaboration", "linking", "ai-assistant"];
 
 const AUTO_ADVANCE_MS = 9000;
 
@@ -64,23 +64,27 @@ const collaborators = [
   { name: "Jordan", color: getColorById("gold")?.value ?? "#E8B974" },
 ];
 
-function getNextState(current: DemoState): DemoState {
-  const idx = STATE_ORDER.indexOf(current);
-  return STATE_ORDER[(idx + 1) % STATE_ORDER.length];
+function getNextState(current: DemoState, stateOrder: DemoState[]): DemoState {
+  const idx = stateOrder.indexOf(current);
+  return stateOrder[(idx + 1) % stateOrder.length];
 }
 
-export function ComposableDemo() {
-  const [currentState, setCurrentState] = useState<DemoState>("search");
+type ComposableDemoProps = {
+  states?: DemoState[];
+};
+
+export function ComposableDemo({ states = DEFAULT_STATE_ORDER }: ComposableDemoProps) {
+  const [currentState, setCurrentState] = useState<DemoState>(states[0]);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   // Auto-advance timer
   useEffect(() => {
     if (!isAutoPlaying) return;
     const timer = setTimeout(() => {
-      setCurrentState(getNextState(currentState));
+      setCurrentState(getNextState(currentState, states));
     }, AUTO_ADVANCE_MS);
     return () => clearTimeout(timer);
-  }, [currentState, isAutoPlaying]);
+  }, [currentState, isAutoPlaying, states]);
 
   const handleStateChange = useCallback((newState: DemoState) => {
     setCurrentState(newState);
@@ -100,9 +104,9 @@ export function ComposableDemo() {
         <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={100}>
           <div className="flex flex-1 h-[620px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit relative">
             {/* Feature Toggle Buttons */}
-            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20 rounded-b-xl z-20">
+            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20 rounded-b-xl z-40">
               <FeatureButtons
-                states={STATE_ORDER}
+                states={states}
                 currentState={currentState}
                 onStateChange={handleStateChange}
                 isAutoPlaying={isAutoPlaying}
@@ -406,7 +410,7 @@ function SearchOverlay() {
       className="absolute inset-0 z-30 flex items-start justify-center pt-16 px-4"
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/20" />
 
       {/* Command Menu */}
       <div className="relative w-full max-w-xl rounded-xl shadow-popover bg-gray-50 overflow-hidden">

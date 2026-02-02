@@ -1,6 +1,10 @@
+import { comparisons } from "../data/comparisons.ts";
+import { getAllFeaturePaths } from "../data/features.ts";
+import { integrations } from "../data/integrations.ts";
+import { useCases } from "../data/use-cases.ts";
 import { generateUrlEntry, generateSitemap, sitemapHeaders } from "./sitemap-utils.js";
 
-// Static pages to include in sitemap
+// Static pages to include in sitemap (pages without dynamic registries)
 const staticPages = [
   { path: "/", priority: "1.0", changefreq: "weekly" },
   { path: "/about", priority: "0.8", changefreq: "monthly" },
@@ -11,34 +15,13 @@ const staticPages = [
   { path: "/templates", priority: "0.9", changefreq: "weekly" },
   { path: "/templates/categories", priority: "0.8", changefreq: "weekly" },
   { path: "/features", priority: "0.8", changefreq: "weekly" },
-  { path: "/features/ai-assistant", priority: "0.7", changefreq: "monthly" },
-  { path: "/features/collaborative-editing", priority: "0.7", changefreq: "monthly" },
-  { path: "/features/knowledge-base", priority: "0.7", changefreq: "monthly" },
   { path: "/documentation", priority: "0.7", changefreq: "monthly" },
   { path: "/documentation/sdk", priority: "0.6", changefreq: "monthly" },
   { path: "/integrations", priority: "0.8", changefreq: "monthly" },
   { path: "/compare", priority: "0.8", changefreq: "monthly" },
+  { path: "/use-cases", priority: "0.8", changefreq: "monthly" },
   { path: "/tools", priority: "0.7", changefreq: "weekly" },
   { path: "/tools/convert", priority: "0.7", changefreq: "weekly" },
-];
-
-// Integration pages
-const integrations = [
-  { id: "github", priority: "0.6" },
-  { id: "wordpress", priority: "0.6" },
-  { id: "shopify", priority: "0.6" },
-  { id: "blogger", priority: "0.6" },
-];
-
-// Comparison pages
-const comparisons = [
-  { slug: "google-docs", priority: "0.6" },
-  { slug: "notion", priority: "0.6" },
-  { slug: "coda", priority: "0.6" },
-  { slug: "confluence", priority: "0.6" },
-  { slug: "evernote", priority: "0.6" },
-  { slug: "onenote", priority: "0.6" },
-  { slug: "nuclino", priority: "0.6" },
 ];
 
 export async function GET() {
@@ -49,12 +32,17 @@ export async function GET() {
     urls.push(generateUrlEntry(page));
   }
 
+  // Feature pages (includes main feature pages and subpages)
+  for (const featurePath of getAllFeaturePaths()) {
+    urls.push(generateUrlEntry(featurePath));
+  }
+
   // Integration pages
   for (const integration of integrations) {
     urls.push(
       generateUrlEntry({
         path: `/integrations/${integration.id}`,
-        priority: integration.priority,
+        priority: integration.sitemapPriority || "0.6",
         changefreq: "monthly",
       }),
     );
@@ -65,7 +53,18 @@ export async function GET() {
     urls.push(
       generateUrlEntry({
         path: `/compare/${comparison.slug}`,
-        priority: comparison.priority,
+        priority: comparison.sitemapPriority || "0.6",
+        changefreq: "monthly",
+      }),
+    );
+  }
+
+  // Use case pages
+  for (const useCase of useCases) {
+    urls.push(
+      generateUrlEntry({
+        path: `/use-cases/${useCase.slug}`,
+        priority: useCase.sitemapPriority || "0.7",
         changefreq: "monthly",
       }),
     );
