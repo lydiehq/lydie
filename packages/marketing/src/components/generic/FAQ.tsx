@@ -54,7 +54,7 @@ export function FAQ({ items }: FAQProps) {
   return (
     <div className="gap-y-6 flex flex-col">
       <h2 className="text-lg font-medium text-black/85">Frequently Asked Questions</h2>
-      <div className="space-y-2">
+      <div className="">
         {items.map((item, index) => (
           <FAQItem
             key={index}
@@ -84,7 +84,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
     <Disclosure className="border-b border-black/6 last:border-b-0">
       {({ isExpanded }) => (
         <>
-          <Heading className="mb-2">
+          <Heading className="py-2">
             <Button
               slot="trigger"
               className="relative w-full flex items-center justify-between gap-4 py-1.5 text-left after:pointer-events-none after:absolute after:inset-y-0 after:-inset-x-2 after:rounded-lg after:bg-transparent after:content-[''] hover:after:bg-black/3 after:transition-colors after:duration-100 after:-z-10"

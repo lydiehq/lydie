@@ -89,8 +89,7 @@ const faqItems = [
 />
 <ProblemSolutionSection />
 
-<div class="max-w-4xl relative">
-  <!-- 768px internal width, centered (w-1 = 4px each side) -->
+<div class="max-w-4xl relative md:block hidden">
   <div
     class="fixed inset-y-0 w-1 border-r border-black/4"
     style="left: calc(50% - 388px)"
@@ -111,7 +110,7 @@ const faqItems = [
     description="At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick notes or deep documentation."
     centered
   />
-  <div class="w-full mt-12">
+  <div class="w-full mt-12 -mx-4 md:mx-0">
     <ComposableDemo
       client:visible
       states={["collaboration", "linking", "ai-assistant"]}
@@ -177,7 +176,7 @@ const faqItems = [
 <!-- <DarkModeSection client:load /> -->
 
 <Container size="sm" className="py-16">
-  <div class="px-12">
+  <div class="md:px-12">
     <FAQSection faqs={faqItems} client:load />
   </div>
 </Container>

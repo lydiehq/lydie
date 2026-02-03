@@ -17,7 +17,8 @@ const TASKS: Array<{
     id: "organize-welcome",
     title: "Organize your welcome documents",
     description: "Ask the assistant to see and organize documents under your welcome page",
-    prompt: "Please clean up all the documents under our welcome page. First visualize the document tree to see what's there, then organize them into a logical structure.",
+    prompt:
+      "Please clean up all the documents under our welcome page. First visualize the document tree to see what's there, then organize them into a logical structure.",
     hasContent: false,
   },
   {

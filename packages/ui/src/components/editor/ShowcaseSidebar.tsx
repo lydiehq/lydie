@@ -17,9 +17,9 @@ import {
   TreeItemContent,
 } from "react-aria-components";
 
+import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 import { Eyebrow } from "../layout/Eyebrow";
 import { Separator } from "../layout/Separator";
-import { Tooltip, TooltipTrigger } from "../generic/Tooltip";
 
 const sidebarItemStyles = cva({
   base: "group flex items-center h-[30px] rounded-lg text-sm font-medium mb-0.5 [&.active]:bg-black/5 transition-colors duration-75",
@@ -116,28 +116,20 @@ export function ShowcaseSidebar({
                 </Button>
               ) : (
                 <div className="text-gray-500 p-1 -ml-1">
-                  <Document16Filled
-                    className={`size-4 shrink-0 ${sidebarItemIconStyles()}`}
-                  />
+                  <Document16Filled className={`size-4 shrink-0 ${sidebarItemIconStyles()}`} />
                 </div>
               )}
               <span className="truncate">{item.name.trim() || "Untitled"}</span>
             </div>
           )}
         </TreeItemContent>
-        {item.children && (
-          <Collection items={item.children}>{renderItem}</Collection>
-        )}
+        {item.children && <Collection items={item.children}>{renderItem}</Collection>}
       </TreeItem>
     );
   };
 
   return (
-    <div
-      className={`shrink-0 flex w-[240px] flex-col rounded-lg bg-white/50 ${
-        className || ""
-      }`}
-    >
+    <div className={`shrink-0 flex w-[240px] flex-col rounded-lg bg-white/50 ${className || ""}`}>
       <div className="flex flex-col grow min-h-0">
         {showHeader && (
           <div className="flex items-center justify-between shrink-0 px-3 pt-3 pb-2">
@@ -163,9 +155,7 @@ export function ShowcaseSidebar({
               onClick={() => onSelect?.("home")}
             >
               <div className="flex items-center gap-1.5 flex-1 min-w-0 px-1.5">
-                <Home16Filled
-                  className={`size-4 ${sidebarItemIconStyles()}`}
-                />
+                <Home16Filled className={`size-4 ${sidebarItemIconStyles()}`} />
                 <span className="truncate flex-1">Home</span>
               </div>
             </div>

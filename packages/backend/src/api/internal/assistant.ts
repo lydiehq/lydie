@@ -1,8 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import {
-  getDefaultAgentById,
-  getDefaultAgentByName,
-} from "@lydie/core/ai/agents/defaults";
+import { getDefaultAgentById, getDefaultAgentByName } from "@lydie/core/ai/agents/defaults";
 import { chatModel } from "@lydie/core/ai/llm";
 import { createDocument } from "@lydie/core/ai/tools/create-document";
 import { listDocuments } from "@lydie/core/ai/tools/list-documents";

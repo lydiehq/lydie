@@ -138,6 +138,88 @@ const keyMap: Record<string, string> = {
   function: "fn",
 };
 
+function CommandMenu() {
+  return (
+    <div className="relative w-full md:w-[440px] h-[320px]">
+      <div className="absolute inset-0 flex flex-col rounded-xl shadow-legit bg-gray-50">
+        <div className="flex items-center border-b border-gray-100 px-3 bg-white rounded-t-xl">
+          <svg
+            className="size-4 text-gray-400 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <input
+            type="text"
+            placeholder="Type a command or search..."
+            className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400"
+            readOnly
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-2">
+          {menuSections.map((section, sectionIndex) => (
+            <div key={section.title}>
+              <div
+                className={clsx(
+                  "px-3 py-1 text-xs font-medium text-gray-500 text-left",
+                  sectionIndex > 0 && "mt-2",
+                )}
+              >
+                {section.title}
+              </div>
+              {section.items.map((item) => (
+                <div
+                  key={item.label}
+                  className={clsx(
+                    "relative flex cursor-pointer select-none items-center rounded-lg px-3 py-3 text-sm outline-none text-gray-800 transition-colors duration-150",
+                    item.selected ? "bg-gray-100 text-gray-950" : "hover:bg-gray-100",
+                  )}
+                >
+                  <svg
+                    className="size-4 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    {(Array.isArray(item.pathD) ? item.pathD : [item.pathD]).map((d, i) => (
+                      <path key={i} strokeLinecap="round" strokeLinejoin="round" d={d} />
+                    ))}
+                  </svg>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2 bg-white text-xs text-gray-500 rounded-b-xl">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">↵</kbd>
+              <span>to select</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">↑↓</kbd>
+              <span>to navigate</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function KeyboardSection() {
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
 
@@ -190,203 +272,103 @@ export function KeyboardSection() {
         description="Press ⌘K to search, navigate, and access any feature instantly."
         centered
       />
-      <div className="flex flex-col items-center gap-y-6">
-        <div className="relative w-full md:w-[1200px] h-[400px] overflow-visible">
-          <div className="relative w-full h-full">
-            <div
-              className="md:absolute md:left-1/2 md:top-1/2 relative"
-              style={{
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              <CastShadow className="w-full" strength={0.2}>
-                <div className="size-full relative">
-                  <GradientOutline />
-                  <div className="rounded-xl absolute inset-0 bg-black/20" />
-                  <div className="relative w-full md:w-[440px] h-[320px]">
-                    <div className="absolute inset-0 flex flex-col rounded-xl shadow-legit bg-gray-50">
-                      <div className="flex items-center border-b border-gray-100 px-3 bg-white rounded-t-xl">
-                        <svg
-                          className="size-4 text-gray-400 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                        <input
-                          type="text"
-                          placeholder="Type a command or search..."
-                          className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400"
-                          readOnly
-                        />
-                      </div>
 
-                      <div className="flex-1 overflow-y-auto p-2">
-                        {menuSections.map((section, sectionIndex) => (
-                          <div key={section.title}>
-                            <div
-                              className={clsx(
-                                "px-3 py-1 text-xs font-medium text-gray-500 text-left",
-                                sectionIndex > 0 && "mt-2",
-                              )}
-                            >
-                              {section.title}
-                            </div>
-                            {section.items.map((item) => (
-                              <div
-                                key={item.label}
-                                className={clsx(
-                                  "relative flex cursor-pointer select-none items-center rounded-lg px-3 py-3 text-sm outline-none text-gray-800 transition-colors duration-150",
-                                  item.selected ? "bg-gray-100 text-gray-950" : "hover:bg-gray-100",
-                                )}
-                              >
-                                <svg
-                                  className="size-4 text-gray-400 mr-2"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={2}
-                                >
-                                  {(Array.isArray(item.pathD) ? item.pathD : [item.pathD]).map(
-                                    (d, i) => (
-                                      <path
-                                        key={i}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d={d}
-                                      />
-                                    ),
-                                  )}
-                                </svg>
-                                <span>{item.label}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
+      <div className="relative w-full md:w-[1200px] h-[400px] flex flex-col md:block items-center gap-6">
+        {/* Command Menu - responsive positioning */}
+        <div className="md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 px-4 md:px-0 w-full md:w-auto z-0">
+          <CastShadow className="w-full" strength={0.2}>
+            <div className="size-full relative">
+              <GradientOutline />
+              <div className="rounded-xl absolute inset-0 bg-black/20" />
+              <CommandMenu />
+            </div>
+          </CastShadow>
+        </div>
 
-                      <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2 bg-white text-xs text-gray-500 rounded-b-xl">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">
-                              ↵
-                            </kbd>
-                            <span>to select</span>
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">
-                              ↑↓
-                            </kbd>
-                            <span>to navigate</span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CastShadow>
-            </div>
+        <div className="absolute left-1/2 -translate-x-24 -bottom-[40px]">
+          <Key
+            label="⌘"
+            width="cmd"
+            isHighlighted={true}
+            rotate={-15}
+            dataKey="meta"
+            isPressed={isKeyPressed("meta")}
+          />
+        </div>
 
-            {/* CMD+K - highlighted in center */}
-            <div className="absolute z-10" style={{ left: "515px", top: "390px" }}>
-              <Key
-                label="⌘"
-                width="cmd"
-                isHighlighted={true}
-                rotate={-15}
-                dataKey="meta"
-                isPressed={isKeyPressed("meta")}
-              />
-            </div>
-            <div className="absolute z-10" style={{ right: "520px", top: "405px" }}>
-              <Key
-                label="K"
-                isHighlighted={true}
-                rotate={9}
-                dataKey="k"
-                isPressed={isKeyPressed("k")}
-              />
-            </div>
+        <div className="absolute left-1/2 -bottom-[60px]">
+          <Key
+            label="K"
+            isHighlighted={true}
+            rotate={9}
+            dataKey="k"
+            isPressed={isKeyPressed("k")}
+          />
+        </div>
 
-            <div className="absolute" style={{ left: "-60px", top: "-150px" }}>
-              <Key label="L" rotate={-15} dataKey="l" isPressed={isKeyPressed("l")} />
-            </div>
-            <div className="absolute" style={{ left: "180px", top: "-120px" }}>
-              <Key label="Y" rotate={-8} dataKey="y" isPressed={isKeyPressed("y")} />
-            </div>
-            <div className="absolute" style={{ left: "1040px", top: "-100px" }}>
-              <Key label="N" rotate={20} dataKey="n" isPressed={isKeyPressed("n")} />
-            </div>
+        {/* L - positioned top-left */}
+        <div className="absolute -left-[60px] -top-[150px]">
+          <Key label="L" rotate={-15} dataKey="l" isPressed={isKeyPressed("l")} />
+        </div>
 
-            <div className="absolute" style={{ right: "-100px", top: "10px" }}>
-              <Key label="X" rotate={-6} dataKey="x" isPressed={isKeyPressed("x")} />
-            </div>
+        {/* Y - positioned top */}
+        <div className="absolute left-[320px] -top-[200px] lg:left-[180px] lg:-top-[120px]">
+          <Key label="Y" rotate={-8} dataKey="y" isPressed={isKeyPressed("y")} />
+        </div>
 
-            <div className="absolute" style={{ left: "220px", top: "30px" }}>
-              <Key
-                label="Tab"
-                width="cmd"
-                rotate={-20}
-                dataKey="tab"
-                isPressed={isKeyPressed("tab")}
-              />
-            </div>
-            <div className="absolute" style={{ left: "120px", top: "120px" }}>
-              <Key label="D" rotate={-16} dataKey="d" isPressed={isKeyPressed("d")} />
-            </div>
-            <div className="absolute" style={{ left: "280px", top: "130px" }}>
-              <Key label="I" rotate={8} dataKey="i" isPressed={isKeyPressed("i")} />
-            </div>
+        {/* N - positioned top-right */}
+        <div className="absolute left-[1040px] -top-[100px]">
+          <Key label="N" rotate={20} dataKey="n" isPressed={isKeyPressed("n")} />
+        </div>
 
-            <div className="absolute" style={{ right: "260px", top: "110px" }}>
-              <Key label="C" rotate={-14} dataKey="c" isPressed={isKeyPressed("c")} />
-            </div>
-            <div className="absolute" style={{ right: "80px", top: "180px" }}>
-              <Key label="O" rotate={-28} dataKey="o" isPressed={isKeyPressed("o")} />
-            </div>
-            <div className="absolute" style={{ left: "100px", top: "280px" }}>
-              <Key label="E" rotate={15} dataKey="e" isPressed={isKeyPressed("e")} />
-            </div>
-            <div className="absolute" style={{ right: "-100px", top: "160px" }}>
-              <Key
-                label="Enter"
-                width="wide"
-                rotate={6}
-                dataKey="enter"
-                isPressed={isKeyPressed("enter")}
-              />
-            </div>
+        {/* X - positioned right */}
+        <div className="absolute -right-[100px] top-[10px]">
+          <Key label="X" rotate={-6} dataKey="x" isPressed={isKeyPressed("x")} />
+        </div>
 
-            <div className="absolute" style={{ left: "270px", top: "360px" }}>
-              <Key
-                label="Ctrl"
-                width="cmd"
-                rotate={-15}
-                dataKey="control"
-                isPressed={isKeyPressed("control")}
-              />
-            </div>
-            <div className="absolute" style={{ left: "1020px", top: "360px" }}>
-              <Key
-                label="Alt"
-                width="cmd"
-                rotate={-8}
-                dataKey="alt"
-                isPressed={isKeyPressed("alt")}
-              />
-            </div>
-            <div className="absolute" style={{ left: "1120px", top: "260px" }}>
-              <Key label="Fn" width="fn" rotate={18} dataKey="fn" isPressed={isKeyPressed("fn")} />
-            </div>
-          </div>
+        <div className="absolute left-[220px] top-[30px] hidden md:block">
+          <Key label="Tab" width="cmd" rotate={-20} dataKey="tab" isPressed={isKeyPressed("tab")} />
+        </div>
+        <div className="absolute left-[120px] top-[120px] hidden md:block">
+          <Key label="D" rotate={-16} dataKey="d" isPressed={isKeyPressed("d")} />
+        </div>
+        <div className="absolute left-[280px] top-[130px] hidden md:block">
+          <Key label="I" rotate={8} dataKey="i" isPressed={isKeyPressed("i")} />
+        </div>
+
+        <div className="absolute right-[260px] top-[110px] hidden md:block">
+          <Key label="C" rotate={-14} dataKey="c" isPressed={isKeyPressed("c")} />
+        </div>
+        <div className="absolute right-[80px] top-[180px] hidden md:block">
+          <Key label="O" rotate={-28} dataKey="o" isPressed={isKeyPressed("o")} />
+        </div>
+        <div className="absolute left-[100px] top-[280px] hidden md:block">
+          <Key label="E" rotate={15} dataKey="e" isPressed={isKeyPressed("e")} />
+        </div>
+        <div className="absolute -right-[100px] top-[160px]">
+          <Key
+            label="Enter"
+            width="wide"
+            rotate={6}
+            dataKey="enter"
+            isPressed={isKeyPressed("enter")}
+          />
+        </div>
+
+        <div className="absolute left-[270px] top-[360px] hidden md:block">
+          <Key
+            label="Ctrl"
+            width="cmd"
+            rotate={-15}
+            dataKey="control"
+            isPressed={isKeyPressed("control")}
+          />
+        </div>
+        <div className="absolute left-[1020px] top-[360px]">
+          <Key label="Alt" width="cmd" rotate={-8} dataKey="alt" isPressed={isKeyPressed("alt")} />
+        </div>
+        <div className="absolute left-[1120px] top-[260px]">
+          <Key label="Fn" width="fn" rotate={18} dataKey="fn" isPressed={isKeyPressed("fn")} />
         </div>
       </div>
     </div>

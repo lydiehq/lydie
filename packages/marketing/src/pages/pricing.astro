@@ -6,9 +6,10 @@ import { Eyebrow } from "../components/landing/Eyebrow";
 import {
   CheckmarkRegular,
   ChevronRightRegular,
-  CodeRegular as GithubRegular,
   ServerRegular,
 } from "@fluentui/react-icons";
+
+import { GitHubIcon } from "../components/icons";
 
 const pricingTiers = [
   {
@@ -136,7 +137,7 @@ const pricingTiers = [
             target="_blank"
           >
             <div class="flex items-center gap-x-1.5">
-              <GithubRegular className="size-3.5" />
+              <GitHubIcon className="size-3.5" />
               <span>View on GitHub</span>
             </div>
           </Button>

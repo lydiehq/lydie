@@ -1,4 +1,4 @@
-import { ArrowCircleUpRegular, SquareFilled } from "@fluentui/react-icons";
+import { ArrowCircleUp32Filled, SquareFilled } from "@fluentui/react-icons";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { EditorContent } from "@tiptap/react";
 import { motion } from "motion/react";
@@ -168,7 +168,7 @@ export function AssistantInput({
               {canStop ? (
                 <SquareFilled className="size-4 text-gray-900 fill-gray-900" />
               ) : (
-                <ArrowCircleUpRegular className="size-4.5 text-gray-500" />
+                <ArrowCircleUp32Filled className="size-5 text-gray-900" />
               )}
             </Button>
           </div>

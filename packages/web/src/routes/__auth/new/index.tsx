@@ -9,6 +9,7 @@ import { useQuery as useZeroQuery } from "@rocicorp/zero/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useSetAtom } from "jotai";
 import { Form } from "react-aria-components";
 import z from "zod";
 
@@ -18,7 +19,6 @@ import { revalidateSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";
 import { useZero } from "@/services/zero";
 import { authClient } from "@/utils/auth";
-import { useSetAtom } from "jotai";
 
 export const Route = createFileRoute("/__auth/new/")({
   component: RouteComponent,

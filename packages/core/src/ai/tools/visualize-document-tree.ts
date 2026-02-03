@@ -21,12 +21,16 @@ Examples: "Show me the document tree", "What documents are under the welcome pag
     inputSchema: z.object({
       rootDocumentId: z
         .string()
-        .describe("ID of the document to start from. If not provided, shows the entire workspace tree from root level.")
+        .describe(
+          "ID of the document to start from. If not provided, shows the entire workspace tree from root level.",
+        )
         .optional()
         .nullable(),
       rootDocumentTitle: z
         .string()
-        .describe("Title of the document to start from (alternative to ID). Searches for document by title.")
+        .describe(
+          "Title of the document to start from (alternative to ID). Searches for document by title.",
+        )
         .optional(),
       maxDepth: z
         .number()
@@ -38,9 +42,10 @@ Examples: "Show me the document tree", "What documents are under the welcome pag
     execute: async function* ({ rootDocumentId, rootDocumentTitle, maxDepth }) {
       yield {
         state: "loading",
-        message: rootDocumentId || rootDocumentTitle
-          ? `Loading document tree structure...`
-          : `Loading workspace document hierarchy...`,
+        message:
+          rootDocumentId || rootDocumentTitle
+            ? `Loading document tree structure...`
+            : `Loading workspace document hierarchy...`,
       };
 
       // Determine the root document
@@ -205,9 +210,7 @@ Examples: "Show me the document tree", "What documents are under the welcome pag
         tree: treeNodes,
         treeVisualization: treeString,
         totalDocuments,
-        rootDocument: resolvedRootId
-          ? { id: resolvedRootId, title: rootDocumentTitle_ }
-          : null,
+        rootDocument: resolvedRootId ? { id: resolvedRootId, title: rootDocumentTitle_ } : null,
       };
     },
   });

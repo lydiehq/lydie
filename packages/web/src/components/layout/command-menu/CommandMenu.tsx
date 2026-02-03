@@ -90,7 +90,8 @@ export function CommandMenu() {
   const handleOpenChange = useCallback(
     (newIsOpen: boolean) => {
       if (!newIsOpen && isOpen) {
-        setSearch("");
+        // Delay clearing search until after animation completes (100ms)
+        setTimeout(() => setSearch(""), 150);
       }
       setOpen(newIsOpen);
     },

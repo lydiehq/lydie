@@ -6,7 +6,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
@@ -17,6 +17,7 @@ import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
 import { isDockedAtom } from "@/hooks/use-floating-assistant";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
+import { authClient } from "@/utils/auth";
 
 const organizationSearchSchema = z.object({
   installTemplate: z.string().optional().catch(undefined),
@@ -31,10 +32,6 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
       const { organizationSlug } = params;
 
       const organization = await loadOrganization(queryClient, zero, organizationSlug);
-
-      // await authClient.organization.setActive({
-      //   organizationId: organization.id,
-      // })
 
       return { organization };
     } catch (error) {
@@ -67,6 +64,26 @@ function RouteLayout() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const params = Route.useParams();
+  const { organization } = Route.useRouteContext();
+
+  // Track the last organization that was set as active to avoid unnecessary API calls.
+  // This ref persists across renders but doesn't trigger re-renders when changed.
+  const lastActiveOrgIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Only set active organization if:
+    // 1. We have an organization
+    // 2. It's different from the last one we set
+    if (organization && organization.id !== lastActiveOrgIdRef.current) {
+      // Update the ref immediately to prevent concurrent calls
+      lastActiveOrgIdRef.current = organization.id;
+
+      // Set the active organization on the server
+      authClient.organization.setActive({
+        organizationId: organization.id,
+      });
+    }
+  }, [organization]);
 
   const dockedAssistantContainerRef = useCallback((node: HTMLDivElement | null) => {
     setDockedAssistantContainer(node);
