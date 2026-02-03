@@ -12,19 +12,10 @@ export const showDocuments = (
   currentDocumentId?: string,
 ) =>
   tool({
-    description: `Show documents to the user in a visually appealing way.
-Use this tool when the user EXPLICITLY asks to see, view, or display their documents.
-This will render a nice interactive list that the user can click on.
+    description: `Display documents to user in an interactive, visually appealing UI.
 
-**When to use this tool:**
-- "Show me my documents"
-- "Display my latest 5 documents"
-- "What documents do I have?" (when they want to see them, not just know about them)
-- "List my recent files"
-
-**When NOT to use this tool:**
-- When you need to understand the workspace for your own research (use listDocuments instead)
-- When searching for specific content (use searchDocuments instead)`,
+Use when user explicitly asks to "show", "display", or "list" their documents.
+For internal research/context gathering, use scan_documents instead.`,
     inputSchema: z.object({
       limit: z.number().describe("Maximum number of documents to show").min(1).max(20).default(5),
       sortBy: z

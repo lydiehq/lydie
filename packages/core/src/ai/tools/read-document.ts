@@ -9,20 +9,10 @@ import { convertYjsToJson } from "../../yjs-to-json";
 export const readDocument = (userId: string, organizationId: string) =>
   tool({
     description: `Read the full content of a document by ID or title.
-Use this tool to access the complete content of any document, including the current document the user is working on.
 
-**When to use this tool:**
-- Before making ANY edits to a document (e.g., "edit all headings", "make text italic", "add a section")
-- When the user asks questions about document content
-- When you need to understand the structure or format of a document
-- When the user asks to modify or reference specific parts of a document
-- To reference information from other documents
+Returns complete HTML content plus optional metadata (creation date, slug, etc.).
 
-**Examples:**
-- User: "Please edit all headings to be in italic" → First use readDocument, then use replaceInDocument for each heading
-- User: "Add a conclusion section" → First use readDocument to see where to add it, then use replaceInDocument
-- User: "What's in this document?" → Use readDocument to see the content
-- User: "Compare this with the Product Roadmap" → Use readDocument to read the other document`,
+CRITICAL: Always read before editing. Use this to understand document structure, answer content questions, or reference other documents.`,
     inputSchema: z.object({
       documentId: z.string().describe("The unique ID of the document to read").optional(),
       documentTitle: z
