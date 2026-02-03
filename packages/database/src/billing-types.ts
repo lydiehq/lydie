@@ -25,7 +25,7 @@ export const PLAN_LIMITS: Record<
     name: "Free",
     maxTokensPerPeriod: 100_000,
     maxRequestsPerPeriod: 50,
-    maxMessagesPerDay: 10,
+    maxMessagesPerDay: 30,
     features: {
       aiAssistant: true,
     },

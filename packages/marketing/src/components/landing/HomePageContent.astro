@@ -14,7 +14,7 @@ import {
 import Container from "../Container.astro";
 import screenshot from "../../../public/screenshot3.png";
 import Divider from "./Divider.astro";
-import { ComposableDemo } from "./ComposableDemo";
+import { DemoWithSelector } from "./DemoWithSelector";
 import { CastShadow } from "../generic/CastShadow";
 import { KeyboardSection } from "./KeyboardSection";
 import { FAQSection } from "../tools/FAQSection";
@@ -111,14 +111,14 @@ const faqItems = [
     centered
   />
   <div class="w-full mt-12 -mx-4 md:mx-0">
-    <ComposableDemo
+    <DemoWithSelector
       client:visible
       states={["collaboration", "linking", "ai-assistant"]}
     />
   </div>
 </Container>
 <Divider />
-<Container className="relative my-24">
+<Container className="relative my-24 max-w-4xl mx-auto">
   <GradientOutline />
   <div class="grid grid-cols-2 z-0">
     <CastShadow className="w-full" strength={0.2}>

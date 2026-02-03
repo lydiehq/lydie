@@ -1,5 +1,4 @@
 import {
-  ArrowRightRegular,
   ArrowTrendingRegular,
   CalendarRegular,
   CheckmarkRegular,
@@ -16,13 +15,11 @@ import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { DialogTrigger } from "react-aria-components";
-import { toast } from "sonner";
 
 import { Card } from "@/components/layout/Card";
-import { useOrganization } from "@/context/organization.context";
-import { authClient } from "@/utils/auth";
+
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/billing")({
   component: RouteComponent,
@@ -39,8 +36,6 @@ function RouteComponent() {
   const { organizationSlug } = useParams({
     from: "/__auth/w/$organizationSlug/settings/billing",
   });
-  const { organization } = useOrganization();
-  const [isUpgrading, setIsUpgrading] = useState(false);
 
   const [billingData] = useQuery(queries.organizations.billing({ organizationSlug }));
 
@@ -76,30 +71,6 @@ function RouteComponent() {
     };
   }, [billingData]);
 
-  const handleUpgrade = async () => {
-    setIsUpgrading(true);
-
-    try {
-      await authClient.checkout({
-        slug: "pro",
-        referenceId: organization.id,
-      });
-    } catch (error: any) {
-      console.error("Upgrade error:", error);
-      toast.error(error?.message || "Failed to start upgrade process");
-      setIsUpgrading(false);
-    }
-  };
-
-  const handleManageSubscription = async () => {
-    try {
-      await authClient.customer.portal();
-    } catch (error: any) {
-      console.error("Portal error:", error);
-      toast.error(error?.message || "Failed to open customer portal");
-    }
-  };
-
   return (
     <div className="flex flex-col gap-y-6">
       <div>
@@ -116,7 +87,8 @@ function RouteComponent() {
           <ErrorCircleRegular className="size-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Plan</h3>
           <p className="text-sm text-gray-600 mb-6">
-            You're currently on the free plan. Upgrade to Pro to unlock unlimited AI features.
+            You're currently on the free plan with <strong>30 AI messages per day</strong>. 
+            The Plus plan is coming soon with unlimited AI features.
           </p>
           <DialogTrigger>
             <Button>
@@ -127,22 +99,25 @@ function RouteComponent() {
               <Dialog>
                 <div className="p-6">
                   <Heading level={2} className="text-xl font-semibold mb-2">
-                    Upgrade to Pro
+                    Plus Plan
                   </Heading>
                   <p className="text-sm text-gray-600 mb-6">
-                    Unlock unlimited AI features with Pro plan.
+                    Unlock unlimited AI features with our Plus plan (coming soon).
                   </p>
 
                   {/* Pro Plan Card */}
                   <div className="max-w-md mx-auto">
-                    <div className="relative rounded-lg border-2 p-6 transition-all border-blue-500 hover:border-blue-600">
+                    <div className="relative rounded-lg border-2 p-6 transition-all border-gray-300 bg-gray-50">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h3 className="font-semibold text-gray-900">Pro Plan</h3>
+                          <h3 className="font-semibold text-gray-900">Plus Plan</h3>
                           <p className="text-2xl font-bold text-gray-900 mt-1">
                             $20
                             <span className="text-sm font-normal text-gray-500">/mo</span>
                           </p>
+                          <span className="inline-block mt-2 px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+                            Coming Soon
+                          </span>
                         </div>
                       </div>
 
@@ -166,21 +141,11 @@ function RouteComponent() {
                       </ul>
 
                       <Button
-                        onPress={() => {
-                          handleUpgrade();
-                        }}
-                        isDisabled={isUpgrading}
+                        isDisabled={true}
                         className="w-full"
                         intent="primary"
                       >
-                        {isUpgrading ? (
-                          "Processing..."
-                        ) : (
-                          <>
-                            Upgrade to Pro
-                            <ArrowRightRegular className="size-4 ml-2" />
-                          </>
-                        )}
+                        Coming Soon
                       </Button>
                     </div>
                   </div>
@@ -208,8 +173,8 @@ function RouteComponent() {
                   </div>
 
                   <div className="flex justify-end gap-2 mt-6">
-                    <Button intent="secondary" isDisabled={isUpgrading}>
-                      Cancel
+                    <Button intent="secondary">
+                      Close
                     </Button>
                   </div>
                 </div>
@@ -244,42 +209,9 @@ function RouteComponent() {
               )}
             </div>
             <div className="flex gap-2">
-              <Button intent="secondary" onPress={handleManageSubscription} size="sm">
-                Manage Subscription
+              <Button intent="secondary" isDisabled={true} size="sm">
+                Manage Subscription (Not Available)
               </Button>
-              <DialogTrigger>
-                <Button intent="secondary" size="sm">
-                  <SparkleRegular className="size-4 mr-2" />
-                  Change Plan
-                </Button>
-                <Modal isDismissable>
-                  <Dialog>
-                    <div className="p-6">
-                      <Heading level={2} className="text-xl font-semibold mb-2">
-                        Manage Subscription
-                      </Heading>
-                      <p className="text-sm text-gray-600 mb-6">
-                        Use the customer portal to manage your subscription, view invoices, and
-                        update payment methods.
-                      </p>
-
-                      <div className="flex justify-end gap-2 mt-6">
-                        <Button intent="secondary" size="sm">
-                          Cancel
-                        </Button>
-                        <Button
-                          onPress={() => {
-                            handleManageSubscription();
-                          }}
-                          intent="primary"
-                        >
-                          Open Customer Portal
-                        </Button>
-                      </div>
-                    </div>
-                  </Dialog>
-                </Modal>
-              </DialogTrigger>
             </div>
           </div>
 

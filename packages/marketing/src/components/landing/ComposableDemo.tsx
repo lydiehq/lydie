@@ -1,62 +1,12 @@
-import {
-  LinkRegular,
-  PeopleTeamRegular,
-  BotRegular,
-  DocumentRegular,
-  SearchRegular,
-} from "@fluentui/react-icons";
 import { getColorById } from "@lydie/core/colors";
 import { CollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
+
+import type { DemoState } from "./DemoStateSelector";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
-
-type DemoState = "collaboration" | "linking" | "ai-assistant" | "search";
-
-interface StateConfig {
-  id: DemoState;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  showSidebar: boolean;
-  sidebarWidth: number;
-}
-
-const STATE_CONFIG: Record<DemoState, StateConfig> = {
-  search: {
-    id: "search",
-    label: "Search",
-    icon: SearchRegular,
-    showSidebar: false,
-    sidebarWidth: 0,
-  },
-  collaboration: {
-    id: "collaboration",
-    label: "Collaboration",
-    icon: PeopleTeamRegular,
-    showSidebar: false,
-    sidebarWidth: 0,
-  },
-  linking: {
-    id: "linking",
-    label: "Internal Linking",
-    icon: LinkRegular,
-    showSidebar: false,
-    sidebarWidth: 0,
-  },
-  "ai-assistant": {
-    id: "ai-assistant",
-    label: "AI Assistant",
-    icon: BotRegular,
-    showSidebar: true,
-    sidebarWidth: 320,
-  },
-};
-
-const DEFAULT_STATE_ORDER: DemoState[] = ["search", "collaboration", "linking", "ai-assistant"];
-
-const AUTO_ADVANCE_MS = 9000;
+import { STATE_CONFIG, DEFAULT_STATE_ORDER } from "./DemoStateSelector";
 
 const collaborators = [
   { name: "Sarah", color: getColorById("cyan")?.value ?? "#7DBCD6" },
@@ -64,36 +14,15 @@ const collaborators = [
   { name: "Jordan", color: getColorById("gold")?.value ?? "#E8B974" },
 ];
 
-function getNextState(current: DemoState, stateOrder: DemoState[]): DemoState {
-  const idx = stateOrder.indexOf(current);
-  return stateOrder[(idx + 1) % stateOrder.length];
-}
-
 type ComposableDemoProps = {
+  activeState: DemoState;
   states?: DemoState[];
 };
 
-export function ComposableDemo({ states = DEFAULT_STATE_ORDER }: ComposableDemoProps) {
-  const [currentState, setCurrentState] = useState<DemoState>(states[0]);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-
-  // Auto-advance timer
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    const timer = setTimeout(() => {
-      setCurrentState(getNextState(currentState, states));
-    }, AUTO_ADVANCE_MS);
-    return () => clearTimeout(timer);
-  }, [currentState, isAutoPlaying, states]);
-
-  const handleStateChange = useCallback((newState: DemoState) => {
-    setCurrentState(newState);
-    setIsAutoPlaying(false);
-  }, []);
-
+export function ComposableDemo({ activeState, states = DEFAULT_STATE_ORDER }: ComposableDemoProps) {
   return (
     <section className="flex flex-col items-center overflow-visible w-full">
-      <div className="rounded-2xl ring ring-black/4 flex flex-col w-full max-w-5xl p-2 relative bg-grain">
+      <div className="rounded-2xl ring ring-black/4 flex flex-col w-full max-w-4xl p-2 relative bg-grain">
         <GradientOutline />
         <div className="flex items-center gap-x-1.5 mb-1.5">
           {[...Array(3)].map((_, i) => (
@@ -102,18 +31,7 @@ export function ComposableDemo({ states = DEFAULT_STATE_ORDER }: ComposableDemoP
         </div>
 
         <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={100}>
-          <div className="flex flex-1 h-[620px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit relative">
-            {/* Feature Toggle Buttons */}
-            <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-white flex items-end justify-center pb-4 pt-20 rounded-b-xl z-40">
-              <FeatureButtons
-                states={states}
-                currentState={currentState}
-                onStateChange={handleStateChange}
-                isAutoPlaying={isAutoPlaying}
-                countdownMs={AUTO_ADVANCE_MS}
-              />
-            </div>
-
+          <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit relative">
             {/* Main Content Area */}
             <div className="flex flex-1 overflow-hidden relative">
               {/* Main Editor Area */}
@@ -121,7 +39,7 @@ export function ComposableDemo({ states = DEFAULT_STATE_ORDER }: ComposableDemoP
                 {/* Toolbar */}
                 <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
                   <ToolbarItems />
-                  {currentState === "collaboration" && (
+                  {activeState === "collaboration" && (
                     <div className="-space-x-2 flex">
                       {collaborators.map((c, i) => (
                         <motion.div
@@ -148,17 +66,17 @@ export function ComposableDemo({ states = DEFAULT_STATE_ORDER }: ComposableDemoP
 
                 {/* Document Content */}
                 <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
-                  <DocumentContent currentState={currentState} />
+                  <DocumentContent currentState={activeState} />
                 </div>
               </div>
 
               {/* AI Assistant Sidebar */}
               <AnimatePresence>
-                {currentState === "ai-assistant" && <AIAssistantSidebar />}
+                {activeState === "ai-assistant" && <AIAssistantSidebar />}
               </AnimatePresence>
 
               {/* Search Overlay */}
-              <AnimatePresence>{currentState === "search" && <SearchOverlay />}</AnimatePresence>
+              <AnimatePresence>{activeState === "search" && <SearchOverlay />}</AnimatePresence>
             </div>
           </div>
         </CastShadow>
@@ -167,83 +85,8 @@ export function ComposableDemo({ states = DEFAULT_STATE_ORDER }: ComposableDemoP
   );
 }
 
-const RING_SIZE = 20;
-const RING_STROKE = 2;
-const RING_R = (RING_SIZE - RING_STROKE) / 2;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
-
-function FeatureButtons({
-  states,
-  currentState,
-  onStateChange,
-  isAutoPlaying,
-  countdownMs,
-}: {
-  states: DemoState[];
-  currentState: DemoState;
-  onStateChange: (state: DemoState) => void;
-  isAutoPlaying: boolean;
-  countdownMs: number;
-}) {
-  const isActive = (id: DemoState) => currentState === id;
-  const showRing = (id: DemoState) => isActive(id);
-
-  return (
-    <div className="rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay bg-black/85 text-white backdrop-blur-sm">
-      {states.map((id) => {
-        const config = STATE_CONFIG[id];
-        const Icon = config.icon;
-
-        return (
-          <button
-            type="button"
-            key={id}
-            onClick={() => onStateChange(id)}
-            className="relative flex items-center gap-2 px-2 py-1 rounded-full text-[0.8125rem]/0 font-medium transition-colors text-white/90 hover:text-white z-0 data-active:text-white [&:not([data-active])]:hover:bg-white/15"
-            data-active={isActive(id) ? "" : undefined}
-          >
-            {isActive(id) && (
-              <motion.div
-                layoutId="feature-tab-highlight"
-                className="absolute inset-0 rounded-full bg-white/30"
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                style={{ zIndex: -1 }}
-              />
-            )}
-            <span className="relative inline-flex items-center justify-center size-5 shrink-0">
-              {showRing(id) && isAutoPlaying && (
-                <svg
-                  className="absolute inset-0 size-full -rotate-90"
-                  viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
-                  aria-hidden
-                >
-                  <motion.circle
-                    cx={RING_SIZE / 2}
-                    cy={RING_SIZE / 2}
-                    r={RING_R}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={RING_STROKE}
-                    strokeLinecap="round"
-                    strokeDasharray={RING_CIRCUMFERENCE}
-                    initial={{ strokeDashoffset: RING_CIRCUMFERENCE }}
-                    animate={{ strokeDashoffset: 0 }}
-                    transition={{ duration: countdownMs / 1000, ease: "linear" }}
-                    className="text-white/20"
-                  />
-                </svg>
-              )}
-              <Icon
-                className={`shrink-0 size-4 relative z-1 ${isActive(id) ? "scale-60" : "scale-100"} transition-transform duration-250 ease-in-out`}
-              />
-            </span>
-            <span>{config.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+export { STATE_CONFIG, DEFAULT_STATE_ORDER };
+export type { DemoState };
 
 function AIAssistantSidebar() {
   return (
@@ -263,7 +106,9 @@ function AIAssistantSidebar() {
       <div className="flex items-center justify-between p-2 border-b border-black/6 bg-white">
         <div className="flex items-center gap-2">
           <div className="rounded-full size-6 flex items-center justify-center bg-purple-100 text-purple-600">
-            <BotRegular className="size-3.5" />
+            <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+            </svg>
           </div>
           <span className="text-sm font-medium text-gray-900">AI Assistant</span>
         </div>
@@ -306,7 +151,9 @@ function AIAssistantSidebar() {
         {/* AI Response */}
         <div className="flex gap-2">
           <div className="rounded-full size-6 bg-purple-100 flex items-center justify-center shrink-0">
-            <BotRegular className="size-3 text-purple-600" />
+            <svg className="size-3" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+            </svg>
           </div>
           <div className="flex-1 space-y-2">
             <div className="bg-purple-50 rounded-lg p-2.5 text-sm text-gray-700">
@@ -314,7 +161,7 @@ function AIAssistantSidebar() {
             </div>
             <div className="bg-purple-50/50 rounded-lg p-2.5 text-sm text-gray-700 space-y-1.5">
               <p>🎌 Add a traditional tea ceremony experience in Kyoto</p>
-              <p>🍜 Include a ramen tour in Tokyo's best districts</p>
+              <p>🍜 Include a ramen tour in Tokyo&apos;s best districts</p>
               <p>🗻 Plan a sunrise hike at Mt. Fuji</p>
               <p>🎮 Visit an arcade in Akihabara</p>
             </div>
@@ -415,7 +262,16 @@ function SearchOverlay() {
       {/* Command Menu */}
       <div className="relative w-full max-w-xl rounded-xl shadow-popover bg-gray-50 overflow-hidden">
         <div className="flex items-center border-b border-gray-100 px-3 bg-white">
-          <SearchRegular className="size-4 text-gray-400 mr-2" />
+          <svg
+            className="size-4 text-gray-400 mr-2"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
           <input
             type="text"
             placeholder="Type a command or search..."
@@ -439,7 +295,16 @@ function SearchOverlay() {
                     item.selected ? "bg-gray-100 text-gray-950" : "text-gray-800 hover:bg-gray-100"
                   }`}
                 >
-                  <SearchRegular className="size-4 text-gray-400 mr-2" />
+                  <svg
+                    className="size-4 text-gray-400 mr-2"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
                   <span>{item.label}</span>
                 </div>
               ))}
@@ -487,7 +352,19 @@ function LinkingOverlay() {
       <div className="bg-white rounded-lg shadow-popover border border-gray-100 overflow-hidden w-[220px]">
         <div className="flex items-center gap-2.5 p-2.5">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500">
-            <DocumentRegular className="size-5" />
+            <svg
+              className="size-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+              />
+            </svg>
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium text-gray-900 truncate">Trip Master Plan</div>
@@ -543,7 +420,7 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
                 : ""
             }`}
           >
-            For must-see spots and hidden gems, we're building off the
+            For must-see spots and hidden gems, we&apos;re building off the
             {showCollaboration && (
               <motion.span
                 initial={{ opacity: 0, y: 6 }}
@@ -558,7 +435,7 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
                 <CollaborationCaret userName="Sarah" userColor={collaborators[0].color} />
               </motion.span>
             )}{" "}
-            recommendations doc. I'll add the restaurant reservations once that's ready.
+            recommendations doc. I&apos;ll add the restaurant reservations once that&apos;s ready.
           </p>
         </div>
 
@@ -611,17 +488,17 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
 
         <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Packing checklist</h2>
         <p className="text-gray-700 leading-relaxed mb-4">
-          We'll do a final gear check the night before we leave. Make sure everyone has comfortable
-          walking shoes!
+          We&apos;ll do a final gear check the night before we leave. Make sure everyone has
+          comfortable walking shoes!
         </p>
         <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
           <li>Portable chargers and universal adapters</li>
           <li>Pocket WiFi or SIM cards</li>
-          <li>Cash for places that don't take cards</li>
+          <li>Cash for places that don&apos;t take cards</li>
         </ul>
 
         <p className="text-gray-700 leading-relaxed mb-0">
-          Can't wait! Drop any other ideas or spots we shouldn't miss.
+          Can&apos;t wait! Drop any other ideas or spots we shouldn&apos;t miss.
         </p>
       </div>
     </>

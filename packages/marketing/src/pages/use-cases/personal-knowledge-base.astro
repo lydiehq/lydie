@@ -6,7 +6,7 @@ import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
 import { FAQSection } from "src/components/tools/FAQSection";
 import { GradientOutline } from "src/components/generic/GradientOutline";
-import { ComposableDemo } from "../../components/landing/ComposableDemo";
+import { DemoWithSelector } from "../../components/landing/DemoWithSelector";
 import Divider from "src/components/landing/Divider.astro";
 import "../../styles/grainy-gradient.css";
 import { CTASection } from "src/components/landing/CTASection";
@@ -166,7 +166,7 @@ const faqItems = [
       </p>
     </div>
     <div class="w-full px-4">
-      <ComposableDemo client:load />
+      <DemoWithSelector client:load />
     </div>
 
     <div class="max-w-xl mx-auto flex flex-col gap-y-8">

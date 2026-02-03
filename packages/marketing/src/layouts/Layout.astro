@@ -111,7 +111,7 @@ const linkGroups = [
               <Logo className="text-gray-200 size-6 hover:text-gray-300" />
             </a>
             <nav
-              class="grid grid-cols-2 sm:grid-cols-3 gap-8"
+              class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-16"
               aria-label="Footer links"
             >
               {
@@ -125,7 +125,7 @@ const linkGroups = [
                         <li>
                           <a
                             href={link.href}
-                            class="text-[0.8125rem]/0 text-gray-700 hover:text-gray-800 py-1.5 block"
+                            class="text-[0.8125rem]/0 text-gray-700 hover:text-gray-800 py-1.5"
                             target={link.target || undefined}
                           >
                             {link.label}
