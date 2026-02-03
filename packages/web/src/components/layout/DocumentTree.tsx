@@ -186,7 +186,7 @@ export function DocumentTree() {
     >();
 
     for (const link of extensionLinks) {
-      const type = link.connection?.integration_type;
+      const type = link.integration_type;
       if (!type) continue;
 
       const group = linkGroupsByType.get(type) || [];
@@ -215,7 +215,7 @@ export function DocumentTree() {
           id: `integration-link-${link.id}`,
           name: link.name,
           type: "integration-link",
-          integrationType: link.connection?.integration_type,
+          integrationType: link.integration_type,
           integrationLinkId: link.id,
           syncStatus: link.sync_status,
           children: buildLinkItems(link.id),
