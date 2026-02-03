@@ -60,6 +60,8 @@ export function ReplaceInDocumentTool({
   const [isApplying, setIsApplying] = useState(false);
   const [isUsingLLM, setIsUsingLLM] = useState(false);
   const [applyStatus, setApplyStatus] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const applyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
@@ -86,7 +88,23 @@ export function ReplaceInDocumentTool({
     setIsApplying(false);
     setIsUsingLLM(false);
     setApplyStatus("");
+    setErrorMessage("");
+
+    // Clear any pending timeout
+    if (applyTimeoutRef.current) {
+      clearTimeout(applyTimeoutRef.current);
+      applyTimeoutRef.current = null;
+    }
   }, [tool.toolCallId]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (applyTimeoutRef.current) {
+        clearTimeout(applyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const isMatchingPendingChange =
@@ -97,6 +115,9 @@ export function ReplaceInDocumentTool({
       pendingChange.title === newTitle;
 
     if (isMatchingPendingChange) {
+      // Clear errors when syncing with pending change
+      setErrorMessage("");
+
       if (pendingChangeStatus === "applying") {
         setIsApplying(true);
         setIsUsingLLM(false); // Will be set by the apply function if needed
@@ -106,16 +127,30 @@ export function ReplaceInDocumentTool({
         setIsApplying(false);
         setIsUsingLLM(false);
         setApplyStatus("");
+
+        // Clear timeout on successful apply
+        if (applyTimeoutRef.current) {
+          clearTimeout(applyTimeoutRef.current);
+          applyTimeoutRef.current = null;
+        }
       } else if (pendingChangeStatus === "failed") {
         setIsApplied(false);
         setIsApplying(false);
         setIsUsingLLM(false);
-        setApplyStatus("Failed to apply");
+        setApplyStatus("");
+        setErrorMessage("Failed to apply changes. Please try again.");
+
+        // Clear timeout on failure
+        if (applyTimeoutRef.current) {
+          clearTimeout(applyTimeoutRef.current);
+          applyTimeoutRef.current = null;
+        }
       } else if (pendingChangeStatus === "pending") {
         setIsApplying(true);
         setApplyStatus("Navigating to document...");
       }
     } else if (!pendingChange && pendingChangeStatus === null) {
+      // Pending change was cleared - check if we should complete
       if (
         isApplying &&
         (applyStatus === "Navigating to document..." || applyStatus === "Applying...")
@@ -125,6 +160,13 @@ export function ReplaceInDocumentTool({
           setIsApplying(false);
           setIsUsingLLM(false);
           setApplyStatus("");
+          setErrorMessage("");
+
+          // Clear timeout on completion
+          if (applyTimeoutRef.current) {
+            clearTimeout(applyTimeoutRef.current);
+            applyTimeoutRef.current = null;
+          }
         }
       }
     }
@@ -170,13 +212,22 @@ export function ReplaceInDocumentTool({
   const wordCount = countWords(replaceText);
 
   const handleApply = async () => {
+    // Clear any previous errors
+    setErrorMessage("");
+
+    // Validate content
     if (!replaceText && !newTitle) {
+      const error = "No content to apply. Please try reloading or asking the AI again.";
+      setErrorMessage(error);
+      console.error("Apply failed: No content", { replaceText, newTitle });
       return;
     }
 
+    // Handle navigation to different document
     if (targetDocumentId && targetDocumentId !== params.id) {
       setIsApplying(true);
       setApplyStatus("Navigating to document...");
+      setErrorMessage("");
 
       // Store the pending change and set status
       setPendingChange({
@@ -187,6 +238,18 @@ export function ReplaceInDocumentTool({
         organizationId,
       });
       setPendingChangeStatus("pending");
+
+      // Safety timeout in case navigation fails
+      applyTimeoutRef.current = setTimeout(() => {
+        if (isApplying) {
+          console.error("Navigation timeout - resetting state");
+          setIsApplying(false);
+          setApplyStatus("");
+          setErrorMessage("Navigation took too long. Please try again.");
+          setPendingChangeStatus(null);
+          setPendingChange(null);
+        }
+      }, 5000);
 
       setTimeout(() => {
         navigate({
@@ -202,16 +265,62 @@ export function ReplaceInDocumentTool({
     }
 
     const currentDocId = targetDocumentId || params.id;
-    if (!currentDocId || (!editor && !titleEditor)) {
+
+    // Validate preconditions with detailed feedback
+    if (!currentDocId) {
+      const error = "No document selected. Please open a document first.";
+      setErrorMessage(error);
+      console.error("Apply failed: No document ID", { targetDocumentId, paramsId: params.id });
+      return;
+    }
+
+    if (!editor && !titleEditor) {
+      const error = "Editor not ready. Please try reloading the document.";
+      setErrorMessage(error);
+      console.error("Apply failed: No editors available", {
+        hasEditor: !!editor,
+        hasTitleEditor: !!titleEditor,
+        needsContent: !!replaceText,
+        needsTitle: !!newTitle,
+      });
+      return;
+    }
+
+    // Check specific editor requirements
+    if (replaceText && !editor) {
+      const error = "Content editor not ready. Please reload the document.";
+      setErrorMessage(error);
+      console.error("Apply failed: Content editor missing but content provided");
+      return;
+    }
+
+    if (newTitle && !titleEditor) {
+      const error = "Title editor not ready. Please reload the document.";
+      setErrorMessage(error);
+      console.error("Apply failed: Title editor missing but title provided");
       return;
     }
 
     setIsApplying(true);
     setApplyStatus("Applying...");
+    setErrorMessage("");
+
+    // Safety timeout to prevent stuck state (30 seconds)
+    applyTimeoutRef.current = setTimeout(() => {
+      if (isApplying) {
+        console.error("Apply timeout - resetting state");
+        setIsApplying(false);
+        setIsUsingLLM(false);
+        setApplyStatus("");
+        setErrorMessage("Operation timed out. Please try again or reload the document.");
+      }
+    }, 30000);
 
     try {
       let contentSuccess = true;
       let titleSuccess = true;
+      let contentError = "";
+      let titleError = "";
 
       if (newTitle && titleEditor) {
         const titleResult = await applyTitleChange(
@@ -223,6 +332,7 @@ export function ReplaceInDocumentTool({
         );
         titleSuccess = titleResult.success;
         if (!titleSuccess) {
+          titleError = titleResult.error || "Unknown title error";
           console.error("Failed to apply title change:", titleResult.error);
         }
       }
@@ -249,19 +359,45 @@ export function ReplaceInDocumentTool({
             console.info("✨ LLM-assisted replacement was used for this change");
           }
         } else {
+          contentError = result.error || "Unknown content error";
           console.error("Failed to apply content changes:", result.error);
         }
+      }
+
+      // Clear timeout on success/failure
+      if (applyTimeoutRef.current) {
+        clearTimeout(applyTimeoutRef.current);
+        applyTimeoutRef.current = null;
       }
 
       if (contentSuccess && titleSuccess) {
         setIsApplied(true);
         setApplyStatus("");
+        setErrorMessage("");
       } else {
-        setApplyStatus("Failed to apply");
+        const errors = [contentError, titleError].filter(Boolean);
+        const errorMsg =
+          errors.length > 0
+            ? `Failed: ${errors.join(", ")}`
+            : "Failed to apply. Please try reloading the document.";
+        setApplyStatus("");
+        setErrorMessage(errorMsg);
       }
     } catch (error) {
       console.error("Failed to apply:", error);
-      setApplyStatus("Failed to apply");
+
+      // Clear timeout
+      if (applyTimeoutRef.current) {
+        clearTimeout(applyTimeoutRef.current);
+        applyTimeoutRef.current = null;
+      }
+
+      const errorMsg =
+        error instanceof Error
+          ? `Error: ${error.message}`
+          : "Unexpected error. Please try reloading the document.";
+      setApplyStatus("");
+      setErrorMessage(errorMsg);
     } finally {
       setIsApplying(false);
       setIsUsingLLM(false);
@@ -301,6 +437,15 @@ export function ReplaceInDocumentTool({
       hasOutput,
       isApplied,
       isApplying,
+      isUsingLLM,
+      errorMessage,
+      applyStatus,
+      hasEditor: !!editor,
+      hasTitleEditor: !!titleEditor,
+      targetDocumentId,
+      currentParamsId: params.id,
+      pendingChange,
+      pendingChangeStatus,
       timestamp: new Date().toISOString(),
     };
 
@@ -308,11 +453,26 @@ export function ReplaceInDocumentTool({
     console.log("Tool object:", tool);
     console.log("Search text:", searchText);
     console.log("Replace text:", replaceText);
-    console.log("isInputStreaming:", isInputStreaming);
-    console.log("isCallStreaming:", isCallStreaming);
-    console.log("hasOutput:", hasOutput);
-    console.log("isApplied:", isApplied);
-    console.log("isApplying:", isApplying);
+    console.log("State flags:", {
+      isInputStreaming,
+      isCallStreaming,
+      hasOutput,
+      isApplied,
+      isApplying,
+      isUsingLLM,
+    });
+    console.log("Editors:", {
+      hasEditor: !!editor,
+      hasTitleEditor: !!titleEditor,
+    });
+    console.log("Error state:", {
+      errorMessage,
+      applyStatus,
+    });
+    console.log("Pending change:", {
+      pendingChange,
+      pendingChangeStatus,
+    });
     console.log("Debug summary:", debugInfo);
     console.groupEnd();
   };
@@ -430,6 +590,22 @@ export function ReplaceInDocumentTool({
           {(replaceText || newTitle || isApplied) && (
             <>
               <Separator className="my-2" />
+              {errorMessage && (
+                <motion.div
+                  className="text-xs text-red-600 bg-red-50 rounded px-2 py-1.5 mb-2 flex items-start justify-between gap-2"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="flex-1">{errorMessage}</span>
+                  <AriaButton
+                    onPress={() => setErrorMessage("")}
+                    className="text-red-600 hover:text-red-700 shrink-0"
+                  >
+                    Dismiss
+                  </AriaButton>
+                </motion.div>
+              )}
               <motion.div
                 className="flex justify-end gap-2 mt-2"
                 initial={{ opacity: 0 }}
@@ -463,7 +639,13 @@ export function ReplaceInDocumentTool({
                   isDisabled={isApplied || isApplying || isInputStreaming}
                   isPending={isApplying || isUsingLLM}
                 >
-                  {isApplying ? applyStatus || "Applying..." : isApplied ? "Applied" : "Apply"}
+                  {isApplying
+                    ? applyStatus || "Applying..."
+                    : isApplied
+                      ? "Applied"
+                      : errorMessage
+                        ? "Retry"
+                        : "Apply"}
                 </Button>
               </motion.div>
             </>

@@ -479,7 +479,11 @@ export const integrationLinksTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    index("integration_links_connection_id_idx").on(table.connectionId),
+    index("integration_links_connection_created_id_idx").on(
+      table.connectionId,
+      table.createdAt,
+      table.id,
+    ),
     index("integration_links_integration_type_idx").on(table.integrationType),
     index("integration_links_organization_created_id_idx").on(
       table.organizationId,

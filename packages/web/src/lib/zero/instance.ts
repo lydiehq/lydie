@@ -50,7 +50,8 @@ export function preloadSidebarData(
   organizationSlug: string,
   _organizationId: string,
 ): void {
-  zero.preload(queries.organizations.documents({ organizationSlug }), {
+  // Preload documents, integration connections, and links in one query
+  zero.preload(queries.organizations.documentTree({ organizationSlug }), {
     ttl: "1m",
   });
 }
