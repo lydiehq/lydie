@@ -341,7 +341,13 @@ export const assistantMessagesTable = pgTable(
     metadata: jsonb("metadata"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (table) => [index("assistant_messages_conversation_id_idx").on(table.conversationId)],
+  (table) => [
+    index("assistant_messages_conversation_created_idx").on(
+      table.conversationId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
 );
 
 export const apiKeysTable = pgTable(
