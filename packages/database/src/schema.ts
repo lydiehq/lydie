@@ -207,12 +207,9 @@ export const documentsTable = pgTable(
     index("documents_org_sort_created_id_not_deleted_idx")
       .on(table.organizationId, table.sortOrder, sql`${table.createdAt} DESC`, table.id)
       .where(sql`${table.deletedAt} IS NULL`),
-    index("documents_org_parent_sort_id_idx").on(
-      table.organizationId,
-      table.parentId,
-      table.sortOrder,
-      table.id,
-    ),
+    index("documents_org_parent_not_deleted_sort_created_id_idx")
+      .on(table.organizationId, table.parentId, table.sortOrder, table.createdAt, table.id)
+      .where(sql`${table.deletedAt} IS NULL`),
   ],
 );
 
