@@ -1,9 +1,3 @@
-/**
- * CastShadow component styles
- * Shadow values are computed in JS and applied via inline styles
- * This file only provides base layout and animation support
- */
-
 .cast-shadow {
   position: relative;
   display: inline-block;

@@ -7,9 +7,16 @@ interface EmailParams {
   text?: string;
   html?: string;
   from?: string;
+  /** Display name for the sender (e.g. "Lars from Lydie"). Uses RFC 5322 format. */
+  fromName?: string;
 }
 
 const sesClient = new SESv2Client({});
+
+function formatFromAddress(email: string, displayName?: string): string {
+  if (!displayName) return email;
+  return `"${displayName.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}" <${email}>`;
+}
 
 export async function sendEmail({
   to,
@@ -17,16 +24,19 @@ export async function sendEmail({
   text,
   html,
   from = "no-reply@lydie.co",
+  fromName,
 }: EmailParams) {
+  const fromAddress = formatFromAddress(from, fromName);
+
   if (Resource.App.stage !== "production") {
     console.log(`[Info] Skipping email sending in non-production stage`);
-    console.log(`[Info] Email details:`, { to, subject, from });
+    console.log(`[Info] Email details:`, { to, subject, from: fromAddress });
     return;
   }
 
   await sesClient.send(
     new SendEmailCommand({
-      FromEmailAddress: from,
+      FromEmailAddress: fromAddress,
       Destination: {
         ToAddresses: [to],
       },

@@ -7,56 +7,17 @@ interface CastShadowProps {
   children: ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  /**
-   * Base shadow strength multiplier (0-1)
-   * @default 0.2
-   */
   strength?: number;
-  /**
-   * 3D height of the box in pixels
-   * Higher boxes cast longer and stronger shadows
-   * @default 50
-   */
   height?: number;
-  /**
-   * Light source angle in degrees (0-360)
-   * 0° = light from right, shadow to left
-   * 45° = light from top-right, shadow to bottom-left
-   * 90° = light from top, shadow to bottom
-   * 135° = light from top-left, shadow to bottom-right
-   * 180° = light from left, shadow to right
-   * @default 135
-   */
   lightAngle?: number;
-  /**
-   * RGB color values for the shadow as a comma-separated string
-   * @default "0, 0, 0"
-   */
-  shadowColor?: string;
-  /**
-   * Whether to animate shadow changes
-   * Uses CSS transition for smooth 600ms animation
-   * @default false
-   */
   animate?: boolean;
 }
 
-/**
- * Round a number to fixed decimal places for consistent SSR/client output
- */
 function round(value: number, decimals: number): number {
   return Math.round(value * 10 ** decimals) / 10 ** decimals;
 }
 
-/**
- * Calculate the full box-shadow value for a given angle, height, strength, and color.
- */
-function calculateBoxShadow(
-  angle: number,
-  height: number,
-  strength: number,
-  shadowColor: string,
-): string {
+function calculateBoxShadow(angle: number, height: number, strength: number): string {
   const normalizedAngle = ((angle % 360) + 360) % 360;
   const shadowAngle = normalizedAngle + 180;
   const radians = (shadowAngle * Math.PI) / 180;
@@ -73,15 +34,13 @@ function calculateBoxShadow(
     const offsetX = round(dx * stepOffset, 2);
     const offsetY = round(dy * stepOffset, 2);
     const opacity = opacitySteps[i] * strength;
-    shadows.push(`${offsetX}px ${offsetY}px 0 0 rgba(${shadowColor}, ${opacity})`);
+    shadows.push(`${offsetX}px ${offsetY}px 0 0 rgba(0, 0, 0, ${opacity})`);
   }
 
   return shadows.join(", ");
 }
 
-/**
- * Calculate clip-path polygon for the shadow based on light angle.
- */
+// Calculates the clip path for the shadow based on the light angle.
 export function calculateClipPath(angle: number): string {
   const normalizedAngle = ((angle % 360) + 360) % 360;
   const shadowRadians = ((normalizedAngle + 180) * Math.PI) / 180;
@@ -185,15 +144,14 @@ export function CastShadow({
   children,
   className,
   style,
-  strength = 0.2,
-  height = 50,
+  strength = 0.4,
+  height = 120,
   lightAngle = 135,
-  shadowColor = "0, 0, 0",
   animate = false,
 }: CastShadowProps) {
   const boxShadow = useMemo(
-    () => calculateBoxShadow(lightAngle, height, strength, shadowColor),
-    [lightAngle, height, strength, shadowColor],
+    () => calculateBoxShadow(lightAngle, height, strength),
+    [lightAngle, height, strength],
   );
 
   const clipPath = useMemo(() => calculateClipPath(lightAngle), [lightAngle]);

@@ -75,13 +75,15 @@ const structuredData = {
     <Container>
       <div class="mx-auto">
         <article class="max-w-2xl mx-auto flex flex-col gap-y-4">
-          <Breadcrumbs
-            items={[
-              { label: "Blog", href: "/blog" },
-              { label: document.title },
-            ]}
-          />
-          <header class="flex flex-col gap-y-4 mb-4">
+          <div class="flex justify-center">
+            <Breadcrumbs
+              items={[
+                { label: "Blog", href: "/blog" },
+                { label: document.title },
+              ]}
+            />
+          </div>
+          <header class="flex flex-col gap-y-4 mb-4 text-center">
             <Heading>{document.title}</Heading>
             {
               (document as any).customFields?.excerpt && (

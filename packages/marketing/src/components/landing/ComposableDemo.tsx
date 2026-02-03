@@ -30,13 +30,10 @@ export function ComposableDemo({ activeState, states = DEFAULT_STATE_ORDER }: Co
           ))}
         </div>
 
-        <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={100}>
+        <CastShadow className="w-full rounded-b-xl rounded-t-lg" height={180}>
           <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-legit relative">
-            {/* Main Content Area */}
             <div className="flex flex-1 overflow-hidden relative">
-              {/* Main Editor Area */}
               <div className="flex-1 flex flex-col min-w-0">
-                {/* Toolbar */}
                 <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
                   <ToolbarItems />
                   {activeState === "collaboration" && (
@@ -64,18 +61,13 @@ export function ComposableDemo({ activeState, states = DEFAULT_STATE_ORDER }: Co
                   )}
                 </div>
 
-                {/* Document Content */}
                 <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
                   <DocumentContent currentState={activeState} />
                 </div>
               </div>
-
-              {/* AI Assistant Sidebar */}
               <AnimatePresence>
                 {activeState === "ai-assistant" && <AIAssistantSidebar />}
               </AnimatePresence>
-
-              {/* Search Overlay */}
               <AnimatePresence>{activeState === "search" && <SearchOverlay />}</AnimatePresence>
             </div>
           </div>
@@ -102,7 +94,6 @@ function AIAssistantSidebar() {
       }}
       className="shrink-0 bg-white ring-1 ring-black/6 rounded-lg flex flex-col overflow-hidden ml-2 shadow-popover"
     >
-      {/* Header */}
       <div className="flex items-center justify-between p-2 border-b border-black/6 bg-white">
         <div className="flex items-center gap-2">
           <div className="rounded-full size-6 flex items-center justify-center bg-purple-100 text-purple-600">
@@ -136,9 +127,7 @@ function AIAssistantSidebar() {
         </div>
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* User Message */}
         <div className="flex gap-2">
           <div className="rounded-full size-6 bg-gray-100 flex items-center justify-center shrink-0">
             <span className="text-xs font-medium text-gray-600">You</span>
@@ -148,7 +137,6 @@ function AIAssistantSidebar() {
           </div>
         </div>
 
-        {/* AI Response */}
         <div className="flex gap-2">
           <div className="rounded-full size-6 bg-purple-100 flex items-center justify-center shrink-0">
             <svg className="size-3" viewBox="0 0 24 24" fill="currentColor">
