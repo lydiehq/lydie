@@ -42,6 +42,13 @@ interface CastShadowProps {
 }
 
 /**
+ * Round a number to fixed decimal places for consistent SSR/client output
+ */
+function round(value: number, decimals: number): number {
+  return Math.round(value * 10 ** decimals) / 10 ** decimals;
+}
+
+/**
  * Calculate the full box-shadow value for a given angle, height, strength, and color.
  */
 function calculateBoxShadow(
@@ -63,8 +70,8 @@ function calculateBoxShadow(
 
   for (let i = 0; i < steps; i++) {
     const stepOffset = ((i + 1) / steps) * maxOffset;
-    const offsetX = dx * stepOffset;
-    const offsetY = dy * stepOffset;
+    const offsetX = round(dx * stepOffset, 2);
+    const offsetY = round(dy * stepOffset, 2);
     const opacity = opacitySteps[i] * strength;
     shadows.push(`${offsetX}px ${offsetY}px 0 0 rgba(${shadowColor}, ${opacity})`);
   }
@@ -166,7 +173,12 @@ export function calculateClipPath(angle: number): string {
   polygon.push(`${corners[c2].x + extendX}% ${corners[c2].y + extendY}%`);
   polygon.push(`${corners[c1].x + extendX}% ${corners[c1].y + extendY}%`);
 
-  return `polygon(${polygon.join(", ")})`;
+  const roundedPolygon = polygon.map((point) => {
+    const [x, y] = point.split("% ");
+    return `${round(Number.parseFloat(x), 4)}% ${round(Number.parseFloat(y), 4)}%`;
+  });
+
+  return `polygon(${roundedPolygon.join(", ")})`;
 }
 
 export function CastShadow({
