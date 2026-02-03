@@ -43,7 +43,6 @@ export const zero = new sst.aws.Service("Zero", {
         cpu: "0.25 vCPU",
         memory: "0.5 GB",
         architecture: "arm64",
-        capacity: "spot",
       }
     : {}),
   image: commonEnv.ZERO_IMAGE_URL,
