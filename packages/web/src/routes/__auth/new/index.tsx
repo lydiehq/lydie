@@ -12,11 +12,13 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
 import z from "zod";
 
+import { documentTreeExpandedKeysAtom } from "@/components/layout/DocumentTree";
 import { useAppForm } from "@/hooks/use-app-form";
 import { revalidateSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";
 import { useZero } from "@/services/zero";
 import { authClient } from "@/utils/auth";
+import { useSetAtom } from "jotai";
 
 export const Route = createFileRoute("/__auth/new/")({
   component: RouteComponent,
@@ -28,6 +30,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const setExpandedKeys = useSetAtom(documentTreeExpandedKeysAtom);
   const { auth } = Route.useRouteContext();
   const search = Route.useSearch();
 
@@ -61,6 +64,9 @@ function RouteComponent() {
         await revalidateSession(queryClient);
         clearZeroInstance();
         await router.invalidate();
+
+        // Expand the onboarding document in the sidebar
+        setExpandedKeys([onboardingDocId]);
 
         // Navigate to the onboarding document or workspace with template
         if (search.template) {

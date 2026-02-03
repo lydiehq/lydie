@@ -47,7 +47,7 @@ function saveToStorage(userId: string | null | undefined, keys: string[]): void 
   } catch {}
 }
 
-const documentTreeExpandedKeysAtom = atom<string[]>([]);
+export const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
 type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documents>>;
 

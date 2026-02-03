@@ -1,4 +1,8 @@
 import { openai } from "@ai-sdk/openai";
+import {
+  getDefaultAgentById,
+  getDefaultAgentByName,
+} from "@lydie/core/ai/agents/defaults";
 import { chatModel } from "@lydie/core/ai/llm";
 import { createDocument } from "@lydie/core/ai/tools/create-document";
 import { listDocuments } from "@lydie/core/ai/tools/list-documents";
@@ -8,6 +12,7 @@ import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
 import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
 import { searchInDocument } from "@lydie/core/ai/tools/search-in-document";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
+import { visualizeDocumentTree } from "@lydie/core/ai/tools/visualize-document-tree";
 import { VisibleError } from "@lydie/core/error";
 import {
   assistantAgentsTable,
@@ -190,31 +195,34 @@ export const AssistantRoute = new Hono<{
     let agentSystemPrompt: string;
 
     if (effectiveAgentId) {
-      const [agent] = await db
-        .select()
-        .from(assistantAgentsTable)
-        .where(eq(assistantAgentsTable.id, effectiveAgentId))
-        .limit(1);
+      // First check if it's a default agent (from code)
+      const defaultAgent = getDefaultAgentById(effectiveAgentId);
 
-      if (!agent) {
-        throw new HTTPException(404, {
-          message: "Agent not found",
-        });
+      if (defaultAgent) {
+        agentSystemPrompt = defaultAgent.systemPrompt;
+      } else {
+        // Check database for custom agents
+        const [agent] = await db
+          .select()
+          .from(assistantAgentsTable)
+          .where(eq(assistantAgentsTable.id, effectiveAgentId))
+          .limit(1);
+
+        if (!agent) {
+          throw new HTTPException(404, {
+            message: "Agent not found",
+          });
+        }
+
+        agentSystemPrompt = agent.systemPrompt;
       }
-
-      agentSystemPrompt = agent.systemPrompt;
     } else {
-      const [defaultAgent] = await db
-        .select()
-        .from(assistantAgentsTable)
-        .where(
-          and(eq(assistantAgentsTable.isDefault, true), eq(assistantAgentsTable.name, "Default")),
-        )
-        .limit(1);
+      // Use the "Default" agent from code
+      const defaultAgent = getDefaultAgentByName("Default");
 
       if (!defaultAgent) {
         throw new HTTPException(500, {
-          message: "Default agent not found. Please run the seed script.",
+          message: "Default agent configuration error",
         });
       }
 
@@ -259,6 +267,7 @@ export const AssistantRoute = new Hono<{
       show_documents: showDocuments(userId, organizationId, currentDocument?.id),
       move_documents: moveDocuments(userId, organizationId),
       create_document: createDocument(userId, organizationId),
+      visualize_document_tree: visualizeDocumentTree(userId, organizationId),
     };
 
     if (currentDocument?.id) {

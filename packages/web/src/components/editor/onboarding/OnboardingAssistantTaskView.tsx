@@ -14,10 +14,10 @@ const TASKS: Array<{
   hasContent: boolean;
 }> = [
   {
-    id: "organize-apollo",
-    title: "Organize Project Apollo documents",
-    description: "Ask the assistant to help organize demo documents",
-    prompt: "Please look at all our documents related to project apollo and organize them",
+    id: "organize-welcome",
+    title: "Organize your welcome documents",
+    description: "Ask the assistant to see and organize documents under your welcome page",
+    prompt: "Please clean up all the documents under our welcome page. First visualize the document tree to see what's there, then organize them into a logical structure.",
     hasContent: false,
   },
   {

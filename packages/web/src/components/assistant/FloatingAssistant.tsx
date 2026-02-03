@@ -8,6 +8,7 @@ import {
   Subtract12Regular as SubtractFilled,
   TextBulletListSquareEditRegular,
 } from "@fluentui/react-icons";
+import { getDefaultAgentById } from "@lydie/core/ai/agents/defaults";
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
@@ -23,7 +24,6 @@ import { createPortal } from "react-dom";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
 import { ChatMessages } from "@/components/chat/ChatMessages";
-import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import {
@@ -229,7 +229,7 @@ function AssistantPopup({
           : "fixed right-4 bottom-4 w-[400px] h-[540px] rounded-xl shadow-popover flex flex-col overflow-hidden z-30 bg-white"
       }
     >
-      <div className="flex items-center justify-between p-1.5 border-b border-black/8 bg-white/95 backdrop-blur-md">
+      <div className="flex items-center justify-between p-1.5 bg-white">
         <div className="flex items-center gap-x-2">
           <ConversationDropdown
             conversationId={conversationId}
@@ -306,8 +306,7 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   selectedAgentId: string | null;
   onSelectAgent: (agentId: string) => void;
 }) {
-  const { user } = useAuth();
-  const [selectedAgent] = useQuery(
+  const [dbAgent] = useQuery(
     selectedAgentId
       ? queries.agents.byId({
           organizationId,
@@ -315,6 +314,24 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
         })
       : null,
   );
+
+  // Check code-based default agents if not found in DB
+  const selectedAgent = useMemo(() => {
+    if (dbAgent) return dbAgent;
+    if (selectedAgentId) {
+      const defaultAgent = getDefaultAgentById(selectedAgentId);
+      if (defaultAgent) {
+        return {
+          id: defaultAgent.id,
+          name: defaultAgent.name,
+          description: defaultAgent.description,
+          system_prompt: defaultAgent.systemPrompt,
+          is_default: true,
+        };
+      }
+    }
+    return null;
+  }, [dbAgent, selectedAgentId]);
 
   const pendingMessage = useAtomValue(pendingMessageAtom);
   const clearPendingMessage = useSetAtom(clearPendingMessageAtom);
@@ -417,7 +434,6 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
         messages={messages}
         status={status as "submitted" | "streaming" | "ready" | "error"}
         organizationId={organizationId}
-        user={user}
         agentName={selectedAgent?.name}
       />
       <div className="p-1.5 relative">
