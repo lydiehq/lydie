@@ -1,3 +1,7 @@
+// DEPRECATED - This tool is not working as expected and has been removed from the assistant.
+// It will be revisited later with a better implementation.
+// For now, use read_document to read full document content.
+
 import { db, documentEmbeddingsTable, documentsTable } from "@lydie/database";
 import { tool } from "ai";
 import { and, eq, sql } from "drizzle-orm";

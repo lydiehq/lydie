@@ -12,23 +12,12 @@ import { convertJsonToYjs } from "../../yjs-to-json";
 
 export const createDocument = (userId: string, organizationId: string) =>
   tool({
-    description: `Create a new document in the knowledge base.
+    description: `Create new documents in the workspace.
 
-Use this tool when the user wants to create NEW, SEPARATE documents - especially when they say:
-- "Create [a document/page/article/post] about X"
-- "Create multiple/several documents"
-- "Create the first 3/5/N [items]"
-- "Create one for X, Y, and Z"
-- Any plural document references ("create articles", "create pages")
+Supports hierarchies via parentId. Content must be provided at creation time in HTML format.
 
-CRITICAL: If a user says "create" with document-like nouns (documents, pages, articles, posts) or mentions multiple items or a specific quantity, they almost always want NEW separate documents, NOT content appended to the current document.
-
-You can create a hierarchy of documents by specifying a parentId.
-
-IMPORTANT:
-- If the user asks for content (like an outline, summary, or article), you MUST provide it in the content parameter when creating the document. You cannot add content to a document after creation with this tool.
-- Don't relay or explain what you've suggested, the tool call already shows the changes
-`,
+Use for: creating NEW separate documents (not adding content to existing ones).
+Signal words: "create documents/pages/articles" (plural), "create 3/5/N items", "create one for X, Y, Z".`,
     inputSchema: z.object({
       title: z.string().describe("The title of the new document"),
       content: z
