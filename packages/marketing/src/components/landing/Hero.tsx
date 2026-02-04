@@ -132,7 +132,12 @@ export function Hero({
               <div
                 className={`${styles.heroButton1} ring ring-white/1 p-0.5 bg-black/4 rounded-[8px]`}
               >
-                <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
+                <Button 
+                  href="https://app.lydie.co/auth" 
+                  size="lg" 
+                  intent="primary"
+                  phCapture="hero_cta_clicked"
+                >
                   <span>Start writing for free</span>
                 </Button>
               </div>
@@ -143,6 +148,7 @@ export function Hero({
                   target="_blank"
                   intent="ghost"
                   className="text-white hover:bg-white/10"
+                  phCapture="github_clicked"
                 >
                   <div className="flex items-center gap-x-1.5">
                     <span>Star on GitHub</span>

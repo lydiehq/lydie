@@ -3,9 +3,6 @@ import { tool } from "ai";
 import { and, asc, desc, eq, ilike, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
 
-// User-facing tool for displaying documents in a pretty UI.
-// Use this when the user explicitly asks to SEE their documents.
-// For research/background exploration, use listDocuments instead.
 export const showDocuments = (
   _userId: string,
   organizationId: string,

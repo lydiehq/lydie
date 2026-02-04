@@ -1,10 +1,11 @@
 ---
 import BaseHead from "../components/BaseHead.astro";
-import "../styles/tailwind.css";
-import { Header } from "../components/Header";
+import PostHog from "../components/PostHog.astro";
 import Container from "../components/Container.astro";
-import { Logo } from "../components/Logo";
 import { DiscordIcon, GitHubIcon } from "../components/icons";
+import { Header } from "../components/Header";
+import { Logo } from "../components/Logo";
+import "../styles/tailwind.css";
 
 export interface Props {
   title: string;
@@ -91,10 +92,7 @@ const linkGroups = [
       description={description}
       canonicalURL={canonicalURL}
     />
-    <script
-      defer
-      src="https://cloud.umami.is/script.js"
-      data-website-id="9402133f-bce6-4b35-a3ec-2a534f3fee3c"></script>
+    <PostHog />
   </head>
   <body class="bg-white bg-grain">
     <Header client:load />

@@ -11,7 +11,7 @@ import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-pan
 import { z } from "zod";
 
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
-import { CommandMenu } from "@/components/layout/command-menu/CommandMenu";
+import { CommandMenu } from "@/components/layout/CommandMenu";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
@@ -177,11 +177,11 @@ function RouteLayout() {
         </Group>
       </div>
       <div ref={floatingAssistantContainerRef} />
-      <FloatingAssistant
+      {/* <FloatingAssistant
         currentDocumentId={currentDocumentId}
         dockedContainer={dockedAssistantContainer}
         floatingContainer={floatingAssistantContainer}
-      />
+      /> */}
       {search.installTemplate && (
         <InstallTemplateDialog
           isOpen={isTemplateDialogOpen}

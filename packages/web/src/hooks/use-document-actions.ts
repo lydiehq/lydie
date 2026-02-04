@@ -5,6 +5,7 @@ import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { useOrganization } from "@/context/organization.context";
+import { trackEvent } from "@/lib/posthog";
 import { useZero } from "@/services/zero";
 
 export function useDocumentActions() {
@@ -31,6 +32,12 @@ export function useDocumentActions() {
       }),
     );
 
+    trackEvent("document_created", {
+      has_parent: !!parentId,
+      has_integration: !!integrationLinkId,
+      has_initial_content: !!initialContent,
+    });
+
     navigate({
       from: "/w/$organizationSlug",
       to: "/w/$organizationSlug/$id",
@@ -51,6 +58,10 @@ export function useDocumentActions() {
             organizationId: organization.id,
           }),
         );
+
+        trackEvent("document_deleted", {
+          has_integration: !!integrationLinkId,
+        });
 
         toast.success("Document deleted");
 
@@ -86,6 +97,8 @@ export function useDocumentActions() {
         organizationId: organization.id,
       }),
     );
+
+    trackEvent("document_published");
   };
 
   const unpublishDocument = (documentId: string) => {

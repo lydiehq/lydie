@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { loadSession } from "@/lib/auth/session";
+import { identifyUser } from "@/lib/posthog";
 import { getZeroInstance } from "@/lib/zero/instance";
 import { getFontSizePixels, rootFontSizeAtom } from "@/stores/font-size";
 
@@ -97,7 +98,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   },
   component: () => {
     const router = useRouter();
-    const { zero } = Route.useRouteContext();
+    const { zero, auth } = Route.useRouteContext();
     const fontSizeOption = useAtomValue(rootFontSizeAtom);
 
     useEffect(() => {
@@ -107,6 +108,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         document.documentElement.style.fontSize = `${getFontSizePixels(fontSizeOption)}px`;
       }
     }, [fontSizeOption]);
+
+    useEffect(() => {
+      if (auth?.user?.id) {
+        identifyUser(auth.user.id, {
+          email: auth.user.email,
+          name: auth.user.name,
+        });
+      }
+    }, [auth?.user?.id]);
 
     return (
       <>

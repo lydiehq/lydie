@@ -87,6 +87,7 @@ const pricingTiers = [
                 size="lg"
                 intent={tier.popular ? "primary" : "secondary"}
                 className="w-full"
+                phCapture={`pricing_${tier.name.toLowerCase()}_clicked`}
               >
                 <div class="flex items-center justify-center gap-x-1">
                   <span>{tier.cta}</span>

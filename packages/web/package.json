@@ -58,6 +58,7 @@
     "jszip": "^3.10.1",
     "marked": "^17.0.1",
     "motion": "^12.30.0",
+    "posthog-js": "^1.339.1",
     "react": "catalog:",
     "react-aria": "^3.45.0",
     "react-aria-components": "^1.14.0",

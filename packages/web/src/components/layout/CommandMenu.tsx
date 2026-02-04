@@ -9,15 +9,27 @@ import {
   SettingsRegular,
 } from "@fluentui/react-icons";
 import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Command } from "cmdk";
-import { cva } from "cva";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, ModalOverlay } from "react-aria-components";
+import { type ComponentType, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Autocomplete,
+  Button,
+  Dialog,
+  Header,
+  Input,
+  Menu,
+  MenuItem,
+  MenuSection,
+  Modal,
+  ModalOverlay,
+  SearchField,
+  Text,
+  useFilter,
+} from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -25,35 +37,27 @@ import { commandMenuOpenAtom } from "@/stores/command-menu";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
-import type { MenuItem } from "./CommandMenuItem";
+interface MenuItem {
+  id: string;
+  label: string;
+  icon?: ComponentType<{ className?: string }>;
+  iconUrl?: string;
+  action: () => void;
+  destructive?: boolean;
+}
 
-import { CommandMenuDocumentItem } from "./CommandMenuDocumentItem";
-import { CommandMenuKeyboardHelp } from "./CommandMenuKeyboardHelp";
-import { CommandMenuSection, type MenuSection } from "./CommandMenuSection";
+interface MenuSectionType {
+  id: string;
+  heading: string;
+  items: MenuItem[];
+}
 
-const commandMenuOverlayStyles = cva({
-  base: "fixed top-0 left-0 w-full h-(--visual-viewport-height) isolate z-40 bg-black/[15%] flex items-start justify-center p-4 pt-[20vh] text-center",
-  variants: {
-    isEntering: {
-      true: "animate-in fade-in duration-100 ease-out",
-    },
-    isExiting: {
-      true: "animate-out fade-out duration-100 ease-in",
-    },
-  },
-});
-
-const modalStyles = cva({
-  base: "w-full max-w-xl max-h-full rounded-xl shadow-popover bg-clip-padding overflow-hidden",
-  variants: {
-    isEntering: {
-      true: "animate-in fade-in duration-75 ease-out",
-    },
-    isExiting: {
-      true: "animate-out fade-out duration-75 ease-in",
-    },
-  },
-});
+interface DocumentItem {
+  id: string;
+  documentId: string;
+  label: string;
+  action: () => void;
+}
 
 export function CommandMenu() {
   const { createDocument, deleteDocument, publishDocument } = useDocumentActions();
@@ -61,6 +65,8 @@ export function CommandMenu() {
   const navigate = useNavigate();
   const { organization } = useOrganization();
   const [search, setSearch] = useState("");
+
+  const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
 
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
@@ -75,7 +81,7 @@ export function CommandMenu() {
         }),
   );
 
-  // Always search documents based on current search input
+  // Search documents based on current search input
   const [searchData] = useQuery(
     queries.organizations.searchDocuments({
       organizationId: organization.id,
@@ -85,12 +91,12 @@ export function CommandMenu() {
 
   const searchDocuments = searchData?.documents || [];
 
-  const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
+  const { contains } = useFilter({ sensitivity: "base" });
+  const filter = (textValue: string, inputValue: string) => contains(textValue, inputValue);
 
   const handleOpenChange = useCallback(
     (newIsOpen: boolean) => {
       if (!newIsOpen && isOpen) {
-        // Delay clearing search until after animation completes (100ms)
         setTimeout(() => setSearch(""), 150);
       }
       setOpen(newIsOpen);
@@ -101,9 +107,7 @@ export function CommandMenu() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        // If the event was already handled (e.g., by an editor with selected text), don't handle it here
         if (e.defaultPrevented) return;
-
         e.preventDefault();
         handleOpenChange(!isOpen);
       }
@@ -124,7 +128,8 @@ export function CommandMenu() {
   const getIntegrationRoute = (integrationType: string) =>
     `/w/$organizationSlug/settings/integrations/${integrationType}`;
 
-  const menuSections = useMemo<MenuSection[]>(() => {
+  // Build menu sections
+  const menuSections = useMemo<MenuSectionType[]>(() => {
     const favoritesItems: MenuItem[] = [];
 
     favoritesItems.push({
@@ -268,9 +273,7 @@ export function CommandMenu() {
       },
     ];
 
-    const sections: MenuSection[] = [];
-
-    sections.push(
+    return [
       {
         id: "favorites",
         heading: "Favorites",
@@ -281,9 +284,7 @@ export function CommandMenu() {
         heading: "Navigation",
         items: navigationItems,
       },
-    );
-
-    return sections;
+    ];
   }, [
     createDocument,
     currentDocument,
@@ -295,9 +296,8 @@ export function CommandMenu() {
     publishDocument,
   ]);
 
-  // Create document menu items from search results
-  // Only show if search has at least 2 characters, capped at 10 results
-  const documentItems = useMemo(() => {
+  // Create document items from search results
+  const documentItems = useMemo<DocumentItem[]>(() => {
     if (search.length < 2) {
       return [];
     }
@@ -322,56 +322,113 @@ export function CommandMenu() {
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
       isDismissable
-      className={commandMenuOverlayStyles}
+      className="fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-black/15 grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr] entering:fade-in entering:animate-in entering:duration-100 entering:ease-out exiting:fade-out exiting:animate-out exiting:ease-in"
     >
-      <Modal className={modalStyles}>
-        <Dialog className="flex flex-col bg-gray-50">
-          <Command>
-            <div className="flex items-center border-b border-gray-100 px-3">
-              <SearchFilled className="size-4 text-gray-400 mr-2" />
-              <Command.Input
-                autoFocus
-                value={search}
-                onValueChange={setSearch}
+      <Modal className="row-start-2 bg-gray-50 text-start shadow-popover outline-none md:row-start-1 max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[20%] sm:left-1/2 sm:-translate-x-1/2 rounded-t-2xl md:rounded-xl sm:max-w-lg entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-100 entering:ease-out exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in">
+        <Dialog
+          aria-label="Command Menu"
+          className="flex max-h-[inherit] flex-col overflow-hidden outline-none"
+        >
+          <Autocomplete filter={filter} inputValue={search} onInputChange={setSearch}>
+            <SearchField
+              aria-label="Quick search"
+              className="flex w-full items-center border-b border-gray-100 px-3"
+            >
+              <SearchFilled className="size-4 shrink-0 text-gray-400" />
+              <Input
                 placeholder="Type a command or search..."
-                className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-11 w-full min-w-0 bg-transparent px-2 py-3 text-sm outline-none placeholder:text-gray-400 [&::-webkit-search-cancel-button]:hidden"
               />
-            </div>
-            <Command.List className="max-h-80 overflow-y-auto overflow-x-hidden p-2">
-              <Command.Empty className="py-6 text-center text-sm text-gray-500">
-                No results found.
-              </Command.Empty>
+            </SearchField>
 
-              {/* Menu sections - always shown */}
+            <Menu
+              className="grid max-h-80 gap-y-2 flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto p-2"
+              renderEmptyState={() => (
+                <div className="col-span-full flex items-center justify-center py-8 text-sm text-gray-500">
+                  No results found.
+                </div>
+              )}
+            >
               {menuSections.map((section) => (
-                <CommandMenuSection
+                <MenuSection
                   key={section.id}
-                  section={section}
-                  onSelect={(item) => handleCommand(item.action)}
-                />
+                  id={section.id}
+                  className="col-span-full grid grid-cols-1 content-start"
+                >
+                  <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">
+                    {section.heading}
+                  </Header>
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <MenuItem
+                        key={item.id}
+                        id={item.id}
+                        textValue={item.label}
+                        onAction={() => handleCommand(item.action)}
+                        className={`relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
+                      >
+                        {item.iconUrl ? (
+                          <img
+                            src={item.iconUrl}
+                            alt=""
+                            className="size-4 rounded-sm shrink-0 mr-2"
+                          />
+                        ) : (
+                          Icon && <Icon className="size-4 text-gray-400 shrink-0 mr-2" />
+                        )}
+                        <Text slot="label" className="flex-1 min-w-0 truncate text-start">
+                          {item.label}
+                        </Text>
+                      </MenuItem>
+                    );
+                  })}
+                </MenuSection>
               ))}
 
-              {/* Quick results - document search results at the bottom */}
+              {/* Document search results */}
               {documentItems.length > 0 && (
-                <Command.Group
-                  heading={
-                    <div className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 text-left">
-                      Quick results
-                    </div>
-                  }
+                <MenuSection
+                  id="quick-results"
+                  className="col-span-full grid grid-cols-1 content-start"
                 >
+                  <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">
+                    Quick results
+                  </Header>
                   {documentItems.map((item) => (
-                    <CommandMenuDocumentItem
+                    <MenuItem
                       key={item.id}
-                      item={item}
-                      onSelect={(docItem) => handleCommand(docItem.action)}
-                    />
+                      id={item.id}
+                      textValue={item.label}
+                      onAction={() => handleCommand(item.action)}
+                      className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
+                    >
+                      <DocumentIcon className="size-4 text-gray-400 shrink-0 mr-2" />
+                      <Text slot="label" className="flex-1 min-w-0 truncate text-start">
+                        {item.label}
+                      </Text>
+                    </MenuItem>
                   ))}
-                </Command.Group>
+                </MenuSection>
               )}
-            </Command.List>
-          </Command>
-          <CommandMenuKeyboardHelp />
+            </Menu>
+
+            <div className="flex-none border-t border-gray-200 px-4 py-2 text-xs text-gray-500 flex items-center gap-x-2">
+              <div className="flex gap-x-1 items-center">
+                <kbd className="inline-flex h-5 select-none items-center rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-600">
+                  ↑↓
+                </kbd>
+                Navigate
+              </div>
+              <div className="h-3 w-px bg-gray-200" />
+              <div className="flex gap-x-1 items-center">
+                <kbd className="inline-flex h-5 select-none items-center rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-600">
+                  ↵
+                </kbd>
+                Select
+              </div>
+            </div>
+          </Autocomplete>
         </Dialog>
       </Modal>
     </ModalOverlay>

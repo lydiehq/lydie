@@ -17,6 +17,7 @@ import ReactDOM from "react-dom/client";
 import type { authClient } from "./utils/auth.ts";
 
 import { ErrorPage } from "./components/layout/ErrorPage.tsx";
+import { initPostHog } from "./lib/posthog.ts";
 import reportWebVitals from "./reportWebVitals.ts";
 import { routeTree } from "./routeTree.gen";
 
@@ -59,6 +60,8 @@ declare module "react-aria-components" {
     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
   }
 }
+
+initPostHog();
 
 const rootElement = document.getElementById("app");
 if (rootElement && !rootElement.innerHTML) {
