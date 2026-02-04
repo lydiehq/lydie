@@ -71,7 +71,7 @@
 
   h1 {
     font-size: var(--text-2xl);
-    line-height: 1;
+    line-height: var(--text-2xl--line-height);
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
@@ -80,7 +80,7 @@
 
   h2 {
     font-size: var(--text-xl);
-    line-height: 1;
+    line-height: var(--text-xl--line-height);
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
@@ -89,7 +89,7 @@
 
   h3 {
     font-size: var(--text-lg);
-    line-height: 1;
+    line-height: var(--text-lg--line-height);
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
@@ -98,7 +98,7 @@
 
   h4 {
     font-size: var(--text-base);
-    line-height: 1;
+    line-height: var(--text-base--line-height);
     color: #0d0d0d;
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
@@ -347,10 +347,12 @@
     margin-bottom: 2em;
     font-size: 0.875rem;
     line-height: 1.4;
+    border-collapse: collapse;
   }
 
   thead {
     border-bottom-width: 1px;
+    border-bottom-style: solid;
     border-bottom-color: var(--editor-content-th-borders);
   }
 
@@ -373,6 +375,7 @@
 
   tbody tr {
     border-bottom-width: 1px;
+    border-bottom-style: solid;
     border-bottom-color: var(--editor-content-td-borders);
   }
 
@@ -401,6 +404,11 @@
   th,
   td {
     text-align: start;
+    border: 1px solid var(--editor-content-td-borders);
+  }
+
+  thead th {
+    border-color: var(--editor-content-th-borders);
   }
 
   td code {
@@ -749,6 +757,18 @@
   --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
+  & table {
+    border-collapse: collapse;
+  }
+
+  & thead {
+    border-bottom-style: solid;
+  }
+
+  & tbody tr {
+    border-bottom-style: solid;
+  }
+
   &:where(.dark, .dark *) {
     --editor-content-color: var(--color-gray-300);
     --editor-content-heading-color: var(--color-white);
@@ -1048,6 +1068,11 @@
   th,
   td {
     text-align: start;
+    border: 1px solid var(--editor-content-td-borders);
+  }
+
+  thead th {
+    border-color: var(--editor-content-th-borders);
   }
 
   td code {
@@ -1395,4 +1420,71 @@ active. */
     0em 0 0 var(--color-gray-200),
     0em 0 0 var(--color-gray-200);
   box-decoration-break: clone;
+}
+
+/* Placeholder styles for template fields */
+.editor-content .placeholder,
+.editor-content-sm .placeholder {
+  display: inline;
+  border-radius: 3px;
+  padding: 0.1em 0.2em;
+}
+
+/* The placeholder label shown when empty */
+.editor-content .placeholder .placeholder-label,
+.editor-content-sm .placeholder .placeholder-label {
+  color: var(--color-gray-400);
+  background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
+  font-style: italic;
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+  border: 1px dashed var(--color-gray-300);
+  user-select: none;
+}
+
+.editor-content .placeholder:hover .placeholder-label,
+.editor-content-sm .placeholder:hover .placeholder-label {
+  background-color: color-mix(in oklab, var(--color-gray-300) 50%, transparent);
+  border-color: var(--color-gray-400);
+  cursor: text;
+}
+
+/* Filled state - when user has typed content */
+.editor-content .placeholder--filled,
+.editor-content-sm .placeholder--filled {
+  display: inline;
+  color: inherit;
+  background-color: transparent;
+  font-style: normal;
+  border: none;
+  padding: 0;
+}
+
+/* Dark mode support for placeholders */
+.editor-content:where(.dark, .dark *) .placeholder .placeholder-label,
+.editor-content-sm:where(.dark, .dark *) .placeholder .placeholder-label {
+  color: var(--color-gray-500);
+  background-color: color-mix(in oklab, var(--color-gray-700) 50%, transparent);
+  border-color: var(--color-gray-600);
+}
+
+.editor-content:where(.dark, .dark *) .placeholder:hover .placeholder-label,
+.editor-content-sm:where(.dark, .dark *) .placeholder:hover .placeholder-label {
+  background-color: color-mix(in oklab, var(--color-gray-600) 50%, transparent);
+  border-color: var(--color-gray-500);
+}
+
+@media (prefers-color-scheme: dark) {
+  .editor-content:where(.system, .system *) .placeholder .placeholder-label,
+  .editor-content-sm:where(.system, .system *) .placeholder .placeholder-label {
+    color: var(--color-gray-500);
+    background-color: color-mix(in oklab, var(--color-gray-700) 50%, transparent);
+    border-color: var(--color-gray-600);
+  }
+
+  .editor-content:where(.system, .system *) .placeholder:hover .placeholder-label,
+  .editor-content-sm:where(.system, .system *) .placeholder:hover .placeholder-label {
+    background-color: color-mix(in oklab, var(--color-gray-600) 50%, transparent);
+    border-color: var(--color-gray-500);
+  }
 }

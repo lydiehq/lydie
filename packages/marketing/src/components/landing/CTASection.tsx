@@ -1,29 +1,29 @@
 import { ChevronRightRegular } from "@fluentui/react-icons";
 
-import { Container } from "../Container";
 import { Button } from "../generic/Button";
-import { HeroBackground } from "./HeroBackground";
+import { SectionHeader } from "./SectionHeader";
 
-export function CTASection() {
+type Props = {
+  title?: string;
+  description?: string;
+};
+
+export function CTASection({
+  title = "Ready to try it yourself?",
+  description = "Create your first document in seconds. No credit card required.",
+}: Props) {
   return (
-    <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4 z-10 mx-32 mb-8">
-      <Container className="flex flex-col gap-y-6 relative z-20 py-16 md:py-20">
-        <div className="flex flex-col gap-y-4 text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-tight text-white drop-shadow-text">
-            Ready to transform your writing?
-          </h2>
-          {/* <p className="text-[15px] md:text-base text-white/90 leading-relaxed">
-          </p> */}
-          <div className="flex justify-center mt-4">
-            <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
-              <div className="flex items-center gap-x-1">
-                <span>Get started for free</span>
-                <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
-              </div>
-            </Button>
-          </div>
-        </div>
-      </Container>
-    </HeroBackground>
+    <div className="flex flex-col gap-y-6 p-16 items-center text-center">
+      <SectionHeader title={title} description={description} centered />
+      <Button 
+        href="https://app.lydie.co/auth" 
+        size="lg" 
+        intent="primary"
+        phCapture="cta_clicked"
+      >
+        <span>Get started for free</span>
+        <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
+      </Button>
+    </div>
   );
 }

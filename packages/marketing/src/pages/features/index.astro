@@ -1,10 +1,11 @@
 ---
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
 import Layout from "../../layouts/Layout.astro";
-import { Button } from "../../components/generic/Button";
-import { ArrowRightRegular, ChevronRightRegular } from "@fluentui/react-icons";
-import { Logo } from "../../components/Logo";
-import { CTASection } from "../../components/landing/CTASection";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { ArrowRightRegular } from "@fluentui/react-icons";
+import { GradientOutline } from "src/components/generic/GradientOutline";
+import { SectionHeader } from "src/components/landing/SectionHeader";
+import { CTASection } from "src/components/landing/CTASection";
 
 const title = "Features - Lydie";
 const description =
@@ -23,49 +24,21 @@ const features = [
       "Get writing assistance, generate content, and chat with your documents using our integrated AI features. Built directly into the editor for seamless help.",
     href: "/features/ai-assistant",
   },
-  {
-    title: "Organized Knowledge Base",
-    description:
-      "Build a centralized knowledge base that grows with your team. Create nested pages, link related documents, and organize information in a way that makes sense for your workflow.",
-    href: "/features/knowledge-base",
-  },
 ];
 ---
 
 <Layout title={title} description={description}>
   <Container className="flex flex-col gap-y-16 pb-16">
-    <!-- Hero Section -->
-    <div class="max-w-4xl mx-auto flex flex-col gap-y-8 pt-8">
-      <div class="flex flex-col gap-y-6 items-center text-center">
-        <Logo className="size-6 text-gray-200" />
-
-        <div class="flex flex-col gap-y-4">
-          <h1
-            class="text-5xl font-heading font-medium tracking-tight text-gray-950 max-w-3xl"
-          >
-            Powerful features for modern teams
-          </h1>
-          <p class="text-lg text-gray-600 max-w-2xl">
-            Discover all the features that make Lydie the perfect writing and
-            collaboration platform. From real-time collaboration to AI-powered
-            assistance, everything you need is built right in.
-          </p>
-        </div>
-
-        <div class="flex gap-x-4 items-center">
-          <Button href="https://app.lydie.co/auth" size="lg">
-            <div class="flex items-center gap-x-1">
-              <span>Get started for free</span>
-              <ChevronRightRegular
-                className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-              />
-            </div>
-          </Button>
-        </div>
-      </div>
+    <Breadcrumbs items={[{ label: "Features" }]} />
+    <div class="flex flex-col gap-y-6 relative p-4">
+      <GradientOutline />
+      <SectionHeader
+        className="max-w-lg"
+        title="Everything you need to write, think, and create"
+        description="From solo writers to collaborative teams, Lydie adapts to how you work. Real-time collaboration when you need it, powerful tools for deep work when you don't."
+      />
     </div>
 
-    <!-- Features Grid -->
     <div class="max-w-6xl mx-auto w-full">
       <div class="grid md:grid-cols-3 gap-8">
         {

@@ -1,4 +1,5 @@
 import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
+import { getAllDefaultAgents } from "@lydie/core/ai/agents/defaults";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Label } from "@lydie/ui/components/generic/Field";
 import { Heading } from "@lydie/ui/components/generic/Heading";
@@ -25,7 +26,6 @@ function RouteComponent() {
   const { organization } = useOrganization();
   const z = useZero();
 
-  const [allAgents] = useQuery(queries.agents.available({ organizationId: organization.id }));
   const [agents] = useQuery(queries.agents.byUser({ organizationId: organization.id }));
   const [isCreating, setIsCreating] = useState(false);
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
@@ -41,8 +41,8 @@ function RouteComponent() {
   }, [organization]);
 
   const defaultAgents = useMemo(() => {
-    return allAgents?.filter((agent) => agent.is_default) || [];
-  }, [allAgents]);
+    return getAllDefaultAgents();
+  }, []);
 
   const handleCreateAgent = async () => {
     if (!formData.name.trim() || !formData.systemPrompt.trim()) {
@@ -163,7 +163,7 @@ function RouteComponent() {
                     </div>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <p className="text-xs text-gray-600 leading-relaxed">{agent.system_prompt}</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">{agent.systemPrompt}</p>
                   </div>
                 </div>
               ))}

@@ -1,6 +1,7 @@
 import {
   Add16Filled,
   ArrowClockwiseRegular,
+  ChevronRightRegular,
   ErrorCircleRegular,
   Home16Filled,
   PersonChat16Filled,
@@ -22,7 +23,7 @@ import clsx from "clsx";
 import { useSetAtom } from "jotai";
 import { useCallback } from "react";
 import { useMemo } from "react";
-import { Button as RACButton } from "react-aria-components";
+import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
@@ -208,14 +209,27 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
 
 function FavoritesSection() {
   return (
-    <>
-      <div className="flex items-center justify-between shrink-0 px-3 py-2">
-        <Eyebrow>Favorites</Eyebrow>
-      </div>
-      <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2">
-        <FavoritesTree />
-      </div>
-    </>
+    <Disclosure className="group" defaultExpanded={true}>
+      <Heading className="m-0">
+        <RACButton
+          slot="trigger"
+          className="w-full flex items-center justify-between shrink-0 px-3 py-2 hover:bg-black/5 rounded-md transition-colors cursor-default"
+        >
+          <div className="flex items-center gap-1.5">
+            <ChevronRightRegular
+              aria-hidden
+              className="size-3.5 text-gray-500 transition-transform duration-200 ease-in-out group-data-[expanded]:rotate-90"
+            />
+            <Eyebrow>Favorites</Eyebrow>
+          </div>
+        </RACButton>
+      </Heading>
+      <DisclosurePanel className="h-(--disclosure-panel-height) motion-safe:transition-[height] overflow-clip">
+        <div className="px-2 pb-2 pt-1">
+          <FavoritesTree />
+        </div>
+      </DisclosurePanel>
+    </Disclosure>
   );
 }
 

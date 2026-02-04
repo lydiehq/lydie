@@ -5,9 +5,9 @@ import {
   PersonRegular,
   ShieldRegular,
 } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { formatDistanceToNow } from "date-fns";
 
-import { Button } from "@lydie/ui/components/generic/Button";
 import { Card } from "@/components/layout/Card";
 
 type Invitation = {

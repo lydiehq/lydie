@@ -4,8 +4,10 @@ import type { Slice } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
 
 import { HocuspocusProvider } from "@hocuspocus/provider";
+import { COLORS } from "@lydie/core/colors";
 import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import { getDocumentEditorExtensions } from "@lydie/editor";
+import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useCallback, useMemo, useRef } from "react";
@@ -14,12 +16,11 @@ import * as Y from "yjs";
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
 import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/OnboardingAssistantTaskView";
-import { OnboardingStepView } from "@/components/editor/onboarding/OnboardingStepView";
 import { OnboardingTextPracticeView } from "@/components/editor/onboarding/OnboardingTextPracticeView";
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
+import { PlaceholderComponent } from "@/components/PlaceholderComponent";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
-import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 
 export type DocumentEditorHookResult = {
   editor: Editor | null;
@@ -29,24 +30,12 @@ export type DocumentEditorHookResult = {
 };
 
 function getUserColor(userId: string): string {
-  const colors = [
-    "#30bced",
-    "#6eeb83",
-    "#ffbc42",
-    "#ecd444",
-    "#ee6352",
-    "#9ac2c9",
-    "#8acb88",
-    "#1be7ff",
-    "#ff006e",
-    "#8338ec",
-  ];
-
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return colors[Math.abs(hash) % colors.length];
+  const color = COLORS[Math.abs(hash) % COLORS.length];
+  return color.value;
 }
 
 type UseDocumentEditorProps = {
@@ -115,14 +104,14 @@ export function useDocumentEditor({
         codeBlock: {
           addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
         },
-        onboardingStep: {
-          addNodeView: () => ReactNodeViewRenderer(OnboardingStepView),
-        },
         onboardingTextPractice: {
           addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),
         },
         onboardingAssistantTask: {
           addNodeView: () => ReactNodeViewRenderer(OnboardingAssistantTaskView),
+        },
+        placeholder: {
+          addNodeView: () => ReactNodeViewRenderer(PlaceholderComponent, { as: "span" }),
         },
         slashCommands: {
           suggestion: {
@@ -148,7 +137,6 @@ export function useDocumentEditor({
       },
       onUpdate: isLocked ? undefined : onUpdate,
       onCreate: ({ editor }) => {
-        console.log("onCreate", editor);
         onCreate?.(editor);
       },
       onDestroy: () => {

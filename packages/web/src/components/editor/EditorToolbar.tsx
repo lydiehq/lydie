@@ -8,6 +8,7 @@ import {
   MoreVerticalRegular,
   RowChildFilled,
   SubtractFilled,
+  TextFieldFilled,
   TextNumberListLtrFilled,
   TextStrikethroughFilled,
 } from "@fluentui/react-icons";
@@ -26,12 +27,14 @@ import {
 } from "@lydie/ui/components/icons/wysiwyg-icons";
 import { queries } from "@lydie/zero/queries";
 import { Editor } from "@tiptap/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
 
+import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
+import { isAdmin } from "@/utils/admin";
 
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { DocumentSettingsDialog } from "./DocumentSettingsDialog";
@@ -41,11 +44,71 @@ type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
 };
 
+type ActiveStates = {
+  bold: boolean;
+  italic: boolean;
+  strike: boolean;
+  code: boolean;
+  blockquote: boolean;
+  bulletList: boolean;
+  orderedList: boolean;
+  taskList: boolean;
+  link: boolean;
+  table: boolean;
+  selectionEmpty: boolean;
+};
+
 export function EditorToolbar({ editor, doc }: Props) {
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeStates, setActiveStates] = useState<ActiveStates>({
+    bold: false,
+    italic: false,
+    strike: false,
+    code: false,
+    blockquote: false,
+    bulletList: false,
+    orderedList: false,
+    taskList: false,
+    link: false,
+    table: false,
+    selectionEmpty: true,
+  });
   const { deleteDocument, publishDocument, unpublishDocument } = useDocumentActions();
   const { uploadImage } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Track active states for all formatting options
+  useEffect(() => {
+    const updateActiveStates = () => {
+      setActiveStates({
+        bold: editor.isActive("bold"),
+        italic: editor.isActive("italic"),
+        strike: editor.isActive("strike"),
+        code: editor.isActive("code"),
+        blockquote: editor.isActive("blockquote"),
+        bulletList: editor.isActive("bulletList"),
+        orderedList: editor.isActive("orderedList"),
+        taskList: editor.isActive("taskList"),
+        link: editor.isActive("link"),
+        table: editor.isActive("table"),
+        selectionEmpty: editor.state.selection.empty,
+      });
+    };
+
+    // Update initially
+    updateActiveStates();
+
+    // Subscribe to editor updates
+    editor.on("selectionUpdate", updateActiveStates);
+    editor.on("update", updateActiveStates);
+
+    return () => {
+      editor.off("selectionUpdate", updateActiveStates);
+      editor.off("update", updateActiveStates);
+    };
+  }, [editor]);
 
   const isMac =
     typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0;
@@ -91,7 +154,6 @@ export function EditorToolbar({ editor, doc }: Props) {
             {textFormattingActions.map((action) => {
               const Icon = iconMap[action.id];
               const hotkeys = hotkeyMap[action.id];
-              const isActive = action.isActive?.(editor) || false;
 
               return (
                 <TooltipTrigger key={action.id} delay={500}>
@@ -100,7 +162,7 @@ export function EditorToolbar({ editor, doc }: Props) {
                     intent="ghost"
                     size="icon-sm"
                     aria-label={action.label}
-                    className={isActive ? "bg-gray-200" : ""}
+                    className={activeStates[action.id as keyof ActiveStates] ? "bg-gray-200" : ""}
                   >
                     <Icon className="size-[15px] text-gray-700" />
                   </Button>
@@ -121,7 +183,7 @@ export function EditorToolbar({ editor, doc }: Props) {
                 intent="ghost"
                 size="icon-sm"
                 aria-label="Blockquote"
-                className={editor.isActive("blockquote") ? "bg-gray-200" : ""}
+                className={activeStates.blockquote ? "bg-gray-200" : ""}
               >
                 <BlockquoteIcon className="size-[15px] text-gray-700" />
               </Button>
@@ -134,7 +196,6 @@ export function EditorToolbar({ editor, doc }: Props) {
           <Group aria-label="List format" className="flex items-center gap-1">
             {listFormattingActions.map((action) => {
               const Icon = iconMap[action.id];
-              const isActive = action.isActive?.(editor) || false;
 
               return (
                 <TooltipTrigger key={action.id} delay={500}>
@@ -143,7 +204,7 @@ export function EditorToolbar({ editor, doc }: Props) {
                     intent="ghost"
                     size="icon-sm"
                     aria-label={action.label}
-                    className={isActive ? "bg-gray-200" : ""}
+                    className={activeStates[action.id as keyof ActiveStates] ? "bg-gray-200" : ""}
                   >
                     <Icon className="size-[15px] text-gray-700" />
                   </Button>
@@ -160,7 +221,7 @@ export function EditorToolbar({ editor, doc }: Props) {
               <Button
                 onPress={() => {
                   // If on a link without selection, select the entire link first
-                  if (editor.isActive("link") && editor.state.selection.empty) {
+                  if (activeStates.link && activeStates.selectionEmpty) {
                     editor.commands.extendMarkRange("link");
                   }
                   editor.commands.openLinkPopover();
@@ -168,8 +229,8 @@ export function EditorToolbar({ editor, doc }: Props) {
                 intent="ghost"
                 size="icon-sm"
                 aria-label="Add Link"
-                isDisabled={editor.state.selection.empty && !editor.isActive("link")}
-                className={editor.isActive("link") ? "bg-gray-200" : ""}
+                isDisabled={activeStates.selectionEmpty && !activeStates.link}
+                className={activeStates.link ? "bg-gray-200" : ""}
               >
                 <LinkIcon className="size-[15px] text-gray-700" />
               </Button>
@@ -218,6 +279,52 @@ export function EditorToolbar({ editor, doc }: Props) {
             </TooltipTrigger>
           </Group>
 
+          {userIsAdmin && (
+            <>
+              <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
+
+              <Group aria-label="Placeholder" className="flex gap-1">
+                <TooltipTrigger delay={500}>
+                  <Button
+                    onPress={() => {
+                      const { state } = editor;
+                      const { from, to } = state.selection;
+                      const hasSelection = from !== to;
+
+                      if (hasSelection) {
+                        // Convert selected text to placeholder
+                        const selectedText = state.doc.textBetween(from, to);
+                        editor
+                          .chain()
+                          .focus()
+                          .deleteRange({ from, to })
+                          .insertContent({
+                            type: "fieldPlaceholder",
+                            attrs: { label: selectedText },
+                            content: [{ type: "text", text: selectedText }],
+                          })
+                          .run();
+                      } else {
+                        // Insert new placeholder with prompt
+                        const label = prompt("Enter placeholder label (e.g., 'Company name'):");
+                        if (label && label.trim()) {
+                          editor.commands.insertPlaceholder({ label: label.trim() });
+                        }
+                      }
+                    }}
+                    intent="ghost"
+                    size="icon-sm"
+                    aria-label="Convert to Placeholder"
+                    isDisabled={activeStates.selectionEmpty}
+                  >
+                    <TextFieldFilled className="size-[15px] text-gray-700" />
+                  </Button>
+                  <Tooltip placement="bottom">Convert to Placeholder</Tooltip>
+                </TooltipTrigger>
+              </Group>
+            </>
+          )}
+
           <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
           <Group aria-label="Table" className="flex gap-1">
@@ -233,7 +340,7 @@ export function EditorToolbar({ editor, doc }: Props) {
                 intent="ghost"
                 size="icon-sm"
                 aria-label="Insert Table"
-                className={editor.isActive("table") ? "bg-gray-200" : ""}
+                className={activeStates.table ? "bg-gray-200" : ""}
               >
                 <TableIcon className="size-[15px] text-gray-700" />
               </Button>
@@ -241,7 +348,7 @@ export function EditorToolbar({ editor, doc }: Props) {
             </TooltipTrigger>
 
             {/* Table management buttons - only show when in a table */}
-            {editor.isActive("table") && (
+            {activeStates.table && (
               <>
                 <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 

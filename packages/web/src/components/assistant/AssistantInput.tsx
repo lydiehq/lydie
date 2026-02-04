@@ -1,4 +1,5 @@
-import { ArrowCircleUpRegular, ChevronUpRegular, SquareFilled } from "@fluentui/react-icons";
+import { ArrowCircleUp32Filled, SquareFilled } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { EditorContent } from "@tiptap/react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -6,7 +7,6 @@ import { Form } from "react-aria-components";
 
 import { AgentSelector } from "@/components/assistant/AgentSelector";
 import { type ChatContextItem, ChatContextList } from "@/components/chat/ChatContextList";
-import { Button } from "@lydie/ui/components/generic/Button";
 import { useDocumentContext } from "@/hooks/use-document-context";
 import { useAssistantEditor } from "@/lib/editor/assistant-editor";
 import { getReferenceDocumentIds } from "@/utils/parse-references";
@@ -35,7 +35,6 @@ export function AssistantInput({
   currentDocumentId,
   onRemoveContext,
   editorClassName = "focus:outline-none text-sm text-gray-700 px-5 py-3.5",
-  variant = "rounded",
   content,
   selectedAgentId,
   onSelectAgent,
@@ -141,81 +140,38 @@ export function AssistantInput({
 
   handleSubmitRef.current = handleSubmit;
 
-  const containerClassName =
-    variant === "rounded"
-      ? "rounded-full bg-white text-sm shadow-surface flex flex-col gap-y-2 relative w-full"
-      : "rounded-lg flex flex-col z-10 relative bg-gray-100 p-1 gap-y-0.5";
-
-  const formClassName = variant === "rounded" ? "relative flex flex-col" : "relative flex flex-col";
-
-  const editorWrapperClassName =
-    variant === "rounded"
-      ? "text-sm text-start"
-      : "flex flex-col bg-white rounded-[6px] p-2 relative shadow-surface";
-
   return (
     <motion.div
-      layoutId={variant === "rounded" ? "assistant-input" : undefined}
-      className={containerClassName}
+      className="rounded-lg flex flex-col z-10 relative bg-gray-100 p-1 gap-y-0.5"
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       initial={false}
     >
-      {variant === "flat" && (
-        <ChatContextList
-          items={contextItems}
-          onRemove={handleRemoveContext}
-          availableDocuments={availableDocuments}
-          onAddDocument={handleAddDocument}
-        />
-      )}
-      <div className={variant === "flat" ? editorWrapperClassName : ""}>
-        <Form className={formClassName} onSubmit={handleSubmit}>
-          {variant === "rounded" && (
-            <ChatContextList
-              items={contextItems}
-              onRemove={handleRemoveContext}
-              availableDocuments={availableDocuments}
-              onAddDocument={handleAddDocument}
-            />
-          )}
-          <EditorContent
-            editor={assistantEditor.editor}
-            className={variant === "rounded" ? "text-sm text-start" : ""}
-          />
-          {variant === "flat" ? (
-            <div className="flex items-center justify-between">
-              {selectedAgentId !== undefined && onSelectAgent && (
-                <AgentSelector selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} />
-              )}
-              <Button
-                type={canStop ? "button" : "submit"}
-                onPress={canStop ? onStop : undefined}
-                intent="ghost"
-                size="icon-sm"
-              >
-                {canStop ? (
-                  <SquareFilled className="size-4 text-gray-900 fill-gray-900" />
-                ) : (
-                  <ArrowCircleUpRegular className="size-4.5 text-gray-500" />
-                )}
-              </Button>
-            </div>
-          ) : (
+      <ChatContextList
+        items={contextItems}
+        onRemove={handleRemoveContext}
+        availableDocuments={availableDocuments}
+        onAddDocument={handleAddDocument}
+      />
+      <div className="flex flex-col bg-white rounded-[6px] p-2 relative shadow-surface">
+        <Form className="relative flex flex-col" onSubmit={handleSubmit}>
+          <EditorContent editor={assistantEditor.editor} />
+          <div className="flex items-center justify-between">
+            {selectedAgentId !== undefined && onSelectAgent && (
+              <AgentSelector selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} />
+            )}
             <Button
               type={canStop ? "button" : "submit"}
               onPress={canStop ? onStop : undefined}
-              intent="primary"
-              size="icon-lg"
-              rounded
-              className="bottom-1.5 right-1.5 absolute"
+              intent="ghost"
+              size="icon-sm"
             >
               {canStop ? (
-                <SquareFilled className="size-3 text-white fill-white" />
+                <SquareFilled className="size-4 text-gray-900 fill-gray-900" />
               ) : (
-                <ChevronUpRegular className="size-4 text-white" />
+                <ArrowCircleUp32Filled className="size-5 text-gray-900" />
               )}
             </Button>
-          )}
+          </div>
         </Form>
       </div>
     </motion.div>

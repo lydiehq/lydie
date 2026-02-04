@@ -1,23 +1,27 @@
 ---
 import { getImage } from "astro:assets";
 import { ChatSection } from "./ChatSection";
-import CollaborationSection from "./CollaborationSection.astro";
 import IntegrationsSection from "./IntegrationsSection.astro";
 import PerformanceSection from "./PerformanceSection.astro";
 import UseCasesSection from "./UseCasesSection.astro";
-import EditorFeaturesSection from "./EditorFeaturesSection.astro";
 import { Hero } from "./Hero";
 import ProblemSolutionSection from "./ProblemSolutionSection.astro";
-import { CTASection } from "./CTASection";
 import {
   GlobeRegular,
   SearchRegular,
   ShareRegular,
 } from "@fluentui/react-icons";
-import { Container } from "../Container";
+import Container from "../Container.astro";
 import screenshot from "../../../public/screenshot3.png";
-import { Logo } from "../Logo";
-import { InteractiveEditorDemo } from "./InteractiveEditorDemo";
+import Divider from "./Divider.astro";
+import { DemoWithSelector } from "./DemoWithSelector";
+import { CastShadow } from "../generic/CastShadow";
+import { KeyboardSection } from "./KeyboardSection";
+import { FAQSection } from "../tools/FAQSection";
+import { GradientOutline } from "../generic/GradientOutline";
+import { DarkModeSection } from "./DarkModeSection";
+import { SectionHeader } from "./SectionHeader";
+import { CTASection } from "./CTASection";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -53,6 +57,25 @@ const keyBenefits = [
     icon: GlobeRegular,
   },
 ];
+
+const faqItems = [
+  {
+    q: "What is Lydie?",
+    a: "Lydie is a modern writing workspace designed for structured documents, notes, and knowledge management. It combines a powerful WYSIWYG editor with AI-powered search and real-time collaboration features to help you organize and find information effortlessly.",
+  },
+  {
+    q: "Is Lydie free to use?",
+    a: "Yes! Lydie is open-source and free to use. There are no hidden fees or vendor lock-in. You can self-host it or use our managed service. You're also welcome to modify and contribute to the codebase.",
+  },
+  {
+    q: "Can I collaborate with my team in real-time?",
+    a: "Absolutely. Lydie supports real-time collaboration, allowing you and your team to work on documents simultaneously. Changes are synced instantly across all devices, so everyone stays up to date. [Learn more about collaborative editing.](/features/collaborative-editing)",
+  },
+  {
+    q: "How does the AI-powered search work?",
+    a: "Lydie uses advanced AI to understand your documents and help you find information quickly. Instead of just matching keywords, the search understands the meaning and context of your content, making it easy to discover relevant information even when you don't remember the exact words.",
+  },
+];
 ---
 
 <Hero
@@ -65,8 +88,64 @@ const keyBenefits = [
   imageHeight={heroDefaultImage.options.height}
 />
 <ProblemSolutionSection />
-<!-- <Container className="flex flex-col gap-y-12 relative">
-  <div class="grid md:grid-cols-3 grid-cols-1 gap-6">
+
+<div class="max-w-4xl relative md:block hidden">
+  <div
+    class="fixed inset-y-0 w-1 border-r border-black/4"
+    style="left: calc(50% - 388px)"
+  >
+  </div>
+  <div
+    class="fixed inset-y-0 w-1 border-r border-black/4"
+    style="right: calc(50% - 388px)"
+  >
+  </div>
+</div>
+<Divider logo />
+
+<Container className="pb-24 pt-16 flex flex-col items-center">
+  <SectionHeader
+    eyebrow="Best-in-class editor"
+    title="Experience the delight of writing"
+    description="At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick notes or deep documentation."
+    centered
+  />
+  <div class="w-full mt-12 -mx-4 md:mx-0">
+    <DemoWithSelector
+      client:visible
+      states={["collaboration", "linking", "ai-assistant"]}
+    />
+  </div>
+</Container>
+<Divider />
+<Container className="relative my-24 max-w-4xl mx-auto">
+  <GradientOutline />
+  <div class="grid grid-cols-2 z-0">
+    <CastShadow className="w-full" strength={0.2}>
+      <div
+        class="flex flex-col flex-1 h-[320px] rounded-xl shadow-legit bg-white overflow-hidden relative"
+      >
+        <div
+          class="size-full"
+          style="mask-image: linear-gradient(to bottom, transparent 0%, black 0%, black 0%, transparent 100%);"
+        >
+        </div>
+      </div>
+    </CastShadow>
+    <div class="flex flex-col gap-y-2 col-span-1 justify-center max-w-sm pl-12">
+      <h2 class="text-3xl tracking-tight font-medium text-black/85">
+        Experience the delight of writing
+      </h2>
+      <p class="text-base/relaxed text-black/60 max-w-xl text-balance">
+        At Lydie's core is an ergonomic editor that feels natural - whether
+        you're drafting quick notes or deep documentation.
+      </p>
+    </div>
+  </div>
+</Container>
+
+<!-- <Container className="flex flex-col gap-y-12 relative" size="sm">
+  <div class="grid md:grid-cols-2 grid-cols-1 gap-6">
     {
       keyBenefits.map((benefit) => (
         <div class="flex flex-col gap-y-2">
@@ -85,37 +164,26 @@ const keyBenefits = [
   </div>
   <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
 </Container> -->
-<div class="relative">
-  <hr class="border-gray-100 w-full max-w-5xl mx-auto my-12" />
-  <div
-    class="rounded-full bg-white px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
-  >
-    <Logo className="text-gray-200 size-3.5" />
-  </div>
-</div>
-<div class="bg-linear-to-t from-gray-100 mx-4 rounded-xl my-4">
-  <Container className="py-12">
-    <InteractiveEditorDemo client:visible />
-  </Container>
-</div>
+
+<Divider logo />
 
 <Container>
-  <div class="rounded-2xl bg-gray-100 relative grid grid-cols-2">
-    <div class="col-span-1"></div>
-
-    <div class="col-span-1 relative"></div>
-  </div>
-  <!-- <EditorFeaturesSection /> -->
-  <!-- <CollaborationSection /> -->
+  <KeyboardSection client:visible />
 </Container>
-<div class="relative">
-  <hr class="border-gray-100 w-full max-w-5xl mx-auto my-24" />
-  <div
-    class="rounded-full bg-white px-2.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
-  >
-    <Logo className="text-gray-200 size-3.5" />
+
+<Divider />
+
+<!-- <DarkModeSection client:load /> -->
+
+<Container size="sm" className="py-16">
+  <div class="md:px-12">
+    <FAQSection faqs={faqItems} client:load />
   </div>
-</div>
+</Container>
+
+<Divider />
+<CTASection client:load />
+
 <!-- <ChatSection
   client:load
   imageSrc={chatDefaultImage.src}
@@ -128,4 +196,4 @@ const keyBenefits = [
 <!-- <UseCasesSection />
 <PerformanceSection />
 <IntegrationsSection /> -->
-<CTASection client:load />
+<!-- <CTASection client:load /> -->

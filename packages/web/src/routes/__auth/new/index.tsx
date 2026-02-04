@@ -1,6 +1,6 @@
+import { getRandomColor } from "@lydie/core/colors";
 import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
-import { getRandomWorkspaceColor } from "@lydie/core/workspace-colors";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { mutators } from "@lydie/zero/mutators";
@@ -9,9 +9,11 @@ import { useQuery as useZeroQuery } from "@rocicorp/zero/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useSetAtom } from "jotai";
 import { Form } from "react-aria-components";
 import z from "zod";
 
+import { documentTreeExpandedKeysAtom } from "@/components/layout/DocumentTree";
 import { useAppForm } from "@/hooks/use-app-form";
 import { revalidateSession } from "@/lib/auth/session";
 import { clearZeroInstance } from "@/lib/zero/instance";
@@ -28,6 +30,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const setExpandedKeys = useSetAtom(documentTreeExpandedKeysAtom);
   const { auth } = Route.useRouteContext();
   const search = Route.useSearch();
 
@@ -38,22 +41,20 @@ function RouteComponent() {
   const form = useAppForm({
     defaultValues: {
       name: defaultName,
-      slug: slugify(defaultName),
     },
     onSubmit: async (values) => {
       try {
         const id = createId();
         const onboardingDocId = createId();
-        const baseSlug = values.value.slug || slugify(values.value.name);
-        // Generate unique slug so we know the final URL before create and redirect correctly
-        const finalSlug = `${baseSlug}-${createId().slice(0, 8)}`;
+        // Generate slug with unique suffix to avoid clashes
+        const slug = `${slugify(values.value.name)}-${id.slice(0, 8)}`;
 
         const write = z.mutate(
           mutators.organization.create({
             id,
             name: values.value.name,
-            slug: finalSlug,
-            color: getRandomWorkspaceColor(),
+            slug,
+            color: getRandomColor().value,
             onboardingDocId,
           }),
         );
@@ -63,6 +64,9 @@ function RouteComponent() {
         await revalidateSession(queryClient);
         clearZeroInstance();
         await router.invalidate();
+
+        // Expand the onboarding document in the sidebar
+        setExpandedKeys([onboardingDocId]);
 
         // Navigate to the onboarding document or workspace with template
         if (search.template) {
@@ -100,7 +104,6 @@ function RouteComponent() {
 
   return (
     <div className="min-h-screen relative grainy-gradient-container custom-inner-shadow overflow-hidden">
-      <div className="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20"></div>
       <svg className="grainy-gradient-svg">
         <filter id="noiseFilter">
           <feTurbulence
@@ -162,11 +165,6 @@ function RouteComponent() {
                         labelClassName="text-white"
                         descriptionClassName="text-white/70"
                         className="text-white"
-                        onChange={(v) => {
-                          field.handleChange(v);
-                          const newSlug = slugify(v);
-                          form.setFieldValue("slug", newSlug);
-                        }}
                       />
                     )}
                   />

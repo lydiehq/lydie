@@ -55,6 +55,19 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     return `- ${firstLine}${restLines.length > 0 ? "\n" + restLines.join("\n") : ""}`;
   }
 
+  taskList(children: string[]): string {
+    return children.join("\n");
+  }
+
+  taskItem(children: string[], checked?: boolean): string {
+    const content = children.join("\n");
+    const lines = content.split("\n");
+    const firstLine = lines[0];
+    const restLines = lines.slice(1).map((line) => `  ${line}`);
+    const checkbox = checked === true ? "[x]" : "[ ]";
+    return `- ${checkbox} ${firstLine}${restLines.length > 0 ? "\n" + restLines.join("\n") : ""}`;
+  }
+
   blockquote(children: string[]): string {
     const content = children.join("\n");
     return content

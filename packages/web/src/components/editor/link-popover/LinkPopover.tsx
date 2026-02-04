@@ -14,6 +14,9 @@ import {
   useRole,
 } from "@floating-ui/react";
 import { EditFilled, LinkDismissRegular, OpenRegular } from "@fluentui/react-icons";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
@@ -31,10 +34,6 @@ import {
   TooltipTrigger,
   useFilter,
 } from "react-aria-components";
-
-import { Separator } from "@lydie/ui/components/layout/Separator";
-import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 type PopoverState =
   | { mode: "closed" }
@@ -331,6 +330,12 @@ function EditModeContent({
   const [linkLabelValue, setLinkLabelValue] = useState(initialText);
   const linkInputRef = useRef<HTMLInputElement>(null);
 
+  // Filter the search results to determine if menu is effectively open
+  const filteredResults = searchResults?.filter((doc) =>
+    contains(doc.title || "Untitled document", linkInputValue),
+  );
+  const isMenuOpen = filteredResults && filteredResults.length > 0;
+
   // Notify parent of search changes
   useEffect(() => {
     onSearchChange?.(linkInputValue);
@@ -439,6 +444,11 @@ function EditModeContent({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter") {
+        // Don't submit if the autocomplete menu is open with results
+        // Let the Autocomplete handle Enter for menu item selection
+        if (isMenuOpen && searchResults && searchResults.length > 0) {
+          return;
+        }
         e.preventDefault();
         handleSubmit();
       } else if (e.key === "Escape") {
@@ -446,7 +456,7 @@ function EditModeContent({
         handleClose();
       }
     },
-    [handleSubmit, handleClose],
+    [handleSubmit, handleClose, isMenuOpen, searchResults],
   );
 
   return (

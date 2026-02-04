@@ -120,22 +120,16 @@ async function sendCheckInEmail(email: string, firstName: string) {
   const subject = "How's Lydie working for you?";
   const html = `
     <p>Hi ${firstName},</p>
-    
-    <p>It's been a few days since you joined Lydie, and I wanted to check in to see how things are going.</p>
-    
+    <p>It's been a couple days since you joined Lydie, and I wanted to check in.</p>
     <p>I'd love to hear:</p>
     <ul>
       <li>What brought you to Lydie?</li>
       <li>How has your experience been so far?</li>
       <li>Is there anything confusing or anything you're struggling with?</li>
     </ul>
-    
     <p>Just reply to this email - I read and respond to every message personally.</p>
-    
-    <p>If you have questions or want to chat, you can also join our <a href="https://discord.gg/gHzKhW9vzg">Discord community</a> where I'm pretty active.</p>
-    
+    <p>If you want to chat, you can also join our <a href="https://discord.gg/gHzKhW9vzg">Discord community</a> where I'm pretty active.</p>
     <p>Thanks for giving Lydie a try!</p>
-    
     <p>Best,<br>Lars<br><a href="https://lydie.co">lydie.co</a></p>
   `;
 
@@ -143,6 +137,8 @@ async function sendCheckInEmail(email: string, firstName: string) {
     to: email,
     subject,
     html,
+    from: "lars@lydie.co",
+    fromName: "Lars from Lydie",
   });
 }
 
@@ -151,8 +147,8 @@ async function sendWelcomeEmail(email: string, firstName: string) {
   const html = `
     <p>Hi ${firstName},</p>
     <p>Welcome to Lydie! I'm excited to have you on board.</p>
-    <p>Lydie is still an early project, but I'm working hard to make it better every day.</p>
-    <p>To make this easier for me, I welcome any feedback or suggestions you have. You can join our <a href="https://discord.gg/gHzKhW9vzg">Discord server</a> to connect!</p>
+    <p>Lydie is still an early project, but I'm working hard to make it better every day. I welcome any feedback or suggestions you have - just reply to this email, I read and respond to every one personally.</p>
+    <p>You can also join our <a href="https://discord.gg/gHzKhW9vzg">Discord server</a> to connect.</p>
     <p>Best,<br>Lars</p>
   `;
 
@@ -160,6 +156,8 @@ async function sendWelcomeEmail(email: string, firstName: string) {
     to: email,
     subject,
     html,
+    from: "lars@lydie.co",
+    fromName: "Lars from Lydie",
   });
 }
 
@@ -167,17 +165,10 @@ async function sendFeedbackEmail(email: string, firstName: string) {
   const subject = "Quick favor? I'd love your feedback on Lydie";
   const html = `
     <p>Hi ${firstName},</p>
-    
-    <p>You've been using Lydie for about a week now, and I'm hoping you can help me out.</p>
-    
+    <p>You signed up for Lydie about a day ago, and I'm hoping you can help me out.</p>
     <p>Since we're in open beta, your feedback is incredibly valuable. I want to know what's working, what's not, and what features would make Lydie more useful for you.</p>
-    
-    <p>As a thank you, I'd like to offer you a few months of Pro access.</p>
-
-    <p>I would love to hear any feedback about how you found the product now and what improvements I could make to make Lydie fit in your writing workflows.</p>
-
-    <p>You can just reply straight to this email and I will respond to you personally.</p>
-    
+    <p>I'd love to hear any feedback about how you found the product and what improvements I could make to fit Lydie into your writing workflows.</p>
+    <p>Just reply to this email - I read and respond to every one personally.</p>
     <p>Thanks,<br>Lars<br><a href="https://lydie.co">lydie.co</a></p>
   `;
 
@@ -185,5 +176,7 @@ async function sendFeedbackEmail(email: string, firstName: string) {
     to: email,
     subject,
     html,
+    from: "lars@lydie.co",
+    fromName: "Lars from Lydie",
   });
 }

@@ -1,12 +1,10 @@
-FROM mirror.gcr.io/oven/bun:1.3.7
+FROM mirror.gcr.io/oven/bun:1.3.8
 
 RUN apt-get update && apt-get install -y \
     pandoc \
     texlive-latex-base \
     texlive-latex-recommended \
     texlive-fonts-recommended \
-    texlive-fonts-extra \
-    texlive-latex-extra \
     && rm -rf /var/lib/apt/lists/*
 
 ADD ./package.json .

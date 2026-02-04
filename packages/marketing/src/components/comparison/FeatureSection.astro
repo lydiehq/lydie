@@ -16,7 +16,15 @@ export interface Props {
   className?: string;
 }
 
-const { title, description, illustrationId, imageAlt, imagePosition, featurePageUrl, className = "" } = Astro.props;
+const {
+  title,
+  description,
+  illustrationId,
+  imageAlt,
+  imagePosition,
+  featurePageUrl,
+  className = "",
+} = Astro.props;
 
 // Map illustration IDs to components
 const illustrationMap: Record<string, typeof CollaborationIllustration> = {
@@ -28,10 +36,13 @@ const illustrationMap: Record<string, typeof CollaborationIllustration> = {
   performance: PerformanceIllustration,
 };
 
-const IllustrationComponent = illustrationMap[illustrationId] || OpenSourceIllustration;
+const IllustrationComponent =
+  illustrationMap[illustrationId] || OpenSourceIllustration;
 ---
 
-<div class={`flex flex-col ${imagePosition === "left" ? "lg:flex-row-reverse" : "lg:flex-row"} gap-8 lg:gap-12 items-center ${className}`}>
+<div
+  class={`flex flex-col ${imagePosition === "left" ? "lg:flex-row-reverse" : "lg:flex-row"} gap-8 lg:gap-12 items-center ${className}`}
+>
   <div class="flex-1 flex flex-col gap-y-4">
     <h3 class="text-2xl font-heading font-medium tracking-tight text-gray-950">
       {title}
@@ -39,19 +50,31 @@ const IllustrationComponent = illustrationMap[illustrationId] || OpenSourceIllus
     <p class="text-[15px]/relaxed text-gray-600 max-w-[55ch]">
       {description}
     </p>
-    {featurePageUrl && (
-      <a
-        href={featurePageUrl}
-        class="inline-flex items-center gap-x-1 text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors w-fit group"
-      >
-        <span>Learn more</span>
-        <svg class="size-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </a>
-    )}
+    {
+      featurePageUrl && (
+        <a
+          href={featurePageUrl}
+          class="inline-flex items-center gap-x-1 text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors w-fit group"
+        >
+          <span>Learn more</span>
+          <svg
+            class="size-4 group-hover:translate-x-0.5 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </a>
+      )
+    }
   </div>
-  
+
   <div class="flex-1 w-full max-w-md lg:max-w-none">
     <div class="rounded-xl overflow-hidden ring-1 ring-black/5 bg-gray-50">
       <IllustrationComponent />

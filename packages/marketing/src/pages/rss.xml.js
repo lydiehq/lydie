@@ -1,5 +1,6 @@
 import rss from "@astrojs/rss";
 
+import { SITE_TAGLINE } from "../config/site";
 import { lydieClient } from "../utils/lydie-client";
 
 export async function GET(context) {
@@ -22,7 +23,7 @@ export async function GET(context) {
 
   return rss({
     title: "Lydie Blog",
-    description: "A minimal, powerful writing environment supercharged with AI.",
+    description: SITE_TAGLINE,
     site: context.site,
     items: sortedPosts.map((post) => ({
       title: post.title,

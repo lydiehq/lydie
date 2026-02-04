@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import interWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import type { ImageMetadata } from "astro";
 
 interface Props {
@@ -22,6 +23,13 @@ const { title, description } = Astro.props;
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link
+  rel="preload"
+  as="font"
+  type="font/woff2"
+  href={interWoff2}
+  crossorigin="anonymous"
+/>
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link
   rel="alternate"

@@ -1,10 +1,10 @@
+import { Heading } from "@lydie/ui/components/generic/Heading";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Heading } from "@lydie/ui/components/generic/Heading";
-import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { PendingInvitationsSection } from "@/components/settings/user/PendingInvitationsSection";
 import { PreferencesSection } from "@/components/settings/user/PreferencesSection";
 import { useAuth } from "@/context/auth.context";
@@ -16,24 +16,11 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user"
 function RouteComponent() {
   const { user } = useAuth();
 
-  const [userSettings] = useQuery(queries.settings.user({}));
   const [userInvitations] = useQuery(
     queries.invitations.byUser({
       email: user.email,
     }),
   );
-
-  if (!userSettings) {
-    return (
-      <div className="flex flex-col gap-y-6">
-        <div>
-          <Heading level={1}>User Settings</Heading>
-        </div>
-        <Separator />
-        <div className="text-sm text-gray-500">Loading settings...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -49,7 +36,7 @@ function RouteComponent() {
           description="Customize your personal preferences and settings."
           descriptionClassName="text-sm/relaxed text-gray-700"
         />
-        <PreferencesSection userSettings={userSettings} />
+        <PreferencesSection />
       </div>
 
       <Separator />

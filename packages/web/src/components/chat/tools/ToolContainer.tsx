@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Button } from "@lydie/ui/components/generic/Button";
+import React from "react";
 
 export interface ToolAction {
   label: string;

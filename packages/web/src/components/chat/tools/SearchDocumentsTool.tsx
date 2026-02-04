@@ -1,8 +1,7 @@
 import { ArrowClockwiseRegular } from "@fluentui/react-icons";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 export interface SearchDocumentsToolProps {
   tool: {

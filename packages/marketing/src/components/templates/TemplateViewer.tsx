@@ -1,76 +1,31 @@
-import { EditorContent, useEditor } from "@tiptap/react";
+import type { ReactElement } from "react";
+import type { Key } from "react-aria-components";
+
+import { CollectionsEmpty16Filled } from "@fluentui/react-icons";
+import { Placeholder } from "@lydie/editor/extensions";
+import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/editor/styles";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { type ReactElement, useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  Collection,
-  type Key,
-  Tree,
-  TreeItem,
-  TreeItemContent,
-} from "react-aria-components";
-import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
+import { useEffect, useMemo, useState } from "react";
+import { Button, Collection, Tree, TreeItem, TreeItemContent } from "react-aria-components";
 
-// SVG Icon Components
-const CollectionsIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    className={className}
-  >
-    <path
-      fill="currentColor"
-      d="M2.854 2.121a2.5 2.5 0 0 0-1.768 3.062L2.12 9.047A2.5 2.5 0 0 0 5 10.857V8a3 3 0 0 1 3-3h2.354L9.78 2.854a2.5 2.5 0 0 0-3.062-1.768zM6 8a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"
-    />
-  </svg>
-);
-
-const DocumentIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 48 48"
-    className={className}
-  >
-    <path
-      fill="currentColor"
-      d="M24 4H12.25A4.25 4.25 0 0 0 8 8.25v31.5A4.25 4.25 0 0 0 12.25 44h23.5A4.25 4.25 0 0 0 40 39.75V20H28.25A4.25 4.25 0 0 1 24 15.75zm15.626 13.5a4.3 4.3 0 0 0-.87-1.263L27.762 5.245a4.3 4.3 0 0 0-1.263-.871V15.75c0 .966.784 1.75 1.75 1.75z"
-    />
-  </svg>
-);
-
-const ChevronRightIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="12"
-    height="12"
-    viewBox="0 0 12 12"
-    className={className}
-  >
-    <path
-      fill="currentColor"
-      d="M2.22 4.47a.75.75 0 0 1 1.06 0L6 7.19l2.72-2.72a.75.75 0 0 1 1.06 1.06L6.53 8.78a.75.75 0 0 1-1.06 0L2.22 5.53a.75.75 0 0 1 0-1.06"
-    />
-  </svg>
-);
-
-
-type DocumentTreeItem = {
-  id: string;
-  name: string;
-  type: "document";
-  children?: DocumentTreeItem[];
-  isLocked?: boolean;
-};
+import { PlaceholderComponent } from "./PlaceholderComponent";
 
 type TemplateDocument = {
   id: string;
   title: string;
   content: any; // TipTap JSON content
   children?: TemplateDocument[];
+};
+
+type DocumentTreeItem = {
+  id: string;
+  name: string;
+  type: "document";
+  children?: DocumentTreeItem[];
+  isLocked: boolean;
 };
 
 type TemplateViewerProps = {
@@ -132,13 +87,18 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: "prose prose-lg max-w-none focus:outline-none font-semibold text-4xl",
+        class: "text-3xl font-medium text-gray-950 mb-6",
       },
     },
   });
 
   const contentEditor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        addNodeView: () => ReactNodeViewRenderer(PlaceholderComponent, { as: "span" }),
+      }),
+    ],
     content: selectedDoc?.content || { type: "doc", content: [] },
     editable: false,
     immediatelyRender: false,
@@ -179,40 +139,48 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
         onAction={() => handleItemAction(item.id)}
         className={sidebarItemStyles({ isCurrent: isCurrentDocument })}
         style={{
-          paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.40rem)`,
+          paddingLeft: `calc(calc(var(--tree-item-level, 1) - 1) * 0.5rem + 0.5rem)`,
           paddingRight: "0.5rem",
         }}
+        data-nosnippet
       >
         <TreeItemContent>
           {({ isExpanded }) => (
-            <>
-              <div className="flex items-center gap-x-1.5 flex-1 min-w-0">
-                {/* Document icon with chevron on hover for items with children */}
-                {hasChildren ? (
-                  <Button
-                    slot="chevron"
-                    className="text-gray-400 hover:text-gray-700 p-1 -ml-1 group/chevron relative"
-                  >
-                    <CollectionsIcon
-                      className={`size-4 shrink-0 ${sidebarItemIconStyles()} transition-[opacity_100ms,transform_200ms] group-hover:opacity-0`}
-                    />
-                    <ChevronRightIcon
-                      className={`size-3 shrink-0 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 group-hover/chevron:text-black/50 transition-[opacity_100ms,transform_200ms] ${
+            <div className="flex items-center gap-x-1 flex-1 min-w-0">
+              {/* Document icon with chevron on hover for items with children */}
+              {hasChildren ? (
+                <Button
+                  slot="chevron"
+                  className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/chevron relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center"
+                >
+                  <CollectionsEmpty16Filled
+                    className={sidebarItemIconStyles({
+                      className:
+                        "size-4 shrink-0 transition-[opacity_100ms,transform_200ms] group-hover:opacity-0",
+                    })}
+                  />
+                  <CollapseArrow
+                    className={sidebarItemIconStyles({
+                      className: `size-3 shrink-0 absolute opacity-0 group-hover:opacity-100 text-black/45! transition-[opacity_100ms,transform_200ms] ${
                         isExpanded ? "rotate-90" : ""
-                      }`}
-                    />
-                  </Button>
-                ) : (
-                  <div className="text-gray-500 p-1 -ml-1">
-                    <DocumentIcon className={`size-4 shrink-0 ${sidebarItemIconStyles()}`} />
-                  </div>
-                )}
+                      }`,
+                    })}
+                  />
+                </Button>
+              ) : (
+                <div className="text-gray-500 p-1 -ml-1 flex">
+                  <DocumentIcon
+                    className={sidebarItemIconStyles({
+                      className: "size-4 shrink-0",
+                    })}
+                  />
+                </div>
+              )}
 
-                <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>
-                  {item.name.trim() || "Untitled document"}
-                </span>
-              </div>
-            </>
+              <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>
+                {item.name.trim() || "Untitled document"}
+              </span>
+            </div>
           )}
         </TreeItemContent>
         {item.children && <Collection items={item.children}>{renderItem}</Collection>}
@@ -223,7 +191,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
   return (
     <div className="flex gap-x-1 bg-[#f8f8f8] rounded-xl border border-black/10 shadow-inner p-1.5">
       {/* Sidebar */}
-      <div className="shrink-0 flex w-[240px] flex-col bg-white rounded-lg shadow-surface">
+      <div className="shrink-0 flex w-[240px] flex-col rounded-lg">
         <div className="flex flex-col grow min-h-0">
           <div className="flex items-center justify-between shrink-0 px-3 pt-3">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -250,11 +218,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
           <div className="overflow-hidden flex flex-col grow">
             <div className="flex py-8 overflow-y-auto grow flex-col scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white relative px-4">
               <div className="mx-auto w-full h-full max-w-[65ch] pb-8 flex flex-col">
-                <EditorContent
-                  editor={titleEditor}
-                  aria-label="Document title"
-                  className="mb-6 editor-content prose prose-lg max-w-none focus:outline-none font-semibold text-4xl"
-                />
+                <EditorContent editor={titleEditor} aria-label="Document title" />
                 <EditorContent
                   aria-label="Document content"
                   editor={contentEditor}

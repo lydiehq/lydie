@@ -2,9 +2,7 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useRef, useState } from "react";
 
-export function useDocumentSearch(
-  organizationId: string,
-) {
+export function useDocumentSearch(organizationId: string) {
   const searchFieldRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState("");

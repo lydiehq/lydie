@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Container } from "../components/Container";
+import Container from "../components/Container.astro";
 import { Button } from "../components/generic/Button";
 import { ChevronRightRegular, HomeRegular } from "@fluentui/react-icons";
 ---
@@ -28,7 +28,7 @@ import { ChevronRightRegular, HomeRegular } from "@fluentui/react-icons";
         you back on track.
       </p>
       <div class="flex justify-center mt-4">
-        <Button href="/" size="lg">
+        <Button href="/" size="lg" client:load>
           <div class="flex items-center gap-x-1">
             <HomeRegular className="size-4" />
             <span>Go to homepage</span>

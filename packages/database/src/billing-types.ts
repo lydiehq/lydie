@@ -22,11 +22,9 @@ export const PLAN_LIMITS: Record<
 > = {
   [PLAN_TYPES.FREE]: {
     name: "Free",
-    price: 0,
-    creditsPerMonth: 25,
-    creditsPerSeat: 25,
-    outputTokenCap: 25_000,
-    maxInternalCost: 0.35,
+    maxTokensPerPeriod: 100_000,
+    maxRequestsPerPeriod: 50,
+    maxMessagesPerDay: 30,
     features: {
       aiAssistant: true,
     },

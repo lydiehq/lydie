@@ -158,7 +158,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               </span>
             </div>
 
-            <div className="items-center gap-1 relative -mr-1">
+            <div className="items-center gap-1 relative -mr-0.5">
               <ItemContextMenu
                 type={item.type}
                 itemId={item.id}

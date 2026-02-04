@@ -6,9 +6,7 @@ import type { Editor } from "@tiptap/core";
  * Document type from Zero queries.
  * Use this type for editor-related components.
  */
-export type EditorDocument = NonNullable<
-  QueryResultType<typeof queries.documents.byId>
->;
+export type EditorDocument = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
 /**
  * Pending change from the AI assistant.

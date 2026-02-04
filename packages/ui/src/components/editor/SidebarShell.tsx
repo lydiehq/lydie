@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import clsx from "clsx";
 
 export interface SidebarShellProps {
@@ -28,16 +29,14 @@ export function SidebarShell({
   return (
     <div className={clsx("flex flex-col grow max-h-screen", className)}>
       {header}
-      
-      <div className={clsx(
-        "flex flex-col gap-y-4 pb-2",
-        isCollapsed ? "hidden" : "",
-        "grow min-h-0"
-      )}>
+
+      <div
+        className={clsx("flex flex-col gap-y-4 pb-2", isCollapsed ? "hidden" : "", "grow min-h-0")}
+      >
         {quickActions && <div className="flex gap-x-1 px-3">{quickActions}</div>}
-        
+
         {navigation && <div className="flex flex-col px-2">{navigation}</div>}
-        
+
         {(documentsHeader || documentsTree) && (
           <div className="flex flex-col grow min-h-0">
             {documentsHeader}
@@ -46,7 +45,7 @@ export function SidebarShell({
             </div>
           </div>
         )}
-        
+
         {usageStats && <div className="px-2">{usageStats}</div>}
         {bottom}
       </div>

@@ -1,6 +1,7 @@
 import { createId } from "@lydie/core/id";
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   PgColumn,
   boolean,
   index,
@@ -299,9 +300,15 @@ export const documentsTable = pgTable(
     uniqueIndex("documents_integration_organization_link_slug_key")
       .on(table.organizationId, table.integrationLinkId, table.slug)
       .where(sql`deleted_at IS NULL`),
-    index("documents_organization_id_idx").on(table.organizationId),
     index("documents_parent_id_idx").on(table.parentId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
+    // Below indexes are important for performance, don't delete!
+    index("documents_org_sort_created_id_not_deleted_idx")
+      .on(table.organizationId, table.sortOrder, sql`${table.createdAt} DESC`, table.id)
+      .where(sql`${table.deletedAt} IS NULL`),
+    index("documents_org_parent_not_deleted_sort_created_id_idx")
+      .on(table.organizationId, table.parentId, table.sortOrder, table.createdAt, table.id)
+      .where(sql`${table.deletedAt} IS NULL`),
   ],
 );
 
@@ -407,7 +414,13 @@ export const assistantConversationsTable = pgTable(
     }),
     ...timestamps,
   },
-  (table) => [index("assistant_conversations_organization_id_idx").on(table.organizationId)],
+  (table) => [
+    index("assistant_conversations_user_created_id_idx").on(
+      table.userId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
 );
 
 export const assistantMessagesTable = pgTable(
@@ -427,7 +440,13 @@ export const assistantMessagesTable = pgTable(
     metadata: jsonb("metadata"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (table) => [index("assistant_messages_conversation_id_idx").on(table.conversationId)],
+  (table) => [
+    index("assistant_messages_conversation_created_idx").on(
+      table.conversationId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
 );
 
 export const apiKeysTable = pgTable(
@@ -463,7 +482,6 @@ export const documentComponentsTable = pgTable("document_components", {
   ...timestamps,
 });
 
-// LLM usage tracking (unified for both document and assistant chat)
 export const llmUsageTable = pgTable(
   "llm_usage",
   {
@@ -496,7 +514,6 @@ export const userSettingsTable = pgTable("user_settings", {
     .notNull()
     .unique()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  persistDocumentTreeExpansion: boolean("persist_document_tree_expansion").notNull().default(true),
   ...timestamps,
 });
 
@@ -528,7 +545,13 @@ export const integrationConnectionsTable = pgTable(
     statusMessage: text("status_message"), // Optional error/status details
     ...timestamps,
   },
-  (table) => [index("integration_connections_organization_id_idx").on(table.organizationId)],
+  (table) => [
+    index("integration_connections_organization_created_id_idx").on(
+      table.organizationId,
+      table.createdAt,
+      table.id,
+    ),
+  ],
 );
 
 export const integrationLinksTable = pgTable(
@@ -554,9 +577,17 @@ export const integrationLinksTable = pgTable(
     ...timestamps,
   },
   (table) => [
-    index("integration_links_connection_id_idx").on(table.connectionId),
-    index("integration_links_organization_id_idx").on(table.organizationId),
+    index("integration_links_connection_created_id_idx").on(
+      table.connectionId,
+      table.createdAt,
+      table.id,
+    ),
     index("integration_links_integration_type_idx").on(table.integrationType),
+    index("integration_links_organization_created_id_idx").on(
+      table.organizationId,
+      table.createdAt,
+      table.id,
+    ),
   ],
 );
 
@@ -672,6 +703,7 @@ export const templatesTable = pgTable(
     teaser: text("teaser"),
     detailedDescription: text("detailed_description"),
     previewData: jsonb("preview_data"), // Serialized document tree for preview
+    thumbnailSrc: text("thumbnail_src"), // S3 URL for template thumbnail
     titleEmbedding: vector("title_embedding", { dimensions: 1536 }),
     ...timestamps,
   },
@@ -742,6 +774,9 @@ export const templateCategoriesTable = pgTable("template_categories", {
     .$default(() => createId()),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  parentId: text("parent_id").references((): AnyPgColumn => templateCategoriesTable.id, {
+    onDelete: "cascade",
+  }),
   ...timestamps,
 });
 
@@ -764,5 +799,26 @@ export const templateCategoryAssignmentsTable = pgTable(
     index("template_category_assignments_template_id_idx").on(table.templateId),
     index("template_category_assignments_category_id_idx").on(table.categoryId),
     uniqueIndex("template_category_assignments_unique_idx").on(table.templateId, table.categoryId),
+  ],
+);
+
+export const templateFaqsTable = pgTable(
+  "template_faqs",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    templateId: text("template_id")
+      .notNull()
+      .references(() => templatesTable.id, { onDelete: "cascade" }),
+    question: text("question").notNull(),
+    answer: text("answer").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    index("template_faqs_template_id_idx").on(table.templateId),
+    index("template_faqs_sort_order_idx").on(table.sortOrder),
   ],
 );

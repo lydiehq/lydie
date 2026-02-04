@@ -1,12 +1,12 @@
 import { openai } from "@ai-sdk/openai";
+import { getDefaultAgentById, getDefaultAgentByName } from "@lydie/core/ai/agents/defaults";
 import { chatModel } from "@lydie/core/ai/llm";
 import { createDocument } from "@lydie/core/ai/tools/create-document";
-import { listDocuments } from "@lydie/core/ai/tools/list-documents";
+import { findDocuments } from "@lydie/core/ai/tools/find-documents";
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
 import { readDocument } from "@lydie/core/ai/tools/read-document";
 import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
-import { searchDocuments } from "@lydie/core/ai/tools/search-documents";
-import { searchInDocument } from "@lydie/core/ai/tools/search-in-document";
+import { scanDocuments } from "@lydie/core/ai/tools/scan-documents";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
 import { VisibleError } from "@lydie/core/error";
 import { ingestCreditUsage } from "@lydie/core/billing/polar-credits";
@@ -90,6 +90,7 @@ export const AssistantRoute = new Hono<{
       const [newConversation] = await db
         .insert(assistantConversationsTable)
         .values({
+          id: conversationId,
           userId,
           organizationId,
           agentId: agentId || null,
@@ -192,31 +193,34 @@ export const AssistantRoute = new Hono<{
     let agentSystemPrompt: string;
 
     if (effectiveAgentId) {
-      const [agent] = await db
-        .select()
-        .from(assistantAgentsTable)
-        .where(eq(assistantAgentsTable.id, effectiveAgentId))
-        .limit(1);
+      // First check if it's a default agent (from code)
+      const defaultAgent = getDefaultAgentById(effectiveAgentId);
 
-      if (!agent) {
-        throw new HTTPException(404, {
-          message: "Agent not found",
-        });
+      if (defaultAgent) {
+        agentSystemPrompt = defaultAgent.systemPrompt;
+      } else {
+        // Check database for custom agents
+        const [agent] = await db
+          .select()
+          .from(assistantAgentsTable)
+          .where(eq(assistantAgentsTable.id, effectiveAgentId))
+          .limit(1);
+
+        if (!agent) {
+          throw new HTTPException(404, {
+            message: "Agent not found",
+          });
+        }
+
+        agentSystemPrompt = agent.systemPrompt;
       }
-
-      agentSystemPrompt = agent.systemPrompt;
     } else {
-      const [defaultAgent] = await db
-        .select()
-        .from(assistantAgentsTable)
-        .where(
-          and(eq(assistantAgentsTable.isDefault, true), eq(assistantAgentsTable.name, "Default")),
-        )
-        .limit(1);
+      // Use the "Default" agent from code
+      const defaultAgent = getDefaultAgentByName("Default");
 
       if (!defaultAgent) {
         throw new HTTPException(500, {
-          message: "Default agent not found. Please run the seed script.",
+          message: "Default agent configuration error",
         });
       }
 
@@ -255,16 +259,15 @@ export const AssistantRoute = new Hono<{
       web_search: openai.tools.webSearch({
         searchContextSize: "low",
       }),
-      search_documents: searchDocuments(userId, organizationId, currentDocument?.id),
+      find_documents: findDocuments(userId, organizationId, currentDocument?.id),
       read_document: readDocument(userId, organizationId),
-      list_documents: listDocuments(userId, organizationId, currentDocument?.id),
+      scan_documents: scanDocuments(userId, organizationId, currentDocument?.id),
       show_documents: showDocuments(userId, organizationId, currentDocument?.id),
       move_documents: moveDocuments(userId, organizationId),
       create_document: createDocument(userId, organizationId),
     };
 
     if (currentDocument?.id) {
-      tools.search_in_document = searchInDocument(currentDocument.id, userId, organizationId);
       tools.replace_in_document = replaceInDocument();
     }
 
@@ -280,12 +283,13 @@ export const AssistantRoute = new Hono<{
     return createAgentUIStreamResponse({
       agent,
       experimental_transform: smoothStream({
-        delayInMs: 10,
-        chunking: "line",
+        delayInMs: 3,
+        chunking: "word",
       }),
       uiMessages: await validateUIMessages({
         messages: enhancedMessages,
       }),
+      abortSignal: c.req.raw.signal,
       messageMetadata: ({ part }): MessageMetadata | undefined => {
         if (part.type === "start") {
           return {
@@ -300,7 +304,12 @@ export const AssistantRoute = new Hono<{
         }
         return undefined;
       },
-      onFinish: async ({ messages: finalMessages }) => {
+      onFinish: async ({ messages: finalMessages, isAborted }) => {
+        if (isAborted) {
+          console.log("Stream was aborted - skipping DB save");
+          return;
+        }
+
         const assistantMessage = finalMessages[finalMessages.length - 1];
 
         const savedMessage = await saveMessage({

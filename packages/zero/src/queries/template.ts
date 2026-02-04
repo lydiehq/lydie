@@ -30,7 +30,19 @@ export const templateQueries = {
       return zql.templates
         .where("id", args.templateId)
         .one()
-        .related("categoryAssignments", (q) => q.related("category"));
+        .related("categoryAssignments", (q) => q.related("category"))
+        .related("faqs");
+    },
+  ),
+
+  byIdWithFaqs: defineQuery(
+    z.object({
+      templateId: z.string(),
+    }),
+    ({ ctx, args }) => {
+      requireAdmin(ctx);
+
+      return zql.templates.where("id", args.templateId).one().related("faqs");
     },
   ),
 };

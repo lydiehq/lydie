@@ -99,7 +99,25 @@ export const organizationQueries = {
             .where("deleted_at", "IS", null)
             .where("title", "ILIKE", searchPattern)
             .orderBy("updated_at", "desc")
-            .limit(20),
+            .limit(10),
+        );
+    },
+  ),
+  documentTree: defineQuery(
+    z.object({ organizationSlug: z.string() }),
+    ({ args: { organizationSlug }, ctx }) => {
+      hasOrganizationAccessBySlug(ctx, organizationSlug);
+      return zql.organizations
+        .where("slug", organizationSlug)
+        .one()
+        .related("documents", (q) =>
+          q
+            .where("deleted_at", "IS", null)
+            .orderBy("sort_order", "asc")
+            .orderBy("created_at", "desc"),
+        )
+        .related("integrationConnections", (q) =>
+          q.orderBy("created_at", "desc").related("links", (links) => links),
         );
     },
   ),

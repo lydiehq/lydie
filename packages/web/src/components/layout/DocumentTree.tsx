@@ -7,13 +7,13 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useAtom } from "jotai";
 import { atom } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tree } from "react-aria-components";
 
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
-import { getUserStorage, removeUserStorage, setUserStorage } from "@/lib/user-storage";
+import { getUserStorage, setUserStorage } from "@/lib/user-storage";
 
 import { DocumentTreeItem } from "./DocumentTreeItem";
 
@@ -47,27 +47,9 @@ function saveToStorage(userId: string | null | undefined, keys: string[]): void 
   } catch {}
 }
 
-const documentTreeExpandedKeysAtom = atom<string[]>([]);
+export const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
-type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documents>>;
-
-function findParentDocumentIds(documentId: string, documents: QueryResult["documents"]): string[] {
-  const document = documents.find((doc) => doc.id === documentId);
-  if (!document || !document.parent_id) {
-    return [];
-  }
-
-  const parentIds: string[] = [];
-  let currentParentId: string | null = document.parent_id;
-
-  while (currentParentId) {
-    parentIds.push(currentParentId);
-    const parentDoc = documents.find((d) => d.id === currentParentId);
-    currentParentId = parentDoc?.parent_id ?? null;
-  }
-
-  return parentIds.reverse();
-}
+type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.documentTree>>;
 
 export function DocumentTree() {
   const { organization } = useOrganization();
@@ -75,29 +57,22 @@ export function DocumentTree() {
   const { session } = useAuth();
   const userId = session?.userId;
 
-  const [userSettings] = useQuery(queries.settings.user({}));
-  const persistExpansion = userSettings?.persist_document_tree_expansion ?? true;
-
   const [initialized, setInitialized] = useState(false);
   const [expandedKeysArray, setExpandedKeysArray] = useAtom(documentTreeExpandedKeysAtom);
 
   useEffect(() => {
-    if (!initialized && persistExpansion) {
+    if (!initialized) {
       const stored = loadFromStorage(userId);
       setExpandedKeysArray(stored);
       setInitialized(true);
-    } else if (!initialized) {
-      setInitialized(true);
     }
-  }, [initialized, persistExpansion, userId, setExpandedKeysArray]);
+  }, [initialized, userId, setExpandedKeysArray]);
 
   useEffect(() => {
-    if (initialized && persistExpansion) {
+    if (initialized) {
       saveToStorage(userId, expandedKeysArray);
-    } else if (initialized && !persistExpansion) {
-      removeUserStorage(userId, STORAGE_KEY);
     }
-  }, [initialized, persistExpansion, userId, expandedKeysArray]);
+  }, [initialized, userId, expandedKeysArray]);
 
   const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
 
@@ -105,101 +80,118 @@ export function DocumentTree() {
     setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
   };
 
+  // Single query fetches documents, integration connections, and links
   const [orgData] = useQuery(
-    queries.organizations.documents({
+    queries.organizations.documentTree({
       organizationSlug: organization.slug,
     }),
   );
 
-  const [connections] = useQuery(
-    queries.integrations.byOrganization({
-      organizationId: organization.id,
-    }),
+  const documents = useMemo(() => orgData?.documents || [], [orgData?.documents]);
+  const connections = useMemo(
+    () => orgData?.integrationConnections || [],
+    [orgData?.integrationConnections],
   );
 
-  const [extensionLinks] = useQuery(
-    queries.integrationLinks.byOrganization({
-      organizationId: organization.id,
-    }),
-  );
+  // Extract all links from connections (links are nested within each connection)
+  const extensionLinks = useMemo(() => {
+    const allLinks: Array<
+      NonNullable<QueryResult["integrationConnections"]>[number]["links"][number]
+    > = [];
 
-  const documents = orgData?.documents || [];
+    for (const connection of connections) {
+      if (connection.links) {
+        allLinks.push(...connection.links);
+      }
+    }
+    return allLinks;
+  }, [connections]);
 
-  const buildTreeItems = (parentId: string | null): TreeItem[] => {
-    const childDocs = documents.filter(
-      (doc) => doc.parent_id === parentId && !doc.integration_link_id,
-    );
-
-    const sortedDocs = [...childDocs].sort((a, b) => {
-      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
-    });
-
-    return sortedDocs.map((doc) => {
-      const children = buildTreeItems(doc.id);
-      return {
-        id: doc.id,
-        name: doc.title || "Untitled document",
-        type: "document" as const,
-        children: children.length > 0 ? children : undefined,
-        isLocked: doc.is_locked ?? false,
-        isFavorited: doc.is_favorited ?? false,
-      };
-    });
-  };
-
-  const buildLinkItems = (linkId: string): TreeItem[] => {
-    const linkDocs = documents.filter((doc) => doc.integration_link_id === linkId);
-
-    const buildNestedDocs = (parentId: string | null): TreeItem[] => {
-      const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
+  const buildTreeItems = useCallback(
+    (parentId: string | null): TreeItem[] => {
+      const childDocs = documents.filter(
+        (doc) => doc.parent_id === parentId && !doc.integration_link_id,
+      );
 
       const sortedDocs = [...childDocs].sort((a, b) => {
         return (a.sort_order ?? 0) - (b.sort_order ?? 0);
       });
 
       return sortedDocs.map((doc) => {
-        const children = buildNestedDocs(doc.id);
+        const children = buildTreeItems(doc.id);
         return {
           id: doc.id,
           name: doc.title || "Untitled document",
           type: "document" as const,
           children: children.length > 0 ? children : undefined,
-          integrationLinkId: doc.integration_link_id,
           isLocked: doc.is_locked ?? false,
           isFavorited: doc.is_favorited ?? false,
         };
       });
-    };
+    },
+    [documents],
+  );
 
-    return buildNestedDocs(null);
-  };
+  const buildLinkItems = useCallback(
+    (linkId: string): TreeItem[] => {
+      const linkDocs = documents.filter((doc) => doc.integration_link_id === linkId);
+
+      const buildNestedDocs = (parentId: string | null): TreeItem[] => {
+        const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
+
+        const sortedDocs = [...childDocs].sort((a, b) => {
+          return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+        });
+
+        return sortedDocs.map((doc) => {
+          const children = buildNestedDocs(doc.id);
+          return {
+            id: doc.id,
+            name: doc.title || "Untitled document",
+            type: "document" as const,
+            children: children.length > 0 ? children : undefined,
+            integrationLinkId: doc.integration_link_id,
+            isLocked: doc.is_locked ?? false,
+            isFavorited: doc.is_favorited ?? false,
+          };
+        });
+      };
+
+      return buildNestedDocs(null);
+    },
+    [documents],
+  );
 
   const linkGroups = useMemo(() => {
-    const connectionGroups = new Map<string, typeof connections>();
+    // Group connections by integration type
+    const connectionGroups = new Map<
+      string,
+      Array<NonNullable<QueryResult["integrationConnections"]>[number]>
+    >();
 
-    connections?.forEach((connection) => {
-      if (connection.status !== "active") return;
+    for (const connection of connections) {
+      if (connection.status !== "active") continue;
 
       const type = connection.integration_type;
-      if (!type) return;
+      if (!type) continue;
 
-      if (!connectionGroups.has(type)) {
-        connectionGroups.set(type, []);
-      }
-      connectionGroups.get(type)?.push(connection);
-    });
+      const group = connectionGroups.get(type) || [];
+      connectionGroups.set(type, [...group, connection]);
+    }
 
-    const linkGroupsByType = new Map<string, typeof extensionLinks>();
+    // Group links by integration type
+    const linkGroupsByType = new Map<
+      string,
+      Array<NonNullable<QueryResult["integrationConnections"]>[number]["links"][number]>
+    >();
 
-    extensionLinks.forEach((link) => {
-      const type = link.connection?.integration_type;
-      if (!type) return;
+    for (const link of extensionLinks) {
+      const type = link.integration_type;
+      if (!type) continue;
 
-      if (!linkGroupsByType.has(type)) {
-        linkGroupsByType.set(type, []);
-      }
-      linkGroupsByType.get(type)?.push(link);
-    });
+      const group = linkGroupsByType.get(type) || [];
+      linkGroupsByType.set(type, [...group, link]);
+    }
 
     const items: TreeItem[] = [];
 
@@ -223,7 +215,7 @@ export function DocumentTree() {
           id: `integration-link-${link.id}`,
           name: link.name,
           type: "integration-link",
-          integrationType: link.connection?.integration_type,
+          integrationType: link.integration_type,
           integrationLinkId: link.id,
           syncStatus: link.sync_status,
           children: buildLinkItems(link.id),
@@ -235,7 +227,7 @@ export function DocumentTree() {
     items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 
     return items;
-  }, [connections, extensionLinks, documents, buildLinkItems]);
+  }, [connections, extensionLinks, buildLinkItems]);
 
   const treeItems = [...linkGroups, ...buildTreeItems(null)];
 

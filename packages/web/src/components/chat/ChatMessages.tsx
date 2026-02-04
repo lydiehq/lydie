@@ -1,15 +1,22 @@
 import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 
 import { MoreVerticalRegular } from "@fluentui/react-icons";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
+import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { AnimatePresence, motion } from "motion/react";
 import { memo } from "react";
+import { useMemo } from "react";
 import { Button, DialogTrigger } from "react-aria-components";
 import { Streamdown } from "streamdown";
 import { StickToBottom } from "use-stick-to-bottom";
 
-import { Popover } from "@lydie/ui/components/generic/Popover";
-import { UserMessage } from "./Message";
+import { useOrganization } from "@/context/organization.context";
+import { type ParsedTextSegment, parseReferences } from "@/utils/parse-references";
+
+import { Logo } from "../layout/Logo";
+import { streamdownHeadings } from "./streamdown/headings";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
 import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";
 import { ReplaceInDocumentTool } from "./tools/ReplaceInDocumentTool";
@@ -20,13 +27,20 @@ type Props = {
   messages: DocumentChatAgentUIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   organizationId: string;
+  agentName?: string | null;
   onApplyContent?: (
     edits: any,
     onProgress?: (current: number, total: number, usedLLM: boolean) => void,
   ) => void;
 };
 
-export function ChatMessages({ messages, status, organizationId, onApplyContent }: Props) {
+export function ChatMessages({
+  messages,
+  status,
+  organizationId,
+  agentName,
+  onApplyContent,
+}: Props) {
   const lastMessage = messages[messages.length - 1];
   const isSubmitting =
     status === "submitted" && messages.length > 0 && lastMessage?.role === "user";
@@ -43,24 +57,23 @@ export function ChatMessages({ messages, status, organizationId, onApplyContent 
       resize="smooth"
       initial={{ damping: 1, stiffness: 1 }}
     >
-      <StickToBottom.Content className="flex flex-col gap-y-2 p-3">
-        <AnimatePresence initial={false}>
-          {messages.map((message, index) => (
-            <div key={message.id}>
-              {message.role === "user" ? (
-                <UserMessage message={message} />
-              ) : (
-                <AssistantMessageWithTools
-                  message={message}
-                  onApplyContent={onApplyContent}
-                  status={status}
-                  isLastMessage={index === messages.length - 1}
-                  organizationId={organizationId}
-                />
-              )}
-            </div>
-          ))}
-        </AnimatePresence>
+      <StickToBottom.Content className="flex flex-col gap-y-4 p-3">
+        {messages.map((message, index) => (
+          <div key={message.id}>
+            {message.role === "user" ? (
+              <UserMessage message={message} />
+            ) : (
+              <AssistantMessageWithTools
+                message={message}
+                onApplyContent={onApplyContent}
+                status={status}
+                isLastMessage={index === messages.length - 1}
+                organizationId={organizationId}
+                agentName={agentName}
+              />
+            )}
+          </div>
+        ))}
         {shouldShowLoading && <ThinkingIndicator />}
       </StickToBottom.Content>
     </StickToBottom>
@@ -69,20 +82,10 @@ export function ChatMessages({ messages, status, organizationId, onApplyContent 
 
 function ThinkingIndicator() {
   return (
-    <motion.div
-      className="flex justify-start w-full"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-x-2 text-gray-600 text-sm">
-          <ThinkingAnimation />
-          <span>Thinking</span>
-        </div>
-      </div>
-    </motion.div>
+    <div className="flex items-center gap-x-2 text-gray-600 text-sm">
+      <ThinkingAnimation />
+      <span>Thinking</span>
+    </div>
   );
 }
 
@@ -92,6 +95,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   status,
   isLastMessage,
   organizationId,
+  agentName,
 }: {
   message: DocumentChatAgentUIMessage;
   onApplyContent?: (
@@ -101,6 +105,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   status: "submitted" | "streaming" | "ready" | "error";
   isLastMessage: boolean;
   organizationId: string;
+  agentName?: string | null;
 }) {
   const formatDuration = (duration?: number) => {
     if (!duration) return "";
@@ -113,6 +118,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   );
 
   const shouldShowMetadata = status === "ready" || !isLastMessage;
+  const displayName = agentName || "Assistant";
 
   const handleApplyAll = async () => {
     if (!onApplyContent || replaceTools.length === 0) {
@@ -137,73 +143,83 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   };
 
   return (
-    <motion.div
-      className="flex justify-start w-full gap-y-1 flex-col"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-    >
-      <div className="flex flex-col">
-        {groupMessageParts(message.parts).map((group, index) => {
-          if (group.type === "research-group") {
-            const actions = group.parts
-              .map(extractActionFromToolPart)
-              .filter((a): a is NonNullable<typeof a> => a !== null);
-            const isLoading = actions.some((a) => a.status === "loading");
-            return <ResearchGroup key={index} actions={actions} isLoading={isLoading} />;
-          }
-          return (
-            <MessagePart
-              key={index}
-              part={group.part}
-              status={status}
-              isLastMessage={isLastMessage}
-              organizationId={organizationId}
-            />
-          );
-        })}
-      </div>
-      {shouldShowMetadata && (
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col gap-y-1">
-            {message.metadata?.createdAt && (
-              <span className="text-gray-400 text-[11px]">
-                {format(new Date(message.metadata.createdAt), "HH:mm")}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-x-1">
-            <DialogTrigger>
-              <Button className="p-0.5 hover:bg-gray-100 rounded">
-                <MoreVerticalRegular className="size-3" />
-              </Button>
-              <Popover>
-                <div className="flex flex-col gap-y-1 text-[11px] text-gray-500 divide-y divide-gray-200">
-                  {message.metadata?.duration && (
-                    <span className="p-0.5">
-                      Response time: {formatDuration(message.metadata.duration)}
-                    </span>
-                  )}
-                  {message.metadata?.usage && (
-                    <span className="p-0.5">Tokens used: {message.metadata.usage}</span>
-                  )}
-                  {onApplyContent && replaceTools.length > 0 && (
-                    <div className="p-0.5 pt-1">
-                      <Button
-                        onPress={handleApplyAll}
-                        className="text-[11px] text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded w-full text-left"
-                      >
-                        Apply all changes ({replaceTools.length})
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Popover>
-            </DialogTrigger>
-          </div>
+    <div className="flex flex-col gap-y-1.5">
+      <div className="flex items-center gap-x-2">
+        <div className="rounded-full bg-white p-1 ring ring-black/4">
+          <Logo className="size-3 text-gray-500" />
         </div>
-      )}
-    </motion.div>
+        <span className="text-sm font-medium text-gray-900">{displayName}</span>
+        {message.metadata?.createdAt && (
+          <span className="text-xs text-gray-400">
+            {format(new Date(message.metadata.createdAt), "HH:mm")}
+          </span>
+        )}
+      </div>
+
+      {/* Message content */}
+      <div className="flex justify-start w-full gap-y-1 flex-col">
+        <div className="flex flex-col">
+          {groupMessageParts(message.parts).map((group, index) => {
+            if (group.type === "research-group") {
+              const actions = group.parts
+                .map(extractActionFromToolPart)
+                .filter((a): a is NonNullable<typeof a> => a !== null);
+              const isLoading = actions.some((a) => a.status === "loading");
+              return <ResearchGroup key={index} actions={actions} isLoading={isLoading} />;
+            }
+            return (
+              <MessagePart
+                key={index}
+                part={group.part}
+                status={status}
+                isLastMessage={isLastMessage}
+                organizationId={organizationId}
+              />
+            );
+          })}
+        </div>
+        {shouldShowMetadata && (
+          <div className="flex justify-between items-center mt-1">
+            <div className="flex flex-col gap-y-1">
+              {message.metadata?.createdAt && (
+                <span className="text-gray-400 text-[11px]">
+                  {format(new Date(message.metadata.createdAt), "HH:mm")}
+                </span>
+              )}
+            </div>
+            <div className="flex gap-x-1">
+              <DialogTrigger>
+                <Button className="p-0.5 hover:bg-gray-100 rounded">
+                  <MoreVerticalRegular className="size-3" />
+                </Button>
+                <Popover>
+                  <div className="flex flex-col gap-y-1 text-[11px] text-gray-500 divide-y divide-gray-200">
+                    {message.metadata?.duration && (
+                      <span className="p-0.5">
+                        Response time: {formatDuration(message.metadata.duration)}
+                      </span>
+                    )}
+                    {message.metadata?.usage && (
+                      <span className="p-0.5">Tokens used: {message.metadata.usage}</span>
+                    )}
+                    {onApplyContent && replaceTools.length > 0 && (
+                      <div className="p-0.5 pt-1">
+                        <Button
+                          onPress={handleApplyAll}
+                          className="text-[11px] text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded w-full text-left"
+                        >
+                          Apply all changes ({replaceTools.length})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Popover>
+              </DialogTrigger>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 });
 
@@ -224,6 +240,7 @@ const MessagePart = memo(function MessagePart({
         isAnimating={status === "streaming" && isLastMessage}
         parseIncompleteMarkdown={true}
         components={{
+          ...streamdownHeadings,
           p: ({ children }) => <p className="text-gray-700 text-sm/relaxed">{children}</p>,
           li: ({ children }) => <li className="text-gray-700 text-sm/relaxed">{children}</li>,
         }}
@@ -369,5 +386,149 @@ function ThinkingAnimation() {
         />
       </circle>
     </svg>
+  );
+}
+
+export type UserMessageProps = {
+  message: DocumentChatAgentUIMessage;
+};
+
+export function UserMessage({ message }: UserMessageProps) {
+  return (
+    <div className="flex flex-col gap-y-1.5 items-end">
+      <div className="flex items-center gap-x-2">
+        <span className="text-sm font-medium text-gray-900">You</span>
+        {message.metadata?.createdAt && (
+          <span className="text-xs text-gray-400">
+            {format(new Date(message.metadata.createdAt), "HH:mm")}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col max-w-[80%] items-end">
+        <div className="bg-black/4 text-gray-600 rounded-xl rounded-tr-sm p-1.5 flex flex-col gap-y-1">
+          {message.parts?.map((part: any, index: number) => {
+            if (part.type === "text") {
+              return (
+                <TextWithReferences key={index} text={part.text} className="text-sm/relaxed" />
+              );
+            }
+            return null;
+          })}
+        </div>
+        <MessageContext message={message} align="right" />
+      </div>
+    </div>
+  );
+}
+
+// Renders text with inline reference pills
+// Optimized to only parse when references are detected
+function TextWithReferences({ text, className = "" }: { text: string; className?: string }) {
+  const segments = useMemo(() => parseReferences(text), [text]);
+
+  return (
+    <span className={`whitespace-pre-wrap ${className}`}>
+      {segments.map((segment, index) => {
+        if (segment.type === "text") {
+          return <span key={index}>{segment.content}</span>;
+        }
+
+        if (segment.type === "reference" && segment.reference) {
+          return <ReferenceSegment key={index} reference={segment.reference} />;
+        }
+
+        return null;
+      })}
+    </span>
+  );
+}
+
+function ReferenceSegment({ reference }: { reference: ParsedTextSegment["reference"] }) {
+  if (!reference) return null;
+
+  if (reference.type === "document") {
+    return <DocumentReferencePill documentId={reference.id} />;
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 font-medium">
+      {reference.type}
+    </span>
+  );
+}
+
+function DocumentReferencePill({ documentId }: { documentId: string }) {
+  const { organization } = useOrganization();
+  const [document] = useQuery(
+    queries.documents.byId({
+      organizationId: organization.id,
+      documentId,
+    }),
+  );
+
+  const title = document?.title || "Untitled";
+  const href = `/w/${organization.slug}/${documentId}`;
+
+  return (
+    <Link
+      to={href}
+      className="inline-flex px-0.5 rounded-sm items-center gap-x-1 relative before:bg-white/40 hover:before:bg-white/80 before:absolute before:inset-x-0 before:inset-y-px before:rounded-sm"
+      title={`Open document: ${title}`}
+    >
+      <span className="max-w-[150px] truncate text-sm relative">@{title}</span>
+    </Link>
+  );
+}
+
+function MessageContext({
+  message,
+  align = "left",
+}: {
+  message: DocumentChatAgentUIMessage;
+  align?: "left" | "right";
+}) {
+  const { organization } = useOrganization();
+  const metadata = message.metadata as any;
+
+  const contextDocuments = metadata?.contextDocuments || [];
+
+  if (contextDocuments.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}>
+      <div className="text-[10px] text-gray-500 font-medium mb-0.5">Context documents:</div>
+      <ul className={`flex flex-col gap-0.5 ${align === "right" ? "items-end" : "items-start"}`}>
+        {contextDocuments.map((doc: { id: string; title: string; current?: boolean }) => (
+          <li key={doc.id}>
+            <Link
+              to="/w/$organizationSlug/$id"
+              params={{ organizationSlug: organization.slug, id: doc.id }}
+              className="inline-flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 hover:underline transition-colors"
+              title={`Open document: ${doc.title}`}
+            >
+              <svg
+                className="size-3 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="max-w-[200px] truncate">
+                {doc.title}
+                {doc.current && " (current)"}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

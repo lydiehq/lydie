@@ -1,25 +1,52 @@
 ---
 interface Props {
   name: string;
-  description?: string;
+  teaser?: string;
   href?: string;
+  slug: string;
+  thumbnailSrc?: string | null;
 }
 
-const { name, description, href = "#" } = Astro.props;
+const { name, teaser, href = "#", thumbnailSrc } = Astro.props;
 ---
 
-<a href={href} class="flex flex-col gap-y-3 group">
-  <div class="w-full aspect-video bg-gray-100 rounded-lg border border-gray-200 group-hover:border-gray-300 transition-colors flex items-center justify-center">
-    <div class="text-gray-400 text-sm">Preview</div>
-  </div>
-  <div class="flex flex-col gap-y-1">
-    <h3 class="text-lg font-medium text-gray-900 group-hover:text-gray-700 transition-colors">
-      {name}
-    </h3>
-    {description && (
-      <p class="text-sm text-gray-600 line-clamp-2">
-        {description}
-      </p>
-    )}
-  </div>
-</a>
+<article>
+  <a 
+    href={href} 
+    class="group flex flex-col gap-3 no-underline text-inherit"
+    aria-label={`View ${name} template`}
+  >
+    <figure class="m-0 w-full">
+      <div 
+        class="relative w-full aspect-video bg-gray-100 rounded-lg border border-gray-200 overflow-hidden transition-colors duration-150 group-hover:border-gray-300"
+      >
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={`Preview of ${name} template`}
+            width="800"
+            height="450"
+            loading="lazy"
+            decoding="async"
+            class="w-full h-full object-cover"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          />
+        ) : null}
+        <div 
+          class={`absolute inset-0 flex items-center justify-center ${thumbnailSrc ? 'hidden' : ''}`}
+          data-fallback
+        >
+          <span class="text-sm text-gray-400">Preview</span>
+        </div>
+      </div>
+    </figure>
+    <div class="flex flex-col gap-1">
+      <h3 class="m-0 text-lg font-medium text-gray-900 transition-colors duration-150 group-hover:text-gray-700">
+        {name}
+      </h3>
+      {teaser && (
+        <p class="m-0 text-sm text-gray-600 line-clamp-2">{teaser}</p>
+      )}
+    </div>
+  </a>
+</article>

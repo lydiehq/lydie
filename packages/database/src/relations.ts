@@ -237,6 +237,7 @@ export const relations = defineRelations(schema, (r) => ({
     documents: r.many.templateDocumentsTable(),
     installations: r.many.templateInstallationsTable(),
     categoryAssignments: r.many.templateCategoryAssignmentsTable(),
+    faqs: r.many.templateFaqsTable(),
   },
   templateDocumentsTable: {
     template: r.one.templatesTable({
@@ -272,6 +273,11 @@ export const relations = defineRelations(schema, (r) => ({
   },
   templateCategoriesTable: {
     assignments: r.many.templateCategoryAssignmentsTable(),
+    parent: r.one.templateCategoriesTable({
+      from: r.templateCategoriesTable.parentId,
+      to: r.templateCategoriesTable.id,
+    }),
+    children: r.many.templateCategoriesTable(),
   },
   templateCategoryAssignmentsTable: {
     template: r.one.templatesTable({
@@ -281,6 +287,12 @@ export const relations = defineRelations(schema, (r) => ({
     category: r.one.templateCategoriesTable({
       from: r.templateCategoryAssignmentsTable.categoryId,
       to: r.templateCategoriesTable.id,
+    }),
+  },
+  templateFaqsTable: {
+    template: r.one.templatesTable({
+      from: r.templateFaqsTable.templateId,
+      to: r.templatesTable.id,
     }),
   },
 }));

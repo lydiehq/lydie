@@ -1,9 +1,8 @@
 import { DismissFilled } from "@fluentui/react-icons";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { Button } from "react-aria-components";
 
 import { DocumentMultiSelect } from "@/components/assistant/DocumentMultiSelect";
-
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 export type ChatContextItem = {
   id: string;

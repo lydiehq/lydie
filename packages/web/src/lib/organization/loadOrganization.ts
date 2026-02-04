@@ -4,6 +4,8 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { queries } from "@lydie/zero/queries";
 
+import { preloadSidebarData } from "@/lib/zero/instance";
+
 const STALE_TIME = 5 * 60 * 1000;
 
 type OrganizationQueryResult = NonNullable<QueryResultType<typeof queries.organizations.bySlug>>;
@@ -54,9 +56,14 @@ export async function loadOrganization(
   zero: Zero,
   organizationSlug: string,
 ): Promise<Organization> {
-  return await queryClient.ensureQueryData({
+  const organization = await queryClient.ensureQueryData({
     queryKey: getOrganizationQueryKey(organizationSlug),
     queryFn: () => fetchOrganization(zero, organizationSlug),
     staleTime: STALE_TIME,
   });
+
+  // Preload sidebar data for faster initial page loads
+  preloadSidebarData(zero, organizationSlug, organization.id);
+
+  return organization;
 }

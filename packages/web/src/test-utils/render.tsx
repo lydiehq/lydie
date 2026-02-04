@@ -22,9 +22,7 @@ const OrganizationContext = {
  */
 export function useTestOrganization() {
   if (!OrganizationContext.current) {
-    throw new Error(
-      "useTestOrganization called outside of TestOrganizationProvider",
-    );
+    throw new Error("useTestOrganization called outside of TestOrganizationProvider");
   }
   return { organization: OrganizationContext.current };
 }

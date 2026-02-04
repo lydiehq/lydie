@@ -78,6 +78,7 @@ function RouteComponent() {
           json: { redirectUrl },
         })
         .then((res: Response) => res.json());
+
       window.location.href = response.authUrl;
     } catch (error) {
       setIsConnecting(false);

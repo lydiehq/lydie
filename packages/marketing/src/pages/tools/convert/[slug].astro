@@ -1,11 +1,12 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { UniversalConverter } from "../../../components/tools/UniversalConverter";
 import { HowToSection } from "../../../components/tools/HowToSection";
 import { FAQSection } from "../../../components/tools/FAQSection";
 import { RelatedConverters } from "../../../components/tools/RelatedConverters";
 import { conversionConfigs } from "../../../data/conversions";
-import { Container } from "../../../components/Container";
+import Container from "../../../components/Container.astro";
 
 export function getStaticPaths() {
   return conversionConfigs.map((config) => ({
@@ -39,37 +40,6 @@ const structuredData = {
   ],
 };
 
-const breadcrumbData = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    {
-      "@type": "ListItem",
-      position: 1,
-      name: "Home",
-      item: "https://lydie.co",
-    },
-    {
-      "@type": "ListItem",
-      position: 2,
-      name: "Tools",
-      item: "https://lydie.co/tools",
-    },
-    {
-      "@type": "ListItem",
-      position: 3,
-      name: "Document Converter",
-      item: "https://lydie.co/tools/convert",
-    },
-    {
-      "@type": "ListItem",
-      position: 4,
-      name: config.h1,
-      item: `https://lydie.co/tools/convert/${config.slug}`,
-    },
-  ],
-};
-
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -89,53 +59,10 @@ const faqData = {
     type="application/ld+json"
     set:html={JSON.stringify(structuredData)}
   />
-  <script
-    type="application/ld+json"
-    set:html={JSON.stringify(breadcrumbData)}
-  />
   <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
   <Container className="py-12">
     <div class="class flex flex-col gap-y-4">
-      <nav class="flex text-[13px] text-gray-600" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center gap-x-1.5">
-          {
-            breadcrumbs.map((crumb, index) => {
-              const isLast = index === breadcrumbs.length - 1;
-              const isFirst = index === 0;
-              return (
-                <li
-                  class={isFirst ? "inline-flex items-center" : ""}
-                  aria-current={isLast ? "page" : undefined}
-                >
-                  <div class="flex items-center gap-x-1.5">
-                    {!isFirst && (
-                      <svg
-                        class="size-4 text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    )}
-                    {crumb.href ? (
-                      <a href={crumb.href} class="hover:text-gray-900">
-                        {crumb.label}
-                      </a>
-                    ) : (
-                      <span class="text-gray-900">{crumb.label}</span>
-                    )}
-                  </div>
-                </li>
-              );
-            })
-          }
-        </ol>
-      </nav>
+      <Breadcrumbs items={breadcrumbs} />
       <UniversalConverter config={config} client:load />
     </div>
     <HowToSection steps={config.howToSteps} />

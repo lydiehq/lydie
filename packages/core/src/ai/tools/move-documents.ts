@@ -7,9 +7,10 @@ type DocumentToMove = { id: string; title: string; parentId: string | null };
 
 export const moveDocuments = (userId: string, organizationId: string) =>
   tool({
-    description: `Move one or more documents to be children of another document (or to root level if no parent specified).
-Use this tool when the user asks to move documents or rearrange their workspace.
-You can move documents by their IDs or by searching for documents matching certain criteria.`,
+    description: `Move documents to a new parent (or to root level).
+
+Accepts document IDs or can move all documents. Prevents circular references automatically.
+Use for: reorganizing workspace, nesting documents, moving to different parents.`,
     inputSchema: z.object({
       documentIds: z
         .array(z.string())

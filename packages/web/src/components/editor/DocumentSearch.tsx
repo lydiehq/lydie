@@ -1,14 +1,13 @@
 import type { Document } from "@lydie/zero/schema";
 
 import { SearchFilled } from "@fluentui/react-icons";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import React, { useState } from "react";
 import { Input } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
-
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 
 interface DocumentSearchProps {
   onSelectDocument: (document: Document) => void;

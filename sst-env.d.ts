@@ -128,10 +128,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "replication-bucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
     "vpc": {
       "type": "sst.aws.Vpc"
     }

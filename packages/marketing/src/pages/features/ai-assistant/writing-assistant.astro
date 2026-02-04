@@ -1,0 +1,257 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import Container from "../../../components/Container.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import { Button } from "../../../components/generic/Button";
+import { ChevronRightRegular } from "@fluentui/react-icons";
+import { FAQSection } from "../../../components/tools/FAQSection";
+import { GradientOutline } from "../../../components/generic/GradientOutline";
+import Divider from "../../../components/landing/Divider.astro";
+import { CTASection } from "src/components/landing/CTASection";
+
+const title = "AI Writing Assistant - Lydie";
+const description =
+  "Generate high-quality content, expand ideas into full drafts, and overcome writer's block with AI-powered writing assistance built directly into your editor.";
+
+const faqItems = [
+  {
+    q: "How does the AI writing assistant help with content creation?",
+    a: "The AI writing assistant can help you draft new documents from scratch, expand bullet points into full paragraphs, generate outlines, continue your writing, and suggest improvements to existing content. Simply describe what you want to write, and the AI will generate a draft that you can refine and customize.",
+  },
+  {
+    q: "Can the AI write in my style or tone?",
+    a: "Yes! The AI adapts to your writing style by understanding the context of your existing documents. You can also provide specific instructions about tone (professional, casual, technical, etc.) and the AI will adjust its suggestions accordingly. The more you use it, the better it understands your preferences.",
+  },
+  {
+    q: "Does the AI replace human writers?",
+    a: "No. The AI writing assistant is designed to augment your creativity, not replace it. Think of it as a collaborative writing partner that helps you overcome writer's block, speeds up drafting, and suggests ideas you might not have considered. The final content always reflects your voice, vision, and expertise.",
+  },
+];
+---
+
+<style>
+  .ai-text {
+    position: relative;
+    display: inline-block;
+  }
+
+  .ai-highlight {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+    width: 0;
+    opacity: 0;
+    animation: highlight-grow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .ai-highlight-rtl {
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+    width: 0;
+    opacity: 0;
+    animation: highlight-grow-rtl 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+      forwards;
+  }
+
+  @keyframes highlight-grow {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: calc(100% + 4px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes highlight-grow-rtl {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    100% {
+      width: calc(100% + 4px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sparkle-appear {
+    0% {
+      opacity: 0;
+      transform: scale(0.5) rotate(-20deg);
+    }
+    50% {
+      transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  .sparkle-wrapper {
+    animation: sparkle-appear 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sparkle-wrapper-right {
+    right: -24px;
+    top: -8px;
+  }
+
+  .sparkle-wrapper-left {
+    left: -24px;
+    top: -8px;
+  }
+</style>
+
+<Layout title={title} description={description}>
+  <div class="max-w-4xl relative">
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="left: calc(50% - 388px)"
+    >
+    </div>
+    <div
+      class="fixed inset-y-0 w-1 border-r border-black/4"
+      style="right: calc(50% - 388px)"
+    >
+    </div>
+  </div>
+  <Container
+    className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-y-32"
+  >
+    <div class="w-full max-w-4xl">
+      <Breadcrumbs
+        items={[
+          { label: "Features", href: "/features" },
+          { label: "AI Assistant", href: "/features/ai-assistant" },
+          { label: "Writing Assistant" },
+        ]}
+      />
+    </div>
+    <div class="text-center relative py-12 size-full">
+      <GradientOutline />
+      <h1
+        class="text-3xl font-medium text-black/85 tracking-tight mb-6 leading-tight"
+      >
+        <span class="ai-text">
+          AI Writing Assistant
+          <span
+            class="ai-highlight"
+            style="background-color: #a855f733; animation-delay: 0s;"></span>
+          <span
+            class="sparkle-wrapper sparkle-wrapper-right"
+            style="animation-delay: 0.5s;"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L13.09 8.26L19 7L15.74 10.26L22 12L15.74 13.74L19 17L13.09 15.74L12 22L10.91 15.74L5 17L8.26 13.74L2 12L8.26 10.26L5 7L10.91 8.26L12 2Z"
+                fill="#a855f7"
+                stroke="#a855f7"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </span>
+      </h1>
+      <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
+        Generate high-quality content, expand ideas into full drafts, and
+        <br />
+        <span class="ai-text">
+          overcome writer's block
+          <span
+            class="ai-highlight-rtl"
+            style="background-color: #3b82f633; animation-delay: 0.2s;"></span>
+          <span
+            class="sparkle-wrapper sparkle-wrapper-left"
+            style="animation-delay: 0.7s;"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L13.5 8.5L20 7L15 11L20 15L13.5 13.5L12 20L10.5 13.5L4 15L9 11L4 7L10.5 8.5L12 2Z"
+                fill="#3b82f6"
+                stroke="#3b82f6"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </span> with intelligent writing suggestions.
+      </p>
+      <div class="flex items-center justify-center gap-4">
+        <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
+          <span>Start writing with AI</span>
+          <ChevronRightRegular className="size-4" />
+        </Button>
+        <a
+          href="/features/ai-assistant"
+          class="text-black/70 hover:text-black transition-colors text-sm font-medium"
+        >
+          All AI features
+        </a>
+      </div>
+    </div>
+    <div class="max-w-xl mx-auto flex flex-col gap-y-8">
+      <div class="prose mx-auto">
+        <h2>Turn Ideas Into Content</h2>
+        <p class="">
+          Lydie's AI writing assistant helps you create high-quality content
+          faster. Whether you're starting from a blank page or expanding
+          existing notes, the AI understands context and generates relevant,
+          well-structured content that matches your style and intent.
+        </p>
+        <p class="">
+          Simply describe what you want to write, and the AI will generate a
+          complete draft. Expand bullet points into full paragraphs, create
+          outlines that develop into detailed articles, or let the AI continue
+          your writing when you're stuck. The AI can create new documents,
+          expand existing content, and help you refine your ideas into polished
+          prose.
+        </p>
+
+        <h2>Intelligent Content Generation</h2>
+        <p class="">
+          The writing assistant excels at understanding context from your
+          existing documents. It can adapt to different writing styles—whether
+          you need professional documentation, casual blog posts, technical
+          guides, or creative content. The AI generates coherent drafts that you
+          can edit and customize, saving you hours of initial writing time.
+        </p>
+        <p class="">
+          Perfect for content creators, bloggers, technical writers, marketers,
+          and anyone who needs to produce written content regularly. The AI
+          handles the heavy lifting of first drafts, letting you focus on
+          refinement and adding your unique perspective.
+        </p>
+      </div>
+      <Divider />
+      <FAQSection faqs={faqItems} client:load />
+    </div>
+  </Container>
+  <CTASection client:load />
+</Layout>

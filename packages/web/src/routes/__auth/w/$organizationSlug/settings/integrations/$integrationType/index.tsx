@@ -1,8 +1,8 @@
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
 import { IntegrationLinkList } from "@/components/settings/integrations/IntegrationLinkList";
 import { useOrganization } from "@/context/organization.context";
 

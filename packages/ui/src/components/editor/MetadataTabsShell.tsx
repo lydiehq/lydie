@@ -1,5 +1,4 @@
 import { AddRegular } from "@fluentui/react-icons";
-import { motion } from "motion/react";
 import { useContext } from "react";
 import { DisclosureStateContext, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Tabs, TabList, Tab, TabPanels } from "react-aria-components";
@@ -67,15 +66,9 @@ export function MetadataTabsShell({
               {({ isSelected }) => (
                 <>
                   {isSelected && (
-                    <motion.span
-                      layoutId="active-tab-background"
+                    <span
                       className="absolute inset-0 bg-white shadow-surface rounded-full"
                       style={{ zIndex: -1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 30,
-                      }}
                     />
                   )}
                   Fields
@@ -92,15 +85,9 @@ export function MetadataTabsShell({
               {({ isSelected }) => (
                 <>
                   {isSelected && (
-                    <motion.span
-                      layoutId="active-tab-background"
+                    <span
                       className="absolute inset-0 bg-white shadow-surface rounded-full"
                       style={{ zIndex: -1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 30,
-                      }}
                     />
                   )}
                   <span>Documents</span>

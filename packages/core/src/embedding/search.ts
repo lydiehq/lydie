@@ -383,6 +383,7 @@ export async function findRelatedTemplates(templateId: string, limit: number = 6
         name: templatesTable.name,
         slug: templatesTable.slug,
         teaser: templatesTable.teaser,
+        thumbnailSrc: templatesTable.thumbnailSrc,
         similarity,
         createdAt: templatesTable.createdAt,
         updatedAt: templatesTable.updatedAt,

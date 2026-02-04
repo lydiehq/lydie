@@ -3,6 +3,7 @@
 @import "@lydie/ui/styles/editor-content.css";
 
 @import "@fontsource-variable/inter";
+@import "@fontsource/reenie-beanie";
 
 /* Scan UI package so Tailwind generates classes used by shared components */
 @source "../../../ui/src/**/*.{tsx,ts,jsx,js}";
@@ -13,7 +14,8 @@
 
 @theme {
   --font-sans: Inter Variable, sans-serif;
-  --shadow-surface: 0 1px 1.5px 0 rgba(0, 0, 0, 0.1), 0 0 1.5px 0 rgba(0, 0, 0, 0.3);
+  --font-handwritten: "Reenie Beanie", cursive;
+  --shadow-surface: 0px 0px 8px -4px rgba(0, 0, 0, 0.2), 0 0 1.5px 0 rgba(0, 0, 0, 0.2);
   --shadow-legit:
     0px 4px 20px 0px rgba(15, 12, 12, 0.08), 0px 8px 12px -4px rgba(15, 12, 12, 0.08),
     0px 0px 2px 0px rgba(15, 12, 12, 0.1), 0px 1px 2px 0px rgba(15, 12, 12, 0.1);
@@ -21,6 +23,10 @@
   --shadow-popover:
     0px 8px 12px -4px rgba(0, 0, 0, 0.2), 0px 0px 2px 0px rgba(0, 0, 0, 0.05),
     0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+
+  --shadow-keyboard-key:
+    0px 4px 20px 0px rgba(15, 12, 12, 0.08), 0px 8px 12px -4px rgba(15, 12, 12, 0.08),
+    0px 0px 2px 0px rgba(15, 12, 12, 0.1), 0px 1px 2px 0px rgba(15, 12, 12, 0.1);
 
   /* Use neutral gray colors as default gray */
   --color-gray-50: oklch(98.5% 0 0);
@@ -34,10 +40,19 @@
   --color-gray-800: oklch(26.9% 0 0);
   --color-gray-900: oklch(20.5% 0 0);
   --color-gray-950: oklch(14.5% 0 0);
+
+  --color-page-bg: rgb(248 248 248);
+}
+
+.bg-grain {
+  background-color: white;
+  background:
+    linear-gradient(to right, transparent, transparent),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='500'%20height='500'%3E%3Cfilter%20id='noise'%20x='0'%20y='0'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.65'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3CfeBlend%20mode='screen'/%3E%3C/filter%3E%3Crect%20width='500'%20height='500'%20filter='url(%23noise)'%20opacity='0.1'/%3E%3C/svg%3E");
 }
 
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -273,13 +288,39 @@ body {
   z-index: 10;
 }
 
-/* Long shadow container - holds both shadow and content layers */
-.long-shadow {
+.cast-shadow {
   position: relative;
-  --long-shadow-strength: 0.2;
+  --cast-shadow-border-radius: 0;
 }
 
-/* Shadow layer - positioned absolutely behind content */
+.cast-shadow__layer {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  filter: blur(10px);
+  z-index: 0;
+  pointer-events: none;
+  background: transparent;
+}
+
+.cast-shadow__layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--cast-shadow-border-radius);
+  background: transparent;
+}
+
+.cast-shadow__content {
+  position: relative;
+  z-index: 10;
+}
+
+/* Legacy classes for backward compatibility */
+.clip {
+  clip-path: polygon(0% 0%, 100% 0%, 200% 200%, 100% 200%, 0% 100%);
+}
+
 .long-shadow-layer {
   content: "";
   position: absolute;
@@ -290,27 +331,14 @@ body {
   background: transparent;
   z-index: 0;
   filter: blur(10px);
-  clip-path: polygon(0.5% 0.5%, 100% 0.5%, 200% 200%, 100% 200%, 0.5% 100%);
   box-shadow:
-    0px 0px 2px 0px rgba(0, 0, 0, 0.05),
-    0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-    15px 15px 0 0 rgba(0, 0, 0, calc(0.15 * var(--long-shadow-strength))),
-    30px 30px 0 0 rgba(0, 0, 0, calc(0.13 * var(--long-shadow-strength))),
-    45px 45px 0 0 rgba(0, 0, 0, calc(0.11 * var(--long-shadow-strength))),
-    60px 60px 0 0 rgba(0, 0, 0, calc(0.09 * var(--long-shadow-strength))),
-    75px 75px 0 0 rgba(0, 0, 0, calc(0.07 * var(--long-shadow-strength))),
-    90px 90px 0 0 rgba(0, 0, 0, calc(0.05 * var(--long-shadow-strength))),
-    105px 105px 0 0 rgba(0, 0, 0, calc(0.03 * var(--long-shadow-strength))),
-    120px 120px 0 0 rgba(0, 0, 0, calc(0.02 * var(--long-shadow-strength))),
-    135px 135px 0 0 rgba(0, 0, 0, calc(0.01 * var(--long-shadow-strength)));
-}
-
-/* Content layer - positioned absolutely on top */
-.long-shadow-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
+    15px 15px 0 0 rgba(0, 0, 0, calc(0.15 * var(--cast-shadow-strength))),
+    30px 30px 0 0 rgba(0, 0, 0, calc(0.13 * var(--cast-shadow-strength))),
+    45px 45px 0 0 rgba(0, 0, 0, calc(0.11 * var(--cast-shadow-strength))),
+    60px 60px 0 0 rgba(0, 0, 0, calc(0.09 * var(--cast-shadow-strength))),
+    75px 75px 0 0 rgba(0, 0, 0, calc(0.07 * var(--cast-shadow-strength))),
+    90px 90px 0 0 rgba(0, 0, 0, calc(0.05 * var(--cast-shadow-strength))),
+    105px 105px 0 0 rgba(0, 0, 0, calc(0.03 * var(--cast-shadow-strength))),
+    120px 120px 0 0 rgba(0, 0, 0, calc(0.02 * var(--cast-shadow-strength))),
+    135px 135px 0 0 rgba(0, 0, 0, calc(0.01 * var(--cast-shadow-strength)));
 }

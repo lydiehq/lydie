@@ -10,6 +10,7 @@ import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 import { clearSession } from "@/lib/auth/session";
+import { resetUser } from "@/lib/posthog";
 import { clearZeroInstance } from "@/lib/zero/instance";
 import { authClient } from "@/utils/auth";
 
@@ -33,6 +34,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
     await authClient.signOut();
     await clearSession(queryClient);
     clearZeroInstance();
+    resetUser();
     window.location.href = import.meta.env.DEV ? "http://localhost:3000" : "https://lydie.co";
   };
 
@@ -43,7 +45,7 @@ export function OrganizationMenu({ isCollapsed }: Props) {
           className={composeTailwindRenderProps(
             focusRing,
             clsx(
-              "group flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-md overflow-hidden aria-expanded:bg-black/3",
+              "group flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-lg overflow-hidden aria-expanded:bg-black/3",
               !isCollapsed && "px-1.5 py-0.5 -mx-1.5",
             ),
           )}

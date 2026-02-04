@@ -6,6 +6,7 @@ import { logger } from "hono/logger";
 import { hocuspocus } from "../hocuspocus-server";
 import { ExternalApi } from "./external";
 import { InternalApi } from "./internal";
+import { PostHogProxy } from "./posthog-proxy";
 import { PublicApi } from "./public";
 
 export const app = new Hono()
@@ -26,7 +27,8 @@ export const app = new Hono()
   })
   .route("/internal", InternalApi)
   .route("/v1/:idOrSlug", ExternalApi)
-  .route("/public", PublicApi);
+  .route("/public", PublicApi)
+  .route("/ingest", PostHogProxy);
 
 export const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
   app,

@@ -44,12 +44,18 @@ const iconMap: Record<string, any> = {
   image: ImageIcon,
 };
 
-const slashMenuItems: SlashMenuItem[] = allFormattingActions.map((action) => ({
-  id: action.id,
-  label: action.label,
-  icon: iconMap[action.id],
-  action,
-}));
+// Filter out text formatting actions (bold, italic, strike, code) from slash menu
+// These should only be accessible via toolbar or keyboard shortcuts
+const excludedSlashMenuIds = new Set(["bold", "italic", "strike", "code"]);
+
+const slashMenuItems: SlashMenuItem[] = allFormattingActions
+  .filter((action) => !excludedSlashMenuIds.has(action.id))
+  .map((action) => ({
+    id: action.id,
+    label: action.label,
+    icon: iconMap[action.id],
+    action,
+  }));
 
 type SlashMenuProps = {
   items: SlashMenuItem[];
@@ -108,14 +114,14 @@ export const SlashMenuList = forwardRef<
 
   if (props.items.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px]">
+      <div className="bg-white rounded-lg shadow-popover border border-gray-200 p-2 min-w-[200px]">
         <div className="text-xs text-gray-500 px-2 py-1">No results</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-1 min-w-[280px] max-h-[400px] overflow-y-auto">
+    <div className="bg-white rounded-lg shadow-popover border border-gray-200 p-1 min-w-[280px] max-h-[400px] overflow-y-auto">
       {props.items.map((item, index) => {
         const Icon = item.icon;
         return (

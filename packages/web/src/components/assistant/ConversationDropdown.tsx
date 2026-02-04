@@ -1,4 +1,9 @@
 import { ChevronDownRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { dropdownItemStyles } from "@lydie/ui/components/generic/ListBox";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { SearchField } from "@lydie/ui/components/generic/SearchField";
+import { SelectItem, SelectSection } from "@lydie/ui/components/generic/Select";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
@@ -7,18 +12,16 @@ import { useCallback, useMemo } from "react";
 import {
   Select as AriaSelect,
   Autocomplete,
+  composeRenderProps,
   ListBox,
+  ListBoxItem,
   Button as RACButton,
   SelectValue,
   useFilter,
 } from "react-aria-components";
 
-import { Popover } from "@lydie/ui/components/generic/Popover";
-import { SearchField } from "@lydie/ui/components/generic/SearchField";
-import { SelectItem, SelectSection } from "@lydie/ui/components/generic/Select";
 import { useOrganization } from "@/context/organization.context";
-
-import { Button } from "@lydie/ui/components/generic/Button";
+import { composeTailwindRenderProps } from "@/utils/focus-ring";
 
 type ConversationGroup = {
   title: string;
@@ -126,6 +129,7 @@ export function ConversationDropdown({
           onSelectConversation(key);
         }
       }}
+      aria-label="Select conversation"
       className="group flex flex-col gap-1 min-w-[200px]"
     >
       <Button intent="ghost" size="sm" className="justify-start">
@@ -145,7 +149,7 @@ export function ConversationDropdown({
           </div>
           <ListBox
             items={groupedConversations}
-            className="outline-none max-h-[400px] overflow-auto"
+            className="outline-none max-h-[400px] overflow-auto p-1"
             selectionMode="single"
           >
             {(group: ConversationGroup) => (
@@ -163,26 +167,21 @@ export function ConversationDropdown({
                   const isSelected = conversation.id === conversationId;
 
                   return (
-                    <SelectItem
-                      id={conversation.id}
+                    <ListBoxItem
                       textValue={title}
-                      className={isSelected ? "bg-blue-50" : ""}
+                      className={composeTailwindRenderProps(
+                        dropdownItemStyles,
+                        "flex justify-between",
+                      )}
                     >
-                      <div className="flex flex-col items-start gap-1 w-full">
-                        <div className="flex items-center gap-2 w-full">
-                          <span
-                            className={`text-sm flex-1 truncate ${isSelected ? "font-semibold" : ""}`}
-                          >
-                            {title.length > 40 ? title.substring(0, 40) + "..." : title}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500 ml-6">
-                          {formatDistanceToNow(new Date(conversation.updated_at), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
-                    </SelectItem>
+                      <span>{title}</span>
+                      <span className="text-xs text-gray-500">
+                        {" "}
+                        {formatDistanceToNow(new Date(conversation.updated_at), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </ListBoxItem>
                   );
                 }}
               </SelectSection>

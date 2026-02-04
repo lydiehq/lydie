@@ -82,6 +82,16 @@ export class HTMLSerializer implements NodeBuilder<string> {
     return `<li>${children.join("")}</li>`;
   }
 
+  taskList(children: string[]): string {
+    return `<ul data-type="taskList">${children.join("")}</ul>`;
+  }
+
+  taskItem(children: string[], checked?: boolean): string {
+    const checkedAttr =
+      checked === true ? ' data-checked="true"' : checked === false ? ' data-checked="false"' : "";
+    return `<li data-type="taskItem"${checkedAttr}>${children.join("")}</li>`;
+  }
+
   blockquote(children: string[]): string {
     return `<blockquote>${children.join("")}</blockquote>`;
   }

@@ -1,27 +1,24 @@
-import type { VariantProps } from "cva";
-
 import { cva } from "cva";
-import { type JSX } from "react";
-import { Heading as RACHeading } from "react-aria-components";
 
 const styles = cva({
-  base: "text-gray-950 leading-none font-heading",
+  base: "text-black/85 text-balance",
   variants: {
     level: {
-      1: "text-4xl/none font-medium",
-      2: "text-base/none font-medium",
-      3: "text-lg/none font-semibold",
-      4: "text-base/none font-semibold",
+      1: "tracking-tight font-medium text-3xl",
+      2: "tracking-tight font-medium text-3xl",
+      3: "text-lg font-semibold",
+      4: "text-base font-semibold",
     },
   },
 });
 
-type Props = JSX.IntrinsicElements["h1"] & VariantProps<typeof styles>;
+type Props = {
+  level?: 1 | 2 | 3 | 4;
+  className?: string;
+  [key: string]: any;
+};
 
-export function Heading({ children, level = 1, className, ...rest }: Props) {
-  return (
-    <RACHeading level={level} className={styles({ level, className })} {...rest}>
-      {children}
-    </RACHeading>
-  );
+export function Heading({ level = 1, className, ...rest }: Props) {
+  const Tag = `h${level}` as "h1" | "h2" | "h3" | "h4";
+  return <Tag className={styles({ level, className })} {...rest} />;
 }

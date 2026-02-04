@@ -1,31 +1,56 @@
 import { ChevronDownRegular } from "@fluentui/react-icons";
+import { getAllDefaultAgents } from "@lydie/core/ai/agents/defaults";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Popover } from "@lydie/ui/components/generic/Popover";
+import { SelectItem } from "@lydie/ui/components/generic/Select";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useMemo } from "react";
 import { Select as AriaSelect, ListBox, SelectValue } from "react-aria-components";
 
-import { Popover } from "@lydie/ui/components/generic/Popover";
-import { SelectItem } from "@lydie/ui/components/generic/Select";
 import { useOrganization } from "@/context/organization.context";
-
-import { Button } from "@lydie/ui/components/generic/Button";
 
 interface AgentSelectorProps {
   selectedAgentId: string | null;
   onSelectAgent: (agentId: string) => void;
 }
 
+interface CombinedAgent {
+  id: string;
+  name: string;
+  description: string | null;
+  is_default: boolean;
+}
+
 export function AgentSelector({ selectedAgentId, onSelectAgent }: AgentSelectorProps) {
   const { organization } = useOrganization();
-  const [agents] = useQuery(
-    queries.agents.available({
+  const [customAgents] = useQuery(
+    queries.agents.byUser({
       organizationId: organization.id,
     }),
   );
 
+  const allAgents = useMemo<CombinedAgent[]>(() => {
+    const defaults = getAllDefaultAgents().map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      is_default: true as const,
+    }));
+
+    const customs = (customAgents || []).map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      is_default: false as const,
+    }));
+
+    return [...defaults, ...customs];
+  }, [customAgents]);
+
   const currentAgent = useMemo(() => {
-    return agents?.find((a) => a.id === selectedAgentId);
-  }, [agents, selectedAgentId]);
+    return allAgents.find((a) => a.id === selectedAgentId);
+  }, [allAgents, selectedAgentId]);
 
   const displayName = useMemo(() => {
     if (currentAgent) {
@@ -34,7 +59,7 @@ export function AgentSelector({ selectedAgentId, onSelectAgent }: AgentSelectorP
     return "Default";
   }, [currentAgent]);
 
-  if (!agents || agents.length === 0) {
+  if (allAgents.length === 0) {
     return null;
   }
 
@@ -46,6 +71,7 @@ export function AgentSelector({ selectedAgentId, onSelectAgent }: AgentSelectorP
           onSelectAgent(key);
         }
       }}
+      aria-label="Select AI agent"
       className="group flex flex-col gap-1"
     >
       <Button intent="ghost" size="sm">
@@ -55,8 +81,8 @@ export function AgentSelector({ selectedAgentId, onSelectAgent }: AgentSelectorP
         <ChevronDownRegular className="size-3.5 text-gray-500 shrink-0" aria-hidden="true" />
       </Button>
       <Popover className="min-w-[250px] max-h-[400px] flex flex-col p-0" placement="bottom start">
-        <ListBox items={agents} className="outline-none overflow-auto" selectionMode="single">
-          {(agent: any) => {
+        <ListBox items={allAgents} className="outline-none overflow-auto" selectionMode="single">
+          {(agent: CombinedAgent) => {
             const isSelected = agent.id === selectedAgentId;
             const isDefault = agent.is_default;
 

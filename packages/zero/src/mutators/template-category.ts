@@ -37,9 +37,7 @@ export const templateCategoryMutators = {
     async ({ tx, ctx, args }) => {
       requireAdmin(ctx);
 
-      const category = await tx.run(
-        zql.template_categories.where("id", args.categoryId).one(),
-      );
+      const category = await tx.run(zql.template_categories.where("id", args.categoryId).one());
 
       if (!category) {
         throw new Error("Category not found");
@@ -63,9 +61,7 @@ export const templateCategoryMutators = {
     async ({ tx, ctx, args }) => {
       requireAdmin(ctx);
 
-      const category = await tx.run(
-        zql.template_categories.where("id", args.categoryId).one(),
-      );
+      const category = await tx.run(zql.template_categories.where("id", args.categoryId).one());
 
       if (!category) {
         throw new Error("Category not found");

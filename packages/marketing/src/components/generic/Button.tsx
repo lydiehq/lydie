@@ -1,6 +1,6 @@
+import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 import clsx from "clsx";
 import { type VariantProps, cva } from "cva";
-import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 import {
@@ -58,11 +58,13 @@ const styles = cva({
 
 type ButtonElementProps = ReactAriaButtonProps & {
   href?: undefined;
+  phCapture?: string;
 } & VariantProps<typeof styles>;
 
 type AnchorProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
   isPending?: boolean;
+  phCapture?: string;
 } & VariantProps<typeof styles>;
 
 export type ButtonProps = ButtonElementProps | AnchorProps;
@@ -74,10 +76,11 @@ const isAnchor = (props: ButtonProps): props is AnchorProps => {
 export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
   (props, ref) => {
     if (isAnchor(props)) {
-      const { className, children, ...rest } = props;
+      const { className, children, phCapture, ...rest } = props;
       return (
         <a
           {...rest}
+          data-ph-capture={phCapture}
           className={twMerge(
             focusRing({ isFocusVisible: false }),
             styles({
@@ -93,11 +96,12 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
       );
     }
 
-    const { className, children, ...rest } = props;
+    const { className, children, phCapture, ...rest } = props;
 
     return (
       <RAButton
         {...rest}
+        data-ph-capture={phCapture}
         ref={ref as any}
         className={composeTailwindRenderProps(
           focusRing,

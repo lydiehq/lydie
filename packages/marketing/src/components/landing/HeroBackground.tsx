@@ -8,8 +8,9 @@ interface HeroBackgroundProps {
 
 export function HeroBackground({ children, className = "" }: HeroBackgroundProps) {
   return (
-    <div className={`grainy-gradient-container custom-inner-shadow relative ${className}`}>
-      <div className="absolute bottom-0 inset-x-0 h-22 bg-linear-to-t from-black/20 z-20 gradient-overlay"></div>
+    <div
+      className={`grainy-gradient-container border border-black/10 custom-inner-shadow relative ${className}`}
+    >
       <svg className="grainy-gradient-svg">
         <filter id="noiseFilter">
           <feTurbulence

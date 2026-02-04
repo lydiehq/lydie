@@ -1,15 +1,11 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import HomePageContent from "../../components/landing/HomePageContent.astro";
+import { SITE_TAGLINE } from "../../config/site";
 
-// Set canonical URL to root domain to avoid duplicate content
-const canonicalURL = new URL("/", Astro.site);
+const canonicalURL = new URL(Astro.site ?? "").origin;
 ---
 
-<Layout
-  title="Lydie"
-  description="A minimal, powerful writing environment supercharged with AI."
-  canonicalURL={canonicalURL}
->
+<Layout title="Lydie" description={SITE_TAGLINE} canonicalURL={canonicalURL}>
   <HomePageContent />
 </Layout>

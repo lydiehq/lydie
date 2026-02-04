@@ -1,22 +1,118 @@
 ---
 import type { Category } from "../../data/categories";
+import { categoryIconMap } from "./category-icons";
 
 interface Props {
   category: Category;
 }
 
 const { category } = Astro.props;
+const categoryHref = category.path ?? `/templates/categories/${category.slug}`;
+
+// Get the appropriate icon for this category
+const CategoryIcon = categoryIconMap[category.slug];
+const hasIcon = !!CategoryIcon;
 ---
 
+<style>
+  .document-card {
+    transform: translateX(var(--rest-x)) translateY(var(--rest-y))
+      rotate(var(--rest-deg));
+  }
+
+  .group:hover .document-card {
+    transform: translateX(var(--hover-x)) translateY(var(--hover-y))
+      rotate(var(--hover-deg));
+  }
+
+  .embossed-icon :global(svg) {
+    filter: drop-shadow(1px 1px 0px rgba(255, 255, 255, 0.1))
+      drop-shadow(-1px -1px 0px rgba(0, 0, 0, 0.1));
+    opacity: 0.9;
+    color: #d4a574;
+  }
+</style>
+
 <a
-  href={`/templates/categories/${category.slug}`}
-  class="group flex flex-col gap-y-3 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+  href={categoryHref}
+  class="flex flex-col group/link no-underline text-inherit hover:text-inherit w-60"
 >
-  <div class="flex items-center gap-x-3">
-    <div class="flex-1 min-w-0">
-      <h3 class="text-base font-medium text-gray-900 truncate">
-        {category.name}
-      </h3>
+  <div class="relative group">
+    <div class="flex flex-col relative">
+      <div
+        class="rounded-t-xl bg-[#e8ad84] h-6 w-30 border-t border-x border-black/8 relative -mb-0.5"
+      >
+      </div>
+      <div
+        class="h-32 w-full bg-[#e8ad84] rounded-r-xl rounded-b-xl border border-black/8"
+      >
+      </div>
     </div>
+    <div
+      class="inset-x-0 top-8 bottom-0 absolute flex items-end justify-center"
+    >
+      <div class="relative h-32 w-28">
+        {
+          [
+            {
+              restDeg: -8,
+              hoverDeg: -12,
+              index: 0,
+              restX: "-1.5rem",
+              restY: "0.25rem",
+              hoverX: "-1.75rem",
+              hoverY: "-0.5rem",
+            },
+            {
+              restDeg: 0,
+              hoverDeg: 0,
+              index: 1,
+              restX: "0",
+              restY: "0",
+              hoverX: "0",
+              hoverY: "-1.25rem",
+            },
+            {
+              restDeg: 8,
+              hoverDeg: 12,
+              index: 2,
+              restX: "1.5rem",
+              restY: "0.25rem",
+              hoverX: "1.75rem",
+              hoverY: "-0.25rem",
+            },
+          ].map(
+            ({ restDeg, hoverDeg, index, restX, restY, hoverX, hoverY }) => (
+              <div
+                class="document-card absolute bottom-4 left-1/2 -translate-x-1/2 transition-all duration-300 ease-out rounded-lg ring ring-black/8 h-32 w-32 bg-white shadow-surface"
+                style={`z-index: ${index}; --rest-x: ${restX}; --rest-y: ${restY}; --hover-x: ${hoverX}; --hover-y: ${hoverY}; --rest-deg: ${restDeg}deg; --hover-deg: ${hoverDeg}deg; transform-origin: center bottom;`}
+              />
+            )
+          )
+        }
+      </div>
+    </div>
+    <div
+      class="inset-x-1 z-10 top-9 bottom-1 absolute group-hover:-skew-x-2 group-hover:translate-x-0.5 transition-all duration-200 ease-out group-hover:shadow-surface rounded-xl"
+    >
+      <div
+        class="h-full w-full bg-linear-to-br from-[#f8d4a8] to-[#f4c28e] rounded-b-lg rounded-t-xl ring ring-black/8 relative shadow-surface"
+      >
+        <div
+          class="absolute inset-1 border border-[#e8ad84] border-dashed rounded-lg"
+        >
+        </div>
+        {
+          hasIcon && (
+            <div class="absolute inset-0 flex items-center justify-center embossed-icon">
+              <CategoryIcon className="size-7" />
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </div>
+  <div class="flex mt-2">
+    <div class="text-sm font-medium text-gray-700">{category.name}</div>
   </div>
 </a>

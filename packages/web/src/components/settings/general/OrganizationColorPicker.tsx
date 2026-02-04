@@ -1,8 +1,7 @@
-import { WORKSPACE_COLORS } from "@lydie/core/workspace-colors";
-import { Radio, RadioGroup } from "react-aria-components";
-
+import { COLORS } from "@lydie/core/colors";
 import { Label } from "@lydie/ui/components/generic/Field";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { Radio, RadioGroup } from "react-aria-components";
 
 type OrganizationColorPickerProps = {
   selectedColor: string;
@@ -22,7 +21,7 @@ export function OrganizationColorPicker({
         orientation="horizontal"
         className="flex gap-3"
       >
-        {WORKSPACE_COLORS.slice(0, 10).map((color) => {
+        {COLORS.slice(0, 10).map((color) => {
           return (
             <TooltipTrigger key={color.value} delay={500}>
               <Radio

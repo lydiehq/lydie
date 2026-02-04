@@ -1,14 +1,15 @@
-import { Node } from "@tiptap/core"
-import type { NodeViewRenderer } from "@tiptap/core"
+import type { NodeViewRenderer } from "@tiptap/core";
+
+import { Node } from "@tiptap/core";
 
 export interface OnboardingTextPracticeTask {
-  id: string
-  label: string
-  completed: boolean
+  id: string;
+  label: string;
+  completed: boolean;
 }
 
 export interface OnboardingTextPracticeOptions {
-  addNodeView?: () => NodeViewRenderer
+  addNodeView?: () => NodeViewRenderer;
 }
 
 export const OnboardingTextPractice = Node.create<OnboardingTextPracticeOptions>({
@@ -20,7 +21,7 @@ export const OnboardingTextPractice = Node.create<OnboardingTextPracticeOptions>
   addOptions() {
     return {
       addNodeView: undefined,
-    }
+    };
   },
 
   addAttributes() {
@@ -32,7 +33,7 @@ export const OnboardingTextPractice = Node.create<OnboardingTextPracticeOptions>
           { id: "heading", label: "Create a heading", completed: false },
         ],
       },
-    }
+    };
   },
 
   parseHTML() {
@@ -43,7 +44,7 @@ export const OnboardingTextPractice = Node.create<OnboardingTextPracticeOptions>
           tasks: JSON.parse((node as HTMLElement).getAttribute("data-tasks") || "[]"),
         }),
       },
-    ]
+    ];
   },
 
   renderHTML({ node }) {
@@ -53,10 +54,10 @@ export const OnboardingTextPractice = Node.create<OnboardingTextPracticeOptions>
         "data-type": "onboarding-text-practice",
         "data-tasks": JSON.stringify(node.attrs.tasks),
       },
-    ]
+    ];
   },
 
   addNodeView() {
-    return this.options.addNodeView?.()
+    return this.options.addNodeView?.();
   },
-})
+});

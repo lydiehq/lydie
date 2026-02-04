@@ -1,5 +1,10 @@
 import { ChatFilled } from "@fluentui/react-icons";
 import { createId } from "@lydie/core/id";
+import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Modal } from "@lydie/ui/components/generic/Modal";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 import { DialogTrigger, Form, Heading, Button as RACButton } from "react-aria-components";
@@ -7,12 +12,6 @@ import { DialogTrigger, Form, Heading, Button as RACButton } from "react-aria-co
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
-
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Modal } from "@lydie/ui/components/generic/Modal";
-import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 
 export function FeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false);

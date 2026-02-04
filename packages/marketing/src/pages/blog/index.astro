@@ -1,7 +1,16 @@
 ---
+export const prerender = false;
+
+// ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+);
+
 import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
-import { Container } from "../../components/Container";
+import Container from "../../components/Container.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import { lydieClient } from "../../utils/lydie-client";
 
@@ -28,11 +37,12 @@ const remainingPosts = sortedPosts.slice(1);
 
 <Layout
   title="Blog - Lydie"
-  description="A minimal, powerful writing environment supercharged with AI."
+  description="Resources on writing, working in teams, and technical insights into Lydie."
 >
   <div class="py-8">
     <Container>
-      <header class="flex flex-col gap-y-2 mb-12">
+      <Breadcrumbs items={[{ label: "Blog" }]} />
+      <header class="flex flex-col gap-y-2 mb-12 mt-4">
         <h1 class="text-2xl font-medium text-gray-900">Blog</h1>
         <span class="text-base text-gray-700"
           >Resources on writing, working in teams, and technical insights into
@@ -48,7 +58,14 @@ const remainingPosts = sortedPosts.slice(1);
                 <div class="flex gap-x-4 items-center">
                   <div class="rounded-lg shadow-surface h-60 aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
                     <Image
-                      src={featuredPost.coverImage ? new URL(featuredPost.coverImage, Astro.site).toString() : "/blog.png"}
+                      src={
+                        featuredPost.coverImage
+                          ? new URL(
+                              featuredPost.coverImage,
+                              Astro.site,
+                            ).toString()
+                          : "/blog.png"
+                      }
                       alt=""
                       width={640}
                       height={360}
@@ -92,7 +109,10 @@ const remainingPosts = sortedPosts.slice(1);
                       {post.coverImage ? (
                         <div class="rounded-lg shadow-surface w-16 h-16 overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
                           <Image
-                            src={new URL(post.coverImage, Astro.site).toString()}
+                            src={new URL(
+                              post.coverImage,
+                              Astro.site,
+                            ).toString()}
                             alt=""
                             width={64}
                             height={64}

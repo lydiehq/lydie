@@ -1,8 +1,8 @@
 import { DismissRegular, ImageRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { mutators } from "@lydie/zero/mutators";
 import { useRef, useState } from "react";
 
-import { Button } from "@lydie/ui/components/generic/Button";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { useZero } from "@/services/zero";
 

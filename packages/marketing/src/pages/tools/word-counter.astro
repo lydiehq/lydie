@@ -1,0 +1,231 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import Container from "../../components/Container.astro";
+import { WordCounter as WordCounterTool } from "../../components/tools/WordCounter";
+import { HowToSection } from "../../components/tools/HowToSection";
+import { FAQSection } from "../../components/tools/FAQSection";
+import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
+
+export const prerender = true;
+
+const breadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "Tools", href: "/tools" },
+  { label: "Word Counter", href: null },
+];
+
+const howToSteps = [
+  "Type or paste your text into the text area. You can also click one of the example texts to get started.",
+  "Watch as the statistics update in real-time. You'll see word count, character count, sentences, and paragraphs.",
+  "View reading and speaking time estimates based on average speeds to plan your content duration.",
+  "Copy the statistics to your clipboard or download a full report with your text and all stats.",
+];
+
+const faqs = [
+  {
+    q: "Is my text stored or sent anywhere?",
+    a: "No, absolutely not. This word counter works entirely in your browser using JavaScript. Your text never leaves your device, and we don't store or have access to any of your content.",
+  },
+  {
+    q: "How is reading time calculated?",
+    a: "Reading time is calculated based on an average reading speed of 225 words per minute, which is the typical pace for comfortable reading. Speaking time uses 140 words per minute, the average conversational speaking speed.",
+  },
+  {
+    q: "What counts as a word?",
+    a: "A word is any sequence of characters separated by whitespace (spaces, tabs, or line breaks). Numbers and punctuation attached to letters count as part of the word.",
+  },
+  {
+    q: "How are sentences counted?",
+    a: "Sentences are counted by identifying text segments ending with period (.), exclamation mark (!), or question mark (?). This works for most standard writing.",
+  },
+  {
+    q: "What defines a paragraph?",
+    a: "A paragraph is defined as text separated by one or more blank lines. Single line breaks within continuous text don't create new paragraphs.",
+  },
+  {
+    q: "Can I use this for academic writing?",
+    a: "Yes! This tool is perfect for essays, research papers, and assignments that have word count requirements. The character count (without spaces) is useful for assignments with character limits.",
+  },
+  {
+    q: "Does it work offline?",
+    a: "Once the page is loaded, the word counter works completely offline since all processing happens in your browser. However, you need to load the page initially while online.",
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Word Counter",
+  description:
+    "Free online word counter with character count, sentence count, reading time, and more. Works entirely in your browser—your text stays private.",
+  applicationCategory: "UtilityApplication",
+  operatingSystem: "Web Browser",
+  featureList: [
+    "Free to use",
+    "No sign-up required",
+    "100% client-side and private",
+    "Real-time statistics",
+    "Reading and speaking time estimates",
+    "Detailed text analysis",
+  ],
+};
+
+const faqData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+};
+---
+
+<Layout
+  title="Free Word Counter | Character Count, Reading Time & Text Statistics"
+  description="Count words, characters, sentences, and paragraphs instantly. Get reading time estimates and detailed text statistics. 100% free and private—all processing happens in your browser."
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  />
+  <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
+  <Container className="py-12">
+    <div class="class flex flex-col gap-y-4">
+      <Breadcrumbs items={breadcrumbs} />
+      <WordCounterTool client:load />
+    </div>
+    <HowToSection steps={howToSteps} />
+
+    <div class="prose max-w-none">
+      <h2>About This Word Counter</h2>
+      <p>
+        Our free word counter is a simple yet powerful tool that provides
+        instant text analysis as you type. Unlike many word counters that send
+        your text to a server, this tool works entirely in your browser,
+        ensuring your content remains completely private.
+      </p>
+
+      <h3>What You Get</h3>
+      <p>
+        This isn't just a basic word counter. You get comprehensive statistics
+        about your text:
+      </p>
+      <ul>
+        <li>
+          <strong>Word Count:</strong> Accurate count of all words in your text
+        </li>
+        <li>
+          <strong>Character Count:</strong> Total characters including spaces, plus
+          a count without spaces for assignments with character limits
+        </li>
+        <li>
+          <strong>Sentence Count:</strong> Number of sentences to help gauge readability
+        </li>
+        <li>
+          <strong>Paragraph Count:</strong> Track how your content is structured
+        </li>
+        <li>
+          <strong>Reading Time:</strong> Estimated time to read your content at average
+          speed (225 WPM)
+        </li>
+        <li>
+          <strong>Speaking Time:</strong> How long it would take to speak your content
+          aloud (140 WPM)
+        </li>
+        <li>
+          <strong>Average Word Length:</strong> Insight into vocabulary complexity
+        </li>
+        <li>
+          <strong>Words per Sentence:</strong> Helps assess sentence complexity and
+          readability
+        </li>
+      </ul>
+
+      <h3>Who Is This For?</h3>
+      <p>This word counter is perfect for:</p>
+      <ul>
+        <li>
+          <strong>Students:</strong> Meet essay word counts, track dissertation progress,
+          or check character limits for applications
+        </li>
+        <li>
+          <strong>Writers and Authors:</strong> Monitor daily word count goals, track
+          manuscript length, or estimate reading time
+        </li>
+        <li>
+          <strong>Content Creators:</strong> Optimize blog posts for SEO, plan video
+          scripts with speaking time, or meet publication guidelines
+        </li>
+        <li>
+          <strong>Professionals:</strong> Keep reports within limits, time presentations,
+          or ensure proposals meet requirements
+        </li>
+        <li>
+          <strong>Social Media Managers:</strong> Stay within character limits for
+          various platforms
+        </li>
+        <li>
+          <strong>Translators:</strong> Calculate project scope and estimate delivery
+          time
+        </li>
+      </ul>
+
+      <h3>Why Privacy Matters</h3>
+      <p>
+        We believe your words are yours alone. That's why this tool processes
+        everything locally in your browser. Your text is never transmitted over
+        the internet, stored on our servers, or used for any purpose. When you
+        close the page, your text is gone—no traces, no logs, no data
+        collection.
+      </p>
+
+      <h3>Tips for Effective Use</h3>
+      <ul>
+        <li>
+          <strong>Set Writing Goals:</strong> Use the word counter to track progress
+          toward daily or project-based word count goals
+        </li>
+        <li>
+          <strong>Improve Readability:</strong> Check words per sentence—shorter sentences
+          (15-20 words) are generally easier to read
+        </li>
+        <li>
+          <strong>Plan Content Length:</strong> Use reading time estimates to create
+          content that matches your audience's attention span
+        </li>
+        <li>
+          <strong>Time Your Presentations:</strong> Speaking time estimates help you
+          plan presentations that fit your time slot
+        </li>
+        <li>
+          <strong>Meet Requirements:</strong> Whether it's a 500-word blog post or
+          a 2000-word essay, track your progress in real-time
+        </li>
+      </ul>
+
+      <h3>Understanding the Statistics</h3>
+      <p>
+        <strong>Reading Time:</strong> Based on 225 words per minute, which is the
+        average comfortable reading speed for adults. Silent reading speeds vary from
+        200-300 WPM depending on text complexity and reader experience.
+      </p>
+      <p>
+        <strong>Speaking Time:</strong> Calculated at 140 words per minute, the average
+        conversational speaking pace. Professional speakers and podcasters often aim
+        for 140-160 WPM for clarity and engagement.
+      </p>
+      <p>
+        <strong>Average Word Length:</strong> English averages about 4.7 characters
+        per word. Longer words can indicate more complex or technical writing, while
+        shorter words typically improve readability.
+      </p>
+    </div>
+    <FAQSection faqs={faqs} client:load />
+    <OtherToolsSection currentHref="/tools/word-counter" />
+  </Container>
+</Layout>

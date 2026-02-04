@@ -1,9 +1,10 @@
 import { ArrowClockwiseRegular, ErrorCircleRegular } from "@fluentui/react-icons";
+import { Button } from "@lydie/ui/components/generic/Button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 
-import { Button } from "@lydie/ui/components/generic/Button";
 import { Logo } from "@/components/layout/Logo";
+import { resetUser } from "@/lib/posthog";
 import { authClient } from "@/utils/auth";
 
 interface ErrorPageProps {
@@ -41,6 +42,7 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
     queryClient.removeQueries({
       queryKey: ["auth", "getSession"],
     });
+    resetUser();
     await router.invalidate();
     navigate({ to: "/auth" });
   };

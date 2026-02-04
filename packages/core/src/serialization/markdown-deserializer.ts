@@ -69,6 +69,50 @@ export function deserializeFromMarkdown(
       return [{ type: "text", text: "" }];
     }
 
+    // Parse placeholder HTML first: <span data-placeholder data-label="...">...</span>
+    const placeholderPattern =
+      /<span data-placeholder[^>]*data-label="([^"]*)"[^>]*>([^<]*)<\/span>/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = placeholderPattern.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        const beforeText = text.substring(lastIndex, match.index);
+        textNodes.push(...parseMarkdownLinks(beforeText));
+      }
+
+      const label = match[1];
+      const innerText = match[2];
+
+      // Create placeholder node with proper structure
+      textNodes.push({
+        type: "fieldPlaceholder",
+        attrs: { label },
+        content: [
+          {
+            type: "text",
+            text: innerText || label,
+          },
+        ],
+      });
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < text.length) {
+      const remainingText = text.substring(lastIndex);
+      textNodes.push(...parseMarkdownLinks(remainingText));
+    }
+
+    return textNodes.length > 0 ? textNodes : [{ type: "text", text: "" }];
+  };
+
+  const parseMarkdownLinks = (text: string): any[] => {
+    const textNodes: any[] = [];
+    if (!text) {
+      return [{ type: "text", text: "" }];
+    }
+
     const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
     let lastIndex = 0;
     let match;

@@ -26,10 +26,10 @@ export interface GetDocumentEditorExtensionsOptions {
   heading?: Partial<HeadingOptions>;
   documentComponent?: Partial<E.DocumentComponentOptions>;
   codeBlock?: Partial<E.CodeBlockOptions>;
-  onboardingStep?: Partial<E.OnboardingStepOptions>;
   onboardingTextPractice?: Partial<E.OnboardingTextPracticeOptions>;
   onboardingAssistantTask?: Partial<E.OnboardingAssistantTaskOptions>;
   slashCommands?: Partial<E.SlashCommandsOptions>;
+  placeholder?: Partial<E.PlaceholderOptions>;
   collaboration?: Partial<CollaborationOptions>;
   collaborationCaret?: Partial<CollaborationCaretOptions>;
 }
@@ -61,11 +61,11 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.KeyboardShortcutExtension,
     E.DocumentComponent.configure(options?.documentComponent),
     E.CodeBlock.configure(options?.codeBlock),
-    E.OnboardingStep.configure(options?.onboardingStep),
     E.OnboardingTextPractice.configure(options?.onboardingTextPractice),
     E.OnboardingAssistantTask.configure(options?.onboardingAssistantTask),
     E.IndentHandlerExtension,
     E.ImageUpload,
+    E.Placeholder.configure(options?.placeholder),
   ];
 
   // Add slash commands if configured

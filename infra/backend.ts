@@ -38,7 +38,6 @@ export const backend = new sst.aws.Service("Backend", {
   cpu: "0.25 vCPU",
   memory: "0.5 GB",
   architecture: "arm64",
-  capacity: "spot",
   loadBalancer: {
     domain: "api.lydie.co",
     rules: [
