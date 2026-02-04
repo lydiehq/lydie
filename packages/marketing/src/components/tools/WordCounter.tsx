@@ -236,7 +236,6 @@ ${text}`;
               }}
               placeholder="Start typing or paste your text here..."
               className="w-full min-h-[400px] p-4 ring ring-black/4 rounded-lg text-sm resize-y shadow-surface font-sans leading-relaxed"
-              autoFocus
             />
           </div>
 

@@ -15,7 +15,6 @@ export interface UseAssistantEditorOptions {
   onEnter?: () => void;
   onChange?: (editor: Editor) => void;
   placeholder?: string;
-  autoFocus?: boolean;
   initialContent?: string;
   editorClassName?: string;
 }
@@ -118,7 +117,6 @@ export function useAssistantEditor({
   onEnter,
   onChange,
   placeholder = "Ask anything. Use @ to refer to documents",
-  autoFocus = false,
   initialContent = "",
   editorClassName = "focus:outline-none min-h-[100px] max-h-[200px] overflow-y-auto text-sm text-gray-700",
 }: UseAssistantEditorOptions): AssistantEditorHandle {
@@ -143,7 +141,6 @@ export function useAssistantEditor({
   const editor = useEditor({
     extensions,
     content: initialContent,
-    autofocus: autoFocus,
     editorProps: {
       attributes: {
         class: editorClassName,
