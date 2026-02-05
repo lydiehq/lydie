@@ -99,6 +99,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "PosthogKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "ShopifyClientId": {
       "type": "sst.sst.Secret"
       "value": string

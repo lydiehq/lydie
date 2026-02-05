@@ -16,21 +16,21 @@ export const PostHogProxy = new Hono()
         },
       });
 
-      const headers = new Headers();
+      const responseHeaders = new Headers();
       response.headers.forEach((value, key) => {
         if (!["content-encoding", "transfer-encoding"].includes(key.toLowerCase())) {
-          headers.set(key, value);
+          responseHeaders.set(key, value);
         }
       });
 
-      headers.set("Access-Control-Allow-Origin", "*");
-      headers.set("Cache-Control", "public, max-age=31536000, immutable");
+      responseHeaders.set("Access-Control-Allow-Origin", "*");
+      responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
 
       const body = await response.arrayBuffer();
 
       return new Response(body, {
         status: response.status,
-        headers,
+        headers: responseHeaders,
       });
     } catch (error) {
       console.error("[PostHog Proxy] Asset error:", error);
@@ -42,34 +42,50 @@ export const PostHogProxy = new Hono()
     const targetUrl = `${POSTHOG_API_URL}${path}`;
 
     try {
+      // Build headers, preserving content-encoding for gzip compression
+      const requestHeaders: Record<string, string> = {
+        "User-Agent": c.req.header("user-agent") || "",
+      };
+
+      const contentType = c.req.header("content-type");
+      if (contentType) {
+        requestHeaders["Content-Type"] = contentType;
+      }
+
+      const contentEncoding = c.req.header("content-encoding");
+      if (contentEncoding) {
+        requestHeaders["Content-Encoding"] = contentEncoding;
+      }
+
+      // Read body as raw bytes to preserve gzip compression
+      let requestBody: ArrayBuffer | undefined;
+      if (c.req.method !== "GET" && c.req.method !== "HEAD") {
+        requestBody = await c.req.arrayBuffer();
+      }
+
       const response = await fetch(targetUrl, {
         method: c.req.method,
-        headers: {
-          "Content-Type": c.req.header("content-type") || "application/json",
-          "User-Agent": c.req.header("user-agent") || "",
-        },
-        body: c.req.method !== "GET" && c.req.method !== "HEAD" 
-          ? await c.req.text()
-          : undefined,
+        headers: requestHeaders,
+        body: requestBody,
       });
 
-      const headers = new Headers();
+      const responseHeaders = new Headers();
       response.headers.forEach((value, key) => {
         if (!["content-encoding", "transfer-encoding"].includes(key.toLowerCase())) {
-          headers.set(key, value);
+          responseHeaders.set(key, value);
         }
       });
 
-      headers.set("Access-Control-Allow-Origin", c.req.header("origin") || "*");
-      headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-      headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-      headers.set("Access-Control-Allow-Credentials", "true");
+      responseHeaders.set("Access-Control-Allow-Origin", c.req.header("origin") || "*");
+      responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      responseHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      responseHeaders.set("Access-Control-Allow-Credentials", "true");
 
-      const body = await response.text();
+      const responseBody = await response.text();
       
-      return new Response(body, {
+      return new Response(responseBody, {
         status: response.status,
-        headers,
+        headers: responseHeaders,
       });
     } catch (error) {
       console.error("[PostHog Proxy] Error:", error);

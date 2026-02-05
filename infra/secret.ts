@@ -24,4 +24,7 @@ export const secret = {
   // Shopify integration
   shopifyClientId: new sst.Secret("ShopifyClientId"),
   shopifyClientSecret: new sst.Secret("ShopifyClientSecret"),
+
+  // PostHog analytics (public key for client-side tracking)
+  posthogKey: new sst.Secret("PosthogKey"),
 };

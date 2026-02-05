@@ -35,7 +35,7 @@ export function initPostHog() {
 
     capture_performance: false,
 
-    loaded: (posthog) => {
+    loaded: (_posthog) => {
       if (import.meta.env.DEV) {
         console.info("[PostHog Marketing] Initialized");
       }
