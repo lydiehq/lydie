@@ -1,7 +1,8 @@
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "@/utils/auth";
@@ -14,6 +15,9 @@ export const Route = createFileRoute("/_landing/auth/")({
     template: z.string().optional(),
   }),
 });
+
+const QUERY_CACHE_KEY = "lydie:query:cache:session";
+const SESSION_QUERY_KEY = ["auth", "getSession"];
 
 function RouteComponent() {
   return (
@@ -65,6 +69,19 @@ function RouteComponent() {
 function AuthBox() {
   const [isPending, setIsPending] = useState(false);
   const { redirect, template } = Route.useSearch();
+  const queryClient = useQueryClient();
+
+  // Clear any stale session cache when visiting auth page
+  // This ensures fresh session data after OAuth redirect
+  useEffect(() => {
+    try {
+      localStorage.removeItem(QUERY_CACHE_KEY);
+      // Also clear React Query cache to ensure fresh fetch
+      queryClient.removeQueries({ queryKey: SESSION_QUERY_KEY });
+    } catch {
+      // Ignore errors
+    }
+  }, [queryClient]);
 
   const handleGoogleSignIn = async () => {
     setIsPending(true);

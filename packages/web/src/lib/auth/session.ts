@@ -2,13 +2,13 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { authClient } from "@/utils/auth";
 
-const SESSION_QUERY_KEY = ["auth", "getSession"];
+export const SESSION_QUERY_KEY = ["auth", "getSession"];
 const STALE_TIME = 5 * 60 * 1000;
 
 type SessionData = Awaited<ReturnType<typeof authClient.getSession>>["data"];
 
 // Extended session type that includes organizations from customSession plugin
-type ExtendedSessionData = SessionData & {
+export type ExtendedSessionData = SessionData & {
   session?: {
     organizations?: Array<{
       id: string;
@@ -18,6 +18,16 @@ type ExtendedSessionData = SessionData & {
     }>;
   };
 };
+
+// Query configuration for React Query
+export function getSessionQuery() {
+  return {
+    queryKey: SESSION_QUERY_KEY,
+    queryFn: fetchSession,
+    staleTime: 0, // Always revalidate on mount to catch auth state changes
+    retry: 2,
+  };
+}
 
 export type LoadSessionResult = {
   auth: SessionData | undefined;
@@ -67,4 +77,12 @@ export async function clearSession(queryClient: QueryClient) {
   queryClient.removeQueries({
     queryKey: SESSION_QUERY_KEY,
   });
+  // Clear persisted cache from localStorage to prevent stale data on next visit
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("lydie:query:cache:session");
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
 }

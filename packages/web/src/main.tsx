@@ -1,6 +1,7 @@
 import type { Zero } from "@rocicorp/zero";
 
-import { QueryClient, type QueryClient as QueryClientType } from "@tanstack/react-query";
+import { QueryClient, type Query, type QueryClient as QueryClientType } from "@tanstack/react-query";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
   CatchBoundary,
   type NavigateOptions,
@@ -8,6 +9,7 @@ import {
   type ToOptions,
   createRouter as createTanStackRouter,
 } from "@tanstack/react-router";
+import { persistQueryClientRestore, persistQueryClientSubscribe } from "@tanstack/react-query-persist-client";
 
 import "./styles/tailwind.css";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
@@ -27,8 +29,41 @@ export interface RouterContext {
   auth: Awaited<ReturnType<typeof authClient.getSession>>["data"];
 }
 
+// Create persister for localStorage
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: "lydie:query:cache:session",
+});
+
 function createRouter() {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 1000 * 60 * 60 * 24, // 24 hours
+      },
+    },
+  });
+
+  // Restore persisted data immediately (blocking render until restored)
+  // This loads the cached session from localStorage before the app renders
+  persistQueryClientRestore({
+    queryClient,
+    persister,
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
+  });
+
+  // Subscribe to persist changes - only persist the session query
+  persistQueryClientSubscribe({
+    queryClient,
+    persister,
+    dehydrateOptions: {
+      shouldDehydrateQuery: (query: Query) => {
+        // Only persist the session query
+        return query.queryKey[0] === "auth" && query.queryKey[1] === "getSession";
+      },
+    },
+  });
+
   return routerWithQueryClient(
     createTanStackRouter({
       routeTree,

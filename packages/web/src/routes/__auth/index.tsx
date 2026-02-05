@@ -4,7 +4,7 @@ import z from "zod";
 export const Route = createFileRoute("/__auth/")({
   component: RouteComponent,
   validateSearch: (search) => z.object({ template: z.string().optional() }).parse(search),
-  beforeLoad: async ({ context: { auth, organizations }, search }) => {
+  beforeLoad: async ({ context: { auth }, search }) => {
     let templateSlug = search.template;
     if (!templateSlug && typeof window !== "undefined") {
       const pendingTemplate = sessionStorage.getItem("pendingTemplateInstall");
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/__auth/")({
     }
 
     const activeOrganizationSlug = (auth?.session as any)?.activeOrganizationSlug;
+    const organizations = (auth?.session as any)?.organizations || [];
 
     if (activeOrganizationSlug) {
       throw redirect({
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/__auth/")({
       });
     }
 
-    if (organizations && organizations.length > 0) {
+    if (organizations.length > 0) {
       const firstOrg = organizations[0];
       throw redirect({
         to: "/w/$organizationSlug",

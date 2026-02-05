@@ -1,4 +1,5 @@
 import { Document16Regular } from "@fluentui/react-icons";
+import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -44,9 +45,9 @@ function PageComponent() {
                     key={doc.id}
                     to="/w/$organizationSlug/$id"
                     params={{ organizationSlug: organization.slug, id: doc.id }}
-                    className="flex items-center gap-2 h-10 px-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="flex items-center gap-2 h-10 px-2 rounded-lg hover:bg-black/3 transition-colors group"
                   >
-                    <Document16Regular className="size-4 text-gray-400 group-hover:text-gray-600" />
+                    <DocumentIcon className="size-4 icon-muted group-hover:text-gray-600" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {doc.title || "Untitled document"}
