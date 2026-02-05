@@ -4,7 +4,7 @@ const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
 
 const API_HOST = import.meta.env.DEV
   ? "http://localhost:3001/ingest"
-  : "https://api.lydie.co/ingest";
+  : (import.meta.env.VITE_POSTHOG_HOST || "https://api.lydie.co/ingest");
 
 export function initPostHog() {
   if (!POSTHOG_KEY) {

@@ -1,7 +1,7 @@
 ---
 const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY;
 const apiHost =
-  import.meta.env.DEV ? "http://localhost:3001/ingest" : "https://api.lydie.co/ingest";
+  import.meta.env.DEV ? "http://localhost:3001/ingest" : import.meta.env.PUBLIC_POSTHOG_HOST
 const uiHost = "https://us.i.posthog.com";
 ---
 

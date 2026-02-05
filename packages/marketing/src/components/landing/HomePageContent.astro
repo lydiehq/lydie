@@ -7,6 +7,7 @@ import UseCasesSection from "./UseCasesSection.astro";
 import { Hero } from "./Hero";
 import ProblemSolutionSection from "./ProblemSolutionSection.astro";
 import {
+  ChevronRightRegular,
   GlobeRegular,
   SearchRegular,
   ShareRegular,
@@ -16,12 +17,15 @@ import screenshot from "../../../public/screenshot3.png";
 import Divider from "./Divider.astro";
 import { DemoWithSelector } from "./DemoWithSelector";
 import { CastShadow } from "../generic/CastShadow";
+import { Button } from "../generic/Button";
 import { KeyboardSection } from "./KeyboardSection";
 import { FAQSection } from "../tools/FAQSection";
 import { GradientOutline } from "../generic/GradientOutline";
 import { DarkModeSection } from "./DarkModeSection";
 import { SectionHeader } from "./SectionHeader";
 import { CTASection } from "./CTASection";
+import { MultiDocumentChatSection } from "./MultiDocumentChatSection";
+import { SpeedSection } from "./SpeedSection";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -119,29 +123,7 @@ const faqItems = [
 </Container>
 <Divider />
 <Container className="relative my-24 max-w-4xl mx-auto">
-  <GradientOutline />
-  <div class="grid grid-cols-2 z-0">
-    <CastShadow className="w-full" strength={0.2}>
-      <div
-        class="flex flex-col flex-1 h-[320px] rounded-xl shadow-legit bg-white overflow-hidden relative"
-      >
-        <div
-          class="size-full"
-          style="mask-image: linear-gradient(to bottom, transparent 0%, black 0%, black 0%, transparent 100%);"
-        >
-        </div>
-      </div>
-    </CastShadow>
-    <div class="flex flex-col gap-y-2 col-span-1 justify-center max-w-sm pl-12">
-      <h2 class="text-3xl tracking-tight font-medium text-black/85">
-        Experience the delight of writing
-      </h2>
-      <p class="text-base/relaxed text-black/60 max-w-xl text-balance">
-        At Lydie's core is an ergonomic editor that feels natural - whether
-        you're drafting quick notes or deep documentation.
-      </p>
-    </div>
-  </div>
+  <SpeedSection />
 </Container>
 
 <!-- <Container className="flex flex-col gap-y-12 relative" size="sm">
@@ -166,6 +148,12 @@ const faqItems = [
 </Container> -->
 
 <Divider logo />
+
+<Container className="my-24 relative">
+  <MultiDocumentChatSection client:load />
+</Container>
+
+<Divider />
 
 <Container>
   <KeyboardSection client:visible />

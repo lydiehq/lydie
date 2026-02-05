@@ -177,11 +177,11 @@ function RouteLayout() {
         </Group>
       </div>
       <div ref={floatingAssistantContainerRef} />
-      {/* <FloatingAssistant
+      <FloatingAssistant
         currentDocumentId={currentDocumentId}
         dockedContainer={dockedAssistantContainer}
         floatingContainer={floatingAssistantContainer}
-      /> */}
+      />
       {search.installTemplate && (
         <InstallTemplateDialog
           isOpen={isTemplateDialogOpen}
