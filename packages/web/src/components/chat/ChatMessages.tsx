@@ -239,6 +239,13 @@ const MessagePart = memo(function MessagePart({
       <Streamdown
         isAnimating={status === "streaming" && isLastMessage}
         parseIncompleteMarkdown={true}
+        linkSafety={{
+          enabled: true,
+          onLinkCheck: (url) => {
+            // Allow internal links without modal
+            return url.startsWith("/w/") || url.startsWith("#") || url.startsWith("/");
+          },
+        }}
         components={{
           ...streamdownHeadings,
           p: ({ children }) => <p className="text-gray-700 text-sm/relaxed">{children}</p>,
