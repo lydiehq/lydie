@@ -4,7 +4,9 @@
   "scripts": {
     "copy-integration-assets": "bun run src/copy-integration-assets.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@lydie/core": "workspace:*"
+  },
   "devDependencies": {
     "@types/bun": "^1.3.8",
     "@types/node": "^25.2.0"

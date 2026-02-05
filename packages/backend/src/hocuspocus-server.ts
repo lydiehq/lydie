@@ -50,7 +50,6 @@ export const hocuspocus = new Hocuspocus({
             return null;
           }
 
-          // Convert base64 string back to Uint8Array
           const buffer = Buffer.from(result[0].yjsState, "base64");
           return new Uint8Array(buffer);
         } catch {
@@ -108,11 +107,12 @@ export const hocuspocus = new Hocuspocus({
         id: session.user.id,
         name: session.user.name,
       };
-    } catch (error) {
-      console.error("Authentication failed:", error);
+    } catch {
       throw new Error("Authentication failed");
     }
   },
 
-  debounce: 25000,
+  // Debounced save for active editing sessions (5s after last change)
+  // Short enough for good UX, long enough to batch rapid changes
+  debounce: 5000,
 });

@@ -366,7 +366,7 @@ export function CommandMenu() {
                         id={item.id}
                         textValue={item.label}
                         onAction={() => handleCommand(item.action)}
-                        className={`relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
+                        className={`relative flex select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
                       >
                         {item.iconUrl ? (
                           <img

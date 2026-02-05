@@ -5,15 +5,14 @@ import type { EditorView } from "@tiptap/pm/view";
 
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { COLORS } from "@lydie/core/colors";
-import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import { getDocumentEditorExtensions } from "@lydie/editor";
 import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Y from "yjs";
 
-import { getSharedWebSocket } from "./shared-websocket";
+import { documentConnectionManager } from "./document-connection-manager";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
@@ -48,8 +47,6 @@ type UseDocumentEditorProps = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
 };
 
-const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001/yjs";
-
 export function useDocumentEditor({
   doc,
   onUpdate,
@@ -61,47 +58,36 @@ export function useDocumentEditor({
   const isLocked = doc.is_locked ?? false;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Create Y.Doc and HocuspocusProvider for this document
-  const { ydoc, provider } = useMemo(() => {
-    if (!doc.id) return { ydoc: null, provider: null };
+  // Track if component is mounted
+  const isMountedRef = useRef(true);
 
-    const yjsState = new Y.Doc();
+  // Get or create connection from the global manager
+  const [connection] = useState(() => {
+    return documentConnectionManager.getConnection(doc.id, doc.yjs_state);
+  });
 
-    // Initialize document with existing state if available
-    if (doc.yjs_state) {
-      try {
-        const bytes = base64ToUint8Array(doc.yjs_state);
-        Y.applyUpdate(yjsState, bytes);
-      } catch (error) {
-        console.error("[useDocumentEditor] Error applying initial Yjs state:", error);
-      }
-    }
-
-    const sharedSocket = getSharedWebSocket(yjsServerUrl);
-
-    const hocuspocusProvider = new HocuspocusProvider({
-      websocketProvider: sharedSocket,
-      name: doc.id,
-      document: yjsState,
-    });
-
-    // Must call attach() when using shared socket
-    hocuspocusProvider.attach();
-
-    return { ydoc: yjsState, provider: hocuspocusProvider };
-  }, [doc.id, doc.yjs_state]);
-
-  // Cleanup provider and ydoc when doc.id changes or unmounts
+  // Keep connection alive while this component is mounted
   useEffect(() => {
+    isMountedRef.current = true;
+
+    // Mark as active
+    documentConnectionManager.keepAlive(doc.id);
+
+    // Set up keep-alive interval (every 30 seconds)
+    const keepAliveInterval = setInterval(() => {
+      if (isMountedRef.current) {
+        documentConnectionManager.keepAlive(doc.id);
+      }
+    }, 30000);
+
     return () => {
-      if (provider) {
-        provider.destroy();
-      }
-      if (ydoc) {
-        ydoc.destroy();
-      }
+      isMountedRef.current = false;
+      clearInterval(keepAliveInterval);
     };
   }, [doc.id]);
+
+  const ydoc = connection.ydoc;
+  const provider = connection.provider;
 
   const userInfo = useMemo(() => {
     return user
@@ -185,12 +171,10 @@ function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
 
       const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
       if (validImageTypes.includes(file.type) && parseFloat(filesize) < 10) {
-        // Check image dimensions
         const _URL = window.URL || window.webkitURL;
         const img = new Image();
         img.src = _URL.createObjectURL(file);
         img.onload = function () {
-          // Allow images up to 5000px in width/height
           if (img.width > 5000 || img.height > 5000) {
             window.alert("Your images need to be less than 5000 pixels in height and width.");
             _URL.revokeObjectURL(img.src);
@@ -217,8 +201,7 @@ function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
                 window.alert("There was a problem loading your image, please try again.");
               };
             })
-            .catch(function (error) {
-              console.error("Failed to upload image:", error);
+            .catch(function () {
               window.alert("There was a problem uploading your image, please try again.");
             })
             .finally(() => {
@@ -230,14 +213,14 @@ function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
           window.alert("Invalid image file. Please try again.");
         };
 
-        return true; // Handled
+        return true;
       } else {
         window.alert(
           "Images need to be in jpg, png, webp, or gif format and less than 10MB in size.",
         );
-        return true; // Handled (even if invalid)
+        return true;
       }
     }
-    return false; // Not handled, use default behaviour
+    return false;
   };
 }
