@@ -61,4 +61,29 @@ export const documentQueries = {
         .limit(20);
     },
   ),
+
+  // Preload recent documents for fast navigation - similar to zbugs pattern
+  // Preloads ~100 most recently updated documents with full content/relationships
+  recent: defineQuery(
+    z.object({
+      organizationId: z.string(),
+      limit: z.number().optional(),
+    }),
+    ({ args: { organizationId, limit = 100 }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.documents
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
+        .related("parent")
+        .related("children", (q) =>
+          q
+            .where("deleted_at", "IS", null)
+            .orderBy("sort_order", "asc")
+            .orderBy("created_at", "asc"),
+        )
+        .related("organization")
+        .orderBy("updated_at", "desc")
+        .limit(limit);
+    },
+  ),
 };

@@ -4,7 +4,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { queries } from "@lydie/zero/queries";
 
-import { preloadSidebarData } from "@/lib/zero/instance";
+import { preloadWorkspaceData } from "@/lib/zero/instance";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -62,8 +62,9 @@ export async function loadOrganization(
     staleTime: STALE_TIME,
   });
 
-  // Preload sidebar data for faster initial page loads
-  preloadSidebarData(zero, organizationSlug, organization.id);
+  // Preload workspace data for instant navigation
+  // Follows zbugs pattern: preload "any data the app needs within one click"
+  preloadWorkspaceData(zero, organizationSlug, organization.id);
 
   return organization;
 }

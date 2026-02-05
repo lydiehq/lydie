@@ -107,6 +107,11 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "PosthogProxy": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "ShopifyClientId": {
       "type": "sst.sst.Secret"
       "value": string
