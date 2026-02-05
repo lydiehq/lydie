@@ -8,7 +8,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { atom } from "jotai";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Tree } from "react-aria-components";
 
 import { useAuth } from "@/context/auth.context";
@@ -90,19 +90,29 @@ export function DocumentTree() {
     [orgData?.integrationConnections],
   );
 
-  // Auto-expand ancestors of current document (ephemeral - not persisted)
-  const autoExpandedKeys = useMemo(() => {
-    return getAncestorIds(currentDocId, documents);
-  }, [currentDocId, documents]);
-
-  // Combine user-expanded and auto-expanded keys for rendering
-  const expandedKeys = useMemo(() => {
-    return new Set([...expandedKeysArray, ...autoExpandedKeys]);
-  }, [expandedKeysArray, autoExpandedKeys]);
-
   const handleExpandedChange = (keys: Set<Key>) => {
     setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
   };
+
+  // Track previous document ID to detect navigation
+  const prevDocIdRef = useRef<string | undefined>(undefined);
+
+  // Auto-expand ancestors when navigating to a new document
+  useEffect(() => {
+    if (currentDocId && currentDocId !== prevDocIdRef.current && documents.length > 0) {
+      const ancestorIds = getAncestorIds(currentDocId, documents);
+
+      // Add ancestors to expanded state (persisted)
+      setExpandedKeysArray((prev) => {
+        const newKeys = new Set([...prev, ...ancestorIds]);
+        return Array.from(newKeys);
+      });
+
+      prevDocIdRef.current = currentDocId;
+    }
+  }, [currentDocId, documents, setExpandedKeysArray]);
+
+  const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
 
   // Extract all links from connections (links are nested within each connection)
   const extensionLinks = useMemo(() => {
