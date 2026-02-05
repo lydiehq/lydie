@@ -5,6 +5,7 @@ import { processDocumentEmbedding } from "@lydie/core/embedding/document-process
 import { db } from "@lydie/database";
 import { documentsTable, membersTable } from "@lydie/database/schema";
 import { and, eq } from "drizzle-orm";
+import * as Y from "yjs";
 
 async function verifyDocumentAccess(documentId: string, userId: string): Promise<boolean> {
   try {
@@ -36,6 +37,7 @@ async function verifyDocumentAccess(documentId: string, userId: string): Promise
 }
 
 export const hocuspocus = new Hocuspocus({
+  quiet: true,
   extensions: [
     new Database({
       fetch: async ({ documentName }) => {
@@ -112,7 +114,22 @@ export const hocuspocus = new Hocuspocus({
     }
   },
 
-  // Debounced save for active editing sessions (5s after last change)
-  // Short enough for good UX, long enough to batch rapid changes
+  async onDisconnect({ documentName, document }) {
+    // Save immediately when any client disconnects
+    // This prevents stale data when:
+    // 1. User refreshes page before debounce fires
+    // 2. User leaves while others are still editing (their changes should persist)
+    const yjsState = Y.encodeStateAsUpdate(document);
+    const base64State = Buffer.from(yjsState).toString("base64");
+
+    await db
+      .update(documentsTable)
+      .set({
+        yjsState: base64State,
+        updatedAt: new Date(),
+      })
+      .where(eq(documentsTable.id, documentName));
+  },
+
   debounce: 5000,
 });

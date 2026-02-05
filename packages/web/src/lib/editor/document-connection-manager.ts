@@ -1,4 +1,5 @@
 import { HocuspocusProvider } from "@hocuspocus/provider";
+import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import * as Y from "yjs";
 
 import { getSharedWebSocket } from "./shared-websocket";
@@ -43,12 +44,8 @@ class DocumentConnectionManager {
 
     // Apply initial state if available
     if (initialYjsState) {
-      try {
-        const bytes = Buffer.from(initialYjsState, "base64");
-        Y.applyUpdate(ydoc, new Uint8Array(bytes));
-      } catch {
-        // Silently fail - document will be empty but collaboration will still work
-      }
+      const bytes = base64ToUint8Array(initialYjsState);
+      Y.applyUpdate(ydoc, bytes);
     }
 
     const sharedSocket = getSharedWebSocket(yjsServerUrl);
