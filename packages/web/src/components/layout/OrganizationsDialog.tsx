@@ -1,4 +1,5 @@
 import { ChevronRightRegular } from "@fluentui/react-icons";
+import { getDefaultColorForId } from "@lydie/core/colors";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Modal } from "@lydie/ui/components/generic/Modal";
@@ -70,7 +71,11 @@ export function OrganizationsDialog({
                     isDisabled={organization?.slug === o.slug}
                     className="flex items-center gap-x-2 relative p-1.5 hover:bg-black/5 rounded-xl group"
                   >
-                    <OrganizationAvatar organization={o} size="lg" />
+                    <OrganizationAvatar
+                      name={o.name}
+                      color={o.color ?? getDefaultColorForId(o.id)}
+                      size="lg"
+                    />
                     <div className="font-medium text-black text-sm">
                       {o.name}
                       {organization?.slug === o.slug && (

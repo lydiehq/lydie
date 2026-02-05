@@ -69,6 +69,32 @@ export async function revalidateSession(queryClient: QueryClient) {
   });
 }
 
+// Wait for session to reflect organization changes (with retries)
+export async function waitForSessionUpdate(
+  queryClient: QueryClient,
+  checkFn: (session: ExtendedSessionData | undefined) => boolean,
+  maxAttempts = 10,
+  delayMs = 200,
+): Promise<boolean> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const session = await queryClient.fetchQuery({
+      queryKey: SESSION_QUERY_KEY,
+      queryFn: fetchSession,
+      staleTime: 0,
+    }) as ExtendedSessionData | undefined;
+
+    if (checkFn(session)) {
+      return true;
+    }
+
+    if (attempt < maxAttempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  return false;
+}
+
 // Clear session data (useful for logout)
 export async function clearSession(queryClient: QueryClient) {
   await queryClient.invalidateQueries({

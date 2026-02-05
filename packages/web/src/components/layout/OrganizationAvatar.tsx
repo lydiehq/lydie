@@ -1,7 +1,4 @@
-import { getRandomColor } from "@lydie/core/colors";
 import { type VariantProps, cva } from "cva";
-
-import { useOrganization } from "@/context/organization.context";
 
 const avatarStyles = cva({
   base: [
@@ -21,18 +18,11 @@ const avatarStyles = cva({
 
 type OrganizationAvatarProps = VariantProps<typeof avatarStyles> & {
   className?: string;
-  organization?: { name?: string | null; color?: string | null } | null;
+  name?: string | null;
+  color: string;
 };
 
-export function OrganizationAvatar({
-  size,
-  className,
-  organization: organizationProp,
-}: OrganizationAvatarProps) {
-  const { organization: organizationFromContext } = useOrganization();
-  const organization = organizationProp ?? organizationFromContext;
-  const color = organization?.color || getRandomColor().value;
-
+export function OrganizationAvatar({ size, className, name, color }: OrganizationAvatarProps) {
   return (
     <div
       className={avatarStyles({ size, className })}
@@ -41,7 +31,7 @@ export function OrganizationAvatar({
       }}
       aria-hidden="true"
     >
-      {organization?.name?.slice(0, 1).toUpperCase() || ""}
+      {name?.slice(0, 1).toUpperCase() ?? ""}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 
 import { Surface } from "@/components/layout/Surface";
+import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
@@ -23,13 +24,15 @@ function PageComponent() {
 
   const hasDocuments = latestDocuments && latestDocuments.length > 0;
 
+  const { user } = useAuth();
+
   return (
-    <div className="h-screen p-1">
+    <div className="h-screen py-1 pr-1 pl-px">
       <Surface className="overflow-y-auto size-full">
         <div className="max-w-4xl mx-auto p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              Welcome to {organization.name}
+            <h1 className="text-2xl font-medium text-gray-900 mb-2">
+              Welcome back, {user?.name ? `${user.name.split(" ")[0]}!` : ""}
             </h1>
             <p className="text-gray-500">Here are the documents you've been working on recently.</p>
           </div>

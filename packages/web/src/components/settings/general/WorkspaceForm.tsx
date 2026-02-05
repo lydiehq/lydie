@@ -1,15 +1,12 @@
 import { getRandomColor } from "@lydie/core/colors";
+import { COLORS } from "@lydie/core/colors";
 import { slugify } from "@lydie/core/utils";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { mutators } from "@lydie/zero/mutators";
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Form } from "react-aria-components";
-import { toast } from "sonner";
 
 import { useAppForm } from "@/hooks/use-app-form";
-import { revalidateSession } from "@/lib/auth/session";
 import { useZero } from "@/services/zero";
 
 import { OrganizationColorPicker } from "./OrganizationColorPicker";
@@ -25,11 +22,10 @@ type WorkspaceFormProps = {
 
 export function WorkspaceForm({ organization }: WorkspaceFormProps) {
   const z = useZero();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [selectedColor, setSelectedColor] = useState<string>(
     organization.color || getRandomColor().value,
   );
+  const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const workspaceForm = useAppForm({
     defaultValues: {
@@ -37,22 +33,24 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
       slug: organization.slug,
     },
     onSubmit: async (values) => {
+      // Clear any previous messages
+      setFormMessage(null);
+
       if (!values.value.name.trim()) {
-        toast.error("Workspace name cannot be empty");
+        setFormMessage({ type: "error", message: "Workspace name cannot be empty" });
         return;
       }
 
       if (!values.value.slug.trim()) {
-        toast.error("Workspace slug cannot be empty");
+        setFormMessage({ type: "error", message: "Workspace slug cannot be empty" });
         return;
       }
 
+      // Auto-correct the slug to ensure it's properly formatted
       const slugified = slugify(values.value.slug.trim());
       if (slugified !== values.value.slug.trim()) {
-        toast.error(
-          "Slug contains invalid characters. Only letters, numbers, and hyphens are allowed.",
-        );
-        return;
+        // Update the form field with the corrected slug
+        workspaceForm.setFieldValue("slug", slugified);
       }
 
       const hasChanges =
@@ -65,7 +63,6 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
       }
 
       const slugChanged = slugified !== organization.slug;
-      let mutationSucceeded = false;
 
       try {
         const write = z.mutate(
@@ -79,22 +76,14 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
 
         await write.server;
 
-        mutationSucceeded = true;
+        setFormMessage({ type: "success", message: "Workspace updated successfully" });
 
-        toast.success("Workspace updated successfully");
-
-        if (slugChanged && mutationSucceeded) {
-          try {
-            await revalidateSession(queryClient);
-          } catch (sessionError) {
-            // If session refresh fails, log but don't block navigation
-            console.error("Failed to refresh session:", sessionError);
-          }
-
-          navigate({
-            to: "/w/$organizationSlug/settings",
-            params: { organizationSlug: slugified },
-          });
+        // If slug changed, do a hard refresh to the new URL
+        // This ensures the session is completely fresh from the server
+        if (slugChanged) {
+          const newUrl = `/w/${slugified}/settings`;
+          window.location.href = newUrl;
+          return; // Don't continue - page will reload
         }
       } catch (error: any) {
         let errorMessage = "Failed to update workspace";
@@ -111,10 +100,9 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
           errorMessage = error.toString();
         }
 
-        toast.error(errorMessage);
+        setFormMessage({ type: "error", message: errorMessage });
         console.error("Workspace update error:", error);
 
-        mutationSucceeded = false;
         return;
       }
     },
@@ -148,13 +136,23 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
         )}
       />
       <OrganizationColorPicker selectedColor={selectedColor} onColorChange={setSelectedColor} />
+      {formMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`text-sm ${formMessage.type === "error" ? "text-red-600" : "text-green-600"}`}
+        >
+          {formMessage.message}
+        </div>
+      )}
       <div className="flex justify-end gap-x-1">
         <Button
           intent="secondary"
           size="sm"
           onPress={() => {
             workspaceForm.reset();
-            setSelectedColor(organization.color || WORKSPACE_COLORS[0].value);
+            setSelectedColor(organization.color || COLORS[0].value);
+            setFormMessage(null);
           }}
         >
           Cancel

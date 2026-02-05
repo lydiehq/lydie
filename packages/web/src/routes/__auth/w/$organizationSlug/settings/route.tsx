@@ -1,5 +1,6 @@
 import {
   ArrowUploadFilled,
+  ChevronLeft16Filled,
   CubeFilled,
   DocumentCopyFilled,
   OpenFilled,
@@ -112,6 +113,13 @@ function RouteComponent() {
       <Surface className="overflow-y-auto">
         <div className="mx-auto max-w-5xl gap-x-8 flex size-full grow p-12 overflow-visible">
           <nav aria-label="Settings navigation" className="w-[200px] shrink-0">
+            <Link
+              to="/w/$organizationSlug"
+              from="/w/$organizationSlug/settings"
+              aria-label="Back to home"
+            >
+              <ChevronLeft16Filled className="size-4 text-gray-400" />
+            </Link>
             <ul className="flex flex-col gap-y-2">
               {settingsRoutes.map((section) => (
                 <li key={section.title} className="flex flex-col gap-y-2">
