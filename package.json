@@ -50,7 +50,7 @@
   "dependencies": {
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
-    "framer-motion": "^12.31.0"
+    "framer-motion": "^12.31.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

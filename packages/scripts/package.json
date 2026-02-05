@@ -2,7 +2,8 @@
   "name": "@lydie/scripts",
   "type": "module",
   "scripts": {
-    "copy-integration-assets": "bun run src/copy-integration-assets.ts"
+    "copy-integration-assets": "bun run src/copy-integration-assets.ts",
+    "cancel-onboarding-emails": "bun run src/cancel-onboarding-emails.ts"
   },
   "dependencies": {
     "@lydie/core": "workspace:*"
