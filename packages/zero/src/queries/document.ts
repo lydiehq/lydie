@@ -86,4 +86,21 @@ export const documentQueries = {
         .limit(limit);
     },
   ),
+
+  // Get latest documents for workspace home page
+  // Returns most recently updated documents with basic info
+  latest: defineQuery(
+    z.object({
+      organizationId: z.string(),
+      limit: z.number().optional(),
+    }),
+    ({ args: { organizationId, limit = 10 }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.documents
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
+        .orderBy("updated_at", "desc")
+        .limit(limit);
+    },
+  ),
 };
