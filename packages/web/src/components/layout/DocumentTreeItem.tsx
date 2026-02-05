@@ -158,7 +158,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
               </span>
             </div>
 
-            <div className="items-center gap-1 relative -mr-0.5">
+            <div className="flex items-center relative">
               <ItemContextMenu
                 type={item.type}
                 itemId={item.id}
@@ -404,7 +404,7 @@ function ItemContextMenu({
   if (type === "integration-link") {
     return (
       <div
-        className={`flex items-center ${isMenuOpen ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"}`}
+        className={`flex items-center bg-inherit pl-1 ${isMenuOpen ? "relative" : "opacity-0 pointer-events-none absolute right-0 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:relative"}`}
       >
         <ActionButton
           aria-label="Add document"
@@ -453,7 +453,7 @@ function ItemContextMenu({
 
   return (
     <div
-      className={`flex gap-x-px items-center ${isMenuOpen ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"}`}
+      className={`flex gap-x-px items-center bg-inherit pl-1 ${isMenuOpen ? "relative" : "opacity-0 pointer-events-none absolute right-0 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:relative"}`}
     >
       <ActionButton
         aria-label="Add sub document"
