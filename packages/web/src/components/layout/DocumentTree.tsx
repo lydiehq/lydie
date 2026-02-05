@@ -5,6 +5,7 @@ import type { Key } from "react-aria-components";
 import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
+import { useParams } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { atom } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,6 +15,7 @@ import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
 import { getUserStorage, setUserStorage } from "@/lib/user-storage";
+import { getAncestorIds } from "@/utils/document-tree";
 
 import { DocumentTreeItem } from "./DocumentTreeItem";
 
@@ -53,6 +55,7 @@ type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.docu
 
 export function DocumentTree() {
   const { organization } = useOrganization();
+  const { id: currentDocId } = useParams({ strict: false });
 
   const { session } = useAuth();
   const userId = session?.userId;
@@ -74,12 +77,6 @@ export function DocumentTree() {
     }
   }, [initialized, userId, expandedKeysArray]);
 
-  const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
-
-  const handleExpandedChange = (keys: Set<Key>) => {
-    setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
-  };
-
   // Single query fetches documents, integration connections, and links
   const [orgData] = useQuery(
     queries.organizations.documentTree({
@@ -92,6 +89,20 @@ export function DocumentTree() {
     () => orgData?.integrationConnections || [],
     [orgData?.integrationConnections],
   );
+
+  // Auto-expand ancestors of current document (ephemeral - not persisted)
+  const autoExpandedKeys = useMemo(() => {
+    return getAncestorIds(currentDocId, documents);
+  }, [currentDocId, documents]);
+
+  // Combine user-expanded and auto-expanded keys for rendering
+  const expandedKeys = useMemo(() => {
+    return new Set([...expandedKeysArray, ...autoExpandedKeys]);
+  }, [expandedKeysArray, autoExpandedKeys]);
+
+  const handleExpandedChange = (keys: Set<Key>) => {
+    setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
+  };
 
   // Extract all links from connections (links are nested within each connection)
   const extensionLinks = useMemo(() => {
