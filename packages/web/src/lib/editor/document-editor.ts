@@ -12,8 +12,6 @@ import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Y from "yjs";
 
-import { documentConnectionManager } from "./document-connection-manager";
-
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
 import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/OnboardingAssistantTaskView";
@@ -22,6 +20,8 @@ import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/e
 import { PlaceholderComponent } from "@/components/PlaceholderComponent";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
+
+import { documentConnectionManager } from "./document-connection-manager";
 
 export type DocumentEditorHookResult = {
   editor: Editor | null;

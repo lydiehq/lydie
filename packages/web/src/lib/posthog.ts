@@ -2,11 +2,18 @@ import posthog from "posthog-js";
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
 
+// Use direct PostHog API in dev (no local proxy needed)
+// In production, use the CloudFront proxy (e.lydie.co) to avoid ad blockers
 const API_HOST = import.meta.env.DEV
-  ? "http://localhost:3001/ingest"
-  : (import.meta.env.VITE_POSTHOG_HOST || "https://api.lydie.co/ingest");
+  ? "https://us.i.posthog.com"
+  : import.meta.env.VITE_POSTHOG_HOST || "https://e.lydie.co";
 
 export function initPostHog() {
+  // Disable PostHog in development - no events sent
+  if (import.meta.env.DEV) {
+    return;
+  }
+
   if (!POSTHOG_KEY) {
     console.info("[PostHog] No API key configured, skipping initialization");
     return;
@@ -47,33 +54,27 @@ export function initPostHog() {
   }
 }
 
-export function trackEvent(
-  eventName: string,
-  properties?: Record<string, unknown>,
-) {
+export function trackEvent(eventName: string, properties?: Record<string, unknown>) {
   if (!POSTHOG_KEY) return;
-  
+
   posthog.capture(eventName, properties);
 }
 
-export function identifyUser(
-  userId: string,
-  properties?: Record<string, unknown>,
-) {
+export function identifyUser(userId: string, properties?: Record<string, unknown>) {
   if (!POSTHOG_KEY) return;
-  
+
   posthog.identify(userId, properties);
 }
 
 export function resetUser() {
   if (!POSTHOG_KEY) return;
-  
+
   posthog.reset();
 }
 
 export function trackPageView(pageName?: string) {
   if (!POSTHOG_KEY) return;
-  
+
   posthog.capture("$pageview", pageName ? { page: pageName } : undefined);
 }
 

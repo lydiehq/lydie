@@ -15,12 +15,7 @@ export function CTASection({
   return (
     <div className="flex flex-col gap-y-6 p-16 items-center text-center">
       <SectionHeader title={title} description={description} centered />
-      <Button 
-        href="https://app.lydie.co/auth" 
-        size="lg" 
-        intent="primary"
-        phCapture="cta_clicked"
-      >
+      <Button href="https://app.lydie.co/auth" size="lg" intent="primary" phCapture="cta_clicked">
         <span>Get started for free</span>
         <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
       </Button>

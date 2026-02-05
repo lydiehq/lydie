@@ -20,7 +20,6 @@ import { DialogTrigger } from "react-aria-components";
 
 import { Card } from "@/components/layout/Card";
 
-
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/billing")({
   component: RouteComponent,
   loader: async ({ context, params }) => {
@@ -87,8 +86,8 @@ function RouteComponent() {
           <ErrorCircleRegular className="size-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Plan</h3>
           <p className="text-sm text-gray-600 mb-6">
-            You're currently on the free plan with <strong>30 AI messages per day</strong>. 
-            The Plus plan is coming soon with unlimited AI features.
+            You're currently on the free plan with <strong>30 AI messages per day</strong>. The Plus
+            plan is coming soon with unlimited AI features.
           </p>
           <DialogTrigger>
             <Button>
@@ -140,11 +139,7 @@ function RouteComponent() {
                         </li>
                       </ul>
 
-                      <Button
-                        isDisabled={true}
-                        className="w-full"
-                        intent="primary"
-                      >
+                      <Button isDisabled={true} className="w-full" intent="primary">
                         Coming Soon
                       </Button>
                     </div>
@@ -173,9 +168,7 @@ function RouteComponent() {
                   </div>
 
                   <div className="flex justify-end gap-2 mt-6">
-                    <Button intent="secondary">
-                      Close
-                    </Button>
+                    <Button intent="secondary">Close</Button>
                   </div>
                 </div>
               </Dialog>

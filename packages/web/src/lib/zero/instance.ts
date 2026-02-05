@@ -77,10 +77,7 @@ export function preloadWorkspaceData(
 
   // Recent documents for fast navigation - preloaded with full relationships
   // so navigating to any recent doc is instant
-  zero.preload(
-    queries.documents.recent({ organizationId, limit: 100 }),
-    CACHE_PRELOAD,
-  );
+  zero.preload(queries.documents.recent({ organizationId, limit: 100 }), CACHE_PRELOAD);
 
   // Organization members - needed for user avatars, mentions, etc.
   zero.preload(queries.members.byOrganization({ organizationId }), CACHE_PRELOAD);

@@ -30,9 +30,7 @@ function PageComponent() {
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
               Welcome to {organization.name}
             </h1>
-            <p className="text-gray-500">
-              Here are the documents you've been working on recently.
-            </p>
+            <p className="text-gray-500">Here are the documents you've been working on recently.</p>
           </div>
 
           {hasDocuments ? (
@@ -68,9 +66,7 @@ function PageComponent() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Document16Regular className="size-12 text-gray-300 mb-4" />
               <p className="text-gray-500 mb-2">No documents yet</p>
-              <p className="text-sm text-gray-400">
-                Start creating documents to see them here.
-              </p>
+              <p className="text-sm text-gray-400">Start creating documents to see them here.</p>
             </div>
           )}
         </div>

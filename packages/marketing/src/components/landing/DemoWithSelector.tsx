@@ -14,9 +14,7 @@ export function DemoWithSelector({
   initialState,
   showSelector = true,
 }: DemoWithSelectorProps) {
-  const [activeState, setActiveState] = useState<DemoState>(
-    initialState ?? states[0]
-  );
+  const [activeState, setActiveState] = useState<DemoState>(initialState ?? states[0]);
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">

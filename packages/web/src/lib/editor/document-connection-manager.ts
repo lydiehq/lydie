@@ -31,7 +31,7 @@ class DocumentConnectionManager {
    */
   getConnection(documentId: string, initialYjsState: string | null): DocumentConnection {
     const existing = this.connections.get(documentId);
-    
+
     if (existing) {
       // Update last accessed time
       existing.lastAccessed = Date.now();
