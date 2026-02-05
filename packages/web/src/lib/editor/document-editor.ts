@@ -10,8 +10,10 @@ import { getDocumentEditorExtensions } from "@lydie/editor";
 import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as Y from "yjs";
+
+import { getSharedWebSocket } from "./shared-websocket";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
@@ -46,7 +48,7 @@ type UseDocumentEditorProps = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
 };
 
-const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001";
+const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001/yjs";
 
 export function useDocumentEditor({
   doc,
@@ -59,6 +61,7 @@ export function useDocumentEditor({
   const isLocked = doc.is_locked ?? false;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Create Y.Doc and HocuspocusProvider for this document
   const { ydoc, provider } = useMemo(() => {
     if (!doc.id) return { ydoc: null, provider: null };
 
@@ -70,18 +73,35 @@ export function useDocumentEditor({
         const bytes = base64ToUint8Array(doc.yjs_state);
         Y.applyUpdate(yjsState, bytes);
       } catch (error) {
-        console.error("[DocumentEditor] Error applying initial Yjs state:", error);
+        console.error("[useDocumentEditor] Error applying initial Yjs state:", error);
       }
     }
 
+    const sharedSocket = getSharedWebSocket(yjsServerUrl);
+
     const hocuspocusProvider = new HocuspocusProvider({
+      websocketProvider: sharedSocket,
       name: doc.id,
-      url: `${yjsServerUrl}/${doc.id}`,
       document: yjsState,
     });
 
+    // Must call attach() when using shared socket
+    hocuspocusProvider.attach();
+
     return { ydoc: yjsState, provider: hocuspocusProvider };
   }, [doc.id, doc.yjs_state]);
+
+  // Cleanup provider and ydoc when doc.id changes or unmounts
+  useEffect(() => {
+    return () => {
+      if (provider) {
+        provider.destroy();
+      }
+      if (ydoc) {
+        ydoc.destroy();
+      }
+    };
+  }, [doc.id]);
 
   const userInfo = useMemo(() => {
     return user
@@ -143,7 +163,7 @@ export function useDocumentEditor({
         onDestroy?.();
       },
     },
-    [],
+    [ydoc, provider, userInfo, doc.id],
   );
 
   const setContent = useCallback(

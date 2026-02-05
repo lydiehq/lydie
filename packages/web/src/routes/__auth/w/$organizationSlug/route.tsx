@@ -16,6 +16,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
 import { isDockedAtom } from "@/hooks/use-floating-assistant";
+import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
 import { authClient } from "@/utils/auth";
 
@@ -51,6 +52,9 @@ function RouteComponent() {
 }
 
 function RouteLayout() {
+  // Initialize shared WebSocket connection for the workspace
+  useWorkspaceWebSocket();
+
   const sidebarPanelRef = usePanelRef();
   const assistantPanelRef = usePanelRef();
   const [dockedAssistantContainer, setDockedAssistantContainer] = useState<HTMLDivElement | null>(
