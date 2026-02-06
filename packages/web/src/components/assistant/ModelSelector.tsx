@@ -1,5 +1,5 @@
 import { ChevronDownRegular } from "@fluentui/react-icons";
-import type { ModelCapability } from "@lydie/core/ai/models";
+import type { LLMModel } from "@lydie/core/ai/models";
 import {
   getAllModels,
   getDefaultModel,
@@ -11,28 +11,19 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { SelectItem } from "@lydie/ui/components/generic/Select";
 import { useMemo, useState } from "react";
-import { Select as AriaSelect, ListBox } from "react-aria-components";
+import {
+  Select as AriaSelect,
+  ListBox,
+  ListBoxSection,
+  Header,
+  Collection,
+} from "react-aria-components";
 
 import { ModelIcon } from "./ModelIcon";
 
 interface ModelSelectorProps {
   selectedModelId: string | null;
   onSelectModel: (modelId: string) => void;
-}
-
-function CapabilityBadge({ capability }: { capability: ModelCapability }) {
-  const labels: Record<ModelCapability, string> = {
-    reasoning: "Reasoning",
-    tools: "Tools",
-    vision: "Vision",
-    documents: "Documents",
-  };
-
-  return (
-    <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">
-      {labels[capability]}
-    </span>
-  );
 }
 
 export function ModelSelector({ selectedModelId, onSelectModel }: ModelSelectorProps) {
@@ -72,65 +63,54 @@ export function ModelSelector({ selectedModelId, onSelectModel }: ModelSelectorP
         <div className="p-2 border-b border-gray-100">
           <span className="text-xs font-medium text-gray-500">Select a model</span>
         </div>
-        <div className="overflow-auto">
-          {providerOrder.map((provider, providerIndex) => {
-            const models = modelsByProvider.get(provider);
-            if (!models || models.length === 0) return null;
+        <ListBox
+          className="outline-none overflow-auto"
+          selectionMode="single"
+          selectedKeys={currentModel ? [currentModel.id] : []}
+        >
+          {providerOrder.map((provider) => {
+            const providerModels = modelsByProvider.get(provider);
+            if (!providerModels || providerModels.length === 0) return null;
 
             return (
-              <div key={provider} className={providerIndex > 0 ? "border-t border-gray-100" : ""}>
-                <div className="px-3 py-2 bg-gray-50 flex items-center gap-2">
-                  <ModelIcon provider={provider} className="size-4" />
+              <ListBoxSection key={provider}>
+                <Header className="px-3 py-2 bg-gray-50 flex items-center gap-2">
+                  <ModelIcon provider={provider} className="size-4 text-gray-600" />
                   <span className="text-xs font-medium text-gray-600">
                     {getProviderDisplayName(provider)}
                   </span>
-                </div>
-                <ListBox
-                  className="outline-none"
-                  selectionMode="single"
-                  selectedKeys={currentModel ? [currentModel.id] : []}
-                >
-                  {models.map((model) => {
+                </Header>
+                <Collection items={providerModels}>
+                  {(model: LLMModel) => {
                     const isSelected = model.id === currentModel?.id;
 
                     return (
                       <SelectItem
-                        key={model.id}
                         id={model.id}
                         textValue={model.name}
                         className={isSelected ? "bg-blue-50" : ""}
                       >
-                        <div className="flex flex-col items-start gap-1.5 w-full py-1.5">
-                          <div className="flex items-center gap-2 w-full">
-                            <span
-                              className={`text-sm flex-1 truncate ${isSelected ? "font-semibold" : ""}`}
-                            >
-                              {model.name}
-                            </span>
-                            {model.isBeta && (
-                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
-                                Beta
-                              </span>
-                            )}
-                            <span className="text-xs text-gray-500">{model.credits}c</span>
-                          </div>
-                          <div className="flex items-center gap-1 flex-wrap">
-                            {model.capabilities.map((cap) => (
-                              <CapabilityBadge key={cap} capability={cap} />
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-500 line-clamp-2">
-                            {model.description}
+                        <div className="flex items-center gap-2 w-full py-2">
+                          <span
+                            className={`text-sm flex-1 truncate ${isSelected ? "font-semibold text-gray-900" : "text-gray-700"}`}
+                          >
+                            {model.name}
                           </span>
+                          {model.isBeta && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                              Beta
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-500 font-medium">{model.credits}c</span>
                         </div>
                       </SelectItem>
                     );
-                  })}
-                </ListBox>
-              </div>
+                  }}
+                </Collection>
+              </ListBoxSection>
             );
           })}
-        </div>
+        </ListBox>
       </Popover>
     </AriaSelect>
   );

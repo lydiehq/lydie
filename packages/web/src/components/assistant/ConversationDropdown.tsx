@@ -8,11 +8,10 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Select as AriaSelect,
   Autocomplete,
-  composeRenderProps,
   ListBox,
   ListBoxItem,
   Button as RACButton,
@@ -42,12 +41,10 @@ export function ConversationDropdown({
   const { organization } = useOrganization();
   const navigate = useNavigate();
   const { contains } = useFilter({ sensitivity: "base" });
-  const [isOpen, setIsOpen] = useState(false);
   const [conversations] = useQuery(
     queries.assistant.conversationsByUser({
       organizationSlug: organization.slug,
     }),
-    { enabled: isOpen },
   );
 
   const currentConversation = useMemo(() => {
@@ -131,7 +128,6 @@ export function ConversationDropdown({
           onSelectConversation(key);
         }
       }}
-      onOpenChange={setIsOpen}
       aria-label="Select conversation"
       className="group flex flex-col gap-1 min-w-[200px]"
     >

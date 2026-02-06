@@ -2,8 +2,6 @@
 // Models are defined with their AI Gateway paths (provider/model-name format)
 // Credit costs are scaled to match billing system where pro users get 4000 credits
 
-export type ModelCapability = "reasoning" | "tools" | "vision" | "documents";
-
 export type ModelProvider = "openai" | "google" | "anthropic" | "moonshotai";
 
 export interface LLMModel {
@@ -12,7 +10,6 @@ export interface LLMModel {
   model: string;
   provider: ModelProvider;
   description: string;
-  capabilities: ModelCapability[];
   credits: number;
   isDefault?: boolean;
   isBeta?: boolean;
@@ -31,7 +28,6 @@ export const AVAILABLE_MODELS: LLMModel[] = [
     model: "openai/gpt-5-mini",
     provider: "openai",
     description: "Fast and cost-effective for everyday tasks",
-    capabilities: ["tools", "documents"],
     credits: 25,
     isDefault: true,
   },
@@ -41,7 +37,6 @@ export const AVAILABLE_MODELS: LLMModel[] = [
     model: "openai/gpt-5.2",
     provider: "openai",
     description: "Most capable GPT-5 model for complex reasoning",
-    capabilities: ["reasoning", "tools", "vision", "documents"],
     credits: 50,
     isBeta: true,
   },
@@ -53,7 +48,6 @@ export const AVAILABLE_MODELS: LLMModel[] = [
     model: "google/gemini-3-flash",
     provider: "google",
     description: "Fast model for everyday tasks",
-    capabilities: ["vision", "tools", "documents"],
     credits: 20,
   },
   {
@@ -62,7 +56,6 @@ export const AVAILABLE_MODELS: LLMModel[] = [
     model: "google/gemini-3-pro",
     provider: "google",
     description: "Google's most advanced model for complex tasks",
-    capabilities: ["reasoning", "tools", "vision", "documents"],
     credits: 45,
     isBeta: true,
   },
@@ -74,7 +67,6 @@ export const AVAILABLE_MODELS: LLMModel[] = [
     model: "anthropic/claude-sonnet-4-20250514",
     provider: "anthropic",
     description: "Anthropic's balanced model for complex tasks",
-    capabilities: ["reasoning", "tools", "documents"],
     credits: 40,
     isBeta: true,
   },
@@ -84,7 +76,6 @@ export const AVAILABLE_MODELS: LLMModel[] = [
     model: "anthropic/claude-opus-4-20250514",
     provider: "anthropic",
     description: "Anthropic's most powerful model",
-    capabilities: ["reasoning", "tools", "vision", "documents"],
     credits: 60,
     isBeta: true,
   },
@@ -96,7 +87,6 @@ export const AVAILABLE_MODELS: LLMModel[] = [
     model: "moonshotai/kimi-k2-5",
     provider: "moonshotai",
     description: "Efficient model with strong reasoning capabilities",
-    capabilities: ["reasoning", "vision", "documents"],
     credits: 35,
   },
 ];
