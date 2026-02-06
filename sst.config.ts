@@ -18,6 +18,7 @@ export default $config({
     await import("./infra/backend");
     await import("./infra/web");
     await import("./infra/zero");
+    await import("./infra/events");
     return {};
   },
 });

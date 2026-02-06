@@ -1,7 +1,8 @@
 ---
-const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY;
-const apiHost =
-  import.meta.env.DEV ? "http://localhost:3001/ingest" : "https://api.lydie.co/ingest";
+// Disable PostHog in development - no events sent
+const isDev = import.meta.env.DEV;
+const posthogKey = isDev ? null : import.meta.env.PUBLIC_POSTHOG_KEY;
+const apiHost = import.meta.env.PUBLIC_POSTHOG_HOST;
 const uiHost = "https://us.i.posthog.com";
 ---
 

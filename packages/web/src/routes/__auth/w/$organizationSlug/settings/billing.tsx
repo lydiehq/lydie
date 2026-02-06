@@ -1,25 +1,29 @@
-import { ArrowClockwiseRegular, CheckmarkRegular, FlashRegular, SparkleRegular } from "@fluentui/react-icons";
+import {
+  ArrowClockwiseRegular,
+  CheckmarkRegular,
+  FlashRegular,
+  SparkleRegular,
+} from "@fluentui/react-icons";
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
-import { queries } from "@lydie/zero/queries";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { Modal } from "@lydie/ui/components/generic/Modal";
 import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
 import { Separator } from "@lydie/ui/components/layout/Separator";
+import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import z from "zod";
 import { DialogTrigger } from "react-aria-components";
+import z from "zod";
 
 import { Card } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/billing")({
   component: RouteComponent,
-  validateSearch: (search) =>
-    z.object({ session_id: z.string().optional() }).parse(search),
+  validateSearch: (search) => z.object({ session_id: z.string().optional() }).parse(search),
   loader: async ({ context }) => {
     const { zero, organization } = context;
 
@@ -103,7 +107,7 @@ function RouteComponent() {
     const creditsAvailable = userCredits?.credits_available ?? planInfo.creditsPerSeat;
     const creditsIncluded = userCredits?.credits_included_monthly ?? planInfo.creditsPerSeat;
     const periodEnd = userCredits?.current_period_end ?? billing?.current_period_end;
-    
+
     return {
       creditsUsed,
       creditsAvailable,
@@ -185,11 +189,11 @@ function RouteComponent() {
 
       {/* Current Plan */}
       <div className="flex flex-col gap-y-4">
-        <SectionHeader 
-          heading="Current Plan" 
+        <SectionHeader
+          heading="Current Plan"
           description={`You are on the ${planInfo.name} plan.`}
         />
-        
+
         <Card className="p-6">
           <div className="flex items-start justify-between">
             <div>
@@ -201,22 +205,22 @@ function RouteComponent() {
                       billing?.stripe_subscription_status === "active"
                         ? "bg-green-100 text-green-700"
                         : billing?.stripe_subscription_status === "past_due"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-gray-100 text-gray-700"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {billing?.stripe_subscription_status || "active"}
                   </span>
                 )}
               </div>
-              
+
               <div className="flex items-baseline gap-1 mt-2">
                 <span className="text-2xl font-bold text-gray-900">
                   ${isPaid ? planInfo.price : 0}
                 </span>
                 {isPaid && <span className="text-sm text-gray-500">/seat/month</span>}
               </div>
-              
+
               <p className="text-sm text-gray-500 mt-1">
                 {currentPlan === PLAN_TYPES.MONTHLY && "Billed monthly"}
                 {currentPlan === PLAN_TYPES.YEARLY && "Billed annually"}
@@ -247,7 +251,8 @@ function RouteComponent() {
                         Upgrade to Pro
                       </Heading>
                       <p className="text-sm text-gray-600 mb-6">
-                        Get {PLAN_LIMITS[PLAN_TYPES.MONTHLY].creditsPerSeat} AI credits per month and priority support.
+                        Get {PLAN_LIMITS[PLAN_TYPES.MONTHLY].creditsPerSeat} AI credits per month
+                        and priority support.
                       </p>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -309,11 +314,11 @@ function RouteComponent() {
 
       {/* Credit Usage */}
       <div className="flex flex-col gap-y-4">
-        <SectionHeader 
-          heading="AI Credits" 
+        <SectionHeader
+          heading="AI Credits"
           description="Credits are used for AI-powered features like writing assistance and document generation."
         />
-        
+
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -324,12 +329,13 @@ function RouteComponent() {
                 of {usageStats.creditsIncluded.toLocaleString()} included
                 {usageStats.periodEnd && (
                   <span className="ml-1">
-                    · Resets {usageStats.daysUntilReset === 0 
-                      ? "today" 
-                      : usageStats.daysUntilReset === 1 
-                        ? "tomorrow" 
-                        : `in ${usageStats.daysUntilReset} days`}
-                    {" "}({formatDate(usageStats.periodEnd)})
+                    · Resets{" "}
+                    {usageStats.daysUntilReset === 0
+                      ? "today"
+                      : usageStats.daysUntilReset === 1
+                        ? "tomorrow"
+                        : `in ${usageStats.daysUntilReset} days`}{" "}
+                    ({formatDate(usageStats.periodEnd)})
                   </span>
                 )}
               </p>
@@ -342,8 +348,8 @@ function RouteComponent() {
 
           {/* Progress bar */}
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(usageStats.percentUsed, 100)}%` }}
             />
           </div>
@@ -379,12 +385,10 @@ function RouteComponent() {
             <div className="flex items-start gap-3">
               <FlashRegular className="size-5 text-blue-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-blue-900">
-                  Running low on credits?
-                </p>
+                <p className="text-sm font-medium text-blue-900">Running low on credits?</p>
                 <p className="text-sm text-blue-700 mt-0.5">
-                  Upgrade to Pro for {PLAN_LIMITS[PLAN_TYPES.MONTHLY].creditsPerSeat} credits per month 
-                  and never worry about limits again.
+                  Upgrade to Pro for {PLAN_LIMITS[PLAN_TYPES.MONTHLY].creditsPerSeat} credits per
+                  month and never worry about limits again.
                 </p>
               </div>
             </div>
@@ -397,10 +401,7 @@ function RouteComponent() {
         <>
           <Separator />
           <div className="flex flex-col gap-y-4">
-            <SectionHeader 
-              heading="Team Usage" 
-              description="See how your team is using credits."
-            />
+            <SectionHeader heading="Team Usage" description="See how your team is using credits." />
             <Card className="p-6">
               <div className="space-y-4">
                 {allMembersCredits.map((memberCredit) => (
@@ -415,16 +416,21 @@ function RouteComponent() {
                     </div>
                     <div className="text-right flex-shrink-0 ml-4">
                       <p className="text-sm font-medium text-gray-900">
-                        {memberCredit.credits_used_this_period || 0} / {memberCredit.credits_included_monthly || planInfo.creditsPerSeat}
+                        {memberCredit.credits_used_this_period || 0} /{" "}
+                        {memberCredit.credits_included_monthly || planInfo.creditsPerSeat}
                       </p>
                       <div className="w-24 bg-gray-200 rounded-full h-1.5 mt-1">
-                        <div 
-                          className="bg-blue-600 h-1.5 rounded-full" 
-                          style={{ 
+                        <div
+                          className="bg-blue-600 h-1.5 rounded-full"
+                          style={{
                             width: `${Math.min(
-                              ((memberCredit.credits_used_this_period || 0) / (memberCredit.credits_included_monthly || planInfo.creditsPerSeat || 1)) * 100, 
-                              100
-                            )}%` 
+                              ((memberCredit.credits_used_this_period || 0) /
+                                (memberCredit.credits_included_monthly ||
+                                  planInfo.creditsPerSeat ||
+                                  1)) *
+                                100,
+                              100,
+                            )}%`,
                           }}
                         />
                       </div>

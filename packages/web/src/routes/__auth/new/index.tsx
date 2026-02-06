@@ -47,7 +47,7 @@ function RouteComponent() {
         const id = createId();
         const onboardingDocId = createId();
         // Generate slug with unique suffix to avoid clashes
-        const slug = `${slugify(values.value.name)}-${id.slice(0, 8)}`;
+        const slug = slugify(`${values.value.name}-${id.slice(0, 8)}`);
 
         const write = z.mutate(
           mutators.organization.create({

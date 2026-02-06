@@ -12,7 +12,7 @@ import { type IntegrationMetadata, integrationMetadata } from "@lydie/integratio
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { type ComponentType, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -366,7 +366,7 @@ export function CommandMenu() {
                         id={item.id}
                         textValue={item.label}
                         onAction={() => handleCommand(item.action)}
-                        className={`relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
+                        className={`relative flex select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
                       >
                         {item.iconUrl ? (
                           <img
@@ -401,6 +401,10 @@ export function CommandMenu() {
                       id={item.id}
                       textValue={item.label}
                       onAction={() => handleCommand(item.action)}
+                      onFocus={() => {
+                        alert(0);
+                        console.log("focus", item.label);
+                      }}
                       className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
                     >
                       <DocumentIcon className="size-4 text-gray-400 shrink-0 mr-2" />

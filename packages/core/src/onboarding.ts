@@ -1,4 +1,8 @@
-import { CreateScheduleCommand, SchedulerClient } from "@aws-sdk/client-scheduler";
+import {
+  CreateScheduleCommand,
+  DeleteScheduleCommand,
+  SchedulerClient,
+} from "@aws-sdk/client-scheduler";
 import { Resource } from "sst";
 
 import { sendEmail } from "./email";
@@ -16,6 +20,37 @@ interface ScheduledEmailEvent {
   email: string;
   fullName: string;
   emailType: "checkin" | "feedback";
+}
+
+export async function cancelOnboardingEmails(userId: string) {
+  const feedbackScheduleName = `onboarding-feedback-${userId}`;
+  const checkinScheduleName = `onboarding-checkin-${userId}`;
+
+  const deletePromises = [
+    deleteSchedule(feedbackScheduleName),
+    deleteSchedule(checkinScheduleName),
+  ];
+
+  const results = await Promise.allSettled(deletePromises);
+
+  const deleted = results.filter((r) => r.status === "fulfilled").length;
+  console.log(`Cancelled ${deleted} scheduled emails for user ${userId}`);
+
+  return { deleted };
+}
+
+async function deleteSchedule(name: string) {
+  try {
+    await schedulerClient.send(
+      new DeleteScheduleCommand({
+        Name: name,
+      }),
+    );
+    console.log(`Deleted schedule: ${name}`);
+  } catch (error) {
+    console.error(`Failed to delete schedule ${name}:`, error);
+    // Don't throw - schedule might not exist
+  }
 }
 
 export async function scheduleOnboardingEmails(userData: UserOnboardingData) {

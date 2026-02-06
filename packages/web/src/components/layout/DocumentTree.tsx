@@ -5,15 +5,17 @@ import type { Key } from "react-aria-components";
 import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
+import { useParams } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { atom } from "jotai";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Tree } from "react-aria-components";
 
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
 import { getUserStorage, setUserStorage } from "@/lib/user-storage";
+import { getAncestorIds } from "@/utils/document-tree";
 
 import { DocumentTreeItem } from "./DocumentTreeItem";
 
@@ -53,6 +55,7 @@ type QueryResult = NonNullable<QueryResultType<typeof queries.organizations.docu
 
 export function DocumentTree() {
   const { organization } = useOrganization();
+  const { id: currentDocId } = useParams({ strict: false });
 
   const { session } = useAuth();
   const userId = session?.userId;
@@ -74,12 +77,6 @@ export function DocumentTree() {
     }
   }, [initialized, userId, expandedKeysArray]);
 
-  const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
-
-  const handleExpandedChange = (keys: Set<Key>) => {
-    setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
-  };
-
   // Single query fetches documents, integration connections, and links
   const [orgData] = useQuery(
     queries.organizations.documentTree({
@@ -92,6 +89,30 @@ export function DocumentTree() {
     () => orgData?.integrationConnections || [],
     [orgData?.integrationConnections],
   );
+
+  const handleExpandedChange = (keys: Set<Key>) => {
+    setExpandedKeysArray(Array.from(keys).map((key) => String(key)));
+  };
+
+  // Track previous document ID to detect navigation
+  const prevDocIdRef = useRef<string | undefined>(undefined);
+
+  // Auto-expand ancestors when navigating to a new document
+  useEffect(() => {
+    if (currentDocId && currentDocId !== prevDocIdRef.current && documents.length > 0) {
+      const ancestorIds = getAncestorIds(currentDocId, documents);
+
+      // Add ancestors to expanded state (persisted)
+      setExpandedKeysArray((prev) => {
+        const newKeys = new Set([...prev, ...ancestorIds]);
+        return Array.from(newKeys);
+      });
+
+      prevDocIdRef.current = currentDocId;
+    }
+  }, [currentDocId, documents, setExpandedKeysArray]);
+
+  const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
 
   // Extract all links from connections (links are nested within each connection)
   const extensionLinks = useMemo(() => {

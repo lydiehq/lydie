@@ -132,9 +132,9 @@ export function Hero({
               <div
                 className={`${styles.heroButton1} ring ring-white/1 p-0.5 bg-black/4 rounded-[8px]`}
               >
-                <Button 
-                  href="https://app.lydie.co/auth" 
-                  size="lg" 
+                <Button
+                  href="https://app.lydie.co/auth"
+                  size="lg"
                   intent="primary"
                   phCapture="hero_cta_clicked"
                 >

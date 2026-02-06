@@ -1,15 +1,10 @@
 import {
   Add16Filled,
-  ArrowClockwiseRegular,
   ChevronRightRegular,
-  ErrorCircleRegular,
   Home16Filled,
   PersonChat16Filled,
   Search16Filled,
-  ShieldErrorRegular,
   TabDesktopMultiple16Filled,
-  Wifi4Regular,
-  WifiOffRegular,
 } from "@fluentui/react-icons";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
@@ -17,18 +12,14 @@ import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { Separator } from "@lydie/ui/components/layout/Separator";
-import { useConnectionState } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
-import clsx from "clsx";
 import { useSetAtom } from "jotai";
-import { useCallback } from "react";
 import { useMemo } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useZero } from "@/services/zero";
 import { commandMenuStateAtom } from "@/stores/command-menu";
 import { isAdmin } from "@/utils/admin";
 
@@ -95,23 +86,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div
-        className={`h-full justify-between items-center flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`}
-      >
-        <div></div>
-        <TooltipTrigger delay={500}>
-          <RACButton
-            className={composeTailwindRenderProps(
-              focusRing,
-              "p-1 rounded hover:bg-black/5 text-gray-700 group",
-            )}
-            onPress={onToggle}
-            aria-label="Expand sidebar"
-          >
-            <SidebarIcon direction="left" collapsed={true} />
-          </RACButton>
-          <Tooltip>Expand sidebar</Tooltip>
-        </TooltipTrigger>
-      </div>
+        className={`h-full flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`}
+      />
       <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
         <div className="flex gap-x-1 px-3">
           <Button
@@ -242,70 +218,4 @@ function BottomBar() {
   );
 }
 
-function ZeroConnectionStatus() {
-  const state = useConnectionState();
-  const zero = useZero();
 
-  const handleRetry = useCallback(() => {
-    if (zero?.connection) {
-      zero.connection.connect();
-    }
-  }, [zero]);
-
-  const getStatusConfig = () => {
-    switch (state.name) {
-      case "connecting":
-        return {
-          icon: ArrowClockwiseRegular,
-          tooltip: state.reason || "Connecting to Zero cache",
-        };
-      case "connected":
-        return {
-          icon: Wifi4Regular,
-          tooltip: "Connected to Zero cache",
-        };
-      case "disconnected":
-        return {
-          icon: WifiOffRegular,
-          tooltip: state.reason || "Disconnected from Zero cache",
-        };
-      case "error":
-        return {
-          icon: ErrorCircleRegular,
-          tooltip: state.reason || "Connection error",
-          clickable: true,
-        };
-      case "needs-auth":
-        return {
-          icon: ShieldErrorRegular,
-          tooltip: "Authentication required",
-          clickable: true,
-        };
-      default:
-        return {
-          icon: WifiOffRegular,
-          tooltip: "Unknown connection state",
-        };
-    }
-  };
-
-  const config = getStatusConfig();
-  const Icon = config.icon;
-  const isAnimating = state.name === "connecting";
-
-  return (
-    <TooltipTrigger>
-      <RACButton
-        className=""
-        onPress={config.clickable ? handleRetry : undefined}
-        aria-label={config.tooltip}
-      >
-        <Icon className={clsx("size-4 shrink-0 text-gray-400", isAnimating && "animate-spin")} />
-      </RACButton>
-      <Tooltip placement="right">
-        {config.tooltip}
-        {config.clickable && " (Click to retry)"}
-      </Tooltip>
-    </TooltipTrigger>
-  );
-}

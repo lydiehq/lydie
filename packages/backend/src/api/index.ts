@@ -6,7 +6,6 @@ import { logger } from "hono/logger";
 import { hocuspocus } from "../hocuspocus-server";
 import { ExternalApi } from "./external";
 import { InternalApi } from "./internal";
-import { PostHogProxy } from "./posthog-proxy";
 import { PublicApi } from "./public";
 
 export const app = new Hono()
@@ -27,24 +26,21 @@ export const app = new Hono()
   })
   .route("/internal", InternalApi)
   .route("/v1/:idOrSlug", ExternalApi)
-  .route("/public", PublicApi)
-  .route("/ingest", PostHogProxy);
+  .route("/public", PublicApi);
 
 export const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
   app,
 });
 
 app.get(
-  "/yjs/:documentId",
+  "/yjs",
   upgradeWebSocket((c) => {
-    const documentId = c.req.param("documentId");
-
     return {
       onOpen(_evt, ws) {
         if (!ws.raw) {
           throw new Error("WebSocket not available");
         }
-        hocuspocus.handleConnection(ws.raw, c.req.raw as any, documentId);
+        hocuspocus.handleConnection(ws.raw, c.req.raw as any);
       },
     };
   }),

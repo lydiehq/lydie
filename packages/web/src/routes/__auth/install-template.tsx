@@ -1,4 +1,5 @@
 import { ChevronRightRegular } from "@fluentui/react-icons";
+import { getDefaultColorForId } from "@lydie/core/colors";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { mutators } from "@lydie/zero/mutators";
@@ -82,7 +83,11 @@ function RouteComponent() {
               disabled={installing !== null}
               className="w-full flex items-center gap-x-3 p-4 hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
             >
-              <OrganizationAvatar organization={org} size="lg" />
+              <OrganizationAvatar
+                name={org.name}
+                color={org.color ?? getDefaultColorForId(org.id)}
+                size="lg"
+              />
               <div className="flex-1 text-left">
                 <div className="font-medium text-gray-900">{org.name}</div>
                 {installing === org.id && (

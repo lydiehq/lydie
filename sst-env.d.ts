@@ -79,6 +79,10 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "PostHogKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "PostgresConnectionStringDirect": {
       "type": "sst.sst.Secret"
       "value": string

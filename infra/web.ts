@@ -1,5 +1,6 @@
 // oxlint-disable typescript/triple-slash-reference
 /// <reference path="../.sst/platform/config.d.ts" />
+import { eventsRouter } from "./events";
 import { secret } from "./secret";
 import { zero } from "./zero";
 
@@ -25,8 +26,9 @@ new sst.aws.StaticSite("Web", {
     VITE_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
     VITE_YJS_SERVER_URL: $dev ? "ws://localhost:3001/yjs" : "wss://api.lydie.co/yjs",
     VITE_ASSETS_DOMAIN: assetsRouter.url,
-    VITE_POSTHOG_KEY: process.env.POSTHOG_KEY || "",
+    VITE_POSTHOG_KEY: secret.posthogKey.value,
     VITE_POSTHOG_ENABLE_REPLAY: process.env.POSTHOG_ENABLE_REPLAY || "false",
+    VITE_POSTHOG_HOST: "https://e.lydie.co",
   },
   ...($dev ? {} : { domain: "app.lydie.co" }),
 });
@@ -36,9 +38,17 @@ new sst.aws.Astro("Marketing", {
   environment: {
     PUBLIC_API_URL: $dev ? "http://localhost:3001" : "https://api.lydie.co",
     PUBLIC_ASSETS_DOMAIN: assetsRouter.url,
-    PUBLIC_POSTHOG_KEY: process.env.POSTHOG_KEY || "",
+    PUBLIC_POSTHOG_KEY: secret.posthogKey.value,
+    PUBLIC_POSTHOG_HOST: "https://e.lydie.co",
   },
-  link: [secret.lydieApiKey, secret.postgresConnectionStringDirect, secret.openAiApiKey],
+  link: $dev
+    ? [secret.lydieApiKey, secret.postgresConnectionStringDirect, secret.openAiApiKey]
+    : [
+        secret.lydieApiKey,
+        secret.postgresConnectionStringDirect,
+        secret.openAiApiKey,
+        secret.posthogKey,
+      ],
   ...($dev ? {} : { domain: "lydie.co" }),
   ...($dev
     ? {}

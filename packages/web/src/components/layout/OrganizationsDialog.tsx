@@ -1,10 +1,14 @@
 import { ChevronRightRegular } from "@fluentui/react-icons";
+import { getDefaultColorForId } from "@lydie/core/colors";
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Modal } from "@lydie/ui/components/generic/Modal";
 import { Separator } from "@lydie/ui/components/layout/Separator";
-import { useNavigate, useRouteContext } from "@tanstack/react-router";
+import { queries } from "@lydie/zero/queries";
+import { type QueryResultType } from "@rocicorp/zero";
+import { useQuery } from "@rocicorp/zero/react";
+import { useNavigate } from "@tanstack/react-router";
 import { Heading, Button as RACButton } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
@@ -24,6 +28,7 @@ function getPlanName(subscriptionPlan: string | null | undefined): string {
   }
   return PLAN_LIMITS[PLAN_TYPES.FREE].name;
 }
+type Organization = QueryResultType<typeof queries.organizations.byUser>[number]["organization"];
 
 export function OrganizationsDialog({
   isOpen,
@@ -33,12 +38,14 @@ export function OrganizationsDialog({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const { organization } = useOrganization();
-  const { organizations } = useRouteContext({ from: "/__auth" });
-
   const navigate = useNavigate();
 
-  const goToOrganization = (targetOrg: { id: string; slug: string }) => {
-    if (organization?.slug === targetOrg.slug) {
+  // Use Zero to get all organizations for the current user
+  const [memberships] = useQuery(queries.organizations.byUser({}));
+  const organizations = memberships?.map((m) => m.organization) ?? [];
+
+  const goToOrganization = (targetOrg: Organization) => {
+    if (!targetOrg || organization?.slug === targetOrg.slug) {
       return;
     }
 
@@ -65,32 +72,34 @@ export function OrganizationsDialog({
           </div>
           <Separator />
           <ul className="p-3">
-            {organizations?.map((o) => (
-              <li
-                key={o.id}
-                className="flex flex-col relative after:absolute after:content-[''] after:left-12 after:right-2 after:bottom-0 after:border-b after:border-black/5 last:after:border-b-0 hover:after:border-transparent"
-              >
-                <RACButton
-                  onPress={() => goToOrganization(o)}
-                  isDisabled={organization?.slug === o.slug}
-                  className="flex items-center gap-x-2 relative p-1.5 hover:bg-black/5 rounded-xl group w-full text-left"
+            {organizations?.map((o) => {
+              if (!o) return null;
+              return (
+                <li
+                  key={o.id}
+                  className="flex flex-col relative after:absolute after:content-[''] after:left-12 after:right-2 after:bottom-0 after:border-b after:border-black/5 last:after:border-b-0 hover:after:border-transparent"
                 >
-                  <OrganizationAvatar organization={o} size="lg" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-black text-sm truncate">
+                  <RACButton
+                    onPress={() => goToOrganization(o)}
+                    isDisabled={organization?.slug === o.slug}
+                    className="flex items-center gap-x-2 relative p-1.5 hover:bg-black/5 rounded-xl group"
+                  >
+                    <OrganizationAvatar
+                      name={o.name}
+                      color={o.color ?? getDefaultColorForId(o.id)}
+                      size="lg"
+                    />
+                    <div className="font-medium text-black text-sm">
                       {o.name}
                       {organization?.slug === o.slug && (
                         <span className="text-gray-500 ml-1">current</span>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {getPlanName(o.subscriptionPlan)}
-                    </div>
-                  </div>
-                  <ChevronRightRegular className="size-[14px] text-gray-200 group-hover:text-gray-400 flex-shrink-0" />
-                </RACButton>
-              </li>
-            ))}
+                    <ChevronRightRegular className="size-[14px] absolute right-2 text-gray-200 top-1/2 -translate-y-1/2 group-hover:text-gray-400" />
+                  </RACButton>
+                </li>
+              );
+            })}
           </ul>
           <Separator />
           <div className="flex justify-end p-3">

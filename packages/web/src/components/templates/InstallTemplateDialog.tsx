@@ -1,9 +1,13 @@
 import { ArrowClockwiseRegular, ChevronRightRegular, DocumentRegular } from "@fluentui/react-icons";
+import { getDefaultColorForId } from "@lydie/core/colors";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Modal } from "@lydie/ui/components/generic/Modal";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
-import { useNavigate, useRouteContext } from "@tanstack/react-router";
+import { queries } from "@lydie/zero/queries";
+import { type QueryResultType } from "@rocicorp/zero";
+import { useQuery } from "@rocicorp/zero/react";
+import { useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { Heading, Button as RACButton } from "react-aria-components";
@@ -15,6 +19,8 @@ import { useZero } from "@/services/zero";
 
 import { OrganizationAvatar } from "../layout/OrganizationAvatar";
 
+type Organization = QueryResultType<typeof queries.organizations.byUser>[number]["organization"];
+
 export function InstallTemplateDialog({
   isOpen,
   onOpenChange,
@@ -25,12 +31,14 @@ export function InstallTemplateDialog({
   templateSlug: string;
 }) {
   const { organization } = useOrganization();
-  const { organizations } = useRouteContext({ from: "/__auth" });
+  const [memberships] = useQuery(queries.organizations.byUser({}));
+  const organizations = memberships?.map((m) => m.organization) ?? [];
   const navigate = useNavigate();
   const z = useZero();
   const [installing, setInstalling] = useState<string | null>(null);
 
-  const handleInstall = async (targetOrg: { id: string; slug: string; name: string }) => {
+  const handleInstall = async (targetOrg: Organization) => {
+    if (!targetOrg) return;
     setInstalling(targetOrg.id);
 
     try {
@@ -111,6 +119,7 @@ export function InstallTemplateDialog({
           <div className="p-3 max-h-96 overflow-y-auto">
             <ul className="space-y-2">
               {organizations?.map((o) => {
+                if (!o) return null;
                 const isInstalling = installing === o.id;
                 const isCurrent = organization?.slug === o.slug;
 
@@ -131,7 +140,11 @@ export function InstallTemplateDialog({
                         disabled:opacity-50 disabled:cursor-not-allowed
                       `}
                     >
-                      <OrganizationAvatar organization={o} size="lg" />
+                      <OrganizationAvatar
+                        name={o.name}
+                        color={o.color ?? getDefaultColorForId(o.id)}
+                        size="lg"
+                      />
                       <div className="flex-1 text-left min-w-0">
                         <div className="flex items-center gap-x-2">
                           <div className="font-medium text-gray-900 text-sm truncate">{o.name}</div>

@@ -15,6 +15,7 @@ import {
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import {
   BlockquoteIcon,
   BoldIcon,
@@ -27,9 +28,12 @@ import {
 } from "@lydie/ui/components/icons/wysiwyg-icons";
 import { queries } from "@lydie/zero/queries";
 import { Editor } from "@tiptap/react";
+import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
+import { Button as RACButton, Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
 
+import { isSidebarCollapsedAtom } from "@/atoms/sidebar";
+import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useImageUpload } from "@/hooks/use-image-upload";
@@ -140,10 +144,33 @@ export function EditorToolbar({ editor, doc }: Props) {
     unpublishDocument(doc.id);
   };
 
+  const isSidebarCollapsed = useAtomValue(isSidebarCollapsedAtom);
+
   return (
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
       <Toolbar aria-label="Editor formatting" className="flex items-center">
         <div className="flex items-center">
+          {isSidebarCollapsed && (
+            <>
+              <TooltipTrigger delay={500}>
+                <RACButton
+                  className={composeTailwindRenderProps(
+                    focusRing,
+                    "p-1 rounded hover:bg-black/5 text-gray-700 group mr-1",
+                  )}
+                  onPress={() => {
+                    // Dispatch custom event to toggle sidebar
+                    window.dispatchEvent(new CustomEvent("toggle-sidebar"));
+                  }}
+                  aria-label="Expand sidebar"
+                >
+                  <SidebarIcon direction="left" collapsed={true} />
+                </RACButton>
+                <Tooltip>Expand sidebar</Tooltip>
+              </TooltipTrigger>
+              <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
+            </>
+          )}
           <Group aria-label="Block type" className="flex items-center gap-1">
             <BlockTypeDropdown editor={editor} />
           </Group>

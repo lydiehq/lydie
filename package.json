@@ -8,7 +8,7 @@
     ],
     "catalog": {
       "@fluentui/react-icons": "^2.0.317",
-      "@rocicorp/zero": "0.25.11",
+      "@rocicorp/zero": "0.25.12",
       "sst": "3.17.21",
       "zod": "^4.3.6",
       "react": "^19.2.4",
@@ -50,7 +50,9 @@
   "dependencies": {
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
-    "framer-motion": "^12.31.0"
+    "@tanstack/query-sync-storage-persister": "^5.90.22",
+    "@tanstack/react-query-persist-client": "^5.90.22",
+    "framer-motion": "^12.31.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

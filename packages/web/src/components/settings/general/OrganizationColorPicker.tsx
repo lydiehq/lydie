@@ -14,8 +14,9 @@ export function OrganizationColorPicker({
 }: OrganizationColorPickerProps) {
   return (
     <div className="flex flex-col gap-y-2">
-      <Label>Workspace Color</Label>
+      <Label id="workspace-color-label">Workspace Color</Label>
       <RadioGroup
+        aria-labelledby="workspace-color-label"
         value={selectedColor}
         onChange={onColorChange}
         orientation="horizontal"

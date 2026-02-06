@@ -5,6 +5,10 @@ import { Zero } from "@rocicorp/zero";
 
 const ZERO_INSTANCE_KEY = Symbol.for("__lydie_zero_instance__");
 
+// Cache configuration following zbugs pattern
+// Short TTL ensures data stays fresh while allowing instant navigation
+export const CACHE_PRELOAD = { ttl: "10s" } as const;
+
 interface GlobalWithZero {
   [ZERO_INSTANCE_KEY]?: Zero<Schema>;
 }
@@ -51,7 +55,30 @@ export function preloadSidebarData(
   _organizationId: string,
 ): void {
   // Preload documents, integration connections, and links in one query
-  zero.preload(queries.organizations.documentTree({ organizationSlug }), {
-    ttl: "1m",
-  });
+  zero.preload(queries.organizations.documentTree({ organizationSlug }), CACHE_PRELOAD);
+}
+
+/**
+ * Preload workspace data for instant navigation.
+ * Following the zbugs pattern: preload "any data the app needs within one click".
+ *
+ * This preloads:
+ * - Document tree (sidebar structure)
+ * - Recent documents (~100 most recently updated, with full content/relationships)
+ * - Organization members (for user avatars/info throughout UI)
+ */
+export function preloadWorkspaceData(
+  zero: Zero<Schema>,
+  organizationSlug: string,
+  organizationId: string,
+): void {
+  // Sidebar structure - documents tree and integration links
+  zero.preload(queries.organizations.documentTree({ organizationSlug }), CACHE_PRELOAD);
+
+  // Recent documents for fast navigation - preloaded with full relationships
+  // so navigating to any recent doc is instant
+  zero.preload(queries.documents.recent({ organizationId, limit: 100 }), CACHE_PRELOAD);
+
+  // Organization members - needed for user avatars, mentions, etc.
+  zero.preload(queries.members.byOrganization({ organizationId }), CACHE_PRELOAD);
 }

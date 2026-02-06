@@ -1,11 +1,5 @@
-import {
-  LinkRegular,
-  PeopleTeamRegular,
-  BotRegular,
-  DocumentRegular,
-  SearchRegular,
-} from "@fluentui/react-icons";
-import { AnimatePresence, motion } from "motion/react";
+import { LinkRegular, PeopleTeamRegular, BotRegular, SearchRegular } from "@fluentui/react-icons";
+import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 
 export type DemoState = "collaboration" | "linking" | "ai-assistant" | "search";
@@ -98,7 +92,7 @@ export function DemoStateSelector({
       onStateChange(newState);
       setIsAutoPlaying(false);
     },
-    [onStateChange, setIsAutoPlaying]
+    [onStateChange, setIsAutoPlaying],
   );
 
   return (

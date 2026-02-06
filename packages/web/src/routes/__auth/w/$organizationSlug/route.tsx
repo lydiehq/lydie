@@ -5,17 +5,21 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "react-aria-components";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
+import { isSidebarCollapsedAtom } from "@/atoms/sidebar";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
 import { isDockedAtom } from "@/hooks/use-floating-assistant";
+import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
 import { authClient } from "@/utils/auth";
 
@@ -51,6 +55,9 @@ function RouteComponent() {
 }
 
 function RouteLayout() {
+  // Initialize shared WebSocket connection for the workspace
+  useWorkspaceWebSocket();
+
   const sidebarPanelRef = usePanelRef();
   const assistantPanelRef = usePanelRef();
   const [dockedAssistantContainer, setDockedAssistantContainer] = useState<HTMLDivElement | null>(
@@ -59,8 +66,25 @@ function RouteLayout() {
   const [floatingAssistantContainer, setFloatingAssistantContainer] =
     useState<HTMLDivElement | null>(null);
   const [size, setSize] = useState(280); // pixels
+  const setIsSidebarCollapsed = useSetAtom(isSidebarCollapsedAtom);
   const routerState = useRouterState();
   const isDocked = useAtomValue(isDockedAtom);
+
+  // Sync sidebar collapsed state to atom
+  useEffect(() => {
+    setIsSidebarCollapsed(size === COLLAPSED_SIZE);
+  }, [size, setIsSidebarCollapsed]);
+
+  // Listen for toggle-sidebar event from child components
+  useEffect(() => {
+    const handleToggleSidebar = () => {
+      toggleSidebar();
+    };
+    window.addEventListener("toggle-sidebar", handleToggleSidebar);
+    return () => {
+      window.removeEventListener("toggle-sidebar", handleToggleSidebar);
+    };
+  }, []);
   const navigate = useNavigate();
   const search = Route.useSearch();
   const params = Route.useParams();
@@ -157,8 +181,12 @@ function RouteLayout() {
             <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
           </Panel>
           <PanelResizer />
-          <Panel>
+          <Panel className="relative">
             <Outlet />
+            <FloatingSidebarToggleButton
+              isCollapsed={size === COLLAPSED_SIZE}
+              isEditorPage={!!currentDocumentId}
+            />
           </Panel>
           {shouldShowDockedPanel && (
             <>
@@ -177,11 +205,11 @@ function RouteLayout() {
         </Group>
       </div>
       <div ref={floatingAssistantContainerRef} />
-      {/* <FloatingAssistant
+      <FloatingAssistant
         currentDocumentId={currentDocumentId}
         dockedContainer={dockedAssistantContainer}
         floatingContainer={floatingAssistantContainer}
-      /> */}
+      />
       {search.installTemplate && (
         <InstallTemplateDialog
           isOpen={isTemplateDialogOpen}
@@ -189,6 +217,33 @@ function RouteLayout() {
           templateSlug={search.installTemplate}
         />
       )}
+    </div>
+  );
+}
+
+type FloatingSidebarToggleButtonProps = {
+  isCollapsed: boolean;
+  isEditorPage: boolean;
+};
+
+function FloatingSidebarToggleButton({
+  isCollapsed,
+  isEditorPage,
+}: FloatingSidebarToggleButtonProps) {
+  if (!isCollapsed || isEditorPage) {
+    return null;
+  }
+
+  return (
+    <div className="absolute top-3 left-3 z-50">
+      <Button
+        onPress={() => {
+          window.dispatchEvent(new CustomEvent("toggle-sidebar"));
+        }}
+        aria-label="Expand sidebar"
+      >
+        <SidebarIcon direction="left" collapsed={true} />
+      </Button>
     </div>
   );
 }

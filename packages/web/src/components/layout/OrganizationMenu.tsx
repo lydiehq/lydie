@@ -1,14 +1,16 @@
+import { getDefaultColorForId } from "@lydie/core/colors";
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLink } from "@tanstack/react-router";
 import clsx from "clsx";
 import { useState } from "react";
 import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
-
-import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 
 import { useOrganization } from "@/context/organization.context";
 import { clearSession } from "@/lib/auth/session";
@@ -27,6 +29,17 @@ type Props = {
 
 export function OrganizationMenu({ isCollapsed }: Props) {
   const { organization } = useOrganization();
+
+  // Live query to get real-time organization updates
+  const [liveOrganization] = useQuery(
+    queries.organizations.byId({ organizationId: organization?.id ?? "" }),
+  );
+
+  // Use live data if available, fall back to loader data
+  const displayOrganization = liveOrganization ?? organization;
+  const avatarColor =
+    displayOrganization?.color ?? getDefaultColorForId(displayOrganization?.id ?? "");
+  const avatarName = displayOrganization?.name ?? null;
 
   const queryClient = useQueryClient();
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
@@ -52,11 +65,11 @@ export function OrganizationMenu({ isCollapsed }: Props) {
             ),
           )}
         >
-          <OrganizationAvatar size="md" />
+          <OrganizationAvatar name={avatarName} color={avatarColor} size="md" />
           {!isCollapsed && (
             <>
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">
-                {organization?.name}
+                {displayOrganization?.name}
               </div>
               <CollapseArrow
                 className={`size-3 text-gray-500 ${isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity rotate-90`}
@@ -66,13 +79,14 @@ export function OrganizationMenu({ isCollapsed }: Props) {
         </RACButton>
         <Popover placement="bottom start" className="min-w-[220px]">
           <div className="flex items-center gap-x-2 px-2 pt-2">
-            <OrganizationAvatar size="md" />
+            <OrganizationAvatar name={avatarName} color={avatarColor} size="md" />
             <div className="flex flex-col">
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">
-                {organization?.name}
+                {displayOrganization?.name}
               </div>
               <div className="text-xs text-gray-500">
-                {!organization?.subscriptionPlan || organization.subscriptionPlan === PLAN_TYPES.FREE
+                {!organization?.subscriptionPlan ||
+                organization.subscriptionPlan === PLAN_TYPES.FREE
                   ? PLAN_LIMITS[PLAN_TYPES.FREE].name
                   : organization.subscriptionPlan === PLAN_TYPES.MONTHLY
                     ? PLAN_LIMITS[PLAN_TYPES.MONTHLY].name

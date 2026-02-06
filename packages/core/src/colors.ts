@@ -21,4 +21,10 @@ export function getRandomColor() {
   return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
+export function getDefaultColorForId(id: string): string {
+  if (!id) return COLORS[0].value;
+  const index = id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % COLORS.length;
+  return COLORS[index]?.value ?? COLORS[0].value;
+}
+
 export type ColorId = (typeof COLORS)[number]["id"];
