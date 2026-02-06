@@ -73,8 +73,8 @@ export async function createCheckoutSession(
 export async function createCustomerPortalSession(organizationId: string, returnUrl: string) {
   const billing = await getWorkspaceBilling(organizationId);
 
-  if (!billing || billing.plan !== "pro") {
-    throw new Error("Customer portal is only available for Pro workspaces");
+  if (!billing || (billing.plan !== "monthly" && billing.plan !== "yearly")) {
+    throw new Error("Customer portal is only available for paid workspaces");
   }
 
   // Get Stripe customer from billing owner
