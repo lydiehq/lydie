@@ -66,10 +66,10 @@ export const sessionAuth: MiddlewareHandler<SessionAuthEnv> = async (c, next) =>
 // Organization ID can come from header (X-Organization-Id) or URL param (:organizationId)
 export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, next) => {
   console.log("[organizationContext] Starting request processing");
-  
+
   const user = c.get("user");
   console.log("[organizationContext] User from context:", user?.id || "NOT SET");
-  
+
   if (!user) {
     console.error("[organizationContext] No user in context - throwing 401");
     throw new HTTPException(401, {
@@ -84,7 +84,10 @@ export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, 
   if (!organizationId) {
     console.error("[organizationContext] No organization ID in header - checking URL params");
     organizationId = c.req.param("organizationId");
-    console.log("[organizationContext] organizationId from URL param:", organizationId || "NOT SET");
+    console.log(
+      "[organizationContext] organizationId from URL param:",
+      organizationId || "NOT SET",
+    );
   }
 
   if (!organizationId) {
@@ -95,8 +98,10 @@ export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, 
     });
   }
 
-  console.log(`[organizationContext] Looking up organization ${organizationId} with user ${user.id}`);
-  
+  console.log(
+    `[organizationContext] Looking up organization ${organizationId} with user ${user.id}`,
+  );
+
   const organization = await db.query.organizationsTable.findFirst({
     where: {
       id: organizationId,
@@ -121,13 +126,17 @@ export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, 
   }
 
   if (organization.members.length === 0) {
-    console.error(`[organizationContext] User ${user.id} is not a member of organization ${organizationId}`);
+    console.error(
+      `[organizationContext] User ${user.id} is not a member of organization ${organizationId}`,
+    );
     throw new HTTPException(403, {
       message: "Access denied - User is not a member of this organization",
     });
   }
 
-  console.log("[organizationContext] SUCCESS - Setting organizationId and organizationSlug and proceeding");
+  console.log(
+    "[organizationContext] SUCCESS - Setting organizationId and organizationSlug and proceeding",
+  );
   c.set("organizationId", organizationId);
   c.set("organizationSlug", organization.slug);
   return next();

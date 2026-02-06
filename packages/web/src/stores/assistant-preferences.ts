@@ -1,6 +1,5 @@
-import { atomWithStorage } from "jotai/utils";
-
 import { getDefaultModel } from "@lydie/core/ai/models";
+import { atomWithStorage } from "jotai/utils";
 
 // Default agent is null (uses system default)
 const DEFAULT_AGENT_ID: string | null = null;

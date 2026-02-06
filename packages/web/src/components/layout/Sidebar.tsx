@@ -85,9 +85,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           <Tooltip>Collapse sidebar</Tooltip>
         </TooltipTrigger>
       </div>
-      <div
-        className={`h-full flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`}
-      />
+      <div className={`h-full flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`} />
       <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
         <div className="flex gap-x-1 px-3">
           <Button
@@ -217,5 +215,3 @@ function BottomBar() {
     </div>
   );
 }
-
-

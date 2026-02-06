@@ -1,7 +1,15 @@
 import type { Zero } from "@rocicorp/zero";
 
-import { QueryClient, type Query, type QueryClient as QueryClientType } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import {
+  QueryClient,
+  type Query,
+  type QueryClient as QueryClientType,
+} from "@tanstack/react-query";
+import {
+  persistQueryClientRestore,
+  persistQueryClientSubscribe,
+} from "@tanstack/react-query-persist-client";
 import {
   CatchBoundary,
   type NavigateOptions,
@@ -9,7 +17,6 @@ import {
   type ToOptions,
   createRouter as createTanStackRouter,
 } from "@tanstack/react-router";
-import { persistQueryClientRestore, persistQueryClientSubscribe } from "@tanstack/react-query-persist-client";
 
 import "./styles/tailwind.css";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";

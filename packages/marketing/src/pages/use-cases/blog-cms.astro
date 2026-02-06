@@ -10,30 +10,30 @@ import Divider from "src/components/landing/Divider.astro";
 import "../../styles/grainy-gradient.css";
 import { CTASection } from "src/components/landing/CTASection";
 
-const title = "Team Knowledge Base & Wiki - Lydie";
+const title = "Blog CMS - Lydie";
 const description =
-  "Build a team wiki and knowledge base that scales with your company. Centralize documentation, streamline onboarding, and keep everyone aligned.";
+  "Run your blog with Lydie's APIs and content management. Built for marketing blogs, developer blogs, and publishing.";
 
 const faqItems = [
   {
-    q: "What is a team knowledge base?",
-    a: "A team knowledge base is a centralized repository where your company stores and organizes important information—processes, documentation, policies, meeting notes, project specs, and more. It serves as a single source of truth that everyone can access, reducing information silos and ensuring everyone has the context they need to do their best work.",
+    q: "How can I use Lydie as a blog CMS?",
+    a: "Lydie gives you a content management system through its APIs. You create, edit, and manage blog posts in Lydie. Then you use the APIs to fetch and display them on your website. This works for marketing sites, developer blogs, or publishing platforms. Writers work in Lydie while developers build the frontend with any framework.",
   },
   {
-    q: "How does a knowledge base help with onboarding?",
-    a: "New team members can ramp up faster when all company knowledge is documented and accessible. Instead of asking questions repeatedly, they can find answers in the wiki—from company values and benefits info to technical documentation and team processes. This reduces onboarding time and helps new hires feel confident and independent from day one.",
+    q: "What makes Lydie different from traditional blog platforms?",
+    a: "Traditional blog platforms lock you into their themes and plugins. Lydie gives you full control over your frontend and a good editing experience. Writers get a modern interface for creating content. Developers fetch content via API and render it how they want. No theme constraints or plugin bloat.",
   },
   {
-    q: "Can different teams have their own wikis?",
-    a: "Absolutely! While you can maintain company-wide knowledge bases for universal information like mission statements and goals, individual teams can create their own dedicated spaces. Engineering can have technical documentation, Marketing can store campaigns and brand guidelines, Product can maintain roadmaps and specs—each tailored to their specific needs while remaining discoverable.",
+    q: "Can I manage multiple blogs with Lydie?",
+    a: "Yes. You can create separate spaces for different blogs in your Lydie workspace. Each space can have its own structure and organization. This works well for companies running multiple blogs: a marketing blog, a developer blog, internal newsletters. All managed from one place.",
   },
   {
-    q: "How do we keep our knowledge base up to date?",
-    a: "Lydie makes it easy to maintain living documentation. Assign owners to key pages, use inline comments to suggest updates, and leverage version history to track changes. Regular reviews and a culture of 'documentation as code'—treating docs with the same care as code—help ensure your knowledge base stays current and valuable.",
+    q: "How do I integrate Lydie with my blog frontend?",
+    a: "Lydie provides REST APIs to fetch your blog content. Retrieve posts, pages, and media with simple API calls. We also have webhooks for real-time updates so your blog stays in sync as content changes. Integration works with Next.js, Astro, or any other framework.",
   },
   {
-    q: "Is there a limit to how much we can store?",
-    a: "There's no practical limit on the amount of content you can store in your Lydie knowledge base. Create as many pages, nested hierarchies, and databases as your team needs. Our search and organization tools scale with your content, so you'll always be able to find what you need regardless of how large your knowledge base grows.",
+    q: "Does Lydie support SEO-optimized blogs?",
+    a: "Yes. You can store SEO metadata alongside your content: titles, descriptions, keywords, and custom fields. Fetch this data via API to populate your meta tags, sitemaps, and structured data. Since you control the frontend, you can implement best practices for page speed and Core Web Vitals.",
   },
 ];
 ---
@@ -129,7 +129,7 @@ const faqItems = [
       <Breadcrumbs
         items={[
           { label: "Use cases", href: "/use-cases" },
-          { label: "Team Knowledge Base & Wiki" },
+          { label: "Blog CMS" },
         ]}
       />
     </div>
@@ -138,57 +138,46 @@ const faqItems = [
       <h1
         class="text-3xl font-medium text-black/85 tracking-tight mb-6 leading-tight"
       >
+        Run your blog with
         <span class="kb-text">
-          Team Knowledge Base
+          powerful APIs
           <span
             class="kb-highlight"
             style="background-color: #3b82f633; animation-delay: 0s;"></span>
-        </span> & Wiki
+        </span>
       </h1>
       <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
-        Centralize your company's knowledge<br />
+        Manage content in Lydie.<br />
         <span class="kb-text">
-          so everyone can find what they need
+          Publish anywhere you want
           <span
             class="kb-highlight-rtl"
             style="background-color: #10b98133; animation-delay: 0.3s;"></span>
-        </span>, from day one.
+        </span>, with total flexibility.
       </p>
       <div class="flex items-center justify-center gap-4">
         <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
-          <span>Create team wiki</span>
+          <span>Start your blog</span>
           <ChevronRightRegular className="size-4" />
         </Button>
         <a
-          href="https://lydie.co/contact"
+          href="https://lydie.co/blog"
           class="text-black/70 hover:text-black transition-colors text-sm font-medium"
         >
-          Request a demo
+          See our blog
         </a>
       </div>
     </div>
     <div class="max-w-xl mx-auto flex flex-col gap-y-8">
       <div class="prose mx-auto">
         <p class="fade-in-element" style="animation-delay: 0.4s;">
-          When all your company's information lives in one place, everything
-          becomes easier. Teams find what they need without hunting through
-          emails or chat threads. New hires get up to speed faster with
-          documented processes and historical context. Decisions get made with
-          better information.
+          We built our own blog on Lydie. Every post was created and managed in Lydie, then served via our APIs. This is how we actually run lydie.co/blog.
         </p>
         <p class="fade-in-element" style="animation-delay: 0.5s;">
-          Lydie wikis are fully customizable, so they work for companies of any
-          size. Build company-wide knowledge bases for universal information
-          like goals, mission statements, and benefits. Let individual teams
-          create their own spaces—engineering wikis, marketing playbooks,
-          product documentation—tailored to their needs while remaining
-          connected to the bigger picture.
+          Writers get a collaborative editor for creating content. Developers get clean APIs to fetch that content and render it how they want. No fighting with themes or plugin limitations. Just flexibility.
         </p>
         <p class="fade-in-element" style="animation-delay: 0.6s;">
-          Start with templates or build from scratch. Create org-wide databases
-          for meeting notes, project docs, and shared resources. With powerful
-          search, linking between pages, and collaborative editing, your team
-          wiki becomes a living document that evolves with your company.
+          Whether you are running a marketing blog, developer documentation, or a publishing platform, Lydie gives you tools to create content and APIs to deliver it anywhere.
         </p>
       </div>
       <Divider />

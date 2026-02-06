@@ -1,18 +1,18 @@
 #!/usr/bin/env bun
 /**
  * CRON Job: Reset Expired Credits
- * 
+ *
  * This script runs daily as a safety net to ensure all users get their credits reset
  * when their billing period ends. The primary reset happens lazily during credit consumption,
  * but this catches inactive users.
- * 
+ *
  * Run daily via cron or scheduled job:
  * 0 0 * * * bun run packages/scripts/src/reset-expired-credits.ts
  */
 
+import { PLAN_CONFIG, type PlanType } from "@lydie/core/billing/config";
 import { db, schema } from "@lydie/database";
 import { eq, lt, and, sql } from "drizzle-orm";
-import { PLAN_CONFIG, type PlanType } from "@lydie/core/billing/config";
 
 async function resetExpiredCredits() {
   const now = new Date();
@@ -26,8 +26,8 @@ async function resetExpiredCredits() {
       and(
         lt(schema.userWorkspaceCreditsTable.currentPeriodEnd, now),
         // Ensure we don't reset records that were just updated (idempotency)
-        lt(schema.userWorkspaceCreditsTable.updatedAt, sql`NOW() - INTERVAL '1 hour'`)
-      )
+        lt(schema.userWorkspaceCreditsTable.updatedAt, sql`NOW() - INTERVAL '1 hour'`),
+      ),
     );
 
   console.log(`Found ${expiredCredits.length} users with expired credit periods`);
@@ -39,12 +39,12 @@ async function resetExpiredCredits() {
     try {
       const organizationId = credit.organizationId;
       const userId = credit.userId;
-      
+
       // Get workspace billing to determine plan and period
       const billing = await db.query.workspaceBillingTable.findFirst({
         where: { organizationId },
       });
-      
+
       const plan = (billing?.plan as PlanType) || "free";
       const planConfig = PLAN_CONFIG[plan];
 

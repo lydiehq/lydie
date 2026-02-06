@@ -70,7 +70,9 @@ async function deleteUser() {
     // Note: Stripe customer data should be cleaned up separately via Stripe Dashboard
 
     // Delete workspace billing records where user is billing owner (must be done before deleting user)
-    await db.delete(schema.workspaceBillingTable).where(eq(schema.workspaceBillingTable.billingOwnerUserId, user.id));
+    await db
+      .delete(schema.workspaceBillingTable)
+      .where(eq(schema.workspaceBillingTable.billingOwnerUserId, user.id));
     console.log(`✅ Deleted workspace billing records`);
 
     await db.delete(schema.assetsTable).where(eq(schema.assetsTable.userId, user.id));

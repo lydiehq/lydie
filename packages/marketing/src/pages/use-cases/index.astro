@@ -2,104 +2,67 @@
 import Container from "../../components/Container.astro";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import { Button } from "../../components/generic/Button";
-import {
-  ArrowRightRegular,
-  ChevronRightRegular,
-  PersonRegular,
-  PeopleTeamRegular,
-} from "@fluentui/react-icons";
-import { Logo } from "../../components/Logo";
+import { ArrowRightRegular } from "@fluentui/react-icons";
+import { GradientOutline } from "src/components/generic/GradientOutline";
+import { SectionHeader } from "src/components/landing/SectionHeader";
 import { CTASection } from "src/components/landing/CTASection";
 
 const title = "Use Cases - Lydie";
 const description =
-  "Discover how Lydie adapts to your needs—whether you're building a personal knowledge base or managing team documentation.";
+  "Discover how Lydie adapts to your needs. Build a personal knowledge base or manage team documentation with one flexible tool.";
 
 const useCases = [
   {
     title: "Personal knowledge base",
     description:
-      "Document and organize your expertise in one place that grows with you. Capture ideas, learnings, and insights to build your second brain.",
+      "Keep all your notes, ideas, and learnings in one place. Document what you know and find it when you need it.",
     href: "/use-cases/personal-knowledge-base",
-    icon: PersonRegular,
-    color: "#3b82f6",
   },
   {
-    title: "Team knowledge base & wiki",
+    title: "Company wiki",
     description:
-      "Centralize company knowledge for seamless onboarding and team alignment. Create customizable wikis that scale from startup to enterprise.",
-    href: "/use-cases/team-knowledge-base",
-    icon: PeopleTeamRegular,
-    color: "#8b5cf6",
+      "Put all your company docs in one place so the team can actually find them. Onboard new people faster and keep everyone on the same page.",
+    href: "/use-cases/company-wiki",
+  },
+  {
+    title: "Blog CMS",
+    description:
+      "Manage your blog content in Lydie and pull it into your site via API. We run our own blog this way.",
+    href: "/use-cases/blog-cms",
   },
 ];
 ---
 
 <Layout title={title} description={description}>
   <Container className="flex flex-col gap-y-16 pb-16">
-    <div class="max-w-4xl mx-auto w-full pt-8">
-      <Breadcrumbs items={[{ label: "Use cases" }]} />
-    </div>
-    <!-- Hero Section -->
-    <div class="max-w-4xl mx-auto flex flex-col gap-y-8">
-      <div class="flex flex-col gap-y-6 items-center text-center">
-        <Logo className="size-6 text-gray-200" />
-
-        <div class="flex flex-col gap-y-4">
-          <h1
-            class="text-5xl font-heading font-medium tracking-tight text-gray-950 max-w-3xl"
-          >
-            Use cases
-          </h1>
-          <p class="text-lg text-gray-600 max-w-2xl text-balance">
-            Lydie is incredibly flexible—whether you're capturing personal ideas
-            or building a team wiki, our platform adapts to your workflow and
-            scales with your needs.
-          </p>
-        </div>
-
-        <div class="flex gap-x-4 items-center">
-          <Button href="https://app.lydie.co/auth" size="lg">
-            <div class="flex items-center gap-x-1">
-              <span>Get started for free</span>
-              <ChevronRightRegular
-                className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200"
-              />
-            </div>
-          </Button>
-        </div>
-      </div>
+    <Breadcrumbs items={[{ label: "Use Cases" }]} />
+    <div class="flex flex-col gap-y-6 relative p-4">
+      <GradientOutline />
+      <SectionHeader
+        className="max-w-lg"
+        title="From personal thinking to team knowledge"
+        description="Capture, organize, and share knowledge. One tool that works for personal notes or full team documentation."
+      />
     </div>
 
-    <!-- Use Cases Grid -->
-    <div class="max-w-4xl mx-auto w-full">
-      <div class="grid md:grid-cols-2 gap-6">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="grid md:grid-cols-3 gap-8">
         {
           useCases.map((useCase) => {
-            const Icon = useCase.icon;
             return (
               <a
                 href={useCase.href}
-                class="group flex flex-col gap-y-4 p-8 rounded-2xl border border-black/8 bg-white hover:border-black/12 hover:shadow-sm transition-all duration-200"
+                class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
               >
-                <div class="flex items-start gap-x-4">
-                  <div
-                    class="size-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-                    style={`background-color: ${useCase.color}15`}
-                  >
-                    <Icon className="size-6" style={{ color: useCase.color }} />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <h3 class="text-xl font-semibold text-black/85 group-hover:text-black/95 transition-colors mb-2">
-                      {useCase.title}
-                    </h3>
-                    <p class="text-black/60 text-[15px]/relaxed">
-                      {useCase.description}
-                    </p>
-                  </div>
+                <div class="flex flex-col gap-y-2">
+                  <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                    {useCase.title}
+                  </h3>
+                  <p class="text-gray-600 text-[15px]/relaxed">
+                    {useCase.description}
+                  </p>
                 </div>
-                <div class="flex items-center gap-x-1 text-sm font-medium text-black/60 group-hover:text-black/80 transition-colors pl-16">
+                <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto">
                   <span>Learn more</span>
                   <ArrowRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
                 </div>

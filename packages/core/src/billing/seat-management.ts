@@ -49,9 +49,7 @@ export async function syncSubscriptionQuantity(
 
   try {
     // Get the subscription to find the subscription item ID
-    const subscription = await stripe.subscriptions.retrieve(
-      billing.stripeSubscriptionId,
-    );
+    const subscription = await stripe.subscriptions.retrieve(billing.stripeSubscriptionId);
 
     const subscriptionItem = subscription.items.data[0];
     if (!subscriptionItem) {
@@ -98,9 +96,7 @@ export async function getBillingMemberCount(organizationId: string) {
 
   if (billing?.stripeSubscriptionId) {
     try {
-      const subscription = await stripe.subscriptions.retrieve(
-        billing.stripeSubscriptionId,
-      );
+      const subscription = await stripe.subscriptions.retrieve(billing.stripeSubscriptionId);
       const subscriptionItem = subscription.items.data[0];
       stripeQuantity = subscriptionItem?.quantity || 1;
     } catch {

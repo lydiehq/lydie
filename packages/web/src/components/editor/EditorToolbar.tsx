@@ -30,7 +30,14 @@ import { queries } from "@lydie/zero/queries";
 import { Editor } from "@tiptap/react";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import { Button as RACButton, Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
+import {
+  Button as RACButton,
+  Group,
+  MenuTrigger,
+  Separator,
+  Toolbar,
+  TooltipTrigger,
+} from "react-aria-components";
 
 import { isSidebarCollapsedAtom } from "@/atoms/sidebar";
 import { SidebarIcon } from "@/components/layout/SidebarIcon";

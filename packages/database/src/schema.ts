@@ -746,7 +746,10 @@ export const stripeCustomersTable = pgTable(
 export const workspaceBillingTable = pgTable(
   "workspace_billing",
   {
-    id: text("id").primaryKey().notNull().$default(() => createId()),
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
     organizationId: text("organization_id")
       .notNull()
       .unique()
@@ -791,8 +794,11 @@ export const workspaceBillingTable = pgTable(
 export const userWorkspaceCreditsTable = pgTable(
   "user_workspace_credits",
   {
-    id: text("id").primaryKey().notNull().$default(() => createId()),
-    
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+
     // Composite unique key: one credit record per user per workspace
     userId: text("user_id")
       .notNull()
@@ -825,7 +831,10 @@ export const userWorkspaceCreditsTable = pgTable(
 export const creditUsageLogTable = pgTable(
   "credit_usage_log",
   {
-    id: text("id").primaryKey().notNull().$default(() => createId()),
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),

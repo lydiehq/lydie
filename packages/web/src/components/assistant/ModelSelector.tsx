@@ -1,5 +1,6 @@
-import { ChevronDownRegular } from "@fluentui/react-icons";
 import type { LLMModel } from "@lydie/core/ai/models";
+
+import { ChevronDownRegular } from "@fluentui/react-icons";
 import {
   getAllModels,
   getDefaultModel,
@@ -101,7 +102,9 @@ export function ModelSelector({ selectedModelId, onSelectModel }: ModelSelectorP
                               Beta
                             </span>
                           )}
-                          <span className="text-xs text-gray-500 font-medium">{model.credits}c</span>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {model.credits}c
+                          </span>
                         </div>
                       </SelectItem>
                     );

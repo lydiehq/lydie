@@ -10,11 +10,7 @@ type InviteDialogProps = {
   invitationForm: any;
 };
 
-export function InviteDialog({
-  isOpen,
-  onOpenChange,
-  invitationForm,
-}: InviteDialogProps) {
+export function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDialogProps) {
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
       <Modal isDismissable>
@@ -29,7 +25,8 @@ export function InviteDialog({
               <Heading level={2}>Invite Member</Heading>
 
               <p className="text-sm text-gray-600">
-                Invite a team member to join your workspace. They will be able to access and collaborate on documents.
+                Invite a team member to join your workspace. They will be able to access and
+                collaborate on documents.
               </p>
 
               <invitationForm.AppField

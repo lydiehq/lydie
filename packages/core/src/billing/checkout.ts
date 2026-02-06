@@ -4,8 +4,8 @@ import { db, schema } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
 import { stripe, STRIPE_PRICE_IDS } from "./config";
-import { getOrCreateStripeCustomer, getWorkspaceBilling } from "./workspace-credits";
 import { getMemberCount } from "./seat-management";
+import { getOrCreateStripeCustomer, getWorkspaceBilling } from "./workspace-credits";
 
 /**
  * Create a Stripe Checkout session for upgrading to Pro
@@ -31,7 +31,10 @@ export async function createCheckoutSession(
   // Check if workspace already has an active subscription
   const billing = await getWorkspaceBilling(organizationId);
   if (billing?.plan === "monthly" || billing?.plan === "yearly") {
-    if (billing.stripeSubscriptionStatus === "active" || billing.stripeSubscriptionStatus === "trialing") {
+    if (
+      billing.stripeSubscriptionStatus === "active" ||
+      billing.stripeSubscriptionStatus === "trialing"
+    ) {
       throw new Error("Workspace already has an active Pro subscription");
     }
   }

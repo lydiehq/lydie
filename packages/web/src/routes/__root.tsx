@@ -1,4 +1,5 @@
 import { ZeroProvider } from "@rocicorp/zero/react";
+import { useQuery } from "@tanstack/react-query";
 import {
   HeadContent,
   type NavigateOptions,
@@ -7,7 +8,6 @@ import {
   createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { RouterProvider } from "react-aria-components";
@@ -83,11 +83,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context: { queryClient } }) => {
     // Get cached session from React Query cache (restored from localStorage by persist)
     // This returns immediately with cached data if available
-    const sessionData = await queryClient.ensureQueryData(getSessionQuery()) as ExtendedSessionData | undefined;
-    
+    const sessionData = (await queryClient.ensureQueryData(getSessionQuery())) as
+      | ExtendedSessionData
+      | undefined;
+
     // Initialize Zero with the cached session so child routes can use it in beforeLoad
     const zero = getZeroInstance(sessionData);
-    
+
     return { zero, auth: sessionData };
   },
   component: () => {
@@ -95,7 +97,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const { zero: zeroInstance } = Route.useRouteContext();
     const fontSizeOption = useAtomValue(rootFontSizeAtom);
     const [isRedirecting, setIsRedirecting] = useState(false);
-    
+
     // Load session - uses cached data immediately, then refetches with staleTime: 0
     const { data: sessionData, isLoading } = useQuery(getSessionQuery()) as {
       data: ExtendedSessionData | undefined;
@@ -109,7 +111,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       if (!isLoading && sessionData?.user) {
         const organizations = sessionData.session?.organizations || [];
         const pathname = window.location.pathname;
-        
+
         // Only redirect to /new if user has no orgs and isn't already on special pages
         if (
           organizations.length === 0 &&

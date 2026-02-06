@@ -25,7 +25,10 @@ export function WorkspaceForm({ organization }: WorkspaceFormProps) {
   const [selectedColor, setSelectedColor] = useState<string>(
     organization.color || getRandomColor().value,
   );
-  const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [formMessage, setFormMessage] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const workspaceForm = useAppForm({
     defaultValues: {

@@ -5,8 +5,8 @@ import { admin, customSession, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
-import { createMemberCredits, markMemberAsRemoved } from "./billing/workspace-credits";
 import { syncSubscriptionQuantity } from "./billing/seat-management";
+import { createMemberCredits, markMemberAsRemoved } from "./billing/workspace-credits";
 import { sendEmail } from "./email";
 import { createId } from "./id";
 import { scheduleOnboardingEmails } from "./onboarding";
@@ -136,7 +136,9 @@ export const authClient = betterAuth({
           // Sync subscription quantity to charge for the new seat
           try {
             await syncSubscriptionQuantity(organization.id);
-            console.log(`Synced subscription quantity for org ${organization.id} after adding member`);
+            console.log(
+              `Synced subscription quantity for org ${organization.id} after adding member`,
+            );
           } catch (error) {
             console.error("Error syncing subscription quantity after adding member:", error);
           }
@@ -161,7 +163,9 @@ export const authClient = betterAuth({
           // Sync subscription quantity to stop charging for the removed seat
           try {
             await syncSubscriptionQuantity(organization.id);
-            console.log(`Synced subscription quantity for org ${organization.id} after removing member`);
+            console.log(
+              `Synced subscription quantity for org ${organization.id} after removing member`,
+            );
           } catch (error) {
             console.error("Error syncing subscription quantity after removing member:", error);
           }
@@ -178,7 +182,9 @@ export const authClient = betterAuth({
           // Create credit record for the new member
           try {
             await createMemberCredits(userId, organization.id);
-            console.log(`Created credit record for invited member ${userId} in org ${organization.id}`);
+            console.log(
+              `Created credit record for invited member ${userId} in org ${organization.id}`,
+            );
           } catch (error) {
             console.error("Error creating member credits after invitation acceptance:", error);
           }
@@ -186,9 +192,14 @@ export const authClient = betterAuth({
           // Sync subscription quantity to charge for the new seat
           try {
             await syncSubscriptionQuantity(organization.id);
-            console.log(`Synced subscription quantity for org ${organization.id} after invitation acceptance`);
+            console.log(
+              `Synced subscription quantity for org ${organization.id} after invitation acceptance`,
+            );
           } catch (error) {
-            console.error("Error syncing subscription quantity after invitation acceptance:", error);
+            console.error(
+              "Error syncing subscription quantity after invitation acceptance:",
+              error,
+            );
           }
         },
       },

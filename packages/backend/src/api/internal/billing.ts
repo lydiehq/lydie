@@ -152,11 +152,11 @@ export const BillingRoute = new Hono<{ Variables: Variables }>()
       // Parse plan from request body
       const body = await c.req.json().catch(() => ({}));
       const plan = body.plan === "yearly" ? "yearly" : "monthly";
-      
+
       const origin = c.req.header("origin") || "https://app.lydie.ai";
       const successUrl = `${origin}/w/${organizationSlug}/settings/billing?session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${origin}/w/${organizationSlug}/settings/billing`;
-      
+
       const checkout = await createCheckoutSession(
         organizationId,
         user.id,

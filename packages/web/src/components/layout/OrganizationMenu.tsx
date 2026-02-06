@@ -1,5 +1,5 @@
-import { getDefaultColorForId } from "@lydie/core/colors";
 import { hasProAccess } from "@lydie/core/billing/plan-utils";
+import { getDefaultColorForId } from "@lydie/core/colors";
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";

@@ -77,11 +77,11 @@ export async function waitForSessionUpdate(
   delayMs = 200,
 ): Promise<boolean> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const session = await queryClient.fetchQuery({
+    const session = (await queryClient.fetchQuery({
       queryKey: SESSION_QUERY_KEY,
       queryFn: fetchSession,
       staleTime: 0,
-    }) as ExtendedSessionData | undefined;
+    })) as ExtendedSessionData | undefined;
 
     if (checkFn(session)) {
       return true;

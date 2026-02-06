@@ -62,9 +62,7 @@ export function MembersList({ members, currentUserId, onRemoveMember }: MembersL
                 <div className="flex flex-col gap-y-2 flex-1">
                   <div className="flex items-center gap-2">
                     <PersonRegular className="size-4 text-gray-500" />
-                    <span className="font-medium text-gray-900">
-                      {displayName}
-                    </span>
+                    <span className="font-medium text-gray-900">{displayName}</span>
                     {isCurrentUser && (
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                         you
@@ -114,12 +112,7 @@ export function MembersList({ members, currentUserId, onRemoveMember }: MembersL
                       </RACButton>
                       <Menu>
                         <MenuItem
-                          onAction={() =>
-                            onRemoveMember(
-                              member.id,
-                              memberNameForAction,
-                            )
-                          }
+                          onAction={() => onRemoveMember(member.id, memberNameForAction)}
                           className="text-red-600"
                         >
                           Remove Member

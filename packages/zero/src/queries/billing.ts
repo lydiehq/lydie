@@ -51,10 +51,7 @@ export const billingQueries = {
     ({ args: { organizationId }, ctx }) => {
       hasOrganizationAccess(ctx, organizationId);
       // Return organization with member count
-      return zql.organizations
-        .where("id", organizationId)
-        .one()
-        .related("members");
+      return zql.organizations.where("id", organizationId).one().related("members");
     },
   ),
 };

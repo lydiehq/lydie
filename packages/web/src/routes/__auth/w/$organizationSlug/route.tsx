@@ -11,10 +11,10 @@ import { Button } from "react-aria-components";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
-import { ErrorPage } from "@/components/layout/ErrorPage";
 import { isSidebarCollapsedAtom } from "@/atoms/sidebar";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
+import { ErrorPage } from "@/components/layout/ErrorPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { PanelResizer } from "@/components/panels/PanelResizer";

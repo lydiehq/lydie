@@ -60,8 +60,6 @@ const invitations = table("invitations")
   })
   .primaryKey("id");
 
-
-
 const documents = table("documents")
   .columns({
     id: string(),
@@ -343,8 +341,6 @@ const invitationsRelations = relationships(invitations, ({ one }) => ({
     destSchema: users,
   }),
 }));
-
-
 
 const usersRelations = relationships(users, ({ many, one }) => ({
   members: many({

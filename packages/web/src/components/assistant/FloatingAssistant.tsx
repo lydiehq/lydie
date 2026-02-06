@@ -31,10 +31,7 @@ import {
   pendingMessageAtom,
   useFloatingAssistant,
 } from "@/hooks/use-floating-assistant";
-import {
-  selectedAgentIdAtom,
-  selectedModelIdAtom,
-} from "@/stores/assistant-preferences";
+import { selectedAgentIdAtom, selectedModelIdAtom } from "@/stores/assistant-preferences";
 
 const LAYOUT_ID = {
   container: "assistant-container",

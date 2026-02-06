@@ -1,11 +1,11 @@
-import { claimSeat, getSeatClaimInfo } from "@lydie/core/billing/seat-management";
 import { handleSeatClaimed } from "@lydie/core/billing/billing-sync";
+import { claimSeat, getSeatClaimInfo } from "@lydie/core/billing/seat-management";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 /**
  * Public Seat Claim API Routes
- * 
+ *
  * These endpoints are publicly accessible for the seat claim flow.
  * Users receive invitation emails with tokens and claim seats without
  * needing to be pre-authenticated.
@@ -43,7 +43,7 @@ export const SeatClaimRoute = new Hono()
   /**
    * POST /api/seats/claim
    * Claim a seat using an invitation token
-   * 
+   *
    * Body:
    * - token: Invitation token from the email
    * - userId: ID of the user claiming the seat (must be logged in)
@@ -80,9 +80,9 @@ export const SeatClaimRoute = new Hono()
           const membershipResult = await handleSeatClaimed(
             result.seat.organizationId,
             result.seat.assignedEmail,
-            userId
+            userId,
           );
-          
+
           if (!membershipResult.success) {
             console.warn("Failed to add member after seat claim:", membershipResult.error);
             // Don't fail the claim if membership fails - they can be added later
@@ -102,11 +102,11 @@ export const SeatClaimRoute = new Hono()
       });
     } catch (error: any) {
       console.error("Error claiming seat:", error);
-      
+
       if (error instanceof HTTPException) {
         throw error;
       }
-      
+
       throw new HTTPException(500, {
         message: error.message || "Failed to claim seat",
       });

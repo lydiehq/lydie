@@ -5,9 +5,7 @@ import { Button } from "./generic/Button";
 
 const PRO_MONTHLY_PRICE = 18;
 const PRO_YEARLY_PRICE = 14;
-const SAVINGS_PERCENT = Math.round(
-  (1 - PRO_YEARLY_PRICE / PRO_MONTHLY_PRICE) * 100,
-);
+const SAVINGS_PERCENT = Math.round((1 - PRO_YEARLY_PRICE / PRO_MONTHLY_PRICE) * 100);
 
 export function PricingSection() {
   const [billing, setBilling] = useState<"yearly" | "monthly">("yearly");
@@ -26,9 +24,7 @@ export function PricingSection() {
             }`}
           >
             Yearly
-            <span className="ml-1.5 text-xs text-green-600">
-              Save {SAVINGS_PERCENT}%
-            </span>
+            <span className="ml-1.5 text-xs text-green-600">Save {SAVINGS_PERCENT}%</span>
           </button>
           <button
             onClick={() => setBilling("monthly")}
@@ -129,9 +125,7 @@ export function PricingSection() {
           <div className="flex flex-col gap-y-4">
             <div>
               <span className="text-2xl font-medium text-gray-900">4,000</span>
-              <span className="text-sm text-gray-600 ml-1">
-                credits / month / seat
-              </span>
+              <span className="text-sm text-gray-600 ml-1">credits / month / seat</span>
             </div>
             <ul className="flex flex-col gap-y-3">
               <li className="flex items-start gap-x-2">
@@ -157,8 +151,8 @@ export function PricingSection() {
 
       {/* Credit Explanation */}
       <div className="text-center text-sm text-gray-600 mt-4">
-        Credits refresh monthly. Yearly plans pay once per year but still get
-        fresh credits every month.
+        Credits refresh monthly. Yearly plans pay once per year but still get fresh credits every
+        month.
       </div>
     </div>
   );

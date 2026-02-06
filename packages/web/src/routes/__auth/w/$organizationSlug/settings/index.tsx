@@ -252,7 +252,11 @@ function RouteComponent() {
           </Button>
         </div>
 
-        <MembersList members={members} currentUserId={user?.id} onRemoveMember={handleRemoveMember} />
+        <MembersList
+          members={members}
+          currentUserId={user?.id}
+          onRemoveMember={handleRemoveMember}
+        />
         <InvitationsList invitations={invitations} onCancelInvitation={handleCancelInvitation} />
 
         {(!members || members.length === 0) && (!invitations || invitations.length === 0) && (

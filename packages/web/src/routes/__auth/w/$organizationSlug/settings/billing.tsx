@@ -293,15 +293,20 @@ function RouteComponent() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {seatInfo.members?.length || 1} seat{seatInfo.members?.length !== 1 ? 's' : ''}
+                        {seatInfo.members?.length || 1} seat
+                        {seatInfo.members?.length !== 1 ? "s" : ""}
                       </p>
                       <p className="text-xs text-gray-500">
-                        ${planInfo.price} × {subscriptionDetails?.quantity || seatInfo.members?.length || 1} = ${(planInfo.price * (subscriptionDetails?.quantity || seatInfo.members?.length || 1)).toFixed(0)}/month
+                        ${planInfo.price} ×{" "}
+                        {subscriptionDetails?.quantity || seatInfo.members?.length || 1} = $
+                        {(
+                          planInfo.price *
+                          (subscriptionDetails?.quantity || seatInfo.members?.length || 1)
+                        ).toFixed(0)}
+                        /month
                       </p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      Additional seats are prorated
-                    </p>
+                    <p className="text-xs text-gray-500">Additional seats are prorated</p>
                   </div>
                 </div>
               )}
@@ -476,7 +481,7 @@ function RouteComponent() {
           <div className="flex flex-col gap-y-4">
             <SectionHeader
               heading="Team Usage"
-              description={`${activeMembers.length} active member${activeMembers.length !== 1 ? 's' : ''} in this workspace.`}
+              description={`${activeMembers.length} active member${activeMembers.length !== 1 ? "s" : ""} in this workspace.`}
             />
             <Card className="p-6">
               <div className="space-y-4">
@@ -526,7 +531,7 @@ function RouteComponent() {
           <div className="flex flex-col gap-y-4">
             <SectionHeader
               heading="Former Members"
-              description={`${formerMembers.length} former member${formerMembers.length !== 1 ? 's' : ''} with historical usage.`}
+              description={`${formerMembers.length} former member${formerMembers.length !== 1 ? "s" : ""} with historical usage.`}
             />
             <Card className="p-6 bg-gray-50 border-gray-200">
               <div className="space-y-4">
