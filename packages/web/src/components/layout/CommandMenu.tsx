@@ -333,6 +333,7 @@ export function CommandMenu() {
             <SearchField
               aria-label="Quick search"
               className="flex w-full items-center border-b border-gray-100 px-3"
+              autoFocus
             >
               <SearchFilled className="size-4 shrink-0 text-gray-400" />
               <Input
