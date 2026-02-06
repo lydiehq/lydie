@@ -111,7 +111,7 @@ function RouteComponent() {
     <div className="p-1 size-full">
       <Surface className="overflow-y-auto">
         <div className="mx-auto max-w-5xl gap-x-8 flex size-full grow p-12 overflow-visible">
-          <nav aria-label="Settings navigation" className="w-[200px] shrink-0">
+          <nav aria-label="Settings navigation" className="w-[200px] shrink-0 sticky top-12 self-start">
             <ul className="flex flex-col gap-y-2">
               {settingsRoutes.map((section) => (
                 <li key={section.title} className="flex flex-col gap-y-2">

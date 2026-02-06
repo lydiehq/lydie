@@ -1,4 +1,5 @@
 import { ChevronRightRegular } from "@fluentui/react-icons";
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Modal } from "@lydie/ui/components/generic/Modal";
@@ -10,6 +11,19 @@ import { useOrganization } from "@/context/organization.context";
 import { authClient } from "@/utils/auth";
 
 import { OrganizationAvatar } from "./OrganizationAvatar";
+
+function getPlanName(subscriptionPlan: string | null | undefined): string {
+  if (!subscriptionPlan || subscriptionPlan === PLAN_TYPES.FREE) {
+    return PLAN_LIMITS[PLAN_TYPES.FREE].name;
+  }
+  if (subscriptionPlan === PLAN_TYPES.MONTHLY) {
+    return PLAN_LIMITS[PLAN_TYPES.MONTHLY].name;
+  }
+  if (subscriptionPlan === PLAN_TYPES.YEARLY) {
+    return PLAN_LIMITS[PLAN_TYPES.YEARLY].name;
+  }
+  return PLAN_LIMITS[PLAN_TYPES.FREE].name;
+}
 
 export function OrganizationsDialog({
   isOpen,
@@ -59,16 +73,21 @@ export function OrganizationsDialog({
                 <RACButton
                   onPress={() => goToOrganization(o)}
                   isDisabled={organization?.slug === o.slug}
-                  className="flex items-center gap-x-2 relative p-1.5 hover:bg-black/5 rounded-xl group"
+                  className="flex items-center gap-x-2 relative p-1.5 hover:bg-black/5 rounded-xl group w-full text-left"
                 >
                   <OrganizationAvatar organization={o} size="lg" />
-                  <div className="font-medium text-black text-sm">
-                    {o.name}
-                    {organization?.slug === o.slug && (
-                      <span className="text-gray-500 ml-1">current</span>
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-black text-sm truncate">
+                      {o.name}
+                      {organization?.slug === o.slug && (
+                        <span className="text-gray-500 ml-1">current</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {getPlanName(o.subscriptionPlan)}
+                    </div>
                   </div>
-                  <ChevronRightRegular className="size-[14px] absolute right-2 text-gray-200 top-1/2 -translate-y-1/2 group-hover:text-gray-400" />
+                  <ChevronRightRegular className="size-[14px] text-gray-200 group-hover:text-gray-400 flex-shrink-0" />
                 </RACButton>
               </li>
             ))}

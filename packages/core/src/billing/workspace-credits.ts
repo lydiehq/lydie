@@ -150,11 +150,12 @@ export async function checkAndResetUserCredits(userId: string, organizationId: s
     const billing = await getWorkspaceBilling(organizationId);
     const planConfig = PLAN_CONFIG[billing?.plan as PlanType] || PLAN_CONFIG.free;
 
-    // Get workspace period dates for consistency
-    const workspaceBilling = await getWorkspaceBilling(organizationId);
-    const periodStart = workspaceBilling?.currentPeriodStart || now;
-    const periodEnd =
-      workspaceBilling?.currentPeriodEnd || new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    // Calculate new period based on current date
+    // For free workspaces, each workspace has its own cycle starting from creation
+    // For paid workspaces, we sync with Stripe's billing cycle
+    const periodStart = now;
+    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    periodEnd.setHours(0, 0, 0, 0);
 
     await db
       .update(schema.userWorkspaceCreditsTable)
@@ -271,13 +272,10 @@ export async function resetAllMemberCredits(organizationId: string) {
   const planConfig = PLAN_CONFIG[billing.plan as PlanType] || PLAN_CONFIG.free;
   const now = new Date();
 
-  // Calculate next period
+  // Calculate next period - credits reset MONTHLY for all plans
+  // Yearly billing = pay once per year, but credits still refill monthly
   const nextPeriodEnd = new Date(now);
-  if (billing.plan === "yearly") {
-    nextPeriodEnd.setFullYear(nextPeriodEnd.getFullYear() + 1);
-  } else {
-    nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
-  }
+  nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
   nextPeriodEnd.setDate(1);
   nextPeriodEnd.setHours(0, 0, 0, 0);
 

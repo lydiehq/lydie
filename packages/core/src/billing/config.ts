@@ -11,19 +11,19 @@ export const stripe = new Stripe(Resource.StripeSecretKey.value, {
 export const PLAN_CONFIG = {
   free: {
     name: "Free",
-    creditsPerMember: 30,
+    creditsPerMember: 150,
     pricePerMonth: 0,
     billingInterval: null,
   },
   monthly: {
     name: "Pro Monthly",
-    creditsPerMember: 800,
+    creditsPerMember: 4000,
     pricePerMonth: 1800, // $18.00 in cents
     billingInterval: "month",
   },
   yearly: {
     name: "Pro Yearly",
-    creditsPerMember: 800,
+    creditsPerMember: 4000,
     pricePerMonth: 1400, // $14.00 in cents (billed yearly)
     billingInterval: "year",
     // Note: Yearly billing means $14 * 12 = $168 per year per member
@@ -47,16 +47,17 @@ export const STRIPE_PRICE_IDS = {
 export const CREDIT_METER_NAME = "credit_usage";
 
 // Credit costs per model (credits per 1k output tokens)
+// Multiplied by 5x to allow for more granular pricing and future flexibility
 export const MODEL_CREDIT_COSTS: Record<string, number> = {
-  "gpt-4o": 10,
-  "gpt-4o-mini": 5,
-  "gpt-5": 10,
-  "gpt-5-mini": 5,
-  "gpt-5.2": 10,
-  "gemini-2.0-flash": 3,
-  "gemini-2.5-flash": 3,
-  "gemini-2.5-flash-lite": 2,
-  default: 5,
+  "gpt-4o": 50,
+  "gpt-4o-mini": 25,
+  "gpt-5": 50,
+  "gpt-5-mini": 25,
+  "gpt-5.2": 50,
+  "gemini-2.0-flash": 15,
+  "gemini-2.5-flash": 15,
+  "gemini-2.5-flash-lite": 10,
+  default: 25,
 };
 
 /**

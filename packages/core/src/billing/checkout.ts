@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 
 import { stripe, STRIPE_PRICE_IDS } from "./config";
 import { getOrCreateStripeCustomer, getWorkspaceBilling } from "./workspace-credits";
+import { getMemberCount } from "./seat-management";
 
 /**
  * Create a Stripe Checkout session for upgrading to Pro
@@ -38,6 +39,9 @@ export async function createCheckoutSession(
   // Select price based on plan
   const priceId = plan === "monthly" ? STRIPE_PRICE_IDS.monthly : STRIPE_PRICE_IDS.yearly;
 
+  // Get current member count for initial quantity
+  const memberCount = await getMemberCount(organizationId);
+
   // Create Checkout session
   const session = await stripe.checkout.sessions.create({
     customer: stripeCustomer.id,
@@ -45,7 +49,7 @@ export async function createCheckoutSession(
     line_items: [
       {
         price: priceId,
-        quantity: 1,
+        quantity: memberCount,
       },
     ],
     success_url: successUrl,

@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
 import { createMemberCredits } from "./billing/workspace-credits";
+import { syncSubscriptionQuantity } from "./billing/seat-management";
 import { sendEmail } from "./email";
 import { createId } from "./id";
 import { scheduleOnboardingEmails } from "./onboarding";
@@ -116,7 +117,7 @@ export const authClient = betterAuth({
 
       // Simplified organization hooks - no seat-based logic
       organizationHooks: {
-        // After adding a member, create their credit record
+        // After adding a member, create their credit record and sync billing
         afterAddMember: async ({ member, organization }) => {
           const userId = member.userId;
           if (!userId) {
@@ -131,9 +132,17 @@ export const authClient = betterAuth({
           } catch (error) {
             console.error("Error creating member credits:", error);
           }
+
+          // Sync subscription quantity to charge for the new seat
+          try {
+            await syncSubscriptionQuantity(organization.id);
+            console.log(`Synced subscription quantity for org ${organization.id} after adding member`);
+          } catch (error) {
+            console.error("Error syncing subscription quantity after adding member:", error);
+          }
         },
 
-        // After removing a member, clean up their credits
+        // After removing a member, sync billing and clean up their credits
         afterRemoveMember: async ({ member, organization }) => {
           const userId = member.userId;
           if (!userId) {
@@ -145,6 +154,14 @@ export const authClient = betterAuth({
           console.log(
             `Member ${userId} removed from org ${organization.id} - credits preserved but inaccessible`,
           );
+
+          // Sync subscription quantity to stop charging for the removed seat
+          try {
+            await syncSubscriptionQuantity(organization.id);
+            console.log(`Synced subscription quantity for org ${organization.id} after removing member`);
+          } catch (error) {
+            console.error("Error syncing subscription quantity after removing member:", error);
+          }
         },
       },
     }),

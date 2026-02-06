@@ -802,9 +802,9 @@ export const userWorkspaceCreditsTable = pgTable(
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
 
     // Credit tracking
-    creditsIncludedMonthly: integer("credits_included_monthly").notNull().default(30),
+    creditsIncludedMonthly: integer("credits_included_monthly").notNull().default(150),
     creditsUsedThisPeriod: integer("credits_used_this_period").notNull().default(0),
-    creditsAvailable: integer("credits_available").notNull().default(30),
+    creditsAvailable: integer("credits_available").notNull().default(150),
 
     // Current period tracking (synced with workspace billing period)
     currentPeriodStart: timestamp("current_period_start"),

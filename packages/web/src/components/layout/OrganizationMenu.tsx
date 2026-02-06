@@ -72,13 +72,13 @@ export function OrganizationMenu({ isCollapsed }: Props) {
                 {organization?.name}
               </div>
               <div className="text-xs text-gray-500">
-                {organization?.subscriptionPlan === PLAN_TYPES.FREE
+                {!organization?.subscriptionPlan || organization.subscriptionPlan === PLAN_TYPES.FREE
                   ? PLAN_LIMITS[PLAN_TYPES.FREE].name
-                  : organization?.subscriptionPlan === PLAN_TYPES.MONTHLY
+                  : organization.subscriptionPlan === PLAN_TYPES.MONTHLY
                     ? PLAN_LIMITS[PLAN_TYPES.MONTHLY].name
-                    : organization?.subscriptionPlan === PLAN_TYPES.YEARLY
+                    : organization.subscriptionPlan === PLAN_TYPES.YEARLY
                       ? PLAN_LIMITS[PLAN_TYPES.YEARLY].name
-                      : "Unknown"}
+                      : PLAN_LIMITS[PLAN_TYPES.FREE].name}
               </div>
             </div>
           </div>
