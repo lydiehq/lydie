@@ -1,4 +1,4 @@
-import { checkSeatCreditBalance, getOrganizationCreditBalance } from "@lydie/core/billing/polar-credits";
+import { checkAndConsumeCredits, getUserCreditStatus } from "@lydie/core/billing/workspace-credits";
 import { PLAN_TYPES, type PlanType } from "@lydie/database/billing-types";
 
 // Get the current plan for an organization
@@ -20,7 +20,7 @@ function getCurrentPlan(
 
 /**
  * Check if a user has sufficient credits for AI operations
- * This is the per-seat version that checks the specific user's credit balance
+ * This checks the specific user's credit balance in the workspace
  */
 export async function checkCreditBalance(params: {
   organizationId: string;
@@ -33,30 +33,50 @@ export async function checkCreditBalance(params: {
   creditsRequired: number;
   currentPlan: PlanType;
 }> {
-  const currentPlan = getCurrentPlan(
-    params.subscriptionPlan,
-    params.subscriptionStatus,
-  );
+  const currentPlan = getCurrentPlan(params.subscriptionPlan, params.subscriptionStatus);
 
-  // Get the current credit balance from Polar for this specific seat/user
-  const creditCheck = await checkSeatCreditBalance(
-    params.organizationId,
-    params.userId,
-    1 // Require at least 1 credit
-  );
+  // Get the current credit status for this user in this workspace
+  const creditStatus = await getUserCreditStatus(params.userId, params.organizationId);
+
+  if (!creditStatus) {
+    return {
+      allowed: false,
+      creditsAvailable: 0,
+      creditsRequired: 1,
+      currentPlan,
+    };
+  }
 
   return {
-    allowed: creditCheck.allowed,
-    creditsAvailable: creditCheck.creditsAvailable,
-    creditsRequired: creditCheck.creditsRequired,
+    allowed: creditStatus.creditsAvailable > 0,
+    creditsAvailable: creditStatus.creditsAvailable,
+    creditsRequired: 1,
     currentPlan,
   };
 }
 
 /**
- * Get the total organization credit balance across all seats
- * This is useful for organization-level reporting
+ * Consume credits for an AI operation
  */
-export async function getOrganizationTotalCredits(organizationId: string): Promise<number> {
-  return getOrganizationCreditBalance(organizationId);
+export async function consumeCredits(params: {
+  organizationId: string;
+  userId: string;
+  creditsRequested: number;
+  actionType: string;
+  resourceId?: string;
+}) {
+  return checkAndConsumeCredits(
+    params.userId,
+    params.organizationId,
+    params.creditsRequested,
+    params.actionType,
+    params.resourceId,
+  );
+}
+
+/**
+ * Get the user's credit status in a workspace
+ */
+export async function getUserCreditStatusInWorkspace(userId: string, organizationId: string) {
+  return getUserCreditStatus(userId, organizationId);
 }

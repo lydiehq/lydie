@@ -21,8 +21,6 @@ const users = table("users")
     email: string(),
     image: string().optional(),
     role: string(),
-    // Polar Customer ID for billing (one per user, can have multiple subscriptions)
-    polar_customer_id: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -35,12 +33,6 @@ const organizations = table("organizations")
     logo: string().optional(),
     metadata: string().optional(),
     color: string().optional(),
-    // Subscription info synced from Polar via webhooks
-    subscription_status: string(),
-    subscription_plan: string(), // 'free', 'monthly', 'yearly'
-    polar_subscription_id: string().optional(),
-    // Billing owner (user who pays for this workspace, references users.polar_customer_id)
-    billing_owner_user_id: string().optional(),
     ...timestamps,
   })
   .primaryKey("id");
@@ -68,26 +60,7 @@ const invitations = table("invitations")
   })
   .primaryKey("id");
 
-const seats = table("seats")
-  .columns({
-    id: string(),
-    organization_id: string(),
-    polar_seat_id: string(),
-    polar_subscription_id: string().optional(),
-    polar_order_id: string().optional(),
-    status: string(), // 'pending', 'claimed', 'revoked'
-    assigned_email: string(),
-    claimed_by_user_id: string().optional(),
-    invitation_token: string().optional(),
-    seat_metadata: json().optional(),
-    credit_balance: number(),
-    assigned_at: number(),
-    claimed_at: number().optional(),
-    revoked_at: number().optional(),
-    expires_at: number().optional(),
-    ...timestamps,
-  })
-  .primaryKey("id");
+
 
 const documents = table("documents")
   .columns({
@@ -308,11 +281,6 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     destField: ["organization_id"],
     destSchema: invitations,
   }),
-  seats: many({
-    sourceField: ["id"],
-    destField: ["organization_id"],
-    destSchema: seats,
-  }),
   documentComponents: many({
     sourceField: ["id"],
     destField: ["organization_id"],
@@ -342,11 +310,6 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     sourceField: ["id"],
     destField: ["organization_id"],
     destSchema: integrationConnections,
-  }),
-  billingOwner: one({
-    sourceField: ["billing_owner_user_id"],
-    destField: ["id"],
-    destSchema: users,
   }),
   settings: one({
     sourceField: ["id"],
@@ -381,18 +344,7 @@ const invitationsRelations = relationships(invitations, ({ one }) => ({
   }),
 }));
 
-const seatsRelations = relationships(seats, ({ one }) => ({
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-  claimedBy: one({
-    sourceField: ["claimed_by_user_id"],
-    destField: ["id"],
-    destSchema: users,
-  }),
-}));
+
 
 const usersRelations = relationships(users, ({ many, one }) => ({
   members: many({
@@ -675,6 +627,59 @@ const templateFaqs = table("template_faqs")
   })
   .primaryKey("id");
 
+// Billing tables
+const workspaceBilling = table("workspace_billing")
+  .columns({
+    id: string(),
+    organization_id: string(),
+    plan: string(),
+    stripe_subscription_id: string().optional(),
+    stripe_subscription_status: string().optional(),
+    billing_owner_user_id: string(),
+    current_period_start: number().optional(),
+    current_period_end: number().optional(),
+    canceled_at: number().optional(),
+    cancel_at_period_end: boolean(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const userWorkspaceCredits = table("user_workspace_credits")
+  .columns({
+    id: string(),
+    user_id: string(),
+    organization_id: string(),
+    credits_included_monthly: number(),
+    credits_used_this_period: number(),
+    credits_available: number(),
+    current_period_start: number().optional(),
+    current_period_end: number().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const stripeCustomers = table("stripe_customers")
+  .columns({
+    id: string(),
+    user_id: string(),
+    email: string(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const creditUsageLog = table("credit_usage_log")
+  .columns({
+    id: string(),
+    organization_id: string(),
+    credits_consumed: number(),
+    action_type: string(),
+    resource_id: string().optional(),
+    stripe_meter_event_id: string().optional(),
+    user_id: string().optional(),
+    created_at: number(),
+  })
+  .primaryKey("id");
+
 const templatesRelations = relationships(templates, ({ many }) => ({
   documents: many({
     sourceField: ["id"],
@@ -771,6 +776,53 @@ const templateFaqsRelations = relationships(templateFaqs, ({ one }) => ({
   }),
 }));
 
+const workspaceBillingRelations = relationships(workspaceBilling, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  billingOwner: one({
+    sourceField: ["billing_owner_user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
+const userWorkspaceCreditsRelations = relationships(userWorkspaceCredits, ({ one }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+}));
+
+const stripeCustomersRelations = relationships(stripeCustomers, ({ one }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
+const creditUsageLogRelations = relationships(creditUsageLog, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
 export const schema = createSchema({
   tables: [
     users,
@@ -778,7 +830,6 @@ export const schema = createSchema({
     organizations,
     members,
     invitations,
-    seats,
     documentComponents,
     assistantAgents,
     assistantConversations,
@@ -799,13 +850,16 @@ export const schema = createSchema({
     templateCategories,
     templateCategoryAssignments,
     templateFaqs,
+    workspaceBilling,
+    userWorkspaceCredits,
+    stripeCustomers,
+    creditUsageLog,
   ],
   relationships: [
     documentsRelations,
     organizationsRelations,
     membersRelations,
     invitationsRelations,
-    seatsRelations,
     usersRelations,
     documentComponentsRelations,
     assistantAgentsRelations,
@@ -827,6 +881,10 @@ export const schema = createSchema({
     templateCategoriesRelations,
     templateCategoryAssignmentsRelations,
     templateFaqsRelations,
+    workspaceBillingRelations,
+    userWorkspaceCreditsRelations,
+    stripeCustomersRelations,
+    creditUsageLogRelations,
   ],
   enableLegacyQueries: false,
   enableLegacyMutators: false,

@@ -1,5 +1,6 @@
 import { db, schema } from "@lydie/database";
 import { eq, and, sql } from "drizzle-orm";
+
 import { stripe, PLAN_CONFIG, type PlanType } from "./config";
 
 /**
@@ -8,7 +9,7 @@ import { stripe, PLAN_CONFIG, type PlanType } from "./config";
 export async function getOrCreateStripeCustomer(userId: string, email: string) {
   // Check if customer already exists
   const existingCustomer = await db.query.stripeCustomersTable.findFirst({
-    where: eq(schema.stripeCustomersTable.userId, userId),
+    where: { userId },
   });
 
   if (existingCustomer) {
@@ -42,7 +43,9 @@ export async function getOrCreateStripeCustomer(userId: string, email: string) {
  */
 export async function getWorkspaceBilling(organizationId: string) {
   const billing = await db.query.workspaceBillingTable.findFirst({
-    where: eq(schema.workspaceBillingTable.organizationId, organizationId),
+    where: {
+      organizationId,
+    },
     with: {
       billingOwner: true,
     },
@@ -55,16 +58,17 @@ export async function getWorkspaceBilling(organizationId: string) {
  * Get or create credit record for a user in a workspace
  * Credits are per-user-per-workspace (not shared)
  */
-export async function getOrCreateUserWorkspaceCredits(
-  userId: string,
-  organizationId: string
-) {
+export async function getOrCreateUserWorkspaceCredits(userId: string, organizationId: string) {
   // Check if credit record exists
   let credits = await db.query.userWorkspaceCreditsTable.findFirst({
-    where: and(
-      eq(schema.userWorkspaceCreditsTable.userId, userId),
-      eq(schema.userWorkspaceCreditsTable.organizationId, organizationId)
-    ),
+    where: {
+      AND: [
+        {
+          userId,
+        },
+        { organizationId },
+      ],
+    },
   });
 
   if (credits) {
@@ -93,10 +97,14 @@ export async function getOrCreateUserWorkspaceCredits(
   });
 
   return await db.query.userWorkspaceCreditsTable.findFirst({
-    where: and(
-      eq(schema.userWorkspaceCreditsTable.userId, userId),
-      eq(schema.userWorkspaceCreditsTable.organizationId, organizationId)
-    ),
+    where: {
+      AND: [
+        {
+          userId,
+        },
+        { organizationId },
+      ],
+    },
   });
 }
 
@@ -105,7 +113,7 @@ export async function getOrCreateUserWorkspaceCredits(
  */
 export async function createFreeWorkspaceBilling(
   organizationId: string,
-  billingOwnerUserId: string
+  billingOwnerUserId: string,
 ) {
   const now = new Date();
   const nextMonth = new Date(now);
@@ -128,10 +136,7 @@ export async function createFreeWorkspaceBilling(
 /**
  * Check if monthly reset is needed for a user's credits
  */
-export async function checkAndResetUserCredits(
-  userId: string,
-  organizationId: string
-) {
+export async function checkAndResetUserCredits(userId: string, organizationId: string) {
   const credits = await getOrCreateUserWorkspaceCredits(userId, organizationId);
 
   if (!credits) {
@@ -148,8 +153,8 @@ export async function checkAndResetUserCredits(
     // Get workspace period dates for consistency
     const workspaceBilling = await getWorkspaceBilling(organizationId);
     const periodStart = workspaceBilling?.currentPeriodStart || now;
-    const periodEnd = workspaceBilling?.currentPeriodEnd || 
-      new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const periodEnd =
+      workspaceBilling?.currentPeriodEnd || new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     await db
       .update(schema.userWorkspaceCreditsTable)
@@ -163,8 +168,8 @@ export async function checkAndResetUserCredits(
       .where(
         and(
           eq(schema.userWorkspaceCreditsTable.userId, userId),
-          eq(schema.userWorkspaceCreditsTable.organizationId, organizationId)
-        )
+          eq(schema.userWorkspaceCreditsTable.organizationId, organizationId),
+        ),
       );
 
     return {
@@ -188,7 +193,7 @@ export async function checkAndConsumeCredits(
   organizationId: string,
   creditsRequested: number,
   actionType: string,
-  resourceId?: string
+  resourceId?: string,
 ): Promise<{
   allowed: boolean;
   remaining: number;
@@ -232,8 +237,8 @@ export async function checkAndConsumeCredits(
     .where(
       and(
         eq(schema.userWorkspaceCreditsTable.userId, userId),
-        eq(schema.userWorkspaceCreditsTable.organizationId, organizationId)
-      )
+        eq(schema.userWorkspaceCreditsTable.organizationId, organizationId),
+      ),
     );
 
   // 6. Log usage for audit trail
@@ -258,7 +263,7 @@ export async function checkAndConsumeCredits(
  */
 export async function resetAllMemberCredits(organizationId: string) {
   const billing = await getWorkspaceBilling(organizationId);
-  
+
   if (!billing) {
     throw new Error("Workspace billing not found");
   }
@@ -339,7 +344,7 @@ export async function getUserCreditStatus(userId: string, organizationId: string
  */
 export async function getWorkspaceMembersCreditStatus(organizationId: string) {
   const billing = await getWorkspaceBilling(organizationId);
-  
+
   if (!billing) {
     return null;
   }
@@ -348,7 +353,7 @@ export async function getWorkspaceMembersCreditStatus(organizationId: string) {
 
   // Get all members' credits
   const allCredits = await db.query.userWorkspaceCreditsTable.findMany({
-    where: eq(schema.userWorkspaceCreditsTable.organizationId, organizationId),
+    where: { organizationId },
     with: {
       user: true,
     },
@@ -377,26 +382,20 @@ export async function getWorkspaceMembersCreditStatus(organizationId: string) {
 /**
  * Create or update credit records when a new member joins
  */
-export async function createMemberCredits(
-  userId: string,
-  organizationId: string
-) {
+export async function createMemberCredits(userId: string, organizationId: string) {
   return await getOrCreateUserWorkspaceCredits(userId, organizationId);
 }
 
 /**
  * Remove credit record when a member leaves (optional cleanup)
  */
-export async function removeMemberCredits(
-  userId: string,
-  organizationId: string
-) {
+export async function removeMemberCredits(userId: string, organizationId: string) {
   await db
     .delete(schema.userWorkspaceCreditsTable)
     .where(
       and(
         eq(schema.userWorkspaceCreditsTable.userId, userId),
-        eq(schema.userWorkspaceCreditsTable.organizationId, organizationId)
-      )
+        eq(schema.userWorkspaceCreditsTable.organizationId, organizationId),
+      ),
     );
 }

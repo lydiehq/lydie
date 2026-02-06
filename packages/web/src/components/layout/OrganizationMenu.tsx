@@ -8,6 +8,8 @@ import clsx from "clsx";
 import { useState } from "react";
 import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
 
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
+
 import { useOrganization } from "@/context/organization.context";
 import { clearSession } from "@/lib/auth/session";
 import { resetUser } from "@/lib/posthog";
@@ -70,7 +72,13 @@ export function OrganizationMenu({ isCollapsed }: Props) {
                 {organization?.name}
               </div>
               <div className="text-xs text-gray-500">
-                {organization?.subscriptionPlan === "free" ? "Free Plan" : "Pro Plan"}
+                {organization?.subscriptionPlan === PLAN_TYPES.FREE
+                  ? PLAN_LIMITS[PLAN_TYPES.FREE].name
+                  : organization?.subscriptionPlan === PLAN_TYPES.MONTHLY
+                    ? PLAN_LIMITS[PLAN_TYPES.MONTHLY].name
+                    : organization?.subscriptionPlan === PLAN_TYPES.YEARLY
+                      ? PLAN_LIMITS[PLAN_TYPES.YEARLY].name
+                      : "Unknown"}
               </div>
             </div>
           </div>

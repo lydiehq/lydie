@@ -369,15 +369,19 @@ When subscription is canceled:
 
 ## Setup Guide (REVISED)
 
-### Step 1: Create Stripe Products (Dashboard)
+### Step 1: Stripe Resources Created ✓
+
+The following Stripe resources have been created via MCP:
 
 **Product 1: Lydie Pro Monthly**
-- Name: "Lydie Pro Monthly"
+- Product ID: `prod_TvNhECrWCBEVo2`
+- Price ID: `price_1SxWwI2QnEmaiVg3KtWhPFeZ`
 - Price: $18.00 per unit (monthly)
 - Usage type: Licensed
 
 **Product 2: Lydie Pro Yearly**
-- Name: "Lydie Pro Yearly"
+- Product ID: `prod_TvNh13Jy72rmb1`
+- Price ID: `price_1SxWwI2QnEmaiVg3oeTqG2c6`
 - Price: $168.00 per unit (yearly)
 - Usage type: Licensed
 
@@ -387,8 +391,8 @@ When subscription is canceled:
 
 ```bash
 StripeSecretKey=sk_test_xxxxx
-StripeMonthlyPriceId=price_xxxxx
-StripeYearlyPriceId=price_xxxxx
+StripeMonthlyPriceId=price_1SxWwI2QnEmaiVg3KtWhPFeZ
+StripeYearlyPriceId=price_1SxWwI2QnEmaiVg3oeTqG2c6
 StripeWebhookSecret=whsec_xxxxx
 ```
 

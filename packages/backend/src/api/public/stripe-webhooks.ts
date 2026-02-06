@@ -1,7 +1,9 @@
-import { Hono } from "hono";
+import type Stripe from "stripe";
+
 import { stripe } from "@lydie/core/billing/config";
 import { handleWebhookEvent } from "@lydie/core/billing/webhooks";
-import type Stripe from "stripe";
+import { Hono } from "hono";
+import { Resource } from "sst";
 
 export const stripeWebhookRouter = new Hono();
 
@@ -18,7 +20,7 @@ stripeWebhookRouter.post("/stripe", async (c) => {
   }
 
   // Get webhook secret from environment
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = Resource.StripeWebhookSecret.value;
   if (!webhookSecret) {
     console.error("STRIPE_WEBHOOK_SECRET not configured");
     return c.json({ error: "Webhook secret not configured" }, 500);
@@ -27,7 +29,7 @@ stripeWebhookRouter.post("/stripe", async (c) => {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    event = await stripe.webhooks.constructEventAsync(payload, signature, webhookSecret);
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
     return c.json({ error: "Invalid signature" }, 400);

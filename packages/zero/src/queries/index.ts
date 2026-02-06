@@ -5,8 +5,8 @@ import type { Context } from "../auth";
 import { agentQueries } from "./agent";
 import { apiKeyQueries } from "./api-key";
 import { assistantQueries } from "./assistant";
+import { billingQueries } from "./billing";
 import { componentQueries } from "./component";
-import { seatQueries } from "./seat";
 import { documentQueries } from "./document";
 import { integrationQueries } from "./integration";
 import { integrationActivityQueries } from "./integration-activity";
@@ -26,7 +26,6 @@ export const queries = defineQueries({
   components: componentQueries,
   apiKeys: apiKeyQueries,
   members: memberQueries,
-  seats: seatQueries,
   invitations: invitationQueries,
   organizations: organizationQueries,
   assistant: assistantQueries,
@@ -38,4 +37,5 @@ export const queries = defineQueries({
   integrationActivityLogs: integrationActivityQueries,
   templates: templateQueries,
   templateCategories: templateCategoryQueries,
+  billing: billingQueries,
 });

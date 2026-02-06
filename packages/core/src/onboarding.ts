@@ -138,7 +138,7 @@ async function sendCheckInEmail(email: string, firstName: string) {
     subject,
     html,
     from: "lars@lydie.co",
-    fromName: "Lars from Lydie",
+    fromName: "Lars Salling",
   });
 }
 
@@ -157,7 +157,7 @@ async function sendWelcomeEmail(email: string, firstName: string) {
     subject,
     html,
     from: "lars@lydie.co",
-    fromName: "Lars from Lydie",
+    fromName: "Lars Salling",
   });
 }
 
@@ -177,6 +177,6 @@ async function sendFeedbackEmail(email: string, firstName: string) {
     subject,
     html,
     from: "lars@lydie.co",
-    fromName: "Lars from Lydie",
+    fromName: "Lars Salling",
   });
 }

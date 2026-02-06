@@ -20,11 +20,12 @@ const commonSecrets = [
   secret.postgresConnectionStringPooled,
   secret.postgresConnectionStringDirect,
   secret.betterAuthSecret,
-  secret.polarApiKey,
-  secret.polarProductIdFree,
-  secret.polarProductIdMonthly,
-  secret.polarProductIdYearly,
-  secret.polarWebhookSecret,
+  // Stripe billing secrets
+  secret.stripeSecretKey,
+  secret.stripeMonthlyPriceId,
+  secret.stripeYearlyPriceId,
+  secret.stripeWebhookSecret,
+  // Integration secrets
   secret.githubClientId,
   secret.githubClientSecret,
   secret.githubPrivateKey,

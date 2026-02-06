@@ -29,9 +29,6 @@ export const organizationMutators = {
           logo: logo || null,
           metadata: metadata || null,
           color: color || null,
-          subscription_status: "free",
-          subscription_plan: "free",
-          polar_subscription_id: null,
         }),
       );
 

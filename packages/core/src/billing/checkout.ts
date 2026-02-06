@@ -1,8 +1,10 @@
+import type Stripe from "stripe";
+
 import { db, schema } from "@lydie/database";
 import { eq } from "drizzle-orm";
+
 import { stripe, STRIPE_PRICE_IDS } from "./config";
 import { getOrCreateStripeCustomer, getWorkspaceBilling } from "./workspace-credits";
-import type Stripe from "stripe";
 
 /**
  * Create a Stripe Checkout session for upgrading to Pro
@@ -11,11 +13,12 @@ export async function createCheckoutSession(
   organizationId: string,
   billingOwnerUserId: string,
   successUrl: string,
-  cancelUrl: string
+  cancelUrl: string,
+  plan: "monthly" | "yearly" = "monthly",
 ) {
   // Get billing owner and ensure they have a Stripe customer
   const user = await db.query.usersTable.findFirst({
-    where: eq(schema.usersTable.id, billingOwnerUserId),
+    where: { id: billingOwnerUserId },
   });
 
   if (!user) {
@@ -26,9 +29,14 @@ export async function createCheckoutSession(
 
   // Check if workspace already has an active subscription
   const billing = await getWorkspaceBilling(organizationId);
-  if (billing?.plan === "pro" && billing.stripeSubscriptionStatus === "active") {
-    throw new Error("Workspace already has an active Pro subscription");
+  if (billing?.plan === "monthly" || billing?.plan === "yearly") {
+    if (billing.stripeSubscriptionStatus === "active" || billing.stripeSubscriptionStatus === "trialing") {
+      throw new Error("Workspace already has an active Pro subscription");
+    }
   }
+
+  // Select price based on plan
+  const priceId = plan === "monthly" ? STRIPE_PRICE_IDS.monthly : STRIPE_PRICE_IDS.yearly;
 
   // Create Checkout session
   const session = await stripe.checkout.sessions.create({
@@ -36,11 +44,8 @@ export async function createCheckoutSession(
     mode: "subscription",
     line_items: [
       {
-        price: STRIPE_PRICE_IDS.proBase,
+        price: priceId,
         quantity: 1,
-      },
-      {
-        price: STRIPE_PRICE_IDS.proOverage,
       },
     ],
     success_url: successUrl,
@@ -49,6 +54,7 @@ export async function createCheckoutSession(
       metadata: {
         organizationId,
         billingOwnerUserId,
+        plan,
       },
     },
     allow_promotion_codes: true,
@@ -64,10 +70,7 @@ export async function createCheckoutSession(
 /**
  * Create a Customer Portal session for managing billing
  */
-export async function createCustomerPortalSession(
-  organizationId: string,
-  returnUrl: string
-) {
+export async function createCustomerPortalSession(organizationId: string, returnUrl: string) {
   const billing = await getWorkspaceBilling(organizationId);
 
   if (!billing || billing.plan !== "pro") {
@@ -76,7 +79,7 @@ export async function createCustomerPortalSession(
 
   // Get Stripe customer from billing owner
   const stripeCustomer = await db.query.stripeCustomersTable.findFirst({
-    where: eq(schema.stripeCustomersTable.userId, billing.billingOwnerUserId),
+    where: { userId: billing.billingOwnerUserId },
   });
 
   if (!stripeCustomer) {
@@ -176,12 +179,14 @@ export async function getSubscriptionDetails(organizationId: string) {
 
   if (billing.stripeSubscriptionId) {
     try {
-      const subscription = await stripe.subscriptions.retrieve(billing.stripeSubscriptionId);
+      const subscription: Stripe.Subscription = await stripe.subscriptions.retrieve(
+        billing.stripeSubscriptionId,
+      );
 
-      // Get upcoming invoice
+      // Get upcoming invoice preview
       let nextInvoiceAmount: number | null = null;
       try {
-        const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
+        const upcomingInvoice = await stripe.invoices.createPreview({
           customer: subscription.customer as string,
           subscription: billing.stripeSubscriptionId,
         });
@@ -190,9 +195,15 @@ export async function getSubscriptionDetails(organizationId: string) {
         // No upcoming invoice yet
       }
 
+      // Get billing period from first subscription item (Stripe API 2025+ changed this structure)
+      const subscriptionItem = subscription.items.data[0];
       subscriptionDetails = {
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        currentPeriodStart: subscriptionItem
+          ? new Date(subscriptionItem.current_period_start * 1000)
+          : null,
+        currentPeriodEnd: subscriptionItem
+          ? new Date(subscriptionItem.current_period_end * 1000)
+          : null,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         nextInvoiceAmount,
       };
@@ -204,10 +215,6 @@ export async function getSubscriptionDetails(organizationId: string) {
   return {
     plan: billing.plan,
     status: billing.stripeSubscriptionStatus,
-    creditsIncluded: billing.creditsIncludedMonthly,
-    creditsUsed: billing.creditsUsedThisPeriod,
-    creditsAvailable: billing.creditsAvailable,
-    overageEnabled: billing.overageEnabled,
     cancelAtPeriodEnd: billing.cancelAtPeriodEnd,
     ...subscriptionDetails,
   };

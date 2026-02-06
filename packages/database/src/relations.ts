@@ -333,7 +333,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.workspaceBillingTable.billingOwnerUserId,
       to: r.usersTable.id,
     }),
-    creditUsageLogs: r.many.creditUsageLogTable(),
+    creditUsageLogs: r.many.creditUsageLogTable({
+      from: r.workspaceBillingTable.organizationId,
+      to: r.creditUsageLogTable.organizationId,
+    }),
   },
 
   userWorkspaceCreditsTable: {

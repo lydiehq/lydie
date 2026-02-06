@@ -23,7 +23,6 @@
     "@lydie/database": "workspace:*",
     "@lydie/integrations": "workspace:*",
     "@lydie/zero": "workspace:*",
-    "@polar-sh/better-auth": "catalog:",
     "@rocicorp/zero": "catalog:",
     "@tiptap/y-tiptap": "catalog:",
     "ai": "catalog:",

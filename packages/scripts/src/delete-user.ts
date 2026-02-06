@@ -1,54 +1,9 @@
 import { db, schema } from "@lydie/database";
-import { Polar } from "@polar-sh/sdk";
 import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
-const polarClient = new Polar({
-  accessToken: Resource.PolarApiKey.value,
-  server: Resource.App.stage === "production" ? "production" : "sandbox",
-});
-
-async function findPolarCustomersByEmail(email: string): Promise<string[]> {
-  try {
-    const response = await polarClient.customers.list({
-      email: email,
-    });
-
-    return (response.result?.items || [])
-      .filter((customer: any) => customer.email === email)
-      .map((customer: any) => customer.id);
-  } catch (error) {
-    console.error("Error finding Polar customers:", error);
-    return [];
-  }
-}
-
-async function deletePolarCustomers(email: string) {
-  const customerIds = await findPolarCustomersByEmail(email);
-
-  if (customerIds.length === 0) {
-    console.log(`ℹ️  No Polar customers found for email: ${email}`);
-    return;
-  }
-
-  console.log(`   Found ${customerIds.length} Polar customer(s) for ${email}`);
-
-  for (const customerId of customerIds) {
-    try {
-      await polarClient.customers.delete({
-        id: customerId,
-      });
-      console.log(`✅ Deleted Polar customer: ${customerId}`);
-    } catch (error: any) {
-      if (error.status === 404) {
-        console.log(`ℹ️  Polar customer already deleted: ${customerId}`);
-      } else {
-        console.error(`⚠️  Failed to delete Polar customer ${customerId}:`, error.message);
-        // Continue with other deletions even if one fails
-      }
-    }
-  }
-}
+// Note: Stripe customer cleanup should be done manually in Stripe Dashboard
+// or via separate Stripe API script if needed
 
 async function deleteUser() {
   if (Resource.App.stage === "production") {
@@ -84,6 +39,7 @@ async function deleteUser() {
   console.log(`   Email: ${user.email}`);
   console.log(`   Role: ${user.role}`);
   console.log(`\n⚠️  This will delete:`);
+  console.log(`   - All workspace billing records where user is billing owner`);
   console.log(`   - All assets (database records only, not S3)`);
   console.log(`   - All sessions`);
   console.log(`   - All accounts`);
@@ -91,7 +47,7 @@ async function deleteUser() {
   console.log(`   - All documents`);
   console.log(`   - All conversations and messages`);
   console.log(`   - All related data (cascades automatically)`);
-  console.log(`   - Polar customer data (if exists)`);
+  console.log(`   - Note: Stripe customer data should be cleaned up separately`);
 
   console.log(`\n⚠️  DESTRUCTIVE OPERATION: Deleting user ${user.email}...`);
 
@@ -111,8 +67,11 @@ async function deleteUser() {
 
     console.log(`   Found ${memberships.length} organization membership(s)`);
 
-    // Delete Polar customers by email (handles organizations)
-    await deletePolarCustomers(user.email);
+    // Note: Stripe customer data should be cleaned up separately via Stripe Dashboard
+
+    // Delete workspace billing records where user is billing owner (must be done before deleting user)
+    await db.delete(schema.workspaceBillingTable).where(eq(schema.workspaceBillingTable.billingOwnerUserId, user.id));
+    console.log(`✅ Deleted workspace billing records`);
 
     await db.delete(schema.assetsTable).where(eq(schema.assetsTable.userId, user.id));
     console.log(`✅ Deleted user assets from database`);

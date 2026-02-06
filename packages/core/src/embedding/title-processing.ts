@@ -1,6 +1,6 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
-import { documentTitleEmbeddingsTable, documentsTable } from "@lydie/database/schema-only";
+import { documentTitleEmbeddingsTable, documentsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
 import { generateTitleEmbedding } from "./generation";

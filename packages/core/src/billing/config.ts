@@ -33,9 +33,14 @@ export const PLAN_CONFIG = {
 export type PlanType = keyof typeof PLAN_CONFIG;
 
 // Price IDs from environment (to be set in SST secrets)
+// Created via Stripe MCP on 2026-02-05:
+// Monthly Product: prod_TvNhECrWCBEVo2
+// Monthly Price: price_1SxWwI2QnEmaiVg3KtWhPFeZ ($18.00/month per member)
+// Yearly Product: prod_TvNh13Jy72rmb1
+// Yearly Price: price_1SxWwI2QnEmaiVg3oeTqG2c6 ($168.00/year per member)
 export const STRIPE_PRICE_IDS = {
-  monthly: Resource.StripeMonthlyPriceId?.value || "",
-  yearly: Resource.StripeYearlyPriceId?.value || "",
+  monthly: Resource.StripeMonthlyPriceId?.value || "price_1SxWwI2QnEmaiVg3KtWhPFeZ",
+  yearly: Resource.StripeYearlyPriceId?.value || "price_1SxWwI2QnEmaiVg3oeTqG2c6",
 };
 
 // Meter name for credit usage

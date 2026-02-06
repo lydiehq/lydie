@@ -53,7 +53,7 @@ export const createOrganizationMutation = (context: MutatorContext) =>
       }
 
       // Setup billing for the organization after transaction commits
-      // This creates a Polar customer for the user and assigns free tier subscription
+      // This creates free tier workspace billing and initial credits for the owner
       context.asyncTasks.push(async () => {
         try {
           await setupOrganizationBilling(

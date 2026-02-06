@@ -1,6 +1,6 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
-import { documentEmbeddingsTable, documentsTable } from "@lydie/database/schema-only";
+import { documentEmbeddingsTable, documentsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
 import { generateContentHash } from "../hash";

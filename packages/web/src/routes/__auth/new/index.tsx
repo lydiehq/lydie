@@ -72,13 +72,13 @@ function RouteComponent() {
         if (search.template) {
           navigate({
             to: "/w/$organizationSlug",
-            params: { organizationSlug: finalSlug },
+            params: { organizationSlug: slug },
             search: { installTemplate: search.template },
           });
         } else {
           navigate({
             to: "/w/$organizationSlug/$id",
-            params: { organizationSlug: finalSlug, id: onboardingDocId },
+            params: { organizationSlug: slug, id: onboardingDocId },
           });
         }
       } catch (error) {

@@ -79,26 +79,6 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "PolarApiKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PolarProductIdFree": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PolarProductIdMonthly": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PolarProductIdYearly": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PolarWebhookSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "PostgresConnectionStringDirect": {
       "type": "sst.sst.Secret"
       "value": string
@@ -112,6 +92,22 @@ declare module "sst" {
       "value": string
     }
     "ShopifyClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeMonthlyPriceId": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeSecretKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeWebhookSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeYearlyPriceId": {
       "type": "sst.sst.Secret"
       "value": string
     }

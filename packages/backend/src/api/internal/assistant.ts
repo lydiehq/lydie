@@ -9,7 +9,7 @@ import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
 import { scanDocuments } from "@lydie/core/ai/tools/scan-documents";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
 import { VisibleError } from "@lydie/core/error";
-import { ingestCreditUsage } from "@lydie/core/billing/polar-credits";
+// Credit tracking now handled via Stripe billing API
 import {
   assistantAgentsTable,
   assistantConversationsTable,
@@ -328,17 +328,8 @@ export const AssistantRoute = new Hono<{
           // Calculate credits used based on output tokens
           const creditsUsed = calculateCreditsFromTokens(completionTokens, chatModel.modelId);
 
-          // Ingest usage to Polar to deduct credits from the user's seat
-          try {
-            await ingestCreditUsage(organizationId, userId, creditsUsed, {
-              documentId: conversationId,
-              model: chatModel.modelId,
-              operation: "assistant_chat",
-            });
-          } catch (error) {
-            console.error("Error ingesting credit usage to Polar:", error);
-            // Continue even if Polar ingestion fails - we'll track it locally
-          }
+          // Credit consumption is now handled via the billing API before AI processing
+          // This local tracking is for analytics purposes only
 
           // Track usage locally with credits
           await db.insert(llmUsageTable).values({

@@ -13,33 +13,40 @@ import { useOrganization } from "@/context/organization.context";
 export function UsageStats() {
   const { organization } = useOrganization();
 
-  const [seat] = useQuery(
-    queries.seats.forUser({
+  // Get current user's credits for this workspace
+  const [userCredits] = useQuery(
+    queries.billing.userCredits({
       organizationId: organization.id,
     }),
   );
 
-  const creditBalance = seat?.credit_balance ?? 0;
+  // Get workspace billing info for plan details
+  const [billing] = useQuery(
+    queries.billing.byOrganizationId({
+      organizationId: organization.id,
+    }),
+  );
+
+  const creditBalance = userCredits?.credits_available ?? 0;
+  const creditsIncluded = userCredits?.credits_included_monthly ?? 30;
 
   const currentPlan = useMemo(() => {
-    if (!organization) {
+    if (!billing) {
       return PLAN_TYPES.FREE;
     }
 
-    if (organization.subscription_status === "active") {
-      if (organization.subscription_plan === "monthly") {
-        return PLAN_TYPES.MONTHLY;
-      }
-      if (organization.subscription_plan === "yearly") {
-        return PLAN_TYPES.YEARLY;
-      }
+    if (billing.plan === "monthly") {
+      return PLAN_TYPES.MONTHLY;
+    }
+    if (billing.plan === "yearly") {
+      return PLAN_TYPES.YEARLY;
     }
 
     return PLAN_TYPES.FREE;
-  }, [organization]);
+  }, [billing]);
 
   const planInfo = PLAN_LIMITS[currentPlan];
-  const maxCredits = planInfo.creditsPerMonth;
+  const maxCredits = creditsIncluded || planInfo.creditsPerSeat || 30;
 
   const isLowCredits = creditBalance <= maxCredits * 0.2; // Less than 20% remaining
   const isOutOfCredits = creditBalance === 0;

@@ -8,7 +8,6 @@
   "dependencies": {
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
-    "@polar-sh/sdk": "catalog:",
     "drizzle-orm": "catalog:",
     "sst": "catalog:"
   },

@@ -1,46 +1,65 @@
 import type Stripe from "stripe";
+
 import { db, schema } from "@lydie/database";
-import { eq } from "drizzle-orm";
-import { stripe, getPlanConfig, type PlanType } from "../config";
-import { getWorkspaceBilling } from "../workspace-credits";
+import { eq, sql } from "drizzle-orm";
+
+import { stripe, PLAN_CONFIG, type PlanType } from "./config";
+import { getWorkspaceBilling, resetAllMemberCredits } from "./workspace-credits";
 
 /**
  * Handle checkout.session.completed
- * Activate Pro subscription after successful checkout
+ * Activate paid subscription after successful checkout
  */
 export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const subscriptionId = session.subscription as string;
-  const orgId = session.metadata?.organizationId;
 
-  if (!orgId) {
-    console.error("No organizationId in checkout session metadata", session.id);
+  if (!subscriptionId) {
+    console.error("No subscription ID in checkout session", session.id);
     return;
   }
 
-  // Retrieve the subscription to get period dates
+  // Retrieve the subscription to get metadata, period dates and determine plan
+  // Note: metadata is stored in subscription_data.metadata during checkout creation
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const orgId = subscription.metadata?.organizationId;
 
-  // Update workspace to Pro
+  if (!orgId) {
+    console.error("No organizationId in subscription metadata", subscriptionId);
+    return;
+  }
+
+  // Determine plan from price interval
+  const interval = subscription.items.data[0]?.price.recurring?.interval;
+  const plan: PlanType = interval === "year" ? "yearly" : "monthly";
+
+  // Get billing period from first subscription item (Stripe API 2025+ changed this structure)
+  const subscriptionItem = subscription.items.data[0];
+
+  // Update workspace billing
   await db
     .update(schema.workspaceBillingTable)
     .set({
-      plan: "pro",
+      plan,
       stripeSubscriptionId: subscriptionId,
       stripeSubscriptionStatus: subscription.status,
-      creditsIncludedMonthly: 800,
-      creditsAvailable: 800,
-      creditsUsedThisPeriod: 0,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      overageEnabled: true,
+      currentPeriodStart: subscriptionItem
+        ? new Date(subscriptionItem.current_period_start * 1000)
+        : null,
+      currentPeriodEnd: subscriptionItem
+        ? new Date(subscriptionItem.current_period_end * 1000)
+        : null,
       cancelAtPeriodEnd: false,
       updatedAt: new Date(),
     })
     .where(eq(schema.workspaceBillingTable.organizationId, orgId));
 
-  console.log("Workspace upgraded to Pro", {
+  // Reset all members' credits with new plan limits
+  await resetAllMemberCredits(orgId);
+
+  console.log("Workspace upgraded to paid plan", {
     organizationId: orgId,
     subscriptionId,
+    plan,
   });
 }
 
@@ -49,11 +68,11 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
  * Confirm successful payment
  */
 export async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice as any).subscription as string;
   if (!subscriptionId) return;
 
   const billing = await db.query.workspaceBillingTable.findFirst({
-    where: eq(schema.workspaceBillingTable.stripeSubscriptionId, subscriptionId),
+    where: { stripeSubscriptionId: subscriptionId },
   });
 
   if (!billing) return;
@@ -80,11 +99,11 @@ export async function handleInvoicePaid(invoice: Stripe.Invoice) {
  * Mark subscription as past_due
  */
 export async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice as any).subscription as string;
   if (!subscriptionId) return;
 
   const billing = await db.query.workspaceBillingTable.findFirst({
-    where: eq(schema.workspaceBillingTable.stripeSubscriptionId, subscriptionId),
+    where: { stripeSubscriptionId: subscriptionId },
   });
 
   if (!billing) return;
@@ -107,32 +126,21 @@ export async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
 /**
  * Handle invoice.finalized
- * Trigger monthly credit reset for new billing period
+ * Trigger monthly/yearly credit reset for ALL members
  */
 export async function handleInvoiceFinalized(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice as any).subscription as string;
   if (!subscriptionId) return;
 
   const billing = await getWorkspaceBillingBySubscription(subscriptionId);
   if (!billing) return;
 
-  const planConfig = getPlanConfig(billing.plan as PlanType);
+  // Reset all members' credits for new period
+  await resetAllMemberCredits(billing.organizationId);
 
-  // Reset credits for new period
-  await db
-    .update(schema.workspaceBillingTable)
-    .set({
-      creditsUsedThisPeriod: 0,
-      creditsAvailable: planConfig.creditsPerMonth,
-      currentPeriodStart: new Date(invoice.period_start * 1000),
-      currentPeriodEnd: new Date(invoice.period_end * 1000),
-      updatedAt: new Date(),
-    })
-    .where(eq(schema.workspaceBillingTable.organizationId, billing.organizationId));
-
-  console.log("Credits reset for new billing period", {
+  console.log("Credits reset for all members for new billing period", {
     organizationId: billing.organizationId,
-    creditsAvailable: planConfig.creditsPerMonth,
+    plan: billing.plan,
   });
 }
 
@@ -147,12 +155,17 @@ export async function handleSubscriptionUpdated(subscription: Stripe.Subscriptio
   const billing = await getWorkspaceBilling(orgId);
   if (!billing) return;
 
+  // Get billing period from first subscription item (Stripe API 2025+ changed this structure)
+  const subscriptionItem = subscription.items.data[0];
+
   await db
     .update(schema.workspaceBillingTable)
     .set({
       stripeSubscriptionStatus: subscription.status,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      currentPeriodEnd: subscriptionItem
+        ? new Date(subscriptionItem.current_period_end * 1000)
+        : null,
       updatedAt: new Date(),
     })
     .where(eq(schema.workspaceBillingTable.organizationId, orgId));
@@ -170,6 +183,7 @@ export async function handleSubscriptionUpdated(subscription: Stripe.Subscriptio
  */
 export async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   let orgId = subscription.metadata?.organizationId;
+
   if (!orgId) {
     // Try to find by subscription ID
     const billing = await getWorkspaceBillingBySubscription(subscription.id);
@@ -180,23 +194,33 @@ export async function handleSubscriptionDeleted(subscription: Stripe.Subscriptio
     orgId = billing.organizationId;
   }
 
-  // Downgrade to free
+  const planConfig = PLAN_CONFIG.free;
+
+  // Downgrade workspace to free
   await db
     .update(schema.workspaceBillingTable)
     .set({
       plan: "free",
       stripeSubscriptionId: null,
       stripeSubscriptionStatus: null,
-      creditsIncludedMonthly: 30,
-      creditsAvailable: Math.min(30, billing?.creditsAvailable || 30),
-      overageEnabled: false,
       cancelAtPeriodEnd: false,
       canceledAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(schema.workspaceBillingTable.organizationId, orgId));
 
-  console.log("Workspace downgraded to Free", {
+  // Reset all members to free tier credits (capped at 30)
+  await db
+    .update(schema.userWorkspaceCreditsTable)
+    .set({
+      creditsIncludedMonthly: planConfig.creditsPerMember,
+      creditsAvailable: sql`LEAST(${schema.userWorkspaceCreditsTable.creditsAvailable}, ${planConfig.creditsPerMember})`,
+      creditsUsedThisPeriod: 0,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.userWorkspaceCreditsTable.organizationId, orgId));
+
+  console.log("Workspace downgraded to Free, all members reset to 30 credits", {
     organizationId: orgId,
     subscriptionId: subscription.id,
   });
@@ -207,7 +231,7 @@ export async function handleSubscriptionDeleted(subscription: Stripe.Subscriptio
  */
 async function getWorkspaceBillingBySubscription(subscriptionId: string) {
   return await db.query.workspaceBillingTable.findFirst({
-    where: eq(schema.workspaceBillingTable.stripeSubscriptionId, subscriptionId),
+    where: { stripeSubscriptionId: subscriptionId },
   });
 }
 

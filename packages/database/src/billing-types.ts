@@ -10,11 +10,8 @@ export const PLAN_LIMITS: Record<
   PlanType,
   {
     name: string;
-    price: number; // Price per seat per month (or effective monthly for yearly)
-    creditsPerMonth: number; // Credits per month
+    price: number; // Price per seat per month (in dollars)
     creditsPerSeat: number; // Credits per seat per month
-    outputTokenCap: number; // Max output tokens
-    maxInternalCost: number; // Max internal cost in dollars
     features: {
       aiAssistant: boolean;
     };
@@ -22,9 +19,8 @@ export const PLAN_LIMITS: Record<
 > = {
   [PLAN_TYPES.FREE]: {
     name: "Free",
-    maxTokensPerPeriod: 100_000,
-    maxRequestsPerPeriod: 50,
-    maxMessagesPerDay: 30,
+    price: 0,
+    creditsPerSeat: 30,
     features: {
       aiAssistant: true,
     },
@@ -32,10 +28,7 @@ export const PLAN_LIMITS: Record<
   [PLAN_TYPES.MONTHLY]: {
     name: "Pro (Monthly)",
     price: 18,
-    creditsPerMonth: 800,
     creditsPerSeat: 800,
-    outputTokenCap: 800_000,
-    maxInternalCost: 11.2,
     features: {
       aiAssistant: true,
     },
@@ -43,10 +36,7 @@ export const PLAN_LIMITS: Record<
   [PLAN_TYPES.YEARLY]: {
     name: "Pro (Yearly)",
     price: 14, // Effective monthly price ($168/year)
-    creditsPerMonth: 650,
-    creditsPerSeat: 650,
-    outputTokenCap: 650_000,
-    maxInternalCost: 9.1,
+    creditsPerSeat: 800,
     features: {
       aiAssistant: true,
     },
@@ -69,6 +59,6 @@ export const MODEL_CREDIT_COSTS: Record<string, number> = {
 
 // Helper function to calculate credits from output tokens
 export function calculateCreditsFromTokens(outputTokens: number, model: string): number {
-  const creditCostPer1k = MODEL_CREDIT_COSTS[model] || MODEL_CREDIT_COSTS.default;
+  const creditCostPer1k = MODEL_CREDIT_COSTS[model] ?? MODEL_CREDIT_COSTS.default;
   return Math.ceil((outputTokens / 1000) * creditCostPer1k);
 }
