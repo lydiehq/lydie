@@ -14,7 +14,7 @@ import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
 import z from "zod";
 
@@ -45,7 +45,13 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/billi
       }),
     );
 
-    return { billing, userCredits, allMembersCredits };
+    const seatInfo = zero.run(
+      queries.billing.seatInfo({
+        organizationId: organization.id,
+      }),
+    );
+
+    return { billing, userCredits, allMembersCredits, seatInfo };
   },
   ssr: false,
 });
@@ -58,6 +64,10 @@ function formatDate(date: Date | string | number | null | undefined): string {
     day: "numeric",
     year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
   });
+}
+
+function isMemberFormer(memberCredit: { removed_at?: number | null }): boolean {
+  return !!memberCredit.removed_at;
 }
 
 function getDaysUntil(date: Date | string | number | null | undefined): number {
@@ -91,6 +101,12 @@ function RouteComponent() {
     }),
   );
 
+  const [seatInfo] = useQuery(
+    queries.billing.seatInfo({
+      organizationId: organization.id,
+    }),
+  );
+
   const currentPlan = useMemo(() => {
     if (!billing) return PLAN_TYPES.FREE;
     if (billing.plan === "monthly") return PLAN_TYPES.MONTHLY;
@@ -100,6 +116,25 @@ function RouteComponent() {
 
   const planInfo = PLAN_LIMITS[currentPlan];
   const isPaid = currentPlan !== PLAN_TYPES.FREE;
+
+  const [subscriptionDetails, setSubscriptionDetails] = useState<{
+    quantity: number | null;
+  } | null>(null);
+
+  // Fetch subscription details to get current seat quantity from Stripe
+  useEffect(() => {
+    if (isPaid) {
+      fetch(`${import.meta.env.VITE_API_URL}/internal/billing/subscription`, {
+        credentials: "include",
+        headers: {
+          "X-Organization-Id": organization.id,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => setSubscriptionDetails(data))
+        .catch(console.error);
+    }
+  }, [isPaid, organization.id]);
 
   // Calculate usage statistics
   const usageStats = useMemo(() => {
@@ -117,6 +152,26 @@ function RouteComponent() {
       percentUsed: creditsIncluded > 0 ? Math.round((creditsUsed / creditsIncluded) * 100) : 0,
     };
   }, [userCredits, billing, planInfo]);
+
+  // Filter active and former members
+  const { activeMembers, formerMembers } = useMemo(() => {
+    if (!allMembersCredits) {
+      return { activeMembers: [], formerMembers: [] };
+    }
+
+    const active: typeof allMembersCredits = [];
+    const former: typeof allMembersCredits = [];
+
+    for (const member of allMembersCredits) {
+      if (isMemberFormer(member)) {
+        former.push(member);
+      } else {
+        active.push(member);
+      }
+    }
+
+    return { activeMembers: active, formerMembers: former };
+  }, [allMembersCredits]);
 
   const handleUpgrade = async (plan: "monthly" | "yearly") => {
     setIsUpgrading(true);
@@ -231,6 +286,24 @@ function RouteComponent() {
                 <p className="text-sm text-amber-600 mt-3">
                   Your subscription will end on {formatDate(billing?.current_period_end)}.
                 </p>
+              )}
+
+              {isPaid && seatInfo && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {seatInfo.members?.length || 1} seat{seatInfo.members?.length !== 1 ? 's' : ''}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        ${planInfo.price} × {subscriptionDetails?.quantity || seatInfo.members?.length || 1} = ${(planInfo.price * (subscriptionDetails?.quantity || seatInfo.members?.length || 1)).toFixed(0)}/month
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Additional seats are prorated
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -396,15 +469,18 @@ function RouteComponent() {
         )}
       </div>
 
-      {/* Team Usage */}
-      {allMembersCredits && allMembersCredits.length > 1 && (
+      {/* Active Team Members */}
+      {activeMembers.length > 0 && (
         <>
           <Separator />
           <div className="flex flex-col gap-y-4">
-            <SectionHeader heading="Team Usage" description="See how your team is using credits." />
+            <SectionHeader
+              heading="Team Usage"
+              description={`${activeMembers.length} active member${activeMembers.length !== 1 ? 's' : ''} in this workspace.`}
+            />
             <Card className="p-6">
               <div className="space-y-4">
-                {allMembersCredits.map((memberCredit) => (
+                {activeMembers.map((memberCredit) => (
                   <div key={memberCredit.id} className="flex items-center justify-between">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -422,6 +498,64 @@ function RouteComponent() {
                       <div className="w-24 bg-gray-200 rounded-full h-1.5 mt-1">
                         <div
                           className="bg-blue-600 h-1.5 rounded-full"
+                          style={{
+                            width: `${Math.min(
+                              ((memberCredit.credits_used_this_period || 0) /
+                                (memberCredit.credits_included_monthly ||
+                                  planInfo.creditsPerSeat ||
+                                  1)) *
+                                100,
+                              100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </>
+      )}
+
+      {/* Former Members */}
+      {formerMembers.length > 0 && (
+        <>
+          <Separator />
+          <div className="flex flex-col gap-y-4">
+            <SectionHeader
+              heading="Former Members"
+              description={`${formerMembers.length} former member${formerMembers.length !== 1 ? 's' : ''} with historical usage.`}
+            />
+            <Card className="p-6 bg-gray-50 border-gray-200">
+              <div className="space-y-4">
+                {formerMembers.map((memberCredit) => (
+                  <div key={memberCredit.id} className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-700 truncate">
+                        {memberCredit.user?.name || "Unknown"}
+                        <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                          Former
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {memberCredit.user?.email || memberCredit.user_id}
+                      </p>
+                      {memberCredit.removed_at && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Left {formatDate(memberCredit.removed_at)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <p className="text-sm font-medium text-gray-700">
+                        {memberCredit.credits_used_this_period || 0} /{" "}
+                        {memberCredit.credits_included_monthly || planInfo.creditsPerSeat}
+                      </p>
+                      <div className="w-24 bg-gray-300 rounded-full h-1.5 mt-1">
+                        <div
+                          className="bg-gray-500 h-1.5 rounded-full"
                           style={{
                             width: `${Math.min(
                               ((memberCredit.credits_used_this_period || 0) /

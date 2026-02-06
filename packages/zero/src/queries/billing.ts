@@ -1,7 +1,7 @@
 import { defineQuery } from "@rocicorp/zero";
 import { z } from "zod";
 
-import { hasOrganizationAccess, hasOrganizationAccessBySlug } from "../auth";
+import { hasOrganizationAccess } from "../auth";
 import { zql } from "../schema";
 
 export const billingQueries = {
@@ -33,6 +33,7 @@ export const billingQueries = {
   ),
 
   // Get all members' credits for a workspace (admin view)
+  // Includes both active and former members - filter by removed_at in UI
   allMembersCredits: defineQuery(
     z.object({ organizationId: z.string() }),
     ({ args: { organizationId }, ctx }) => {
@@ -41,6 +42,19 @@ export const billingQueries = {
         .where("organization_id", organizationId)
         .related("user")
         .related("organization");
+    },
+  ),
+
+  // Get member count and seat information for billing
+  seatInfo: defineQuery(
+    z.object({ organizationId: z.string() }),
+    ({ args: { organizationId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      // Return organization with member count
+      return zql.organizations
+        .where("id", organizationId)
+        .one()
+        .related("members");
     },
   ),
 };

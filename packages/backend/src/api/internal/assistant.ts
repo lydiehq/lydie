@@ -27,7 +27,7 @@ import { z } from "zod";
 
 import { buildAssistantSystemPrompt } from "../utils/ai/assistant/system-prompt";
 import { generateConversationTitle } from "../utils/conversation";
-import { checkCreditBalance } from "../utils/usage-limits";
+import { checkCreditBalance, consumeCredits } from "../utils/usage-limits";
 
 export const messageMetadataSchema = z
   .object({
@@ -111,6 +111,9 @@ export const AssistantRoute = new Hono<{
 
     const organization = await db.query.organizationsTable.findFirst({
       where: { id: organizationId },
+      with: {
+        billing: true,
+      },
     });
 
     if (!organization) {
@@ -124,8 +127,8 @@ export const AssistantRoute = new Hono<{
       const creditCheck = await checkCreditBalance({
         organizationId: organization.id,
         userId: (user as any)?.id,
-        subscriptionPlan: organization.subscriptionPlan,
-        subscriptionStatus: organization.subscriptionStatus,
+        subscriptionPlan: organization.billing?.plan,
+        subscriptionStatus: organization.billing?.stripeSubscriptionStatus,
       });
 
       if (!creditCheck.allowed) {
@@ -328,8 +331,14 @@ export const AssistantRoute = new Hono<{
           // Calculate credits used based on output tokens
           const creditsUsed = calculateCreditsFromTokens(completionTokens, chatModel.modelId);
 
-          // Credit consumption is now handled via the billing API before AI processing
-          // This local tracking is for analytics purposes only
+          // Consume credits from user's workspace balance
+          await consumeCredits({
+            organizationId,
+            userId,
+            creditsRequested: creditsUsed,
+            actionType: "assistant_message",
+            resourceId: savedMessage.id,
+          });
 
           // Track usage locally with credits
           await db.insert(llmUsageTable).values({

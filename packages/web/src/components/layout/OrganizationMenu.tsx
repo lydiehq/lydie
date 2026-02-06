@@ -1,4 +1,5 @@
 import { getDefaultColorForId } from "@lydie/core/colors";
+import { hasProAccess } from "@lydie/core/billing/plan-utils";
 import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
@@ -85,14 +86,11 @@ export function OrganizationMenu({ isCollapsed }: Props) {
                 {displayOrganization?.name}
               </div>
               <div className="text-xs text-gray-500">
-                {!organization?.subscriptionPlan ||
-                organization.subscriptionPlan === PLAN_TYPES.FREE
-                  ? PLAN_LIMITS[PLAN_TYPES.FREE].name
-                  : organization.subscriptionPlan === PLAN_TYPES.MONTHLY
-                    ? PLAN_LIMITS[PLAN_TYPES.MONTHLY].name
-                    : organization.subscriptionPlan === PLAN_TYPES.YEARLY
-                      ? PLAN_LIMITS[PLAN_TYPES.YEARLY].name
-                      : PLAN_LIMITS[PLAN_TYPES.FREE].name}
+                {hasProAccess(organization?.subscriptionPlan, organization?.subscriptionStatus)
+                  ? organization?.subscriptionPlan === PLAN_TYPES.YEARLY
+                    ? PLAN_LIMITS[PLAN_TYPES.YEARLY].name
+                    : PLAN_LIMITS[PLAN_TYPES.MONTHLY].name
+                  : PLAN_LIMITS[PLAN_TYPES.FREE].name}
               </div>
             </div>
           </div>

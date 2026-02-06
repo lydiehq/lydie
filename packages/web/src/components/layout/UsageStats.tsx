@@ -27,9 +27,6 @@ export function UsageStats() {
     }),
   );
 
-  const creditBalance = userCredits?.credits_available ?? 0;
-  const creditsIncluded = userCredits?.credits_included_monthly ?? 30;
-
   const currentPlan = useMemo(() => {
     if (!billing) {
       return PLAN_TYPES.FREE;
@@ -46,6 +43,9 @@ export function UsageStats() {
   }, [billing]);
 
   const planInfo = PLAN_LIMITS[currentPlan];
+
+  const creditBalance = userCredits?.credits_available ?? planInfo.creditsPerSeat;
+  const creditsIncluded = userCredits?.credits_included_monthly ?? planInfo.creditsPerSeat;
   const maxCredits = creditsIncluded || planInfo.creditsPerSeat || 30;
 
   const isLowCredits = creditBalance <= maxCredits * 0.2; // Less than 20% remaining

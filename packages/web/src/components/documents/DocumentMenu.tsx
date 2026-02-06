@@ -127,9 +127,13 @@ export function DocumentMenu({
           <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
         )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
-        <MenuSeparator />
         {userIsAdmin && (
-          <MenuItem onAction={() => setIsCreateTemplateDialogOpen(true)}>Create template</MenuItem>
+          <>
+            <MenuSeparator />
+            <MenuItem onAction={() => setIsCreateTemplateDialogOpen(true)}>
+              Create template
+            </MenuItem>
+          </>
         )}
       </Menu>
 

@@ -184,10 +184,6 @@ function getLinkStateFromEditor(editor: Editor): PopoverState {
   return { mode: "closed" };
 }
 
-// ============================================================================
-// Hooks
-// ============================================================================
-
 function useLinkState(editor: Editor): PopoverState {
   const [state, setState] = useState<PopoverState>(() => getLinkStateFromEditor(editor));
 

@@ -18,6 +18,7 @@ import { InvitationsList } from "@/components/settings/general/InvitationsList";
 import { InviteDialog } from "@/components/settings/general/InviteDialog";
 import { MembersList } from "@/components/settings/general/MembersList";
 import { WorkspaceForm } from "@/components/settings/general/WorkspaceForm";
+import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useAuthenticatedApi } from "@/services/api";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/")({
 function RouteComponent() {
   const { createClient } = useAuthenticatedApi();
   const { organization } = useOrganization();
+  const { user } = useAuth();
   const z = useZero();
   const navigate = useNavigate();
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
@@ -216,7 +218,7 @@ function RouteComponent() {
         try {
           await authClient.organization.removeMember({
             organizationId: organization.id,
-            memberId,
+            memberIdOrEmail: memberId,
           });
           toast.success("Member removed successfully");
         } catch (error) {
@@ -250,7 +252,7 @@ function RouteComponent() {
           </Button>
         </div>
 
-        <MembersList members={members} onRemoveMember={handleRemoveMember} />
+        <MembersList members={members} currentUserId={user?.id} onRemoveMember={handleRemoveMember} />
         <InvitationsList invitations={invitations} onCancelInvitation={handleCancelInvitation} />
 
         {(!members || members.length === 0) && (!invitations || invitations.length === 0) && (

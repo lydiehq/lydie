@@ -5,7 +5,7 @@ import { admin, customSession, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
-import { createMemberCredits } from "./billing/workspace-credits";
+import { createMemberCredits, markMemberAsRemoved } from "./billing/workspace-credits";
 import { syncSubscriptionQuantity } from "./billing/seat-management";
 import { sendEmail } from "./email";
 import { createId } from "./id";
@@ -142,18 +142,21 @@ export const authClient = betterAuth({
           }
         },
 
-        // After removing a member, sync billing and clean up their credits
+        // After removing a member, sync billing and mark their credits as removed
         afterRemoveMember: async ({ member, organization }) => {
           const userId = member.userId;
           if (!userId) {
-            console.warn("Cannot remove credits for member without userId");
+            console.warn("Cannot mark credits for member without userId");
             return;
           }
 
-          // Credits are kept but won't be accessible since they're no longer a member
-          console.log(
-            `Member ${userId} removed from org ${organization.id} - credits preserved but inaccessible`,
-          );
+          // Mark credit record as removed (preserves historical data)
+          try {
+            await markMemberAsRemoved(userId, organization.id);
+            console.log(`Marked member ${userId} as removed in org ${organization.id}`);
+          } catch (error) {
+            console.error("Error marking member as removed:", error);
+          }
 
           // Sync subscription quantity to stop charging for the removed seat
           try {
@@ -161,6 +164,31 @@ export const authClient = betterAuth({
             console.log(`Synced subscription quantity for org ${organization.id} after removing member`);
           } catch (error) {
             console.error("Error syncing subscription quantity after removing member:", error);
+          }
+        },
+
+        // After accepting an invitation, create credits and sync subscription quantity
+        afterAcceptInvitation: async ({ member, organization }) => {
+          const userId = member.userId;
+          if (!userId) {
+            console.warn("Cannot create credits for member without userId");
+            return;
+          }
+
+          // Create credit record for the new member
+          try {
+            await createMemberCredits(userId, organization.id);
+            console.log(`Created credit record for invited member ${userId} in org ${organization.id}`);
+          } catch (error) {
+            console.error("Error creating member credits after invitation acceptance:", error);
+          }
+
+          // Sync subscription quantity to charge for the new seat
+          try {
+            await syncSubscriptionQuantity(organization.id);
+            console.log(`Synced subscription quantity for org ${organization.id} after invitation acceptance`);
+          } catch (error) {
+            console.error("Error syncing subscription quantity after invitation acceptance:", error);
           }
         },
       },

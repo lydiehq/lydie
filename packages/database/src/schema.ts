@@ -810,6 +810,9 @@ export const userWorkspaceCreditsTable = pgTable(
     currentPeriodStart: timestamp("current_period_start"),
     currentPeriodEnd: timestamp("current_period_end"),
 
+    // Track when member left workspace (null = currently active)
+    removedAt: timestamp("removed_at"),
+
     ...timestamps,
   },
   (table) => [

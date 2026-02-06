@@ -179,6 +179,7 @@ export async function getSubscriptionDetails(organizationId: string) {
     currentPeriodEnd: Date | null;
     cancelAtPeriodEnd: boolean;
     nextInvoiceAmount: number | null;
+    quantity: number | null;
   } | null = null;
 
   if (billing.stripeSubscriptionId) {
@@ -210,6 +211,7 @@ export async function getSubscriptionDetails(organizationId: string) {
           : null,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         nextInvoiceAmount,
+        quantity: subscriptionItem?.quantity || 1,
       };
     } catch (error) {
       console.error("Error fetching subscription details", error);

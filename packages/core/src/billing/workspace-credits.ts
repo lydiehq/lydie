@@ -72,6 +72,22 @@ export async function getOrCreateUserWorkspaceCredits(userId: string, organizati
   });
 
   if (credits) {
+    // If user was previously removed (re-invited), clear the removed_at timestamp
+    if (credits.removedAt) {
+      await db
+        .update(schema.userWorkspaceCreditsTable)
+        .set({
+          removedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.userWorkspaceCreditsTable.userId, userId),
+            eq(schema.userWorkspaceCreditsTable.organizationId, organizationId),
+          ),
+        );
+      console.log(`Cleared removedAt for re-invited member ${userId} in org ${organizationId}`);
+    }
     return credits;
   }
 
@@ -106,6 +122,26 @@ export async function getOrCreateUserWorkspaceCredits(userId: string, organizati
       ],
     },
   });
+}
+
+/**
+ * Mark a member's credit record as removed (when they leave the workspace)
+ */
+export async function markMemberAsRemoved(userId: string, organizationId: string) {
+  await db
+    .update(schema.userWorkspaceCreditsTable)
+    .set({
+      removedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(schema.userWorkspaceCreditsTable.userId, userId),
+        eq(schema.userWorkspaceCreditsTable.organizationId, organizationId),
+      ),
+    );
+
+  console.log(`Marked member ${userId} as removed from org ${organizationId}`);
 }
 
 /**

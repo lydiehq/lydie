@@ -654,6 +654,7 @@ const userWorkspaceCredits = table("user_workspace_credits")
     credits_available: number(),
     current_period_start: number().optional(),
     current_period_end: number().optional(),
+    removed_at: number().optional(),
     ...timestamps,
   })
   .primaryKey("id");

@@ -27,7 +27,7 @@ function PageComponent() {
   const { user } = useAuth();
 
   return (
-    <div className="h-screen py-1 pr-1 pl-px">
+    <div className="h-screen p-1">
       <Surface className="overflow-y-auto size-full">
         <div className="max-w-4xl mx-auto p-8">
           <div className="mb-8">
