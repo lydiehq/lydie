@@ -27,6 +27,7 @@ export async function checkCreditBalance(params: {
   userId: string;
   subscriptionPlan?: string | null;
   subscriptionStatus?: string | null;
+  creditsRequired?: number;
 }): Promise<{
   allowed: boolean;
   creditsAvailable: number;
@@ -34,6 +35,7 @@ export async function checkCreditBalance(params: {
   currentPlan: PlanType;
 }> {
   const currentPlan = getCurrentPlan(params.subscriptionPlan, params.subscriptionStatus);
+  const creditsRequired = params.creditsRequired ?? 1;
 
   // Get the current credit status for this user in this workspace
   const creditStatus = await getUserCreditStatus(params.userId, params.organizationId);
@@ -42,15 +44,15 @@ export async function checkCreditBalance(params: {
     return {
       allowed: false,
       creditsAvailable: 0,
-      creditsRequired: 1,
+      creditsRequired,
       currentPlan,
     };
   }
 
   return {
-    allowed: creditStatus.creditsAvailable > 0,
+    allowed: creditStatus.creditsAvailable >= creditsRequired,
     creditsAvailable: creditStatus.creditsAvailable,
-    creditsRequired: 1,
+    creditsRequired,
     currentPlan,
   };
 }

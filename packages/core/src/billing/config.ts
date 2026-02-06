@@ -2,7 +2,7 @@ import { Resource } from "sst";
 import Stripe from "stripe";
 
 export const stripe = new Stripe(Resource.StripeSecretKey.value, {
-  apiVersion: "2025-01-27.acacia",
+  apiVersion: "2026-01-28.clover",
   typescript: true,
 });
 

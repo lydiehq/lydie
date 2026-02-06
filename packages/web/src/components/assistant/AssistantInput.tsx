@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Form } from "react-aria-components";
 
 import { AgentSelector } from "@/components/assistant/AgentSelector";
+import { ModelSelector } from "@/components/assistant/ModelSelector";
 import { type ChatContextItem, ChatContextList } from "@/components/chat/ChatContextList";
 import { useDocumentContext } from "@/hooks/use-document-context";
 import { useAssistantEditor } from "@/lib/editor/assistant-editor";
@@ -24,6 +25,8 @@ export interface AssistantInputProps {
   content?: string;
   selectedAgentId?: string | null;
   onSelectAgent?: (agentId: string) => void;
+  selectedModelId?: string | null;
+  onSelectModel?: (modelId: string) => void;
 }
 
 export function AssistantInput({
@@ -38,6 +41,8 @@ export function AssistantInput({
   content,
   selectedAgentId,
   onSelectAgent,
+  selectedModelId,
+  onSelectModel,
 }: AssistantInputProps) {
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([]);
   const [manuallySelectedDocumentIds, setManuallySelectedDocumentIds] = useState<string[]>([]);
@@ -156,21 +161,31 @@ export function AssistantInput({
         <Form className="relative flex flex-col" onSubmit={handleSubmit}>
           <EditorContent editor={assistantEditor.editor} />
           <div className="flex items-center justify-between">
-            {selectedAgentId !== undefined && onSelectAgent && (
-              <AgentSelector selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} />
-            )}
-            <Button
-              type={canStop ? "button" : "submit"}
-              onPress={canStop ? onStop : undefined}
-              intent="ghost"
-              size="icon-sm"
-            >
-              {canStop ? (
-                <SquareFilled className="size-4 text-gray-900 fill-gray-900" />
-              ) : (
-                <ArrowCircleUp32Filled className="size-5 text-gray-900" />
+            <div className="flex items-center gap-1">
+              {selectedAgentId !== undefined && onSelectAgent && (
+                <AgentSelector selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} />
               )}
-            </Button>
+            </div>
+            <div className="flex items-center gap-0.5">
+              {onSelectModel && (
+                <ModelSelector
+                  selectedModelId={selectedModelId || null}
+                  onSelectModel={onSelectModel}
+                />
+              )}
+              <Button
+                type={canStop ? "button" : "submit"}
+                onPress={canStop ? onStop : undefined}
+                intent="ghost"
+                size="icon-sm"
+              >
+                {canStop ? (
+                  <SquareFilled className="size-4 text-gray-900 fill-gray-900" />
+                ) : (
+                  <ArrowCircleUp32Filled className="size-5 text-gray-900" />
+                )}
+              </Button>
+            </div>
           </div>
         </Form>
       </div>

@@ -1,6 +1,7 @@
+import { createGateway } from "@ai-sdk/gateway";
 import { openai } from "@ai-sdk/openai";
 import { getDefaultAgentById, getDefaultAgentByName } from "@lydie/core/ai/agents/defaults";
-import { chatModel } from "@lydie/core/ai/llm";
+import { getDefaultModel, getModelById, type LLMModel } from "@lydie/core/ai/models";
 import { createDocument } from "@lydie/core/ai/tools/create-document";
 import { findDocuments } from "@lydie/core/ai/tools/find-documents";
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
@@ -9,7 +10,6 @@ import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
 import { scanDocuments } from "@lydie/core/ai/tools/scan-documents";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
 import { VisibleError } from "@lydie/core/error";
-// Credit tracking now handled via Stripe billing API
 import {
   assistantAgentsTable,
   assistantConversationsTable,
@@ -18,11 +18,11 @@ import {
   documentsTable,
   llmUsageTable,
 } from "@lydie/database";
-import { calculateCreditsFromTokens } from "@lydie/database/billing-types";
 import { ToolLoopAgent, createAgentUIStreamResponse, smoothStream, validateUIMessages } from "ai";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { Resource } from "sst";
 import { z } from "zod";
 
 import { buildAssistantSystemPrompt } from "../utils/ai/assistant/system-prompt";
@@ -65,9 +65,10 @@ export const AssistantRoute = new Hono<{
     const userId = c.get("user").id;
     const organizationId = c.get("organizationId");
 
-    // Extract agentId from message metadata if not provided in body
+    // Extract agentId and modelId from message metadata
     const latestMessageForAgent = messages[messages.length - 1];
     const agentId = bodyAgentId || latestMessageForAgent?.metadata?.agentId || null;
+    const modelId = latestMessageForAgent?.metadata?.modelId || null;
 
     let conversationId = providedConversationId;
     let conversation = null;
@@ -122,6 +123,10 @@ export const AssistantRoute = new Hono<{
       });
     }
 
+    // Get the selected model or use default
+    const selectedModel = modelId ? getModelById(modelId) || getDefaultModel() : getDefaultModel();
+
+    // Check credit balance before processing - now using per-message credits
     const isAdmin = (user as any)?.role === "admin";
     if (!isAdmin) {
       const creditCheck = await checkCreditBalance({
@@ -129,12 +134,13 @@ export const AssistantRoute = new Hono<{
         userId: (user as any)?.id,
         subscriptionPlan: organization.billing?.plan,
         subscriptionStatus: organization.billing?.stripeSubscriptionStatus,
+        creditsRequired: selectedModel.credits,
       });
 
       if (!creditCheck.allowed) {
         throw new VisibleError(
           "insufficient_credits",
-          `You've run out of AI credits. You have ${creditCheck.creditsAvailable} credits remaining. Upgrade your plan or wait for your credits to reset next billing cycle.`,
+          `You don't have enough credits for this model. The ${selectedModel.name} model costs ${selectedModel.credits} credit${selectedModel.credits > 1 ? "s" : ""} per message. You have ${creditCheck.creditsAvailable} credits remaining.`,
           429,
         );
       }
@@ -274,10 +280,40 @@ export const AssistantRoute = new Hono<{
       tools.replace_in_document = replaceInDocument();
     }
 
-    const agent = new ToolLoopAgent({
-      providerOptions: {
-        openai: { reasoningEffort: "low" },
+    const gateway = createGateway({
+      apiKey: Resource.ApiGatewayKey.value,
+    });
+
+    const chatModel = gateway(selectedModel.model);
+
+    // Build provider options based on the selected model's provider
+    const providerOptions: Record<string, any> = {
+      openai: {
+        parallelToolCalls: false,
       },
+      google: {
+        thinkingConfig: {
+          includeThoughts: true,
+        },
+      },
+      anthropic: {
+        sendReasoning: true,
+        thinking: { type: "enabled", budgetTokens: 3000 },
+        disableParallelToolUse: true,
+      },
+      gateway: {
+        order: ["groq", "cerebras", "baseten"],
+      },
+    };
+
+    // Add provider-specific options if applicable
+    if (selectedModel.provider === "openai" && selectedModel.id.includes("gpt-5")) {
+      providerOptions.openai.include = ["reasoning.encrypted_content"];
+      providerOptions.openai.reasoningSummary = "auto";
+    }
+
+    const agent = new ToolLoopAgent({
+      providerOptions,
       model: chatModel,
       instructions: systemPrompt,
       tools,
@@ -322,36 +358,29 @@ export const AssistantRoute = new Hono<{
           role: "assistant",
         });
 
-        const totalTokens = (assistantMessage.metadata as MessageMetadata)?.usage || 0;
+        // Use per-message credit cost from the selected model
+        const creditsUsed = selectedModel.credits;
 
-        if (totalTokens > 0) {
-          // Calculate completion tokens (estimate 30% of total)
-          const completionTokens = Math.floor(totalTokens * 0.3);
+        // Consume credits from user's workspace balance
+        await consumeCredits({
+          organizationId,
+          userId,
+          creditsRequested: creditsUsed,
+          actionType: "assistant_message",
+          resourceId: savedMessage.id,
+        });
 
-          // Calculate credits used based on output tokens
-          const creditsUsed = calculateCreditsFromTokens(completionTokens, chatModel.modelId);
-
-          // Consume credits from user's workspace balance
-          await consumeCredits({
-            organizationId,
-            userId,
-            creditsRequested: creditsUsed,
-            actionType: "assistant_message",
-            resourceId: savedMessage.id,
-          });
-
-          // Track usage locally with credits
-          await db.insert(llmUsageTable).values({
-            conversationId,
-            messageId: savedMessage.id,
-            organizationId,
-            source: "assistant",
-            model: chatModel.modelId,
-            creditsUsed,
-            finishReason: "stop",
-            toolCalls: null,
-          });
-        }
+        // Track usage locally with credits
+        await db.insert(llmUsageTable).values({
+          conversationId,
+          messageId: savedMessage.id,
+          organizationId,
+          source: "assistant",
+          model: selectedModel.model,
+          creditsUsed,
+          finishReason: "stop",
+          toolCalls: null,
+        });
       },
     });
   } catch (e) {

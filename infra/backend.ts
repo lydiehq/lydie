@@ -20,18 +20,17 @@ const commonSecrets = [
   secret.postgresConnectionStringPooled,
   secret.postgresConnectionStringDirect,
   secret.betterAuthSecret,
-  // Stripe billing secrets
   secret.stripeSecretKey,
   secret.stripeMonthlyPriceId,
   secret.stripeYearlyPriceId,
   secret.stripeWebhookSecret,
-  // Integration secrets
   secret.githubClientId,
   secret.githubClientSecret,
   secret.githubPrivateKey,
   secret.githubAppSlug,
   secret.shopifyClientId,
   secret.shopifyClientSecret,
+  secret.apiGatewayKey,
 ];
 
 export const backend = new sst.aws.Service("Backend", {

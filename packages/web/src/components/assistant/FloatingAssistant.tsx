@@ -15,7 +15,7 @@ import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
@@ -31,6 +31,10 @@ import {
   pendingMessageAtom,
   useFloatingAssistant,
 } from "@/hooks/use-floating-assistant";
+import {
+  selectedAgentIdAtom,
+  selectedModelIdAtom,
+} from "@/stores/assistant-preferences";
 
 const LAYOUT_ID = {
   container: "assistant-container",
@@ -50,9 +54,12 @@ export function FloatingAssistant({
   const { organization } = useOrganization();
   const assistant = useFloatingAssistant();
 
+  // Persisted preferences from localStorage
+  const [selectedAgentId, setSelectedAgentId] = useAtom(selectedAgentIdAtom);
+  const [selectedModelId, setSelectedModelId] = useAtom(selectedModelIdAtom);
+
   // Local conversation state
   const [conversationId, setConversationId] = useState(() => createId());
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
 
   const [currentConversation] = useQuery(
     conversationId
@@ -65,6 +72,7 @@ export function FloatingAssistant({
 
   const { messages, sendMessage, stop, status, setMessages } = useAssistantChat({
     conversationId,
+    modelId: selectedModelId,
     initialMessages:
       currentConversation?.messages?.map((msg: any) => ({
         id: msg.id,
@@ -95,9 +103,19 @@ export function FloatingAssistant({
     currentConversation,
   ]);
 
-  const handleSelectAgent = useCallback((agentId: string) => {
-    setSelectedAgentId(agentId);
-  }, []);
+  const handleSelectAgent = useCallback(
+    (agentId: string) => {
+      setSelectedAgentId(agentId);
+    },
+    [setSelectedAgentId],
+  );
+
+  const handleSelectModel = useCallback(
+    (modelId: string) => {
+      setSelectedModelId(modelId);
+    },
+    [setSelectedModelId],
+  );
 
   const handleNewChat = useCallback(() => {
     const newId = createId();
@@ -149,6 +167,8 @@ export function FloatingAssistant({
             status={status}
             selectedAgentId={selectedAgentId}
             onSelectAgent={handleSelectAgent}
+            selectedModelId={selectedModelId}
+            onSelectModel={handleSelectModel}
             onNewChat={handleNewChat}
             onSelectConversation={handleSelectConversation}
           />
@@ -173,6 +193,8 @@ function AssistantPopup({
   status,
   selectedAgentId,
   onSelectAgent,
+  selectedModelId,
+  onSelectModel,
   onNewChat,
   onSelectConversation,
 }: {
@@ -188,6 +210,8 @@ function AssistantPopup({
   status: string;
   selectedAgentId: string | null;
   onSelectAgent: (agentId: string) => void;
+  selectedModelId: string | null;
+  onSelectModel: (modelId: string) => void;
   onNewChat: () => void;
   onSelectConversation: (id: string) => void;
 }) {
@@ -278,6 +302,8 @@ function AssistantPopup({
           status={status}
           selectedAgentId={selectedAgentId}
           onSelectAgent={onSelectAgent}
+          selectedModelId={selectedModelId}
+          onSelectModel={onSelectModel}
         />
       </motion.div>
     </motion.div>
@@ -296,6 +322,8 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   status,
   selectedAgentId,
   onSelectAgent,
+  selectedModelId,
+  onSelectModel,
 }: {
   organizationId: string;
   currentDocumentId: string | null;
@@ -305,6 +333,8 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   status: string;
   selectedAgentId: string | null;
   onSelectAgent: (agentId: string) => void;
+  selectedModelId: string | null;
+  onSelectModel: (modelId: string) => void;
 }) {
   const [dbAgent] = useQuery(
     selectedAgentId
@@ -467,6 +497,8 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
           content={pendingContent}
           selectedAgentId={selectedAgentId}
           onSelectAgent={onSelectAgent}
+          selectedModelId={selectedModelId}
+          onSelectModel={onSelectModel}
         />
       </div>
     </div>

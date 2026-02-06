@@ -5,6 +5,10 @@
 
 declare module "sst" {
   export interface Resource {
+    "ApiGatewayKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "AssetsRouter": {
       "type": "sst.aws.Router"
       "url": string

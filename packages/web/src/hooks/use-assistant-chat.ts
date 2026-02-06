@@ -11,11 +11,13 @@ import { isUsageLimitError, parseChatError } from "@/utils/chat-error-handler";
 
 interface UseAssistantChatOptions {
   conversationId: string;
+  modelId?: string | null;
   initialMessages?: DocumentChatAgentUIMessage[];
 }
 
 export function useAssistantChat({
   conversationId,
+  modelId,
   initialMessages = [],
 }: UseAssistantChatOptions) {
   const { organization } = useOrganization();
@@ -68,10 +70,11 @@ export function useAssistantChat({
     (options: { text: string; metadata?: any; agentId?: string | null }) => {
       messageStartTimeRef.current = Date.now();
 
-      // Store agentId in metadata so backend can extract it
+      // Store agentId and modelId in metadata so backend can extract it
       const enhancedMetadata = {
         ...options.metadata,
         agentId: options.agentId || null,
+        modelId: modelId || null,
       };
 
       return originalSendMessage({
@@ -79,7 +82,7 @@ export function useAssistantChat({
         metadata: enhancedMetadata,
       });
     },
-    [originalSendMessage],
+    [originalSendMessage, modelId],
   );
 
   return {

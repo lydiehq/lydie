@@ -29,4 +29,6 @@ export const secret = {
 
   // PostHog analytics (public key for client-side tracking)
   posthogKey: new sst.Secret("PostHogKey"),
+
+  apiGatewayKey: new sst.Secret("ApiGatewayKey"),
 };
