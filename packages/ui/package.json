@@ -12,15 +12,15 @@
     "@tiptap/react": "catalog:",
     "clsx": "^2.1.1",
     "cva": "^1.0.0-beta.4",
-    "motion": "^12.31.2",
+    "motion": "^12.33.0",
     "react": "catalog:",
     "react-aria": "^3.46.0",
-    "react-aria-components": "^1.15.0",
+    "react-aria-components": "^1.15.1",
     "react-dom": "catalog:",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
-    "@types/node": "^25.2.0",
+    "@types/node": "^25.2.1",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "sst": "catalog:",

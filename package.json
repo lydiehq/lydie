@@ -52,7 +52,7 @@
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/query-sync-storage-persister": "^5.90.22",
     "@tanstack/react-query-persist-client": "^5.90.22",
-    "framer-motion": "^12.31.2"
+    "framer-motion": "^12.33.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
