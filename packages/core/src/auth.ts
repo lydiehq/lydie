@@ -1,20 +1,15 @@
 import { db, schema } from "@lydie/database";
-import { checkout, polar, portal, usage, webhooks } from "@polar-sh/better-auth";
-import { Polar } from "@polar-sh/sdk";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, customSession, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { Resource } from "sst";
 
+import { createMemberCredits, markMemberAsRemoved } from "./billing/workspace-credits";
+import { syncSubscriptionQuantity } from "./billing/seat-management";
 import { sendEmail } from "./email";
 import { createId } from "./id";
 import { scheduleOnboardingEmails } from "./onboarding";
-
-const polarClient = new Polar({
-  accessToken: Resource.PolarApiKey.value,
-  server: Resource.App.stage === "production" ? "production" : "sandbox",
-});
 
 export const authClient = betterAuth({
   logger: {
@@ -100,7 +95,6 @@ export const authClient = betterAuth({
             await db.insert(schema.userSettingsTable).values({
               id: createId(),
               userId: user.id,
-              persistDocumentTreeExpansion: true,
             });
           }
         },
@@ -113,22 +107,90 @@ export const authClient = betterAuth({
       adminRoles: ["admin"],
     }),
     organization({
+      // Use Better-Auth's default invitation system
+      // Invitations are now handled via standard Better-Auth flows
       sendInvitationEmail: async (data) => {
-        const frontendUrl =
-          process.env.FRONTEND_URL ||
-          (Resource.App.stage === "production" ? "https://app.lydie.co" : "http://localhost:3000");
-        const invitationUrl = `${frontendUrl}/invitations/${data.invitation.id}`;
+        // Send invitation email via our email system
+        // TODO: Implement email sending for invitations
+        console.log("Invitation email would be sent to:", data.email);
+      },
 
-        await sendEmail({
-          to: data.email,
-          subject: `You've been invited to join ${data.organization.name}`,
-          html: `
-            <p>You've been invited to join <strong>${data.organization.name}</strong> on Lydie.</p>
-            <p>Click the link below to accept the invitation:</p>
-            <p><a href="${invitationUrl}">${invitationUrl}</a></p>
-            <p>This invitation will expire in 48 hours.</p>
-          `,
-        });
+      // Simplified organization hooks - no seat-based logic
+      organizationHooks: {
+        // After adding a member, create their credit record and sync billing
+        afterAddMember: async ({ member, organization }) => {
+          const userId = member.userId;
+          if (!userId) {
+            console.warn("Cannot create credits for member without userId");
+            return;
+          }
+
+          // Create credit record for the new member
+          try {
+            await createMemberCredits(userId, organization.id);
+            console.log(`Created credit record for member ${userId} in org ${organization.id}`);
+          } catch (error) {
+            console.error("Error creating member credits:", error);
+          }
+
+          // Sync subscription quantity to charge for the new seat
+          try {
+            await syncSubscriptionQuantity(organization.id);
+            console.log(`Synced subscription quantity for org ${organization.id} after adding member`);
+          } catch (error) {
+            console.error("Error syncing subscription quantity after adding member:", error);
+          }
+        },
+
+        // After removing a member, sync billing and mark their credits as removed
+        afterRemoveMember: async ({ member, organization }) => {
+          const userId = member.userId;
+          if (!userId) {
+            console.warn("Cannot mark credits for member without userId");
+            return;
+          }
+
+          // Mark credit record as removed (preserves historical data)
+          try {
+            await markMemberAsRemoved(userId, organization.id);
+            console.log(`Marked member ${userId} as removed in org ${organization.id}`);
+          } catch (error) {
+            console.error("Error marking member as removed:", error);
+          }
+
+          // Sync subscription quantity to stop charging for the removed seat
+          try {
+            await syncSubscriptionQuantity(organization.id);
+            console.log(`Synced subscription quantity for org ${organization.id} after removing member`);
+          } catch (error) {
+            console.error("Error syncing subscription quantity after removing member:", error);
+          }
+        },
+
+        // After accepting an invitation, create credits and sync subscription quantity
+        afterAcceptInvitation: async ({ member, organization }) => {
+          const userId = member.userId;
+          if (!userId) {
+            console.warn("Cannot create credits for member without userId");
+            return;
+          }
+
+          // Create credit record for the new member
+          try {
+            await createMemberCredits(userId, organization.id);
+            console.log(`Created credit record for invited member ${userId} in org ${organization.id}`);
+          } catch (error) {
+            console.error("Error creating member credits after invitation acceptance:", error);
+          }
+
+          // Sync subscription quantity to charge for the new seat
+          try {
+            await syncSubscriptionQuantity(organization.id);
+            console.log(`Synced subscription quantity for org ${organization.id} after invitation acceptance`);
+          } catch (error) {
+            console.error("Error syncing subscription quantity after invitation acceptance:", error);
+          }
+        },
       },
     }),
     customSession(async ({ user, session }) => {
@@ -147,8 +209,8 @@ export const authClient = betterAuth({
 
       const organizations = members.map((m) => m.organization);
 
-      const foundOrg = session.activeOrganizationId
-        ? organizations.find((org) => org.id === session.activeOrganizationId)
+      const foundOrg = (session as any).activeOrganizationId
+        ? organizations.find((org) => org.id === (session as any).activeOrganizationId)
         : undefined;
       const activeOrganizationSlug = foundOrg?.slug;
 
@@ -157,80 +219,11 @@ export const authClient = betterAuth({
         user,
         session: {
           ...session,
-          role: user.role,
+          role: (user as any).role,
           organizations,
           activeOrganizationSlug,
         },
       };
-    }),
-    polar({
-      client: polarClient,
-      createCustomerOnSignUp: false,
-      use: [
-        checkout({
-          products: [
-            {
-              productId: Resource.PolarProProductId.value,
-              slug: "pro",
-            },
-          ],
-          successUrl: "/",
-          authenticatedUsersOnly: true,
-        }),
-        portal(),
-        usage(),
-        webhooks({
-          secret: Resource.PolarWebhookSecret?.value || "",
-          onSubscriptionActive: async (payload) => {
-            console.log("Subscription active:", payload);
-            const organizationId = payload.data.metadata?.referenceId;
-            if (!organizationId || typeof organizationId !== "string") {
-              console.warn("No valid organization ID in subscription metadata");
-              return;
-            }
-
-            await db
-              .update(schema.organizationsTable)
-              .set({
-                subscriptionStatus: "active",
-                subscriptionPlan: "pro",
-                polarSubscriptionId: payload.data.id,
-              })
-              .where(eq(schema.organizationsTable.id, organizationId));
-          },
-          onSubscriptionCanceled: async (payload) => {
-            console.log("Subscription canceled:", payload);
-            const organizationId = payload.data.metadata?.referenceId;
-            if (!organizationId || typeof organizationId !== "string") {
-              console.warn("No valid organization ID in subscription metadata");
-              return;
-            }
-
-            await db
-              .update(schema.organizationsTable)
-              .set({
-                subscriptionStatus: "canceled",
-                subscriptionPlan: "free",
-              })
-              .where(eq(schema.organizationsTable.id, organizationId));
-          },
-          onSubscriptionUpdated: async (payload) => {
-            console.log("Subscription updated:", payload);
-            const organizationId = payload.data.metadata?.referenceId;
-            if (!organizationId || typeof organizationId !== "string") {
-              console.warn("No valid organization ID in subscription metadata");
-              return;
-            }
-
-            await db
-              .update(schema.organizationsTable)
-              .set({
-                subscriptionStatus: payload.data.status,
-              })
-              .where(eq(schema.organizationsTable.id, organizationId));
-          },
-        }),
-      ],
     }),
   ],
 });

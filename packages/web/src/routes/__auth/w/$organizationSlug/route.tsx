@@ -11,6 +11,7 @@ import { Button } from "react-aria-components";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
+import { ErrorPage } from "@/components/layout/ErrorPage";
 import { isSidebarCollapsedAtom } from "@/atoms/sidebar";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
@@ -43,12 +44,23 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
       throw notFound();
     }
   },
-  notFoundComponent: () => <div>Organization not found</div>,
+  notFoundComponent: NotFoundComponent,
   gcTime: Infinity,
   staleTime: Infinity,
 });
 
 const COLLAPSED_SIZE = 50; // pixels
+
+function NotFoundComponent() {
+  return (
+    <ErrorPage
+      error={new Error("Organization not found")}
+      reset={() => {
+        window.location.href = "/";
+      }}
+    />
+  );
+}
 
 function RouteComponent() {
   return <RouteLayout />;

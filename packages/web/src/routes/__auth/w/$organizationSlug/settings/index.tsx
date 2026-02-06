@@ -18,6 +18,7 @@ import { InvitationsList } from "@/components/settings/general/InvitationsList";
 import { InviteDialog } from "@/components/settings/general/InviteDialog";
 import { MembersList } from "@/components/settings/general/MembersList";
 import { WorkspaceForm } from "@/components/settings/general/WorkspaceForm";
+import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useAuthenticatedApi } from "@/services/api";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/")({
 function RouteComponent() {
   const { createClient } = useAuthenticatedApi();
   const { organization } = useOrganization();
+  const { user } = useAuth();
   const z = useZero();
   const navigate = useNavigate();
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
@@ -195,14 +197,28 @@ function RouteComponent() {
       return;
     }
 
+    // Check if this is a paid workspace
+    const isPaidWorkspace =
+      organization.subscriptionStatus === "active" &&
+      (organization.subscriptionPlan === "monthly" || organization.subscriptionPlan === "yearly");
+
+    let billingMessage = "";
+    if (isPaidWorkspace) {
+      const pricePerSeat =
+        organization.subscriptionPlan === "yearly"
+          ? 14 // PLAN_LIMITS[PLAN_TYPES.YEARLY].price
+          : 18; // PLAN_LIMITS[PLAN_TYPES.MONTHLY].price
+      billingMessage = `\n\nBilling Impact:\n• This will free 1 seat\n• Your next bill will be reduced by $${pricePerSeat} (prorated)`;
+    }
+
     confirmDialog({
       title: `Remove Member`,
-      message: `Are you sure you want to remove ${memberName} from this organization?`,
+      message: `Are you sure you want to remove ${memberName} from this organization?${billingMessage}`,
       onConfirm: async () => {
         try {
           await authClient.organization.removeMember({
             organizationId: organization.id,
-            memberId,
+            memberIdOrEmail: memberId,
           });
           toast.success("Member removed successfully");
         } catch (error) {
@@ -236,7 +252,7 @@ function RouteComponent() {
           </Button>
         </div>
 
-        <MembersList members={members} onRemoveMember={handleRemoveMember} />
+        <MembersList members={members} currentUserId={user?.id} onRemoveMember={handleRemoveMember} />
         <InvitationsList invitations={invitations} onCancelInvitation={handleCancelInvitation} />
 
         {(!members || members.length === 0) && (!invitations || invitations.length === 0) && (

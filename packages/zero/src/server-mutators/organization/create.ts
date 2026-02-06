@@ -1,11 +1,13 @@
+import { setupOrganizationBilling } from "@lydie/core/billing/billing-sync";
 import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { documentEmbeddingsTable, documentTitleEmbeddingsTable } from "@lydie/database";
 import { defineMutator, Transaction } from "@rocicorp/zero";
-import { z } from "zod";
 
 import "../../db-types";
+import { z } from "zod";
+
 import { mutators as sharedMutators } from "../../mutators/index";
 import { onboardingEmbeddings } from "../../onboarding/embeddings";
 import {
@@ -16,7 +18,7 @@ import {
 import { MutatorContext } from "../../server-mutators";
 import { withTimestamps } from "../../utils/timestamps";
 
-export const createOrganizationMutation = (_context: MutatorContext) =>
+export const createOrganizationMutation = (context: MutatorContext) =>
   defineMutator(
     z.object({
       id: z.string(),
@@ -49,6 +51,22 @@ export const createOrganizationMutation = (_context: MutatorContext) =>
           ctx.userId,
         );
       }
+
+      // Setup billing for the organization after transaction commits
+      // This creates free tier workspace billing and initial credits for the owner
+      context.asyncTasks.push(async () => {
+        try {
+          await setupOrganizationBilling(
+            args.id,
+            args.name,
+            ctx.userId,
+            // Email and name will be fetched by setupOrganizationBilling
+          );
+        } catch (error) {
+          console.error("Failed to setup billing for organization:", args.id, error);
+          // Don't throw - billing setup failure shouldn't block organization creation
+        }
+      });
     },
   );
 
@@ -87,6 +105,7 @@ async function createOnboardingDocumentsWithEmbeddings(
       organization_id: organizationId,
       integration_link_id: null,
       is_locked: false,
+      is_favorited: false,
       published: false,
       parent_id: null,
       sort_order: 0,
@@ -145,6 +164,7 @@ async function createOnboardingDocumentsWithEmbeddings(
         user_id: userId,
         organization_id: organizationId,
         integration_link_id: null,
+        is_favorited: false,
         is_locked: false,
         published: false,
         parent_id: onboardingDocId,

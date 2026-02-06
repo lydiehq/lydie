@@ -16,7 +16,6 @@
       "yjs": "^13.6.29",
       "drizzle-orm": "^1.0.0-beta.12-d1c2b4c",
       "better-auth": "1.4.7-beta.2",
-      "@polar-sh/better-auth": "^1.6.4",
       "@ai-sdk/google": "^3.0.20",
       "@ai-sdk/openai": "^3.0.25",
       "ai": "^6.0.67",
@@ -26,7 +25,8 @@
       "@tiptap/starter-kit": "^3.18.0",
       "@tiptap/y-tiptap": "^3.0.2",
       "@tiptap/extension-mention": "^3.18.0",
-      "@tiptap/extension-placeholder": "^3.18.0"
+      "@tiptap/extension-placeholder": "^3.18.0",
+      "stripe": "^20.3.1"
     }
   },
   "scripts": {

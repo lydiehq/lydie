@@ -9,13 +9,14 @@ interface SessionAuthEnv {
     user: typeof authClient.$Infer.Session.user | null;
     session: typeof authClient.$Infer.Session.session | null;
     organizationId: string;
+    organizationSlug: string;
   };
 }
 
 // Rate limiting middleware for internal API
 // Limits requests per authenticated user: 1000 requests per 15 minutes
 // More lenient than public API since users are authenticated
-export const internalRateLimit = rateLimiter({
+export const internalRateLimit = rateLimiter<SessionAuthEnv>({
   windowMs: 15 * 60 * 1000, // 15 minutes
   limit: 1000,
   keyGenerator: (c) => {
@@ -62,21 +63,40 @@ export const sessionAuth: MiddlewareHandler<SessionAuthEnv> = async (c, next) =>
 
 // Organization context middleware that validates and sets organization context
 // Requires sessionAuth to be run first
+// Organization ID can come from header (X-Organization-Id) or URL param (:organizationId)
 export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, next) => {
+  console.log("[organizationContext] Starting request processing");
+  
   const user = c.get("user");
+  console.log("[organizationContext] User from context:", user?.id || "NOT SET");
+  
   if (!user) {
+    console.error("[organizationContext] No user in context - throwing 401");
     throw new HTTPException(401, {
       message: "Unauthorized - User not found in context",
     });
   }
 
-  const organizationId = c.req.header("X-Organization-Id");
+  // Try to get organization ID from header first, then from URL params
+  let organizationId = c.req.header("X-Organization-Id");
+  console.log("[organizationContext] X-Organization-Id header:", organizationId || "NOT SET");
+
   if (!organizationId) {
+    console.error("[organizationContext] No organization ID in header - checking URL params");
+    organizationId = c.req.param("organizationId");
+    console.log("[organizationContext] organizationId from URL param:", organizationId || "NOT SET");
+  }
+
+  if (!organizationId) {
+    console.error("[organizationContext] No organization ID found anywhere - throwing 400");
     throw new HTTPException(400, {
-      message: "Organization ID is required",
+      message:
+        "Organization ID is required (provide via X-Organization-Id header or URL parameter)",
     });
   }
 
+  console.log(`[organizationContext] Looking up organization ${organizationId} with user ${user.id}`);
+  
   const organization = await db.query.organizationsTable.findFirst({
     where: {
       id: organizationId,
@@ -90,13 +110,26 @@ export const organizationContext: MiddlewareHandler<SessionAuthEnv> = async (c, 
     },
   });
 
-  if (!organization || organization.members.length === 0) {
+  console.log("[organizationContext] Organization found:", !!organization);
+  console.log("[organizationContext] Members found:", organization?.members?.length || 0);
+
+  if (!organization) {
+    console.error(`[organizationContext] Organization not found: ${organizationId}`);
+    throw new HTTPException(403, {
+      message: "Access denied - Organization not found",
+    });
+  }
+
+  if (organization.members.length === 0) {
+    console.error(`[organizationContext] User ${user.id} is not a member of organization ${organizationId}`);
     throw new HTTPException(403, {
       message: "Access denied - User is not a member of this organization",
     });
   }
 
+  console.log("[organizationContext] SUCCESS - Setting organizationId and organizationSlug and proceeding");
   c.set("organizationId", organizationId);
+  c.set("organizationSlug", organization.slug);
   return next();
 };
 

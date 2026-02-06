@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 import { AssistantRoute } from "./assistant";
+import { BillingRoute } from "./billing";
 import { ImagesRoute } from "./images";
 import { IntegrationsRoute } from "./integrations";
 import { LLMReplaceRoute } from "./llm-replace";
@@ -29,7 +30,8 @@ const organizationScopedRouter = new Hono<{
   .route("/assistant", AssistantRoute)
   .route("/mdx-import", MDXImportRoute)
   .route("/llm-replace", LLMReplaceRoute)
-  .route("/images", ImagesRoute);
+  .route("/images", ImagesRoute)
+  .route("/billing", BillingRoute);
 
 export const InternalApi = new Hono()
   .route("/public", publicRouter)

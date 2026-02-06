@@ -5,6 +5,7 @@ import type { Context } from "../auth";
 import { agentQueries } from "./agent";
 import { apiKeyQueries } from "./api-key";
 import { assistantQueries } from "./assistant";
+import { billingQueries } from "./billing";
 import { componentQueries } from "./component";
 import { documentQueries } from "./document";
 import { integrationQueries } from "./integration";
@@ -17,7 +18,6 @@ import { settingsQueries } from "./settings";
 import { syncMetadataQueries } from "./sync-metadata";
 import { templateQueries } from "./template";
 import { templateCategoryQueries } from "./template-category";
-import { usageQueries } from "./usage";
 
 export type QueryContext = Context;
 
@@ -30,7 +30,6 @@ export const queries = defineQueries({
   organizations: organizationQueries,
   assistant: assistantQueries,
   agents: agentQueries,
-  usage: usageQueries,
   settings: settingsQueries,
   integrations: integrationQueries,
   integrationLinks: integrationLinkQueries,
@@ -38,4 +37,5 @@ export const queries = defineQueries({
   integrationActivityLogs: integrationActivityQueries,
   templates: templateQueries,
   templateCategories: templateCategoryQueries,
+  billing: billingQueries,
 });

@@ -13,50 +13,54 @@ import { useOrganization } from "@/context/organization.context";
 export function UsageStats() {
   const { organization } = useOrganization();
 
-  const [todayUsage] = useQuery(queries.usage.today({ organizationId: organization.id }));
+  // Get current user's credits for this workspace
+  const [userCredits] = useQuery(
+    queries.billing.userCredits({
+      organizationId: organization.id,
+    }),
+  );
+
+  // Get workspace billing info for plan details
+  const [billing] = useQuery(
+    queries.billing.byOrganizationId({
+      organizationId: organization.id,
+    }),
+  );
 
   const currentPlan = useMemo(() => {
-    if (!organization) {
+    if (!billing) {
       return PLAN_TYPES.FREE;
     }
 
-    const hasProAccess =
-      organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active";
-
-    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE;
-  }, [organization]);
-
-  const planInfo = PLAN_LIMITS[currentPlan];
-  const maxMessages = planInfo.maxMessagesPerDay || 0;
-
-  const usageStats = useMemo(() => {
-    if (!todayUsage) {
-      return {
-        messagesUsedToday: 0,
-      };
+    if (billing.plan === "monthly") {
+      return PLAN_TYPES.MONTHLY;
+    }
+    if (billing.plan === "yearly") {
+      return PLAN_TYPES.YEARLY;
     }
 
-    const messagesUsedToday = todayUsage.filter(
-      (usage: any) => usage.source === "document" || usage.source === "assistant",
-    ).length;
+    return PLAN_TYPES.FREE;
+  }, [billing]);
 
-    return {
-      messagesUsedToday,
-    };
-  }, [todayUsage]);
+  const planInfo = PLAN_LIMITS[currentPlan];
 
-  const isAtLimit = usageStats.messagesUsedToday >= maxMessages;
-  const isNearLimit = maxMessages > 0 && usageStats.messagesUsedToday >= maxMessages * 0.8;
+  const creditBalance = userCredits?.credits_available ?? planInfo.creditsPerSeat;
+  const creditsIncluded = userCredits?.credits_included_monthly ?? planInfo.creditsPerSeat;
+  const maxCredits = creditsIncluded || planInfo.creditsPerSeat || 30;
+
+  const isLowCredits = creditBalance <= maxCredits * 0.2; // Less than 20% remaining
+  const isOutOfCredits = creditBalance === 0;
 
   const progress = useMemo(() => {
-    if (maxMessages === 0) return 0;
-    return Math.min((usageStats.messagesUsedToday / maxMessages) * 100, 100);
-  }, [usageStats.messagesUsedToday, maxMessages]);
+    if (maxCredits === 0) return 0;
+    return Math.min((creditBalance / maxCredits) * 100, 100);
+  }, [creditBalance, maxCredits]);
 
   const progressColor = useMemo(() => {
-    if (isNearLimit) return "#f59e0b";
+    if (isOutOfCredits) return "#ef4444"; // red
+    if (isLowCredits) return "#f59e0b"; // amber
     return "var(--color-gray-900)";
-  }, [isAtLimit, isNearLimit]);
+  }, [isOutOfCredits, isLowCredits]);
 
   return (
     <TooltipTrigger>
@@ -65,9 +69,9 @@ export function UsageStats() {
         from="/w/$organizationSlug"
         className={clsx(
           "flex flex-col gap-2 px-3 py-2 rounded-lg border transition-colors",
-          isAtLimit
+          isOutOfCredits
             ? "bg-red-50 border-red-200 hover:border-red-300"
-            : isNearLimit
+            : isLowCredits
               ? "bg-amber-50 border-amber-200 hover:border-amber-300"
               : "bg-gray-50 border-gray-200 hover:border-gray-300",
         )}
@@ -77,14 +81,18 @@ export function UsageStats() {
             <div className="flex items-center justify-center">
               <CircularProgress progress={progress} size={16} progressColor={progressColor} />
             </div>
-            <span className="text-xs font-medium text-gray-900">Free daily messages</span>
+            <span className="text-xs font-medium text-gray-900">AI Credits</span>
           </div>
           <span className="text-gray-700 text-xs font-medium">
-            {usageStats.messagesUsedToday}/{maxMessages}
+            {creditBalance.toLocaleString()}
           </span>
         </div>
       </Link>
-      <Tooltip placement="right">Upgrade to Pro for unlimited daily messages</Tooltip>
+      <Tooltip placement="right">
+        {isOutOfCredits
+          ? "Out of credits. Upgrade your plan to continue using AI features."
+          : `${creditBalance} credits remaining this period`}
+      </Tooltip>
     </TooltipTrigger>
   );
 }

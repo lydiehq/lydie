@@ -1,5 +1,6 @@
 import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
 import { getAllDefaultAgents } from "@lydie/core/ai/agents/defaults";
+import { hasProAccess } from "@lydie/core/billing/plan-utils";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Label } from "@lydie/ui/components/generic/Field";
 import { Heading } from "@lydie/ui/components/generic/Heading";
@@ -37,7 +38,7 @@ function RouteComponent() {
 
   const isPro = useMemo(() => {
     if (!organization) return false;
-    return organization.subscriptionPlan === "pro" && organization.subscriptionStatus === "active";
+    return hasProAccess(organization.subscriptionPlan, organization.subscriptionStatus);
   }, [organization]);
 
   const defaultAgents = useMemo(() => {

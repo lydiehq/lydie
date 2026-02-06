@@ -30,7 +30,6 @@
     "@lydie/integrations": "workspace:*",
     "@lydie/ui": "workspace:*",
     "@lydie/zero": "workspace:*",
-    "@polar-sh/better-auth": "catalog:",
     "@rocicorp/zero": "catalog:",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-form": "^1.28.0",

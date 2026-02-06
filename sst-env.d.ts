@@ -23,10 +23,6 @@ declare module "sst" {
       "sender": string
       "type": "sst.aws.Email"
     }
-    "EventsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
     "GitHubAppSlug": {
       "type": "sst.sst.Secret"
       "value": string
@@ -83,18 +79,6 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "PolarApiKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PolarProProductId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PolarWebhookSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "PostHogKey": {
       "type": "sst.sst.Secret"
       "value": string
@@ -112,6 +96,22 @@ declare module "sst" {
       "value": string
     }
     "ShopifyClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeMonthlyPriceId": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeSecretKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeWebhookSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "StripeYearlyPriceId": {
       "type": "sst.sst.Secret"
       "value": string
     }

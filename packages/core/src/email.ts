@@ -7,7 +7,7 @@ interface EmailParams {
   text?: string;
   html?: string;
   from?: string;
-  /** Display name for the sender (e.g. "Lars from Lydie"). Uses RFC 5322 format. */
+  /** Display name for the sender. Uses RFC 5322 format. */
   fromName?: string;
 }
 

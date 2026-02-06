@@ -90,6 +90,14 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.organizationsTable.id,
       to: r.organizationSettingsTable.organizationId,
     }),
+    billing: r.one.workspaceBillingTable({
+      from: r.organizationsTable.id,
+      to: r.workspaceBillingTable.organizationId,
+    }),
+    memberCredits: r.many.userWorkspaceCreditsTable({
+      from: r.organizationsTable.id,
+      to: r.userWorkspaceCreditsTable.organizationId,
+    }),
   },
 
   membersTable: {
@@ -168,6 +176,18 @@ export const relations = defineRelations(schema, (r) => ({
     settings: r.one.userSettingsTable({
       from: r.usersTable.id,
       to: r.userSettingsTable.userId,
+    }),
+    stripeCustomer: r.one.stripeCustomersTable({
+      from: r.usersTable.id,
+      to: r.stripeCustomersTable.userId,
+    }),
+    billingOwnedWorkspaces: r.many.workspaceBillingTable({
+      from: r.usersTable.id,
+      to: r.workspaceBillingTable.billingOwnerUserId,
+    }),
+    workspaceCredits: r.many.userWorkspaceCreditsTable({
+      from: r.usersTable.id,
+      to: r.userWorkspaceCreditsTable.userId,
     }),
   },
 
@@ -293,6 +313,55 @@ export const relations = defineRelations(schema, (r) => ({
     template: r.one.templatesTable({
       from: r.templateFaqsTable.templateId,
       to: r.templatesTable.id,
+    }),
+  },
+
+  // Stripe billing relations
+  stripeCustomersTable: {
+    user: r.one.usersTable({
+      from: r.stripeCustomersTable.userId,
+      to: r.usersTable.id,
+    }),
+  },
+
+  workspaceBillingTable: {
+    organization: r.one.organizationsTable({
+      from: r.workspaceBillingTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    billingOwner: r.one.usersTable({
+      from: r.workspaceBillingTable.billingOwnerUserId,
+      to: r.usersTable.id,
+    }),
+    creditUsageLogs: r.many.creditUsageLogTable({
+      from: r.workspaceBillingTable.organizationId,
+      to: r.creditUsageLogTable.organizationId,
+    }),
+  },
+
+  userWorkspaceCreditsTable: {
+    user: r.one.usersTable({
+      from: r.userWorkspaceCreditsTable.userId,
+      to: r.usersTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.userWorkspaceCreditsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    creditUsageLogs: r.many.creditUsageLogTable({
+      from: r.userWorkspaceCreditsTable.userId,
+      to: r.creditUsageLogTable.userId,
+    }),
+  },
+
+  creditUsageLogTable: {
+    organization: r.one.organizationsTable({
+      from: r.creditUsageLogTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    user: r.one.usersTable({
+      from: r.creditUsageLogTable.userId,
+      to: r.usersTable.id,
     }),
   },
 }));

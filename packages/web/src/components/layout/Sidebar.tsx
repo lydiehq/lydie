@@ -139,7 +139,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
-          <Link
+          {/* <Link
             to="/w/$organizationSlug/settings/integrations"
             from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
@@ -151,7 +151,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               />
               <span className="truncate flex-1">Integrations</span>
             </div>
-          </Link>
+          </Link> */}
         </div>
         <Separator className="mx-2" />
         <div className="flex flex-col grow min-h-0">

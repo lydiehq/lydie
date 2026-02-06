@@ -37,7 +37,8 @@ export const organizationQueries = {
       return zql.organizations
         .where("slug", organizationSlug)
         .one()
-        .related("llmUsage", (q) => q.orderBy("created_at", "desc"));
+        .related("billing")
+        .related("memberCredits", (q) => q.related("user"));
     },
   ),
 

@@ -105,10 +105,6 @@ export const organizationsTable = pgTable("organizations", {
   logo: text("logo"),
   metadata: text("metadata"),
   color: text("color"),
-  // Subscription info synced from Polar via webhooks
-  subscriptionStatus: text("subscription_status").default("free"), // 'free', 'active', 'canceled', 'past_due'
-  subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'pro'
-  polarSubscriptionId: text("polar_subscription_id"),
   ...timestamps,
 });
 
@@ -397,9 +393,8 @@ export const llmUsageTable = pgTable(
     }),
     source: text("source").notNull(), // 'document' or 'assistant'
     model: text("model").notNull(),
-    promptTokens: integer("prompt_tokens").notNull(),
-    completionTokens: integer("completion_tokens").notNull(),
-    totalTokens: integer("total_tokens").notNull(),
+    // Credit-based tracking
+    creditsUsed: integer("credits_used").notNull().default(0),
     finishReason: text("finish_reason"),
     toolCalls: jsonb("tool_calls"),
     ...timestamps,
@@ -722,5 +717,135 @@ export const templateFaqsTable = pgTable(
   (table) => [
     index("template_faqs_template_id_idx").on(table.templateId),
     index("template_faqs_sort_order_idx").on(table.sortOrder),
+  ],
+);
+
+/**
+ * STRIPE BILLING TABLES
+ *
+ * New billing architecture replacing Polar.sh with Stripe:
+ * - One Customer per billing owner user
+ * - Workspace-level billing with shared credit pools
+ * - Fixed fee + overage model ($20 base + $0.10/credit overage)
+ */
+
+export const stripeCustomersTable = pgTable(
+  "stripe_customers",
+  {
+    id: text("id").primaryKey().notNull(), // Stripe customer ID (cus_xx)
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("stripe_customers_user_id_idx").on(table.userId)],
+);
+
+export const workspaceBillingTable = pgTable(
+  "workspace_billing",
+  {
+    id: text("id").primaryKey().notNull().$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .unique()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+
+    // Plan type (determines credits per member)
+    plan: text("plan").notNull().default("free"), // 'free', 'monthly', 'yearly'
+
+    // Stripe subscription (null for free workspaces)
+    stripeSubscriptionId: text("stripe_subscription_id"),
+    stripeSubscriptionStatus: text("stripe_subscription_status"), // 'active', 'past_due', 'canceled'
+
+    // Billing owner (who pays for the workspace)
+    billingOwnerUserId: text("billing_owner_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "restrict" }),
+
+    // Current period tracking (for monthly reset - all members reset together)
+    currentPeriodStart: timestamp("current_period_start"),
+    currentPeriodEnd: timestamp("current_period_end"),
+
+    // Metadata
+    canceledAt: timestamp("canceled_at"),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+
+    ...timestamps,
+  },
+  (table) => [
+    index("workspace_billing_org_id_idx").on(table.organizationId),
+    index("workspace_billing_owner_idx").on(table.billingOwnerUserId),
+    index("workspace_billing_plan_idx").on(table.plan),
+  ],
+);
+
+/**
+ * USER WORKSPACE CREDITS TABLE
+ *
+ * Tracks credits per user per workspace. Each member gets their own credits
+ * based on the workspace plan. Credits are NOT shared between members.
+ * If a user is in 3 workspaces, they have 3 separate credit accounts.
+ */
+export const userWorkspaceCreditsTable = pgTable(
+  "user_workspace_credits",
+  {
+    id: text("id").primaryKey().notNull().$default(() => createId()),
+    
+    // Composite unique key: one credit record per user per workspace
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+
+    // Credit tracking
+    creditsIncludedMonthly: integer("credits_included_monthly").notNull().default(150),
+    creditsUsedThisPeriod: integer("credits_used_this_period").notNull().default(0),
+    creditsAvailable: integer("credits_available").notNull().default(150),
+
+    // Current period tracking (synced with workspace billing period)
+    currentPeriodStart: timestamp("current_period_start"),
+    currentPeriodEnd: timestamp("current_period_end"),
+
+    // Track when member left workspace (null = currently active)
+    removedAt: timestamp("removed_at"),
+
+    ...timestamps,
+  },
+  (table) => [
+    index("user_credits_user_id_idx").on(table.userId),
+    index("user_credits_org_id_idx").on(table.organizationId),
+    uniqueIndex("user_credits_unique_idx").on(table.userId, table.organizationId),
+  ],
+);
+
+export const creditUsageLogTable = pgTable(
+  "credit_usage_log",
+  {
+    id: text("id").primaryKey().notNull().$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+
+    // Usage details
+    creditsConsumed: integer("credits_consumed").notNull(),
+    actionType: text("action_type").notNull(), // 'ai_assistant', 'document_create', etc.
+    resourceId: text("resource_id"), // conversation_id, document_id, etc.
+
+    // Stripe tracking
+    stripeMeterEventId: text("stripe_meter_event_id"), // ID from Stripe after successful report
+
+    // User who triggered the usage
+    userId: text("user_id").references(() => usersTable.id, { onDelete: "set null" }),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("credit_usage_log_org_id_idx").on(table.organizationId),
+    index("credit_usage_log_created_idx").on(table.createdAt),
+    index("credit_usage_log_user_idx").on(table.userId),
   ],
 );

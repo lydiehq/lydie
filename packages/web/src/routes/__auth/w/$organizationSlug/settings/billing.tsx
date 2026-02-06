@@ -1,8 +1,6 @@
 import {
-  ArrowTrendingRegular,
-  CalendarRegular,
+  ArrowClockwiseRegular,
   CheckmarkRegular,
-  ErrorCircleRegular,
   FlashRegular,
   SparkleRegular,
 } from "@fluentui/react-icons";
@@ -11,293 +9,573 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { Modal } from "@lydie/ui/components/generic/Modal";
+import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { DialogTrigger } from "react-aria-components";
+import z from "zod";
 
 import { Card } from "@/components/layout/Card";
+import { useOrganization } from "@/context/organization.context";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/billing")({
   component: RouteComponent,
-  loader: async ({ context, params }) => {
-    const { zero } = context;
-    const { organizationSlug } = params;
-    // Preload billing data including LLM usage
-    zero.run(queries.organizations.billing({ organizationSlug }));
+  validateSearch: (search) => z.object({ session_id: z.string().optional() }).parse(search),
+  loader: async ({ context }) => {
+    const { zero, organization } = context;
+
+    const billing = zero.run(
+      queries.billing.byOrganizationId({
+        organizationId: organization.id,
+      }),
+    );
+
+    const userCredits = zero.run(
+      queries.billing.userCredits({
+        organizationId: organization.id,
+      }),
+    );
+
+    const allMembersCredits = zero.run(
+      queries.billing.allMembersCredits({
+        organizationId: organization.id,
+      }),
+    );
+
+    const seatInfo = zero.run(
+      queries.billing.seatInfo({
+        organizationId: organization.id,
+      }),
+    );
+
+    return { billing, userCredits, allMembersCredits, seatInfo };
   },
   ssr: false,
 });
 
-function RouteComponent() {
-  const { organizationSlug } = useParams({
-    from: "/__auth/w/$organizationSlug/settings/billing",
+function formatDate(date: Date | string | number | null | undefined): string {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
   });
+}
 
-  const [billingData] = useQuery(queries.organizations.billing({ organizationSlug }));
+function isMemberFormer(memberCredit: { removed_at?: number | null }): boolean {
+  return !!memberCredit.removed_at;
+}
+
+function getDaysUntil(date: Date | string | number | null | undefined): number {
+  if (!date) return 0;
+  const end = new Date(date);
+  const now = new Date();
+  const diff = end.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+function RouteComponent() {
+  const { organization } = useOrganization();
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const { session_id } = Route.useSearch();
+
+  const [billing] = useQuery(
+    queries.billing.byOrganizationId({
+      organizationId: organization.id,
+    }),
+  );
+
+  const [userCredits] = useQuery(
+    queries.billing.userCredits({
+      organizationId: organization.id,
+    }),
+  );
+
+  const [allMembersCredits] = useQuery(
+    queries.billing.allMembersCredits({
+      organizationId: organization.id,
+    }),
+  );
+
+  const [seatInfo] = useQuery(
+    queries.billing.seatInfo({
+      organizationId: organization.id,
+    }),
+  );
 
   const currentPlan = useMemo(() => {
-    if (!billingData) {
-      return PLAN_TYPES.FREE;
-    }
-
-    const hasProAccess =
-      billingData.subscription_plan === "pro" && billingData.subscription_status === "active";
-
-    return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE;
-  }, [billingData]);
+    if (!billing) return PLAN_TYPES.FREE;
+    if (billing.plan === "monthly") return PLAN_TYPES.MONTHLY;
+    if (billing.plan === "yearly") return PLAN_TYPES.YEARLY;
+    return PLAN_TYPES.FREE;
+  }, [billing]);
 
   const planInfo = PLAN_LIMITS[currentPlan];
+  const isPaid = currentPlan !== PLAN_TYPES.FREE;
+
+  const [subscriptionDetails, setSubscriptionDetails] = useState<{
+    quantity: number | null;
+  } | null>(null);
+
+  // Fetch subscription details to get current seat quantity from Stripe
+  useEffect(() => {
+    if (isPaid) {
+      fetch(`${import.meta.env.VITE_API_URL}/internal/billing/subscription`, {
+        credentials: "include",
+        headers: {
+          "X-Organization-Id": organization.id,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => setSubscriptionDetails(data))
+        .catch(console.error);
+    }
+  }, [isPaid, organization.id]);
 
   // Calculate usage statistics
   const usageStats = useMemo(() => {
-    if (!billingData?.llmUsage) {
-      return {
-        totalTokens: 0,
-        totalRequests: 0,
-      };
-    }
-
-    const totalTokens =
-      billingData.llmUsage.reduce((sum: any, usage: any) => sum + usage.total_tokens, 0) || 0;
-    const totalRequests = billingData.llmUsage.length || 0;
+    const creditsUsed = userCredits?.credits_used_this_period ?? 0;
+    const creditsAvailable = userCredits?.credits_available ?? planInfo.creditsPerSeat;
+    const creditsIncluded = userCredits?.credits_included_monthly ?? planInfo.creditsPerSeat;
+    const periodEnd = userCredits?.current_period_end ?? billing?.current_period_end;
 
     return {
-      totalTokens,
-      totalRequests,
+      creditsUsed,
+      creditsAvailable,
+      creditsIncluded,
+      periodEnd,
+      daysUntilReset: getDaysUntil(periodEnd),
+      percentUsed: creditsIncluded > 0 ? Math.round((creditsUsed / creditsIncluded) * 100) : 0,
     };
-  }, [billingData]);
+  }, [userCredits, billing, planInfo]);
+
+  // Filter active and former members
+  const { activeMembers, formerMembers } = useMemo(() => {
+    if (!allMembersCredits) {
+      return { activeMembers: [], formerMembers: [] };
+    }
+
+    const active: typeof allMembersCredits = [];
+    const former: typeof allMembersCredits = [];
+
+    for (const member of allMembersCredits) {
+      if (isMemberFormer(member)) {
+        former.push(member);
+      } else {
+        active.push(member);
+      }
+    }
+
+    return { activeMembers: active, formerMembers: former };
+  }, [allMembersCredits]);
+
+  const handleUpgrade = async (plan: "monthly" | "yearly") => {
+    setIsUpgrading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/internal/billing/checkout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Organization-Id": organization.id,
+        },
+        body: JSON.stringify({ plan }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || "Failed to create checkout session");
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (error: any) {
+      console.error("Upgrade error:", error);
+      alert(error.message || "Failed to start upgrade process. Please try again.");
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/internal/billing/portal`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Organization-Id": organization.id,
+        },
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Failed to open billing portal:", error);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-y-6">
-      <div>
-        <Heading level={1}>Billing & Usage</Heading>
-        <p className="text-sm text-gray-600 mt-1">
-          Monitor your AI usage and manage your subscription
-        </p>
-      </div>
-      <Separator />
-
-      {/* Free Plan Upgrade Section */}
-      {currentPlan === PLAN_TYPES.FREE && (
-        <Card className="p-8 text-center">
-          <ErrorCircleRegular className="size-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Plan</h3>
-          <p className="text-sm text-gray-600 mb-6">
-            You're currently on the free plan with <strong>30 AI messages per day</strong>. The Plus
-            plan is coming soon with unlimited AI features.
-          </p>
-          <DialogTrigger>
-            <Button>
-              <SparkleRegular className="size-4 mr-2" />
-              Upgrade to Pro
-            </Button>
-            <Modal isDismissable>
-              <Dialog>
-                <div className="p-6">
-                  <Heading level={2} className="text-xl font-semibold mb-2">
-                    Plus Plan
-                  </Heading>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Unlock unlimited AI features with our Plus plan (coming soon).
-                  </p>
-
-                  {/* Pro Plan Card */}
-                  <div className="max-w-md mx-auto">
-                    <div className="relative rounded-lg border-2 p-6 transition-all border-gray-300 bg-gray-50">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">Plus Plan</h3>
-                          <p className="text-2xl font-bold text-gray-900 mt-1">
-                            $20
-                            <span className="text-sm font-normal text-gray-500">/mo</span>
-                          </p>
-                          <span className="inline-block mt-2 px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
-                            Coming Soon
-                          </span>
-                        </div>
-                      </div>
-
-                      <ul className="space-y-2 mb-4">
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Unlimited tokens</span>
-                        </li>
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Unlimited requests</span>
-                        </li>
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Background processing</span>
-                        </li>
-                        <li className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckmarkRegular className="size-4 text-green-600 mt-0.5 shrink-0" />
-                          <span>Priority support</span>
-                        </li>
-                      </ul>
-
-                      <Button isDisabled={true} className="w-full" intent="primary">
-                        Coming Soon
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-900">
-                      <strong>✨ Pro Features</strong> - Get unlimited AI usage, priority support,
-                      and advanced features.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      <strong>Need custom limits?</strong> Contact us for Enterprise pricing with
-                      unlimited usage, dedicated support, and advanced features.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800">
-                      <strong>⚠️ Early Alpha Disclaimer:</strong> The PRO plan may be subject to
-                      changes in terms of token limitations and pricing as we are still figuring out
-                      our monetization model during this early alpha phase.
-                    </p>
-                  </div>
-
-                  <div className="flex justify-end gap-2 mt-6">
-                    <Button intent="secondary">Close</Button>
-                  </div>
-                </div>
-              </Dialog>
-            </Modal>
-          </DialogTrigger>
+      {/* Success message after Stripe checkout */}
+      {session_id && (
+        <Card className="p-4 bg-green-50 border-green-200">
+          <div className="flex items-center gap-3">
+            <CheckmarkRegular className="size-5 text-green-600 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-green-900">Payment successful!</p>
+              <p className="text-sm text-green-700">Your subscription has been activated.</p>
+            </div>
+          </div>
         </Card>
       )}
 
-      {/* Current Plan - Only show for Pro users */}
-      {currentPlan === PLAN_TYPES.PRO && (
+      <Heading level={1}>Billing</Heading>
+      <Separator />
+
+      {/* Current Plan */}
+      <div className="flex flex-col gap-y-4">
+        <SectionHeader
+          heading="Current Plan"
+          description={`You are on the ${planInfo.name} plan.`}
+        />
+
         <Card className="p-6">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-gray-900">{planInfo.name} Plan</h2>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    billingData?.subscription_status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {billingData?.subscription_status || "active"}
-                </span>
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg font-semibold text-gray-900">{planInfo.name}</h2>
+                {isPaid && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      billing?.stripe_subscription_status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : billing?.stripe_subscription_status === "past_due"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {billing?.stripe_subscription_status || "active"}
+                  </span>
+                )}
               </div>
-              {planInfo.price.monthly !== null && (
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  ${(planInfo.price.monthly / 100).toFixed(0)}
-                  <span className="text-sm font-normal text-gray-500">/month</span>
+
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-bold text-gray-900">
+                  ${isPaid ? planInfo.price : 0}
+                </span>
+                {isPaid && <span className="text-sm text-gray-500">/seat/month</span>}
+              </div>
+
+              <p className="text-sm text-gray-500 mt-1">
+                {currentPlan === PLAN_TYPES.MONTHLY && "Billed monthly"}
+                {currentPlan === PLAN_TYPES.YEARLY && "Billed annually"}
+                {currentPlan === PLAN_TYPES.FREE && "Free forever"}
+              </p>
+
+              {billing?.cancel_at_period_end && (
+                <p className="text-sm text-amber-600 mt-3">
+                  Your subscription will end on {formatDate(billing?.current_period_end)}.
                 </p>
               )}
+
+              {isPaid && seatInfo && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {seatInfo.members?.length || 1} seat{seatInfo.members?.length !== 1 ? 's' : ''}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        ${planInfo.price} × {subscriptionDetails?.quantity || seatInfo.members?.length || 1} = ${(planInfo.price * (subscriptionDetails?.quantity || seatInfo.members?.length || 1)).toFixed(0)}/month
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Additional seats are prorated
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex gap-2">
-              <Button intent="secondary" isDisabled={true} size="sm">
-                Manage Subscription (Not Available)
+
+            {isPaid ? (
+              <Button intent="secondary" size="sm" onPress={handleManageSubscription}>
+                Manage Subscription
               </Button>
+            ) : (
+              <DialogTrigger>
+                <Button intent="primary" size="sm">
+                  <SparkleRegular className="size-4 mr-1.5" />
+                  Upgrade
+                </Button>
+                <Modal isDismissable>
+                  <Dialog>
+                    <div className="p-6 max-w-lg">
+                      <Heading level={2} className="text-xl font-semibold mb-4">
+                        Upgrade to Pro
+                      </Heading>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Get {PLAN_LIMITS[PLAN_TYPES.MONTHLY].creditsPerSeat} AI credits per month
+                        and priority support.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Monthly */}
+                        <div className="border rounded-lg p-4 hover:border-gray-400 transition-colors">
+                          <h4 className="font-medium text-gray-900">Monthly</h4>
+                          <p className="text-2xl font-bold text-gray-900 mt-1">
+                            ${PLAN_LIMITS[PLAN_TYPES.MONTHLY].price}
+                            <span className="text-sm font-normal text-gray-500">/mo</span>
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">per seat</p>
+                          <Button
+                            onPress={() => handleUpgrade("monthly")}
+                            isDisabled={isUpgrading}
+                            className="w-full mt-4"
+                            intent="secondary"
+                            size="sm"
+                          >
+                            {isUpgrading ? "Processing..." : "Choose Monthly"}
+                          </Button>
+                        </div>
+
+                        {/* Yearly */}
+                        <div className="border-2 border-purple-500 rounded-lg p-4 relative">
+                          <span className="absolute -top-2 left-4 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
+                            Save 22%
+                          </span>
+                          <h4 className="font-medium text-gray-900">Yearly</h4>
+                          <p className="text-2xl font-bold text-gray-900 mt-1">
+                            ${PLAN_LIMITS[PLAN_TYPES.YEARLY].price}
+                            <span className="text-sm font-normal text-gray-500">/mo</span>
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">per seat, billed annually</p>
+                          <Button
+                            onPress={() => handleUpgrade("yearly")}
+                            isDisabled={isUpgrading}
+                            className="w-full mt-4"
+                            intent="primary"
+                            size="sm"
+                          >
+                            {isUpgrading ? "Processing..." : "Choose Yearly"}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end mt-6">
+                        <Button intent="secondary">Close</Button>
+                      </div>
+                    </div>
+                  </Dialog>
+                </Modal>
+              </DialogTrigger>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      <Separator />
+
+      {/* Credit Usage */}
+      <div className="flex flex-col gap-y-4">
+        <SectionHeader
+          heading="AI Credits"
+          description="Credits are used for AI-powered features like writing assistance and document generation."
+        />
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {usageStats.creditsAvailable.toLocaleString()} credits available
+              </p>
+              <p className="text-xs text-gray-500">
+                of {usageStats.creditsIncluded.toLocaleString()} included
+                {usageStats.periodEnd && (
+                  <span className="ml-1">
+                    · Resets{" "}
+                    {usageStats.daysUntilReset === 0
+                      ? "today"
+                      : usageStats.daysUntilReset === 1
+                        ? "tomorrow"
+                        : `in ${usageStats.daysUntilReset} days`}{" "}
+                    ({formatDate(usageStats.periodEnd)})
+                  </span>
+                )}
+              </p>
             </div>
+            <Button intent="secondary" size="sm" isDisabled>
+              <ArrowClockwiseRegular className="size-4 mr-1.5" />
+              Auto-refills
+            </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <CalendarRegular className="size-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Plan Status</p>
-                <p className="text-sm font-medium text-gray-900">Active</p>
-              </div>
+          {/* Progress bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(usageStats.percentUsed, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {usageStats.creditsUsed.toLocaleString()} used ({usageStats.percentUsed}%)
+          </p>
+
+          {/* Credit stats */}
+          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-gray-900">
+                {usageStats.creditsAvailable.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">Available</p>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FlashRegular className="size-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Total Requests</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {!billingData?.llmUsage ? (
-                    <span className="text-gray-400">Loading...</span>
-                  ) : (
-                    usageStats.totalRequests.toLocaleString()
-                  )}
-                </p>
-              </div>
+            <div className="text-center border-x">
+              <p className="text-2xl font-semibold text-gray-900">
+                {usageStats.creditsUsed.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">Used this period</p>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <ArrowTrendingRegular className="size-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Total Tokens</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {!billingData?.llmUsage ? (
-                    <span className="text-gray-400">Loading...</span>
-                  ) : (
-                    usageStats.totalTokens.toLocaleString()
-                  )}
-                </p>
-              </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-gray-900">
+                {usageStats.creditsIncluded.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">Total per period</p>
             </div>
           </div>
         </Card>
-      )}
-      {/* AI Usage */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-md font-semibold text-gray-900">AI Usage</h3>
-          {billingData?.llmUsage && billingData.llmUsage.length > 0 && (
-            <span className="text-xs text-gray-500">
-              {billingData.llmUsage.length} total requests
-            </span>
-          )}
-        </div>
 
-        {!billingData?.llmUsage ? (
-          <div className="text-center py-8 text-gray-500">
-            <p className="text-sm">Loading usage data...</p>
-          </div>
-        ) : billingData.llmUsage.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p className="text-sm mb-2">No usage data yet</p>
-            <p className="text-xs">
-              Start using the AI assistant to see your usage statistics here.
-            </p>
-          </div>
-        ) : (
-          <div className="flex justify-between items-center py-4">
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">Total Requests</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {usageStats.totalRequests.toLocaleString()}
-              </p>
+        {!isPaid && (
+          <Card className="p-4 bg-blue-50 border-blue-200">
+            <div className="flex items-start gap-3">
+              <FlashRegular className="size-5 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-900">Running low on credits?</p>
+                <p className="text-sm text-blue-700 mt-0.5">
+                  Upgrade to Pro for {PLAN_LIMITS[PLAN_TYPES.MONTHLY].creditsPerSeat} credits per
+                  month and never worry about limits again.
+                </p>
+              </div>
             </div>
-            <div className="space-y-1 text-right">
-              <p className="text-sm text-gray-600">Total Tokens</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {usageStats.totalTokens.toLocaleString()}
-              </p>
-            </div>
-          </div>
+          </Card>
         )}
-      </Card>
+      </div>
 
-      <Card className="p-6">
-        <div className="flex items-start gap-3">
-          <ErrorCircleRegular className="size-5 text-amber-600 mt-0.5 shrink-0" />
-          <div>
-            <h3 className="text-sm font-semibold text-amber-800 mb-1">Early Alpha Disclaimer</h3>
-            <p className="text-sm text-amber-700">
-              The PRO plan may be subject to changes in terms of token limitations, pricing, and
-              features as we are still figuring out our monetization model during this early alpha
-              phase. We'll notify you of any significant changes in advance.
-            </p>
+      {/* Active Team Members */}
+      {activeMembers.length > 0 && (
+        <>
+          <Separator />
+          <div className="flex flex-col gap-y-4">
+            <SectionHeader
+              heading="Team Usage"
+              description={`${activeMembers.length} active member${activeMembers.length !== 1 ? 's' : ''} in this workspace.`}
+            />
+            <Card className="p-6">
+              <div className="space-y-4">
+                {activeMembers.map((memberCredit) => (
+                  <div key={memberCredit.id} className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {memberCredit.user?.name || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {memberCredit.user?.email || memberCredit.user_id}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <p className="text-sm font-medium text-gray-900">
+                        {memberCredit.credits_used_this_period || 0} /{" "}
+                        {memberCredit.credits_included_monthly || planInfo.creditsPerSeat}
+                      </p>
+                      <div className="w-24 bg-gray-200 rounded-full h-1.5 mt-1">
+                        <div
+                          className="bg-blue-600 h-1.5 rounded-full"
+                          style={{
+                            width: `${Math.min(
+                              ((memberCredit.credits_used_this_period || 0) /
+                                (memberCredit.credits_included_monthly ||
+                                  planInfo.creditsPerSeat ||
+                                  1)) *
+                                100,
+                              100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
-        </div>
-      </Card>
+        </>
+      )}
+
+      {/* Former Members */}
+      {formerMembers.length > 0 && (
+        <>
+          <Separator />
+          <div className="flex flex-col gap-y-4">
+            <SectionHeader
+              heading="Former Members"
+              description={`${formerMembers.length} former member${formerMembers.length !== 1 ? 's' : ''} with historical usage.`}
+            />
+            <Card className="p-6 bg-gray-50 border-gray-200">
+              <div className="space-y-4">
+                {formerMembers.map((memberCredit) => (
+                  <div key={memberCredit.id} className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-700 truncate">
+                        {memberCredit.user?.name || "Unknown"}
+                        <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                          Former
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {memberCredit.user?.email || memberCredit.user_id}
+                      </p>
+                      {memberCredit.removed_at && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Left {formatDate(memberCredit.removed_at)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <p className="text-sm font-medium text-gray-700">
+                        {memberCredit.credits_used_this_period || 0} /{" "}
+                        {memberCredit.credits_included_monthly || planInfo.creditsPerSeat}
+                      </p>
+                      <div className="w-24 bg-gray-300 rounded-full h-1.5 mt-1">
+                        <div
+                          className="bg-gray-500 h-1.5 rounded-full"
+                          style={{
+                            width: `${Math.min(
+                              ((memberCredit.credits_used_this_period || 0) /
+                                (memberCredit.credits_included_monthly ||
+                                  planInfo.creditsPerSeat ||
+                                  1)) *
+                                100,
+                              100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

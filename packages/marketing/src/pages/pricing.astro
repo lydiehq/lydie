@@ -1,38 +1,15 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Container from "../components/Container.astro";
+import { PricingSection } from "../components/PricingSection";
 import { Button } from "../components/generic/Button";
 import { Eyebrow } from "../components/landing/Eyebrow";
 import {
-  CheckmarkRegular,
   ChevronRightRegular,
   ServerRegular,
 } from "@fluentui/react-icons";
 
 import { GitHubIcon } from "../components/icons";
-
-const pricingTiers = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Perfect for getting started",
-    features: ["Unlimited documents"],
-    cta: "Get started",
-    ctaHref: "https://app.lydie.co/auth",
-    popular: false,
-  },
-  {
-    name: "Pro",
-    price: "$20",
-    period: "per month",
-    description: "For power users and teams",
-    features: ["Everything in Free", "AI-powered search", "API access"],
-    cta: "Get started",
-    ctaHref: "https://app.lydie.co/auth",
-    popular: true,
-  },
-];
 ---
 
 <Layout
@@ -50,63 +27,12 @@ const pricingTiers = [
       <p
         class="text-[15px]/relaxed text-gray-600 max-w-2xl mx-auto text-balance"
       >
-        Start free and upgrade when you need more. No hidden fees, no surprises.
+        Start free and upgrade when you need more. Credits refresh monthly.
       </p>
     </Container>
 
-    <Container className="flex flex-col gap-y-8">
-      <div class="grid md:grid-cols-2 gap-6">
-        {
-          pricingTiers.map((tier) => (
-            <div
-              class={`flex flex-col gap-y-6 p-6 rounded-2xl border ${
-                tier.popular
-                  ? "border-gray-800 ring-2 ring-gray-800/10 bg-gray-50/50"
-                  : "border-gray-200 bg-white"
-              }`}
-            >
-              {tier.popular && (
-                <div class="text-xs font-medium text-gray-800 bg-gray-200 px-2 py-1 rounded-full w-fit">
-                  Most popular
-                </div>
-              )}
-              <div class="flex flex-col gap-y-1">
-                <h3 class="text-xl font-medium text-gray-900">{tier.name}</h3>
-                <p class="text-sm text-gray-600">{tier.description}</p>
-              </div>
-              <div class="flex items-baseline gap-x-1">
-                <span class="text-4xl font-medium text-gray-900">
-                  {tier.price}
-                </span>
-                {tier.period && (
-                  <span class="text-sm text-gray-600">{tier.period}</span>
-                )}
-              </div>
-              <Button
-                href={tier.ctaHref}
-                size="lg"
-                intent={tier.popular ? "primary" : "secondary"}
-                className="w-full"
-                phCapture={`pricing_${tier.name.toLowerCase()}_clicked`}
-              >
-                <div class="flex items-center justify-center gap-x-1">
-                  <span>{tier.cta}</span>
-                  <ChevronRightRegular className="size-3.5 translate-y-px group-hover:translate-x-0.5 transition-transform duration-200" />
-                </div>
-              </Button>
-              <hr class="border-gray-200" />
-              <ul class="flex flex-col gap-y-3">
-                {tier.features.map((feature) => (
-                  <li class="flex items-start gap-x-2">
-                    <CheckmarkRegular className="size-4 text-gray-700 mt-0.5 shrink-0" />
-                    <span class="text-sm text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))
-        }
-      </div>
+    <Container>
+      <PricingSection client:load />
     </Container>
 
     <Container className="flex flex-col gap-y-8">
@@ -180,56 +106,5 @@ const pricingTiers = [
         </div>
       </div>
     </Container>
-
-    <!-- <Container className="flex flex-col gap-y-8">
-      <div class="text-center flex flex-col gap-y-4">
-        <h2
-          class="text-2xl font-heading font-medium tracking-tight text-gray-800"
-        >
-          Frequently asked questions
-        </h2>
-        <p class="text-sm text-gray-600">
-          Everything you need to know about our pricing.
-        </p>
-      </div>
-      <div class="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-        <div class="flex flex-col gap-y-2">
-          <h3 class="font-medium text-[15px]/0 text-gray-900">
-            Can I change plans later?
-          </h3>
-          <p class="text-sm text-gray-600">
-            Yes, you can upgrade or downgrade your plan at any time. Changes
-            take effect immediately.
-          </p>
-        </div>
-        <div class="flex flex-col gap-y-2">
-          <h3 class="font-medium text-[15px]/0 text-gray-900">
-            What payment methods do you accept?
-          </h3>
-          <p class="text-sm text-gray-600">
-            We accept all major credit cards and process payments securely
-            through Stripe.
-          </p>
-        </div>
-        <div class="flex flex-col gap-y-2">
-          <h3 class="font-medium text-[15px]/0 text-gray-900">
-            Is there a free trial?
-          </h3>
-          <p class="text-sm text-gray-600">
-            Yes, all paid plans come with a 14-day free trial. No credit card
-            required.
-          </p>
-        </div>
-        <div class="flex flex-col gap-y-2">
-          <h3 class="font-medium text-[15px]/0 text-gray-900">
-            Do you offer refunds?
-          </h3>
-          <p class="text-sm text-gray-600">
-            We offer a 30-day money-back guarantee. If you're not satisfied,
-            we'll refund your payment.
-          </p>
-        </div>
-      </div>
-    </Container> -->
   </div>
 </Layout>

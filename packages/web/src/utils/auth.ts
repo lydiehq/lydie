@@ -1,4 +1,3 @@
-import { polarClient } from "@polar-sh/better-auth";
 import { adminClient, customSessionClient, organizationClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
@@ -7,7 +6,7 @@ export const authClient = createAuthClient({
   fetchOptions: {
     credentials: "include",
   },
-  plugins: [organizationClient(), customSessionClient(), polarClient(), adminClient()],
+  plugins: [organizationClient(), customSessionClient(), adminClient()],
 });
 
 export const listOrganizationsQuery = {

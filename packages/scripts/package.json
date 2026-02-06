@@ -3,10 +3,14 @@
   "type": "module",
   "scripts": {
     "copy-integration-assets": "bun run src/copy-integration-assets.ts",
+    "delete-user": "bun sst shell bun run src/delete-user.ts",
     "cancel-onboarding-emails": "bun run src/cancel-onboarding-emails.ts"
   },
   "dependencies": {
-    "@lydie/core": "workspace:*"
+    "@lydie/core": "workspace:*",
+    "@lydie/database": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "sst": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "^1.3.8",

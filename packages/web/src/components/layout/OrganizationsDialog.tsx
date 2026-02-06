@@ -1,5 +1,6 @@
 import { ChevronRightRegular } from "@fluentui/react-icons";
 import { getDefaultColorForId } from "@lydie/core/colors";
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Modal } from "@lydie/ui/components/generic/Modal";
@@ -15,6 +16,18 @@ import { authClient } from "@/utils/auth";
 
 import { OrganizationAvatar } from "./OrganizationAvatar";
 
+function getPlanName(subscriptionPlan: string | null | undefined): string {
+  if (!subscriptionPlan || subscriptionPlan === PLAN_TYPES.FREE) {
+    return PLAN_LIMITS[PLAN_TYPES.FREE].name;
+  }
+  if (subscriptionPlan === PLAN_TYPES.MONTHLY) {
+    return PLAN_LIMITS[PLAN_TYPES.MONTHLY].name;
+  }
+  if (subscriptionPlan === PLAN_TYPES.YEARLY) {
+    return PLAN_LIMITS[PLAN_TYPES.YEARLY].name;
+  }
+  return PLAN_LIMITS[PLAN_TYPES.FREE].name;
+}
 type Organization = QueryResultType<typeof queries.organizations.byUser>[number]["organization"];
 
 export function OrganizationsDialog({

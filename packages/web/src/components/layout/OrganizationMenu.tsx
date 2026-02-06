@@ -1,12 +1,14 @@
 import { getDefaultColorForId } from "@lydie/core/colors";
+import { hasProAccess } from "@lydie/core/billing/plan-utils";
+import { PLAN_LIMITS, PLAN_TYPES } from "@lydie/database/billing-types";
 import { MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLink } from "@tanstack/react-router";
-import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import { useState } from "react";
 import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
@@ -84,7 +86,11 @@ export function OrganizationMenu({ isCollapsed }: Props) {
                 {displayOrganization?.name}
               </div>
               <div className="text-xs text-gray-500">
-                {displayOrganization?.subscription_plan === "free" ? "Free Plan" : "Pro Plan"}
+                {hasProAccess(organization?.subscriptionPlan, organization?.subscriptionStatus)
+                  ? organization?.subscriptionPlan === PLAN_TYPES.YEARLY
+                    ? PLAN_LIMITS[PLAN_TYPES.YEARLY].name
+                    : PLAN_LIMITS[PLAN_TYPES.MONTHLY].name
+                  : PLAN_LIMITS[PLAN_TYPES.FREE].name}
               </div>
             </div>
           </div>

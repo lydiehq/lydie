@@ -11,9 +11,11 @@ export const secret = {
   betterAuthSecret: new sst.Secret("BetterAuthSecret"),
   lydieApiKey: new sst.Secret("LydieApiKey"),
   zeroAdminPassword: new sst.Secret("ZeroAdminPassword"),
-  polarApiKey: new sst.Secret("PolarApiKey"),
-  polarProProductId: new sst.Secret("PolarProProductId"),
-  polarWebhookSecret: new sst.Secret("PolarWebhookSecret"),
+  // Stripe secrets
+  stripeSecretKey: new sst.Secret("StripeSecretKey"),
+  stripeMonthlyPriceId: new sst.Secret("StripeMonthlyPriceId"),
+  stripeYearlyPriceId: new sst.Secret("StripeYearlyPriceId"),
+  stripeWebhookSecret: new sst.Secret("StripeWebhookSecret"),
 
   // GitHub integration
   githubClientId: new sst.Secret("GitHubClientId"),

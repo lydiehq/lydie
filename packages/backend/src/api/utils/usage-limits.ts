@@ -1,94 +1,82 @@
-import { assistantConversationsTable, assistantMessagesTable, db } from "@lydie/database";
-import { PLAN_LIMITS, PLAN_TYPES, type PlanType } from "@lydie/database/billing-types";
-import { and, eq, gte } from "drizzle-orm";
-
-// Get the start of today in UTC
-function getStartOfToday(): Date {
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  return today;
-}
-
-// Count user messages (not LLM usage) sent today for a given organization
-// We count from message tables because usage is only created after completion
-async function getUserMessagesToday(organizationId: string): Promise<number> {
-  const startOfDay = getStartOfToday();
-
-  const assistantConvs = await db
-    .select({ id: assistantConversationsTable.id })
-    .from(assistantConversationsTable)
-    .where(
-      and(
-        eq(assistantConversationsTable.organizationId, organizationId),
-        gte(assistantConversationsTable.createdAt, startOfDay),
-      ),
-    );
-
-  const assistantConvIds = assistantConvs.map((c) => c.id);
-
-  if (assistantConvIds.length === 0) {
-    return 0;
-  }
-
-  const assistantMessages = await db
-    .select()
-    .from(assistantMessagesTable)
-    .where(
-      and(
-        eq(assistantMessagesTable.role, "user"),
-        gte(assistantMessagesTable.createdAt, startOfDay),
-      ),
-    );
-
-  return assistantMessages.filter((msg) => assistantConvIds.includes(msg.conversationId)).length;
-}
+import { checkAndConsumeCredits, getUserCreditStatus } from "@lydie/core/billing/workspace-credits";
+import { PLAN_TYPES, type PlanType } from "@lydie/database/billing-types";
 
 // Get the current plan for an organization
 function getCurrentPlan(
   subscriptionPlan?: string | null,
   subscriptionStatus?: string | null,
 ): PlanType {
-  const hasProAccess = subscriptionPlan === "pro" && subscriptionStatus === "active";
+  if (subscriptionStatus === "active") {
+    if (subscriptionPlan === "monthly") {
+      return PLAN_TYPES.MONTHLY;
+    }
+    if (subscriptionPlan === "yearly") {
+      return PLAN_TYPES.YEARLY;
+    }
+  }
 
-  return hasProAccess ? PLAN_TYPES.PRO : PLAN_TYPES.FREE;
+  return PLAN_TYPES.FREE;
 }
 
-// Check if an organization has reached their daily message limit
-// Returns { allowed: boolean, messagesUsed: number, messageLimit: number | null }
-export async function checkDailyMessageLimit(organization: {
-  id: string;
+/**
+ * Check if a user has sufficient credits for AI operations
+ * This checks the specific user's credit balance in the workspace
+ */
+export async function checkCreditBalance(params: {
+  organizationId: string;
+  userId: string;
   subscriptionPlan?: string | null;
   subscriptionStatus?: string | null;
 }): Promise<{
   allowed: boolean;
-  messagesUsed: number;
-  messageLimit: number | null;
+  creditsAvailable: number;
+  creditsRequired: number;
   currentPlan: PlanType;
 }> {
-  const currentPlan = getCurrentPlan(
-    organization.subscriptionPlan,
-    organization.subscriptionStatus,
-  );
+  const currentPlan = getCurrentPlan(params.subscriptionPlan, params.subscriptionStatus);
 
-  const planLimits = PLAN_LIMITS[currentPlan];
-  const messageLimit = planLimits.maxMessagesPerDay;
+  // Get the current credit status for this user in this workspace
+  const creditStatus = await getUserCreditStatus(params.userId, params.organizationId);
 
-  if (messageLimit === null) {
+  if (!creditStatus) {
     return {
-      allowed: true,
-      messagesUsed: 0,
-      messageLimit: null,
+      allowed: false,
+      creditsAvailable: 0,
+      creditsRequired: 1,
       currentPlan,
     };
   }
 
-  const messagesUsed = await getUserMessagesToday(organization.id);
-  const allowed = messagesUsed < messageLimit;
-
   return {
-    allowed,
-    messagesUsed,
-    messageLimit,
+    allowed: creditStatus.creditsAvailable > 0,
+    creditsAvailable: creditStatus.creditsAvailable,
+    creditsRequired: 1,
     currentPlan,
   };
+}
+
+/**
+ * Consume credits for an AI operation
+ */
+export async function consumeCredits(params: {
+  organizationId: string;
+  userId: string;
+  creditsRequested: number;
+  actionType: string;
+  resourceId?: string;
+}) {
+  return checkAndConsumeCredits(
+    params.userId,
+    params.organizationId,
+    params.creditsRequested,
+    params.actionType,
+    params.resourceId,
+  );
+}
+
+/**
+ * Get the user's credit status in a workspace
+ */
+export async function getUserCreditStatusInWorkspace(userId: string, organizationId: string) {
+  return getUserCreditStatus(userId, organizationId);
 }
