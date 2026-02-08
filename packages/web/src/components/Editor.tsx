@@ -12,7 +12,10 @@ import {
   pendingEditorChangeAtom,
   titleEditorAtom,
 } from "@/atoms/editor";
-import { isDockedAtom, isOpenAtom } from "@/hooks/use-floating-assistant";
+import {
+  isFloatingAssistantDockedAtom as isDockedAtom,
+  isFloatingAssistantOpenAtom as isOpenAtom,
+} from "@/atoms/workspace-settings";
 import { useDocumentEditor } from "@/lib/editor/document-editor";
 import { useTitleEditor } from "@/lib/editor/title-editor";
 import { useZero } from "@/services/zero";

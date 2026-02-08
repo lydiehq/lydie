@@ -1,15 +1,15 @@
 import { atom, useAtomValue, useSetAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
 import { useCallback } from "react";
 
-// Global UI state - needed for layout coordination across components
-export const isDockedAtom = atomWithStorage("assistant:docked", false);
-export const isOpenAtom = atomWithStorage("assistant:open", false);
+import {
+  isFloatingAssistantDockedAtom,
+  isFloatingAssistantOpenAtom,
+} from "@/atoms/workspace-settings";
 
 // Derived state
 export const isMinimizedAtom = atom((get) => {
-  const isDocked = get(isDockedAtom);
-  const isOpen = get(isOpenAtom);
+  const isDocked = get(isFloatingAssistantDockedAtom);
+  const isOpen = get(isFloatingAssistantOpenAtom);
   return !isDocked && !isOpen;
 });
 
@@ -17,49 +17,49 @@ export const isMinimizedAtom = atom((get) => {
 export const pendingMessageAtom = atom<string | undefined>(undefined);
 
 // Internal atom to track if assistant was previously docked
-const wasDockedAtom = atomWithStorage("assistant:was-docked", false);
+const wasDockedAtom = atom<boolean>(false);
 
 // Actions
 export const openAssistantAtom = atom(null, (get, set, message?: string) => {
   if (get(wasDockedAtom)) {
-    set(isDockedAtom, true);
+    set(isFloatingAssistantDockedAtom, true);
     set(wasDockedAtom, false);
   }
-  set(isOpenAtom, true);
+  set(isFloatingAssistantOpenAtom, true);
   if (message) {
     set(pendingMessageAtom, message);
   }
 });
 
 export const closeAssistantAtom = atom(null, (get, set) => {
-  const isDocked = get(isDockedAtom);
+  const isDocked = get(isFloatingAssistantDockedAtom);
   if (isDocked) {
     set(wasDockedAtom, true);
-    set(isDockedAtom, false);
+    set(isFloatingAssistantDockedAtom, false);
   }
-  set(isOpenAtom, false);
+  set(isFloatingAssistantOpenAtom, false);
 });
 
 export const toggleAssistantAtom = atom(null, (get, set) => {
-  const wasOpen = get(isOpenAtom);
+  const wasOpen = get(isFloatingAssistantOpenAtom);
   const newValue = !wasOpen;
 
-  set(isOpenAtom, newValue);
+  set(isFloatingAssistantOpenAtom, newValue);
 
   if (newValue && get(wasDockedAtom)) {
-    set(isDockedAtom, true);
+    set(isFloatingAssistantDockedAtom, true);
     set(wasDockedAtom, false);
   }
 });
 
 export const dockAssistantAtom = atom(null, (_get, set) => {
-  set(isDockedAtom, true);
-  set(isOpenAtom, true);
+  set(isFloatingAssistantDockedAtom, true);
+  set(isFloatingAssistantOpenAtom, true);
   set(wasDockedAtom, false);
 });
 
 export const undockAssistantAtom = atom(null, (_get, set) => {
-  set(isDockedAtom, false);
+  set(isFloatingAssistantDockedAtom, false);
   set(wasDockedAtom, false);
 });
 
@@ -81,8 +81,8 @@ export interface UseFloatingAssistantReturn {
 }
 
 export function useFloatingAssistant(): UseFloatingAssistantReturn {
-  const isOpen = useAtomValue(isOpenAtom);
-  const isDocked = useAtomValue(isDockedAtom);
+  const isOpen = useAtomValue(isFloatingAssistantOpenAtom);
+  const isDocked = useAtomValue(isFloatingAssistantDockedAtom);
   const isMinimized = useAtomValue(isMinimizedAtom);
 
   const openAssistant = useSetAtom(openAssistantAtom);

@@ -1,7 +1,6 @@
 import {
   Add16Filled,
-  ChevronRightRegular,
-  Delete16Regular,
+  Delete12Filled,
   Home16Filled,
   PersonChat16Filled,
   Search16Filled,
@@ -13,11 +12,14 @@ import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/gene
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { Separator } from "@lydie/ui/components/layout/Separator";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
-import { useSetAtom } from "jotai";
-import { useMemo, useState } from "react";
+import { useAtom, useSetAtom } from "jotai";
+import { useMemo } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 
+import { isFavoritesExpandedAtom, isDocumentsExpandedAtom } from "@/atoms/workspace-settings";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -37,7 +39,6 @@ type Props = {
 };
 
 export function Sidebar({ isCollapsed, onToggle }: Props) {
-  const { createDocument } = useDocumentActions();
   const { organization } = useOrganization();
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
@@ -145,7 +146,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <Delete16Regular className={sidebarItemIconStyles({ className: "size-4" })} />
+              <Delete12Filled className={sidebarItemIconStyles({ className: "size-4" })} />
               <span className="truncate flex-1">Trash</span>
             </div>
           </Link>
@@ -153,25 +154,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         <Separator className="mx-2" />
         <div className="flex flex-col grow min-h-0">
           <FavoritesSection />
-          <div className="flex items-center justify-between shrink-0 px-3 pt-2">
-            <Eyebrow>Documents</Eyebrow>
-            <TooltipTrigger delay={500}>
-              <Button
-                intent="secondary"
-                size="icon-sm"
-                onPress={() => createDocument()}
-                aria-label="Create new document"
-              >
-                <Add16Filled
-                  className={sidebarItemIconStyles({ className: "size-3 m-0.5 icon-muted" })}
-                />
-              </Button>
-              <Tooltip>Add document</Tooltip>
-            </TooltipTrigger>
-          </div>
-          <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
-            <DocumentTree />
-          </div>
+          <DocumentsSection />
         </div>
         <div className="px-2">{isFreePlan && !userIsAdmin && <UsageStats />}</div>
         <BottomBar />
@@ -181,7 +164,21 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
 }
 
 function FavoritesSection() {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useAtom(isFavoritesExpandedAtom);
+  const { organization } = useOrganization();
+  const [orgData] = useQuery(
+    queries.organizations.documents({
+      organizationSlug: organization.slug,
+    }),
+  );
+
+  const documents = orgData?.documents || [];
+  const hasFavorites = documents.some((doc) => doc.is_favorited && !doc.integration_link_id);
+
+  if (!hasFavorites) {
+    return null;
+  }
+
   return (
     <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
       <div className="w-full flex items-center shrink-0 px-3 py-2 group gap-x-2">
@@ -193,14 +190,58 @@ function FavoritesSection() {
           >
             <CollapseArrow
               aria-hidden
-              className={`size-3 shrink-0 absolute text-black/45 transition-[opacity_100ms,transform_200ms] ${isExpanded ? "rotate-90" : "rotate-0"}`}
+              className={`size-3 shrink-0 absolute text-black/45 ${isExpanded ? "rotate-90" : "rotate-0"}`}
             />
           </RACButton>
         </Heading>
       </div>
-      <DisclosurePanel className="h-(--disclosure-panel-height) motion-safe:transition-[height] overflow-clip">
+      <DisclosurePanel className="h-(--disclosure-panel-height) overflow-clip">
         <div className="px-2 pb-2 pt-1">
           <FavoritesTree />
+        </div>
+      </DisclosurePanel>
+    </Disclosure>
+  );
+}
+
+function DocumentsSection() {
+  const [isExpanded, setIsExpanded] = useAtom(isDocumentsExpandedAtom);
+  const { createDocument } = useDocumentActions();
+
+  return (
+    <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
+      <div className="w-full flex items-center shrink-0 px-3 py-2 group gap-x-2">
+        <Eyebrow>Documents</Eyebrow>
+        <Heading>
+          <RACButton
+            slot="trigger"
+            className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/button relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100"
+          >
+            <CollapseArrow
+              aria-hidden
+              className={`size-3 shrink-0 absolute text-black/45 ${isExpanded ? "rotate-90" : "rotate-0"}`}
+            />
+          </RACButton>
+        </Heading>
+        <div className="flex items-center gap-x-1 ml-auto">
+          <TooltipTrigger delay={500}>
+            <Button
+              intent="secondary"
+              size="icon-sm"
+              onPress={() => createDocument()}
+              aria-label="Create new document"
+            >
+              <Add16Filled
+                className={sidebarItemIconStyles({ className: "size-3 m-0.5 icon-muted" })}
+              />
+            </Button>
+            <Tooltip>Add document</Tooltip>
+          </TooltipTrigger>
+        </div>
+      </div>
+      <DisclosurePanel className="h-(--disclosure-panel-height) overflow-clip">
+        <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
+          <DocumentTree />
         </div>
       </DisclosurePanel>
     </Disclosure>

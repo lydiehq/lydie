@@ -1,4 +1,3 @@
-import type { QueryResultType } from "@rocicorp/zero";
 import type { ReactElement } from "react";
 
 import { queries } from "@lydie/zero/queries";

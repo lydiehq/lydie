@@ -39,7 +39,7 @@ import {
   TooltipTrigger,
 } from "react-aria-components";
 
-import { isSidebarCollapsedAtom } from "@/atoms/sidebar";
+import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
 import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";

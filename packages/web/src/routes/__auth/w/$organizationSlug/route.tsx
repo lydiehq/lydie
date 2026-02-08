@@ -11,7 +11,8 @@ import { Button } from "react-aria-components";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
-import { isSidebarCollapsedAtom } from "@/atoms/sidebar";
+import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
+import { isFloatingAssistantDockedAtom as isDockedAtom } from "@/atoms/workspace-settings";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
 import { ErrorPage } from "@/components/layout/ErrorPage";
@@ -19,7 +20,6 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
-import { isDockedAtom } from "@/hooks/use-floating-assistant";
 import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
 import { authClient } from "@/utils/auth";

@@ -13,7 +13,13 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
   component: PageComponent,
 });
 
-function DocumentItem({ doc, organizationSlug }: { doc: { id: string; title: string; updated_at: number }; organizationSlug: string }) {
+function DocumentItem({
+  doc,
+  organizationSlug,
+}: {
+  doc: { id: string; title: string; updated_at: number };
+  organizationSlug: string;
+}) {
   return (
     <Link
       key={doc.id}
@@ -99,7 +105,9 @@ function PageComponent() {
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <Document16Regular className="size-12 text-gray-300 mb-4" />
                   <p className="text-gray-500 mb-2">No documents yet</p>
-                  <p className="text-sm text-gray-400">Start creating documents to see them here.</p>
+                  <p className="text-sm text-gray-400">
+                    Start creating documents to see them here.
+                  </p>
                 </div>
               )
             )}

@@ -12,7 +12,7 @@ import { useAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 import { z } from "zod";
 
-import { isAssistantSidebarOpenAtom } from "@/atoms/assistant-sidebar";
+import { isAssistantSidebarOpenAtom } from "@/atoms/workspace-settings";
 import { AssistantChat } from "@/components/assistant/AssistantChat";
 import { AssistantHeader } from "@/components/assistant/AssistantHeader";
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
@@ -116,8 +116,8 @@ function AssistantLayout() {
   }, [existingConversation, setMessages, messages.length]);
 
   const toggleSidebar = useCallback(() => {
-    setSidebarOpen((prev) => !prev);
-  }, [setSidebarOpen]);
+    setSidebarOpen(!sidebarOpen);
+  }, [setSidebarOpen, sidebarOpen]);
 
   const handleNavigateToChat = useCallback(() => {
     navigate({

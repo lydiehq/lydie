@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { createContext, useCallback, useContext, type ReactNode } from "react";
 
-import { selectedAgentIdAtom, selectedModelIdAtom } from "@/stores/assistant-preferences";
+import { selectedAgentIdAtom, selectedModelIdAtom } from "@/atoms/workspace-settings";
 
 interface AssistantPreferencesContextValue {
   selectedAgentId: string | null;

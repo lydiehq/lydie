@@ -2,11 +2,12 @@ import { Label } from "@lydie/ui/components/generic/Field";
 import { Select, SelectItem } from "@lydie/ui/components/generic/Select";
 import { useAtom } from "jotai";
 
+import { editorFontSizeAtom } from "@/atoms/workspace-settings";
 import { Card } from "@/components/layout/Card";
-import { FONT_SIZE_MAP, type FontSizeOption, rootFontSizeAtom } from "@/stores/font-size";
+import { FONT_SIZE_MAP, type FontSizeOption } from "@/stores/font-size";
 
 export function PreferencesSection() {
-  const [fontSize, setFontSize] = useAtom(rootFontSizeAtom);
+  const [fontSize, setFontSize] = useAtom(editorFontSizeAtom);
 
   return (
     <Card className="p-4 flex flex-col gap-y-4">

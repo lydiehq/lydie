@@ -34,8 +34,19 @@ export const textFormattingActions: FormattingAction[] = [
   {
     id: "code",
     label: "Code",
-    isActive: (editor) => editor.isActive("code"),
-    execute: (editor) => editor.chain().focus().toggleCode().run(),
+    isActive: (editor) => editor.isActive("code") || editor.isActive("codeBlock"),
+    execute: (editor) => {
+      const { from, to } = editor.state.selection;
+      const hasSelection = from !== to;
+
+      if (hasSelection) {
+        // If text is selected, apply inline code
+        editor.chain().focus().toggleCode().run();
+      } else {
+        // If no selection, create a code block
+        editor.chain().focus().toggleCodeBlock().run();
+      }
+    },
     group: "text-style",
   },
 ];

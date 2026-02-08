@@ -95,10 +95,10 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
         sidebarItemStyles({
           isCurrent,
           className: `
+          cursor-default
             group
             dragging:opacity-50 dragging:bg-gray-50 
             ${item.type === "document" || isIntegrationLink ? "drop-target:bg-gray-200" : ""}
-            ${isGroup ? "cursor-default" : ""}
           `,
         }),
       )}

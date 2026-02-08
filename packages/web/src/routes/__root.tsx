@@ -14,13 +14,14 @@ import { RouterProvider } from "react-aria-components";
 
 import type { RouterContext } from "@/main";
 
+import { editorFontSizeAtom } from "@/atoms/workspace-settings";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { getSessionQuery, type ExtendedSessionData } from "@/lib/auth/session";
 import { identifyUser } from "@/lib/posthog";
 import { getZeroInstance } from "@/lib/zero/instance";
-import { getFontSizePixels, rootFontSizeAtom } from "@/stores/font-size";
+import { getFontSizePixels } from "@/stores/font-size";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -95,7 +96,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => {
     const router = useRouter();
     const { zero: zeroInstance } = Route.useRouteContext();
-    const fontSizeOption = useAtomValue(rootFontSizeAtom);
+    const fontSizeOption = useAtomValue(editorFontSizeAtom);
     const [isRedirecting, setIsRedirecting] = useState(false);
 
     // Load session - uses cached data immediately, then refetches with staleTime: 0

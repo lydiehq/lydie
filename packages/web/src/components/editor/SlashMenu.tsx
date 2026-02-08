@@ -44,9 +44,10 @@ const iconMap: Record<string, any> = {
   image: ImageIcon,
 };
 
-// Filter out text formatting actions (bold, italic, strike, code) from slash menu
+// Filter out text formatting actions (bold, italic, strike) from slash menu
 // These should only be accessible via toolbar or keyboard shortcuts
-const excludedSlashMenuIds = new Set(["bold", "italic", "strike", "code"]);
+// Note: "code" is excluded because it needs context (selection) to determine inline vs block
+const excludedSlashMenuIds = new Set(["bold", "italic", "strike"]);
 
 const slashMenuItems: SlashMenuItem[] = allFormattingActions
   .filter((action) => !excludedSlashMenuIds.has(action.id))
