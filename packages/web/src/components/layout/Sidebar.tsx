@@ -196,7 +196,7 @@ function FavoritesSection() {
         </Heading>
       </div>
       <DisclosurePanel className="h-(--disclosure-panel-height) overflow-clip">
-        <div className="px-2 pb-2 pt-1">
+        <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2 pt-1">
           <FavoritesTree />
         </div>
       </DisclosurePanel>
