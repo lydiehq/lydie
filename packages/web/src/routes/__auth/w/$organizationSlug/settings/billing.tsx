@@ -20,6 +20,7 @@ import z from "zod";
 
 import { Card } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/billing")({
   component: RouteComponent,
@@ -79,6 +80,8 @@ function getDaysUntil(date: Date | string | number | null | undefined): number {
 }
 
 function RouteComponent() {
+  useDocumentTitle("Billing");
+
   const { organization } = useOrganization();
   const [isUpgrading, setIsUpgrading] = useState(false);
   const { session_id } = Route.useSearch();

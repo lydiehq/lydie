@@ -11,6 +11,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { Surface } from "@/components/layout/Surface";
 import { useOrganization } from "@/context/organization.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
 
 type TrashDocument = QueryResultType<typeof queries.documents.trash>[number];
@@ -24,6 +25,8 @@ type TreeItem = {
 };
 
 export function TrashPage() {
+  useDocumentTitle("Trash");
+
   const { organization } = useOrganization();
   const z = useZero();
   const [restoringIds, setRestoringIds] = useState<Set<string>>(new Set());

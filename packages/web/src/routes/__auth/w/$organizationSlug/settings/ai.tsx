@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Link } from "@/components/generic/Link";
 import { Card } from "@/components/layout/Card";
 import { useOrganization } from "@/context/organization.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")({
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/ai")(
 });
 
 function RouteComponent() {
+  useDocumentTitle("AI Settings");
+
   const { organization } = useOrganization();
   const z = useZero();
 

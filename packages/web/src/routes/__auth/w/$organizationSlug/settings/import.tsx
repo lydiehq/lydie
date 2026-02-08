@@ -12,6 +12,7 @@ import { Form } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useOrganization } from "@/context/organization.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useAuthenticatedApi } from "@/services/api";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/import")({
@@ -34,6 +35,8 @@ interface FileWithPath {
 }
 
 function RouteComponent() {
+  useDocumentTitle("Import");
+
   const { createClient } = useAuthenticatedApi();
   const { organization } = useOrganization();
   const navigate = useNavigate();

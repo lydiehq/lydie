@@ -5,12 +5,15 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ProfileForm } from "@/components/settings/profile/ProfileForm";
 import { useAuth } from "@/context/auth.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/profile")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  useDocumentTitle("Profile");
+
   const { user } = useAuth();
 
   if (!user) {

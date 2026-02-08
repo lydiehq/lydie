@@ -3,6 +3,7 @@ import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { IntegrationsList } from "@/components/settings/integrations/IntegrationsList";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integrations/")({
@@ -16,6 +17,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integ
 });
 
 function RouteComponent() {
+  useDocumentTitle("Integrations");
+
   return (
     <div className="flex flex-col gap-y-6">
       <div className="flex flex-col gap-y-1">

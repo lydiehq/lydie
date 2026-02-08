@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Surface } from "@/components/layout/Surface";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/")({
   component: PageComponent,
@@ -45,6 +46,9 @@ function DocumentItem({
 
 function PageComponent() {
   const { organization } = useOrganization();
+
+  useDocumentTitle(organization?.name ?? "Home");
+
   const [latestDocuments] = useQuery(
     queries.documents.latest({
       organizationId: organization.id,

@@ -347,19 +347,57 @@ export async function resetAllMemberCredits(organizationId: string) {
 
 /**
  * Get credit status for a specific user in a workspace
+ * Optimized to minimize sequential database queries
  */
 export async function getUserCreditStatus(userId: string, organizationId: string) {
-  const credits = await getOrCreateUserWorkspaceCredits(userId, organizationId);
+  // Get credits and billing in parallel to reduce latency
+  const [credits, billing] = await Promise.all([
+    getOrCreateUserWorkspaceCredits(userId, organizationId),
+    getWorkspaceBilling(organizationId),
+  ]);
 
   if (!credits) {
     return null;
   }
 
-  // Check for reset
-  const resetResult = await checkAndResetUserCredits(userId, organizationId);
-
-  const billing = await getWorkspaceBilling(organizationId);
   const planConfig = PLAN_CONFIG[billing?.plan as PlanType] || PLAN_CONFIG.free;
+  const now = new Date();
+
+  // Check if we need to reset (period ended)
+  // Do this inline to avoid another query in checkAndResetUserCredits
+  if (credits.currentPeriodEnd && now >= credits.currentPeriodEnd) {
+    const periodStart = now;
+    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    periodEnd.setHours(0, 0, 0, 0);
+
+    // Reset credits atomically
+    await db
+      .update(schema.userWorkspaceCreditsTable)
+      .set({
+        creditsUsedThisPeriod: 0,
+        creditsAvailable: planConfig.creditsPerMember,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(schema.userWorkspaceCreditsTable.userId, userId),
+          eq(schema.userWorkspaceCreditsTable.organizationId, organizationId),
+        ),
+      );
+
+    return {
+      userId,
+      organizationId,
+      plan: billing?.plan || "free",
+      creditsIncluded: planConfig.creditsPerMember,
+      creditsUsed: 0,
+      creditsAvailable: planConfig.creditsPerMember,
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+    };
+  }
 
   return {
     userId,
@@ -367,7 +405,7 @@ export async function getUserCreditStatus(userId: string, organizationId: string
     plan: billing?.plan || "free",
     creditsIncluded: planConfig.creditsPerMember,
     creditsUsed: credits.creditsUsedThisPeriod,
-    creditsAvailable: resetResult.creditsAvailable,
+    creditsAvailable: credits.creditsAvailable,
     currentPeriodStart: credits.currentPeriodStart,
     currentPeriodEnd: credits.currentPeriodEnd,
   };

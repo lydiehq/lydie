@@ -20,6 +20,7 @@ import { Surface } from "@/components/layout/Surface";
 import { useAssistantPreferences } from "@/context/assistant-preferences.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 const assistantSearchSchema = z.object({
   prompt: z.string().optional(),
@@ -89,6 +90,9 @@ function AssistantLayout() {
         })
       : null,
   );
+
+  // Set document title based on conversation
+  useDocumentTitle(existingConversation?.title ?? "Assistant");
 
   const { messages, sendMessage, stop, status, alert, setAlert, setMessages } = useAssistantChat({
     conversationId,

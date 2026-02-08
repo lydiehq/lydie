@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/components")({
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/compo
 });
 
 function RouteComponent() {
+  useDocumentTitle("Components");
+
   const z = useZero();
   const { organization } = useOrganization();
 

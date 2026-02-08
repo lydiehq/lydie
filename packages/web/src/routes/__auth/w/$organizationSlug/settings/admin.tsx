@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Card } from "@/components/layout/Card";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { isAdmin } from "@/utils/admin";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/admin")({
@@ -23,6 +24,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/admin
 });
 
 function RouteComponent() {
+  useDocumentTitle("Admin");
+
   const { organization } = useOrganization();
   const { user } = useAuth();
   const [isExporting, setIsExporting] = useState(false);

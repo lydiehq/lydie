@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { SimpleEditorToolbar } from "@/components/editor/SimpleEditorToolbar";
 import { Card } from "@/components/layout/Card";
 import { useAuth } from "@/context/auth.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
 
@@ -72,6 +73,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/templ
 });
 
 function RouteComponent() {
+  useDocumentTitle("Edit Template");
+
   const { user } = useAuth();
   const { id } = Route.useParams();
   const navigate = useNavigate();

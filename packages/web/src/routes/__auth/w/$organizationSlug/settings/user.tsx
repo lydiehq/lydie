@@ -8,12 +8,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PendingInvitationsSection } from "@/components/settings/user/PendingInvitationsSection";
 import { PreferencesSection } from "@/components/settings/user/PreferencesSection";
 import { useAuth } from "@/context/auth.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/user")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  useDocumentTitle("User Settings");
+
   const { user } = useAuth();
 
   const [userInvitations] = useQuery(

@@ -17,6 +17,7 @@ import { toast } from "sonner";
 
 import { Card } from "@/components/layout/Card";
 import { useAuth } from "@/context/auth.context";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { isAdmin } from "@/utils/admin";
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/templ
 });
 
 function RouteComponent() {
+  useDocumentTitle("Templates");
+
   const { user } = useAuth();
   const z = useZero();
   const navigate = useNavigate();

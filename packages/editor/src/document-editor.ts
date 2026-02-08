@@ -1,7 +1,7 @@
 import { Blockquote } from "@tiptap/extension-blockquote";
 import { Bold } from "@tiptap/extension-bold";
-import { Code } from "@tiptap/extension-code";
 import { CharacterCount } from "@tiptap/extension-character-count";
+import { Code } from "@tiptap/extension-code";
 import { Collaboration, type CollaborationOptions } from "@tiptap/extension-collaboration";
 import CollaborationCaret, {
   type CollaborationCaretOptions,

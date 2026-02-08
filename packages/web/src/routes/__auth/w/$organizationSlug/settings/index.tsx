@@ -22,6 +22,7 @@ import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useAuthenticatedApi } from "@/services/api";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { authClient } from "@/utils/auth";
@@ -33,6 +34,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/")({
 });
 
 function RouteComponent() {
+  useDocumentTitle("Settings");
+
   const { createClient } = useAuthenticatedApi();
   const { organization } = useOrganization();
   const { user } = useAuth();

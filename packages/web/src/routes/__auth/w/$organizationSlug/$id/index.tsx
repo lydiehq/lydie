@@ -36,11 +36,7 @@ function RouteComponent() {
     }),
   );
 
-  useEffect(() => {
-    if (doc?.title) {
-      document.title = doc.title;
-    }
-  }, [doc?.title]);
+  useDocumentTitle(doc?.title, { suffix: "" });
 
   if (!doc && status.type === "complete") {
     return (
