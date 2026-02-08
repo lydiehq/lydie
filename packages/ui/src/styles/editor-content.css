@@ -307,6 +307,10 @@
     font-family: var(--font-mono);
     font-weight: var(--font-weight-medium);
     color: var(--editor-content-code-color);
+  }
+
+  /* Inline code styling - exclude code blocks */
+  :not(pre) > code {
     background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
     padding: 0.15em 0.4em;
     border-radius: 4px;
@@ -317,8 +321,8 @@
     font-weight: var(--font-weight-medium);
   }
 
-  code::before,
-  code::after {
+  :not(pre) > code::before,
+  :not(pre) > code::after {
     display: none;
     content: none;
   }
@@ -985,6 +989,10 @@
     font-family: var(--font-mono);
     font-weight: var(--font-weight-medium);
     color: var(--editor-content-code-color);
+  }
+
+  /* Inline code styling - exclude code blocks */
+  :not(pre) > code {
     background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
     padding: 0.15em 0.4em;
     border-radius: 4px;
@@ -995,8 +1003,8 @@
     font-weight: var(--font-weight-medium);
   }
 
-  code::before,
-  code::after {
+  :not(pre) > code::before,
+  :not(pre) > code::after {
     display: none;
     content: none;
   }
