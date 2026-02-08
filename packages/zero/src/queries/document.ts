@@ -103,4 +103,28 @@ export const documentQueries = {
         .limit(limit);
     },
   ),
+
+  // Get deleted documents (trash) for an organization
+  // Returns documents with deleted_at set, ordered by deletion date
+  trash: defineQuery(
+    z.object({
+      organizationId: z.string(),
+      limit: z.number().optional(),
+    }),
+    ({ args: { organizationId, limit = 100 }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.documents
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS NOT", null)
+        .related("parent")
+        .related("children", (q) =>
+          q
+            .where("deleted_at", "IS NOT", null)
+            .orderBy("sort_order", "asc")
+            .orderBy("created_at", "asc"),
+        )
+        .orderBy("deleted_at", "desc")
+        .limit(limit);
+    },
+  ),
 };

@@ -65,3 +65,26 @@ export async function findAllChildDocuments(
 
   return childIds;
 }
+
+// Recursively finds all deleted child documents of a parent document (for trash restoration)
+export async function findAllDeletedChildDocuments(
+  tx: Transaction,
+  parentId: string,
+  organizationId: string,
+  childIds: string[] = [],
+): Promise<string[]> {
+  const children = await tx.run(
+    zql.documents
+      .where("parent_id", parentId)
+      .where("organization_id", organizationId)
+      .where("deleted_at", "IS NOT", null),
+  );
+
+  for (const child of children) {
+    childIds.push(child.id);
+    // Recursively get deleted children of this child
+    await findAllDeletedChildDocuments(tx, child.id, organizationId, childIds);
+  }
+
+  return childIds;
+}

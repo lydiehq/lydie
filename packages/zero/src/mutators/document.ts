@@ -6,7 +6,12 @@ import { z } from "zod";
 
 import { hasOrganizationAccess, isAuthenticated } from "../auth";
 import { zql } from "../schema";
-import { findAllChildDocuments, getDocumentById, verifyDocumentAccess } from "../utils/documents";
+import {
+  findAllChildDocuments,
+  findAllDeletedChildDocuments,
+  getDocumentById,
+  verifyDocumentAccess,
+} from "../utils/documents";
 import { notFoundError } from "../utils/errors";
 import { withTimestamps, withUpdatedTimestamp } from "../utils/timestamps";
 
@@ -128,6 +133,7 @@ export const documentMutators = {
           integration_link_id: finalIntegrationLinkId || null,
           is_locked: false,
           published: false,
+          is_favorited: false,
           parent_id: parentId || null,
           sort_order: minSortOrder - 1,
         }),
@@ -386,6 +392,48 @@ export const documentMutators = {
         withUpdatedTimestamp({
           id: documentId,
           is_favorited: isFavorited,
+        }),
+      );
+    },
+  ),
+
+  restore: defineMutator(
+    z.object({
+      documentId: z.string(),
+      organizationId: z.string(),
+    }),
+    async ({ tx, ctx, args: { documentId, organizationId } }) => {
+      hasOrganizationAccess(ctx, organizationId);
+
+      // Get the document (including deleted ones)
+      const document = await getDocumentById(tx, documentId, organizationId, true);
+      if (!document) {
+        throw notFoundError("Document", documentId);
+      }
+
+      // Check if document is actually deleted
+      if (!document.deleted_at) {
+        throw new Error("Document is not in trash");
+      }
+
+      // Find all deleted child documents recursively
+      const childIds = await findAllDeletedChildDocuments(tx, documentId, organizationId);
+
+      // Restore all children first (clear deleted_at)
+      for (const childId of childIds) {
+        await tx.mutate.documents.update(
+          withUpdatedTimestamp({
+            id: childId,
+            deleted_at: null,
+          }),
+        );
+      }
+
+      // Then restore the parent
+      await tx.mutate.documents.update(
+        withUpdatedTimestamp({
+          id: documentId,
+          deleted_at: null,
         }),
       );
     },

@@ -1,10 +1,10 @@
 import {
   Add16Filled,
   ChevronRightRegular,
+  Delete16Regular,
   Home16Filled,
   PersonChat16Filled,
   Search16Filled,
-  TabDesktopMultiple16Filled,
 } from "@fluentui/react-icons";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
@@ -137,19 +137,17 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
               <span className="truncate flex-1">Assistant</span>
             </div>
           </Link>
-          {/* <Link
-            to="/w/$organizationSlug/settings/integrations"
+          <Link
+            to="/w/$organizationSlug/trash"
             from="/w/$organizationSlug"
             activeOptions={{ exact: true }}
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <TabDesktopMultiple16Filled
-                className={sidebarItemIconStyles({ className: "size-4" })}
-              />
-              <span className="truncate flex-1">Integrations</span>
+              <Delete16Regular className={sidebarItemIconStyles({ className: "size-4" })} />
+              <span className="truncate flex-1">Trash</span>
             </div>
-          </Link> */}
+          </Link>
         </div>
         <Separator className="mx-2" />
         <div className="flex flex-col grow min-h-0">

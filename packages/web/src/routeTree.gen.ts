@@ -17,6 +17,7 @@ import { Route as LandingAuthIndexRouteImport } from './routes/_landing/auth/ind
 import { Route as _authNewIndexRouteImport } from './routes/__auth/new/index'
 import { Route as _authWOrganizationSlugRouteRouteImport } from './routes/__auth/w/$organizationSlug/route'
 import { Route as _authWOrganizationSlugIndexRouteImport } from './routes/__auth/w/$organizationSlug/index'
+import { Route as _authWOrganizationSlugTrashRouteImport } from './routes/__auth/w/$organizationSlug/trash'
 import { Route as _authWOrganizationSlugAssistantRouteImport } from './routes/__auth/w/$organizationSlug/assistant'
 import { Route as _authWOrganizationSlugSettingsRouteRouteImport } from './routes/__auth/w/$organizationSlug/settings/route'
 import { Route as _authWOrganizationSlugSettingsIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/index'
@@ -75,6 +76,12 @@ const _authWOrganizationSlugIndexRoute =
   _authWOrganizationSlugIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => _authWOrganizationSlugRouteRoute,
+  } as any)
+const _authWOrganizationSlugTrashRoute =
+  _authWOrganizationSlugTrashRouteImport.update({
+    id: '/trash',
+    path: '/trash',
     getParentRoute: () => _authWOrganizationSlugRouteRoute,
   } as any)
 const _authWOrganizationSlugAssistantRoute =
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/auth/': typeof LandingAuthIndexRoute
   '/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
   '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantRouteWithChildren
+  '/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
@@ -232,6 +240,7 @@ export interface FileRoutesByTo {
   '/install-template': typeof _authInstallTemplateRoute
   '/new': typeof _authNewIndexRoute
   '/auth': typeof LandingAuthIndexRoute
+  '/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugIndexRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
@@ -261,6 +270,7 @@ export interface FileRoutesById {
   '/_landing/auth/': typeof LandingAuthIndexRoute
   '/__auth/w/$organizationSlug/settings': typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
   '/__auth/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantRouteWithChildren
+  '/__auth/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/__auth/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
   '/__auth/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/__auth/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/w/$organizationSlug/settings'
     | '/w/$organizationSlug/assistant'
+    | '/w/$organizationSlug/trash'
     | '/w/$organizationSlug/'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/install-template'
     | '/new'
     | '/auth'
+    | '/w/$organizationSlug/trash'
     | '/w/$organizationSlug'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
@@ -342,6 +354,7 @@ export interface FileRouteTypes {
     | '/_landing/auth/'
     | '/__auth/w/$organizationSlug/settings'
     | '/__auth/w/$organizationSlug/assistant'
+    | '/__auth/w/$organizationSlug/trash'
     | '/__auth/w/$organizationSlug/'
     | '/__auth/w/$organizationSlug/settings/admin'
     | '/__auth/w/$organizationSlug/settings/ai'
@@ -423,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/w/$organizationSlug/'
       preLoaderRoute: typeof _authWOrganizationSlugIndexRouteImport
+      parentRoute: typeof _authWOrganizationSlugRouteRoute
+    }
+    '/__auth/w/$organizationSlug/trash': {
+      id: '/__auth/w/$organizationSlug/trash'
+      path: '/trash'
+      fullPath: '/w/$organizationSlug/trash'
+      preLoaderRoute: typeof _authWOrganizationSlugTrashRouteImport
       parentRoute: typeof _authWOrganizationSlugRouteRoute
     }
     '/__auth/w/$organizationSlug/assistant': {
@@ -648,6 +668,7 @@ const _authWOrganizationSlugAssistantRouteWithChildren =
 interface _authWOrganizationSlugRouteRouteChildren {
   _authWOrganizationSlugSettingsRouteRoute: typeof _authWOrganizationSlugSettingsRouteRouteWithChildren
   _authWOrganizationSlugAssistantRoute: typeof _authWOrganizationSlugAssistantRouteWithChildren
+  _authWOrganizationSlugTrashRoute: typeof _authWOrganizationSlugTrashRoute
   _authWOrganizationSlugIndexRoute: typeof _authWOrganizationSlugIndexRoute
   _authWOrganizationSlugIdIndexRoute: typeof _authWOrganizationSlugIdIndexRoute
 }
@@ -658,6 +679,7 @@ const _authWOrganizationSlugRouteRouteChildren: _authWOrganizationSlugRouteRoute
       _authWOrganizationSlugSettingsRouteRouteWithChildren,
     _authWOrganizationSlugAssistantRoute:
       _authWOrganizationSlugAssistantRouteWithChildren,
+    _authWOrganizationSlugTrashRoute: _authWOrganizationSlugTrashRoute,
     _authWOrganizationSlugIndexRoute: _authWOrganizationSlugIndexRoute,
     _authWOrganizationSlugIdIndexRoute: _authWOrganizationSlugIdIndexRoute,
   }
