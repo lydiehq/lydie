@@ -16,6 +16,7 @@
     "@tiptap/extension-blockquote": "^3.19.0",
     "@tiptap/extension-bold": "^3.19.0",
     "@tiptap/extension-character-count": "^3.19.0",
+    "@tiptap/extension-code": "^3.19.0",
     "@tiptap/extension-code-block-lowlight": "^3.19.0",
     "@tiptap/extension-collaboration": "^3.19.0",
     "@tiptap/extension-collaboration-caret": "^3.19.0",

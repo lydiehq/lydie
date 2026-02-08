@@ -21,6 +21,8 @@ export interface UseCase {
     href: string;
     text: string;
   };
+  templateSlugs?: string[];
+  templates?: string[];
 }
 
 export const useCases: UseCase[] = [
@@ -75,6 +77,8 @@ export const useCases: UseCase[] = [
     ],
     demoStates: ["search", "ai-assistant", "linking"],
     ctaText: "Start for free",
+    templateSlugs: ["personal-notes", "reading-list", "book-notes"],
+    templates: ["CNidcw5nia3iLKRh", "ottPzeqZAhnbLS9c", "Qt6PaUkoEJcvjmRz"],
   },
   {
     slug: "company-wiki",
@@ -113,6 +117,8 @@ export const useCases: UseCase[] = [
     ],
     demoStates: ["collaboration", "search", "linking"],
     ctaText: "Create company wiki",
+    templateSlugs: ["company-handbook", "employee-onboarding", "meeting-notes"],
+    templates: ["sF6JPmcYXwNueTcE", "bBSnZw5i6gSAvxzF", "WZbG32PZrEduBMRf"],
   },
   {
     slug: "blog-cms",
@@ -154,6 +160,8 @@ export const useCases: UseCase[] = [
       href: "https://lydie.co/blog",
       text: "See our blog",
     },
+    templateSlugs: ["blog-post", "content-calendar", "editorial-calendar"],
+    templates: ["5B4W3XNqhRmBXpvc", "oLVr26yaHG7Cvv8f", "xQc3GpEaMCZxsBaq"],
   },
   {
     slug: "researchers",
@@ -194,6 +202,8 @@ export const useCases: UseCase[] = [
     ],
     demoStates: ["ai-assistant", "search", "linking", "collaboration"],
     ctaText: "Start researching",
+    templateSlugs: ["research-notes", "literature-review", "research-proposal"],
+    templates: ["7YayZjGVYJYQk3Nq", "5S6qdYa8bK66yRMh", "rw131RYawq35CUas"],
   },
 ];
 

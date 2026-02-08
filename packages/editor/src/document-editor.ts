@@ -1,5 +1,6 @@
 import { Blockquote } from "@tiptap/extension-blockquote";
 import { Bold } from "@tiptap/extension-bold";
+import { Code } from "@tiptap/extension-code";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { Collaboration, type CollaborationOptions } from "@tiptap/extension-collaboration";
 import CollaborationCaret, {
@@ -44,6 +45,7 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     HardBreak,
     HorizontalRule,
     Bold,
+    Code,
     Italic,
     Strike,
     Underline,

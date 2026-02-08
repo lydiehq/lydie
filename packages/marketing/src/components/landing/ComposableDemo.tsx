@@ -7,6 +7,7 @@ import type { DemoState } from "./DemoStateSelector";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
+import { AssistantDemo, type Message } from "./demo/AssistantDemo";
 import { STATE_CONFIG, DEFAULT_STATE_ORDER } from "./DemoStateSelector";
 
 const collaborators = [
@@ -131,6 +132,25 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
 export { STATE_CONFIG, DEFAULT_STATE_ORDER };
 export type { DemoState };
 
+const DEMO_MESSAGES: Message[] = [
+  {
+    id: "user-1",
+    type: "user",
+    content: "Help me make this itinerary more exciting and fun",
+  },
+  {
+    id: "assistant-1",
+    type: "assistant",
+    content: "Here are some ways to make your Japan trip more exciting:",
+  },
+  {
+    id: "assistant-2",
+    type: "assistant",
+    content:
+      "🎌 Add a traditional tea ceremony experience in Kyoto\n🍜 Include a ramen tour in Tokyo's best districts\n🗻 Plan a sunrise hike at Mt. Fuji\n🎮 Visit an arcade in Akihabara",
+  },
+];
+
 function AIAssistantSidebar() {
   return (
     <motion.div
@@ -145,90 +165,12 @@ function AIAssistantSidebar() {
       }}
       className="shrink-0 flex flex-col overflow-hidden"
     >
-      <div className="flex items-center justify-between p-2">
-        <div className="flex items-center gap-2">
-          <div className="rounded-full size-6 flex items-center justify-center bg-purple-100 text-purple-600">
-            <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-            </svg>
-          </div>
-          <span className="text-sm font-medium text-gray-900">AI Assistant</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button className="p-1 rounded hover:bg-black/5 text-gray-500" aria-label="New chat">
-            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-          </button>
-          <button className="p-1 rounded hover:bg-black/5 text-gray-500" aria-label="Close">
-            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        <div className="flex gap-2">
-          <div className="rounded-full size-6 bg-gray-100 flex items-center justify-center shrink-0">
-            <span className="text-xs font-medium text-gray-600">You</span>
-          </div>
-          <div className="flex-1 bg-gray-50 rounded-lg p-2.5 text-sm text-gray-700">
-            Help me make this itinerary more exciting and fun
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <div className="rounded-full size-6 bg-purple-100 flex items-center justify-center shrink-0">
-            <svg className="size-3" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-            </svg>
-          </div>
-          <div className="flex-1 space-y-2">
-            <div className="bg-purple-50 rounded-lg p-2.5 text-sm text-gray-700">
-              Here are some ways to make your Japan trip more exciting:
-            </div>
-            <div className="bg-purple-50/50 rounded-lg p-2.5 text-sm text-gray-700 space-y-1.5">
-              <p>🎌 Add a traditional tea ceremony experience in Kyoto</p>
-              <p>🍜 Include a ramen tour in Tokyo&apos;s best districts</p>
-              <p>🗻 Plan a sunrise hike at Mt. Fuji</p>
-              <p>🎮 Visit an arcade in Akihabara</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Input Area */}
-      <div className="p-2">
-        <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-          <input
-            type="text"
-            placeholder="Ask anything..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
-            readOnly
-          />
-          <button className="p-1 rounded hover:bg-black/5 text-gray-500">
-            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
+      <AssistantDemo
+        messages={DEMO_MESSAGES}
+        showHeader={false}
+        className="h-full"
+        inputPlaceholder="Ask anything..."
+      />
     </motion.div>
   );
 }

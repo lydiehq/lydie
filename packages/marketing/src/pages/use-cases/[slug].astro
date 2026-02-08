@@ -15,6 +15,7 @@ import { getUseCase, useCases, type UseCase } from "src/data/use-cases";
 import { Eyebrow } from "src/components/landing/Eyebrow";
 import TemplateThumbnail from "src/components/templates/TemplateThumbnail.astro";
 import { SectionHeader } from "src/components/landing/SectionHeader";
+import { getTemplate } from "src/data/templates";
 
 export function getStaticPaths() {
   return useCases.map((useCase) => ({
@@ -38,7 +39,14 @@ const {
   faqs,
   demoStates,
   ctaText,
+  templateSlugs,
 } = useCase;
+
+// Fetch templates for this use case
+const templates = templateSlugs
+  ? await Promise.all(templateSlugs.map((slug: string) => getTemplate(slug)))
+  : [];
+const validTemplates = templates.filter((t): t is NonNullable<typeof t> => t !== undefined);
 ---
 
 <Layout title={metaTitle} description={metaDescription}>
@@ -88,21 +96,27 @@ const {
       </div>
     </div>
     <Divider />
-    <section class="flex flex-col md:flex-row gap-8">
+    <section class="flex flex-col md:flex-row gap-8 w-full">
       <SectionHeader
         title="Templates"
         description="Here are some templates that you can use to get started with Lydie."
-        className="max-w-md"
+        className="max-w-sm"
       />
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3 grow">
         {
-          [...Array(3)].map(() => (
-            <TemplateThumbnail
-              name="Template 1"
-              href="/templates/template-1"
-              slug="template-1"
-            />
-          ))
+          validTemplates.length > 0 ? (
+            validTemplates.map((template: { name: string; teaser: string; slug: string; thumbnailSrc: string | null; }) => (
+              <TemplateThumbnail
+                name={template.name}
+                teaser={template.teaser}
+                href={`/templates/${template.slug}`}
+                slug={template.slug}
+                thumbnailSrc={template.thumbnailSrc}
+              />
+            ))
+          ) : (
+            <p class="text-gray-500 col-span-3">No templates available for this use case.</p>
+          )
         }
       </div>
     </section>

@@ -307,6 +307,10 @@
     font-family: var(--font-mono);
     font-weight: var(--font-weight-medium);
     color: var(--editor-content-code-color);
+    background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.875em;
   }
 
   :where(h2, h3, h4) code {
@@ -315,8 +319,8 @@
 
   code::before,
   code::after {
-    display: inline;
-    content: "`";
+    display: none;
+    content: none;
   }
 
   pre {
@@ -981,6 +985,10 @@
     font-family: var(--font-mono);
     font-weight: var(--font-weight-medium);
     color: var(--editor-content-code-color);
+    background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.875em;
   }
 
   :where(h2, h3, h4) code {
@@ -989,8 +997,8 @@
 
   code::before,
   code::after {
-    display: inline;
-    content: "`";
+    display: none;
+    content: none;
   }
 
   pre {
