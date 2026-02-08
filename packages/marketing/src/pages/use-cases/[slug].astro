@@ -12,6 +12,9 @@ import "../../styles/grainy-gradient.css";
 import { CTASection } from "src/components/landing/CTASection";
 import { Heading } from "src/components/generic/Heading";
 import { getUseCase, useCases, type UseCase } from "src/data/use-cases";
+import { Eyebrow } from "src/components/landing/Eyebrow";
+import TemplateThumbnail from "src/components/templates/TemplateThumbnail.astro";
+import { SectionHeader } from "src/components/landing/SectionHeader";
 
 export function getStaticPaths() {
   return useCases.map((useCase) => ({
@@ -39,19 +42,6 @@ const {
 ---
 
 <Layout title={metaTitle} description={metaDescription}>
-  <div class="max-w-4xl relative">
-    <!-- 768px internal width, centered (w-1 = 4px each side) -->
-    <div
-      class="fixed inset-y-0 w-1 border-r border-black/4"
-      style="left: calc(50% - 388px)"
-    >
-    </div>
-    <div
-      class="fixed inset-y-0 w-1 border-r border-black/4"
-      style="right: calc(50% - 388px)"
-    >
-    </div>
-  </div>
   <Container
     className="flex flex-col items-center justify-center min-h-[60vh] py-8 gap-y-12"
   >
@@ -96,7 +86,28 @@ const {
           ))
         }
       </div>
-      <Divider />
+    </div>
+    <Divider />
+    <section class="flex flex-col md:flex-row gap-8">
+      <SectionHeader
+        title="Templates"
+        description="Here are some templates that you can use to get started with Lydie."
+        className="max-w-md"
+      />
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {
+          [...Array(3)].map(() => (
+            <TemplateThumbnail
+              name="Template 1"
+              href="/templates/template-1"
+              slug="template-1"
+            />
+          ))
+        }
+      </div>
+    </section>
+    <Divider />
+    <div class="max-w-xl mx-auto">
       <FAQSection faqs={faqs} client:load />
     </div>
   </Container>

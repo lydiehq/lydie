@@ -45,30 +45,44 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
         <div className="flex gap-x-2">
           <CastShadow className="w-full rounded-b-xl rounded-t-lg">
             <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg overflow-hidden bg-[#fcfcfc] shadow-xl ring ring-black/4 relative">
-              <div className="w-44 flex flex-col p-1">
-                <div className="w-full p-1 mb-4">
-                  <div className="size-5.5 rounded-md bg-black/12"></div>
-                </div>
-                {documents.map((title, i) => {
-                  const isActive = title === "Japan Trip Planning";
-                  return (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-gray-200/80" : ""}`}
-                    >
-                      <DocumentIcon
-                        className={`size-4 shrink-0 ${isActive ? "text-black/60" : "text-black/20"}`}
-                      />
-                      <span
-                        className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : "text-black/40"}`}
+              <motion.div
+                className=""
+                animate={{
+                  width: activeState === "ai-assistant" ? 0 : "auto",
+                }}
+              >
+                <div className="w-44 flex flex-col p-1">
+                  <div className="w-full p-1 mb-4">
+                    <div className="size-5.5 rounded-md bg-black/12"></div>
+                  </div>
+                  {documents.map((title, i) => {
+                    const isActive = title === "Japan Trip Planning";
+                    return (
+                      <div
+                        key={i}
+                        className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-gray-200/80" : ""}`}
                       >
-                        {title}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex flex-1 overflow-hidden relative rounded-l-lg rounded-tr-[7px] rounded-br-[9px] bg-white ring ring-black/2 shadow-sm m-1">
+                        <DocumentIcon
+                          className={`size-4 shrink-0 ${isActive ? "text-black/60" : "text-black/20"}`}
+                        />
+                        <span
+                          className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : "text-black/40"}`}
+                        >
+                          {title}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+              <motion.div
+                className="flex flex-1 overflow-hidden relative rounded-l-lg rounded-tr-[7px] rounded-br-[9px] bg-white ring ring-black/2 shadow-sm m-1"
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 35,
+                }}
+              >
                 <div className="flex-1 flex flex-col min-w-0">
                   <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
                     <ToolbarItems />
@@ -101,10 +115,10 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                     <DocumentContent currentState={activeState} />
                   </div>
                 </div>
-                <AnimatePresence>
-                  {activeState === "ai-assistant" && <AIAssistantSidebar />}
-                </AnimatePresence>
-              </div>
+              </motion.div>
+              <AnimatePresence>
+                {activeState === "ai-assistant" && <AIAssistantSidebar />}
+              </AnimatePresence>
               <AnimatePresence>{activeState === "search" && <SearchOverlay />}</AnimatePresence>
             </div>
           </CastShadow>
@@ -129,9 +143,9 @@ function AIAssistantSidebar() {
         damping: 35,
         opacity: { duration: 0.2 },
       }}
-      className="shrink-0 bg-white ring-1 ring-black/6 rounded-lg flex flex-col overflow-hidden ml-2 shadow-popover"
+      className="shrink-0 flex flex-col overflow-hidden"
     >
-      <div className="flex items-center justify-between p-2 border-b border-black/6 bg-white">
+      <div className="flex items-center justify-between p-2">
         <div className="flex items-center gap-2">
           <div className="rounded-full size-6 flex items-center justify-center bg-purple-100 text-purple-600">
             <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -195,7 +209,7 @@ function AIAssistantSidebar() {
       </div>
 
       {/* Input Area */}
-      <div className="p-2 border-t border-black/6 bg-white">
+      <div className="p-2">
         <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
           <input
             type="text"

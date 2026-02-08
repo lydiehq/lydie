@@ -10,11 +10,12 @@ import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/e
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
+import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { Link } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 
 import { useAuth } from "@/context/auth.context";
@@ -180,22 +181,23 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
 }
 
 function FavoritesSection() {
+  const [isExpanded, setIsExpanded] = useState(true);
   return (
-    <Disclosure className="group" defaultExpanded={true}>
-      <Heading className="m-0">
-        <RACButton
-          slot="trigger"
-          className="w-full flex items-center justify-between shrink-0 px-3 py-2 hover:bg-black/5 rounded-md transition-colors cursor-default"
-        >
-          <div className="flex items-center gap-1.5">
-            <ChevronRightRegular
+    <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
+      <div className="w-full flex items-center shrink-0 px-3 py-2 group gap-x-2">
+        <Eyebrow>Favorites</Eyebrow>
+        <Heading>
+          <RACButton
+            slot="trigger"
+            className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/button relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100"
+          >
+            <CollapseArrow
               aria-hidden
-              className="size-3.5 text-gray-500 transition-transform duration-200 ease-in-out group-data-[expanded]:rotate-90"
+              className={`size-3 shrink-0 absolute text-black/45 transition-[opacity_100ms,transform_200ms] ${isExpanded ? "rotate-90" : "rotate-0"}`}
             />
-            <Eyebrow>Favorites</Eyebrow>
-          </div>
-        </RACButton>
-      </Heading>
+          </RACButton>
+        </Heading>
+      </div>
       <DisclosurePanel className="h-(--disclosure-panel-height) motion-safe:transition-[height] overflow-clip">
         <div className="px-2 pb-2 pt-1">
           <FavoritesTree />

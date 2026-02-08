@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 const sizeClasses: Record<string, string> = {
   sm: "max-w-3xl",
   xl: "max-w-xl",
-  default: "max-w-5xl",
+  default: "max-w-232",
 };
 
 type Props = {

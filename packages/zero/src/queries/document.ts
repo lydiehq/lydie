@@ -127,4 +127,22 @@ export const documentQueries = {
         .limit(limit);
     },
   ),
+
+  // Get favorited documents for an organization
+  // Returns favorited documents ordered by updated_at
+  favorites: defineQuery(
+    z.object({
+      organizationId: z.string(),
+      limit: z.number().optional(),
+    }),
+    ({ args: { organizationId, limit = 10 }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.documents
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
+        .where("is_favorited", true)
+        .orderBy("updated_at", "desc")
+        .limit(limit);
+    },
+  ),
 };
