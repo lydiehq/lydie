@@ -20,8 +20,7 @@ export function deserializeFromHTML(html: string): any {
       const tagName = node.tagName.toLowerCase();
 
       switch (tagName) {
-        case "p":
-        case "div": {
+        case "p": {
           const children = node.childNodes.flatMap((n) => parseNode(n, true));
           if (children.length === 0) {
             return [];
@@ -32,6 +31,46 @@ export function deserializeFromHTML(html: string): any {
               content: children.length > 0 ? children : undefined,
             },
           ];
+        }
+        case "div": {
+          // Parse children in normal (non-inline) context to allow block elements to be parsed correctly
+          const children = node.childNodes.flatMap((n) => parseNode(n, false));
+
+          const isInlineNode = (node: any) => node.type === "text" || node.type === "hardBreak";
+          const isBlockNode = (node: any) =>
+            [
+              "paragraph",
+              "heading",
+              "bulletList",
+              "orderedList",
+              "codeBlock",
+              "horizontalRule",
+            ].includes(node.type);
+
+          const processedContent: any[] = [];
+          let inlineBuffer: any[] = [];
+
+          const flushInlineBuffer = () => {
+            if (inlineBuffer.length > 0) {
+              processedContent.push({
+                type: "paragraph",
+                content: inlineBuffer,
+              });
+              inlineBuffer = [];
+            }
+          };
+
+          for (const child of children) {
+            if (isInlineNode(child)) {
+              inlineBuffer.push(child);
+            } else if (isBlockNode(child)) {
+              flushInlineBuffer();
+              processedContent.push(child);
+            }
+          }
+          flushInlineBuffer();
+
+          return processedContent;
         }
         case "h1":
         case "h2":
