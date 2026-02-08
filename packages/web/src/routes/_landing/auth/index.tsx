@@ -77,7 +77,9 @@ function AuthBox() {
     try {
       localStorage.removeItem(QUERY_CACHE_KEY);
       // Also clear React Query cache to ensure fresh fetch
-      queryClient.removeQueries({ queryKey: SESSION_QUERY_KEY });
+      // Use setQueryData instead of removeQueries to avoid triggering
+      // a refetch that would cause an infinite loop with the root route loader
+      queryClient.setQueryData(SESSION_QUERY_KEY, undefined);
     } catch {
       // Ignore errors
     }

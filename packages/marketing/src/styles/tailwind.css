@@ -42,12 +42,18 @@
   --color-gray-950: oklch(14.5% 0 0);
 
   --color-page-bg: rgb(248 248 248);
+  --color-outline-subtle: #f1f1f1;
 }
 
 .bg-grain {
-  background-color: white;
   background:
-    linear-gradient(to right, transparent, transparent),
+    linear-gradient(to right, white, white),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='500'%20height='500'%3E%3Cfilter%20id='noise'%20x='0'%20y='0'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.65'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3CfeBlend%20mode='screen'/%3E%3C/filter%3E%3Crect%20width='500'%20height='500'%20filter='url(%23noise)'%20opacity='0.1'/%3E%3C/svg%3E");
+}
+
+.bg-grain-dark {
+  background:
+    linear-gradient(to right, #f9f9f9, #f9f9f9),
     url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='500'%20height='500'%3E%3Cfilter%20id='noise'%20x='0'%20y='0'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.65'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3CfeBlend%20mode='screen'/%3E%3C/filter%3E%3Crect%20width='500'%20height='500'%20filter='url(%23noise)'%20opacity='0.1'/%3E%3C/svg%3E");
 }
 

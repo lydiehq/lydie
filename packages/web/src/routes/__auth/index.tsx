@@ -14,8 +14,8 @@ export const Route = createFileRoute("/__auth/")({
       }
     }
 
-    const activeOrganizationSlug = (auth?.session as any)?.activeOrganizationSlug;
-    const organizations = (auth?.session as any)?.organizations || [];
+    const activeOrganizationSlug = auth?.session?.activeOrganizationSlug;
+    const organizations = auth?.session?.organizations ?? [];
 
     if (activeOrganizationSlug) {
       throw redirect({

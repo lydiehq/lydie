@@ -1,7 +1,7 @@
-import { comparisons } from "../data/comparisons.ts";
-import { getAllFeaturePaths } from "../data/features.ts";
-import { integrations } from "../data/integrations.ts";
-import { useCases } from "../data/use-cases.ts";
+import { comparisons } from "../data/comparisons";
+import { getAllFeaturePaths } from "../data/features";
+import { integrations } from "../data/integrations";
+import { useCases } from "../data/use-cases";
 import { generateUrlEntry, generateSitemap, sitemapHeaders } from "./sitemap-utils.js";
 
 // Static pages to include in sitemap (pages without dynamic registries)

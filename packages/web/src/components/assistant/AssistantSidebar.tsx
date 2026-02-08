@@ -1,5 +1,4 @@
-import { ChatRegular, EditRegular } from "@fluentui/react-icons";
-import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { ChatRegular } from "@fluentui/react-icons";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
@@ -7,7 +6,6 @@ import clsx from "clsx";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 import { useCallback } from "react";
-import { Button } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
 
@@ -24,13 +22,6 @@ export function AssistantSidebar({ isOpen, conversationId }: Props) {
       organizationSlug: organization.slug,
     }),
   );
-
-  const handleNewConversation = useCallback(() => {
-    navigate({
-      to: "/w/$organizationSlug/assistant",
-      params: { organizationSlug: organization.slug },
-    });
-  }, [navigate, organization.slug]);
 
   const handleSelectConversation = useCallback(
     (id: string) => {
@@ -50,21 +41,10 @@ export function AssistantSidebar({ isOpen, conversationId }: Props) {
           animate={{ width: 280, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="overflow-hidden flex flex-col border-r border-black/8 bg-surface shrink-0"
+          className="overflow-hidden flex flex-col border-l border-black/8 bg-surface shrink-0"
         >
-          <div className="flex items-center justify-between h-10 px-3 border-b border-black/8 shrink-0">
+          <div className="flex items-center h-10 px-3 border-b border-black/8 shrink-0">
             <span className="text-sm font-medium text-gray-700">Conversations</span>
-            <div className="flex flex-row gap-x-0.5">
-              <TooltipTrigger>
-                <Button
-                  className="rounded hover:bg-gray-100 text-gray-600 group p-1"
-                  onPress={handleNewConversation}
-                >
-                  <EditRegular className="size-3.5" />
-                </Button>
-                <Tooltip>New Conversation</Tooltip>
-              </TooltipTrigger>
-            </div>
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations && conversations.length > 0 ? (

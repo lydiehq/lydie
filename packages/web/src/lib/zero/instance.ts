@@ -5,16 +5,10 @@ import { Zero } from "@rocicorp/zero";
 
 const ZERO_INSTANCE_KEY = Symbol.for("__lydie_zero_instance__");
 
-// Cache configuration following zbugs pattern
-// Short TTL ensures data stays fresh while allowing instant navigation
-export const CACHE_PRELOAD = { ttl: "10s" } as const;
-
-interface GlobalWithZero {
-  [ZERO_INSTANCE_KEY]?: Zero<Schema>;
-}
+const CACHE_PRELOAD = { ttl: "10s" } as const;
 
 export function getZeroInstance(auth: any): Zero<Schema> {
-  const globalWithZero = globalThis as GlobalWithZero;
+  const globalWithZero = globalThis as any;
 
   const userID = auth?.session?.userId ?? "anon";
   const cacheURL = auth?.session ? import.meta.env.VITE_ZERO_URL : undefined;
@@ -28,7 +22,7 @@ export function getZeroInstance(auth: any): Zero<Schema> {
   }
 
   const newInstance = new Zero({
-    hiddenTabDisconnectDelay: 5 * 60 * 1000, // 5 minutes
+    hiddenTabDisconnectDelay: 5 * 60 * 1000, // 5 minutes (same as default)
     userID,
     schema,
     context: auth?.session,
@@ -42,7 +36,7 @@ export function getZeroInstance(auth: any): Zero<Schema> {
 }
 
 export function clearZeroInstance(): void {
-  const globalWithZero = globalThis as GlobalWithZero;
+  const globalWithZero = globalThis as any;
   if (globalWithZero[ZERO_INSTANCE_KEY]) {
     console.log("Clearing Zero instance");
     delete globalWithZero[ZERO_INSTANCE_KEY];
@@ -54,19 +48,9 @@ export function preloadSidebarData(
   organizationSlug: string,
   _organizationId: string,
 ): void {
-  // Preload documents, integration connections, and links in one query
   zero.preload(queries.organizations.documentTree({ organizationSlug }), CACHE_PRELOAD);
 }
 
-/**
- * Preload workspace data for instant navigation.
- * Following the zbugs pattern: preload "any data the app needs within one click".
- *
- * This preloads:
- * - Document tree (sidebar structure)
- * - Recent documents (~100 most recently updated, with full content/relationships)
- * - Organization members (for user avatars/info throughout UI)
- */
 export function preloadWorkspaceData(
   zero: Zero<Schema>,
   organizationSlug: string,

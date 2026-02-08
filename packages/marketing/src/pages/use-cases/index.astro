@@ -6,31 +6,11 @@ import { ArrowRightRegular } from "@fluentui/react-icons";
 import { GradientOutline } from "src/components/generic/GradientOutline";
 import { SectionHeader } from "src/components/landing/SectionHeader";
 import { CTASection } from "src/components/landing/CTASection";
+import { useCases } from "src/data/use-cases";
 
 const title = "Use Cases - Lydie";
 const description =
   "Discover how Lydie adapts to your needs. Build a personal knowledge base or manage team documentation with one flexible tool.";
-
-const useCases = [
-  {
-    title: "Personal knowledge base",
-    description:
-      "Keep all your notes, ideas, and learnings in one place. Document what you know and find it when you need it.",
-    href: "/use-cases/personal-knowledge-base",
-  },
-  {
-    title: "Company wiki",
-    description:
-      "Put all your company docs in one place so the team can actually find them. Onboard new people faster and keep everyone on the same page.",
-    href: "/use-cases/company-wiki",
-  },
-  {
-    title: "Blog CMS",
-    description:
-      "Manage your blog content in Lydie and pull it into your site via API. We run our own blog this way.",
-    href: "/use-cases/blog-cms",
-  },
-];
 ---
 
 <Layout title={title} description={description}>
@@ -51,7 +31,7 @@ const useCases = [
           useCases.map((useCase) => {
             return (
               <a
-                href={useCase.href}
+                href={`/use-cases/${useCase.slug}`}
                 class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
               >
                 <div class="flex flex-col gap-y-2">

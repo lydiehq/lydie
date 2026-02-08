@@ -1,7 +1,6 @@
 import { ArrowClockwiseRegular, ErrorCircleRegular } from "@fluentui/react-icons";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useRouter } from "@tanstack/react-router";
 
 import { Logo } from "@/components/layout/Logo";
 import { resetUser } from "@/lib/posthog";
@@ -13,7 +12,6 @@ interface ErrorPageProps {
 }
 
 export function ErrorPage({ error, reset }: ErrorPageProps) {
-  const router = useRouter();
   const isDev = import.meta.env.DEV;
 
   if (isDev) {
@@ -34,17 +32,27 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
     }
   };
 
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const signOut = async () => {
-    await authClient.signOut();
-    queryClient.removeQueries({
-      queryKey: ["auth", "getSession"],
-    });
+    // Clear client-side state BEFORE calling signOut to prevent race conditions
     resetUser();
-    await router.invalidate();
-    navigate({ to: "/auth" });
+
+    // Clear React Query cache completely
+    queryClient.clear();
+
+    // Remove persisted session from localStorage immediately
+    try {
+      localStorage.removeItem("lydie:query:cache:session");
+    } catch {
+      // Ignore localStorage errors
+    }
+
+    // Sign out on the server (clears HTTP-only cookie)
+    await authClient.signOut();
+
+    // Hard navigate to auth page to ensure clean state
+    window.location.href = "/auth";
   };
 
   return (

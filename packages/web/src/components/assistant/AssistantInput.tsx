@@ -8,6 +8,7 @@ import { Form } from "react-aria-components";
 import { AgentSelector } from "@/components/assistant/AgentSelector";
 import { ModelSelector } from "@/components/assistant/ModelSelector";
 import { type ChatContextItem, ChatContextList } from "@/components/chat/ChatContextList";
+import { useAssistantPreferences } from "@/context/assistant-preferences.context";
 import { useDocumentContext } from "@/hooks/use-document-context";
 import { useAssistantEditor } from "@/lib/editor/assistant-editor";
 import { getReferenceDocumentIds } from "@/utils/parse-references";
@@ -15,7 +16,6 @@ import { getReferenceDocumentIds } from "@/utils/parse-references";
 export interface AssistantInputProps {
   onSubmit: (text: string, contextDocumentIds: string[]) => void;
   onStop?: () => void;
-  placeholder?: string;
   canStop?: boolean;
   initialPrompt?: string;
   currentDocumentId?: string | null;
@@ -23,27 +23,24 @@ export interface AssistantInputProps {
   editorClassName?: string;
   variant?: "rounded" | "flat";
   content?: string;
-  selectedAgentId?: string | null;
-  onSelectAgent?: (agentId: string) => void;
-  selectedModelId?: string | null;
-  onSelectModel?: (modelId: string) => void;
+  showAgentSelector?: boolean;
+  showModelSelector?: boolean;
 }
 
 export function AssistantInput({
   onSubmit,
   onStop,
-  placeholder = "Ask anything. Use @ to refer to documents",
   canStop = false,
   initialPrompt,
   currentDocumentId,
   onRemoveContext,
-  editorClassName = "focus:outline-none text-sm text-gray-700 px-5 py-3.5",
+  editorClassName,
   content,
-  selectedAgentId,
-  onSelectAgent,
-  selectedModelId,
-  onSelectModel,
+  showAgentSelector = true,
+  showModelSelector = true,
 }: AssistantInputProps) {
+  const { selectedAgentId, setSelectedAgentId, selectedModelId, setSelectedModelId } =
+    useAssistantPreferences();
   const [mentionedDocumentIds, setMentionedDocumentIds] = useState<string[]>([]);
   const [manuallySelectedDocumentIds, setManuallySelectedDocumentIds] = useState<string[]>([]);
 
@@ -66,7 +63,6 @@ export function AssistantInput({
 
   const assistantEditor = useAssistantEditor({
     documents: availableDocuments,
-    placeholder,
     editorClassName,
     onChange: (editor) => {
       const textContent = editor.getText();
@@ -147,7 +143,7 @@ export function AssistantInput({
 
   return (
     <motion.div
-      className="rounded-lg flex flex-col z-10 relative bg-gray-100 p-1 gap-y-0.5"
+      className="rounded-2xl flex flex-col z-10 relative bg-gray-100 p-1 gap-y-0.5 w-full"
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       initial={false}
     >
@@ -157,20 +153,23 @@ export function AssistantInput({
         availableDocuments={availableDocuments}
         onAddDocument={handleAddDocument}
       />
-      <div className="flex flex-col bg-white rounded-[6px] p-2 relative shadow-surface">
+      <div className="flex flex-col bg-white rounded-2xl p-2 relative shadow-surface">
         <Form className="relative flex flex-col" onSubmit={handleSubmit}>
           <EditorContent editor={assistantEditor.editor} />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
-              {selectedAgentId !== undefined && onSelectAgent && (
-                <AgentSelector selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} />
+              {showAgentSelector && (
+                <AgentSelector
+                  selectedAgentId={selectedAgentId}
+                  onSelectAgent={setSelectedAgentId}
+                />
               )}
             </div>
             <div className="flex items-center gap-0.5">
-              {onSelectModel && (
+              {showModelSelector && (
                 <ModelSelector
-                  selectedModelId={selectedModelId || null}
-                  onSelectModel={onSelectModel}
+                  selectedModelId={selectedModelId}
+                  onSelectModel={setSelectedModelId}
                 />
               )}
               <Button

@@ -1,6 +1,7 @@
 import { getAssistantEditorExtensions } from "@lydie/editor";
 import { type Editor, useEditor } from "@tiptap/react";
 import { useCallback, useMemo } from "react";
+import { twMerge } from "tailwind-merge";
 import tippy from "tippy.js";
 
 import { MentionList } from "@/lib/editor/MentionList";
@@ -14,7 +15,6 @@ export interface UseAssistantEditorOptions {
   documents: AssistantEditorDocument[];
   onEnter?: () => void;
   onChange?: (editor: Editor) => void;
-  placeholder?: string;
   initialContent?: string;
   editorClassName?: string;
 }
@@ -116,9 +116,8 @@ export function useAssistantEditor({
   documents,
   onEnter,
   onChange,
-  placeholder = "Ask anything. Use @ to refer to documents",
   initialContent = "",
-  editorClassName = "focus:outline-none min-h-[100px] max-h-[200px] overflow-y-auto text-sm text-gray-700",
+  editorClassName = "focus:outline-none overflow-y-auto text-sm text-gray-700",
 }: UseAssistantEditorOptions): AssistantEditorHandle {
   const mentionItems = useMemo(() => {
     return documents.map((doc) => ({
@@ -132,18 +131,18 @@ export function useAssistantEditor({
 
   const extensions = useMemo(() => {
     return getAssistantEditorExtensions({
-      placeholder,
+      placeholder: "Ask anything. Use @ to refer to documents",
       mentionSuggestion,
       onEnter,
     });
-  }, [placeholder, mentionSuggestion, onEnter]);
+  }, [mentionSuggestion, onEnter]);
 
   const editor = useEditor({
     extensions,
     content: initialContent,
     editorProps: {
       attributes: {
-        class: editorClassName,
+        class: twMerge("overflow-y-auto focus:outline-none text-sm text-gray-700", editorClassName),
       },
     },
     onUpdate: onChange ? ({ editor }) => onChange(editor) : undefined,

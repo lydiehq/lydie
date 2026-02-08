@@ -15,7 +15,7 @@ import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
@@ -24,6 +24,7 @@ import { createPortal } from "react-dom";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ConversationDropdown } from "@/components/assistant/ConversationDropdown";
 import { ChatMessages } from "@/components/chat/ChatMessages";
+import { useAssistantPreferences } from "@/context/assistant-preferences.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import {
@@ -31,7 +32,6 @@ import {
   pendingMessageAtom,
   useFloatingAssistant,
 } from "@/hooks/use-floating-assistant";
-import { selectedAgentIdAtom, selectedModelIdAtom } from "@/stores/assistant-preferences";
 
 const LAYOUT_ID = {
   container: "assistant-container",
@@ -51,9 +51,8 @@ export function FloatingAssistant({
   const { organization } = useOrganization();
   const assistant = useFloatingAssistant();
 
-  // Persisted preferences from localStorage
-  const [selectedAgentId, setSelectedAgentId] = useAtom(selectedAgentIdAtom);
-  const [selectedModelId, setSelectedModelId] = useAtom(selectedModelIdAtom);
+  // Persisted preferences from context
+  const { selectedModelId } = useAssistantPreferences();
 
   // Local conversation state
   const [conversationId, setConversationId] = useState(() => createId());
@@ -99,20 +98,6 @@ export function FloatingAssistant({
     currentConversation?.messages,
     currentConversation,
   ]);
-
-  const handleSelectAgent = useCallback(
-    (agentId: string) => {
-      setSelectedAgentId(agentId);
-    },
-    [setSelectedAgentId],
-  );
-
-  const handleSelectModel = useCallback(
-    (modelId: string) => {
-      setSelectedModelId(modelId);
-    },
-    [setSelectedModelId],
-  );
 
   const handleNewChat = useCallback(() => {
     const newId = createId();
@@ -162,10 +147,6 @@ export function FloatingAssistant({
             sendMessage={sendMessage}
             stop={stop}
             status={status}
-            selectedAgentId={selectedAgentId}
-            onSelectAgent={handleSelectAgent}
-            selectedModelId={selectedModelId}
-            onSelectModel={handleSelectModel}
             onNewChat={handleNewChat}
             onSelectConversation={handleSelectConversation}
           />
@@ -188,10 +169,6 @@ function AssistantPopup({
   sendMessage,
   stop,
   status,
-  selectedAgentId,
-  onSelectAgent,
-  selectedModelId,
-  onSelectModel,
   onNewChat,
   onSelectConversation,
 }: {
@@ -205,10 +182,6 @@ function AssistantPopup({
   sendMessage: (options: { text: string; metadata?: any; agentId?: string | null }) => void;
   stop: () => void;
   status: string;
-  selectedAgentId: string | null;
-  onSelectAgent: (agentId: string) => void;
-  selectedModelId: string | null;
-  onSelectModel: (modelId: string) => void;
   onNewChat: () => void;
   onSelectConversation: (id: string) => void;
 }) {
@@ -247,7 +220,7 @@ function AssistantPopup({
       className={
         assistant.isDocked
           ? "w-full h-full bg-white ring ring-black/6 rounded-lg flex flex-col overflow-hidden"
-          : "fixed right-4 bottom-4 w-[400px] h-[540px] rounded-xl shadow-popover flex flex-col overflow-hidden z-30 bg-white"
+          : "fixed right-4 bottom-4 w-[400px] h-[540px] rounded-3xl shadow-popover flex flex-col overflow-hidden z-30 bg-white"
       }
     >
       <div className="flex items-center justify-between p-1.5 bg-white">
@@ -297,10 +270,6 @@ function AssistantPopup({
           sendMessage={sendMessage}
           stop={stop}
           status={status}
-          selectedAgentId={selectedAgentId}
-          onSelectAgent={onSelectAgent}
-          selectedModelId={selectedModelId}
-          onSelectModel={onSelectModel}
         />
       </motion.div>
     </motion.div>
@@ -317,10 +286,6 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   sendMessage,
   stop,
   status,
-  selectedAgentId,
-  onSelectAgent,
-  selectedModelId,
-  onSelectModel,
 }: {
   organizationId: string;
   currentDocumentId: string | null;
@@ -328,11 +293,8 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   sendMessage: (options: { text: string; metadata?: any; agentId?: string | null }) => void;
   stop: () => void;
   status: string;
-  selectedAgentId: string | null;
-  onSelectAgent: (agentId: string) => void;
-  selectedModelId: string | null;
-  onSelectModel: (modelId: string) => void;
 }) {
+  const { selectedAgentId } = useAssistantPreferences();
   const [dbAgent] = useQuery(
     selectedAgentId
       ? queries.agents.byId({
@@ -487,15 +449,10 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
         <AssistantInput
           onSubmit={handleSubmit}
           onStop={stop}
-          placeholder="Ask anything. Use @ to refer to documents"
           canStop={canStop}
           currentDocumentId={currentDocumentId}
-          editorClassName="focus:outline-none min-h-[80px] max-h-[200px] overflow-y-auto text-sm text-gray-700"
+          editorClassName="min-h-[80px] max-h-[200px]"
           content={pendingContent}
-          selectedAgentId={selectedAgentId}
-          onSelectAgent={onSelectAgent}
-          selectedModelId={selectedModelId}
-          onSelectModel={onSelectModel}
         />
       </div>
     </div>

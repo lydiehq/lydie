@@ -3,6 +3,7 @@ import { Outlet, createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
+import { AssistantPreferencesProvider } from "@/context/assistant-preferences.context";
 import { getSessionQuery } from "@/lib/auth/session";
 
 const QUERY_CACHE_KEY = "lydie:query:cache:session";
@@ -47,5 +48,9 @@ function RouteComponent() {
     return null;
   }
 
-  return <Outlet />;
+  return (
+    <AssistantPreferencesProvider>
+      <Outlet />
+    </AssistantPreferencesProvider>
+  );
 }

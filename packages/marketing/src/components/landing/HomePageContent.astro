@@ -3,7 +3,6 @@ import { getImage } from "astro:assets";
 import { ChatSection } from "./ChatSection";
 import IntegrationsSection from "./IntegrationsSection.astro";
 import PerformanceSection from "./PerformanceSection.astro";
-import UseCasesSection from "./UseCasesSection.astro";
 import { Hero } from "./Hero";
 import ProblemSolutionSection from "./ProblemSolutionSection.astro";
 import {
@@ -93,14 +92,14 @@ const faqItems = [
 />
 <ProblemSolutionSection />
 
-<div class="max-w-4xl relative md:block hidden">
+<div class="max-w-4xl relative md:block hidden -z-10">
   <div
-    class="fixed inset-y-0 w-1 border-r border-black/4"
+    class="fixed inset-y-0 w-1 border-r border-outline-subtle"
     style="left: calc(50% - 388px)"
   >
   </div>
   <div
-    class="fixed inset-y-0 w-1 border-r border-black/4"
+    class="fixed inset-y-0 w-1 border-r border-outline-subtle"
     style="right: calc(50% - 388px)"
   >
   </div>
@@ -181,7 +180,6 @@ const faqItems = [
   imageWidth={chatDefaultImage.options.width}
   imageHeight={chatDefaultImage.options.height}
 /> -->
-<!-- <UseCasesSection />
-<PerformanceSection />
+<!-- <PerformanceSection />
 <IntegrationsSection /> -->
 <!-- <CTASection client:load /> -->

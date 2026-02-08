@@ -6,6 +6,7 @@ import type { ChatAlertState } from "@/components/editor/ChatAlert";
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatAlert } from "@/components/editor/ChatAlert";
+import { useAssistantPreferences } from "@/context/assistant-preferences.context";
 
 interface AssistantChatProps {
   organizationId: string;
@@ -13,13 +14,12 @@ interface AssistantChatProps {
   onPromptUsed?: () => void;
   showEmptyState?: boolean;
   messages: any[];
-  sendMessage: (options: { text: string; metadata?: any }) => void;
+  sendMessage: (options: { text: string; metadata?: any; agentId?: string | null }) => void;
   stop: () => void;
   status: string;
   alert: ChatAlertState | null;
   setAlert: (alert: ChatAlertState | null) => void;
   isNewConversation?: boolean;
-  conversationTitle?: string | null;
   onNavigateToChat?: () => void;
 }
 
@@ -35,9 +35,9 @@ export function AssistantChat({
   alert,
   setAlert,
   isNewConversation = false,
-  conversationTitle,
   onNavigateToChat,
 }: AssistantChatProps) {
+  const { selectedAgentId } = useAssistantPreferences();
   const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(
     initialPrompt,
   );
@@ -71,6 +71,7 @@ export function AssistantChat({
           createdAt: new Date().toISOString(),
           contextDocuments,
         },
+        agentId: selectedAgentId,
       });
 
       if (currentInitialPrompt) {
@@ -85,6 +86,7 @@ export function AssistantChat({
       isNewConversation,
       hasNavigated,
       onNavigateToChat,
+      selectedAgentId,
     ],
   );
 
@@ -105,14 +107,12 @@ export function AssistantChat({
               className="flex flex-col gap-y-4 items-center w-full max-w-xl"
               layoutId="assistant-input-container"
             >
-              <h1 className="text-2xl font-medium text-gray-900">
-                {conversationTitle || "Ask anything"}
-              </h1>
+              <h1 className="text-xl font-medium text-gray-900">Ask anything</h1>
               <AssistantInput
                 onSubmit={handleSubmit}
                 onStop={stop}
-                placeholder="Ask anything. Use @ to refer to documents"
                 initialPrompt={currentInitialPrompt}
+                editorClassName="min-h-[40px] max-h-[200px] rounded-2xl"
               />
             </motion.div>
           </motion.div>
@@ -139,9 +139,9 @@ export function AssistantChat({
                   <AssistantInput
                     onSubmit={handleSubmit}
                     onStop={stop}
-                    placeholder="Ask anything. Use @ to refer to documents"
                     canStop={canStop}
                     initialPrompt={currentInitialPrompt}
+                    editorClassName="min-h-[40px] max-h-[200px] rounded-2xl"
                   />
                 </motion.div>
               </div>

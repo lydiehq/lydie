@@ -16,6 +16,7 @@ export type ExtendedSessionData = SessionData & {
       slug: string;
       [key: string]: any;
     }>;
+    activeOrganizationSlug?: string;
   };
 };
 
@@ -96,13 +97,15 @@ export async function waitForSessionUpdate(
 }
 
 // Clear session data (useful for logout)
-export async function clearSession(queryClient: QueryClient) {
-  await queryClient.invalidateQueries({
+export function clearSession(queryClient: QueryClient) {
+  // Cancel all ongoing queries to prevent race conditions
+  queryClient.cancelQueries({
     queryKey: SESSION_QUERY_KEY,
   });
-  queryClient.removeQueries({
-    queryKey: SESSION_QUERY_KEY,
-  });
+
+  // Clear all queries (more thorough than just removing session)
+  queryClient.clear();
+
   // Clear persisted cache from localStorage to prevent stale data on next visit
   if (typeof window !== "undefined") {
     try {

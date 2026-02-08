@@ -9,7 +9,6 @@ import {
   Heading,
 } from "react-aria-components";
 
-/** Parses markdown-style links [text](href) in a string and returns React nodes with <a> elements. */
 function parseAnswerWithLinks(text: string): React.ReactNode {
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   const parts: React.ReactNode[] = [];
@@ -18,7 +17,7 @@ function parseAnswerWithLinks(text: string): React.ReactNode {
 
   while ((match = linkRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      parts.push(renderTextWithLineBreaks(text.slice(lastIndex, match.index)));
     }
     parts.push(
       <a
@@ -33,10 +32,23 @@ function parseAnswerWithLinks(text: string): React.ReactNode {
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+    parts.push(renderTextWithLineBreaks(text.slice(lastIndex)));
   }
 
   return parts.length === 1 ? parts[0] : parts;
+}
+
+function renderTextWithLineBreaks(text: string): React.ReactNode {
+  const lines = text.split("\n");
+  if (lines.length === 1) {
+    return text;
+  }
+  return lines.map((line, index) => (
+    <React.Fragment key={index}>
+      {line}
+      {index < lines.length - 1 && <br />}
+    </React.Fragment>
+  ));
 }
 
 export interface FAQItem {
@@ -74,7 +86,6 @@ interface FAQItemProps {
   isLast?: boolean;
 }
 
-// Create Motion wrapper for React Aria DisclosurePanel
 const MotionDisclosurePanel = motion.create(DisclosurePanel);
 
 function FAQItem({ question, answer }: FAQItemProps) {
