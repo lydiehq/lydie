@@ -27,20 +27,13 @@ type Props = {
   messages: DocumentChatAgentUIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   organizationId: string;
-  agentName?: string | null;
   onApplyContent?: (
     edits: any,
     onProgress?: (current: number, total: number, usedLLM: boolean) => void,
   ) => void;
 };
 
-export function ChatMessages({
-  messages,
-  status,
-  organizationId,
-  agentName,
-  onApplyContent,
-}: Props) {
+export function ChatMessages({ messages, status, organizationId, onApplyContent }: Props) {
   const lastMessage = messages[messages.length - 1];
   const isSubmitting =
     status === "submitted" && messages.length > 0 && lastMessage?.role === "user";
@@ -69,7 +62,6 @@ export function ChatMessages({
                 status={status}
                 isLastMessage={index === messages.length - 1}
                 organizationId={organizationId}
-                agentName={agentName}
               />
             )}
           </div>
@@ -95,7 +87,6 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   status,
   isLastMessage,
   organizationId,
-  agentName,
 }: {
   message: DocumentChatAgentUIMessage;
   onApplyContent?: (
@@ -105,7 +96,6 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   status: "submitted" | "streaming" | "ready" | "error";
   isLastMessage: boolean;
   organizationId: string;
-  agentName?: string | null;
 }) {
   const formatDuration = (duration?: number) => {
     if (!duration) return "";
@@ -118,7 +108,6 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   );
 
   const shouldShowMetadata = status === "ready" || !isLastMessage;
-  const displayName = agentName || "Assistant";
 
   const handleApplyAll = async () => {
     if (!onApplyContent || replaceTools.length === 0) {
@@ -144,19 +133,6 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
 
   return (
     <div className="flex flex-col gap-y-1.5">
-      <div className="flex items-center gap-x-2">
-        <div className="rounded-full bg-white p-1 ring ring-black/4">
-          <Logo className="size-3 text-gray-500" />
-        </div>
-        <span className="text-sm font-medium text-gray-900">{displayName}</span>
-        {message.metadata?.createdAt && (
-          <span className="text-xs text-gray-400">
-            {format(new Date(message.metadata.createdAt), "HH:mm")}
-          </span>
-        )}
-      </div>
-
-      {/* Message content */}
       <div className="flex justify-start w-full gap-y-1 flex-col">
         <div className="flex flex-col">
           {groupMessageParts(message.parts).map((group, index) => {
@@ -403,14 +379,6 @@ export type UserMessageProps = {
 export function UserMessage({ message }: UserMessageProps) {
   return (
     <div className="flex flex-col gap-y-1.5 items-end">
-      <div className="flex items-center gap-x-2">
-        <span className="text-sm font-medium text-gray-900">You</span>
-        {message.metadata?.createdAt && (
-          <span className="text-xs text-gray-400">
-            {format(new Date(message.metadata.createdAt), "HH:mm")}
-          </span>
-        )}
-      </div>
       <div className="flex flex-col max-w-[80%] items-end">
         <div className="bg-black/4 text-gray-600 rounded-xl rounded-tr-sm p-1.5 flex flex-col gap-y-1">
           {message.parts?.map((part: any, index: number) => {

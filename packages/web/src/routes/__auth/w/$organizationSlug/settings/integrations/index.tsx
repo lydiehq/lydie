@@ -3,8 +3,8 @@ import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { useDocumentTitle } from "@/hooks/use-document-title";
 import { IntegrationsList } from "@/components/settings/integrations/IntegrationsList";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/integrations/")({
   component: RouteComponent,
