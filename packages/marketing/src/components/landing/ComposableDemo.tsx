@@ -23,6 +23,7 @@ type ComposableDemoProps = {
 
 const documents = [
   "Quick notes",
+  "Trip Master Plan",
   "Reading list",
   "Goals 2025",
   "Meeting notes",
@@ -58,16 +59,17 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                   </div>
                   {documents.map((title, i) => {
                     const isActive = title === "Japan Trip Planning";
+                    const isLinked = activeState === "linking" && title === "Trip Master Plan";
                     return (
                       <div
                         key={i}
-                        className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-gray-200/80" : ""}`}
+                        className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-gray-200/80" : ""} ${isLinked ? "bg-blue-50 ring-1 ring-blue-200/60" : ""}`}
                       >
                         <DocumentIcon
-                          className={`size-4 shrink-0 ${isActive ? "text-black/60" : "text-black/20"}`}
+                          className={`size-4 shrink-0 ${isActive ? "text-black/60" : isLinked ? "text-blue-500" : "text-black/20"}`}
                         />
                         <span
-                          className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : "text-black/40"}`}
+                          className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : isLinked ? "font-medium text-blue-600" : "text-black/40"}`}
                         >
                           {title}
                         </span>
@@ -316,29 +318,23 @@ function SearchOverlay() {
 function LinkingOverlay() {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute left-1/2 bottom-[calc(100%+1rem)] -translate-x-1/2 z-30"
+      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className="absolute left-1/2 bottom-[calc(100%+0.75rem)] -translate-x-1/2 z-30"
     >
-      {/* Connector line + arrow pointing from card back to the linked text */}
-      <div
-        className="absolute right-full top-1/2 -translate-y-1/2 h-px bg-gray-200 w-2"
-        aria-hidden
-      />
-      <div
-        className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-y-4 border-y-transparent border-l-[6px] border-l-gray-200 -mr-2"
-        aria-hidden
-      />
-      <div className="bg-white rounded-lg shadow-popover border border-gray-100 overflow-hidden w-[220px]">
-        <div className="flex items-center gap-2.5 p-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500">
+      <div className="bg-white rounded-xl shadow-lg border border-blue-200/60 overflow-hidden w-[240px]">
+        <div className="h-1.5 bg-linear-to-r from-blue-400 via-blue-500 to-blue-400" />
+
+        <div className="flex items-center gap-3 p-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 shadow-sm">
             <svg
               className="size-5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth={1.5}
+              strokeWidth={1.75}
             >
               <path
                 strokeLinecap="round"
@@ -348,9 +344,27 @@ function LinkingOverlay() {
             </svg>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-gray-900 truncate">Trip Master Plan</div>
-            <div className="text-xs text-gray-500">Shared document</div>
+            <div className="text-sm font-semibold text-gray-900 truncate">Trip Master Plan</div>
+            <div className="text-xs text-blue-600 font-medium">Linked document</div>
           </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.15, type: "spring", stiffness: 500 }}
+            className="shrink-0"
+          >
+            <div className="size-5 rounded-full bg-blue-500 flex items-center justify-center">
+              <svg
+                className="size-3 text-white"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+            </div>
+          </motion.div>
         </div>
       </div>
     </motion.div>
@@ -432,12 +446,21 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
           </li>
           <li className="text-gray-700">
             For the full itinerary and daily schedule, see{" "}
-            <span className="relative inline">
-              <span className="text-sm font-medium decoration-2 text-gray-900">
+            <motion.span
+              className="relative inline"
+              animate={{
+                backgroundColor:
+                  currentState === "linking" ? "rgba(59, 130, 246, 0.12)" : "transparent",
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <span
+                className={`text-sm font-medium decoration-2 ${currentState === "linking" ? "text-blue-600 underline underline-offset-2" : "text-gray-900"}`}
+              >
                 Trip Master Plan
               </span>
               <AnimatePresence>{currentState === "linking" && <LinkingOverlay />}</AnimatePresence>
-            </span>
+            </motion.span>
             .
           </li>
           <li>
