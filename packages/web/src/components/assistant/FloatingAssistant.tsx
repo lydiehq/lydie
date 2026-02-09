@@ -8,7 +8,6 @@ import {
   Subtract12Regular as SubtractFilled,
   TextBulletListSquareEditRegular,
 } from "@fluentui/react-icons";
-import { getDefaultAgentById } from "@lydie/core/ai/agents/defaults";
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
@@ -17,7 +16,7 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
 import { createPortal } from "react-dom";
 
@@ -78,26 +77,30 @@ export function FloatingAssistant({
       })) || [],
   });
 
+  // Track the last conversation ID we synced from
+  const lastSyncedIdRef = useRef<string | null>(null);
+
+  // Sync server messages only when switching to a different conversation
+  // Don't sync during streaming/submitted to avoid overwriting local state
   useEffect(() => {
-    if (currentConversation?.messages) {
-      setMessages(
-        currentConversation.messages.map((msg: any) => ({
-          id: msg.id,
-          role: msg.role as "user" | "system" | "assistant",
-          parts: msg.parts,
-          metadata: msg.metadata,
-        })),
-      );
-    } else if (currentConversation === null && conversationId) {
-      setMessages([]);
+    const conversationIdChanged = currentConversation?.id !== lastSyncedIdRef.current;
+    const isStable = status === "ready" || status === "error";
+
+    if (
+      conversationIdChanged &&
+      isStable &&
+      currentConversation?.messages
+    ) {
+      const formattedMessages = currentConversation.messages.map((msg: any) => ({
+        id: msg.id,
+        role: msg.role as "user" | "system" | "assistant",
+        parts: msg.parts,
+        metadata: msg.metadata,
+      }));
+      setMessages(formattedMessages);
+      lastSyncedIdRef.current = currentConversation.id;
     }
-  }, [
-    currentConversation?.id,
-    conversationId,
-    setMessages,
-    currentConversation?.messages,
-    currentConversation,
-  ]);
+  }, [currentConversation?.id, currentConversation?.messages, status, setMessages]);
 
   const handleNewChat = useCallback(() => {
     const newId = createId();
@@ -295,32 +298,6 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   status: string;
 }) {
   const { selectedAgentId } = useAssistantPreferences();
-  const [dbAgent] = useQuery(
-    selectedAgentId
-      ? queries.agents.byId({
-          organizationId,
-          agentId: selectedAgentId,
-        })
-      : null,
-  );
-
-  // Check code-based default agents if not found in DB
-  const selectedAgent = useMemo(() => {
-    if (dbAgent) return dbAgent;
-    if (selectedAgentId) {
-      const defaultAgent = getDefaultAgentById(selectedAgentId);
-      if (defaultAgent) {
-        return {
-          id: defaultAgent.id,
-          name: defaultAgent.name,
-          description: defaultAgent.description,
-          system_prompt: defaultAgent.systemPrompt,
-          is_default: true,
-        };
-      }
-    }
-    return null;
-  }, [dbAgent, selectedAgentId]);
 
   const pendingMessage = useAtomValue(pendingMessageAtom);
   const clearPendingMessage = useSetAtom(clearPendingMessageAtom);
@@ -423,7 +400,6 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
         messages={messages}
         status={status as "submitted" | "streaming" | "ready" | "error"}
         organizationId={organizationId}
-        agentName={selectedAgent?.name}
       />
       <div className="p-1.5 relative">
         {isChatEmpty && (

@@ -174,6 +174,14 @@ function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
         const _URL = window.URL || window.webkitURL;
         const img = new Image();
         img.src = _URL.createObjectURL(file);
+
+        // Calculate drop position synchronously before any async operations
+        const coordinates = view.posAtCoords({
+          left: event.clientX,
+          top: event.clientY,
+        });
+        const dropPos = coordinates?.pos;
+
         img.onload = function () {
           if (img.width > 5000 || img.height > 5000) {
             window.alert("Your images need to be less than 5000 pixels in height and width.");
@@ -187,13 +195,9 @@ function createImageDropHandler(uploadImage: (file: File) => Promise<string>) {
               preloadImg.src = url;
               preloadImg.onload = function () {
                 const { schema } = view.state;
-                const coordinates = view.posAtCoords({
-                  left: event.clientX,
-                  top: event.clientY,
-                });
-                if (coordinates) {
+                if (dropPos !== undefined) {
                   const node = schema.nodes.image.create({ src: url });
-                  const transaction = view.state.tr.insert(coordinates.pos, node);
+                  const transaction = view.state.tr.insert(dropPos, node);
                   view.dispatch(transaction);
                 }
               };

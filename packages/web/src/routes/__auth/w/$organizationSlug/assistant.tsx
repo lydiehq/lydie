@@ -9,7 +9,7 @@ import {
   useSearch,
 } from "@tanstack/react-router";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { z } from "zod";
 
 import { isAssistantSidebarOpenAtom } from "@/atoms/workspace-settings";
@@ -106,9 +106,20 @@ function AssistantLayout() {
       })) || [],
   });
 
-  // Sync server messages on initial load for existing conversations
+  // Track the last conversation ID we synced from
+  const lastSyncedIdRef = useRef<string | null>(null);
+
+  // Sync server messages only when switching to a different conversation
+  // Don't sync during streaming/submitted to avoid overwriting local state
   useEffect(() => {
-    if (existingConversation?.messages && messages.length === 0) {
+    const conversationIdChanged = existingConversation?.id !== lastSyncedIdRef.current;
+    const isStable = status === "ready" || status === "error";
+
+    if (
+      conversationIdChanged &&
+      isStable &&
+      existingConversation?.messages
+    ) {
       const formattedMessages = existingConversation.messages.map((msg: any) => ({
         id: msg.id,
         role: msg.role as "user" | "system" | "assistant",
@@ -116,8 +127,9 @@ function AssistantLayout() {
         metadata: msg.metadata,
       }));
       setMessages(formattedMessages);
+      lastSyncedIdRef.current = existingConversation.id;
     }
-  }, [existingConversation, setMessages, messages.length]);
+  }, [existingConversation?.id, existingConversation?.messages, status, setMessages]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen);
