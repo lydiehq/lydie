@@ -11,7 +11,6 @@ import {
   SearchRegular,
   ShareRegular,
 } from "@fluentui/react-icons";
-import Container from "../Container.astro";
 import screenshot from "../../../public/screenshot3.png";
 import Divider from "./Divider.astro";
 import { DemoWithSelector } from "./DemoWithSelector";
@@ -25,6 +24,7 @@ import { SectionHeader } from "./SectionHeader";
 import { CTASection } from "./CTASection";
 import { MultiDocumentChatSection } from "./MultiDocumentChatSection";
 import { SpeedSection } from "./SpeedSection";
+import { Container } from "../Container";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -92,7 +92,7 @@ const faqItems = [
 />
 <ProblemSolutionSection />
 
-<div class="max-w-4xl relative md:block hidden -z-10">
+<!-- <div class="max-w-4xl relative md:block hidden -z-10">
   <div
     class="fixed inset-y-0 w-1 border-r border-outline-subtle"
     style="left: calc(50% - 388px)"
@@ -103,7 +103,7 @@ const faqItems = [
     style="right: calc(50% - 388px)"
   >
   </div>
-</div>
+</div> -->
 <Divider logo />
 
 <Container className="pb-24 pt-16 flex flex-col items-center">
@@ -121,11 +121,10 @@ const faqItems = [
   </div>
 </Container>
 <Divider />
-<Container className="relative my-24 max-w-4xl mx-auto">
+<Container className="relative my-24 flex flex-col gap-y-24">
   <SpeedSection />
-</Container>
 
-<!-- <Container className="flex flex-col gap-y-12 relative" size="sm">
+  <!-- <Container className="flex flex-col gap-y-12 relative" size="sm">
   <div class="grid md:grid-cols-2 grid-cols-1 gap-6">
     {
       keyBenefits.map((benefit) => (
@@ -146,9 +145,8 @@ const faqItems = [
   <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
 </Container> -->
 
-<Divider logo />
+  <Divider logo />
 
-<Container className="my-24 relative">
   <MultiDocumentChatSection client:load />
 </Container>
 

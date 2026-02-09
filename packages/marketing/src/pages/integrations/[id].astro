@@ -1,5 +1,5 @@
 ---
-import Container from "../../components/Container.astro";
+import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
 import { getIntegration } from "../../utils/integrations";
 import { ChevronLeftRegular } from "@fluentui/react-icons";
@@ -70,7 +70,7 @@ if (!integration) {
                 const paragraphs =
                   integration.extendedDescription.split("\n\n");
                 const instructionsIndex = paragraphs.findIndex((p) =>
-                  p.startsWith("## Instructions")
+                  p.startsWith("## Instructions"),
                 );
                 const filteredParagraphs =
                   instructionsIndex >= 0

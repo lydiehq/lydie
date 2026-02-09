@@ -1,6 +1,6 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
-import Container from "../../../components/Container.astro";
+import { Container } from "../../../components/Container";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { Button } from "../../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
@@ -213,7 +213,15 @@ const contentSections = content.map((section) => {
       <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
         {subheadline.split(". ")[0]}.<br />
         <span class="feature-text">
-          {subheadline.split(". ").slice(1).join(". ").split(" ").slice(0, 4).join(" ")}
+          {
+            subheadline
+              .split(". ")
+              .slice(1)
+              .join(". ")
+              .split(" ")
+              .slice(0, 4)
+              .join(" ")
+          }
           <span
             class="feature-highlight-rtl"
             style={`background-color: ${secondaryAccentColor || accentColor}33; animation-delay: 0.2s;`}
@@ -238,14 +246,21 @@ const contentSections = content.map((section) => {
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                  >
-                  </path>
+                  />
                 </svg>
               </span>
             )
           }
         </span>
-        {subheadline.split(". ").slice(1).join(". ").split(" ").slice(4).join(" ")}
+        {
+          subheadline
+            .split(". ")
+            .slice(1)
+            .join(". ")
+            .split(" ")
+            .slice(4)
+            .join(" ")
+        }
       </p>
       <div class="flex items-center justify-center gap-4">
         <Button href="https://app.lydie.co/auth" size="lg" intent="primary">

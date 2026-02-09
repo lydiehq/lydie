@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Container from "../../components/Container.astro";
+import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { DocumentFormatter as DocumentFormatterTool } from "../../components/tools/DocumentFormatter";
 import { HowToSection } from "../../components/tools/HowToSection";
@@ -100,33 +100,34 @@ const faqData = {
     <div class="prose max-w-none">
       <h2>About AI Document Formatter</h2>
       <p>
-        Our free AI document formatter helps you transform messy notes, rough drafts, and
-        unformatted text into beautifully structured documents. Whether you need professional
-        reports, academic essays, casual blog posts, or highly organized reference materials,
-        this tool adapts to your needs.
+        Our free AI document formatter helps you transform messy notes, rough
+        drafts, and unformatted text into beautifully structured documents.
+        Whether you need professional reports, academic essays, casual blog
+        posts, or highly organized reference materials, this tool adapts to your
+        needs.
       </p>
 
       <h3>How to Use This Tool Effectively</h3>
       <p>
-        While AI can quickly format your documents, the best results come from understanding
-        your options and using them intentionally:
+        While AI can quickly format your documents, the best results come from
+        understanding your options and using them intentionally:
       </p>
       <ul>
         <li>
           <strong>Choose the right output format:</strong> Use Markdown for maximum
-          compatibility with writing apps, HTML for web publishing, and Plain Text for
-          simple text editors.
+          compatibility with writing apps, HTML for web publishing, and Plain Text
+          for simple text editors.
         </li>
         <li>
-          <strong>Match style to purpose:</strong> Professional style works best for business
-          documents and reports. Academic style is ideal for research papers. Casual style
-          suits blog posts and newsletters. Structured style creates highly scannable
-          reference documents.
+          <strong>Match style to purpose:</strong> Professional style works best for
+          business documents and reports. Academic style is ideal for research papers.
+          Casual style suits blog posts and newsletters. Structured style creates
+          highly scannable reference documents.
         </li>
         <li>
-          <strong>Review and refine:</strong> The AI creates a great starting point, but you
-          should always review the output and make it your own. Add your voice, adjust
-          headings, and customize as needed.
+          <strong>Review and refine:</strong> The AI creates a great starting point,
+          but you should always review the output and make it your own. Add your voice,
+          adjust headings, and customize as needed.
         </li>
       </ul>
 
@@ -135,7 +136,9 @@ const faqData = {
         <li>Free to use - no sign-up required</li>
         <li>Powered by Google Gemini 2.5 Flash</li>
         <li>Three output formats: Markdown, HTML, and Plain Text</li>
-        <li>Four formatting styles: Professional, Academic, Casual, Structured</li>
+        <li>
+          Four formatting styles: Professional, Academic, Casual, Structured
+        </li>
         <li>Handles up to 50,000 characters per document</li>
         <li>Download formatted documents or copy to clipboard</li>
         <li>Privacy-focused - no data storage</li>
@@ -154,11 +157,12 @@ const faqData = {
 
       <h3>Why Format Documents?</h3>
       <p>
-        Well-formatted documents are easier to read, more professional in appearance, and
-        more accessible to diverse audiences. Good formatting creates visual hierarchy that
-        guides readers through your content, emphasizes key points, and improves
-        comprehension. Whether you're sharing with colleagues, publishing online, or
-        submitting for academic review, proper formatting makes your content shine.
+        Well-formatted documents are easier to read, more professional in
+        appearance, and more accessible to diverse audiences. Good formatting
+        creates visual hierarchy that guides readers through your content,
+        emphasizes key points, and improves comprehension. Whether you're
+        sharing with colleagues, publishing online, or submitting for academic
+        review, proper formatting makes your content shine.
       </p>
     </div>
     <FAQSection faqs={faqs} client:load />

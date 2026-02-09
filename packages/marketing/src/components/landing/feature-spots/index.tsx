@@ -18,13 +18,7 @@ export function FeatureSpot({ type, className = "" }: FeatureSpotProps) {
     "ai-assistant": <FeatureSpotAI />,
   };
 
-  return (
-    <div
-      className={`relative w-full rounded-xl overflow-hidden bg-gradient-to-br from-gray-50/80 to-gray-100/50 ring-1 ring-black/5 ${className}`}
-    >
-      {spots[type]}
-    </div>
-  );
+  return <div>{spots[type]}</div>;
 }
 
 export { FeatureSpotSearch, FeatureSpotCollaboration, FeatureSpotLinking, FeatureSpotAI };

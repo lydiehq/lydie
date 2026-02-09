@@ -130,7 +130,7 @@ function FeatureButtons({
   const showRing = (id: DemoState) => isActive(id);
 
   return (
-    <div className="rounded-full p-1 flex items-center gap-1 border border-black shadow-[0_1px_--theme(--color-white/0.25)_inset,0_1px_3px_--theme(--color-black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full active:before:bg-white/0 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-full after:bg-linear-to-b after:from-white/14 after:mix-blend-overlay bg-black/85 text-white backdrop-blur-sm">
+    <div className="inline-flex items-center gap-1 p-0.5 ring ring-black/8 rounded-full">
       {states.map((id) => {
         const config = STATE_CONFIG[id];
         const Icon = config.icon;
@@ -140,13 +140,13 @@ function FeatureButtons({
             type="button"
             key={id}
             onClick={() => onStateChange(id)}
-            className="relative flex items-center gap-2 px-2 py-1 rounded-full text-[0.8125rem]/0 font-medium transition-colors text-white/90 hover:text-white z-0 data-active:text-white [&:not([data-active])]:hover:bg-white/15"
+            className="relative flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 text-gray-600 hover:text-gray-900 z-1 data-active:text-gray-900 [&:not([data-active])]:hover:bg-black/5"
             data-active={isActive(id) ? "" : undefined}
           >
             {isActive(id) && (
               <motion.div
                 layoutId="feature-tab-highlight"
-                className="absolute inset-0 rounded-full bg-white/30"
+                className="absolute inset-0 rounded-full bg-white shadow-sm -z-10"
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 style={{ zIndex: -1 }}
               />
@@ -170,7 +170,7 @@ function FeatureButtons({
                     initial={{ strokeDashoffset: RING_CIRCUMFERENCE }}
                     animate={{ strokeDashoffset: 0 }}
                     transition={{ duration: countdownMs / 1000, ease: "linear" }}
-                    className="text-white/20"
+                    className="text-gray-300"
                   />
                 </svg>
               )}

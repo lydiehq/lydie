@@ -4,11 +4,11 @@ export const prerender = false;
 // ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
 Astro.response.headers.set(
   "Cache-Control",
-  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
 import Layout from "../../../layouts/Layout.astro";
-import Container from "../../../components/Container.astro";
+import { Container } from "../../../components/Container";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import {
   getCategoriesFromDb,
@@ -30,7 +30,7 @@ if (!category) {
 
 // Find subcategories (direct children)
 const subcategories = allCategories.filter(
-  (cat) => cat.parentId === category.id
+  (cat) => cat.parentId === category.id,
 );
 
 // Get all templates
@@ -39,7 +39,7 @@ const allTemplates = await getAllTemplates();
 // Get templates that belong to this category or any of its descendants
 function getCategoryAndDescendantIds(
   catId: string,
-  allCats: typeof allCategories
+  allCats: typeof allCategories,
 ): string[] {
   const ids = [catId];
   const children = allCats.filter((cat) => cat.parentId === catId);
@@ -51,12 +51,12 @@ function getCategoryAndDescendantIds(
 
 const relevantCategoryIds = getCategoryAndDescendantIds(
   category.id,
-  allCategories
+  allCategories,
 );
 
 // Filter templates that belong to this category or any descendant
 const categoryTemplates = allTemplates.filter((template) =>
-  template.categories.some((cat) => relevantCategoryIds.includes(cat.id))
+  template.categories.some((cat) => relevantCategoryIds.includes(cat.id)),
 );
 
 // Build breadcrumb trail

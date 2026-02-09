@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Container from "../components/Container.astro";
+import { Container } from "../components/Container";
 ---
 
 <Layout
@@ -29,7 +29,11 @@ import Container from "../components/Container.astro";
           service is used:
         </p>
         <ul>
-          <li><strong>PostHog</strong> – for website and product analytics (page views, key actions, funnels). We respect Do Not Track and mask sensitive inputs. Session replay is disabled by default.</li>
+          <li>
+            <strong>PostHog</strong> – for website and product analytics (page views,
+            key actions, funnels). We respect Do Not Track and mask sensitive inputs.
+            Session replay is disabled by default.
+          </li>
         </ul>
         <p>
           Analytics may collect anonymized or pseudonymized usage data such as

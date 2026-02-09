@@ -144,7 +144,7 @@ export function CastShadow({
   children,
   className,
   style,
-  strength = 0.4,
+  strength = 0.15,
   height = 120,
   lightAngle = 135,
   animate = false,

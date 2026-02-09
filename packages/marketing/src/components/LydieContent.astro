@@ -22,7 +22,7 @@ interface Props {
 
 const { content, linkPrefix, linkResolver } = Astro.props;
 
-// Custom image component that uses Astro's Image optimization
+  // Custom image component that uses Astro's Image optimization
 async function astroImageComponent(props: ImageComponentProps): Promise<string> {
   const { src, alt, title, width, height } = props;
 
@@ -48,9 +48,8 @@ async function astroImageComponent(props: ImageComponentProps): Promise<string> 
     const srcset = optimized.srcSet?.attribute
       ? ` srcset="${optimized.srcSet.attribute}"`
       : "";
-    const sizes = optimized.attributes?.sizes
-      ? ` sizes="${optimized.attributes.sizes}"`
-      : "";
+    // Blog content is in max-w-2xl container (~672px), so use appropriate sizes
+    const sizes = ` sizes="(max-width: 672px) 100vw, 672px"`;
 
     return `<div class="my-6 flex justify-center">
       <img

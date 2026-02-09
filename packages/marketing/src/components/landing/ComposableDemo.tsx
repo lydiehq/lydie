@@ -37,7 +37,7 @@ const documents = [
 export function ComposableDemo({ activeState }: ComposableDemoProps) {
   return (
     <section className="flex flex-col items-center overflow-visible w-full" aria-hidden="true">
-      <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full max-w-232 p-2 relative bg-grain-dark">
+      <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full p-2 relative bg-white">
         <GradientOutline />
         <div className="flex items-center gap-x-1.5 mb-1.5">
           {[...Array(3)].map((_, i) => (
@@ -46,16 +46,19 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
         </div>
         <div className="flex gap-x-2">
           <CastShadow className="w-full rounded-b-xl rounded-t-lg">
-            <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg overflow-hidden bg-[#fcfcfc] shadow-xl ring ring-black/4 relative">
+            <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-xl ring ring-black/8 relative">
               <motion.div
                 className=""
                 animate={{
                   width: activeState === "ai-assistant" ? 0 : "auto",
                 }}
               >
-                <div className="w-44 flex flex-col p-1">
-                  <div className="w-full p-1 mb-4">
-                    <div className="size-5.5 rounded-md bg-black/12"></div>
+                <div className="w-52 flex flex-col p-1">
+                  <div className="w-full p-1 mb-2">
+                    <div className="flex items-center gap-x-2">
+                      <div className="size-5.5 rounded-md border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-pink-300"></div>
+                      <span className="text-xs font-medium text-gray-400">My notes</span>
+                    </div>
                   </div>
                   {documents.map((title, i) => {
                     const isActive = title === "Japan Trip Planning";
@@ -63,13 +66,13 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                     return (
                       <div
                         key={i}
-                        className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-gray-200/80" : ""} ${isLinked ? "bg-blue-50 ring-1 ring-blue-200/60" : ""}`}
+                        className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-black/5" : ""} ${isLinked ? "bg-blue-50 ring-1 ring-blue-200/60" : ""}`}
                       >
                         <DocumentIcon
-                          className={`size-4 shrink-0 ${isActive ? "text-black/60" : isLinked ? "text-blue-500" : "text-black/20"}`}
+                          className={`size-4 shrink-0 ${isActive ? "text-black/60" : isLinked ? "text-blue-500" : "text-black/30"}`}
                         />
                         <span
-                          className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : isLinked ? "font-medium text-blue-600" : "text-black/40"}`}
+                          className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : isLinked ? "font-medium text-blue-600" : "text-black/60"}`}
                         >
                           {title}
                         </span>
@@ -79,7 +82,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                 </div>
               </motion.div>
               <motion.div
-                className="flex flex-1 overflow-hidden relative rounded-l-lg rounded-tr-[7px] rounded-br-[9px] bg-white ring ring-black/2 shadow-sm m-1"
+                className={`flex flex-1 overflow-hidden relative bg-white ${activeState === "ai-assistant" ? "border-r border-black/8 rounded-r-lg" : "border-l border-black/8 rounded-l-lg"}`}
                 transition={{
                   type: "spring",
                   stiffness: 400,
@@ -167,12 +170,7 @@ function AIAssistantSidebar() {
       }}
       className="shrink-0 flex flex-col overflow-hidden"
     >
-      <AssistantDemo
-        messages={DEMO_MESSAGES}
-        showHeader={false}
-        className="h-full"
-        inputPlaceholder="Ask anything..."
-      />
+      <AssistantDemo messages={DEMO_MESSAGES} />
     </motion.div>
   );
 }

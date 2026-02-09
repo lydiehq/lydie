@@ -18,6 +18,7 @@ export function DemoWithSelector({
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
+      <ComposableDemo activeState={activeState} states={states} />
       {showSelector && (
         <DemoStateSelector
           states={states}
@@ -25,7 +26,6 @@ export function DemoWithSelector({
           onStateChange={setActiveState}
         />
       )}
-      <ComposableDemo activeState={activeState} states={states} />
     </div>
   );
 }

@@ -4,11 +4,11 @@ export const prerender = false;
 // ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
 Astro.response.headers.set(
   "Cache-Control",
-  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
 import Layout from "../../layouts/Layout.astro";
-import Container from "../../components/Container.astro";
+import { Container } from "../../components/Container";
 import { Button } from "../../components/generic/Button";
 import { FAQSection } from "../../components/tools/FAQSection";
 import { TemplateViewer } from "../../components/templates/TemplateViewer";
@@ -143,10 +143,12 @@ try {
         template.faqs && template.faqs.length > 0 && (
           <section class="max-w-2xl mt-12">
             <FAQSection
-              faqs={template.faqs.map((faq: { question: string; answer: string }) => ({
-                q: faq.question,
-                a: faq.answer,
-              }))}
+              faqs={template.faqs.map(
+                (faq: { question: string; answer: string }) => ({
+                  q: faq.question,
+                  a: faq.answer,
+                }),
+              )}
               client:load
             />
           </section>

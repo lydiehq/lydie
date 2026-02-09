@@ -41,7 +41,7 @@ export function Hero({
             </h1>
             <p className="text-[17px]/relaxed text-white/90 text-balance">
               <span className={styles.heroSentence1}>
-                Lydie is a writing workspace that adapts to your needs.
+                Lydie is a cloud-based writing workspace that adapts to your needs.
               </span>
               <br />
               <span className={styles.heroSentence2}>

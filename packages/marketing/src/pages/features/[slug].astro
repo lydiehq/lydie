@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Container from "../../components/Container.astro";
+import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular, ArrowRightRegular } from "@fluentui/react-icons";
@@ -8,11 +8,7 @@ import { FAQSection } from "../../components/tools/FAQSection";
 import { GradientOutline } from "../../components/generic/GradientOutline";
 import Divider from "../../components/landing/Divider.astro";
 import { CTASection } from "../../components/landing/CTASection";
-import {
-  features,
-  type Feature,
-  getFeature,
-} from "../../data/features";
+import { features, type Feature, getFeature } from "../../data/features";
 
 export function getStaticPaths() {
   return features.map((feature) => ({
@@ -159,10 +155,7 @@ const contentSections = content.map((section) => {
   >
     <div class="w-full max-w-4xl">
       <Breadcrumbs
-        items={[
-          { label: "Features", href: "/features" },
-          { label: title },
-        ]}
+        items={[{ label: "Features", href: "/features" }, { label: title }]}
       />
     </div>
     <div class="text-center relative py-12 size-full">
@@ -203,7 +196,15 @@ const contentSections = content.map((section) => {
       <p class="text-base text-black/60 max-w-md mx-auto mb-8 text-balance">
         {subheadline.split(". ")[0]}.<br />
         <span class="feature-text">
-          {subheadline.split(". ").slice(1).join(". ").split(" ").slice(0, 4).join(" ")}
+          {
+            subheadline
+              .split(". ")
+              .slice(1)
+              .join(". ")
+              .split(" ")
+              .slice(0, 4)
+              .join(" ")
+          }
           <span
             class="feature-highlight-rtl"
             style={`background-color: ${secondaryAccentColor || accentColor}33; animation-delay: 0.2s;`}
@@ -228,14 +229,21 @@ const contentSections = content.map((section) => {
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                  >
-                  </path>
+                  />
                 </svg>
               </span>
             )
           }
         </span>
-        {subheadline.split(". ").slice(1).join(". ").split(" ").slice(4).join(" ")}
+        {
+          subheadline
+            .split(". ")
+            .slice(1)
+            .join(". ")
+            .split(" ")
+            .slice(4)
+            .join(" ")
+        }
       </p>
       <div class="flex items-center justify-center gap-4">
         <Button href={ctaHref} size="lg" intent="primary">
@@ -277,7 +285,8 @@ const contentSections = content.map((section) => {
                   Explore {title} Capabilities
                 </h2>
                 <p class="text-sm text-black/60">
-                  Discover how {title.toLowerCase()} can help you with different aspects of your work
+                  Discover how {title.toLowerCase()} can help you with different
+                  aspects of your work
                 </p>
               </div>
               <div class="grid md:grid-cols-2 gap-4">

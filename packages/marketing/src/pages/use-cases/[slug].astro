@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Container from "../../components/Container.astro";
+import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
@@ -84,20 +84,32 @@ const validTemplates = fetchedTemplates.filter(
       initialState={demoStates[0]}
     />
 
-    <!-- Feature Sections -->
     {
       sections && sections.length > 0 && (
-        <div class="w-full space-y-16 md:space-y-24">
-          {sections.map((section: { illustration: DemoState; title: string; content: string; featureSlug: string }, index: number) => (
-            <FeatureSection
-              client:load
-              illustration={section.illustration}
-              title={section.title}
-              content={section.content}
-              featureSlug={section.featureSlug}
-              reverse={index % 2 === 1}
-            />
-          ))}
+        <div class="w-full flex flex-col gap-y-16 md:gap-y-24 mt-24">
+          {sections.map(
+            (
+              section: {
+                illustration: DemoState;
+                title: string;
+                content: string;
+                featureSlug: string;
+              },
+              index: number,
+            ) => (
+              <>
+                <FeatureSection
+                  client:load
+                  illustration={section.illustration}
+                  title={section.title}
+                  content={section.content}
+                  featureSlug={section.featureSlug}
+                  reverse={index % 2 === 1}
+                />
+                <Divider />
+              </>
+            ),
+          )}
         </div>
       )
     }

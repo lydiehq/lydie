@@ -141,7 +141,7 @@ const keyMap: Record<string, string> = {
 function CommandMenu() {
   return (
     <div className="relative w-full md:w-[440px] h-[320px]">
-      <div className="absolute inset-0 flex flex-col rounded-xl shadow-legit bg-gray-50">
+      <div className="absolute inset-0 flex flex-col rounded-xl bg-white shadow-legit">
         <div className="flex items-center border-b border-gray-100 px-3 bg-white rounded-t-xl">
           <svg
             className="size-4 text-gray-400 mr-2"

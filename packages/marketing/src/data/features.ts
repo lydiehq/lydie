@@ -286,35 +286,6 @@ export const features: Feature[] = [
     ],
   },
   {
-    slug: "knowledge-base",
-    title: "Knowledge Base",
-    description:
-      "Build a comprehensive knowledge base for your team. Organize information with nested pages, links, and powerful search.",
-    metaTitle: "Knowledge Base - Lydie",
-    metaDescription:
-      "Build a comprehensive knowledge base for your team. Organize information with nested pages, links, and powerful search.",
-    headline: "Knowledge Base",
-    subheadline:
-      "Build a comprehensive knowledge base for your team. Organize information with nested pages, links, and powerful search.",
-    ctaText: "Start building",
-    ctaHref: "https://app.lydie.co/auth",
-    accentColor: "#f59e0b",
-    faqs: [
-      {
-        q: "How do I organize my knowledge base?",
-        a: "Lydie provides flexible organization tools including nested pages, tags, and custom databases. You can create a hierarchical structure that matches how your team works, link related documents together, and use powerful search to find anything instantly.",
-      },
-      {
-        q: "Can I import existing content?",
-        a: "Yes, Lydie supports importing content from various formats including Markdown, HTML, and text files. You can also paste content directly into the editor.",
-      },
-    ],
-    content: [
-      "Lydie helps you build a comprehensive knowledge base that grows with your team. Create nested pages to organize information hierarchically, use links to connect related documents, and leverage powerful search to find anything instantly.",
-      "Whether you're building a company wiki, documenting processes, or creating a personal knowledge management system, Lydie provides the tools you need to capture, organize, and share knowledge effectively.",
-    ],
-  },
-  {
     slug: "search",
     title: "Search",
     description:

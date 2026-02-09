@@ -4,11 +4,11 @@ export const prerender = false;
 // ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
 Astro.response.headers.set(
   "Cache-Control",
-  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
 import Layout from "../../layouts/Layout.astro";
-import Container from "../../components/Container.astro";
+import { Container } from "../../components/Container";
 import { Button } from "../../components/generic/Button";
 import CategoryThumbnail from "../../components/templates/CategoryThumbnail.astro";
 import { getCategoryTreeFromDb } from "../../data/categories";
@@ -30,8 +30,8 @@ const categoryTree = await getCategoryTreeFromDb();
           <div class="max-w-lg flex flex-col gap-y-3">
             <h1 class="text-4xl font-medium text-gray-900">All Categories</h1>
             <span class="text-base/relaxed text-gray-600"
-              >Explore our template categories organized by topic to find the perfect
-              template for your project.</span
+              >Explore our template categories organized by topic to find the
+              perfect template for your project.</span
             >
           </div>
         </header>
@@ -42,7 +42,9 @@ const categoryTree = await getCategoryTreeFromDb();
             <div class="flex flex-col gap-y-4">
               <div class="flex flex-col gap-y-2">
                 <a
-                  href={category.path || `/templates/categories/${category.slug}`}
+                  href={
+                    category.path || `/templates/categories/${category.slug}`
+                  }
                   class="text-2xl font-medium text-gray-900 hover:text-gray-700 transition-colors"
                 >
                   {category.name}
