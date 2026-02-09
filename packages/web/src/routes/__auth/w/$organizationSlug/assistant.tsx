@@ -9,7 +9,7 @@ import {
   useSearch,
 } from "@tanstack/react-router";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { z } from "zod";
 
 import { isAssistantSidebarOpenAtom } from "@/atoms/workspace-settings";
@@ -60,8 +60,6 @@ function AssistantLayout() {
   const initialPrompt = (search as { prompt?: string })?.prompt;
 
   const [sidebarOpen, setSidebarOpen] = useAtom(isAssistantSidebarOpenAtom);
-
-  // Model preference (needed for useAssistantChat)
   const { selectedModelId } = useAssistantPreferences();
 
   const chatRouteMatch = useMatch({
@@ -81,7 +79,7 @@ function AssistantLayout() {
     return createId();
   }, [urlChatId]);
 
-  // Query for existing conversation data
+  // Query for existing conversation data (only used for initial messages)
   const [existingConversation] = useQuery(
     urlChatId
       ? queries.assistant.byId({
@@ -94,47 +92,29 @@ function AssistantLayout() {
   // Set document title based on conversation
   useDocumentTitle(existingConversation?.title ?? "Assistant");
 
-  const { messages, sendMessage, stop, status, alert, setAlert, setMessages } = useAssistantChat({
+  // Prepare initial messages from server (only used on first render of this conversation)
+  const initialMessages = useMemo(() => {
+    if (!existingConversation?.messages) return [];
+    return existingConversation.messages.map((msg: any) => ({
+      id: msg.id,
+      role: msg.role as "user" | "system" | "assistant",
+      parts: msg.parts,
+      metadata: msg.metadata,
+    }));
+  }, [existingConversation?.messages]);
+
+  // useChat instance - automatically resets when conversationId changes (via URL navigation)
+  const { messages, sendMessage, stop, status, alert, setAlert } = useAssistantChat({
     conversationId,
     modelId: selectedModelId,
-    initialMessages:
-      existingConversation?.messages?.map((msg: any) => ({
-        id: msg.id,
-        role: msg.role as "user" | "system" | "assistant",
-        parts: msg.parts,
-        metadata: msg.metadata,
-      })) || [],
+    initialMessages,
   });
-
-  // Track the last conversation ID we synced from
-  const lastSyncedIdRef = useRef<string | null>(null);
-
-  // Sync server messages only when switching to a different conversation
-  // Don't sync during streaming/submitted to avoid overwriting local state
-  useEffect(() => {
-    const conversationIdChanged = existingConversation?.id !== lastSyncedIdRef.current;
-    const isStable = status === "ready" || status === "error";
-
-    if (
-      conversationIdChanged &&
-      isStable &&
-      existingConversation?.messages
-    ) {
-      const formattedMessages = existingConversation.messages.map((msg: any) => ({
-        id: msg.id,
-        role: msg.role as "user" | "system" | "assistant",
-        parts: msg.parts,
-        metadata: msg.metadata,
-      }));
-      setMessages(formattedMessages);
-      lastSyncedIdRef.current = existingConversation.id;
-    }
-  }, [existingConversation?.id, existingConversation?.messages, status, setMessages]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen);
   }, [setSidebarOpen, sidebarOpen]);
 
+  // Navigate to the conversation URL after first message in a new conversation
   const handleNavigateToChat = useCallback(() => {
     navigate({
       to: "/w/$organizationSlug/assistant/$chatId",

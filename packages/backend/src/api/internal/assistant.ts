@@ -299,9 +299,9 @@ export const AssistantRoute = new Hono<{
         : messages;
 
     const tools: Record<string, any> = {
-      web_search: openai.tools.webSearch({
-        searchContextSize: "low",
-      }),
+      // web_search: openai.tools.webSearch({
+      //   searchContextSize: "low",
+      // }),
       find_documents: findDocuments(userId, organizationId, currentDocument?.id),
       read_document: readDocument(userId, organizationId),
       scan_documents: scanDocuments(userId, organizationId, currentDocument?.id),

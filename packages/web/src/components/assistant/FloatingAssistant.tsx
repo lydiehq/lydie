@@ -16,7 +16,7 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
 import { createPortal } from "react-dom";
 
@@ -49,14 +49,13 @@ export function FloatingAssistant({
 }) {
   const { organization } = useOrganization();
   const assistant = useFloatingAssistant();
-
-  // Persisted preferences from context
   const { selectedModelId } = useAssistantPreferences();
 
-  // Local conversation state
+  // Local conversation state - changing this creates a fresh useChat instance
   const [conversationId, setConversationId] = useState(() => createId());
 
-  const [currentConversation] = useQuery(
+  // Query for existing conversation (only used for initial messages)
+  const [existingConversation] = useQuery(
     conversationId
       ? queries.assistant.byId({
           organizationId: organization.id,
@@ -65,60 +64,37 @@ export function FloatingAssistant({
       : null,
   );
 
-  const { messages, sendMessage, stop, status, setMessages } = useAssistantChat({
+  // Prepare initial messages from server (only used on first render of this conversation)
+  const initialMessages = useMemo(() => {
+    if (!existingConversation?.messages) return [];
+    return existingConversation.messages.map((msg: any) => ({
+      id: msg.id,
+      role: msg.role as "user" | "system" | "assistant",
+      parts: msg.parts,
+      metadata: msg.metadata,
+    }));
+  }, [existingConversation?.messages]);
+
+  // useChat instance - automatically resets when conversationId changes
+  const { messages, sendMessage, stop, status } = useAssistantChat({
     conversationId,
     modelId: selectedModelId,
-    initialMessages:
-      currentConversation?.messages?.map((msg: any) => ({
-        id: msg.id,
-        role: msg.role as "user" | "system" | "assistant",
-        parts: msg.parts,
-        metadata: msg.metadata,
-      })) || [],
+    initialMessages,
   });
 
-  // Track the last conversation ID we synced from
-  const lastSyncedIdRef = useRef<string | null>(null);
-
-  // Sync server messages only when switching to a different conversation
-  // Don't sync during streaming/submitted to avoid overwriting local state
-  useEffect(() => {
-    const conversationIdChanged = currentConversation?.id !== lastSyncedIdRef.current;
-    const isStable = status === "ready" || status === "error";
-
-    if (
-      conversationIdChanged &&
-      isStable &&
-      currentConversation?.messages
-    ) {
-      const formattedMessages = currentConversation.messages.map((msg: any) => ({
-        id: msg.id,
-        role: msg.role as "user" | "system" | "assistant",
-        parts: msg.parts,
-        metadata: msg.metadata,
-      }));
-      setMessages(formattedMessages);
-      lastSyncedIdRef.current = currentConversation.id;
-    }
-  }, [currentConversation?.id, currentConversation?.messages, status, setMessages]);
-
+  // Start a new chat - creates fresh conversationId which resets useChat
   const handleNewChat = useCallback(() => {
-    const newId = createId();
-    setConversationId(newId);
-    setMessages([]);
-  }, [setMessages]);
+    setConversationId(createId());
+  }, []);
 
-  const handleSelectConversation = useCallback(
-    (id: string) => {
-      setConversationId(id);
-      setMessages([]);
-    },
-    [setMessages],
-  );
+  // Switch to existing conversation - loads messages via initialMessages
+  const handleSelectConversation = useCallback((id: string) => {
+    setConversationId(id);
+  }, []);
 
   const isExpanded = !assistant.isMinimized;
 
-  const content = (
+  return (
     <MotionConfig transition={{ type: "spring", bounce: 0, duration: 0.4 }}>
       <AnimatePresence initial={false} mode="popLayout" propagate>
         {!isExpanded && (
@@ -157,8 +133,6 @@ export function FloatingAssistant({
       </AnimatePresence>
     </MotionConfig>
   );
-
-  return content;
 }
 
 function AssistantPopup({
@@ -210,6 +184,7 @@ function AssistantPopup({
       },
     ];
   }, [assistant, onNewChat]);
+
   const targetContainer = assistant.isDocked ? dockedContainer : floatingContainer;
 
   const popup = (
@@ -298,21 +273,18 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   status: string;
 }) {
   const { selectedAgentId } = useAssistantPreferences();
-
   const pendingMessage = useAtomValue(pendingMessageAtom);
   const clearPendingMessage = useSetAtom(clearPendingMessageAtom);
   const [pendingContent, setPendingContent] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (pendingMessage) {
-      setPendingContent(pendingMessage);
-      clearPendingMessage();
-    }
-  }, [pendingMessage, clearPendingMessage]);
+  // Handle pending message from other components
+  if (pendingMessage && pendingContent !== pendingMessage) {
+    setPendingContent(pendingMessage);
+    clearPendingMessage();
+  }
 
   const handleSubmit = useCallback(
     (text: string, contextDocumentIds: string[]) => {
-      // Build contextDocuments array with current flag
       const contextDocuments = contextDocumentIds.map((id) => ({
         id,
         current: id === currentDocumentId,
@@ -336,48 +308,22 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   const suggestions = useMemo(() => {
     if (currentDocumentId) {
       return [
-        {
-          text: "Summarize this document",
-          icon: DocumentIcon,
-        },
-        {
-          text: "Help me write a draft",
-          icon: EditRegular,
-        },
-        {
-          text: "Explain this in simpler terms",
-          icon: QuestionCircleRegular,
-        },
-      ];
-    } else {
-      return [
-        {
-          text: "Summarize my 3 last documents",
-          icon: DocumentCopyFilled,
-        },
-        {
-          text: "Help me write a draft",
-          icon: EditRegular,
-        },
-        {
-          text: "What can you help me with?",
-          icon: QuestionCircleRegular,
-        },
+        { text: "Summarize this document", icon: DocumentIcon },
+        { text: "Help me write a draft", icon: EditRegular },
+        { text: "Explain this in simpler terms", icon: QuestionCircleRegular },
       ];
     }
+    return [
+      { text: "Summarize my 3 last documents", icon: DocumentCopyFilled },
+      { text: "Help me write a draft", icon: EditRegular },
+      { text: "What can you help me with?", icon: QuestionCircleRegular },
+    ];
   }, [currentDocumentId]);
 
   const handleSuggestionClick = useCallback(
     (suggestionText: string) => {
-      // Build contextDocuments array with current flag
       const contextDocuments = currentDocumentId
-        ? [
-            {
-              id: currentDocumentId,
-              title: "", // Will be fetched from database on backend
-              current: true,
-            },
-          ]
+        ? [{ id: currentDocumentId, title: "", current: true }]
         : [];
 
       sendMessage({
@@ -393,6 +339,8 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   );
 
   const isChatEmpty = messages.length === 0;
+
+  console.log(messages);
 
   return (
     <div className="flex flex-col overflow-hidden grow h-full">

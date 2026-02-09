@@ -14,6 +14,7 @@ import { StickToBottom } from "use-stick-to-bottom";
 
 import { useOrganization } from "@/context/organization.context";
 import { type ParsedTextSegment, parseReferences } from "@/utils/parse-references";
+
 import { streamdownHeadings } from "./streamdown/headings";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
 import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";
@@ -286,7 +287,7 @@ function ThinkingAnimation() {
           repeatCount="indefinite"
         />
       </circle>
-      <circle cx="12.5" cy="52.5" r="12.5" fill-opacity=".5">
+      <circle cx="12.5" cy="52.5" r="12.5" fillOpacity=".5">
         <animate
           attributeName="fill-opacity"
           begin="100ms"
@@ -451,5 +452,3 @@ function DocumentReferencePill({ documentId }: { documentId: string }) {
     </Link>
   );
 }
-
-
