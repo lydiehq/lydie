@@ -28,6 +28,7 @@
     "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
+    "@sentry/node": "^9.0.0",
     "hono": "^4.11.8",
     "hono-rate-limiter": "^0.5.3",
     "postgres": "^3.4.8",

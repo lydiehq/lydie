@@ -6,6 +6,12 @@ export const freeTools = [
     href: "/tools/convert",
   },
   {
+    title: "AI Document Formatter",
+    description:
+      "Transform messy text into beautifully formatted documents. Markdown, HTML, and plain text output.",
+    href: "/tools/ai-document-formatter",
+  },
+  {
     title: "AI Outline Generator",
     description:
       "Generate structured outlines for your content using AI. Perfect for articles, essays, and reports.",

@@ -1,0 +1,167 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Container from "../../components/Container.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { DocumentFormatter as DocumentFormatterTool } from "../../components/tools/DocumentFormatter";
+import { HowToSection } from "../../components/tools/HowToSection";
+import { FAQSection } from "../../components/tools/FAQSection";
+import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
+
+export const prerender = true;
+
+const breadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "Tools", href: "/tools" },
+  { label: "AI Document Formatter", href: null },
+];
+
+const howToSteps = [
+  "Choose your output format: Markdown (for flexibility), HTML (for web), or Plain Text (for simplicity).",
+  "Select a formatting style: Professional (business), Academic (formal), Casual (blog), or Structured (high organization).",
+  "Paste your unformatted content, rough notes, or messy text into the input area.",
+  "Click 'Format Document' to transform your content. Download or copy the formatted result.",
+];
+
+const faqs = [
+  {
+    q: "What formats can I output to?",
+    a: "You can output to Markdown (great for most writing apps), HTML (for web publishing), or Plain Text (for simple text editors).",
+  },
+  {
+    q: "What's the difference between the style options?",
+    a: "Professional style creates polished business documents. Academic style follows scholarly conventions. Casual style creates friendly blog content. Structured style maximizes organization with clear hierarchy.",
+  },
+  {
+    q: "Will the formatter change my content's meaning?",
+    a: "No, the AI preserves your original content and meaning. It only improves structure, formatting, and readability without adding or removing information.",
+  },
+  {
+    q: "Is there a length limit?",
+    a: "Yes, the current limit is 50,000 characters per document. This handles most articles, reports, and essays. For longer documents, consider formatting in sections.",
+  },
+  {
+    q: "Is my data stored or used for training?",
+    a: "No, we don't store your content or formatted documents. All processing is done in real-time and data is discarded immediately after formatting.",
+  },
+  {
+    q: "Can I edit the formatted output?",
+    a: "Absolutely! The formatted output is yours to edit, customize, and refine. Use it as a starting point and make it your own.",
+  },
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "AI Document Formatter",
+  description:
+    "Transform messy text into beautifully formatted documents. Free AI-powered formatting for Markdown, HTML, and plain text.",
+  applicationCategory: "UtilityApplication",
+  operatingSystem: "Web Browser",
+  featureList: [
+    "Free to use",
+    "No sign-up required",
+    "Powered by Google Gemini AI",
+    "Multiple output formats",
+    "Multiple formatting styles",
+    "Instant formatting",
+  ],
+};
+
+const faqData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+};
+---
+
+<Layout
+  title="Free AI Document Formatter | Transform Text to Beautiful Documents"
+  description="Transform messy notes and rough drafts into beautifully formatted documents. Choose Markdown, HTML, or plain text output. No sign-up required, powered by Google Gemini."
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  />
+  <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
+  <Container className="py-12">
+    <div class="class flex flex-col gap-y-4">
+      <Breadcrumbs items={breadcrumbs} />
+      <DocumentFormatterTool client:load />
+    </div>
+    <HowToSection steps={howToSteps} />
+
+    <div class="prose max-w-none">
+      <h2>About AI Document Formatter</h2>
+      <p>
+        Our free AI document formatter helps you transform messy notes, rough drafts, and
+        unformatted text into beautifully structured documents. Whether you need professional
+        reports, academic essays, casual blog posts, or highly organized reference materials,
+        this tool adapts to your needs.
+      </p>
+
+      <h3>How to Use This Tool Effectively</h3>
+      <p>
+        While AI can quickly format your documents, the best results come from understanding
+        your options and using them intentionally:
+      </p>
+      <ul>
+        <li>
+          <strong>Choose the right output format:</strong> Use Markdown for maximum
+          compatibility with writing apps, HTML for web publishing, and Plain Text for
+          simple text editors.
+        </li>
+        <li>
+          <strong>Match style to purpose:</strong> Professional style works best for business
+          documents and reports. Academic style is ideal for research papers. Casual style
+          suits blog posts and newsletters. Structured style creates highly scannable
+          reference documents.
+        </li>
+        <li>
+          <strong>Review and refine:</strong> The AI creates a great starting point, but you
+          should always review the output and make it your own. Add your voice, adjust
+          headings, and customize as needed.
+        </li>
+      </ul>
+
+      <h3>Features</h3>
+      <ul>
+        <li>Free to use - no sign-up required</li>
+        <li>Powered by Google Gemini 2.5 Flash</li>
+        <li>Three output formats: Markdown, HTML, and Plain Text</li>
+        <li>Four formatting styles: Professional, Academic, Casual, Structured</li>
+        <li>Handles up to 50,000 characters per document</li>
+        <li>Download formatted documents or copy to clipboard</li>
+        <li>Privacy-focused - no data storage</li>
+      </ul>
+
+      <h3>Use Cases</h3>
+      <p>Perfect for:</p>
+      <ul>
+        <li>Turning meeting notes into professional reports</li>
+        <li>Converting brain dumps into structured essays</li>
+        <li>Formatting raw data into readable documents</li>
+        <li>Preparing content for different publishing platforms</li>
+        <li>Improving readability of legacy or poorly formatted documents</li>
+        <li>Creating consistent formatting across multiple documents</li>
+      </ul>
+
+      <h3>Why Format Documents?</h3>
+      <p>
+        Well-formatted documents are easier to read, more professional in appearance, and
+        more accessible to diverse audiences. Good formatting creates visual hierarchy that
+        guides readers through your content, emphasizes key points, and improves
+        comprehension. Whether you're sharing with colleagues, publishing online, or
+        submitting for academic review, proper formatting makes your content shine.
+      </p>
+    </div>
+    <FAQSection faqs={faqs} client:load />
+    <OtherToolsSection currentHref="/tools/ai-document-formatter" />
+  </Container>
+</Layout>

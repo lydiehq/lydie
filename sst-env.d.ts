@@ -95,6 +95,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "SentryDsn": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "ShopifyClientId": {
       "type": "sst.sst.Secret"
       "value": string

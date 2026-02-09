@@ -31,6 +31,7 @@ const commonSecrets = [
   secret.shopifyClientId,
   secret.shopifyClientSecret,
   secret.apiGatewayKey,
+  secret.sentryDsn,
 ];
 
 export const backend = new sst.aws.Service("Backend", {

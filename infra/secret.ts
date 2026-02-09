@@ -31,4 +31,7 @@ export const secret = {
   posthogKey: new sst.Secret("PostHogKey"),
 
   apiGatewayKey: new sst.Secret("ApiGatewayKey"),
+
+  // Sentry error tracking
+  sentryDsn: new sst.Secret("SentryDsn"),
 };

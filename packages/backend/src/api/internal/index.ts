@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { authClient } from "@lydie/core/auth";
 import { VisibleError } from "@lydie/core/error";
 import { Hono } from "hono";
@@ -40,6 +41,7 @@ export const InternalApi = new Hono()
   .route("/", organizationScopedRouter)
   .onError((err, c) => {
     console.error(err);
+    Sentry.captureException(err);
 
     if (err instanceof VisibleError) {
       return c.json({ error: err.message, code: err.code }, err.status as any);
