@@ -340,8 +340,6 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
 
   const isChatEmpty = messages.length === 0;
 
-  console.log(messages);
-
   return (
     <div className="flex flex-col overflow-hidden grow h-full">
       <ChatMessages

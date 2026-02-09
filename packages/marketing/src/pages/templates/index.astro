@@ -4,7 +4,7 @@ export const prerender = false;
 // ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
 Astro.response.headers.set(
   "Cache-Control",
-  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
 import Layout from "../../layouts/Layout.astro";
@@ -15,7 +15,6 @@ import CategoryThumbnail from "../../components/templates/CategoryThumbnail.astr
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
 import { getMostPopularCategories } from "../../data/categories";
 import { getAllTemplates } from "../../data/templates";
-import { GradientOutline } from "src/components/generic/GradientOutline";
 
 const popularCategories = getMostPopularCategories(4);
 const templates = await getAllTemplates();

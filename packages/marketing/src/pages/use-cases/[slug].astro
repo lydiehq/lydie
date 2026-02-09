@@ -4,18 +4,16 @@ import Container from "../../components/Container.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { FAQSection } from "src/components/tools/FAQSection";
-import { GradientOutline } from "src/components/generic/GradientOutline";
 import { DemoWithSelector } from "../../components/landing/DemoWithSelector";
-import Divider from "src/components/landing/Divider.astro";
 import "../../styles/grainy-gradient.css";
-import { CTASection } from "src/components/landing/CTASection";
-import { Heading } from "src/components/generic/Heading";
-import { getUseCase, useCases, type UseCase } from "src/data/use-cases";
-import { Eyebrow } from "src/components/landing/Eyebrow";
-import TemplateThumbnail from "src/components/templates/TemplateThumbnail.astro";
-import { SectionHeader } from "src/components/landing/SectionHeader";
-import { getTemplate } from "src/data/templates";
+import { CTASection } from "../../components/landing/CTASection";
+import Divider from "../../components/landing/Divider.astro";
+import { SectionHeader } from "../../components/landing/SectionHeader";
+import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
+import { FAQSection } from "../../components/tools/FAQSection";
+import { getTemplate } from "../../data/templates";
+import { useCases, type UseCase, getUseCase } from "../../data/use-cases";
+import { Heading } from "../../components/generic/Heading";
 
 export function getStaticPaths() {
   return useCases.map((useCase) => ({
@@ -46,7 +44,9 @@ const {
 const templates = templateSlugs
   ? await Promise.all(templateSlugs.map((slug: string) => getTemplate(slug)))
   : [];
-const validTemplates = templates.filter((t): t is NonNullable<typeof t> => t !== undefined);
+const validTemplates = templates.filter(
+  (t): t is NonNullable<typeof t> => t !== undefined,
+);
 ---
 
 <Layout title={metaTitle} description={metaDescription}>
@@ -105,17 +105,26 @@ const validTemplates = templates.filter((t): t is NonNullable<typeof t> => t !==
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3 grow">
         {
           validTemplates.length > 0 ? (
-            validTemplates.map((template: { name: string; teaser: string; slug: string; thumbnailSrc: string | null; }) => (
-              <TemplateThumbnail
-                name={template.name}
-                teaser={template.teaser}
-                href={`/templates/${template.slug}`}
-                slug={template.slug}
-                thumbnailSrc={template.thumbnailSrc}
-              />
-            ))
+            validTemplates.map(
+              (template: {
+                name: string;
+                teaser: string;
+                slug: string;
+                thumbnailSrc: string | null;
+              }) => (
+                <TemplateThumbnail
+                  name={template.name}
+                  teaser={template.teaser}
+                  href={`/templates/${template.slug}`}
+                  slug={template.slug}
+                  thumbnailSrc={template.thumbnailSrc}
+                />
+              ),
+            )
           ) : (
-            <p class="text-gray-500 col-span-3">No templates available for this use case.</p>
+            <p class="text-gray-500 col-span-3">
+              No templates available for this use case.
+            </p>
           )
         }
       </div>

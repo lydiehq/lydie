@@ -112,7 +112,7 @@ export function AssistantChat({
                 onSubmit={handleSubmit}
                 onStop={stop}
                 initialPrompt={currentInitialPrompt}
-                editorClassName="min-h-[40px] max-h-[200px] rounded-2xl"
+                editorClassName="min-h-[60px] max-h-[200px]"
               />
             </motion.div>
           </motion.div>
@@ -141,7 +141,7 @@ export function AssistantChat({
                     onStop={stop}
                     canStop={canStop}
                     initialPrompt={currentInitialPrompt}
-                    editorClassName="min-h-[40px] max-h-[200px] rounded-2xl"
+                    editorClassName="min-h-[40px] max-h-[200px]"
                   />
                 </motion.div>
               </div>
