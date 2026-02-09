@@ -152,7 +152,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
           </Link>
         </div>
         <Separator className="mx-2" />
-        <div className="flex flex-col grow min-h-0">
+        <div className="flex flex-col grow min-h-0 overflow-hidden">
           <FavoritesSection />
           <DocumentsSection />
         </div>
@@ -209,7 +209,11 @@ function DocumentsSection() {
   const { createDocument } = useDocumentActions();
 
   return (
-    <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
+    <Disclosure
+      className="group overflow-y-hidden"
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
+    >
       <div className="w-full flex items-center shrink-0 px-3 py-2 group gap-x-2">
         <Eyebrow>Documents</Eyebrow>
         <Heading>
@@ -239,10 +243,8 @@ function DocumentsSection() {
           </TooltipTrigger>
         </div>
       </div>
-      <DisclosurePanel className="h-(--disclosure-panel-height) overflow-clip">
-        <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
-          <DocumentTree />
-        </div>
+      <DisclosurePanel className="overflow-y-auto h-full scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
+        <DocumentTree />
       </DisclosurePanel>
     </Disclosure>
   );
