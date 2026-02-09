@@ -126,6 +126,7 @@ export interface NodeBuilder<T> {
   blockquote(children: T[]): T;
   horizontalRule(): T;
   codeBlock(children: T[], language?: string | null): T;
+  image(src: string, alt?: string, title?: string): T;
 
   table(children: T[]): T;
   tableRow(children: T[]): T;
@@ -268,6 +269,14 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
           const componentName = node.attrs?.name;
           if (componentName && typeof componentName === "string") {
             return builder.customBlock(componentName, node.attrs?.properties || {});
+          }
+          return builder.empty();
+        }
+
+        case "image": {
+          const src = node.attrs?.src;
+          if (typeof src === "string") {
+            return builder.image(src, node.attrs?.alt, node.attrs?.title);
           }
           return builder.empty();
         }

@@ -1,4 +1,5 @@
 import type { Zero } from "@rocicorp/zero";
+import type { PersistedClient } from "@tanstack/react-query-persist-client";
 
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
@@ -36,87 +37,83 @@ export interface RouterContext {
   auth: Awaited<ReturnType<typeof authClient.getSession>>["data"];
 }
 
-// Minimal session data type for caching (non-sensitive)
-type MinimalUser = {
-  id: string;
-  name: string | null;
-  email: string;
-  image: string | null;
-};
+// Sanitize session data by removing sensitive fields (tokens, etc.)
+function sanitizeSessionData(data: unknown): unknown {
+  if (!data || typeof data !== "object") return data;
 
-type MinimalOrganization = {
-  id: string;
-  name: string;
-  slug: string;
-};
-
-type MinimalSessionData = {
-  user: MinimalUser;
-  session?: {
-    organizations?: MinimalOrganization[];
-    activeOrganizationSlug?: string;
-  };
-};
-
-// Sanitize session data to only include non-sensitive fields
-function sanitizeSessionData(data: unknown): MinimalSessionData | undefined {
-  if (!data || typeof data !== "object") return undefined;
-
-  const sessionData = data as Record<string, unknown>;
-
-  // Extract only minimal user fields
-  const user = sessionData.user as Record<string, unknown> | undefined;
-  if (!user || typeof user !== "object" || !user.id) {
-    return undefined;
+  // Handle arrays
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeSessionData(item));
   }
 
-  const minimalUser: MinimalUser = {
-    id: String(user.id),
-    name: user.name ? String(user.name) : null,
-    email: String(user.email || ""),
-    image: user.image ? String(user.image) : null,
+  const record = data as Record<string, unknown>;
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(record)) {
+    // Skip sensitive fields
+    if (key === "token" || key === "accessToken" || key === "refreshToken") {
+      continue;
+    }
+
+    // Recursively sanitize nested objects
+    if (value && typeof value === "object") {
+      sanitized[key] = sanitizeSessionData(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized;
+}
+
+// Sanitize dehydrated cache state to remove tokens
+function sanitizeDehydratedState(state: unknown): unknown {
+  if (!state || typeof state !== "object") return state;
+
+  const dehydratedState = state as {
+    queries?: Array<{
+      queryKey: unknown[];
+      state: { data: unknown };
+    }>;
   };
 
-  // Extract only minimal organization fields
-  const session = sessionData.session as Record<string, unknown> | undefined;
-  const organizations =
-    (session?.organizations as Array<Record<string, unknown>> | undefined) ?? [];
-  const minimalOrgs: MinimalOrganization[] = organizations.map((org) => ({
-    id: String(org.id),
-    name: String(org.name || ""),
-    slug: String(org.slug || ""),
-  }));
+  if (!dehydratedState.queries || !Array.isArray(dehydratedState.queries)) {
+    return state;
+  }
 
   return {
-    user: minimalUser,
-    session: {
-      organizations: minimalOrgs,
-      activeOrganizationSlug: session?.activeOrganizationSlug
-        ? String(session.activeOrganizationSlug)
-        : undefined,
-    },
+    ...dehydratedState,
+    queries: dehydratedState.queries.map((query) => ({
+      ...query,
+      state: {
+        ...query.state,
+        data: sanitizeSessionData(query.state.data),
+      },
+    })),
   };
 }
 
-// Create persister for localStorage with sanitized data
+// Create persister for localStorage with sanitization
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
   key: "lydie:query:cache:session",
   serialize: (data) => {
-    // Sanitize the data before storing
-    const sanitized = sanitizeSessionData(data);
+    // Sanitize to remove tokens before storing
+    const sanitized = sanitizeDehydratedState(data);
     return JSON.stringify(sanitized);
   },
   deserialize: (data) => {
     try {
-      return JSON.parse(data);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return JSON.parse(data) as PersistedClient;
     } catch {
-      return undefined;
+      // Return empty client on parse error
+      return { buster: Date.now().toString() } as PersistedClient;
     }
   },
 });
 
-function createRouter() {
+async function createRouter() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -127,7 +124,7 @@ function createRouter() {
 
   // Restore persisted data immediately (blocking render until restored)
   // This loads the cached session from localStorage before the app renders
-  persistQueryClientRestore({
+  await persistQueryClientRestore({
     queryClient,
     persister,
     maxAge: 1000 * 60 * 60 * 24, // 24 hours
@@ -182,13 +179,17 @@ initPostHog();
 const rootElement = document.getElementById("app");
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <CatchBoundary errorComponent={ErrorPage} getResetKey={() => "error"}>
-        <RouterProvider router={createRouter()} />
-      </CatchBoundary>
-    </StrictMode>,
-  );
+
+  // Create router asynchronously to ensure cache is restored before rendering
+  void createRouter().then((router) => {
+    root.render(
+      <StrictMode>
+        <CatchBoundary errorComponent={ErrorPage} getResetKey={() => "error"}>
+          <RouterProvider router={router} />
+        </CatchBoundary>
+      </StrictMode>,
+    );
+  });
 }
 
 reportWebVitals();

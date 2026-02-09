@@ -334,6 +334,14 @@ export const AssistantRoute = new Hono<{
       model: chatModel,
       instructions: systemPrompt,
       tools,
+      onStepFinish: async ({ usage, finishReason, toolCalls, text }) => {
+        console.log(`[Agent Step] finishReason: ${finishReason}`, {
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          toolsUsed: toolCalls?.map((tc) => tc.toolName),
+          textLength: text?.length,
+        });
+      },
     });
 
     return createAgentUIStreamResponse({
@@ -360,58 +368,74 @@ export const AssistantRoute = new Hono<{
         }
         return undefined;
       },
-      onFinish: async ({ messages: finalMessages, isAborted }) => {
+      onFinish: async ({ messages: finalMessages, isAborted, finishReason }) => {
+        console.log("[Agent onFinish]", {
+          isAborted,
+          finishReason,
+          messageCount: finalMessages.length,
+        });
+
         if (isAborted) {
           console.log("Stream was aborted - skipping DB save");
           return;
         }
 
-        const assistantMessage = finalMessages[finalMessages.length - 1];
+        try {
+          const assistantMessage = finalMessages[finalMessages.length - 1];
 
-        const savedMessage = await saveMessage({
-          conversationId,
-          parts: assistantMessage.parts,
-          metadata: assistantMessage.metadata as MessageMetadata,
-          role: "assistant",
-        });
+          if (!assistantMessage) {
+            console.error("[Agent onFinish] No assistant message found in final messages");
+            return;
+          }
 
-        // Use per-message credit cost from the selected model
-        const creditsUsed = selectedModel.credits;
+          const savedMessage = await saveMessage({
+            conversationId,
+            parts: assistantMessage.parts,
+            metadata: assistantMessage.metadata as MessageMetadata,
+            role: "assistant",
+          });
 
-        // Consume credits from user's workspace balance
-        await consumeCredits({
-          organizationId,
-          userId,
-          creditsRequested: creditsUsed,
-          actionType: "assistant_message",
-          resourceId: savedMessage.id,
-        });
+          // Use per-message credit cost from the selected model
+          const creditsUsed = selectedModel.credits;
 
-        // Track usage locally with credits
-        await db.insert(llmUsageTable).values({
-          conversationId,
-          messageId: savedMessage.id,
-          organizationId,
-          source: "assistant",
-          model: selectedModel.model,
-          creditsUsed,
-          finishReason: "stop",
-          toolCalls: null,
-        });
+          // Consume credits from user's workspace balance
+          await consumeCredits({
+            organizationId,
+            userId,
+            creditsRequested: creditsUsed,
+            actionType: "assistant_message",
+            resourceId: savedMessage.id,
+          });
 
-        // Generate real title asynchronously after first message is complete
-        // This was moved from before the stream to avoid blocking
-        if (!conversation && messages[0]) {
-          generateConversationTitle(messages[0])
-            .then(async (title) => {
-              await db
-                .update(assistantConversationsTable)
-                .set({ title })
-                .where(eq(assistantConversationsTable.id, conversationId));
-            })
-            .catch((error) => {
-              console.error("Failed to generate conversation title:", error);
-            });
+          // Track usage locally with credits
+          await db.insert(llmUsageTable).values({
+            conversationId,
+            messageId: savedMessage.id,
+            organizationId,
+            source: "assistant",
+            model: selectedModel.model,
+            creditsUsed,
+            finishReason: finishReason || "stop",
+            toolCalls: null,
+          });
+
+          // Generate real title asynchronously after first message is complete
+          // This was moved from before the stream to avoid blocking
+          if (!conversation && messages[0]) {
+            generateConversationTitle(messages[0])
+              .then(async (title) => {
+                await db
+                  .update(assistantConversationsTable)
+                  .set({ title })
+                  .where(eq(assistantConversationsTable.id, conversationId));
+              })
+              .catch((error) => {
+                console.error("Failed to generate conversation title:", error);
+              });
+          }
+        } catch (error) {
+          console.error("[Agent onFinish] Error in onFinish callback:", error);
+          throw error;
         }
       },
     });

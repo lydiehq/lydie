@@ -106,6 +106,12 @@ export class HTMLSerializer implements NodeBuilder<string> {
     return `<pre><code${langAttr}>${this.escape(code)}</code></pre>`;
   }
 
+  image(src: string, alt?: string, title?: string): string {
+    const altAttr = alt ? ` alt="${this.escape(alt)}"` : "";
+    const titleAttr = title ? ` title="${this.escape(title)}"` : "";
+    return `<img src="${this.escape(src)}"${altAttr}${titleAttr} />`;
+  }
+
   table(children: string[]): string {
     return `<table>${children.join("")}</table>`;
   }

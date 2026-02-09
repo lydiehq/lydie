@@ -1,10 +1,12 @@
 ---
-import { renderWithBuilder } from "@lydie/core/content";
+import { getImage } from "astro:assets";
 import type { ContentNode } from "@lydie-app/sdk";
 import {
-  ShikiHTMLSerializer,
-  extractCodeText,
-} from "../utils/shiki-html-serializer";
+  renderContent,
+  type RenderContentResult,
+  type ImageComponentProps,
+  blogImageComponent,
+} from "../utils/content-renderer";
 
 interface Props {
   content: ContentNode;
@@ -20,128 +22,79 @@ interface Props {
 
 const { content, linkPrefix, linkResolver } = Astro.props;
 
-// Process code blocks with Shiki, then render the rest with the standard serializer
-async function processCodeBlocks(
-  node: ContentNode | any,
-): Promise<ContentNode | any> {
-  if (node.type === "codeBlock") {
-    // Leave code blocks as-is, we'll process them separately
-    return node;
-  }
+// Custom image component that uses Astro's Image optimization
+async function astroImageComponent(props: ImageComponentProps): Promise<string> {
+  const { src, alt, title, width, height } = props;
 
-  if (node.content && Array.isArray(node.content)) {
-    return {
-      ...node,
-      content: await Promise.all(node.content.map(processCodeBlocks)),
-    };
-  }
+  try {
+    const optimized = await getImage({
+      src,
+      alt: alt || "",
+      width: width || 800,
+      height: height || 600,
+      inferSize: !width || !height,
+      format: "webp",
+      quality: 80,
+    });
 
-  return node;
+    const altAttr = alt ? ` alt="${alt}"` : "";
+    const titleAttr = title ? ` title="${title}"` : "";
+    const widthAttr = optimized.attributes?.width
+      ? ` width="${optimized.attributes.width}"`
+      : "";
+    const heightAttr = optimized.attributes?.height
+      ? ` height="${optimized.attributes.height}"`
+      : "";
+    const srcset = optimized.srcSet?.attribute
+      ? ` srcset="${optimized.srcSet.attribute}"`
+      : "";
+    const sizes = optimized.attributes?.sizes
+      ? ` sizes="${optimized.attributes.sizes}"`
+      : "";
+
+    return `<div class="my-6 flex justify-center">
+      <img
+        src="${optimized.src}"
+        ${srcset}${sizes}${altAttr}${titleAttr}${widthAttr}${heightAttr}
+        class="rounded-lg border border-black/8 max-w-full h-auto"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>`;
+  } catch (error) {
+    // Fallback to blog image component if optimization fails
+    console.warn(`[LydieContent] Failed to optimize image: ${src}`, error);
+    return blogImageComponent(props);
+  }
 }
 
-// Render content, processing code blocks with Shiki
-async function renderContentWithShiki(
-  node: ContentNode | any,
-): Promise<string> {
-  const serializer = new ShikiHTMLSerializer({ linkPrefix, linkResolver });
+// First pass: render content to get HTML and image list
+const { html, images } = await renderContent(content, {
+  linkPrefix,
+  linkResolver,
+  components: {
+    // Use default image component for first pass
+    image: blogImageComponent,
+  },
+});
 
-  // First, render everything using the standard builder
-  // But we need to handle code blocks specially
-  async function renderNode(n: ContentNode | any): Promise<string> {
-    if (n.type === "text") {
-      return renderMarks(n.text, n.marks, serializer);
-    }
-
-    if (!n.content || !Array.isArray(n.content)) {
-      return serializer.empty();
-    }
-
-    const children = await Promise.all(n.content.map(renderNode));
-
-    switch (n.type) {
-      case "doc":
-        return serializer.doc(children);
-      case "paragraph":
-        return serializer.paragraph(children);
-      case "heading":
-        return serializer.heading(n.attrs?.level || 1, children);
-      case "bulletList":
-        return serializer.bulletList(children);
-      case "orderedList":
-        return serializer.orderedList(children, n.attrs?.start);
-      case "listItem":
-        return serializer.listItem(children);
-      case "horizontalRule":
-        return serializer.horizontalRule();
-      case "blockquote":
-        return serializer.blockquote(children);
-      case "codeBlock": {
-        // Extract raw code text and process with Shiki
-        const rawCode = extractCodeText(n);
-        return await serializer.codeBlockWithShiki(
-          [rawCode],
-          n.attrs?.language,
-        );
-      }
-      case "customBlock":
-        return serializer.customBlock(
-          n.attrs?.name || "",
-          n.attrs?.properties || {},
-        );
-      case "documentComponent":
-        return serializer.customBlock(
-          n.attrs?.name || "",
-          n.attrs?.properties || {},
-        );
-      default:
-        return serializer.empty();
-    }
-  }
-
-  return await renderNode(node);
+// Create a map of optimized images
+const optimizedImages = new Map<string, string>();
+for (const image of images) {
+  optimizedImages.set(image.src, await astroImageComponent(image));
 }
 
-// Handle marks (bold, italic, links, etc.)
-function renderMarks(
-  text: string,
-  marks: any[] | undefined,
-  serializer: ShikiHTMLSerializer,
-): string {
-  if (!marks || marks.length === 0) {
-    return serializer.text(text);
-  }
-
-  return marks.reduce((wrapped: string, mark) => {
-    if (!mark || typeof mark !== "object" || !mark.type) {
-      return wrapped;
-    }
-
-    switch (mark.type) {
-      case "bold":
-        return serializer.bold(wrapped);
-      case "italic":
-        return serializer.italic(wrapped);
-      case "link":
-        return serializer.link(
-          wrapped,
-          mark.attrs?.href,
-          mark.attrs?.rel,
-          mark.attrs?.target,
-        );
-      case "internal-link":
-        return serializer.internalLink(
-          wrapped,
-          mark.attrs?.["document-id"],
-          mark.attrs?.["document-slug"],
-          mark.attrs?.["document-title"],
-        );
-      default:
-        return wrapped;
-    }
-  }, serializer.text(text));
+// Replace image placeholders in HTML with optimized versions
+let finalHtml = html;
+for (const [originalSrc, optimizedHtml] of optimizedImages) {
+  // Find and replace the blog image component output with optimized version
+  const escapedSrc = originalSrc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const blogPattern = new RegExp(
+    `<div class="my-6 flex justify-center">\\s*<img[^>]*src="${escapedSrc}"[^>]*/?>\\s*</div>`,
+    "g",
+  );
+  finalHtml = finalHtml.replace(blogPattern, optimizedHtml);
 }
-
-const html = await renderContentWithShiki(content);
 ---
 
-<div set:html={html} />
+<div set:html={finalHtml} />
