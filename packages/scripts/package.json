@@ -4,7 +4,7 @@
   "scripts": {
     "copy-integration-assets": "bun run src/copy-integration-assets.ts",
     "delete-user": "bun sst shell bun run src/delete-user.ts",
-    "cancel-onboarding-emails": "bun run src/cancel-onboarding-emails.ts"
+    "cancel-onboarding-emails": "bun sst shell bun run src/cancel-onboarding-emails.ts"
   },
   "dependencies": {
     "@lydie/core": "workspace:*",
