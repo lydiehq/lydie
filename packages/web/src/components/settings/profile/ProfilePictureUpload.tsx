@@ -29,7 +29,9 @@ export function ProfilePictureUpload({
     <Card className="p-4">
       <div className="flex flex-col gap-y-4">
         <div className="flex flex-col gap-y-1">
-          <label className="text-sm font-medium text-gray-900">Profile Picture</label>
+          <label htmlFor="profile-picture-input" className="text-sm font-medium text-gray-900">
+            Profile Picture
+          </label>
           <p className="text-xs text-gray-500">
             Upload a profile picture. Recommended size: 200x200 pixels. Max file size: 5MB.
           </p>
@@ -58,6 +60,7 @@ export function ProfilePictureUpload({
           </div>
           <div className="flex flex-col gap-y-2">
             <input
+              id="profile-picture-input"
               ref={fileInputRef}
               type="file"
               accept="image/*"

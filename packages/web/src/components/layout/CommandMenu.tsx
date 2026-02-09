@@ -12,12 +12,11 @@ import { type IntegrationMetadata, integrationMetadata } from "@lydie/integratio
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { type ComponentType, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
-  Button,
   Dialog,
   Header,
   Input,
@@ -89,7 +88,7 @@ export function CommandMenu() {
     }),
   );
 
-  const searchDocuments = searchData?.documents || [];
+  const searchDocuments = useMemo(() => searchData?.documents || [], [searchData?.documents]);
 
   const { contains } = useFilter({ sensitivity: "base" });
   const filter = (textValue: string, inputValue: string) => contains(textValue, inputValue);
@@ -291,7 +290,6 @@ export function CommandMenu() {
     currentDocumentId,
     deleteDocument,
     navigate,
-    organization.id,
     organization.slug,
     publishDocument,
   ]);

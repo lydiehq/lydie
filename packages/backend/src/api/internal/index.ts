@@ -1,6 +1,6 @@
-import * as Sentry from "@sentry/node";
 import { authClient } from "@lydie/core/auth";
 import { VisibleError } from "@lydie/core/error";
+import * as Sentry from "@sentry/node";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 

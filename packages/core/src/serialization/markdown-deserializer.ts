@@ -3,7 +3,7 @@ export interface MarkdownDeserializeOptions {}
 // Deserialize Markdown string to TipTap JSON
 export function deserializeFromMarkdown(
   markdown: string,
-  options: MarkdownDeserializeOptions = {},
+  _options: MarkdownDeserializeOptions = {},
 ): any {
   const lines = markdown.split("\n");
   const content: any[] = [];

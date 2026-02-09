@@ -44,8 +44,11 @@ export function InviteDialog({ isOpen, onOpenChange, invitationForm }: InviteDia
                 name="role"
                 children={(field: any) => (
                   <div className="flex flex-col gap-y-1">
-                    <label className="text-sm font-medium text-gray-900">Role</label>
+                    <label htmlFor="role-select" className="text-sm font-medium text-gray-900">
+                      Role
+                    </label>
                     <select
+                      id="role-select"
                       className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value as "member" | "admin")}

@@ -1,5 +1,4 @@
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import type { Message } from "./demo/AssistantDemo";

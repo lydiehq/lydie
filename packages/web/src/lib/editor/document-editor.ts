@@ -93,7 +93,7 @@ export function useDocumentEditor({
     return user
       ? { name: user.name, color: getUserColor(user.id) }
       : { name: "Anonymous", color: "#808080" };
-  }, [user?.id, user?.name, user]);
+  }, [user]);
 
   const slashMenuSuggestion = createSlashMenuSuggestion(
     fileInputRef as React.RefObject<HTMLInputElement | null>,

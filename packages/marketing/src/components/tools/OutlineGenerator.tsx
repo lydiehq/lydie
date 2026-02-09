@@ -225,7 +225,7 @@ export function OutlineGenerator() {
         <div className="lg:col-span-2 space-y-4">
           {/* Outline Type Selection */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">Outline Type</label>
+            <div className="block text-sm font-medium text-gray-900">Outline Type</div>
             <div className="flex gap-2">
               <button
                 onClick={() => setOutlineType("article")}
@@ -262,8 +262,11 @@ export function OutlineGenerator() {
 
           {/* Topic Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">Topic *</label>
+            <label htmlFor="topic-input" className="block text-sm font-medium text-gray-900">
+              Topic *
+            </label>
             <input
+              id="topic-input"
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
@@ -279,10 +282,11 @@ export function OutlineGenerator() {
 
           {/* Context Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">
+            <label htmlFor="context-textarea" className="block text-sm font-medium text-gray-900">
               Additional Context (Optional)
             </label>
             <textarea
+              id="context-textarea"
               value={context}
               onChange={(e) => setContext(e.target.value)}
               placeholder="Add any specific requirements, target audience, key points to include, or other details..."
@@ -329,10 +333,10 @@ export function OutlineGenerator() {
 
         {/* Right column: Examples */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
             <SparkleRegular className="w-4 h-4" />
             Try an Example
-          </label>
+          </div>
           <div className="flex flex-col gap-2">
             {EXAMPLE_TOPICS.map((example) => (
               <button
@@ -354,7 +358,7 @@ export function OutlineGenerator() {
         {outline && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-900">Generated Outline</label>
+              <span className="block text-sm font-medium text-gray-900">Generated Outline</span>
               <div className="flex gap-2">
                 <button
                   onClick={handleCopy}

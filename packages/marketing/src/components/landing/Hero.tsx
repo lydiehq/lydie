@@ -1,6 +1,3 @@
-import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
-
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
 import styles from "./Hero.module.css";
@@ -13,83 +10,6 @@ interface HeroProps {
   imageAlt: string;
   imageWidth?: number;
   imageHeight?: number;
-}
-
-function DemoButton() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleDemoClick = async () => {
-    setIsLoading(true);
-
-    // Mock loading for 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setIsLoading(false);
-  };
-
-  return (
-    <div className={`relative group ${styles.demoButtonContainer}`}>
-      <div className={styles.demoGlow}></div>
-      <div className={styles.demoParticles}>
-        <div className={styles.demoRotate}>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className={styles.demoAngle}>
-              <div className={styles.demoSize}>
-                <div className={styles.demoPosition}>
-                  <div className={styles.demoParticle} />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <button
-        onClick={handleDemoClick}
-        disabled={isLoading}
-        className="rounded-full size-[13px] bg-green-300 hover:bg-green-200 transition-colors duration-100 cursor-pointer relative z-10 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              key="loader"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1, rotate: 360 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              transition={{
-                opacity: { duration: 0.2 },
-                scale: { duration: 0.2 },
-                rotate: {
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: "linear",
-                },
-              }}
-              className="size-[8px] border-2 border-green-800 border-t-transparent rounded-full"
-            />
-          ) : (
-            <motion.svg
-              key="icon"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.2 }}
-              xmlns="http://www.w3.org/2000/svg"
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              className="size-[11px] text-green-800 -rotate-45"
-            >
-              <path fill="currentColor" d="m18 9l-6-6l-6 6zm0 6l-6 6l-6-6z"></path>
-            </motion.svg>
-          )}
-        </AnimatePresence>
-      </button>
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md shadow-lg whitespace-nowrap pointer-events-none z-50">
-        {isLoading ? "Loading..." : "Click to demo!"}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></div>
-      </div>
-    </div>
-  );
 }
 
 export function Hero({

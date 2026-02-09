@@ -21,8 +21,8 @@ const RESOURCE_TYPES = [
 ] as const;
 
 export function WordPressForm({
-  connectionId,
-  organizationId,
+  connectionId: _connectionId,
+  organizationId: _organizationId,
   onCreate,
   onCancel,
 }: WordPressFormProps) {

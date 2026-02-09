@@ -20,7 +20,7 @@ export type ShopifyFormProps = {
 
 export function ShopifyForm({
   connectionId,
-  organizationId,
+  organizationId: _organizationId,
   onCreate,
   onCancel,
 }: ShopifyFormProps) {

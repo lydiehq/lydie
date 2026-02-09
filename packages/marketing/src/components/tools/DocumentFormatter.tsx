@@ -58,7 +58,9 @@ const EXAMPLE_DOCUMENTS: ExampleDocument[] = [
 export function DocumentFormatter() {
   const [content, setContent] = useState("");
   const [format, setFormat] = useState<"markdown" | "html" | "plain">("markdown");
-  const [style, setStyle] = useState<"professional" | "academic" | "casual" | "structured">("professional");
+  const [style, setStyle] = useState<"professional" | "academic" | "casual" | "structured">(
+    "professional",
+  );
   const [formattedContent, setFormattedContent] = useState("");
   const [isFormatting, setIsFormatting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,9 +140,7 @@ export function DocumentFormatter() {
       }
     } catch (err) {
       console.error("Formatting error:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to format document. Please try again.",
-      );
+      setError(err instanceof Error ? err.message : "Failed to format document. Please try again.");
 
       if (typeof window !== "undefined" && (window as any).gtag) {
         (window as any).gtag("event", "formatting_error", {
@@ -213,8 +213,10 @@ export function DocumentFormatter() {
         <div className="lg:col-span-2 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-900">Output Format</label>
-              <div className="flex flex-wrap gap-2">
+              <label htmlFor="output-format" className="block text-sm font-medium text-gray-900">
+                Output Format
+              </label>
+              <div id="output-format" className="flex flex-wrap gap-2">
                 {(["markdown", "html", "plain"] as const).map((f) => (
                   <button
                     key={f}
@@ -232,8 +234,11 @@ export function DocumentFormatter() {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-900">Style</label>
+              <label htmlFor="style-select" className="block text-sm font-medium text-gray-900">
+                Style
+              </label>
               <select
+                id="style-select"
                 value={style}
                 onChange={(e) => setStyle(e.target.value as typeof style)}
                 className="w-full p-3 ring ring-black/4 rounded-lg text-sm shadow-surface bg-white"
@@ -247,10 +252,11 @@ export function DocumentFormatter() {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">
+            <label htmlFor="content-textarea" className="block text-sm font-medium text-gray-900">
               Content to Format *
             </label>
             <textarea
+              id="content-textarea"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Paste your messy notes, rough draft, or unformatted content here..."
@@ -294,10 +300,10 @@ export function DocumentFormatter() {
         </div>
 
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
             <SparkleRegular className="w-4 h-4" />
             Try an Example
-          </label>
+          </div>
           <div className="flex flex-col gap-2">
             {EXAMPLE_DOCUMENTS.map((example) => (
               <button
@@ -319,7 +325,7 @@ export function DocumentFormatter() {
         {formattedContent && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-900">Formatted Result</label>
+              <span className="block text-sm font-medium text-gray-900">Formatted Result</span>
               <div className="flex gap-2">
                 <button
                   onClick={handleCopy}
@@ -353,9 +359,9 @@ export function DocumentFormatter() {
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-blue-900">How it works</h3>
               <p className="text-sm text-blue-800">
-                Paste your unformatted or messy content, choose your desired output format and style,
-                and let AI transform it into a beautifully structured document. The formatter preserves
-                your original meaning while improving readability and organization.
+                Paste your unformatted or messy content, choose your desired output format and
+                style, and let AI transform it into a beautifully structured document. The formatter
+                preserves your original meaning while improving readability and organization.
               </p>
             </div>
           </div>

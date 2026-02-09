@@ -84,7 +84,7 @@ export const wordpressIntegration: Integration = {
         };
       }
 
-      const user = (await response.json()) as WpUser;
+      (await response.json()) as WpUser;
 
       return { valid: true };
     } catch (error: any) {

@@ -93,7 +93,7 @@ export function SearchInDocumentTool({ tool, className = "" }: SearchInDocumentT
         className="group flex items-center gap-x-2 truncate relative text-gray-500 hover:text-gray-700"
         slot="trigger"
       >
-        <SearchIcon className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
+        <SearchFilled className="size-3 group-hover:opacity-0 transition-opacity duration-200" />
         <ChevronRightRegular className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">
           Read {topResult?.heading ? `"${topResult.heading}"` : "section"}

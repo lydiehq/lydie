@@ -1,6 +1,6 @@
 export interface TextDeserializeOptions {}
 
-export function deserializeFromText(text: string, options: TextDeserializeOptions = {}): any {
+export function deserializeFromText(text: string, _options: TextDeserializeOptions = {}): any {
   const lines = text.split("\n");
   const content: any[] = [];
   let currentParagraph: any = null;

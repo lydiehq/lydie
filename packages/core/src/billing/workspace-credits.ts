@@ -1,5 +1,5 @@
 import { db, schema } from "@lydie/database";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import { stripe, PLAN_CONFIG, type PlanType } from "./config";
 
@@ -249,7 +249,6 @@ export async function checkAndConsumeCredits(
 
   // 3. Get workspace plan for upgrade messaging
   const billing = await getWorkspaceBilling(organizationId);
-  const planConfig = PLAN_CONFIG[billing?.plan as PlanType] || PLAN_CONFIG.free;
 
   // 4. Check hard limit (all tiers have hard limits - no overages)
   if (creditsAvailable < creditsRequested) {

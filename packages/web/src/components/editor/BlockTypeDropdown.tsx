@@ -5,7 +5,7 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { DropdownItem } from "@lydie/ui/components/generic/ListBox";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { useEffect, useState } from "react";
-import { ListBox, Select as AriaSelect, SelectValue } from "react-aria-components";
+import { ListBox, Select as AriaSelect } from "react-aria-components";
 
 import { blockFormattingActions, getActiveBlockType } from "@/lib/editor/formatting-actions";
 

@@ -23,8 +23,8 @@ export interface SearchFieldProps extends AriaSearchFieldProps {
 
 export function SearchField({
   label,
-  description,
-  errorMessage,
+  description: _description,
+  errorMessage: _errorMessage,
   placeholder,
   inputRef,
   ...props

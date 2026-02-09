@@ -25,7 +25,12 @@ export type GitHubFormProps = {
   onCancel: () => void;
 };
 
-export function GitHubForm({ connectionId, organizationId, onCreate, onCancel }: GitHubFormProps) {
+export function GitHubForm({
+  connectionId,
+  organizationId: _organizationId,
+  onCreate,
+  onCancel,
+}: GitHubFormProps) {
   const { createClient } = useAuthenticatedApi();
 
   const { data, isLoading } = useTSQQuery<{
@@ -116,8 +121,11 @@ export function GitHubForm({ connectionId, organizationId, onCreate, onCancel }:
           name="repositoryId"
           children={(field) => (
             <div className="flex flex-col gap-y-1">
-              <label className="text-sm font-medium text-gray-900">Repository</label>
+              <label htmlFor="repository-select" className="text-sm font-medium text-gray-900">
+                Repository
+              </label>
               <select
+                id="repository-select"
                 className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}

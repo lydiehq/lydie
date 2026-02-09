@@ -32,22 +32,6 @@ export type Template = {
 let allTemplatesCache: Template[] | null = null;
 let allTemplatesCachePromise: Promise<Template[]> | null = null;
 
-// Generate full path for nested categories
-function generateCategoryPath(
-  category: { id: string; slug: string; parentId: string | null },
-  allCategories: { id: string; slug: string; parentId: string | null }[],
-): string {
-  const pathSegments: string[] = [];
-  let current: typeof category | undefined = category;
-
-  while (current) {
-    pathSegments.unshift(current.slug);
-    current = allCategories.find((cat) => cat.id === current?.parentId);
-  }
-
-  return `/templates/categories/${pathSegments.join("/")}`;
-}
-
 export async function getTemplate(slug: string): Promise<Template | undefined> {
   const [template] = await db
     .select()

@@ -23,7 +23,7 @@ export function PreviewPlayButton({ videoRef }: { videoRef: RefObject<HTMLVideoE
     } else {
       videoRef.current.pause();
     }
-  }, [playback.isPlaying]);
+  }, [playback.isPlaying, videoRef]);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -44,7 +44,7 @@ export function PreviewPlayButton({ videoRef }: { videoRef: RefObject<HTMLVideoE
       video.removeEventListener("timeupdate", updateProgress);
       video.removeEventListener("loadedmetadata", updateProgress);
     };
-  }, []);
+  }, [videoRef]);
 
   const progressPercent = (playback.progress / playback.duration) * 100;
 

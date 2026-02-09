@@ -231,7 +231,7 @@ export function TitleGenerator() {
         <div className="lg:col-span-2 space-y-4">
           {/* Content Type Selection */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">Content Type</label>
+            <div className="block text-sm font-medium text-gray-900">Content Type</div>
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setContentType("blog")}
@@ -278,7 +278,7 @@ export function TitleGenerator() {
 
           {/* Tone Selection */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">Tone</label>
+            <div className="block text-sm font-medium text-gray-900">Tone</div>
             <div className="flex gap-2 flex-wrap">
               {["professional", "friendly", "engaging", "informative", "exciting"].map((t) => (
                 <button
@@ -298,8 +298,14 @@ export function TitleGenerator() {
 
           {/* Description Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">Content Description *</label>
+            <label
+              htmlFor="description-textarea"
+              className="block text-sm font-medium text-gray-900"
+            >
+              Content Description *
+            </label>
             <textarea
+              id="description-textarea"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what your content is about. Be specific to get better title suggestions."
@@ -319,8 +325,11 @@ export function TitleGenerator() {
 
           {/* Keywords Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">Keywords (Optional)</label>
+            <label htmlFor="keywords-input" className="block text-sm font-medium text-gray-900">
+              Keywords (Optional)
+            </label>
             <input
+              id="keywords-input"
               type="text"
               value={keywords}
               onChange={(e) => setKeywords(e.target.value)}
@@ -363,10 +372,10 @@ export function TitleGenerator() {
 
         {/* Right column: Examples */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
             <SparkleRegular className="w-4 h-4" />
             Try an Example
-          </label>
+          </div>
           <div className="flex flex-col gap-2">
             {EXAMPLE_PROMPTS.map((example) => (
               <button

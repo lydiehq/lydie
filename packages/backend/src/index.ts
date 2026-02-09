@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/node";
 import { serve } from "@hono/node-server";
+import * as Sentry from "@sentry/node";
 
 import { app, injectWebSocket } from "./api";
 

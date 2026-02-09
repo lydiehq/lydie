@@ -516,7 +516,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
     credentials: OAuthCredentials,
     state: string,
     redirectUri: string,
-    params?: Record<string, string>,
+    _params?: Record<string, string>,
   ): string {
     const scopes = this.getOAuthConfig().scopes.join(" ");
     const paramsObj = new URLSearchParams({

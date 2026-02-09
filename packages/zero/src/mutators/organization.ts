@@ -17,7 +17,11 @@ export const organizationMutators = {
       color: z.string().optional(),
       onboardingDocId: z.string().optional(),
     }),
-    async ({ tx, ctx, args: { id, name, slug, logo, metadata, color, onboardingDocId } }) => {
+    async ({
+      tx,
+      ctx,
+      args: { id, name, slug, logo, metadata, color, onboardingDocId: _onboardingDocId },
+    }) => {
       isAuthenticated(ctx);
 
       // Client generates unique slug (baseSlug-createId) so redirect goes to correct workspace

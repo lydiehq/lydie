@@ -87,6 +87,16 @@ function RouteLayout() {
     setIsSidebarCollapsed(size === COLLAPSED_SIZE);
   }, [size, setIsSidebarCollapsed]);
 
+  const toggleSidebar = useCallback(() => {
+    if (!sidebarPanelRef.current) return;
+    if (sidebarPanelRef.current.isCollapsed()) {
+      sidebarPanelRef.current.expand();
+    } else {
+      sidebarPanelRef.current.collapse();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Listen for toggle-sidebar event from child components
   useEffect(() => {
     const handleToggleSidebar = () => {
@@ -96,7 +106,7 @@ function RouteLayout() {
     return () => {
       window.removeEventListener("toggle-sidebar", handleToggleSidebar);
     };
-  }, []);
+  }, [toggleSidebar]);
   const navigate = useNavigate();
   const search = Route.useSearch();
   const params = Route.useParams();
@@ -146,15 +156,6 @@ function RouteLayout() {
         search: {},
         replace: true,
       });
-    }
-  };
-
-  const toggleSidebar = () => {
-    if (!sidebarPanelRef.current) return;
-    if (sidebarPanelRef.current.isCollapsed()) {
-      sidebarPanelRef.current.expand();
-    } else {
-      sidebarPanelRef.current.collapse();
     }
   };
 

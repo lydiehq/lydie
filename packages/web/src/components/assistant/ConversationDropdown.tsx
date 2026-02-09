@@ -163,7 +163,6 @@ export function ConversationDropdown({
                     return <SelectItem id={`empty-${Math.random()}`} textValue="" />;
                   }
                   const title = getConversationTitle(conversation);
-                  const isSelected = conversation.id === conversationId;
 
                   return (
                     <ListBoxItem

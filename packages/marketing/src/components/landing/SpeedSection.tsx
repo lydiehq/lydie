@@ -32,7 +32,7 @@ export function SpeedSection() {
       setActiveDoc((prev) => (prev + 1) % docs.length);
     }, 2500);
     return () => clearInterval(interval);
-  }, []);
+  }, [docs.length]);
 
   return (
     <div className="relative max-w-4xl mx-auto">

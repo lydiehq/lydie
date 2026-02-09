@@ -123,7 +123,7 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     return `| ${children.join(" | ")} |`;
   }
 
-  tableHeader(children: string[], colspan?: number, rowspan?: number): string {
+  tableHeader(children: string[], colspan?: number, _rowspan?: number): string {
     // For markdown, we'll just render the content
     // Colspan/rowspan are not well-supported in standard markdown
     // If colspan > 1, we'll add empty cells to represent it
@@ -135,7 +135,7 @@ export class MarkdownSerializer implements NodeBuilder<string> {
     return content;
   }
 
-  tableCell(children: string[], colspan?: number, rowspan?: number): string {
+  tableCell(children: string[], colspan?: number, _rowspan?: number): string {
     // For markdown, we'll just render the content
     // Colspan/rowspan are not well-supported in standard markdown
     // If colspan > 1, we'll add empty cells to represent it

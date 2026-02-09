@@ -108,6 +108,7 @@ export const test = baseTest.extend<
   { workerStorageState: string; workerData: WorkerData }
 >({
   workerData: [
+    // eslint-disable-next-line no-empty-pattern
     async ({}, use, workerInfo) => {
       const id = workerInfo.workerIndex;
       const orgId = createId();

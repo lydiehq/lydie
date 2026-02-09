@@ -45,7 +45,7 @@ export class PlainTextSerializer implements NodeBuilder<string> {
     return children.join("\n");
   }
 
-  taskItem(children: string[], checked?: boolean): string {
+  taskItem(children: string[], _checked?: boolean): string {
     return children.join("\n");
   }
 

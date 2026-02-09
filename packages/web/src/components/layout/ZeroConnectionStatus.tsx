@@ -97,6 +97,18 @@ export function ZeroConnectionStatus() {
           config.clickable && "cursor-pointer hover:opacity-80",
         )}
         onClick={config.clickable ? handleRetry : undefined}
+        onKeyDown={
+          config.clickable
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleRetry();
+                }
+              }
+            : undefined
+        }
+        role={config.clickable ? "button" : undefined}
+        tabIndex={config.clickable ? 0 : undefined}
         title={config.tooltip}
       >
         <Icon className={clsx("size-4 shrink-0", config.color, isAnimating && "animate-spin")} />

@@ -770,7 +770,7 @@ export const githubIntegration: GitHubIntegrationExtended = {
     credentials: OAuthCredentials,
     state: string,
     redirectUri: string,
-    params?: Record<string, string>,
+    _params?: Record<string, string>,
   ): string {
     const appSlug = Resource.GitHubAppSlug.value;
     if (!appSlug) {
