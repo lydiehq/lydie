@@ -5,14 +5,16 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
 import { DemoWithSelector } from "../../components/landing/DemoWithSelector";
+import { FeatureSection } from "../../components/landing/FeatureSection";
 import "../../styles/grainy-gradient.css";
 import { CTASection } from "../../components/landing/CTASection";
 import Divider from "../../components/landing/Divider.astro";
 import { SectionHeader } from "../../components/landing/SectionHeader";
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
 import { FAQSection } from "../../components/tools/FAQSection";
-import { getTemplate } from "../../data/templates";
+import { getTemplatesByIds } from "../../data/templates";
 import { useCases, type UseCase, getUseCase } from "../../data/use-cases";
+import type { DemoState } from "../../components/landing/DemoStateSelector";
 import { Heading } from "../../components/generic/Heading";
 
 export function getStaticPaths() {
@@ -33,18 +35,18 @@ const {
   metaDescription,
   title,
   description,
-  content,
   faqs,
   demoStates,
   ctaText,
-  templateSlugs,
+  templates: templateIds,
+  sections,
 } = useCase;
 
-// Fetch templates for this use case
-const templates = templateSlugs
-  ? await Promise.all(templateSlugs.map((slug: string) => getTemplate(slug)))
+// Fetch templates for this use case using efficient batch query
+const fetchedTemplates = templateIds?.length
+  ? await getTemplatesByIds(templateIds)
   : [];
-const validTemplates = templates.filter(
+const validTemplates = fetchedTemplates.filter(
   (t): t is NonNullable<typeof t> => t !== undefined,
 );
 ---
@@ -81,20 +83,25 @@ const validTemplates = templates.filter(
       states={demoStates}
       initialState={demoStates[0]}
     />
-    <div class="max-w-xl mx-auto flex flex-col gap-y-8">
-      <div class="prose mx-auto">
-        {
-          content.map((paragraph: string, index: number) => (
-            <p
-              class="fade-in-element"
-              style={`animation-delay: ${0.4 + index * 0.1}s;`}
-            >
-              {paragraph}
-            </p>
-          ))
-        }
-      </div>
-    </div>
+
+    <!-- Feature Sections -->
+    {
+      sections && sections.length > 0 && (
+        <div class="w-full space-y-16 md:space-y-24">
+          {sections.map((section: { illustration: DemoState; title: string; content: string; featureSlug: string }, index: number) => (
+            <FeatureSection
+              client:load
+              illustration={section.illustration}
+              title={section.title}
+              content={section.content}
+              featureSlug={section.featureSlug}
+              reverse={index % 2 === 1}
+            />
+          ))}
+        </div>
+      )
+    }
+
     <Divider />
     <section class="flex flex-col md:flex-row gap-8 w-full">
       <SectionHeader
@@ -136,21 +143,3 @@ const validTemplates = templates.filter(
   </Container>
   <CTASection client:load />
 </Layout>
-
-<style>
-  @keyframes fade-in-up {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .fade-in-element {
-    animation: fade-in-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    opacity: 0;
-  }
-</style>

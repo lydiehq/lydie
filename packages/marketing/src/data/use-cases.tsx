@@ -7,6 +7,13 @@ export interface FAQItem {
   a: React.ReactNode;
 }
 
+export interface UseCaseSection {
+  illustration: DemoState;
+  title: string;
+  content: string;
+  featureSlug: string;
+}
+
 export interface UseCase {
   slug: string;
   title: string;
@@ -21,8 +28,8 @@ export interface UseCase {
     href: string;
     text: string;
   };
-  templateSlugs?: string[];
   templates?: string[];
+  sections?: UseCaseSection[];
 }
 
 export const useCases: UseCase[] = [
@@ -77,8 +84,30 @@ export const useCases: UseCase[] = [
     ],
     demoStates: ["search", "ai-assistant", "linking"],
     ctaText: "Start for free",
-    templateSlugs: ["personal-notes", "reading-list", "book-notes"],
     templates: ["CNidcw5nia3iLKRh", "ottPzeqZAhnbLS9c", "Qt6PaUkoEJcvjmRz"],
+    sections: [
+      {
+        illustration: "search",
+        title: "Find anything in seconds",
+        content:
+          "No more digging through folders or wondering where you saved that note. With powerful search, you can find exactly what you need, when you need it. Your knowledge is always at your fingertips.",
+        featureSlug: "search",
+      },
+      {
+        illustration: "linking",
+        title: "Connect your ideas",
+        content:
+          "Link related ideas together to build connections and discover patterns. See how your thoughts connect over time and build a web of knowledge that grows with you.",
+        featureSlug: "linking",
+      },
+      {
+        illustration: "ai-assistant",
+        title: "AI-powered insights",
+        content:
+          "AI features help you discover connections you might have missed and summarize complex information. Get help organizing and making sense of your knowledge.",
+        featureSlug: "ai-assistant",
+      },
+    ],
   },
   {
     slug: "company-wiki",
@@ -117,8 +146,30 @@ export const useCases: UseCase[] = [
     ],
     demoStates: ["collaboration", "search", "linking"],
     ctaText: "Create company wiki",
-    templateSlugs: ["company-handbook", "employee-onboarding", "meeting-notes"],
     templates: ["sF6JPmcYXwNueTcE", "bBSnZw5i6gSAvxzF", "WZbG32PZrEduBMRf"],
+    sections: [
+      {
+        illustration: "collaboration",
+        title: "Work together in real-time",
+        content:
+          "Multiple team members can edit documents simultaneously. See who's working on what with live cursors and presence indicators. Build your wiki together, seamlessly.",
+        featureSlug: "collaborative-editing",
+      },
+      {
+        illustration: "search",
+        title: "Find information instantly",
+        content:
+          "Teams find what they need without digging through emails or chat. New hires get up to speed faster when company knowledge is documented and easy to find.",
+        featureSlug: "search",
+      },
+      {
+        illustration: "linking",
+        title: "Connect related documentation",
+        content:
+          "Link between related docs, specs, and processes. Create a web of knowledge that helps people discover related information and understand the full context.",
+        featureSlug: "linking",
+      },
+    ],
   },
   {
     slug: "blog-cms",
@@ -160,13 +211,28 @@ export const useCases: UseCase[] = [
       href: "https://lydie.co/blog",
       text: "See our blog",
     },
-    templateSlugs: ["blog-post", "content-calendar", "editorial-calendar"],
     templates: ["5B4W3XNqhRmBXpvc", "oLVr26yaHG7Cvv8f", "xQc3GpEaMCZxsBaq"],
+    sections: [
+      {
+        illustration: "linking",
+        title: "Link posts and content",
+        content:
+          "Create internal links between related posts, series, and content hubs. Keep readers engaged by surfacing relevant content and building topic clusters.",
+        featureSlug: "linking",
+      },
+      {
+        illustration: "ai-assistant",
+        title: "AI-assisted writing",
+        content:
+          "Get help brainstorming topics, improving headlines, and polishing your drafts. The AI assistant helps you write better content faster.",
+        featureSlug: "ai-assistant",
+      },
+    ],
   },
   {
-    slug: "researchers",
-    title: "Researchers",
-    metaTitle: "Research Documentation & Notes - Lydie",
+    slug: "research",
+    title: "Research",
+    metaTitle: "The best note-taking app for researchers",
     metaDescription:
       "Organize your research, synthesize findings, and build knowledge that compounds. Built for academics, scientists, and independent researchers.",
     description:
@@ -202,8 +268,37 @@ export const useCases: UseCase[] = [
     ],
     demoStates: ["ai-assistant", "search", "linking", "collaboration"],
     ctaText: "Start researching",
-    templateSlugs: ["research-notes", "literature-review", "research-proposal"],
     templates: ["7YayZjGVYJYQk3Nq", "5S6qdYa8bK66yRMh", "rw131RYawq35CUas"],
+    sections: [
+      {
+        illustration: "ai-assistant",
+        title: "AI research assistant",
+        content:
+          "Summarize long papers, extract key insights, and synthesize findings across multiple sources. Get help understanding complex concepts and discovering connections.",
+        featureSlug: "ai-assistant",
+      },
+      {
+        illustration: "search",
+        title: "Find any source instantly",
+        content:
+          "Find that paper you read six months ago, locate a specific data point, or rediscover an insight you had forgotten. Your research becomes a living, searchable body of knowledge.",
+        featureSlug: "search",
+      },
+      {
+        illustration: "linking",
+        title: "Connect research concepts",
+        content:
+          "Link related concepts across your knowledge base to discover patterns and connections you might have missed. Build a web of knowledge that compounds over time.",
+        featureSlug: "linking",
+      },
+      {
+        illustration: "collaboration",
+        title: "Collaborate with your team",
+        content:
+          "Work with co-authors, advisors, or research teams. Share specific pages or keep your entire workspace open. Build on shared knowledge together.",
+        featureSlug: "collaborative-editing",
+      },
+    ],
   },
 ];
 

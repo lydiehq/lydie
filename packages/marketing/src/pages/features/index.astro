@@ -6,25 +6,11 @@ import { ArrowRightRegular } from "@fluentui/react-icons";
 import { GradientOutline } from "../../components/generic/GradientOutline";
 import { SectionHeader } from "../../components/landing/SectionHeader";
 import { CTASection } from "../../components/landing/CTASection";
+import { features, type Feature } from "../../data/features";
 
 const title = "Features - Lydie";
 const description =
   "Discover all the powerful features that make Lydie the perfect writing and collaboration platform for modern teams.";
-
-const features = [
-  {
-    title: "Real-Time Collaborative Editing",
-    description:
-      "Work together seamlessly with your team. See changes as they happen, with live cursors, instant updates, and built-in communication tools.",
-    href: "/features/collaborative-editing",
-  },
-  {
-    title: "AI Assistant Built-In",
-    description:
-      "Get writing assistance, generate content, and chat with your documents using our integrated AI features. Built directly into the editor for seamless help.",
-    href: "/features/ai-assistant",
-  },
-];
 ---
 
 <Layout title={title} description={description}>
@@ -42,10 +28,10 @@ const features = [
     <div class="max-w-6xl mx-auto w-full">
       <div class="grid md:grid-cols-3 gap-8">
         {
-          features.map((feature) => {
+          features.map((feature: Feature) => {
             return (
               <a
-                href={feature.href}
+                href={`/features/${feature.slug}`}
                 class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
               >
                 <div class="flex flex-col gap-y-2">
