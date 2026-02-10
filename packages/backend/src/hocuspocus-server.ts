@@ -5,12 +5,13 @@ import { createId } from "@lydie/core/id";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 import { db } from "@lydie/database";
 import { documentVersionsTable, documentsTable, membersTable } from "@lydie/database/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import * as Y from "yjs";
 
 // Track last version creation time per document
 const lastVersionTime = new Map<string, number>();
 const VERSION_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes minimum between auto-versions
+const MAX_VERSIONS_PER_DOCUMENT = 100; // Keep only the most recent 100 versions
 
 async function verifyDocumentAccess(documentId: string, userId: string): Promise<boolean> {
   try {
@@ -105,6 +106,28 @@ export const hocuspocus = new Hocuspocus({
               createdAt: new Date(),
               updatedAt: new Date(),
             });
+
+            // Clean up old versions to prevent unbounded growth
+            const versionsToDelete = await db
+              .select({ id: documentVersionsTable.id })
+              .from(documentVersionsTable)
+              .where(eq(documentVersionsTable.documentId, documentName))
+              .orderBy(desc(documentVersionsTable.createdAt))
+              .offset(MAX_VERSIONS_PER_DOCUMENT);
+
+            if (versionsToDelete.length > 0) {
+              await db
+                .delete(documentVersionsTable)
+                .where(
+                  and(
+                    eq(documentVersionsTable.documentId, documentName),
+                    inArray(
+                      documentVersionsTable.id,
+                      versionsToDelete.map((v) => v.id),
+                    ),
+                  ),
+                );
+            }
 
             lastVersionTime.set(documentName, now);
           } catch (error) {
