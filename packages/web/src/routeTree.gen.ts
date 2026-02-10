@@ -30,6 +30,7 @@ import { Route as _authWOrganizationSlugSettingsComponentsRouteImport } from './
 import { Route as _authWOrganizationSlugSettingsBillingRouteImport } from './routes/__auth/w/$organizationSlug/settings/billing'
 import { Route as _authWOrganizationSlugSettingsAiRouteImport } from './routes/__auth/w/$organizationSlug/settings/ai'
 import { Route as _authWOrganizationSlugSettingsAdminRouteImport } from './routes/__auth/w/$organizationSlug/settings/admin'
+import { Route as _authWOrganizationSlugIdHistoryRouteImport } from './routes/__auth/w/$organizationSlug/$id/history'
 import { Route as _authWOrganizationSlugSettingsTemplatesIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/templates/index'
 import { Route as _authWOrganizationSlugSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/index'
 import { Route as _authWOrganizationSlugAssistantChatIdIndexRouteImport } from './routes/__auth/w/$organizationSlug/assistant/$chatId/index'
@@ -156,6 +157,12 @@ const _authWOrganizationSlugSettingsAdminRoute =
     path: '/admin',
     getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
+const _authWOrganizationSlugIdHistoryRoute =
+  _authWOrganizationSlugIdHistoryRouteImport.update({
+    id: '/$id/history',
+    path: '/$id/history',
+    getParentRoute: () => _authWOrganizationSlugRouteRoute,
+  } as any)
 const _authWOrganizationSlugSettingsTemplatesIndexRoute =
   _authWOrganizationSlugSettingsTemplatesIndexRouteImport.update({
     id: '/templates/',
@@ -217,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantRouteWithChildren
   '/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
+  '/w/$organizationSlug/$id/history': typeof _authWOrganizationSlugIdHistoryRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -242,6 +250,7 @@ export interface FileRoutesByTo {
   '/auth': typeof LandingAuthIndexRoute
   '/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugIndexRoute
+  '/w/$organizationSlug/$id/history': typeof _authWOrganizationSlugIdHistoryRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -272,6 +281,7 @@ export interface FileRoutesById {
   '/__auth/w/$organizationSlug/assistant': typeof _authWOrganizationSlugAssistantRouteWithChildren
   '/__auth/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/__auth/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
+  '/__auth/w/$organizationSlug/$id/history': typeof _authWOrganizationSlugIdHistoryRoute
   '/__auth/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/__auth/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/__auth/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/assistant'
     | '/w/$organizationSlug/trash'
     | '/w/$organizationSlug/'
+    | '/w/$organizationSlug/$id/history'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
     | '/w/$organizationSlug/settings/billing'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/w/$organizationSlug/trash'
     | '/w/$organizationSlug'
+    | '/w/$organizationSlug/$id/history'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
     | '/w/$organizationSlug/settings/billing'
@@ -356,6 +368,7 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationSlug/assistant'
     | '/__auth/w/$organizationSlug/trash'
     | '/__auth/w/$organizationSlug/'
+    | '/__auth/w/$organizationSlug/$id/history'
     | '/__auth/w/$organizationSlug/settings/admin'
     | '/__auth/w/$organizationSlug/settings/ai'
     | '/__auth/w/$organizationSlug/settings/billing'
@@ -529,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationSlugSettingsAdminRouteImport
       parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
+    '/__auth/w/$organizationSlug/$id/history': {
+      id: '/__auth/w/$organizationSlug/$id/history'
+      path: '/$id/history'
+      fullPath: '/w/$organizationSlug/$id/history'
+      preLoaderRoute: typeof _authWOrganizationSlugIdHistoryRouteImport
+      parentRoute: typeof _authWOrganizationSlugRouteRoute
+    }
     '/__auth/w/$organizationSlug/settings/templates/': {
       id: '/__auth/w/$organizationSlug/settings/templates/'
       path: '/templates'
@@ -670,6 +690,7 @@ interface _authWOrganizationSlugRouteRouteChildren {
   _authWOrganizationSlugAssistantRoute: typeof _authWOrganizationSlugAssistantRouteWithChildren
   _authWOrganizationSlugTrashRoute: typeof _authWOrganizationSlugTrashRoute
   _authWOrganizationSlugIndexRoute: typeof _authWOrganizationSlugIndexRoute
+  _authWOrganizationSlugIdHistoryRoute: typeof _authWOrganizationSlugIdHistoryRoute
   _authWOrganizationSlugIdIndexRoute: typeof _authWOrganizationSlugIdIndexRoute
 }
 
@@ -681,6 +702,7 @@ const _authWOrganizationSlugRouteRouteChildren: _authWOrganizationSlugRouteRoute
       _authWOrganizationSlugAssistantRouteWithChildren,
     _authWOrganizationSlugTrashRoute: _authWOrganizationSlugTrashRoute,
     _authWOrganizationSlugIndexRoute: _authWOrganizationSlugIndexRoute,
+    _authWOrganizationSlugIdHistoryRoute: _authWOrganizationSlugIdHistoryRoute,
     _authWOrganizationSlugIdIndexRoute: _authWOrganizationSlugIdIndexRoute,
   }
 

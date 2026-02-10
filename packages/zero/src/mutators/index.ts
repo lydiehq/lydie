@@ -5,6 +5,7 @@ import { apiKeyMutators } from "./api-key";
 import { assistantMutators } from "./assistant";
 import { documentMutators } from "./document";
 import { documentComponentMutators } from "./document-component";
+import { documentVersionMutators } from "./document-version";
 import { feedbackMutators } from "./feedback";
 import { integrationMutators } from "./integration";
 import { integrationConnectionMutators } from "./integration-connection";
@@ -17,6 +18,7 @@ import { userSettingsMutators } from "./user-settings";
 
 export const mutators = defineMutators({
   document: documentMutators,
+  documentVersion: documentVersionMutators,
   documentComponent: documentComponentMutators,
   assistantConversation: assistantMutators,
   apiKey: apiKeyMutators,

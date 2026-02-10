@@ -1,5 +1,3 @@
-import { AnimatePresence, motion } from "motion/react";
-
 interface Message {
   id: string;
   type: "user" | "assistant" | "thinking" | "tool-call" | "tool-result";
@@ -37,11 +35,9 @@ export function AssistantDemo({
   return (
     <div className={`flex flex-col h-full overflow-hidden ${className}`}>
       <div className={`flex-1 overflow-y-auto px-4 py-4 space-y-3 ${messagesClassName}`}>
-        <AnimatePresence mode="popLayout">
-          {visibleMessages.map((message) => (
-            <MessageComponent key={message.id} message={message} />
-          ))}
-        </AnimatePresence>
+        {visibleMessages.map((message) => (
+          <MessageComponent key={message.id} message={message} />
+        ))}
       </div>
 
       {showInput && (
@@ -93,69 +89,42 @@ export function AssistantDemo({
 function MessageComponent({ message }: { message: Message }) {
   if (message.type === "user") {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="flex justify-end"
-      >
+      <div className="flex justify-end">
         <div className="max-w-[85%] bg-gray-100 rounded-2xl rounded-tr-md px-4 py-3 text-sm text-gray-900 leading-relaxed">
           {message.content}
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (message.type === "assistant") {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="flex justify-start"
-      >
+      <div className="flex justify-start">
         <div className="max-w-[85%] bg-gray-50 rounded-2xl rounded-tl-md px-4 py-3 text-sm text-gray-700 leading-relaxed">
           {message.content}
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (message.type === "thinking") {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="flex justify-start"
-      >
+      <div className="flex justify-start">
         <div className="px-3 py-1.5 text-xs text-gray-400 font-medium">{message.content}</div>
-      </motion.div>
+      </div>
     );
   }
 
   if (message.type === "tool-call") {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="flex justify-start"
-      >
+      <div className="flex justify-start">
         <div className="max-w-[85%] bg-gray-50 rounded-lg px-3 py-2.5 flex items-center gap-3 border border-gray-200">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <span className="text-xs font-medium text-gray-500 shrink-0">{message.toolName}</span>
             <span className="text-sm text-gray-700 truncate">{message.content}</span>
           </div>
           {message.status === "complete" && (
-            <motion.svg
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            <svg
               className="size-4 shrink-0 text-green-600"
               fill="none"
               viewBox="0 0 24 24"
@@ -167,10 +136,10 @@ function MessageComponent({ message }: { message: Message }) {
                 strokeWidth={2.5}
                 d="M5 13l4 4L19 7"
               />
-            </motion.svg>
+            </svg>
           )}
         </div>
-      </motion.div>
+      </div>
     );
   }
 

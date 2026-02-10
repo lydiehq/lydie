@@ -8,6 +8,7 @@ import { assistantQueries } from "./assistant";
 import { billingQueries } from "./billing";
 import { componentQueries } from "./component";
 import { documentQueries } from "./document";
+import { documentVersionQueries } from "./document-version";
 import { integrationQueries } from "./integration";
 import { integrationActivityQueries } from "./integration-activity";
 import { integrationLinkQueries } from "./integration-link";
@@ -23,6 +24,7 @@ export type QueryContext = Context;
 
 export const queries = defineQueries({
   documents: documentQueries,
+  documentVersions: documentVersionQueries,
   components: componentQueries,
   apiKeys: apiKeyQueries,
   members: memberQueries,

@@ -26,3 +26,6 @@ export type { SlashCommandsOptions } from "./slash-commands";
 
 export { Placeholder } from "./placeholder";
 export type { PlaceholderOptions, PlaceholderAttributes } from "./placeholder";
+
+export { VersionHistory } from "./version-history";
+export type { VersionHistoryOptions, VersionHistoryStorage } from "./version-history";

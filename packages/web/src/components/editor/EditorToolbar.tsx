@@ -2,6 +2,7 @@ import type { QueryResultType } from "@rocicorp/zero";
 
 import {
   AddFilled,
+  ClockRegular,
   ColumnRegular,
   DeleteFilled,
   ListFilled,
@@ -42,6 +43,7 @@ import {
 import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
 import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { useAuth } from "@/context/auth.context";
+import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
@@ -71,6 +73,7 @@ type ActiveStates = {
 
 export function EditorToolbar({ editor, doc }: Props) {
   const { user } = useAuth();
+  const { organization } = useOrganization();
   const userIsAdmin = isAdmin(user);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeStates, setActiveStates] = useState<ActiveStates>({
@@ -518,6 +521,9 @@ export function EditorToolbar({ editor, doc }: Props) {
           size="sm"
         >
           {doc.published ? "Unpublish" : "Publish"}
+        </Button>
+        <Button intent="ghost" size="icon-sm" href={`/w/${organization?.slug}/${doc.id}/history`}>
+          <ClockRegular className="size-3.5" />
         </Button>
         <MenuTrigger>
           <Button intent="ghost" size="icon-sm" aria-label="Document Options">

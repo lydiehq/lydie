@@ -1,11 +1,16 @@
 import { Database } from "@hocuspocus/extension-database";
 import { Hocuspocus, onAuthenticatePayload } from "@hocuspocus/server";
 import { authClient } from "@lydie/core/auth";
+import { createId } from "@lydie/core/id";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 import { db } from "@lydie/database";
-import { documentsTable, membersTable } from "@lydie/database/schema";
-import { and, eq } from "drizzle-orm";
+import { documentVersionsTable, documentsTable, membersTable } from "@lydie/database/schema";
+import { and, desc, eq } from "drizzle-orm";
 import * as Y from "yjs";
+
+// Track last version creation time per document
+const lastVersionTime = new Map<string, number>();
+const VERSION_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes minimum between auto-versions
 
 async function verifyDocumentAccess(documentId: string, userId: string): Promise<boolean> {
   try {
@@ -58,8 +63,14 @@ export const hocuspocus = new Hocuspocus({
           return null;
         }
       },
-      store: async ({ documentName, state }) => {
+      store: async ({ documentName, state, context }) => {
         const base64State = Buffer.from(state).toString("base64");
+
+        const [document] = await db
+          .select({ title: documentsTable.title, organizationId: documentsTable.organizationId })
+          .from(documentsTable)
+          .where(eq(documentsTable.id, documentName))
+          .limit(1);
 
         await db
           .update(documentsTable)
@@ -68,6 +79,38 @@ export const hocuspocus = new Hocuspocus({
             updatedAt: new Date(),
           })
           .where(eq(documentsTable.id, documentName));
+
+        const now = Date.now();
+        const lastTime = lastVersionTime.get(documentName) || 0;
+        
+        if (now - lastTime >= VERSION_INTERVAL_MS) {
+          try {
+            const [latestVersion] = await db
+              .select({ versionNumber: documentVersionsTable.versionNumber })
+              .from(documentVersionsTable)
+              .where(eq(documentVersionsTable.documentId, documentName))
+              .orderBy(desc(documentVersionsTable.versionNumber))
+              .limit(1);
+
+            const nextVersionNumber = (latestVersion?.versionNumber || 0) + 1;
+
+            await db.insert(documentVersionsTable).values({
+              id: createId(),
+              documentId: documentName,
+              userId: context?.id || null,
+              title: document?.title || "Untitled",
+              yjsState: base64State,
+              versionNumber: nextVersionNumber,
+              changeDescription: "Auto-saved",
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+
+            lastVersionTime.set(documentName, now);
+          } catch (error) {
+            console.error(`Failed to create auto-version for document ${documentName}:`, error);
+          }
+        }
 
         processDocumentEmbedding(
           {

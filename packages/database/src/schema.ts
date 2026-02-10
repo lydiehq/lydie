@@ -587,6 +587,32 @@ export const feedbackSubmissionsTable = pgTable(
   ],
 );
 
+export const documentVersionsTable = pgTable(
+  "document_versions",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    yjsState: text("yjs_state").notNull(), // Y.js binary state stored as base64
+    versionNumber: integer("version_number").notNull(),
+    changeDescription: text("change_description"), // Optional commit message
+    ...timestamps,
+  },
+  (table) => [
+    index("document_versions_document_id_idx").on(table.documentId),
+    index("document_versions_created_at_idx").on(table.createdAt),
+    uniqueIndex("document_versions_document_version_idx").on(table.documentId, table.versionNumber),
+  ],
+);
+
 export const templatesTable = pgTable(
   "templates",
   {

@@ -20,6 +20,17 @@ export const relations = defineRelations(schema, (r) => ({
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
     syncMetadata: r.many.syncMetadataTable(),
     publications: r.many.documentPublicationsTable(),
+    versions: r.many.documentVersionsTable(),
+  },
+  documentVersionsTable: {
+    document: r.one.documentsTable({
+      from: r.documentVersionsTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    user: r.one.usersTable({
+      from: r.documentVersionsTable.userId,
+      to: r.usersTable.id,
+    }),
   },
   documentEmbeddingsTable: {
     document: r.one.documentsTable({

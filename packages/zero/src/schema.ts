@@ -82,6 +82,19 @@ const documents = table("documents")
   })
   .primaryKey("id");
 
+const documentVersions = table("document_versions")
+  .columns({
+    id: string(),
+    document_id: string(),
+    user_id: string().optional(),
+    title: string(),
+    yjs_state: string(),
+    version_number: number(),
+    change_description: string().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
 const documentPublications = table("document_publications")
   .columns({
     id: string(),
@@ -260,6 +273,24 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     sourceField: ["id"],
     destField: ["document_id"],
     destSchema: documentPublications,
+  }),
+  versions: many({
+    sourceField: ["id"],
+    destField: ["document_id"],
+    destSchema: documentVersions,
+  }),
+}));
+
+const documentVersionsRelations = relationships(documentVersions, ({ one }) => ({
+  document: one({
+    sourceField: ["document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
   }),
 }));
 
@@ -824,6 +855,7 @@ export const schema = createSchema({
   tables: [
     users,
     documents,
+    documentVersions,
     organizations,
     members,
     invitations,
@@ -854,6 +886,7 @@ export const schema = createSchema({
   ],
   relationships: [
     documentsRelations,
+    documentVersionsRelations,
     organizationsRelations,
     membersRelations,
     invitationsRelations,
