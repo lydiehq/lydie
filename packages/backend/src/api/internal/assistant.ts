@@ -1,6 +1,10 @@
 import { createGateway } from "@ai-sdk/gateway";
 import { openai } from "@ai-sdk/openai";
-import { getDefaultAgentById, getDefaultAgentByName } from "@lydie/core/ai/agents/defaults";
+import {
+  getDefaultAgentById,
+  getDefaultAgentByName,
+  isDefaultAgentId,
+} from "@lydie/core/ai/agents/defaults";
 import { getDefaultModel, getModelById, type LLMModel } from "@lydie/core/ai/models";
 import { createDocument } from "@lydie/core/ai/tools/create-document";
 import { findDocuments } from "@lydie/core/ai/tools/find-documents";
@@ -117,13 +121,16 @@ export const AssistantRoute = new Hono<{
       // Start with a placeholder title and generate the real one asynchronously
       // to avoid blocking the stream initialization (1-3s delay eliminated)
       const placeholderTitle = messages[0]?.content?.slice(0, 40) || "New chat";
+      // Only save agentId if it's a custom database agent (not a default code agent)
+      // Default agents have IDs like "agent_default" which don't exist in the database
+      const isDefaultAgent = agentId ? isDefaultAgentId(agentId) : false;
       const [newConversation] = await db
         .insert(assistantConversationsTable)
         .values({
           id: conversationId,
           userId,
           organizationId,
-          agentId: agentId || null,
+          agentId: isDefaultAgent ? null : agentId,
           title: placeholderTitle,
         })
         .returning();

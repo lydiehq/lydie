@@ -11,7 +11,6 @@ import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
@@ -88,8 +87,8 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
         </TooltipTrigger>
       </div>
       <div className={`h-full flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`} />
-      <div className={`flex flex-col gap-y-4 pb-2 ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
-        <div className="flex gap-x-1 px-3">
+      <div className={`flex flex-col ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
+        <div className="flex gap-x-1 px-3 mb-2">
           <Button
             intent="secondary"
             size="sm"
@@ -116,7 +115,7 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             <Search16Filled className="size-3.5 icon-muted" />
           </Button>
         </div>
-        <div className="flex flex-col px-2">
+        <div className="flex flex-col px-2 mb-2">
           <Link
             to="/w/$organizationSlug"
             from="/w/$organizationSlug"
@@ -151,7 +150,6 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Link>
         </div>
-        <Separator className="mx-2" />
         <div className="flex flex-col grow min-h-0 overflow-hidden">
           <FavoritesSection />
           <DocumentsSection />
@@ -181,7 +179,7 @@ function FavoritesSection() {
 
   return (
     <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
-      <div className="w-full flex items-center shrink-0 px-3 py-2 group gap-x-2">
+      <div className="w-full flex items-center shrink-0 px-3 group gap-x-2">
         <Eyebrow>Favorites</Eyebrow>
         <Heading>
           <RACButton
@@ -214,7 +212,7 @@ function DocumentsSection() {
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
     >
-      <div className="w-full flex items-center shrink-0 px-3 py-2 group gap-x-2">
+      <div className="w-full flex items-center shrink-0 px-3 group gap-x-2">
         <Eyebrow>Documents</Eyebrow>
         <Heading>
           <RACButton

@@ -40,8 +40,8 @@ export const zero = new sst.aws.Service("Zero", {
   cluster,
   ...($app.stage === "production"
     ? {
-        cpu: "0.25 vCPU",
-        memory: "0.5 GB",
+        cpu: "2 vCPU",
+        memory: "4 GB",
         architecture: "arm64",
       }
     : {}),
