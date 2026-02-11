@@ -12,7 +12,7 @@
     "generate:onboarding-embeddings": "sst shell bun run src/onboarding/generate-embeddings.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-sqs": "^3.986.0",
+    "@aws-sdk/client-sqs": "^3.987.0",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "@lydie/integrations": "workspace:*",
