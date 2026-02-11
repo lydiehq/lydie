@@ -82,16 +82,31 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   pendingComponent: LoadingScreen,
   errorComponent: ErrorPage,
   beforeLoad: async ({ context: { queryClient } }) => {
-    // Get cached session from React Query cache (restored from localStorage by persist)
-    // This returns immediately with cached data if available
-    const sessionData = (await queryClient.ensureQueryData(getSessionQuery())) as
+    // Check if we have cached session data (persister restores before render)
+    const cachedData = queryClient.getQueryData<ExtendedSessionData>(
+      getSessionQuery().queryKey,
+    );
+
+    // If we have cached session with a user, use it immediately for fast load
+    // but trigger background refetch to validate (staleTime: 0 ensures this)
+    if (cachedData?.user) {
+      void queryClient.fetchQuery(getSessionQuery());
+
+      return {
+        zero: getZeroInstance(cachedData),
+        auth: cachedData,
+      };
+    }
+
+    // No cached session - fetch fresh data (handles post-OAuth or not logged in)
+    const sessionData = (await queryClient.fetchQuery(getSessionQuery())) as
       | ExtendedSessionData
       | undefined;
 
-    // Initialize Zero with the cached session so child routes can use it in beforeLoad
-    const zero = getZeroInstance(sessionData);
-
-    return { zero, auth: sessionData };
+    return {
+      zero: getZeroInstance(sessionData),
+      auth: sessionData,
+    };
   },
   component: () => {
     const router = useRouter();
