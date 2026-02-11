@@ -1,13 +1,34 @@
-import { ChevronRightRegular } from "@fluentui/react-icons";
 import type { ReactNode } from "react";
 
+import { ChevronRightRegular } from "@fluentui/react-icons";
+
 import { Button } from "../generic/Button";
-import { FeatureBadge } from "./FeatureBadge";
+import { FeatureBadge } from "./FeatureIcon";
 
 type ButtonConfig = {
   href: string;
   label: string;
   showArrow?: boolean;
+};
+
+type ColorId =
+  | "coral"
+  | "purple"
+  | "blue"
+  | "mint"
+  | "gold"
+  | "pink"
+  | "periwinkle"
+  | "green"
+  | "peach"
+  | "violet"
+  | "cyan"
+  | "rose";
+
+type FeatureBadgeConfig = {
+  icon: "assistant" | "linking" | "collaboration" | "search" | "speed";
+  color: ColorId;
+  text: string;
 };
 
 type LandingSectionProps = {
@@ -16,7 +37,7 @@ type LandingSectionProps = {
   illustration: ReactNode;
   primaryButton: ButtonConfig;
   secondaryButton?: ButtonConfig;
-  featureBadge?: string;
+  featureBadge?: FeatureBadgeConfig;
   reverse?: boolean;
 };
 
@@ -27,11 +48,17 @@ export function LandingSection({
   primaryButton,
   secondaryButton,
   featureBadge,
-  reverse = false,
+  reverse = true,
 }: LandingSectionProps) {
   const textContent = (
-    <div className="flex flex-col gap-y-4 justify-center px-4 sm:px-0 size-full">
-      {featureBadge && <FeatureBadge feature={featureBadge} />}
+    <div className="flex flex-col gap-y-4 justify-center size-full">
+      {featureBadge && (
+        <FeatureBadge
+          icon={featureBadge.icon}
+          color={featureBadge.color}
+          text={featureBadge.text}
+        />
+      )}
       <h2 className="text-2xl sm:text-3xl tracking-tight font-medium text-black/85">{title}</h2>
       <p className="text-base/relaxed text-black/60 text-balance">{description}</p>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mt-4">
@@ -52,15 +79,11 @@ export function LandingSection({
 
   return (
     <div className="relative bg-white z-10">
-      <div
-        className={`grid grid-cols-1 md:grid-cols-2 z-0 gap-8 items-center ${
-          reverse ? "md:[direction:rtl]" : ""
-        }`}
-      >
-        <div className={`relative flex size-full ${reverse ? "md:[direction:ltr]" : ""}`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 z-0 gap-8 items-center">
+        <div className={`relative flex size-full order-2 ${reverse ? "md:order-2" : "md:order-1"}`}>
           {illustration}
         </div>
-        <div className={reverse ? "md:[direction:ltr] md:pl-4" : "md:pr-4"}>{textContent}</div>
+        <div className={`order-1 ${reverse ? "md:order-1" : "md:order-2"}`}>{textContent}</div>
       </div>
     </div>
   );

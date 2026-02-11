@@ -82,7 +82,7 @@ export const useCases: UseCase[] = [
         a: "AI changes how you interact with your knowledge base. Lydie's AI can summarize long notes, suggest connections between related ideas, expand on concepts you are developing, and help you reorganize content. It is like having a research assistant that knows everything you have written. AI helps you discover insights you might have missed.",
       },
     ],
-    demoStates: ["search", "ai-assistant", "linking"],
+    demoStates: ["search", "assistant", "linking"],
     ctaText: "Start for free",
     templates: ["CNidcw5nia3iLKRh", "ottPzeqZAhnbLS9c", "Qt6PaUkoEJcvjmRz"],
     sections: [
@@ -101,11 +101,11 @@ export const useCases: UseCase[] = [
         featureSlug: "linking",
       },
       {
-        illustration: "ai-assistant",
+        illustration: "assistant",
         title: "AI-powered insights",
         content:
           "AI features help you discover connections you might have missed and summarize complex information. Get help organizing and making sense of your knowledge.",
-        featureSlug: "ai-assistant",
+        featureSlug: "assistant",
       },
     ],
   },
@@ -205,7 +205,7 @@ export const useCases: UseCase[] = [
         a: "Yes. You can store SEO metadata alongside your content: titles, descriptions, keywords, and custom fields. Fetch this data via API to populate your meta tags, sitemaps, and structured data. Since you control the frontend, you can implement best practices for page speed and Core Web Vitals.",
       },
     ],
-    demoStates: ["linking", "ai-assistant"],
+    demoStates: ["linking", "assistant"],
     ctaText: "Start your blog",
     secondaryLink: {
       href: "https://lydie.co/blog",
@@ -221,11 +221,11 @@ export const useCases: UseCase[] = [
         featureSlug: "linking",
       },
       {
-        illustration: "ai-assistant",
+        illustration: "assistant",
         title: "AI-assisted writing",
         content:
           "Get help brainstorming topics, improving headlines, and polishing your drafts. The AI assistant helps you write better content faster.",
-        featureSlug: "ai-assistant",
+        featureSlug: "assistant",
       },
     ],
   },
@@ -266,16 +266,16 @@ export const useCases: UseCase[] = [
         a: "Your data is encrypted in transit and at rest. You control who has access to your work. For sensitive research, you can keep everything private or share only specific pages with trusted collaborators. We take data security seriously and do not use your content to train AI models without your explicit consent.",
       },
     ],
-    demoStates: ["ai-assistant", "search", "linking", "collaboration"],
+    demoStates: ["assistant", "search", "linking", "collaboration"],
     ctaText: "Start researching",
     templates: ["7YayZjGVYJYQk3Nq", "5S6qdYa8bK66yRMh", "rw131RYawq35CUas"],
     sections: [
       {
-        illustration: "ai-assistant",
+        illustration: "assistant",
         title: "AI research assistant",
         content:
           "Summarize long papers, extract key insights, and synthesize findings across multiple sources. Get help understanding complex concepts and discovering connections.",
-        featureSlug: "ai-assistant",
+        featureSlug: "assistant",
       },
       {
         illustration: "search",

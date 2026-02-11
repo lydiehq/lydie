@@ -12,7 +12,11 @@ export function SpeedSection() {
 
   return (
     <LandingSection
-      featureBadge="speed"
+      featureBadge={{
+        icon: "speed",
+        color: "bg-green-500",
+        text: "Speed",
+      }}
       title="Don't lose your thoughts to loading screens"
       description="While other tools leave you waiting, Lydie's local-first sync engine keeps navigation and actions near-instant. No loading screens. No waiting. Just flow."
       illustration={illustration}
@@ -25,7 +29,6 @@ export function SpeedSection() {
         href: "/features",
         label: "Learn more",
       }}
-      reverse={false}
     />
   );
 }

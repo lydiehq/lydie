@@ -10,7 +10,7 @@ Astro.response.headers.set(
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import { Button } from "../../components/generic/Button";
-import { FAQSection } from "../../components/tools/FAQSection";
+import { FAQ } from "../../components/generic/FAQ";
 import CategoryThumbnail from "../../components/templates/CategoryThumbnail.astro";
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
 import { getMostPopularCategories } from "../../data/categories";
@@ -106,28 +106,28 @@ const templates = await getAllTemplates();
       </div>
 
       <div class="max-w-xl mx-auto w-full">
-        <FAQSection
+        <FAQ
           client:load
-          faqs={[
+          items={[
             {
-              q: "What templates are available?",
-              a: "We offer a wide variety of templates for different use cases including blog posts, documentation, technical writing, and more. All templates are designed to help you get started quickly with Lydie.",
+              question: "What templates are available?",
+              answer: "We offer a wide variety of templates for different use cases including blog posts, documentation, technical writing, and more. All templates are designed to help you get started quickly with Lydie.",
             },
             {
-              q: "Are templates free to use?",
-              a: "Yes, all templates are completely free to use. You can customize them to fit your needs and start writing immediately.",
+              question: "Are templates free to use?",
+              answer: "Yes, all templates are completely free to use. You can customize them to fit your needs and start writing immediately.",
             },
             {
-              q: "Can I customize the templates?",
-              a: "Absolutely! All templates are fully customizable. You can modify the structure, add your own content, and adapt them to your specific requirements.",
+              question: "Can I customize the templates?",
+              answer: "Absolutely! All templates are fully customizable. You can modify the structure, add your own content, and adapt them to your specific requirements.",
             },
             {
-              q: "Do I need to sign up to use templates?",
-              a: "No sign-up is required. You can browse and use templates immediately. However, signing up allows you to save your customized templates for future use.",
+              question: "Do I need to sign up to use templates?",
+              answer: "No sign-up is required. You can browse and use templates immediately. However, signing up allows you to save your customized templates for future use.",
             },
             {
-              q: "How do I get started with a template?",
-              a: "Simply browse our template collection, select one that fits your needs, and click to start using it. You'll be able to edit and customize it right away.",
+              question: "How do I get started with a template?",
+              answer: "Simply browse our template collection, select one that fits your needs, and click to start using it. You'll be able to edit and customize it right away.",
             },
           ]}
         />

@@ -68,7 +68,9 @@ export function FeatureSpotLinking() {
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-gray-900 truncate">Project Plan</div>
+                        <div className="text-xs font-medium text-gray-900 truncate">
+                          Project Plan
+                        </div>
                         <div className="text-[0.6rem] text-blue-500">Linked document</div>
                       </div>
                     </div>

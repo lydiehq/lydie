@@ -11,7 +11,7 @@ import { DemoWithSelector } from "./DemoWithSelector";
 import { CastShadow } from "../generic/CastShadow";
 import { Button } from "../generic/Button";
 import { KeyboardSection } from "./KeyboardSection";
-import { FAQSection } from "../tools/FAQSection";
+import { FAQ } from "../generic/FAQ";
 import { GradientOutline } from "../generic/GradientOutline";
 import { DarkModeSection } from "./DarkModeSection";
 import { SectionHeader } from "./SectionHeader";
@@ -19,6 +19,7 @@ import { CTASection } from "./CTASection";
 import { MultiDocumentChatSection } from "./MultiDocumentChatSection";
 import { SpeedSection } from "./SpeedSection";
 import { Container } from "../Container";
+import { HeroNew } from "./HeroNew";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -38,25 +39,29 @@ const heroDefaultImage = heroOptimizedImages[heroOptimizedImages.length - 1];
 
 const faqItems = [
   {
-    q: "What is Lydie?",
-    a: "Lydie is a modern writing workspace designed for structured documents, notes, and knowledge management. It combines a powerful WYSIWYG editor with AI-powered search and real-time collaboration features to help you organize and find information effortlessly.",
+    question: "What is Lydie?",
+    answer:
+      "Lydie is a modern writing workspace designed for structured documents, notes, and knowledge management. It combines a powerful WYSIWYG editor with AI-powered search and real-time collaboration features to help you organize and find information effortlessly.",
   },
   {
-    q: "Is Lydie free to use?",
-    a: "Yes! Lydie is open-source and free to use. There are no hidden fees or vendor lock-in. You can self-host it or use our managed service. You're also welcome to modify and contribute to the codebase.",
+    question: "Is Lydie free to use?",
+    answer:
+      "Yes! Lydie is open-source and free to use. There are no hidden fees or vendor lock-in. You can self-host it or use our managed service. You're also welcome to modify and contribute to the codebase.",
   },
   {
-    q: "Can I collaborate with my team in real-time?",
-    a: "Absolutely. Lydie supports real-time collaboration, allowing you and your team to work on documents simultaneously. Changes are synced instantly across all devices, so everyone stays up to date. [Learn more about collaborative editing.](/features/collaborative-editing)",
+    question: "Can I collaborate with my team in real-time?",
+    answer:
+      "Absolutely. Lydie supports real-time collaboration, allowing you and your team to work on documents simultaneously. Changes are synced instantly across all devices, so everyone stays up to date. [Learn more about collaborative editing.](/features/collaborative-editing)",
   },
   {
-    q: "How does the AI-powered search work?",
-    a: "Lydie uses advanced AI to understand your documents and help you find information quickly. Instead of just matching keywords, the search understands the meaning and context of your content, making it easy to discover relevant information even when you don't remember the exact words.",
+    question: "How does the AI-powered search work?",
+    answer:
+      "Lydie uses advanced AI to understand your documents and help you find information quickly. Instead of just matching keywords, the search understands the meaning and context of your content, making it easy to discover relevant information even when you don't remember the exact words.",
   },
 ];
 ---
 
-<Hero
+<HeroNew
   client:load
   imageSrc={heroDefaultImage.src}
   imageSrcSet={heroSrcset}
@@ -65,9 +70,17 @@ const faqItems = [
   imageWidth={heroDefaultImage.options.width}
   imageHeight={heroDefaultImage.options.height}
 />
-<ProblemSolutionSection />
+<!-- <ProblemSolutionSection /> -->
 
-<!-- <div class="max-w-4xl relative md:block hidden -z-10">
+<!-- <Hero
+  client:load
+  imageSrc={heroDefaultImage.src}
+  imageSrcSet={heroSrcset}
+  imageSizes="(max-width: 768px) 100vw, (max-width: 1536px) 90vw, 1536px"
+  imageAlt="Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
+  imageWidth={heroDefaultImage.options.width}
+  imageHeight={heroDefaultImage.options.height}
+/> --><!-- <ProblemSolutionSection /> --><!-- <div class="max-w-4xl relative md:block hidden -z-10">
   <div
     class="fixed inset-y-0 w-1 border-r border-outline-subtle"
     style="left: calc(50% - 388px)"
@@ -80,33 +93,23 @@ const faqItems = [
   </div>
 </div> -->
 <Divider logo />
-
-<Container className="pb-24 pt-16 flex flex-col items-center">
-  <SectionHeader
-    eyebrow="Best-in-class editor"
-    title="Experience the delight of writing"
-    description="At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick notes or deep documentation."
-    centered
-  />
-  <div class="w-full mt-12 -mx-4 md:mx-0">
-    <DemoWithSelector
-      client:visible
-      states={["collaboration", "linking", "ai-assistant"]}
+<Container className="pb-24 pt-16 hidden flex-col md:flex">
+  <DemoWithSelector
+    client:visible
+    states={["collaboration", "linking", "assistant"]}
+  >
+    <SectionHeader
+      eyebrow="Best-in-class editor"
+      title="Experience the delight of writing"
+      description="At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick notes or deep documentation."
     />
-  </div>
+  </DemoWithSelector>
 </Container>
 <Divider />
 <Container className="relative my-24 flex flex-col gap-y-24">
-  <SpeedSection />
-
-  <!-- <Container className="flex flex-col gap-y-12 relative" size="sm">
-  
-  <hr class="border-gray-100 w-full max-w-5xl mx-auto" />
-</Container> -->
-
-  <Divider logo />
-
-  <MultiDocumentChatSection client:load />
+  <MultiDocumentChatSection />
+  <!-- <Divider logo />
+  <SpeedSection /> -->
 </Container>
 
 <Divider />
@@ -121,7 +124,7 @@ const faqItems = [
 
 <Container size="sm" className="py-16">
   <div class="md:px-12">
-    <FAQSection faqs={faqItems} client:load />
+    <FAQ items={faqItems} client:load />
   </div>
 </Container>
 

@@ -2,7 +2,7 @@ import { LinkRegular, PeopleTeamRegular, BotRegular, SearchRegular } from "@flue
 import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 
-export type DemoState = "collaboration" | "linking" | "ai-assistant" | "search";
+export type DemoState = "collaboration" | "linking" | "assistant" | "search";
 
 interface StateConfig {
   id: DemoState;
@@ -34,8 +34,8 @@ export const STATE_CONFIG: Record<DemoState, StateConfig> = {
     showSidebar: false,
     sidebarWidth: 0,
   },
-  "ai-assistant": {
-    id: "ai-assistant",
+  assistant: {
+    id: "assistant",
     label: "AI Assistant",
     icon: BotRegular,
     showSidebar: true,
@@ -43,12 +43,7 @@ export const STATE_CONFIG: Record<DemoState, StateConfig> = {
   },
 };
 
-export const DEFAULT_STATE_ORDER: DemoState[] = [
-  "search",
-  "collaboration",
-  "linking",
-  "ai-assistant",
-];
+export const DEFAULT_STATE_ORDER: DemoState[] = ["search", "collaboration", "linking", "assistant"];
 
 const AUTO_ADVANCE_MS = 9000;
 

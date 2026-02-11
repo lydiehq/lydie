@@ -171,6 +171,14 @@ export async function renderContent(
         return serializer.customBlock(n.attrs?.name || "", n.attrs?.properties || {});
       case "documentComponent":
         return serializer.customBlock(n.attrs?.name || "", n.attrs?.properties || {});
+      case "table":
+        return serializer.table(childHtmls);
+      case "tableRow":
+        return serializer.tableRow(childHtmls);
+      case "tableHeader":
+        return serializer.tableHeader(childHtmls, n.attrs?.colspan, n.attrs?.rowspan);
+      case "tableCell":
+        return serializer.tableCell(childHtmls, n.attrs?.colspan, n.attrs?.rowspan);
       default:
         return "";
     }

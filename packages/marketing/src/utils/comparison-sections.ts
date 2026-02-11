@@ -69,8 +69,10 @@ export function getSection(id: string): ComparisonSection | undefined {
 // Section override type for comparisons
 export interface SectionOverride {
   id: string;
-  title?: string;
-  description?: string;
+  overrides?: {
+    title?: string;
+    description?: string;
+  };
 }
 
 // Get multiple sections by IDs or override objects
@@ -93,8 +95,8 @@ export function getSections(sections: (string | SectionOverride)[]): ComparisonS
       // Otherwise, merge overrides with base section
       return {
         ...baseSection,
-        title: sectionRef.title ?? baseSection.title,
-        description: sectionRef.description ?? baseSection.description,
+        title: sectionRef.overrides?.title ?? baseSection.title,
+        description: sectionRef.overrides?.description ?? baseSection.description,
       };
     })
     .filter((section): section is ComparisonSection => section !== undefined);

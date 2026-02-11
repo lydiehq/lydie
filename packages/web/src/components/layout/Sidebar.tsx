@@ -179,7 +179,7 @@ function FavoritesSection() {
 
   return (
     <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
-      <div className="w-full flex items-center shrink-0 px-3 group gap-x-2">
+      <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
         <Eyebrow>Favorites</Eyebrow>
         <Heading>
           <RACButton
@@ -188,13 +188,13 @@ function FavoritesSection() {
           >
             <CollapseArrow
               aria-hidden
-              className={`size-3 shrink-0 absolute text-black/45 ${isExpanded ? "rotate-90" : "rotate-0"}`}
+              className={`size-3 shrink-0 absolute text-black/45 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : "rotate-0"}`}
             />
           </RACButton>
         </Heading>
       </div>
       <DisclosurePanel className="h-(--disclosure-panel-height) overflow-clip">
-        <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2 pt-1">
+        <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2">
           <FavoritesTree />
         </div>
       </DisclosurePanel>
@@ -212,7 +212,7 @@ function DocumentsSection() {
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
     >
-      <div className="w-full flex items-center shrink-0 px-3 group gap-x-2">
+      <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
         <Eyebrow>Documents</Eyebrow>
         <Heading>
           <RACButton
@@ -221,7 +221,7 @@ function DocumentsSection() {
           >
             <CollapseArrow
               aria-hidden
-              className={`size-3 shrink-0 absolute text-black/45 ${isExpanded ? "rotate-90" : "rotate-0"}`}
+              className={`size-3 shrink-0 absolute text-black/45 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : "rotate-0"}`}
             />
           </RACButton>
         </Heading>
@@ -241,7 +241,7 @@ function DocumentsSection() {
           </TooltipTrigger>
         </div>
       </div>
-      <DisclosurePanel className="overflow-y-auto h-full scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 py-2">
+      <DisclosurePanel className="overflow-y-auto h-full scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2">
         <DocumentTree />
       </DisclosurePanel>
     </Disclosure>

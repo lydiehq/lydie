@@ -9,7 +9,7 @@ const { logo = false } = Astro.props;
 ---
 
 <div
-  class="flex items-center gap-2 w-full max-w-5xl mx-auto"
+  class:list={["flex items-center w-full max-w-5xl mx-auto", logo && "gap-2"]}
   role="presentation"
 >
   <hr class="flex-1 border-0 h-px bg-linear-to-r from-transparent to-black/6 from-0% to-15%" />

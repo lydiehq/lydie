@@ -4,7 +4,7 @@ import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { DocumentFormatter as DocumentFormatterTool } from "../../components/tools/DocumentFormatter";
 import { HowToSection } from "../../components/tools/HowToSection";
-import { FAQSection } from "../../components/tools/FAQSection";
+import { FAQ } from "../../components/generic/FAQ";
 import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
@@ -22,30 +22,30 @@ const howToSteps = [
   "Click 'Format Document' to transform your content. Download or copy the formatted result.",
 ];
 
-const faqs = [
+const faqItems = [
   {
-    q: "What formats can I output to?",
-    a: "You can output to Markdown (great for most writing apps), HTML (for web publishing), or Plain Text (for simple text editors).",
+    question: "What formats can I output to?",
+    answer: "You can output to Markdown (great for most writing apps), HTML (for web publishing), or Plain Text (for simple text editors).",
   },
   {
-    q: "What's the difference between the style options?",
-    a: "Professional style creates polished business documents. Academic style follows scholarly conventions. Casual style creates friendly blog content. Structured style maximizes organization with clear hierarchy.",
+    question: "What's the difference between the style options?",
+    answer: "Professional style creates polished business documents. Academic style follows scholarly conventions. Casual style creates friendly blog content. Structured style maximizes organization with clear hierarchy.",
   },
   {
-    q: "Will the formatter change my content's meaning?",
-    a: "No, the AI preserves your original content and meaning. It only improves structure, formatting, and readability without adding or removing information.",
+    question: "Will the formatter change my content's meaning?",
+    answer: "No, the AI preserves your original content and meaning. It only improves structure, formatting, and readability without adding or removing information.",
   },
   {
-    q: "Is there a length limit?",
-    a: "Yes, the current limit is 50,000 characters per document. This handles most articles, reports, and essays. For longer documents, consider formatting in sections.",
+    question: "Is there a length limit?",
+    answer: "Yes, the current limit is 50,000 characters per document. This handles most articles, reports, and essays. For longer documents, consider formatting in sections.",
   },
   {
-    q: "Is my data stored or used for training?",
-    a: "No, we don't store your content or formatted documents. All processing is done in real-time and data is discarded immediately after formatting.",
+    question: "Is my data stored or used for training?",
+    answer: "No, we don't store your content or formatted documents. All processing is done in real-time and data is discarded immediately after formatting.",
   },
   {
-    q: "Can I edit the formatted output?",
-    a: "Absolutely! The formatted output is yours to edit, customize, and refine. Use it as a starting point and make it your own.",
+    question: "Can I edit the formatted output?",
+    answer: "Absolutely! The formatted output is yours to edit, customize, and refine. Use it as a starting point and make it your own.",
   },
 ];
 
@@ -70,12 +70,12 @@ const structuredData = {
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
+  mainEntity: faqItems.map((faq) => ({
     "@type": "Question",
-    name: faq.q,
+    name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.a,
+      text: faq.answer,
     },
   })),
 };
@@ -165,7 +165,7 @@ const faqData = {
         review, proper formatting makes your content shine.
       </p>
     </div>
-    <FAQSection faqs={faqs} client:load />
+    <FAQ items={faqItems} client:load />
     <OtherToolsSection currentHref="/tools/ai-document-formatter" />
   </Container>
 </Layout>

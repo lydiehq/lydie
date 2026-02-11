@@ -9,66 +9,96 @@ import {
   Heading,
 } from "react-aria-components";
 
-function parseAnswerWithLinks(text: string): React.ReactNode {
+/**
+ * Parses markdown-style links [text](url) and line breaks in text
+ * Returns an array of React nodes
+ */
+function renderRichText(text: string): React.ReactNode[] {
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = linkRegex.exec(text)) !== null) {
+    // Add text before the link (with line breaks)
     if (match.index > lastIndex) {
-      parts.push(renderTextWithLineBreaks(text.slice(lastIndex, match.index)));
+      parts.push(...renderTextWithLineBreaks(text.slice(lastIndex, match.index)));
     }
+
+    // Add the link
     parts.push(
       <a
-        key={match.index}
+        key={`link-${match.index}`}
         href={match[2]}
         className="underline text-black/85 hover:text-black focus:outline-none focus:underline"
       >
         {match[1]}
       </a>,
     );
+
     lastIndex = match.index + match[0].length;
   }
 
+  // Add remaining text (with line breaks)
   if (lastIndex < text.length) {
-    parts.push(renderTextWithLineBreaks(text.slice(lastIndex)));
+    parts.push(...renderTextWithLineBreaks(text.slice(lastIndex)));
   }
 
-  return parts.length === 1 ? parts[0] : parts;
+  return parts;
 }
 
-function renderTextWithLineBreaks(text: string): React.ReactNode {
+/**
+ * Splits text by newlines and returns an array of fragments with <br /> tags
+ */
+function renderTextWithLineBreaks(text: string): React.ReactNode[] {
   const lines = text.split("\n");
-  if (lines.length === 1) {
-    return text;
-  }
-  return lines.map((line, index) => (
-    <React.Fragment key={index}>
-      {line}
-      {index < lines.length - 1 && <br />}
-    </React.Fragment>
-  ));
+  const result: React.ReactNode[] = [];
+
+  lines.forEach((line, index) => {
+    result.push(line);
+    if (index < lines.length - 1) {
+      result.push(<br key={`br-${index}`} />);
+    }
+  });
+
+  return result;
 }
 
 export interface FAQItem {
+  /** The question text */
   question: string;
-  answer: React.ReactNode;
+  /** The answer text (supports markdown-style links [text](url) and line breaks) */
+  answer: string;
+}
+
+/** Legacy format used in some data files */
+export interface LegacyFAQItem {
+  q: string;
+  a: string;
 }
 
 interface FAQProps {
   title?: string;
-  items: FAQItem[];
+  items: (FAQItem | LegacyFAQItem)[];
   className?: string;
 }
 
-export function FAQ({ items }: FAQProps) {
+function normalizeFAQItem(item: FAQItem | LegacyFAQItem): FAQItem {
+  if ("q" in item && "a" in item) {
+    return { question: item.q, answer: item.a };
+  }
+  return item as FAQItem;
+}
+
+export function FAQ({ title = "Frequently Asked Questions", items }: FAQProps) {
+  const normalizedItems = items.map(normalizeFAQItem);
+
   return (
-    <div className="gap-y-6 flex flex-col">
-      <h2 className="text-lg font-medium text-black/85">Frequently Asked Questions</h2>
-      <div className="">
-        {items.map((item, index) => (
-          <FAQItem
+    <div className="gap-y-6 flex flex-col w-full">
+      <h2 className="text-lg font-medium text-black/85">{title}</h2>
+      <div>
+        {normalizedItems.map((item, index) => (
+          <FAQItemComponent
             key={index}
             question={item.question}
             answer={item.answer}
@@ -80,16 +110,16 @@ export function FAQ({ items }: FAQProps) {
   );
 }
 
-interface FAQItemProps {
+interface FAQItemComponentProps {
   question: string;
-  answer: React.ReactNode;
+  answer: string;
   isLast?: boolean;
 }
 
 const MotionDisclosurePanel = motion.create(DisclosurePanel);
 
-function FAQItem({ question, answer }: FAQItemProps) {
-  const resolvedAnswer = typeof answer === "string" ? parseAnswerWithLinks(answer) : answer;
+function FAQItemComponent({ question, answer }: FAQItemComponentProps) {
+  const renderedAnswer = renderRichText(answer);
 
   return (
     <Disclosure className="border-b border-black/6 last:border-b-0">
@@ -120,7 +150,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
                   transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1], delay: 0.05 }}
                   className="pb-4 max-w-[65ch]"
                 >
-                  {resolvedAnswer}
+                  {renderedAnswer}
                 </motion.div>
               </MotionDisclosurePanel>
             )}

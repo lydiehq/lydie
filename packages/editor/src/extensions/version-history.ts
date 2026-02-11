@@ -1,5 +1,6 @@
-import { Extension } from "@tiptap/core";
 import type { Editor, RawCommands } from "@tiptap/core";
+
+import { Extension } from "@tiptap/core";
 import * as Y from "yjs";
 
 export interface VersionHistoryOptions {
@@ -72,9 +73,9 @@ export const VersionHistory = Extension.create<VersionHistoryOptions, VersionHis
   onCreate() {
     if (this.options.autoVersioning) {
       this.storage.autoVersioningEnabled = true;
-      
+
       const intervalMs = (this.options.autoVersioningInterval || 300) * 1000;
-      
+
       const existingInterval = autoVersioningIntervals.get(this.editor);
       if (existingInterval) {
         clearInterval(existingInterval);
@@ -149,7 +150,7 @@ export const VersionHistory = Extension.create<VersionHistoryOptions, VersionHis
           extension.storage.autoVersioningEnabled = !extension.storage.autoVersioningEnabled;
 
           const intervalMs = (extension.options.autoVersioningInterval || 300) * 1000;
-          
+
           if (extension.storage.autoVersioningEnabled) {
             const existingInterval = autoVersioningIntervals.get(editor);
             if (existingInterval) {

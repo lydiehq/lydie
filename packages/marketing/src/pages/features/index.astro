@@ -2,10 +2,14 @@
 import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import { ArrowRightRegular, BotFilled } from "@fluentui/react-icons";
+import { ArrowRightRegular } from "@fluentui/react-icons";
 import { GradientOutline } from "../../components/generic/GradientOutline";
 import { SectionHeader } from "../../components/landing/SectionHeader";
 import { CTASection } from "../../components/landing/CTASection";
+import {
+  FeatureIcon,
+  featureSlugToIcon,
+} from "../../components/landing/FeatureIcon";
 import { features, type Feature } from "../../data/features";
 
 const title = "Features - Lydie";
@@ -34,14 +38,10 @@ const description =
                 href={`/features/${feature.slug}`}
                 class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
               >
-                <div class="rounded-xl bg-blue-500 size-10 justify-center flex items-center border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-linear-to-t before:from-white/25 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative overflow-hidden">
-                  <div class="absolute border border-white/20 inset-0 rounded-xl" />
-                  <div class="absolute top-2 bg-linear-to-r h-px bg-white/7 inset-x-0 y-0" />
-                  <div class="absolute bottom-2 bg-linear-to-r h-px bg-white/7 inset-x-0 y-0" />
-                  <div class="absolute right-2 bg-linear-to-t w-px bg-white/7 inset-y-0 x-0" />
-                  <div class="absolute left-2 bg-linear-to-b w-px bg-white/7 inset-y-0 x-0" />
-                  <BotFilled className="text-white size-5" />
-                </div>
+                <FeatureIcon
+                  icon={featureSlugToIcon[feature.slug] || "assistant"}
+                  color={feature.iconColor}
+                />
                 <div class="flex flex-col gap-y-2">
                   <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
                     {feature.title}

@@ -4,7 +4,7 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Container } from "../../components/Container";
 import { TextSummarizer as TextSummarizerTool } from "../../components/tools/TextSummarizer";
 import { HowToSection } from "../../components/tools/HowToSection";
-import { FAQSection } from "../../components/tools/FAQSection";
+import { FAQ } from "../../components/generic/FAQ";
 import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
@@ -22,30 +22,30 @@ const howToSteps = [
   "Download as Markdown or copy to clipboard to use the summary in your work.",
 ];
 
-const faqs = [
+const faqItems = [
   {
-    q: "What types of text can I summarize?",
-    a: "You can summarize any type of written content including articles, blog posts, research papers, reports, essays, news stories, documentation, and more. The AI works best with well-structured text that has clear main points.",
+    question: "What types of text can I summarize?",
+    answer: "You can summarize any type of written content including articles, blog posts, research papers, reports, essays, news stories, documentation, and more. The AI works best with well-structured text that has clear main points.",
   },
   {
-    q: "What's the difference between summary lengths?",
-    a: "Short summaries provide 1-2 sentences capturing the main point. Medium summaries give a paragraph with key points and context. Detailed summaries offer multiple paragraphs with comprehensive coverage of the main ideas.",
+    question: "What's the difference between summary lengths?",
+    answer: "Short summaries provide 1-2 sentences capturing the main point. Medium summaries give a paragraph with key points and context. Detailed summaries offer multiple paragraphs with comprehensive coverage of the main ideas.",
   },
   {
-    q: "Is my text stored or used for training?",
-    a: "No, we don't store your text or generated summaries. All processing is done in real-time and data is discarded immediately after generation. Your privacy is our priority.",
+    question: "Is my text stored or used for training?",
+    answer: "No, we don't store your text or generated summaries. All processing is done in real-time and data is discarded immediately after generation. Your privacy is our priority.",
   },
   {
-    q: "How accurate are the AI text summaries?",
-    a: "Our AI text summary tool uses advanced language models to identify and extract key information accurately. However, we recommend reviewing the summary to ensure it captures what's most important for your specific needs.",
+    question: "How accurate are the AI text summaries?",
+    answer: "Our AI text summary tool uses advanced language models to identify and extract key information accurately. However, we recommend reviewing the summary to ensure it captures what's most important for your specific needs.",
   },
   {
-    q: "Are there any usage limits?",
-    a: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 summaries per hour. Text must be between 100 and 50,000 characters.",
+    question: "Are there any usage limits?",
+    answer: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 summaries per hour. Text must be between 100 and 50,000 characters.",
   },
   {
-    q: "Can I summarize text in different languages?",
-    a: "Currently, the tool works best with English text. Support for additional languages may be added in the future based on user demand.",
+    question: "Can I summarize text in different languages?",
+    answer: "Currently, the tool works best with English text. Support for additional languages may be added in the future based on user demand.",
   },
 ];
 
@@ -70,12 +70,12 @@ const structuredData = {
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
+  mainEntity: faqItems.map((faq) => ({
     "@type": "Question",
-    name: faq.q,
+    name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.a,
+      text: faq.answer,
     },
   })),
 };
@@ -175,7 +175,7 @@ const faqData = {
         they align with your specific needs and context.
       </p>
     </div>
-    <FAQSection faqs={faqs} client:load />
+    <FAQ items={faqItems} client:load />
     <OtherToolsSection currentHref="/tools/text-summarizer" />
   </Container>
 </Layout>

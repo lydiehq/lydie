@@ -5,16 +5,15 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
 import { DemoWithSelector } from "../../components/landing/DemoWithSelector";
-import { FeatureSection } from "../../components/landing/FeatureSection";
 import "../../styles/grainy-gradient.css";
 import { CTASection } from "../../components/landing/CTASection";
 import Divider from "../../components/landing/Divider.astro";
 import { SectionHeader } from "../../components/landing/SectionHeader";
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
-import { FAQSection } from "../../components/tools/FAQSection";
+import { FAQ } from "../../components/generic/FAQ";
+import { FeatureSections } from "../../components/landing/FeatureSection";
 import { getTemplatesByIds } from "../../data/templates";
 import { useCases, type UseCase, getUseCase } from "../../data/use-cases";
-import type { DemoState } from "../../components/landing/DemoStateSelector";
 import { Heading } from "../../components/generic/Heading";
 
 export function getStaticPaths() {
@@ -49,6 +48,17 @@ const fetchedTemplates = templateIds?.length
 const validTemplates = fetchedTemplates.filter(
   (t): t is NonNullable<typeof t> => t !== undefined,
 );
+
+// Prepare sections for FeatureSections component
+// Map use case sections to the format with overrides
+const featureSections = sections?.map((section) => ({
+  id: section.illustration, // The illustration ID matches the feature ID
+  overrides: {
+    title: section.title,
+    description: section.content,
+    featureSlug: section.featureSlug,
+  },
+})) ?? [];
 ---
 
 <Layout title={metaTitle} description={metaDescription}>
@@ -85,32 +95,11 @@ const validTemplates = fetchedTemplates.filter(
     />
 
     {
-      sections && sections.length > 0 && (
-        <div class="w-full flex flex-col gap-y-16 md:gap-y-24 mt-24">
-          {sections.map(
-            (
-              section: {
-                illustration: DemoState;
-                title: string;
-                content: string;
-                featureSlug: string;
-              },
-              index: number,
-            ) => (
-              <>
-                <FeatureSection
-                  client:load
-                  illustration={section.illustration}
-                  title={section.title}
-                  content={section.content}
-                  featureSlug={section.featureSlug}
-                  reverse={index % 2 === 1}
-                />
-                <Divider />
-              </>
-            ),
-          )}
-        </div>
+      featureSections.length > 0 && (
+        <>
+          <FeatureSections client:load sections={featureSections} />
+          <Divider />
+        </>
       )
     }
 
@@ -149,8 +138,8 @@ const validTemplates = fetchedTemplates.filter(
       </div>
     </section>
     <Divider />
-    <div class="max-w-xl mx-auto">
-      <FAQSection faqs={faqs} client:load />
+    <div class="max-w-xl mx-auto w-full">
+      {faqs && faqs.length > 0 && <FAQ items={faqs} client:load />}
     </div>
   </Container>
   <CTASection client:load />

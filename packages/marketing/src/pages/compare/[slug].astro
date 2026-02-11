@@ -2,7 +2,6 @@
 import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
 import { getComparison } from "../../data/comparisons";
-import { getSections } from "../../utils/comparison-sections";
 import {
   CheckmarkRegular,
   ChevronRightRegular,
@@ -10,7 +9,7 @@ import {
 } from "@fluentui/react-icons";
 import { Button } from "../../components/generic/Button";
 import { Logo } from "../../components/Logo";
-import FeatureSection from "../../components/comparison/FeatureSection.astro";
+import { FeatureSections } from "../../components/landing/FeatureSection";
 
 export async function getStaticPaths() {
   const { comparisons } = await import("../../data/comparisons");
@@ -30,7 +29,9 @@ if (!comparison) {
 }
 
 const title = `Open-Source ${comparison.name} Alterantive - Lydie`;
-const sections = comparison.sections ? getSections(comparison.sections) : [];
+
+// Prepare sections for FeatureSections component - pass raw sections, let component resolve
+const sections = comparison.sections ?? [];
 ---
 
 <Layout title={title} description={comparison.description}>
@@ -158,16 +159,7 @@ const sections = comparison.sections ? getSections(comparison.sections) : [];
       {
         sections.length > 0 && (
           <div class="flex flex-col gap-y-16 py-16">
-            {sections.map((section, index) => (
-              <FeatureSection
-                title={section.title}
-                description={section.description}
-                illustrationId={section.illustrationId}
-                imageAlt={section.imageAlt}
-                imagePosition={index % 2 === 0 ? "right" : "left"}
-                featurePageUrl={section.featurePageUrl}
-              />
-            ))}
+            <FeatureSections client:load sections={sections} />
           </div>
         )
       }

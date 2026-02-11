@@ -7,6 +7,7 @@ import type { DemoState } from "./DemoStateSelector";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
+import { type CommandMenuSection } from "./CommandMenuIllustration";
 import { AssistantDemo, type Message } from "./demo/AssistantDemo";
 import { STATE_CONFIG, DEFAULT_STATE_ORDER } from "./DemoStateSelector";
 import { SearchIllustration } from "./SearchIllustration";
@@ -38,7 +39,7 @@ const documents = [
 export function ComposableDemo({ activeState }: ComposableDemoProps) {
   return (
     <section className="flex flex-col items-center overflow-visible w-full" aria-hidden="true">
-      <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full p-2 relative bg-white">
+      <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full p-2 relative bg-white select-none">
         <GradientOutline />
         <div className="flex items-center gap-x-1.5 mb-1.5">
           {[...Array(3)].map((_, i) => (
@@ -51,7 +52,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
               <motion.div
                 className=""
                 animate={{
-                  width: activeState === "ai-assistant" ? 0 : "auto",
+                  width: activeState === "assistant" ? 0 : "auto",
                 }}
               >
                 <div className="w-52 flex flex-col p-1">
@@ -83,7 +84,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                 </div>
               </motion.div>
               <motion.div
-                className={`flex flex-1 overflow-hidden relative bg-white ${activeState === "ai-assistant" ? "border-r border-black/8 rounded-r-lg" : "border-l border-black/8 rounded-l-lg"}`}
+                className={`flex flex-1 overflow-hidden relative bg-white ${activeState === "assistant" ? "border-r border-black/8 rounded-r-lg" : "border-l border-black/8 rounded-l-lg"}`}
                 transition={{
                   type: "spring",
                   stiffness: 400,
@@ -108,7 +109,6 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                             className="rounded-full size-6 border-2 border-white shrink-0 flex items-center justify-center text-[0.65rem] font-semibold text-white select-none"
                             style={{
                               backgroundColor: c.color,
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
                             }}
                           >
                             {c.name[0]}
@@ -124,7 +124,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                 </div>
               </motion.div>
               <AnimatePresence>
-                {activeState === "ai-assistant" && <AIAssistantSidebar />}
+                {activeState === "assistant" && <AIAssistantSidebar />}
               </AnimatePresence>
               <AnimatePresence>{activeState === "search" && <SearchOverlay />}</AnimatePresence>
             </div>
@@ -176,61 +176,112 @@ function AIAssistantSidebar() {
   );
 }
 
+import {
+  ListFilled,
+  TextNumberListLtrFilled,
+  TextStrikethroughFilled,
+} from "@fluentui/react-icons";
+import {
+  BlockquoteIcon,
+  BoldIcon,
+  CodeIcon,
+  ItalicIcon,
+  LinkIcon,
+} from "@lydie/ui/components/icons/wysiwyg-icons";
+
 function ToolbarItems() {
   return (
-    <div className="flex items-center gap-1">
-      {/* Simple toolbar buttons - using text for simplicity */}
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700" title="Bold">
-        <span className="text-xs font-bold">B</span>
-      </button>
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700" title="Italic">
-        <span className="text-xs italic">I</span>
-      </button>
+    <div className="flex items-center">
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-600 px-1.5">Paragraph</span>
+      </div>
+
       <div className="mx-1 h-6 w-px bg-gray-200" />
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Heading 1">
-        H1
-      </button>
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Heading 2">
-        H2
-      </button>
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Heading 3">
-        H3
-      </button>
+
+      <div className="flex items-center gap-1">
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <BoldIcon className="size-[15px]" />
+        </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <ItalicIcon className="size-[15px]" />
+        </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <TextStrikethroughFilled className="size-[15px]" />
+        </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <CodeIcon className="size-[15px]" />
+        </div>
+      </div>
+
       <div className="mx-1 h-6 w-px bg-gray-200" />
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Bullet List">
-        •
-      </button>
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Numbered List">
-        1.
-      </button>
+
+      <div className="flex items-center gap-1">
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <BlockquoteIcon className="size-[15px]" />
+        </div>
+      </div>
+
       <div className="mx-1 h-6 w-px bg-gray-200" />
-      <button className="p-1 rounded hover:bg-gray-100 text-gray-700 text-xs" title="Link">
-        Link
-      </button>
+
+      <div className="flex items-center gap-1">
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <ListFilled className="size-[15px]" />
+        </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <TextNumberListLtrFilled className="size-[15px]" />
+        </div>
+      </div>
+
+      <div className="mx-1 h-6 w-px bg-gray-200" />
+
+      <div className="flex items-center gap-1">
+        <div className="flex h-7 w-7 items-center justify-center rounded text-gray-700">
+          <LinkIcon className="size-[15px]" />
+        </div>
+      </div>
     </div>
   );
 }
 
 function SearchOverlay() {
-  const menuSections = [
+  // Example showing a search query with document results
+  const searchQuery = "trip";
+
+  const menuSections: CommandMenuSection[] = [
     {
-      title: "Favorites",
+      id: "favorites",
+      heading: "Favorites",
       items: [
-        { label: "Create new document", selected: false, icon: "search" as const },
-        { label: "Publish document", selected: false, icon: "search" as const },
+        { id: "create", label: "Create new document…", icon: "add" },
+        { id: "publish", label: "Publish document", icon: "publish" },
       ],
     },
     {
-      title: "Navigation",
+      id: "navigation",
+      heading: "Navigation",
       items: [
-        { label: "Search documents", selected: true, icon: "search" as const },
-        { label: "Go home", selected: false, icon: "search" as const },
-        { label: "Go to assistant", selected: false, icon: "search" as const },
+        { id: "search", label: "Search documents", icon: "search", selected: false },
+        { id: "home", label: "Go home", icon: "home" },
+        { id: "assistant", label: "Go to assistant", icon: "assistant" },
+      ],
+    },
+    {
+      id: "quick-results",
+      heading: "Quick results",
+      items: [
+        { id: "doc-1", label: "Trip Master Plan", icon: "document" },
+        { id: "doc-2", label: "Japan Trip Planning", icon: "document" },
       ],
     },
   ];
 
-  return <SearchIllustration placeholder="Type a command or search..." sections={menuSections} />;
+  return (
+    <SearchIllustration
+      query={searchQuery}
+      placeholder="Type a command or search..."
+      sections={menuSections}
+    />
+  );
 }
 
 function LinkingOverlay() {
@@ -240,49 +291,18 @@ function LinkingOverlay() {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8, scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className="absolute left-1/2 bottom-[calc(100%+0.75rem)] -translate-x-1/2 z-30"
+      className="absolute left-1/2 bottom-[calc(100%+0.75rem)] -translate-x-1/2 z-30 editor-content-reset"
     >
-      <div className="bg-white rounded-xl shadow-lg border border-blue-200/60 overflow-hidden w-[240px]">
-        <div className="h-1.5 bg-linear-to-r from-blue-400 via-blue-500 to-blue-400" />
-
-        <div className="flex items-center gap-3 p-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 shadow-sm">
-            <svg
-              className="size-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.75}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-              />
-            </svg>
+      <div className="bg-white rounded-xl shadow-legit ring ring-black/4 overflow-hidden w-[240px]">
+        <div className="flex flex-col gap-3 p-2">
+          <div className="flex flex-col gap-y-0.5 w-full p-1 rounded-lg ring ring-black/4 bg-gray-100">
+            <div className="h-3 w-[85%] rounded-md bg-black/5"></div>
+            <div className="h-3 w-[90%] rounded-md bg-black/5"></div>
+            <div className="h-3 w-[75%] rounded-md bg-black/5"></div>
+            <div className="h-3 w-[90%] rounded-md bg-black/5"></div>
+            <div className="h-3 w-[80%] rounded-md bg-black/5"></div>
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-gray-900 truncate">Trip Master Plan</div>
-            <div className="text-xs text-blue-600 font-medium">Linked document</div>
-          </div>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.15, type: "spring", stiffness: 500 }}
-            className="shrink-0"
-          >
-            <div className="size-5 rounded-full bg-blue-500 flex items-center justify-center">
-              <svg
-                className="size-3 text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={3}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
-            </div>
-          </motion.div>
+          <span className="text-sm font-medium text-gray-900">Trip Master Plan</span>
         </div>
       </div>
     </motion.div>
@@ -328,7 +348,7 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
         <div className="relative">
           <p
             className={`text-gray-700 leading-relaxed mb-4 ${
-              currentState === "ai-assistant"
+              currentState === "assistant"
                 ? "rounded-sm bg-blue-100/50 ring-2 ring-blue-400/40 px-2 py-1"
                 : ""
             }`}

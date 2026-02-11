@@ -1,8 +1,6 @@
-import type React from "react";
-
 export interface FAQItem {
   q: string;
-  a: React.ReactNode;
+  a: string;
 }
 
 export interface FeatureSubpage {
@@ -34,7 +32,19 @@ export interface Feature {
     href: string;
     text: string;
   };
-  icon?: string;
+  iconColor:
+    | "coral"
+    | "purple"
+    | "blue"
+    | "mint"
+    | "gold"
+    | "pink"
+    | "periwinkle"
+    | "green"
+    | "peach"
+    | "violet"
+    | "cyan"
+    | "rose";
   faqs: FAQItem[];
   content: string[];
   subpages?: FeatureSubpage[];
@@ -44,7 +54,7 @@ export interface Feature {
 
 export const features: Feature[] = [
   {
-    slug: "ai-assistant",
+    slug: "assistant",
     title: "AI Assistant",
     description:
       "Powerful AI features built directly into your editor. Get writing assistance, generate content, and chat with your documents.",
@@ -59,6 +69,7 @@ export const features: Feature[] = [
       href: "https://lydie.co/blog",
       text: "Learn more",
     },
+    iconColor: "purple",
     accentColor: "#a855f7",
     secondaryAccentColor: "#ec4899",
     faqs: [
@@ -255,6 +266,7 @@ export const features: Feature[] = [
       href: "https://lydie.co/blog/real-time-collaboration-implementation-in-lydie",
       text: "Behind the scenes",
     },
+    iconColor: "blue",
     accentColor: "#30bced",
     secondaryAccentColor: "#6eeb83",
     faqs: [
@@ -298,6 +310,7 @@ export const features: Feature[] = [
       "Find anything in your workspace instantly. Powerful full-text search with filters, shortcuts, and smart suggestions.",
     ctaText: "Start searching",
     ctaHref: "https://app.lydie.co/auth",
+    iconColor: "cyan",
     accentColor: "#3b82f6",
     faqs: [
       {
@@ -327,6 +340,7 @@ export const features: Feature[] = [
       "Connect your ideas with bidirectional links. Create a web of knowledge and discover connections between your documents.",
     ctaText: "Start linking",
     ctaHref: "https://app.lydie.co/auth",
+    iconColor: "violet",
     accentColor: "#8b5cf6",
     faqs: [
       {

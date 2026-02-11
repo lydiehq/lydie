@@ -4,12 +4,13 @@ import { ArrowLeftRegular, ClockRegular, PersonRegular } from "@fluentui/react-i
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { queries } from "@lydie/zero/queries";
-import { formatDistanceToNow } from "date-fns";
 import { Link } from "@tanstack/react-router";
+import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 
-import { VersionPreviewEditor } from "./VersionPreviewEditor";
 import { useDocumentVersions, type Version } from "@/hooks/use-document-versions";
+
+import { VersionPreviewEditor } from "./VersionPreviewEditor";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
@@ -24,7 +25,7 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(versions[0] || null);
   const [versionToRestore, setVersionToRestore] = useState<Version | null>(null);
   const [restoreDescription, setRestoreDescription] = useState("");
-  
+
   const { restoreVersion, isLoading } = useDocumentVersions({
     documentId: doc.id,
     organizationId,
@@ -32,7 +33,7 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
 
   const handleRestore = async () => {
     if (!versionToRestore) return;
-    
+
     try {
       await restoreVersion(versionToRestore, restoreDescription || undefined);
       setVersionToRestore(null);
@@ -63,7 +64,7 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
             <p className="text-sm text-gray-500">{doc.title}</p>
           </div>
         </div>
-        
+
         {selectedVersion && (
           <div className="flex items-center gap-2">
             <Button
@@ -100,14 +101,16 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
             </Heading>
             <p className="text-xs text-gray-500 mt-1">{versions.length} versions saved</p>
           </div>
-          
+
           <div className="divide-y divide-gray-100">
             {versions.map((version, index) => (
               <button
                 key={version.id}
                 onClick={() => setSelectedVersion(version)}
                 className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${
-                  selectedVersion?.id === version.id ? "bg-blue-50 border-l-2 border-l-blue-500" : ""
+                  selectedVersion?.id === version.id
+                    ? "bg-blue-50 border-l-2 border-l-blue-500"
+                    : ""
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -125,7 +128,7 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
                   <span className="flex items-center gap-1">
                     <ClockRegular className="h-3 w-3" />
@@ -152,10 +155,10 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
               Restore Version
             </Heading>
             <p className="text-sm text-gray-500 mb-4">
-              This will restore the document to Version {versionToRestore.version_number}. 
-              Your current version will be saved as a backup.
+              This will restore the document to Version {versionToRestore.version_number}. Your
+              current version will be saved as a backup.
             </p>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description (optional)
@@ -168,7 +171,7 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               />
             </div>
-            
+
             <div className="flex justify-end gap-2">
               <Button
                 intent="secondary"
@@ -180,12 +183,7 @@ export function VersionHistoryPage({ doc, versions, organizationId, organization
               >
                 Cancel
               </Button>
-              <Button
-                intent="primary"
-                size="sm"
-                onPress={handleRestore}
-                isDisabled={isLoading}
-              >
+              <Button intent="primary" size="sm" onPress={handleRestore} isDisabled={isLoading}>
                 Restore
               </Button>
             </div>

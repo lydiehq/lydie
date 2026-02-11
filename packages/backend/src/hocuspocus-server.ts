@@ -1,8 +1,8 @@
 import { Database } from "@hocuspocus/extension-database";
 import { Hocuspocus, onAuthenticatePayload } from "@hocuspocus/server";
 import { authClient } from "@lydie/core/auth";
-import { createId } from "@lydie/core/id";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
+import { createId } from "@lydie/core/id";
 import { db } from "@lydie/database";
 import { documentVersionsTable, documentsTable, membersTable } from "@lydie/database/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -83,7 +83,7 @@ export const hocuspocus = new Hocuspocus({
 
         const now = Date.now();
         const lastTime = lastVersionTime.get(documentName) || 0;
-        
+
         if (now - lastTime >= VERSION_INTERVAL_MS) {
           try {
             const [latestVersion] = await db
@@ -116,17 +116,15 @@ export const hocuspocus = new Hocuspocus({
               .offset(MAX_VERSIONS_PER_DOCUMENT);
 
             if (versionsToDelete.length > 0) {
-              await db
-                .delete(documentVersionsTable)
-                .where(
-                  and(
-                    eq(documentVersionsTable.documentId, documentName),
-                    inArray(
-                      documentVersionsTable.id,
-                      versionsToDelete.map((v) => v.id),
-                    ),
+              await db.delete(documentVersionsTable).where(
+                and(
+                  eq(documentVersionsTable.documentId, documentName),
+                  inArray(
+                    documentVersionsTable.id,
+                    versionsToDelete.map((v) => v.id),
                   ),
-                );
+                ),
+              );
             }
 
             lastVersionTime.set(documentName, now);

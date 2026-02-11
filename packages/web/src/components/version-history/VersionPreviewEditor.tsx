@@ -17,7 +17,7 @@ export function VersionPreviewEditor({ yjsState }: Props) {
       const ydoc = new Y.Doc();
       const update = base64ToUint8Array(yjsState);
       Y.applyUpdate(ydoc, update);
-      
+
       // Convert to JSON for TipTap
       return convertYjsToJson(yjsState);
     } catch (error) {

@@ -3,7 +3,7 @@ import Layout from "../../../layouts/Layout.astro";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { UniversalConverter } from "../../../components/tools/UniversalConverter";
 import { HowToSection } from "../../../components/tools/HowToSection";
-import { FAQSection } from "../../../components/tools/FAQSection";
+import { FAQ } from "../../../components/generic/FAQ";
 import { RelatedConverters } from "../../../components/tools/RelatedConverters";
 import { conversionConfigs } from "../../../data/conversions";
 import { Container } from "../../../components/Container";
@@ -40,15 +40,20 @@ const structuredData = {
   ],
 };
 
+const faqItems = config.faqs.map((faq) => ({
+  question: faq.q,
+  answer: faq.a,
+}));
+
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: config.faqs.map((faq) => ({
+  mainEntity: faqItems.map((faq) => ({
     "@type": "Question",
-    name: faq.q,
+    name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.a,
+      text: faq.answer,
     },
   })),
 };
@@ -95,7 +100,7 @@ const faqData = {
         <li>Archiving content in different formats</li>
       </ul>
     </div>
-    <FAQSection faqs={config.faqs} client:load />
+    <FAQ items={faqItems} client:load />
     <RelatedConverters slugs={config.relatedSlugs} />
   </Container>
 </Layout>

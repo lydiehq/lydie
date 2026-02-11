@@ -31,9 +31,8 @@ export const documentVersionMutators = {
           .limit(1),
       );
 
-      const nextVersionNumber = existingVersions.length > 0 
-        ? (existingVersions[0]?.version_number ?? 0) + 1 
-        : 1;
+      const nextVersionNumber =
+        existingVersions.length > 0 ? (existingVersions[0]?.version_number ?? 0) + 1 : 1;
 
       await tx.mutate.document_versions.insert(
         withTimestamps({
@@ -61,10 +60,7 @@ export const documentVersionMutators = {
 
       // Verify the version belongs to this document
       const version = await tx.run(
-        zql.document_versions
-          .where("id", versionId)
-          .where("document_id", documentId)
-          .one(),
+        zql.document_versions.where("id", versionId).where("document_id", documentId).one(),
       );
 
       if (!version) {
@@ -84,19 +80,12 @@ export const documentVersionMutators = {
       organizationId: z.string(),
       changeDescription: z.string().optional(),
     }),
-    async ({
-      tx,
-      ctx,
-      args: { versionId, documentId, organizationId, changeDescription },
-    }) => {
+    async ({ tx, ctx, args: { versionId, documentId, organizationId, changeDescription } }) => {
       hasOrganizationAccess(ctx, organizationId);
       await verifyDocumentAccess(tx, documentId, organizationId);
 
       const version = await tx.run(
-        zql.document_versions
-          .where("id", versionId)
-          .where("document_id", documentId)
-          .one(),
+        zql.document_versions.where("id", versionId).where("document_id", documentId).one(),
       );
 
       if (!version) {
@@ -104,9 +93,7 @@ export const documentVersionMutators = {
       }
 
       // Get current document state before restoring (to save as a backup version)
-      const currentDocument = await tx.run(
-        zql.documents.where("id", documentId).one(),
-      );
+      const currentDocument = await tx.run(zql.documents.where("id", documentId).one());
 
       if (!currentDocument) {
         throw new Error("Document not found");
@@ -120,9 +107,8 @@ export const documentVersionMutators = {
           .limit(1),
       );
 
-      const nextVersionNumber = existingVersions.length > 0 
-        ? (existingVersions[0]?.version_number ?? 0) + 1 
-        : 1;
+      const nextVersionNumber =
+        existingVersions.length > 0 ? (existingVersions[0]?.version_number ?? 0) + 1 : 1;
 
       if (currentDocument.yjs_state) {
         await tx.mutate.document_versions.insert(

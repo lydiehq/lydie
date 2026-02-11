@@ -10,15 +10,15 @@ export interface FeatureSpotProps {
   className?: string;
 }
 
-export function FeatureSpot({ type, className = "" }: FeatureSpotProps) {
+export function FeatureSpot({ type }: FeatureSpotProps) {
   const spots: Record<DemoState, React.ReactNode> = {
     search: <FeatureSpotSearch />,
     collaboration: <FeatureSpotCollaboration />,
     linking: <FeatureSpotLinking />,
-    "ai-assistant": <FeatureSpotAI />,
+    assistant: <FeatureSpotAI />,
   };
 
-  return <div>{spots[type]}</div>;
+  return spots[type];
 }
 
 export { FeatureSpotSearch, FeatureSpotCollaboration, FeatureSpotLinking, FeatureSpotAI };

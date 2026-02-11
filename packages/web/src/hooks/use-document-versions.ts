@@ -15,13 +15,15 @@ export interface Version {
   change_description: string | null;
   created_at: number;
   updated_at: number;
-  user?: {
-    readonly id: string;
-    readonly name: string;
-    readonly image: string | null;
-    readonly email?: string;
-    readonly role?: string;
-  } | undefined;
+  user?:
+    | {
+        readonly id: string;
+        readonly name: string;
+        readonly image: string | null;
+        readonly email?: string;
+        readonly role?: string;
+      }
+    | undefined;
 }
 
 interface UseDocumentVersionsOptions {

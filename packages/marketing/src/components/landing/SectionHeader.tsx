@@ -2,6 +2,21 @@ import { clsx } from "clsx";
 
 import { Heading } from "../generic/Heading";
 import { Eyebrow } from "./Eyebrow";
+import { FeatureBadge } from "./FeatureIcon";
+
+type ColorId =
+  | "coral"
+  | "purple"
+  | "blue"
+  | "mint"
+  | "gold"
+  | "pink"
+  | "periwinkle"
+  | "green"
+  | "peach"
+  | "violet"
+  | "cyan"
+  | "rose";
 
 type Props = {
   eyebrow?: string;
@@ -9,9 +24,21 @@ type Props = {
   description?: string;
   centered?: boolean;
   className?: string;
+  feature?: {
+    icon: "assistant" | "linking" | "collaboration" | "search" | "speed";
+    color: ColorId;
+    text: string;
+  };
 };
 
-export function SectionHeader({ eyebrow, title, description, centered, className }: Props) {
+export function SectionHeader({
+  eyebrow,
+  title,
+  description,
+  centered,
+  className,
+  feature,
+}: Props) {
   return (
     <div
       className={clsx(
@@ -20,6 +47,7 @@ export function SectionHeader({ eyebrow, title, description, centered, className
         className,
       )}
     >
+      {feature && <FeatureBadge icon={feature.icon} color={feature.color} text={feature.text} />}
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
       <Heading level={2}>{title}</Heading>
       {description && <p className="text-base/relaxed text-black/60 text-balance">{description}</p>}

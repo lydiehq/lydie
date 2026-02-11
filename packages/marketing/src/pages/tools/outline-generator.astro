@@ -4,7 +4,7 @@ import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { OutlineGenerator as OutlineGeneratorTool } from "../../components/tools/OutlineGenerator";
 import { HowToSection } from "../../components/tools/HowToSection";
-import { FAQSection } from "../../components/tools/FAQSection";
+import { FAQ } from "../../components/generic/FAQ";
 import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
@@ -22,30 +22,30 @@ const howToSteps = [
   "Click generate to create your outline. Download it as Markdown or copy to use in your writing tool.",
 ];
 
-const faqs = [
+const faqItems = [
   {
-    q: "What types of outlines can I generate?",
-    a: "You can generate outlines for articles, essays, and reports. Each type is structured differently - articles focus on engagement and flow, essays on argumentative structure, and reports on comprehensive analysis.",
+    question: "What types of outlines can I generate?",
+    answer: "You can generate outlines for articles, essays, and reports. Each type is structured differently - articles focus on engagement and flow, essays on argumentative structure, and reports on comprehensive analysis.",
   },
   {
-    q: "How detailed are the generated outlines?",
-    a: "The AI generates hierarchical outlines with main sections and subsections. The level of detail depends on your topic complexity and the context you provide.",
+    question: "How detailed are the generated outlines?",
+    answer: "The AI generates hierarchical outlines with main sections and subsections. The level of detail depends on your topic complexity and the context you provide.",
   },
   {
-    q: "Is my data stored or used for training?",
-    a: "No, we don't store your topics or generated outlines. All processing is done in real-time and data is discarded immediately after generation.",
+    question: "Is my data stored or used for training?",
+    answer: "No, we don't store your topics or generated outlines. All processing is done in real-time and data is discarded immediately after generation.",
   },
   {
-    q: "Can I customize the outline after it's generated?",
-    a: "Yes! The outline is generated in Markdown format, making it easy to edit in any text editor. You can add, remove, or modify sections as needed.",
+    question: "Can I customize the outline after it's generated?",
+    answer: "Yes! The outline is generated in Markdown format, making it easy to edit in any text editor. You can add, remove, or modify sections as needed.",
   },
   {
-    q: "Are there any usage limits?",
-    a: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 outlines per hour.",
+    question: "Are there any usage limits?",
+    answer: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 outlines per hour.",
   },
   {
-    q: "What's the difference between article, essay, and report outlines?",
-    a: "Articles are structured for readability and engagement with a focus on hooks and flow. Essays follow academic structure with introduction, body paragraphs, and conclusion. Reports are comprehensive with executive summaries, methodology, and findings.",
+    question: "What's the difference between article, essay, and report outlines?",
+    answer: "Articles are structured for readability and engagement with a focus on hooks and flow. Essays follow academic structure with introduction, body paragraphs, and conclusion. Reports are comprehensive with executive summaries, methodology, and findings.",
   },
 ];
 
@@ -69,12 +69,12 @@ const structuredData = {
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
+  mainEntity: faqItems.map((faq) => ({
     "@type": "Question",
-    name: faq.q,
+    name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.a,
+      text: faq.answer,
     },
   })),
 };
@@ -163,7 +163,7 @@ const faqData = {
         piece.
       </p>
     </div>
-    <FAQSection faqs={faqs} client:load />
+    <FAQ items={faqItems} client:load />
     <OtherToolsSection currentHref="/tools/outline-generator" />
   </Container>
 </Layout>

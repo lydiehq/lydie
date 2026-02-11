@@ -4,10 +4,14 @@ import { Container } from "../../../components/Container";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { Button } from "../../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { FAQSection } from "../../../components/tools/FAQSection";
+import { FAQ } from "../../../components/generic/FAQ";
 import { GradientOutline } from "../../../components/generic/GradientOutline";
 import Divider from "../../../components/landing/Divider.astro";
 import { CTASection } from "../../../components/landing/CTASection";
+import {
+  FeatureIcon,
+  featureSlugToIcon,
+} from "../../../components/landing/FeatureIcon";
 import {
   features,
   type FeatureSubpage,
@@ -51,6 +55,8 @@ const {
   accentColor,
   secondaryAccentColor,
 } = subpageData;
+
+
 
 // Parse content sections to separate paragraphs from headings
 const contentSections = content.map((section) => {
@@ -177,6 +183,12 @@ const contentSections = content.map((section) => {
     </div>
     <div class="text-center relative py-12 size-full">
       <GradientOutline />
+      <div class="flex justify-center mb-6">
+        <FeatureIcon
+          icon={featureSlugToIcon[slug!] || "assistant"}
+          color={feature.iconColor}
+        />
+      </div>
       <h1
         class="text-3xl font-medium text-black/85 tracking-tight mb-6 leading-tight"
       >
@@ -287,7 +299,7 @@ const contentSections = content.map((section) => {
         }
       </div>
       <Divider />
-      <FAQSection faqs={faqs} client:load />
+      <FAQ items={faqs} client:load />
     </div>
   </Container>
   <CTASection client:load />

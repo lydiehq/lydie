@@ -3,14 +3,14 @@ import { Button } from "../generic/Button";
 import styles from "./Hero.module.css";
 import { HeroBackground } from "./HeroBackground";
 
-interface HeroProps {
+type Props = {
   imageSrc: string;
   imageSrcSet?: string;
   imageSizes?: string;
   imageAlt: string;
   imageWidth?: number;
   imageHeight?: number;
-}
+};
 
 export function Hero({
   imageSrc,
@@ -19,7 +19,7 @@ export function Hero({
   imageAlt,
   imageWidth,
   imageHeight,
-}: HeroProps) {
+}: Props) {
   return (
     <div className="md:px-4">
       <HeroBackground className="md:rounded-xl md:ring md:ring-black/20 relative md:px-4">

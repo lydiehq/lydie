@@ -4,7 +4,7 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Container } from "../../components/Container";
 import { WordCounter as WordCounterTool } from "../../components/tools/WordCounter";
 import { HowToSection } from "../../components/tools/HowToSection";
-import { FAQSection } from "../../components/tools/FAQSection";
+import { FAQ } from "../../components/generic/FAQ";
 import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
@@ -22,34 +22,34 @@ const howToSteps = [
   "Copy the statistics to your clipboard or download a full report with your text and all stats.",
 ];
 
-const faqs = [
+const faqItems = [
   {
-    q: "Is my text stored or sent anywhere?",
-    a: "No, absolutely not. This word counter works entirely in your browser using JavaScript. Your text never leaves your device, and we don't store or have access to any of your content.",
+    question: "Is my text stored or sent anywhere?",
+    answer: "No, absolutely not. This word counter works entirely in your browser using JavaScript. Your text never leaves your device, and we don't store or have access to any of your content.",
   },
   {
-    q: "How is reading time calculated?",
-    a: "Reading time is calculated based on an average reading speed of 225 words per minute, which is the typical pace for comfortable reading. Speaking time uses 140 words per minute, the average conversational speaking speed.",
+    question: "How is reading time calculated?",
+    answer: "Reading time is calculated based on an average reading speed of 225 words per minute, which is the typical pace for comfortable reading. Speaking time uses 140 words per minute, the average conversational speaking speed.",
   },
   {
-    q: "What counts as a word?",
-    a: "A word is any sequence of characters separated by whitespace (spaces, tabs, or line breaks). Numbers and punctuation attached to letters count as part of the word.",
+    question: "What counts as a word?",
+    answer: "A word is any sequence of characters separated by whitespace (spaces, tabs, or line breaks). Numbers and punctuation attached to letters count as part of the word.",
   },
   {
-    q: "How are sentences counted?",
-    a: "Sentences are counted by identifying text segments ending with period (.), exclamation mark (!), or question mark (?). This works for most standard writing.",
+    question: "How are sentences counted?",
+    answer: "Sentences are counted by identifying text segments ending with period (.), exclamation mark (!), or question mark (?). This works for most standard writing.",
   },
   {
-    q: "What defines a paragraph?",
-    a: "A paragraph is defined as text separated by one or more blank lines. Single line breaks within continuous text don't create new paragraphs.",
+    question: "What defines a paragraph?",
+    answer: "A paragraph is defined as text separated by one or more blank lines. Single line breaks within continuous text don't create new paragraphs.",
   },
   {
-    q: "Can I use this for academic writing?",
-    a: "Yes! This tool is perfect for essays, research papers, and assignments that have word count requirements. The character count (without spaces) is useful for assignments with character limits.",
+    question: "Can I use this for academic writing?",
+    answer: "Yes! This tool is perfect for essays, research papers, and assignments that have word count requirements. The character count (without spaces) is useful for assignments with character limits.",
   },
   {
-    q: "Does it work offline?",
-    a: "Once the page is loaded, the word counter works completely offline since all processing happens in your browser. However, you need to load the page initially while online.",
+    question: "Does it work offline?",
+    answer: "Once the page is loaded, the word counter works completely offline since all processing happens in your browser. However, you need to load the page initially while online.",
   },
 ];
 
@@ -74,12 +74,12 @@ const structuredData = {
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
+  mainEntity: faqItems.map((faq) => ({
     "@type": "Question",
-    name: faq.q,
+    name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.a,
+      text: faq.answer,
     },
   })),
 };
@@ -225,7 +225,7 @@ const faqData = {
         shorter words typically improve readability.
       </p>
     </div>
-    <FAQSection faqs={faqs} client:load />
+    <FAQ items={faqItems} client:load />
     <OtherToolsSection currentHref="/tools/word-counter" />
   </Container>
 </Layout>

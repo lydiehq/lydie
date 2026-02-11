@@ -1,41 +1,67 @@
-interface Message {
+import { CastShadow } from "../../generic/CastShadow";
+import { Logo } from "../../Logo";
+
+export interface Message {
   id: string;
-  type: "user" | "assistant" | "thinking" | "tool-call" | "tool-result";
+  type: "user" | "assistant" | "tool-call" | "tool-result";
   content: string;
   toolName?: string;
   status?: "pending" | "complete";
-  delay?: number;
+}
+
+type UserMessageProps = {
+  content: string;
+  className?: string;
+};
+
+type AssistantMessageProps = {
+  content: string;
+  className?: string;
+};
+
+export function UserMessage({ content }: UserMessageProps) {
+  return (
+    <div className="flex self-end justify-end max-w-[85%]">
+      <CastShadow height={20} strength={0.2}>
+        <div className="bg-white shadow-md ring ring-black/4 rounded-2xl rounded-tr-md px-3 py-2 text-sm text-gray-600 leading-relaxed">
+          {content}
+        </div>
+      </CastShadow>
+    </div>
+  );
+}
+
+export function AssistantMessage({ content }: AssistantMessageProps) {
+  return (
+    <div className="flex self-start justify-start max-w-[85%] flex-col gap-y-1.5">
+      <CastShadow height={20} strength={0.2}>
+        <div className=" bg-white ring ring-black/4 shadow-md rounded-2xl rounded-tl-md px-3 py-2 text-sm text-gray-600 leading-relaxed">
+          {content}
+        </div>
+      </CastShadow>
+    </div>
+  );
 }
 
 type AssistantDemoProps = {
   messages: Message[];
-  visibleMessageIds?: string[];
   showInput?: boolean;
   className?: string;
   messagesClassName?: string;
   inputClassName?: string;
-  onReplay?: () => void;
-  isPlaying?: boolean;
 };
 
 export function AssistantDemo({
   messages,
-  visibleMessageIds,
   showInput = true,
   className = "",
   messagesClassName = "",
   inputClassName = "",
-  onReplay,
-  isPlaying = false,
 }: AssistantDemoProps) {
-  const visibleMessages = visibleMessageIds
-    ? messages.filter((msg) => visibleMessageIds.includes(msg.id))
-    : messages;
-
   return (
     <div className={`flex flex-col h-full overflow-hidden ${className}`}>
       <div className={`flex-1 overflow-y-auto px-4 py-4 space-y-3 ${messagesClassName}`}>
-        {visibleMessages.map((message) => (
+        {messages.map((message) => (
           <MessageComponent key={message.id} message={message} />
         ))}
       </div>
@@ -60,26 +86,6 @@ export function AssistantDemo({
               </svg>
             </button>
           </div>
-
-          {onReplay && (
-            <div className="flex items-center justify-center mt-3 gap-2">
-              <button
-                onClick={onReplay}
-                disabled={isPlaying}
-                className="text-xs text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
-              >
-                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                Replay animation
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -88,31 +94,11 @@ export function AssistantDemo({
 
 function MessageComponent({ message }: { message: Message }) {
   if (message.type === "user") {
-    return (
-      <div className="flex justify-end">
-        <div className="max-w-[85%] bg-gray-100 rounded-2xl rounded-tr-md px-4 py-3 text-sm text-gray-900 leading-relaxed">
-          {message.content}
-        </div>
-      </div>
-    );
+    return <UserMessage content={message.content} />;
   }
 
   if (message.type === "assistant") {
-    return (
-      <div className="flex justify-start">
-        <div className="max-w-[85%] bg-gray-50 rounded-2xl rounded-tl-md px-4 py-3 text-sm text-gray-700 leading-relaxed">
-          {message.content}
-        </div>
-      </div>
-    );
-  }
-
-  if (message.type === "thinking") {
-    return (
-      <div className="flex justify-start">
-        <div className="px-3 py-1.5 text-xs text-gray-400 font-medium">{message.content}</div>
-      </div>
-    );
+    return <AssistantMessage content={message.content} />;
   }
 
   if (message.type === "tool-call") {
@@ -145,6 +131,3 @@ function MessageComponent({ message }: { message: Message }) {
 
   return null;
 }
-
-export type { Message, AssistantDemoProps };
-export { MessageComponent };

@@ -4,7 +4,7 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { Container } from "../../components/Container";
 import { TitleGenerator as TitleGeneratorTool } from "../../components/tools/TitleGenerator";
 import { HowToSection } from "../../components/tools/HowToSection";
-import { FAQSection } from "../../components/tools/FAQSection";
+import { FAQ } from "../../components/generic/FAQ";
 import OtherToolsSection from "../../components/tools/OtherToolsSection.astro";
 
 export const prerender = true;
@@ -23,34 +23,34 @@ const howToSteps = [
   "Click generate to create multiple title options. Copy your favorite or download all for later review.",
 ];
 
-const faqs = [
+const faqItems = [
   {
-    q: "How many titles will be generated?",
-    a: "The AI generates 5 unique title options for each request. This gives you a focused set of options to choose from.",
+    question: "How many titles will be generated?",
+    answer: "The AI generates 5 unique title options for each request. This gives you a focused set of options to choose from.",
   },
   {
-    q: "What makes a good title?",
-    a: "Good titles are clear, compelling, and relevant to your content. They should capture attention, include important keywords naturally, and accurately represent what readers will find. Different content types have different title conventions - blog posts can be more casual, while articles tend to be more formal.",
+    question: "What makes a good title?",
+    answer: "Good titles are clear, compelling, and relevant to your content. They should capture attention, include important keywords naturally, and accurately represent what readers will find. Different content types have different title conventions - blog posts can be more casual, while articles tend to be more formal.",
   },
   {
-    q: "Can I use these titles for SEO?",
-    a: "Yes! The generated titles are designed to be both engaging and SEO-friendly. For best results, include relevant keywords in your description and review the titles to ensure they match your target search terms.",
+    question: "Can I use these titles for SEO?",
+    answer: "Yes! The generated titles are designed to be both engaging and SEO-friendly. For best results, include relevant keywords in your description and review the titles to ensure they match your target search terms.",
   },
   {
-    q: "Is my data stored or used for training?",
-    a: "No, we don't store your descriptions or generated titles. All processing is done in real-time and data is discarded immediately after generation.",
+    question: "Is my data stored or used for training?",
+    answer: "No, we don't store your descriptions or generated titles. All processing is done in real-time and data is discarded immediately after generation.",
   },
   {
-    q: "Are there any usage limits?",
-    a: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 title sets per hour.",
+    question: "Are there any usage limits?",
+    answer: "We have rate limiting in place to ensure fair usage for all users. You can generate up to 100 title sets per hour.",
   },
   {
-    q: "What's the difference between content types?",
-    a: "Blog posts tend to be conversational and may include numbers or questions. Articles are more formal and authoritative. Video titles prioritize curiosity and clarity. Social media titles are punchy and attention-grabbing, often shorter to fit platform constraints.",
+    question: "What's the difference between content types?",
+    answer: "Blog posts tend to be conversational and may include numbers or questions. Articles are more formal and authoritative. Video titles prioritize curiosity and clarity. Social media titles are punchy and attention-grabbing, often shorter to fit platform constraints.",
   },
   {
-    q: "Can I edit the generated titles?",
-    a: "Absolutely! Think of these titles as starting points. You can (and should) adjust them to better fit your specific needs, brand voice, and target audience. The best titles often combine AI suggestions with your personal touch.",
+    question: "Can I edit the generated titles?",
+    answer: "Absolutely! Think of these titles as starting points. You can (and should) adjust them to better fit your specific needs, brand voice, and target audience. The best titles often combine AI suggestions with your personal touch.",
   },
 ];
 
@@ -76,12 +76,12 @@ const structuredData = {
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
+  mainEntity: faqItems.map((faq) => ({
     "@type": "Question",
-    name: faq.q,
+    name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.a,
+      text: faq.answer,
     },
   })),
 };
@@ -186,7 +186,7 @@ const faqData = {
         provide, the more targeted and useful the title suggestions will be.
       </p>
     </div>
-    <FAQSection faqs={faqs} client:load />
+    <FAQ items={faqItems} client:load />
     <OtherToolsSection currentHref="/tools/title-generator" />
   </Container>
 </Layout>

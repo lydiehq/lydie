@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
+import { CommandMenuIllustration, type CommandMenuSection } from "./CommandMenuIllustration";
 import { SectionHeader } from "./SectionHeader";
 
 interface KeyProps {
@@ -55,7 +56,7 @@ function Key({
         <div className={baseClasses}>
           <div
             className={clsx(
-              "absolute inset-1.5 rounded-lg ring ring-black/3",
+              "absolute inset-1.5 rounded-lg ring ring-black/3 transition-colors duration-500",
               showHighlighted ? "bg-blue-400" : "bg-white",
             )}
           />
@@ -66,53 +67,6 @@ function Key({
     </div>
   );
 }
-
-const menuSections = [
-  {
-    title: "Favorites",
-    items: [
-      {
-        label: "Create new document",
-        pathD: "M12 4v16m8-8H4",
-      },
-      {
-        label: "Publish document",
-        pathD: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12",
-      },
-    ],
-  },
-  {
-    title: "Navigation",
-    items: [
-      {
-        label: "Search documents",
-        pathD: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
-        selected: true,
-      },
-      {
-        label: "Go home",
-        pathD:
-          "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-      },
-      {
-        label: "Go to assistant",
-        pathD:
-          "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
-      },
-      {
-        label: "Go to settings",
-        pathD: [
-          "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
-          "M15 12a3 3 0 11-6 0 3 3 0 016 0z",
-        ],
-      },
-      {
-        label: "Go to integrations",
-        pathD: "M13 10V3L4 14h7v7l9-11h-7z",
-      },
-    ],
-  },
-];
 
 const keyMap: Record<string, string> = {
   meta: "meta",
@@ -138,87 +92,28 @@ const keyMap: Record<string, string> = {
   function: "fn",
 };
 
-function CommandMenu() {
-  return (
-    <div className="relative w-full md:w-[440px] h-[320px]">
-      <div className="absolute inset-0 flex flex-col rounded-xl bg-white shadow-legit">
-        <div className="flex items-center border-b border-gray-100 px-3 bg-white rounded-t-xl">
-          <svg
-            className="size-4 text-gray-400 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            type="text"
-            placeholder="Type a command or search..."
-            className="flex h-11 w-full border-none bg-transparent py-3 text-sm outline-none placeholder:text-gray-400"
-            readOnly
-          />
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-2">
-          {menuSections.map((section, sectionIndex) => (
-            <div key={section.title}>
-              <div
-                className={clsx(
-                  "px-3 py-1 text-xs font-medium text-gray-500 text-left",
-                  sectionIndex > 0 && "mt-2",
-                )}
-              >
-                {section.title}
-              </div>
-              {section.items.map((item) => (
-                <div
-                  key={item.label}
-                  className={clsx(
-                    "relative flex cursor-pointer select-none items-center rounded-lg px-3 py-3 text-sm outline-none text-gray-800 transition-colors duration-150",
-                    item.selected ? "bg-gray-100 text-gray-950" : "hover:bg-gray-100",
-                  )}
-                >
-                  <svg
-                    className="size-4 text-gray-400 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    {(Array.isArray(item.pathD) ? item.pathD : [item.pathD]).map((d, i) => (
-                      <path key={i} strokeLinecap="round" strokeLinejoin="round" d={d} />
-                    ))}
-                  </svg>
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2 bg-white text-xs text-gray-500 rounded-b-xl">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">↵</kbd>
-              <span>to select</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-sans">↑↓</kbd>
-              <span>to navigate</span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Convert old menu sections format to new format
+const commandMenuSections: CommandMenuSection[] = [
+  {
+    id: "favorites",
+    heading: "Favorites",
+    items: [
+      { id: "create-doc", label: "Create new document…", icon: "add" },
+      { id: "publish", label: "Publish document", icon: "publish" },
+    ],
+  },
+  {
+    id: "navigation",
+    heading: "Navigation",
+    items: [
+      { id: "search", label: "Search documents", icon: "search", selected: true },
+      { id: "home", label: "Go home", icon: "home" },
+      { id: "assistant", label: "Go to assistant", icon: "assistant" },
+      { id: "settings", label: "Go to settings", icon: "settings" },
+      { id: "integrations", label: "Go to integrations", icon: "integrations" },
+    ],
+  },
+];
 
 export function KeyboardSection() {
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
@@ -280,7 +175,13 @@ export function KeyboardSection() {
             <div className="size-full relative">
               <GradientOutline />
               <div className="rounded-xl absolute inset-0 bg-black/20" />
-              <CommandMenu />
+              <div className="relative w-full md:w-[440px]">
+                <CommandMenuIllustration
+                  sections={commandMenuSections}
+                  className="h-[320px]"
+                  maxHeight="260px"
+                />
+              </div>
             </div>
           </CastShadow>
         </div>
