@@ -10,9 +10,7 @@ import {
   getUseCaseDefinition,
   getAllUseCaseSlugs,
 } from "../../data/use-case-definitions";
-import {
-  getRolesToDisplayForUseCase,
-} from "../../data/role-use-cases";
+import { getRolesToDisplayForUseCase } from "../../data/role-use-cases";
 import { getAllRoles } from "../../data/roles";
 import { Sections } from "../../components/landing/Sections";
 import { resolveSections } from "../../data/sections";
@@ -35,7 +33,7 @@ const { slug } = Astro.params;
 const useCase = getUseCaseDefinition(slug!);
 
 if (!useCase) {
-  return Astro.redirect("/404");
+  return new Response(null, { status: 404 });
 }
 
 const allRoles = getAllRoles();
@@ -233,12 +231,9 @@ const rolesToDisplay = getRolesToDisplayForUseCase(useCase);
                 class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
               >
                 <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                  How {role.terms.actorPlural} use Lydie for{" "}
-                  {useCase.terms.act}
+                  How {role.terms.actorPlural} use Lydie for {useCase.terms.act}
                 </h3>
-                <p class="text-gray-600 text-[15px]/relaxed">
-                  {description}
-                </p>
+                <p class="text-gray-600 text-[15px]/relaxed">{description}</p>
                 <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
                   <span>Learn more</span>
                   <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />

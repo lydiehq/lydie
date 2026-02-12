@@ -20,10 +20,10 @@ import { Sections } from "@/components/landing/Sections";
 import { resolveSections } from "@/data/sections";
 import { UseCaseHero } from "@/components/landing/UseCaseHero";
 
-// Generate all valid role/use-case combinations that are visible
+// Generate all valid role/use-case combinations (only those with role-use-case content)
 export function getStaticPaths() {
   const paths: Array<{ params: { role: string; useCase: string } }> = [];
-  const roles = getAllRoles().filter((role) => role.visible);
+  const roles = getAllRoles();
   const useCases = getAllUseCaseSlugs();
 
   for (const role of roles) {
@@ -46,7 +46,7 @@ const useCaseDef = getUseCaseDefinition(useCaseSlug!);
 const content = getRoleUseCaseContent(roleSlug!, useCaseSlug!);
 
 if (!role || !useCaseDef || !content) {
-  return Astro.redirect("/404");
+  return new Response(null, { status: 404 });
 }
 
 const {
@@ -57,7 +57,7 @@ const {
   faqs,
   statement,
   workflowExample,
-  features,
+  sections,
 } = content;
 
 // Get templates for this role+use case combination (up to 3)
@@ -144,19 +144,9 @@ const templates =
     }
 
     {
-      features && Object.keys(features).length > 0 && (
+      sections && sections.length > 0 && (
         <section class="flex flex-col gap-y-8">
-          <Sections
-            sections={resolveSections(features).map((showcase, index) => ({
-              illustration: showcase.illustration,
-              title: showcase.title,
-              content: showcase.description,
-              featureSlug: showcase.featureSlug,
-              index,
-              featureBadge: showcase.featureBadge,
-            }))}
-            client:load
-          />
+          <Sections sections={resolveSections(sections)} client:load />
         </section>
       )
     }

@@ -252,6 +252,111 @@ export const roleUseCaseContent: RoleUseCaseContent[] = [
       "study-guide-xUnXnq",
     ],
   },
+  {
+    roleSlug: "developers",
+    useCaseSlug: "note-taking",
+    meta: {
+      title: "The Best Note-taking App for Developers",
+    },
+    hero: {
+      title: "Note-taking that fits how developers work",
+      description:
+        "Capture meeting notes, design decisions, and RFC ideas in one fast workspace. Link specs to code context, resurface past decisions, and keep your team's knowledge in sync.",
+    },
+    thumbnail: {
+      title: "Note-taking",
+      description:
+        "Capture meeting notes, design decisions, and RFC ideas. Link specs, resurface context, and keep technical knowledge in one place.",
+    },
+    content: [
+      "Developers juggle meeting notes, design docs, RFCs, and ADRs. When these live in scattered tools or stale READMEs, context gets lost and decisions get repeated. Lydie gives you a single workspace to capture technical notes, link them to each other, and find them when you need them.",
+      "Take notes in standups, architecture reviews, or incident postmortems. Create pages for each project or system. Link related decisions, specs, and meeting outcomes so the next person (or future you) can trace the full picture.",
+      "Powerful search and internal linking mean you can resurface that design discussion from three months ago in seconds.",
+    ],
+    examples: [
+      {
+        title: "Meeting notes",
+        description:
+          "Capture standup notes, architecture review outcomes, and postmortem learnings in structured pages",
+      },
+      {
+        title: "RFCs and design docs",
+        description:
+          "Draft and iterate on RFCs and design docs with linked context and versioned thinking",
+      },
+      {
+        title: "ADRs and decisions",
+        description:
+          "Document architectural decisions and link them to relevant specs and code areas",
+      },
+    ],
+    sections: [
+      {
+        id: "opensource",
+        description:
+          "Lydie is fully open-source under the AGPL license. We strive to keep our code as transparent as possible and gladly accept contributions.",
+      },
+      {
+        id: "assistant",
+        description:
+          "Use the AI assistant to summarize long meeting notes, turn rough bullet points into clear decisions, and draft outlines for RFCs.",
+      },
+      {
+        id: "search",
+        title: "Resurface context in seconds",
+        description:
+          "Find any past note, decision, or spec via the command menu. No more digging through folders or outdated wikis.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Can I use Lydie for technical meeting notes?",
+        answer:
+          "Yes. Lydie is an ideal tool for standups, architecture reviews, and postmortems. Link notes to relevant specs or ADRs so context stays connected.",
+      },
+      {
+        question: "How does note-taking fit with our existing docs?",
+        answer:
+          "Lydie works alongside READMEs and wikis. Use it for evolving notes, meeting outcomes, and design discussions that you want to link and search, without slowing down as the doc grows.",
+      },
+    ],
+    workflowExample: {
+      title: "Example workflow: from meeting notes to documented decisions",
+      description:
+        "See how developers use Lydie to turn meeting notes into linked, searchable team knowledge.",
+      steps: [
+        "Capture meeting notes in a page per meeting or project",
+        "Link related ADRs, specs, and past notes so context is explicit",
+        "Use search to pull up relevant decisions when writing a new RFC",
+        "Use AI to summarize long threads or draft decision summaries",
+      ],
+    },
+    differentiation: {
+      title: "How Lydie differs from typical developer note-taking",
+      points: [
+        {
+          label: "Built for long-form technical writing",
+          description:
+            "Designed for specs, RFCs, and meeting notes that grow—stays fast instead of bogging down.",
+        },
+        {
+          label: "Link decisions to context",
+          description:
+            "Internal linking connects meeting outcomes, ADRs, and specs so nothing lives in isolation.",
+        },
+        {
+          label: "Fast with large docs",
+          description:
+            "Performance stays snappy even with hundreds of pages and long technical documents.",
+        },
+        {
+          label: "AI that helps without replacing you",
+          description:
+            "Summarize meetings, clarify bullet points, and draft outlines while you own the content.",
+        },
+      ],
+    },
+  },
 ];
 
 export function getRoleUseCaseContent(
@@ -365,7 +470,7 @@ export function getFeaturedRolesForUseCase(
 
   for (const [roleSlug, value] of Object.entries(useCase.featuredRoles)) {
     const role = allRoles.find((r) => r.slug === roleSlug);
-    if (!role || !role.visible) continue;
+    if (!role) continue;
 
     // Get the role+use case content for this combination
     const content = getRoleUseCaseContent(roleSlug, useCase.slug);
@@ -402,7 +507,7 @@ export function getAutoLinkedRolesForUseCase(
     if (featuredSlugs.includes(content.roleSlug)) continue;
 
     const role = allRoles.find((r) => r.slug === content.roleSlug);
-    if (!role || !role.visible) continue;
+    if (!role) continue;
 
     autoLinked.push({
       role,

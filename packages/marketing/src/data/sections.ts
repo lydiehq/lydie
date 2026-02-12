@@ -126,7 +126,7 @@ export const sections: Record<SectionId, Section> = {
     id: "opensource",
     title: "Open-source",
     description:
-      "Lydie is fully open-source under the AGPL license. Self-host on your own infrastructure for complete control over your data, or use our cloud version to get started instantly.",
+      "Lydie is fully open-source under the AGPL license. Use our cloud version to get started instantly, with complete transparency and no vendor lock-in. You own your data and can export or integrate with your existing tools.",
     badge: {
       icon: "assistant",
       color: "green",

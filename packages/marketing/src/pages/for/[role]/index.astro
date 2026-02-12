@@ -17,18 +17,16 @@ import { UseCaseHero } from "@/components/landing/UseCaseHero";
 import { getComparison } from "../../../data/comparisons";
 
 export function getStaticPaths() {
-  return getAllRoles()
-    .filter((role) => role.visible)
-    .map((role) => ({
-      params: { role: role.slug },
-    }));
+  return getAllRoles().map((role) => ({
+    params: { role: role.slug },
+  }));
 }
 
 const { role: roleSlug } = Astro.params;
 const role = getRole(roleSlug!);
 
-if (!role || !role.visible) {
-  return Astro.redirect("/404");
+if (!role) {
+  return new Response(null, { status: 404 });
 }
 
 const useCasesToDisplay = getUseCasesToDisplayForRole(role);
@@ -138,9 +136,7 @@ const templates =
                 <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
                   {useCase.thumbnail.title}
                 </h3>
-                <p class="text-gray-600 text-[15px]/relaxed">
-                  {description}
-                </p>
+                <p class="text-gray-600 text-[15px]/relaxed">{description}</p>
                 <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
                   <span>Learn more</span>
                   <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
@@ -151,8 +147,6 @@ const templates =
         </section>
       )
     }
-
-    {/* Comparison Section */}
     {
       comparison && role.comparison && (
         <section class="bg-linear-to-br from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white">

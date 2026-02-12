@@ -46,7 +46,6 @@ export interface Role {
   faqs: FAQItem[];
   ctaText: string;
   relatedFeatures?: string[];
-  visible: boolean;
   /**
    * Sections to display on the role page.
    * Can be section IDs (e.g., "assistant", "opensource") or objects with overrides.
@@ -131,7 +130,6 @@ export const roles = [
       },
     ],
     ctaText: "Try Lydie for research",
-    visible: true,
     relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
   },
   {
@@ -196,7 +194,6 @@ export const roles = [
       },
     ],
     ctaText: "Try Lydie for student life",
-    visible: true,
     relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
     templateSlugs: ["study-guide-xUnXnq"],
   },
@@ -208,9 +205,9 @@ export const roles = [
       actorPlural: "developers",
     },
     hero: {
-      title: "A writing workspace built for developers",
+      title: "A writing workspace developers actually enjoy using",
       description:
-        "Docs, specs, notes, and ideas shouldn’t live in scattered tools. Lydie gives developers a fast, local-first writing workspace to think clearly, document decisions, and build shared knowledge alongside code.",
+        "Docs, specs, and ideas shouldn't be scattered across five different tools. Lydie gives developers a fast, intuitive, and extendable workspace to think clearly, document decisions, and build shared knowledge right next to their code.",
     },
     thumbnail: {
       title: "Writing Workspace for Developers",
@@ -218,9 +215,7 @@ export const roles = [
         "Document systems, write specs, and build a shared knowledge base for your team. Built for developers who value speed, structure, and privacy.",
     },
     meta: {
-      title: "Writing Workspace for Developers",
-      description:
-        "Document systems, write specs, and build a shared knowledge base for your team. A fast, local-first writing workspace built for developers.",
+      title: "The Best Writing Workspace for Developers",
     },
     painPoints: [
       "Docs scattered across Notion, README files, and random Google Docs",
@@ -229,19 +224,18 @@ export const roles = [
       "Hard to onboard new teammates without repeating yourself",
     ],
     featuredUseCases: {
-      "personal-knowledge-base":
-        "Build a personal knowledge base for your code, architecture decisions, and learnings.",
+      "note-taking": true,
     },
     comparison: {
       slug: "notion",
       description:
-        "Compared to Notion, Lydie stays fast with large technical docs, works local-first, and feels closer to how developers already think and write. It’s built for deep writing, not just databases and dashboards.",
+        "Compared to Notion, Lydie stays fast with large technical docs, is open-source and feels closer to how developers already think and write. It's built for deep writing, not just databases and dashboards.",
     },
     faqs: [
       {
         question: "How do developers use Lydie?",
         answer:
-          "Developers use Lydie to write technical documentation, RFCs, design docs, meeting notes, and personal knowledge bases. It’s a place to think through problems, capture decisions, and build shared context over time.",
+          "Developers use Lydie to write technical documentation, RFCs, design docs, meeting notes, and [personal knowledge bases](/use-cases/personal-knowledge-base).",
       },
       {
         question: "Is Lydie a replacement for README files?",
@@ -260,7 +254,6 @@ export const roles = [
       },
     ],
     ctaText: "Try Lydie for developers",
-    visible: true,
     relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
     templateSlugs: [],
   },

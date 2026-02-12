@@ -22,7 +22,7 @@ export const comparisons: Comparison[] = [
     slug: "google-docs",
     name: "Google Docs",
     description:
-      "Looking for an open-source alternative to Google Docs? Lydie provides powerful document editing with real-time collaboration, built-in AI assistance, and the freedom to self-host. Perfect for teams who want full control over their documents and data.",
+      "Looking for an open-source alternative to Google Docs? Lydie provides powerful document editing with real-time collaboration, built-in AI assistance, and complete data ownership. Perfect for teams who want full control over their documents and data.",
     sections: [
       {
         id: "opensource",
@@ -47,7 +47,7 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "Open-source",
-        description: "Self-host and customize the platform to your needs",
+        description: "Open-source and fully customizable to your needs",
         lydie: true,
         competitor: false,
       },
@@ -82,13 +82,13 @@ export const comparisons: Comparison[] = [
     slug: "notion",
     name: "Notion",
     description:
-      "Switch from Notion to Lydie for a more flexible, open-source workspace. With native AI capabilities, unlimited customization through self-hosting, and powerful collaboration tools, Lydie gives you complete ownership of your knowledge base and workflows.",
+      "Switch from Notion to Lydie for a more flexible, open-source workspace. With native AI capabilities, unlimited customization, and powerful collaboration tools, Lydie gives you complete ownership of your knowledge base and workflows.",
     sections: [
       {
         id: "opensource",
         title: "Open-source Notion AI alternative",
         description:
-          "Notion locks you into their platform with no way to self-host or customize. As an open-source Notion AI alternative, Lydie gives you complete control over your data and the ability to customize it to your needs. No vendor lock-in, no data silos - just the freedom to run your workspace your way.",
+          "Notion locks you into their platform with limited customization. As an open-source Notion AI alternative, Lydie gives you complete control over your data and the ability to customize it to your needs. No vendor lock-in, no data silos - just the freedom to run your workspace your way.",
       },
       {
         id: "assistant",
@@ -118,7 +118,7 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "Open-source",
-        description: "Self-host and customize the platform to your needs",
+        description: "Open-source and fully customizable to your needs",
         lydie: true,
         competitor: false,
       },
@@ -176,7 +176,7 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "Open-source",
-        description: "Self-host and customize the platform to your needs",
+        description: "Open-source and fully customizable to your needs",
         lydie: true,
         competitor: false,
       },
@@ -212,8 +212,8 @@ export const comparisons: Comparison[] = [
         competitor: true,
       },
       {
-        name: "Self-hosting",
-        description: "Host on your own infrastructure",
+        name: "Data ownership",
+        description: "Full control over your data, no vendor lock-in",
         lydie: true,
         competitor: false,
       },
@@ -223,7 +223,7 @@ export const comparisons: Comparison[] = [
     slug: "confluence",
     name: "Confluence",
     description:
-      "Switch from Confluence to Lydie for a modern, lightweight alternative. Built for teams who want simple yet powerful documentation without the complexity of enterprise tools. With native AI, real-time collaboration, and the freedom to self-host, Lydie makes team knowledge management effortless.",
+      "Switch from Confluence to Lydie for a modern, lightweight alternative. Built for teams who want simple yet powerful documentation without the complexity of enterprise tools. With native AI, real-time collaboration, and complete data ownership, Lydie makes team knowledge management effortless.",
     sections: [
       {
         id: "opensource",
@@ -253,7 +253,7 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "Open-source",
-        description: "Self-host and customize the platform to your needs",
+        description: "Open-source and fully customizable to your needs",
         lydie: true,
         competitor: false,
       },
@@ -300,7 +300,7 @@ export const comparisons: Comparison[] = [
     slug: "evernote",
     name: "Evernote",
     description:
-      "Move from Evernote to Lydie for a modern, collaborative note-taking experience. While Evernote focuses on personal note-taking, Lydie brings powerful team collaboration, integrated AI, and the flexibility to self-host. Perfect for teams who have outgrown Evernote's limited collaboration features.",
+      "Move from Evernote to Lydie for a modern, collaborative note-taking experience. While Evernote focuses on personal note-taking, Lydie brings powerful team collaboration, integrated AI, and complete data ownership. Perfect for teams who have outgrown Evernote's limited collaboration features.",
     sections: ["opensource", "assistant", "collaboration"],
     features: [
       {
@@ -311,7 +311,7 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "Open-source",
-        description: "Self-host and customize the platform to your needs",
+        description: "Open-source and fully customizable to your needs",
         lydie: true,
         competitor: false,
       },
@@ -364,13 +364,13 @@ export const comparisons: Comparison[] = [
     slug: "onenote",
     name: "OneNote",
     description:
-      "Upgrade from OneNote to Lydie for better team collaboration and modern features. While OneNote excels at personal note-taking with handwriting support, Lydie brings powerful real-time collaboration, integrated AI, and the freedom to self-host. Perfect for teams who need more than OneNote's limited collaboration capabilities.",
+      "Upgrade from OneNote to Lydie for better team collaboration and modern features. While OneNote excels at personal note-taking with handwriting support, Lydie brings powerful real-time collaboration, integrated AI, and complete data ownership. Perfect for teams who need more than OneNote's limited collaboration capabilities.",
     sections: [
       {
         id: "opensource",
         title: "Open-source alternative to OneNote",
         description:
-          "OneNote locks you into Microsoft's ecosystem with no self-hosting options. As an open-source OneNote alternative, Lydie gives you complete control over your notes and data. Self-host on your own infrastructure or use our cloud version - the choice is yours, without vendor lock-in.",
+          "OneNote locks you into Microsoft's ecosystem. As an open-source OneNote alternative, Lydie gives you complete control over your notes and data. Use our cloud version to get started - no vendor lock-in, and you own your data.",
       },
       {
         id: "assistant",
@@ -394,7 +394,7 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "Open-source",
-        description: "Self-host and customize the platform to your needs",
+        description: "Open-source and fully customizable to your needs",
         lydie: true,
         competitor: false,
       },
@@ -453,13 +453,13 @@ export const comparisons: Comparison[] = [
     slug: "nuclino",
     name: "Nuclino",
     description:
-      "Switch from Nuclino to Lydie for an open-source knowledge base alternative. While Nuclino excels at team wikis and knowledge management, Lydie offers the same collaborative documentation with integrated AI, self-hosting capabilities, and complete data ownership. Perfect for teams who want to break free from vendor lock-in.",
+      "Switch from Nuclino to Lydie for an open-source knowledge base alternative. While Nuclino excels at team wikis and knowledge management, Lydie offers the same collaborative documentation with integrated AI and complete data ownership. Perfect for teams who want to break free from vendor lock-in.",
     sections: [
       {
         id: "opensource",
         title: "Open-source alternative to Nuclino",
         description:
-          "Nuclino keeps your knowledge locked in their cloud with no self-hosting option. As an open-source Nuclino alternative, Lydie gives you complete control over your knowledge base. Self-host on your own infrastructure or use our cloud version - the choice is yours, without vendor lock-in.",
+          "Nuclino keeps your knowledge locked in their cloud. As an open-source Nuclino alternative, Lydie gives you complete control over your knowledge base. Use our cloud version to get started - no vendor lock-in, and you own your data.",
       },
       {
         id: "collaboration",
@@ -477,7 +477,7 @@ export const comparisons: Comparison[] = [
       },
       {
         name: "Open-source",
-        description: "Self-host and customize the platform to your needs",
+        description: "Open-source and fully customizable to your needs",
         lydie: true,
         competitor: false,
       },

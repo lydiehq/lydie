@@ -153,6 +153,7 @@ export const useCaseDefinitions = [
     featuredRoles: {
       researchers: true,
       students: true,
+      developers: true,
     },
     workflowExample: {
       title: "Example workflow: capturing and connecting meeting notes",
