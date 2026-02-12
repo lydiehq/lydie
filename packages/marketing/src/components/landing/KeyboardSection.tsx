@@ -36,7 +36,7 @@ function Key({
   const showHighlighted = isHighlighted || isPressed;
 
   const baseClasses = clsx(
-    "relative h-[60px] ring-black/5 ring rounded-xl shadow-legit flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-500 flex-shrink-0 shadow-sm",
+    "relative h-[60px] ring-black/5 ring rounded-xl shadow-legit flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-200 flex-shrink-0 shadow-sm",
     widthClasses[width] || widthClasses.normal,
     showHighlighted
       ? "bg-gradient-to-b from-[#3b82f6] to-[#2563eb] text-white border-[#1d4ed8] border-t-blue-400"
@@ -47,7 +47,7 @@ function Key({
   return (
     <div
       data-key={dataKey}
-      className="transition-transform duration-700 ease-out"
+      className="transition-transform duration-200 ease-out"
       style={{
         transform: rotate !== 0 ? `rotate(${rotate}deg)` : undefined,
       }}
@@ -56,7 +56,7 @@ function Key({
         <div className={baseClasses}>
           <div
             className={clsx(
-              "absolute inset-1.5 rounded-lg ring ring-black/3 transition-colors duration-500",
+              "absolute inset-1.5 rounded-lg ring ring-black/3 transition-colors duration-200",
               showHighlighted ? "bg-blue-400" : "bg-white",
             )}
           />

@@ -1,57 +1,69 @@
 ---
-import { Container } from "../../components/Container";
 import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { ArrowRightRegular } from "@fluentui/react-icons";
-import { GradientOutline } from "../../components/generic/GradientOutline";
 import { CTASection } from "../../components/landing/CTASection";
 import { SectionHeader } from "../../components/landing/SectionHeader";
-import { useCases } from "../../data/use-cases";
+import { getAllUseCaseDefinitions } from "../../data/use-case-definitions";
 
-const title = "Use Cases - Lydie";
+const useCases = getAllUseCaseDefinitions();
+
+const title = "Use Cases - How Teams Use Lydie";
 const description =
-  "Discover how Lydie adapts to your needs. Build a personal knowledge base or manage team documentation with one flexible tool.";
+  "Discover how different teams and individuals use Lydie for note-taking, documentation, knowledge bases, wikis, and more.";
 ---
 
 <Layout title={title} description={description}>
   <Container className="flex flex-col gap-y-16 pb-16">
-    <Breadcrumbs items={[{ label: "Use Cases" }]} />
-    <div class="flex flex-col gap-y-6 relative p-4">
-      <GradientOutline />
-      <SectionHeader
-        className="max-w-lg"
-        title="From personal thinking to team knowledge"
-        description="Capture, organize, and share knowledge. One tool that works for personal notes or full team documentation."
-      />
-    </div>
+    <Breadcrumbs items={[{ label: "Use cases" }]} />
+    <SectionHeader
+      level={1}
+      className="max-w-2xl"
+      title="How people use Lydie"
+      description="Discover how different teams and individuals use Lydie for note-taking, documentation, knowledge bases, wikis, and more."
+    />
 
     <div class="max-w-6xl mx-auto w-full">
-      <div class="grid md:grid-cols-3 gap-8">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {
-          useCases.map((useCase) => {
-            return (
-              <a
-                href={`/use-cases/${useCase.slug}`}
-                class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
-              >
-                <div class="flex flex-col gap-y-2">
-                  <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                    {useCase.title}
-                  </h3>
-                  <p class="text-gray-600 text-[15px]/relaxed">
-                    {useCase.description}
-                  </p>
-                </div>
-                <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto">
-                  <span>Learn more</span>
-                  <ArrowRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </a>
-            );
-          })
+          useCases.map((useCase) => (
+            <a
+              href={`/use-cases/${useCase.slug}`}
+              class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+            >
+              <div class="flex flex-col gap-y-2">
+                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                  {useCase.thumbnail.title}
+                </h3>
+                <p class="text-gray-600 text-[15px]/relaxed">
+                  {useCase.thumbnail.description}
+                </p>
+              </div>
+              <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors pt-2">
+                <span>Learn more</span>
+                <ArrowRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </a>
+          ))
         }
       </div>
     </div>
+    <!-- <section class="flex flex-col gap-y-8">
+      <SectionHeader
+        title="Explore by role"
+        description="See how Lydie adapts to specific roles and professions."
+      />
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="/for"
+          class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          View all roles
+          <ArrowRightRegular className="ml-2 size-4" />
+        </a>
+      </div>
+    </section> -->
   </Container>
-  <CTASection client:load />
+  <CTASection />
 </Layout>

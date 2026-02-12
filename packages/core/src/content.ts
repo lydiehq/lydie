@@ -523,6 +523,46 @@ export class LydieClient {
       throw error;
     }
   }
+
+  async getDocumentsBySlugs(slugs: string[]): Promise<{ documents: DocumentListItem[] }> {
+    try {
+      const url = `${this.getBaseUrl()}/documents/by-slugs`;
+
+      if (this.debug) {
+        console.log(`[Lydie] Fetching documents by slugs from url: ${url}`);
+        console.log(`[Lydie] Slugs:`, slugs);
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: this.getHeaders(),
+        body: JSON.stringify({ slugs }),
+      });
+
+      if (this.debug) {
+        console.log(
+          `[Lydie] Documents by slugs fetch response status: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(`[Lydie] Failed to fetch documents by slugs: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as { documents: DocumentListItem[] };
+
+      if (this.debug) {
+        console.log(`[Lydie] Successfully fetched ${data.documents.length} documents`);
+      }
+
+      return data;
+    } catch (error) {
+      if (this.debug) {
+        console.error("[Lydie] Error fetching documents by slugs:", error);
+      }
+      throw error;
+    }
+  }
 }
 
 export function extractTableOfContents(content: ContentNode): TocItem[] {

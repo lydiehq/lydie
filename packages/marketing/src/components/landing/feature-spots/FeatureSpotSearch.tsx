@@ -17,15 +17,21 @@ const searchSections = [
 
 export function FeatureSpotSearch() {
   return (
-    <CastShadow className="w-full relative">
-      <GradientOutline />
-      <CommandMenuIllustration
-        query="trip"
-        placeholder="Search documents..."
-        sections={searchSections}
-        showKeyboardHelp={false}
-        className="h-[320px]"
-      />
-    </CastShadow>
+    <div
+      role="img"
+      aria-label="Search interface illustration showing quick document search results"
+      className="w-full"
+    >
+      <CastShadow className="w-full relative">
+        <GradientOutline />
+        <CommandMenuIllustration
+          query="trip"
+          placeholder="Search documents..."
+          sections={searchSections}
+          showKeyboardHelp={false}
+          className="h-[320px]"
+        />
+      </CastShadow>
+    </div>
   );
 }

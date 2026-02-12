@@ -1,146 +1,345 @@
 ---
+import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import { Button } from "../../components/generic/Button";
 import { ChevronRightRegular } from "@fluentui/react-icons";
-import { DemoWithSelector } from "../../components/landing/DemoWithSelector";
-import "../../styles/grainy-gradient.css";
 import { CTASection } from "../../components/landing/CTASection";
-import Divider from "../../components/landing/Divider.astro";
 import { SectionHeader } from "../../components/landing/SectionHeader";
+import {
+  getUseCaseDefinition,
+  getAllUseCaseSlugs,
+} from "../../data/use-case-definitions";
+import {
+  getRolesForUseCase,
+  getRoleUseCaseContent,
+} from "../../data/role-use-cases";
+import { getAllRoles } from "../../data/roles";
+import { UseCaseSections } from "../../components/landing/UseCaseSections";
+import { resolveFeaturesMap } from "../../data/feature-showcases";
+import { getTemplatesBySlugs } from "../../data/templates";
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
+import { getBlogPostsBySlugs } from "../../data/blog-posts";
+import FormattedDate from "../../components/FormattedDate.astro";
 import { FAQ } from "../../components/generic/FAQ";
-import { FeatureSections } from "../../components/landing/FeatureSection";
-import { getTemplatesByIds } from "../../data/templates";
-import { useCases, type UseCase, getUseCase } from "../../data/use-cases";
-import { Heading } from "../../components/generic/Heading";
+import { UseCaseHero } from "@/components/landing/UseCaseHero";
+import Divider from "@/components/landing/Divider.astro";
 
 export function getStaticPaths() {
-  return useCases.map((useCase) => ({
-    params: { slug: useCase.slug },
+  const useCaseSlugs = getAllUseCaseSlugs();
+  return useCaseSlugs.map((slug) => ({
+    params: { slug },
   }));
 }
 
 const { slug } = Astro.params;
-const useCase: UseCase | undefined = getUseCase(slug!);
+const useCase = getUseCaseDefinition(slug!);
 
 if (!useCase) {
   return Astro.redirect("/404");
 }
 
-const {
-  metaTitle,
-  metaDescription,
-  title,
-  description,
-  faqs,
-  demoStates,
-  ctaText,
-  templates: templateIds,
-  sections,
-} = useCase;
+const roleUseCases = getRolesForUseCase(slug!);
+const allRoles = getAllRoles();
 
-// Fetch templates for this use case using efficient batch query
-const fetchedTemplates = templateIds?.length
-  ? await getTemplatesByIds(templateIds)
+const applicableRoles = roleUseCases
+  .map((ruc) => ({
+    role: allRoles.find((r) => r.slug === ruc.roleSlug),
+    content: ruc,
+  }))
+  .filter(
+    (
+      item,
+    ): item is {
+      role: NonNullable<typeof item.role>;
+      content: typeof item.content;
+    } => item.role !== undefined && item.role.visible,
+  );
+
+// Get templates for this use case (up to 3)
+const templateSlugs = useCase.templateSlugs?.slice(0, 3) ?? [];
+const templates =
+  templateSlugs.length > 0 ? await getTemplatesBySlugs(templateSlugs) : [];
+
+// Get blog posts for this use case
+const blogPostSlugs = useCase.blogPosts ?? [];
+const blogPosts =
+  blogPostSlugs.length > 0 ? await getBlogPostsBySlugs(blogPostSlugs) : [];
+
+// Filter featured roles to only include visible role+use case combinations
+const visibleFeaturedRoles = useCase.featuredRoles
+  ? Object.entries(useCase.featuredRoles)
+      .filter(([roleSlug]) => {
+        const content = getRoleUseCaseContent(roleSlug, slug!);
+        return content ? true : false;
+      })
+      .map(([roleSlug, fallbackDescription]) => {
+        const content = getRoleUseCaseContent(roleSlug, slug!);
+        return {
+          roleSlug,
+          description: content?.thumbnail.description || fallbackDescription,
+        };
+      })
   : [];
-const validTemplates = fetchedTemplates.filter(
-  (t): t is NonNullable<typeof t> => t !== undefined,
-);
 
-// Prepare sections for FeatureSections component
-// Map use case sections to the format with overrides
-const featureSections = sections?.map((section) => ({
-  id: section.illustration, // The illustration ID matches the feature ID
-  overrides: {
-    title: section.title,
-    description: section.content,
-    featureSlug: section.featureSlug,
-  },
-})) ?? [];
+const title = `${useCase.meta.title} - Lydie`;
+const description = useCase.meta.description;
 ---
 
-<Layout title={metaTitle} description={metaDescription}>
-  <Container
-    className="flex flex-col items-center justify-center min-h-[60vh] py-8 gap-y-12"
-  >
-    <div class="w-full">
-      <Breadcrumbs
-        items={[{ label: "Use cases", href: "/use-cases" }, { label: title }]}
-      />
-    </div>
-    <div class="text-center relative py-8 size-full">
-      <div
-        class="flex flex-col max-w-md mx-auto text-center items-center gap-y-6"
-      >
-        <Heading className="text-4xl">
-          {metaTitle.replace(" - Lydie", "")}
-        </Heading>
-        <p class="text-base text-black/60 mx-auto text-balance">
-          {description}
-        </p>
-        <div class="flex items-center justify-center gap-4">
-          <Button href="https://app.lydie.co/auth" size="lg" intent="primary">
-            <span>{ctaText}</span>
-            <ChevronRightRegular className="size-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-    <DemoWithSelector
+<Layout title={title} description={description}>
+  <Container className="flex flex-col gap-y-16 py-16">
+    <Breadcrumbs
+      items={[
+        { label: "Use cases", href: "/use-cases" },
+        { label: useCase.thumbnail.title },
+      ]}
+    />
+    <UseCaseHero
+      title={useCase.hero.title}
+      description={useCase.hero.description}
+      states={useCase.demoStates}
       client:load
-      states={demoStates}
-      initialState={demoStates[0]}
     />
 
     {
-      featureSections.length > 0 && (
-        <>
-          <FeatureSections client:load sections={featureSections} />
-          <Divider />
-        </>
+      useCase.statement && (
+        <section class="py-5">
+          <blockquote class="text-lg font-medium text-gray-900 text-center max-w-3xl mx-auto leading-relaxed text-balance">
+            "{useCase.statement}"
+          </blockquote>
+        </section>
+      )
+    }
+    <!-- {
+      useCase.problemsAndSolutions && (
+        <section class="flex flex-col gap-y-6">
+          <SectionHeader
+            title={useCase.problemsAndSolutions.title}
+            description="How Lydie solves common challenges"
+          />
+          <div class="space-y-4">
+            {useCase.problemsAndSolutions.problems.map((item) => (
+              <div class="flex flex-col sm:flex-row sm:items-start gap-4 p-5 rounded-xl border border-gray-200">
+                <div class="flex-1">
+                  <p class="font-medium text-gray-900 mb-1">{item.problem}</p>
+                  <p class="text-gray-600 text-sm">{item.solution}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )
+    } -->
+
+    {
+      useCase.workflowExample && (
+        <section class="flex flex-col gap-y-6">
+          <SectionHeader
+            title={useCase.workflowExample.title}
+            description={useCase.workflowExample.description}
+          />
+          <div class="bg-gray-50 rounded-xl p-6 sm:p-8">
+            <ol class="space-y-4">
+              {useCase.workflowExample.steps.map((step, index) => (
+                <li class="flex items-start gap-4">
+                  <span class="shrink-0 w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-medium">
+                    {index + 1}
+                  </span>
+                  <p class="text-gray-700 leading-relaxed pt-1">{step}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
       )
     }
 
-    <Divider />
-    <section class="flex flex-col md:flex-row gap-8 w-full">
-      <SectionHeader
-        title="Templates"
-        description="Here are some templates that you can use to get started with Lydie."
-        className="max-w-sm"
-      />
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3 grow">
-        {
-          validTemplates.length > 0 ? (
-            validTemplates.map(
-              (template: {
-                name: string;
-                teaser: string;
-                slug: string;
-                thumbnailSrc: string | null;
-              }) => (
-                <TemplateThumbnail
-                  name={template.name}
-                  teaser={template.teaser}
-                  href={`/templates/${template.slug}`}
-                  slug={template.slug}
-                  thumbnailSrc={template.thumbnailSrc}
-                />
-              ),
-            )
-          ) : (
-            <p class="text-gray-500 col-span-3">
-              No templates available for this use case.
-            </p>
-          )
-        }
-      </div>
-    </section>
-    <Divider />
-    <div class="max-w-xl mx-auto w-full">
-      {faqs && faqs.length > 0 && <FAQ items={faqs} client:load />}
-    </div>
+    <!-- {
+      useCase.differentiation && (
+        <section class="flex flex-col gap-y-6">
+          <SectionHeader title={useCase.differentiation.title} />
+          <div class="grid sm:grid-cols-2 gap-4">
+            {useCase.differentiation.points.map((point) => (
+              <div class="p-5 rounded-xl border border-gray-200">
+                <h3 class="font-medium text-gray-900 mb-2">{point.label}</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                  {point.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )
+    } -->
+
+    {
+      useCase.featureShowcases &&
+        Object.keys(useCase.featureShowcases).length > 0 && (
+          <section class="flex flex-col gap-y-8">
+            <UseCaseSections
+              sections={resolveFeaturesMap(useCase.featureShowcases).map(
+                (showcase, index) => ({
+                  illustration: showcase.illustration,
+                  title: showcase.title,
+                  content: showcase.description,
+                  featureSlug: showcase.featureSlug,
+                  index,
+                  featureBadge: showcase.featureBadge,
+                }),
+              )}
+              client:load
+            />
+          </section>
+        )
+    }
+    {
+      templates.length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <SectionHeader
+            title={`Templates for ${useCase.thumbnail.title.toLowerCase()}`}
+            description="Get started quickly with these pre-built templates:"
+          />
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {templates.map((template) => (
+              <TemplateThumbnail
+                name={template.name}
+                teaser={template.teaser}
+                href={`/templates/${template.slug}`}
+                slug={template.slug}
+                thumbnailSrc={template.thumbnailSrc}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      blogPosts.length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <SectionHeader
+            title={`Learn more about ${useCase.thumbnail.title.toLowerCase()}`}
+            description="Explore our articles on this topic:"
+          />
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {blogPosts.map((post) => (
+              <a
+                href={`/blog/${post.slug}`}
+                class="group flex flex-col gap-y-4"
+              >
+                <div class="rounded-lg shadow-surface aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
+                  <Image
+                    src={
+                      post.coverImage
+                        ? new URL(post.coverImage, Astro.site).toString()
+                        : "/blog.png"
+                    }
+                    alt=""
+                    width={640}
+                    height={360}
+                    layout="constrained"
+                    fit="cover"
+                    class="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div class="flex flex-col gap-y-2">
+                  <h3 class="text-base font-medium text-gray-900 group-hover:text-gray-700 transition-colors">
+                    {post.title}
+                  </h3>
+                  {post.createdAt && (
+                    <p class="text-xs text-gray-500">
+                      <FormattedDate date={new Date(post.createdAt)} />
+                    </p>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <Divider logo />
+
+    {
+      (visibleFeaturedRoles.length > 0 || applicableRoles.length > 0) && (
+        <section class="flex flex-col gap-y-8">
+          <SectionHeader
+            title={`How different people use Lydie for ${useCase.thumbnail.title.toLowerCase()}`}
+            description="See how professionals across different fields capture and organize their knowledge:"
+          />
+          <div class="grid sm:grid-cols-2 gap-6">
+            {/* Show visible featured roles first if available, otherwise fall back to applicable roles */}
+            {visibleFeaturedRoles.length > 0
+              ? visibleFeaturedRoles
+                  .slice(0, 4)
+                  .map(({ roleSlug, description }) => {
+                    const role = allRoles.find((r) => r.slug === roleSlug);
+                    if (!role) return null;
+                    return (
+                      <a
+                        href={`/for/${roleSlug}/${slug}`}
+                        class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+                      >
+                        <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                          How {role.terms.actorPlural} use Lydie for{" "}
+                          {useCase.terms.act}
+                        </h3>
+                        <p class="text-gray-600 text-[15px]/relaxed">
+                          {description}
+                        </p>
+                        <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
+                          <span>Learn more</span>
+                          <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                      </a>
+                    );
+                  })
+              : applicableRoles.slice(0, 4).map(({ role, content }) => (
+                  <a
+                    href={`/for/${role.slug}/${slug}`}
+                    class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+                  >
+                    <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                      How {role.terms.actorPlural} use Lydie for{" "}
+                      {useCase.thumbnail.title.toLowerCase()}
+                    </h3>
+                    <p class="text-gray-600 text-[15px]/relaxed">
+                      {content.hero.description}
+                    </p>
+                    <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
+                      <span>Learn more</span>
+                      <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </a>
+                ))}
+          </div>
+
+          {/* Show "See all roles" link if there are more than 4 visible roles or more applicable roles */}
+          {(visibleFeaturedRoles.length > 0
+            ? visibleFeaturedRoles.length > 4
+            : applicableRoles.length > 4) && (
+            <div class="flex justify-center pt-4">
+              <a
+                href="/for"
+                class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Explore all roles
+                <ChevronRightRegular className="ml-2 size-4" />
+              </a>
+            </div>
+          )}
+        </section>
+      )
+    }
+
+    {
+      useCase.faqs && useCase.faqs.length > 0 && (
+        <section class="max-w-3xl mx-auto w-full">
+          <FAQ items={useCase.faqs} client:load />
+        </section>
+      )
+    }
   </Container>
-  <CTASection client:load />
+  <CTASection />
 </Layout>

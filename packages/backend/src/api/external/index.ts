@@ -1,7 +1,7 @@
 import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { db, documentsTable } from "@lydie/database";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -111,4 +111,46 @@ export const ExternalApi = new Hono()
     };
 
     return c.json(response);
+  })
+  .post("/documents/by-slugs", async (c) => {
+    const organizationId = c.get("organizationId");
+    const body = await c.req.json<{ slugs: string[] }>();
+    const slugs = body.slugs || [];
+
+    if (slugs.length === 0) {
+      return c.json({ documents: [] });
+    }
+
+    const documents = await db
+      .select({
+        id: documentsTable.id,
+        title: documentsTable.title,
+        slug: documentsTable.slug,
+        published: documentsTable.published,
+        customFields: documentsTable.customFields,
+        coverImage: documentsTable.coverImage,
+        createdAt: documentsTable.createdAt,
+        updatedAt: documentsTable.updatedAt,
+      })
+      .from(documentsTable)
+      .where(
+        and(
+          eq(documentsTable.organizationId, organizationId),
+          isNull(documentsTable.deletedAt),
+          eq(documentsTable.published, true),
+          inArray(documentsTable.slug, slugs),
+        ),
+      )
+      .orderBy(desc(documentsTable.createdAt));
+
+    const documentsWithPaths = documents.map((doc) => ({
+      ...doc,
+      path: "/",
+      fullPath: `/${doc.slug}`,
+      customFields: doc.customFields || null,
+    }));
+
+    return c.json({
+      documents: documentsWithPaths,
+    });
   });

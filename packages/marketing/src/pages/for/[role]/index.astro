@@ -1,0 +1,191 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { Container } from "../../../components/Container";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import { Button } from "../../../components/generic/Button";
+import { ChevronRightRegular } from "@fluentui/react-icons";
+import { CTASection } from "../../../components/landing/CTASection";
+import { SectionHeader } from "../../../components/landing/SectionHeader";
+import { FAQ } from "../../../components/generic/FAQ";
+import { getRole, getAllRoles } from "../../../data/roles";
+import { getUseCasesForRole } from "../../../data/role-use-cases";
+import { Heading } from "../../../components/generic/Heading";
+import { getTemplatesBySlugs } from "../../../data/templates";
+import TemplateThumbnail from "../../../components/templates/TemplateThumbnail.astro";
+import { DemoWithSelector } from "../../../components/landing/DemoWithSelector";
+import { UseCaseHero } from "@/components/landing/UseCaseHero";
+import { getComparison } from "../../../data/comparisons";
+
+export function getStaticPaths() {
+  return getAllRoles()
+    .filter((role) => role.visible)
+    .map((role) => ({
+      params: { role: role.slug },
+    }));
+}
+
+const { role: roleSlug } = Astro.params;
+const role = getRole(roleSlug!);
+
+if (!role || !role.visible) {
+  return Astro.redirect("/404");
+}
+
+const roleUseCases = getUseCasesForRole(roleSlug!);
+
+const { meta, painPoints, workflows, faqs, ctaText } = role;
+
+// Look up comparison data if specified
+const comparison = role.comparison
+  ? getComparison(role.comparison.slug)
+  : undefined;
+
+// Get templates for this role (up to 3)
+const templateSlugs = role.templateSlugs?.slice(0, 3) ?? [];
+const templates =
+  templateSlugs.length > 0 ? await getTemplatesBySlugs(templateSlugs) : [];
+---
+
+<Layout title={`${meta.title} - Lydie`} description={meta.description}>
+  <Container className="flex flex-col gap-y-16 py-16">
+    <Breadcrumbs
+      items={[{ label: "Lydie for", href: "/for" }, { label: role.shortTitle }]}
+    />
+
+    <UseCaseHero
+      title={role.hero.title}
+      description={role.hero.description}
+      states={["search", "collaboration", "linking", "assistant"]}
+      client:load
+    />
+
+    {/* Pain Points */}
+    <!-- <section class="bg-gray-50 rounded-2xl p-8 sm:p-12">
+      <SectionHeader
+        title={`Who this is for`}
+        description={`Common challenges ${role.thumbnail.title.toLowerCase()} face:`}
+        className="mb-8"
+      />
+      <div class="grid sm:grid-cols-2 gap-4">
+        {
+          painPoints.map((point) => (
+            <div class="flex items-start gap-x-3">
+              <div class="shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                <svg
+                  class="w-3 h-3 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </div>
+              <p class="text-black/70">{point}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section> -->
+    {
+      templates.length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <SectionHeader
+            title={`Templates for ${role.thumbnail.title}`}
+            description="Get started quickly with these pre-built templates:"
+          />
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {templates.map((template) => (
+              <TemplateThumbnail
+                name={template.name}
+                teaser={template.teaser}
+                href={`/templates/${template.slug}`}
+                slug={template.slug}
+                thumbnailSrc={template.thumbnailSrc}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {/* Workflows / Use Cases */}
+    <section class="flex flex-col gap-y-8">
+      <SectionHeader
+        title={`Common workflows for ${role.thumbnail.title}`}
+        description={`How ${role.shortTitle.toLowerCase()} use Lydie to work smarter:`}
+      />
+      <div class="grid sm:grid-cols-2 gap-6">
+        {
+          workflows.map((workflow) => (
+            <a
+              href={`/for/${roleSlug}/${workflow.useCaseSlug}`}
+              class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+            >
+              <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                {workflow.title}
+              </h3>
+              <p class="text-gray-600 text-[15px]/relaxed">
+                {workflow.description}
+              </p>
+              <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
+                <span>Learn more</span>
+                <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    {/* Comparison Section */}
+    {
+      comparison && role.comparison && (
+        <section class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white">
+          <div class="flex flex-col gap-y-4 max-w-2xl">
+            <h2 class="text-2xl font-semibold">
+              Why teams choose Lydie over {comparison.name}
+            </h2>
+            <p class="text-white/80 text-lg leading-relaxed">
+              {role.comparison.description}
+            </p>
+            <div class="pt-4 flex gap-x-3">
+              <Button
+                href={`/compare/${role.comparison.slug}`}
+                size="lg"
+                intent="secondary"
+                className="bg-white/10 text-white hover:bg-white/20"
+              >
+                <span>See full comparison</span>
+                <ChevronRightRegular className="size-4" />
+              </Button>
+              <Button
+                href="https://app.lydie.co/auth"
+                size="lg"
+                intent="primary"
+                className="bg-white text-gray-900 hover:bg-gray-100"
+              >
+                <span>Try Lydie free</span>
+                <ChevronRightRegular className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    {/* FAQs */}
+    {
+      faqs.length > 0 && (
+        <section class="max-w-2xl">
+          <FAQ items={faqs} client:load />
+        </section>
+      )
+    }
+  </Container>
+  <CTASection />
+</Layout>

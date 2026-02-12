@@ -9,7 +9,10 @@ import {
 } from "@fluentui/react-icons";
 import { Button } from "../../components/generic/Button";
 import { Logo } from "../../components/Logo";
-import { FeatureSections } from "../../components/landing/FeatureSection";
+import { UseCaseSections } from "../../components/landing/UseCaseSections";
+import type { FeatureKey } from "../../data/feature-showcases";
+import { getSections } from "../../utils/comparison-sections";
+import type { DemoState } from "../../components/landing/DemoStateSelector";
 
 export async function getStaticPaths() {
   const { comparisons } = await import("../../data/comparisons");
@@ -28,10 +31,74 @@ if (!comparison) {
   });
 }
 
-const title = `Open-Source ${comparison.name} Alterantive - Lydie`;
+const title = `Open-Source ${comparison.name} Alternative - Lydie`;
 
-// Prepare sections for FeatureSections component - pass raw sections, let component resolve
-const sections = comparison.sections ?? [];
+// Map comparison section IDs to feature keys and DemoStates
+const sectionToFeatureKey: Record<string, FeatureKey> = {
+  "assistant": "ai",
+  "ai": "ai",
+  "collaboration": "collaboration",
+  "linking": "linking",
+  "search": "search",
+  "opensource": "linking",
+  "knowledgebase": "search",
+  "integrations": "linking",
+  "performance": "search",
+};
+
+// Convert comparison sections to UseCaseSection format
+const comparisonSections = getSections(comparison.sections ?? []);
+const useCaseSections = comparisonSections
+  .map((section, index) => {
+    const featureKey = sectionToFeatureKey[section.id];
+    if (!featureKey) {
+      console.warn(`No feature key mapping for comparison section: ${section.id}`);
+      return null;
+    }
+    
+    const demoStateMap: Record<string, DemoState> = {
+      "assistant": "assistant",
+      "ai": "assistant",
+      "collaboration": "collaboration",
+      "linking": "linking",
+      "search": "search",
+    };
+    
+    // Map section IDs to badge configs
+    const badgeConfigMap: Record<string, { icon: "assistant" | "linking" | "collaboration" | "search" | "speed"; color: "coral" | "purple" | "blue" | "mint" | "gold" | "pink" | "periwinkle" | "green" | "peach" | "violet" | "cyan" | "rose"; text: string }> = {
+      "assistant": { icon: "assistant", color: "purple", text: "AI Assistant" },
+      "ai": { icon: "assistant", color: "purple", text: "AI Assistant" },
+      "collaboration": { icon: "collaboration", color: "blue", text: "Collaboration" },
+      "linking": { icon: "linking", color: "violet", text: "Internal Linking" },
+      "search": { icon: "search", color: "cyan", text: "Search" },
+      "opensource": { icon: "assistant", color: "green", text: "Open Source" },
+      "knowledgebase": { icon: "linking", color: "gold", text: "Knowledge Base" },
+      "integrations": { icon: "assistant", color: "coral", text: "Integrations" },
+      "performance": { icon: "speed", color: "mint", text: "Performance" },
+    };
+    
+    const featureSlugMap: Record<string, string> = {
+      "assistant": "assistant",
+      "ai": "assistant",
+      "collaboration": "collaborative-editing",
+      "linking": "linking",
+      "search": "search",
+      "opensource": "assistant",
+      "knowledgebase": "linking",
+      "integrations": "assistant",
+      "performance": "search",
+    };
+    
+    return {
+      illustration: demoStateMap[featureKey],
+      title: section.title,
+      content: section.description,
+      featureSlug: featureSlugMap[section.id] ?? "assistant",
+      index,
+      featureBadge: badgeConfigMap[section.id],
+    };
+  })
+  .filter((section): section is NonNullable<typeof section> => section !== null);
 ---
 
 <Layout title={title} description={comparison.description}>
@@ -157,9 +224,9 @@ const sections = comparison.sections ?? [];
       </div>
 
       {
-        sections.length > 0 && (
+        useCaseSections.length > 0 && (
           <div class="flex flex-col gap-y-16 py-16">
-            <FeatureSections client:load sections={sections} />
+            <UseCaseSections client:load sections={useCaseSections} />
           </div>
         )
       }

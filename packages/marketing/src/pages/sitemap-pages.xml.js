@@ -1,7 +1,9 @@
 import { comparisons } from "../data/comparisons";
 import { getAllFeaturePaths } from "../data/features";
 import { integrations } from "../data/integrations";
-import { useCases } from "../data/use-cases";
+import { getAllRoleUseCaseCombinations } from "../data/role-use-cases";
+import { getAllRoles } from "../data/roles";
+import { getAllUseCaseSlugs } from "../data/use-case-definitions";
 import { generateUrlEntry, generateSitemap, sitemapHeaders } from "./sitemap-utils.js";
 
 // Static pages to include in sitemap (pages without dynamic registries)
@@ -19,6 +21,7 @@ const staticPages = [
   { path: "/documentation/sdk", priority: "0.6", changefreq: "monthly" },
   { path: "/integrations", priority: "0.8", changefreq: "monthly" },
   { path: "/compare", priority: "0.8", changefreq: "monthly" },
+  { path: "/for", priority: "0.8", changefreq: "monthly" },
   { path: "/use-cases", priority: "0.8", changefreq: "monthly" },
   { path: "/tools", priority: "0.7", changefreq: "weekly" },
   { path: "/tools/convert", priority: "0.7", changefreq: "weekly" },
@@ -65,12 +68,37 @@ export async function GET() {
     );
   }
 
-  // Use case pages
-  for (const useCase of useCases) {
+  // Role hub pages (e.g., /for/researchers) - only visible ones
+  const roles = getAllRoles().filter((role) => role.visible);
+  for (const role of roles) {
     urls.push(
       generateUrlEntry({
-        path: `/use-cases/${useCase.slug}`,
-        priority: useCase.sitemapPriority || "0.7",
+        path: `/for/${role.slug}`,
+        priority: "0.7",
+        changefreq: "monthly",
+      }),
+    );
+  }
+
+  // Role + use case combination pages (e.g., /for/researchers/note-taking) - only visible ones
+  const roleUseCases = getAllRoleUseCaseCombinations().filter((ruc) => ruc.visible);
+  for (const roleUseCase of roleUseCases) {
+    urls.push(
+      generateUrlEntry({
+        path: `/for/${roleUseCase.roleSlug}/${roleUseCase.useCaseSlug}`,
+        priority: "0.6",
+        changefreq: "monthly",
+      }),
+    );
+  }
+
+  // Use case pages (e.g., /use-cases/note-taking)
+  const useCaseSlugs = getAllUseCaseSlugs();
+  for (const useCaseSlug of useCaseSlugs) {
+    urls.push(
+      generateUrlEntry({
+        path: `/use-cases/${useCaseSlug}`,
+        priority: "0.7",
         changefreq: "monthly",
       }),
     );

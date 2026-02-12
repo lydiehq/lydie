@@ -97,7 +97,7 @@ export function createOnboardingContent() {
             content: [
               {
                 type: "text",
-                text: "The journalist sat in the dimly lit cafe, reviewing her notes one more time. The story had taken months to piece together—countless interviews, late nights chasing leads, and dead ends that threatened to derail everything. But now, with the evidence spread across the table, she finally had what she needed. Tomorrow's headline would change everything.",
+                text: "The journalist sat in the dimly lit cafe, reviewing her notes one more time. The story had taken months to piece together, countless interviews, late nights chasing leads, and dead ends that threatened to derail everything. But now, with the evidence spread across the table, she finally had what she needed. Tomorrow's headline would change everything.",
               },
             ],
           },

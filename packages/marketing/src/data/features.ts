@@ -202,7 +202,7 @@ export const features: Feature[] = [
           },
         ],
         content: [
-          "Lydie's AI research assistant brings the power of web search and intelligent document search directly into your writing environment. No need to switch between browser tabs, note-taking apps, and your editor—the AI finds and synthesizes information from the web and your existing documents, presenting it right where you need it.",
+          "Lydie's AI research assistant brings the power of web search and intelligent document search directly into your writing environment. No need to switch between browser tabs, note-taking apps, and your editor, the AI finds and synthesizes information from the web and your existing documents, presenting it right where you need it.",
           "Ask the AI to research a topic, verify a fact, or find related information, and it will search the web for current data while simultaneously exploring your document library for relevant past research. This dual-source approach ensures you have both fresh information and your accumulated knowledge at your fingertips.",
           "## Intelligent Knowledge Discovery",
           "The AI research assistant goes beyond simple keyword search. It understands context, can interpret semantic queries, and connects related ideas across different documents and sources. Ask questions in natural language, and the AI will find relevant information even if the exact keywords don't match.",
@@ -243,7 +243,7 @@ export const features: Feature[] = [
           "Lydie's AI writing assistant helps you create high-quality content faster. Whether you're starting from a blank page or expanding existing notes, the AI understands context and generates relevant, well-structured content that matches your style and intent.",
           "Simply describe what you want to write, and the AI will generate a complete draft. Expand bullet points into full paragraphs, create outlines that develop into detailed articles, or let the AI continue your writing when you're stuck. The AI can create new documents, expand existing content, and help you refine your ideas into polished prose.",
           "## Intelligent Content Generation",
-          "The writing assistant excels at understanding context from your existing documents. It can adapt to different writing styles—whether you need professional documentation, casual blog posts, technical guides, or creative content. The AI generates coherent drafts that you can edit and customize, saving you hours of initial writing time.",
+          "The writing assistant excels at understanding context from your existing documents. It can adapt to different writing styles, whether you need professional documentation, casual blog posts, technical guides, or creative content. The AI generates coherent drafts that you can edit and customize, saving you hours of initial writing time.",
           "Perfect for content creators, bloggers, technical writers, marketers, and anyone who needs to produce written content regularly. The AI handles the heavy lifting of first drafts, letting you focus on refinement and adding your unique perspective.",
         ],
       },

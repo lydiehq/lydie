@@ -8,7 +8,6 @@ import type { DemoState } from "./DemoStateSelector";
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
 import { type CommandMenuSection } from "./CommandMenuIllustration";
-import { AssistantDemo, type Message } from "./demo/AssistantDemo";
 import { STATE_CONFIG, DEFAULT_STATE_ORDER } from "./DemoStateSelector";
 import { SearchIllustration } from "./SearchIllustration";
 
@@ -39,96 +38,98 @@ const documents = [
 export function ComposableDemo({ activeState }: ComposableDemoProps) {
   return (
     <section className="flex flex-col items-center overflow-visible w-full" aria-hidden="true">
-      <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full p-2 relative bg-white select-none">
+      <div className="relative size-full p-1.5 -m-1.5">
         <GradientOutline />
-        <div className="flex items-center gap-x-1.5 mb-1.5">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-full size-3 ring ring-black/6 shrink-0" />
-          ))}
-        </div>
-        <div className="flex gap-x-2">
-          <CastShadow className="w-full rounded-b-xl rounded-t-lg">
-            <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-xl ring ring-black/8 relative">
-              <motion.div
-                className=""
-                animate={{
-                  width: activeState === "assistant" ? 0 : "auto",
-                }}
-              >
-                <div className="w-52 flex flex-col p-1">
-                  <div className="w-full p-1 mb-2">
-                    <div className="flex items-center gap-x-2">
-                      <div className="size-5.5 rounded-md border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-pink-300"></div>
-                      <span className="text-xs font-medium text-gray-400">My notes</span>
+        <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full p-2 relative bg-white select-none">
+          <div className="flex items-center gap-x-1.5 mb-1.5">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-full size-3 ring ring-black/6 shrink-0" />
+            ))}
+          </div>
+          <div className="flex gap-x-2">
+            <CastShadow className="w-full rounded-b-xl rounded-t-lg">
+              <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-xl ring ring-black/8 relative">
+                <motion.div
+                  className=""
+                  animate={{
+                    width: activeState === "assistant" ? 0 : "auto",
+                  }}
+                >
+                  <div className="w-52 flex flex-col p-1">
+                    <div className="w-full p-1 mb-2">
+                      <div className="flex items-center gap-x-2">
+                        <div className="size-5.5 rounded-md border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-pink-300"></div>
+                        <span className="text-xs font-medium text-gray-400">My notes</span>
+                      </div>
+                    </div>
+                    {documents.map((title, i) => {
+                      const isActive = title === "Japan Trip Planning";
+                      const isLinked = activeState === "linking" && title === "Trip Master Plan";
+                      return (
+                        <div
+                          key={i}
+                          className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-black/5" : ""} ${isLinked ? "bg-blue-50 ring-1 ring-blue-200/60" : ""}`}
+                        >
+                          <DocumentIcon
+                            className={`size-4 shrink-0 ${isActive ? "text-black/60" : isLinked ? "text-blue-500" : "text-black/30"}`}
+                          />
+                          <span
+                            className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : isLinked ? "font-medium text-blue-600" : "text-black/60"}`}
+                          >
+                            {title}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+                <motion.div
+                  className={`flex flex-1 overflow-hidden relative bg-white ${activeState === "assistant" ? "border-r border-black/8 rounded-r-lg" : "border-l border-black/8 rounded-l-lg"}`}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 35,
+                  }}
+                >
+                  <div className="flex-1 flex flex-col min-w-0">
+                    <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
+                      <ToolbarItems />
+                      {activeState === "collaboration" && (
+                        <div className="-space-x-2 flex">
+                          {collaborators.map((c, i) => (
+                            <motion.div
+                              key={c.name}
+                              initial={{ opacity: 0, scale: 0.6 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{
+                                delay: 0.08 * i,
+                                duration: 0.3,
+                                ease: [0.25, 0.46, 0.45, 0.94],
+                              }}
+                              className="rounded-full size-6 border-2 border-white shrink-0 flex items-center justify-center text-[0.65rem] font-semibold text-white select-none"
+                              style={{
+                                backgroundColor: c.color,
+                              }}
+                            >
+                              {c.name[0]}
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
+                      <DocumentContent currentState={activeState} />
                     </div>
                   </div>
-                  {documents.map((title, i) => {
-                    const isActive = title === "Japan Trip Planning";
-                    const isLinked = activeState === "linking" && title === "Trip Master Plan";
-                    return (
-                      <div
-                        key={i}
-                        className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-black/5" : ""} ${isLinked ? "bg-blue-50 ring-1 ring-blue-200/60" : ""}`}
-                      >
-                        <DocumentIcon
-                          className={`size-4 shrink-0 ${isActive ? "text-black/60" : isLinked ? "text-blue-500" : "text-black/30"}`}
-                        />
-                        <span
-                          className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : isLinked ? "font-medium text-blue-600" : "text-black/60"}`}
-                        >
-                          {title}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-              <motion.div
-                className={`flex flex-1 overflow-hidden relative bg-white ${activeState === "assistant" ? "border-r border-black/8 rounded-r-lg" : "border-l border-black/8 rounded-l-lg"}`}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 35,
-                }}
-              >
-                <div className="flex-1 flex flex-col min-w-0">
-                  <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
-                    <ToolbarItems />
-                    {activeState === "collaboration" && (
-                      <div className="-space-x-2 flex">
-                        {collaborators.map((c, i) => (
-                          <motion.div
-                            key={c.name}
-                            initial={{ opacity: 0, scale: 0.6 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{
-                              delay: 0.08 * i,
-                              duration: 0.3,
-                              ease: [0.25, 0.46, 0.45, 0.94],
-                            }}
-                            className="rounded-full size-6 border-2 border-white shrink-0 flex items-center justify-center text-[0.65rem] font-semibold text-white select-none"
-                            style={{
-                              backgroundColor: c.color,
-                            }}
-                          >
-                            {c.name[0]}
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow">
-                    <DocumentContent currentState={activeState} />
-                  </div>
-                </div>
-              </motion.div>
-              <AnimatePresence>
-                {activeState === "assistant" && <AIAssistantSidebar />}
-              </AnimatePresence>
-              <AnimatePresence>{activeState === "search" && <SearchOverlay />}</AnimatePresence>
-            </div>
-          </CastShadow>
+                </motion.div>
+                <AnimatePresence>
+                  {activeState === "assistant" && <AIAssistantSidebar />}
+                </AnimatePresence>
+                <AnimatePresence>{activeState === "search" && <SearchOverlay />}</AnimatePresence>
+              </div>
+            </CastShadow>
+          </div>
         </div>
       </div>
     </section>
@@ -138,7 +139,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
 export { STATE_CONFIG, DEFAULT_STATE_ORDER };
 export type { DemoState };
 
-const DEMO_MESSAGES: Message[] = [
+const DEMO_MESSAGES = [
   {
     id: "user-1",
     type: "user",
@@ -157,6 +158,30 @@ const DEMO_MESSAGES: Message[] = [
   },
 ];
 
+type MessageProps = {
+  content: string;
+};
+
+function UserMessage({ content }: MessageProps) {
+  return (
+    <div className="flex self-end justify-end max-w-[85%]">
+      <div className="bg-white shadow-md ring ring-black/4 rounded-2xl rounded-tr-md px-3 py-2 text-sm text-gray-600 leading-relaxed">
+        {content}
+      </div>
+    </div>
+  );
+}
+
+function AssistantMessage({ content }: MessageProps) {
+  return (
+    <div className="flex self-start justify-start max-w-[85%] flex-col gap-y-1.5">
+      <div className=" bg-white ring ring-black/4 shadow-md rounded-2xl rounded-tl-md px-3 py-2 text-sm text-gray-600 leading-relaxed">
+        {content}
+      </div>
+    </div>
+  );
+}
+
 function AIAssistantSidebar() {
   return (
     <motion.div
@@ -171,7 +196,17 @@ function AIAssistantSidebar() {
       }}
       className="shrink-0 flex flex-col overflow-hidden"
     >
-      <AssistantDemo messages={DEMO_MESSAGES} />
+      <div className="flex flex-col gap-y-1.5">
+        {DEMO_MESSAGES.map((message) => (
+          <div key={message.id}>
+            {message.type === "user" ? (
+              <UserMessage content={message.content} />
+            ) : (
+              <AssistantMessage content={message.content} />
+            )}
+          </div>
+        ))}
+      </div>
     </motion.div>
   );
 }
@@ -376,7 +411,7 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
         <ul className="list-disc pl-6 space-y-1 mb-4 text-gray-700">
           <li>
             <p>
-              <strong>JR Pass</strong> — order online by end of week
+              <strong>JR Pass</strong> - order online by end of week
             </p>
           </li>
           <li>

@@ -15,6 +15,11 @@ export default defineConfig({
     ssr: {
       noExternal: ["@fluentui/react-icons"],
     },
+    resolve: {
+      alias: {
+        "@/": new URL("./src/", import.meta.url).pathname,
+      },
+    },
   },
   trailingSlash: "never",
   image: {

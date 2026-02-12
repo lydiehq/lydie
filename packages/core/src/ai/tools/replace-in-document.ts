@@ -7,7 +7,7 @@ export const replaceInDocument = () =>
 
 **CRITICAL: You MUST specify the documentId parameter. Use the "Current Document" ID from the context information provided to you. If you need to modify a different document, use its ID instead.**
 
-**CRITICAL: Changes require user approval. When you use this tool, the changes are NOT immediately applied to the document. They are presented to the user for review, and the user must manually accept them before they appear in the document. Never claim the content has been "added" or "placed" in the document—it's only prepared for review.**
+**CRITICAL: Changes require user approval. When you use this tool, the changes are NOT immediately applied to the document. They are presented to the user for review, and the user must manually accept them before they appear in the document. Never claim the content has been "added" or "placed" in the document, it's only prepared for review.**
 
 **CRITICAL: The \`replace\` parameter must be HTML, not Markdown. Use HTML tags like <p>, <h2>, etc.**
 
@@ -73,18 +73,18 @@ Format: <ul data-type="taskList"><li data-type="taskItem" data-checked="true">Co
         .string()
         .optional()
         .describe(
-          "New title for the document (plain text, no HTML). Leave empty to keep existing title. Do NOT include H1 in content—use this field instead.",
+          "New title for the document (plain text, no HTML). Leave empty to keep existing title. Do NOT include H1 in content, use this field instead.",
         ),
       search: z
         .string()
         .describe(
-          "Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max—just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string to replace entire document.",
+          "Exact text to find. PREFER closing tags only (e.g., 'text.</p>'). Use 10-30 words max, just enough to uniquely identify location. For appending, use only last sentence/tag. Use empty string to replace entire document.",
         )
         .optional(),
       replace: z
         .string()
         .describe(
-          'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>. Do NOT include H1 headings—start with H2 or paragraphs.',
+          'Replacement text in HTML format (not Markdown). Empty string deletes. Internal links: <a href="internal://DOCUMENT_ID">Text</a>. Do NOT include H1 headings, start with H2 or paragraphs.',
         ),
     }),
     execute: async function ({ documentId, title, search, replace }) {

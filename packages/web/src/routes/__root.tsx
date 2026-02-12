@@ -83,9 +83,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   errorComponent: ErrorPage,
   beforeLoad: async ({ context: { queryClient } }) => {
     // Check if we have cached session data (persister restores before render)
-    const cachedData = queryClient.getQueryData<ExtendedSessionData>(
-      getSessionQuery().queryKey,
-    );
+    const cachedData = queryClient.getQueryData<ExtendedSessionData>(getSessionQuery().queryKey);
 
     // If we have cached session with a user, use it immediately for fast load
     // but trigger background refetch to validate (staleTime: 0 ensures this)

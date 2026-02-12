@@ -180,6 +180,125 @@ export function clearAllTemplatesCache(): void {
 // Cache for template ID lookups
 const templatesByIdCache = new Map<string, Template>();
 
+// Cache for template slug lookups
+const templatesBySlugCache = new Map<string, Template>();
+
+/**
+ * Fetch multiple templates by their slugs in a single efficient query.
+ * This is more performant than calling getTemplate individually for each slug.
+ */
+export async function getTemplatesBySlugs(slugs: string[]): Promise<Template[]> {
+  if (slugs.length === 0) {
+    return [];
+  }
+
+  // Check which templates are already cached
+  const cachedTemplates: Template[] = [];
+  const uncachedSlugs: string[] = [];
+
+  for (const slug of slugs) {
+    const cached = templatesBySlugCache.get(slug);
+    if (cached) {
+      cachedTemplates.push(cached);
+    } else {
+      uncachedSlugs.push(slug);
+    }
+  }
+
+  // If all templates are cached, return them
+  if (uncachedSlugs.length === 0) {
+    // Return in the same order as requested
+    return slugs
+      .map((slug) => templatesBySlugCache.get(slug))
+      .filter((t): t is Template => t !== undefined);
+  }
+
+  // Fetch uncached templates in ONE query
+  const templates = await db
+    .select()
+    .from(templatesTable)
+    .where(inArray(templatesTable.slug, uncachedSlugs));
+
+  if (templates.length === 0) {
+    return cachedTemplates;
+  }
+
+  const templateIds = templates.map((t) => t.id);
+
+  // Fetch all categories once (uses cache)
+  const allCategories = await getCategoriesFromDb();
+  const categoryIdMap = new Map(allCategories.map((c) => [c.id, c]));
+
+  // Fetch all category assignments for these templates in ONE query
+  const allAssignments = await db
+    .select({
+      templateId: templateCategoryAssignmentsTable.templateId,
+      categoryId: templateCategoryAssignmentsTable.categoryId,
+    })
+    .from(templateCategoryAssignmentsTable)
+    .where(inArray(templateCategoryAssignmentsTable.templateId, templateIds));
+
+  // Group assignments by template
+  const assignmentsByTemplate = new Map<string, string[]>();
+  for (const assignment of allAssignments) {
+    const existing = assignmentsByTemplate.get(assignment.templateId) || [];
+    existing.push(assignment.categoryId);
+    assignmentsByTemplate.set(assignment.templateId, existing);
+  }
+
+  // Fetch all FAQs for these templates in ONE query
+  const allFaqs = await db
+    .select({
+      templateId: templateFaqsTable.templateId,
+      question: templateFaqsTable.question,
+      answer: templateFaqsTable.answer,
+    })
+    .from(templateFaqsTable)
+    .where(inArray(templateFaqsTable.templateId, templateIds))
+    .orderBy(asc(templateFaqsTable.sortOrder));
+
+  // Group FAQs by template
+  const faqsByTemplate = new Map<string, Array<{ question: string; answer: string }>>();
+  for (const faq of allFaqs) {
+    const existing = faqsByTemplate.get(faq.templateId) || [];
+    existing.push({ question: faq.question, answer: faq.answer });
+    faqsByTemplate.set(faq.templateId, existing);
+  }
+
+  // Build templates with their categories and FAQs
+  templates.map((template) => {
+    const categoryIds = assignmentsByTemplate.get(template.id) || [];
+    const categories: Category[] = categoryIds
+      .map((id) => categoryIdMap.get(id))
+      .filter((c): c is Category => c !== undefined);
+
+    const result: Template = {
+      id: template.id,
+      slug: template.slug,
+      name: template.name,
+      description: template.description || "",
+      teaser: template.teaser || "",
+      detailedDescription: template.detailedDescription || "",
+      thumbnailSrc: template.thumbnailSrc || null,
+      categories,
+      documents: (template.previewData as TemplateDocument[]) || [],
+      faqs: faqsByTemplate.get(template.id) || [],
+    };
+
+    // Cache this template by slug
+    templatesBySlugCache.set(template.slug, result);
+    // Also cache by ID for consistency
+    templatesByIdCache.set(template.id, result);
+
+    return result;
+  });
+
+  // Return all templates (cached + fetched) in the original order
+  return slugs
+    .map((slug) => templatesBySlugCache.get(slug))
+    .filter((t): t is Template => t !== undefined);
+}
+
 /**
  * Fetch multiple templates by their IDs in a single efficient query.
  * This is more performant than calling getTemplate individually for each ID.

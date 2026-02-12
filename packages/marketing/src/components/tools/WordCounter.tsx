@@ -30,7 +30,7 @@ Companies worldwide are embracing flexible work arrangements, recognizing that p
 
 However, challenges remain. Communication, team cohesion, and work-life balance require intentional effort in remote settings. Organizations must adapt their culture and tools to support distributed teams effectively.
 
-Looking ahead, hybrid models are likely to dominate. The future of work isn't just remote or in-office—it's about giving people the flexibility to work where they're most productive.`,
+Looking ahead, hybrid models are likely to dominate. The future of work isn't just remote or in-office, it's about giving people the flexibility to work where they're most productive.`,
   },
   {
     label: "Academic Essay",
@@ -44,11 +44,11 @@ Conversely, the spread of misinformation poses serious risks. False information 
 
 Mental health concerns have also emerged. Studies link excessive social media use to anxiety, depression, and decreased self-esteem, particularly among young people. The constant comparison to curated online personas creates unrealistic expectations and social pressure.
 
-In conclusion, social media is neither inherently good nor bad—it's a tool whose impact depends on how we use it. Critical digital literacy, thoughtful platform design, and mindful usage are essential for maximizing benefits while minimizing harms.`,
+In conclusion, social media is neither inherently good nor bad,it's a tool whose impact depends on how we use it. Critical digital literacy, thoughtful platform design, and mindful usage are essential for maximizing benefits while minimizing harms.`,
   },
   {
     label: "Short Story",
-    text: `She found the letter tucked between the pages of an old book, yellowed with age and folded precisely into thirds. The handwriting was familiar, yet impossible—her grandmother had passed away twenty years ago.
+    text: `She found the letter tucked between the pages of an old book, yellowed with age and folded precisely into thirds. The handwriting was familiar, yet impossible, her grandmother had passed away twenty years ago.
 
 "My dearest," it began, "if you're reading this, then the bookshop has found you."
 
@@ -370,10 +370,10 @@ ${text}`;
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-blue-900">How it works</h3>
             <p className="text-sm text-blue-800">
-              This word counter works entirely in your browser—no data is sent to any server. Simply
-              type or paste your text to see real-time statistics including word count, character
-              count, reading time estimates, and more. Perfect for writers, students, and anyone who
-              needs accurate text analysis.
+              This word counter works entirely in your browser, no data is sent to any server.
+              Simply type or paste your text to see real-time statistics including word count,
+              character count, reading time estimates, and more. Perfect for writers, students, and
+              anyone who needs accurate text analysis.
             </p>
           </div>
         </div>

@@ -130,7 +130,7 @@ function FAQItemComponent({ question, answer }: FAQItemComponentProps) {
               slot="trigger"
               className="relative w-full flex items-center justify-between gap-4 py-1.5 text-left after:pointer-events-none after:absolute after:inset-y-0 after:-inset-x-2 after:rounded-lg after:bg-transparent after:content-[''] hover:after:bg-black/3 after:transition-colors after:duration-100 after:-z-10"
             >
-              <span className="text-[0.9375rem] font-medium text-black/85 pr-4">{question}</span>
+              <span className="text-[0.9375rem] font-medium text-black/75">{question}</span>
               <ChevronIcon />
             </Button>
           </Heading>

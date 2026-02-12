@@ -24,6 +24,7 @@ type Props = {
   description?: string;
   centered?: boolean;
   className?: string;
+  level?: 1 | 2 | 3 | 4;
   feature?: {
     icon: "assistant" | "linking" | "collaboration" | "search" | "speed";
     color: ColorId;
@@ -38,6 +39,7 @@ export function SectionHeader({
   centered,
   className,
   feature,
+  level = 2,
 }: Props) {
   return (
     <div
@@ -49,7 +51,7 @@ export function SectionHeader({
     >
       {feature && <FeatureBadge icon={feature.icon} color={feature.color} text={feature.text} />}
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <Heading level={2}>{title}</Heading>
+      <Heading level={level}>{title}</Heading>
       {description && <p className="text-base/relaxed text-black/60 text-balance">{description}</p>}
     </div>
   );

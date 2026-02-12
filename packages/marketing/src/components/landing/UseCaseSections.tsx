@@ -50,7 +50,7 @@ const illustrationComponents: Record<DemoState, React.ComponentType> = {
 
 export function UseCaseSections({ sections }: UseCaseSectionsProps) {
   return (
-    <div className="w-full flex flex-col gap-y-16 md:gap-y-24 mt-24">
+    <div className="w-full flex flex-col gap-y-16 md:gap-y-48 mt-12">
       {sections.map((section) => {
         const Illustration = illustrationComponents[section.illustration];
         if (!Illustration) {

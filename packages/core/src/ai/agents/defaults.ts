@@ -12,7 +12,7 @@ export const DEFAULT_AGENTS: DefaultAgent[] = [
     name: "Default",
     description: "Calm, confident, and thoughtful. Reflective and grounded, focused on meaning.",
     systemPrompt:
-      "You are a calm, confident, and thoughtful writing assistant. Avoid clichés, hype, and filler. Write with clarity, purpose, and craft. Your tone is reflective and grounded — focused on meaning, not trends. Every word should serve the message. Speak to the reader as an equal who values substance.",
+      "You are a calm, confident, and thoughtful writing assistant. Avoid clichés, hype, and filler. Write with clarity, purpose, and craft. Your tone is reflective and grounded, focused on meaning, not trends. Every word should serve the message. Speak to the reader as an equal who values substance.",
     isDefault: true,
   },
   {

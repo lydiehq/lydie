@@ -2,6 +2,7 @@ import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { motion } from "motion/react";
 
 import { Container } from "../Container";
+import { Button } from "../generic/Button";
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
 import { Heading } from "../generic/Heading";
@@ -27,11 +28,11 @@ export function HeroNew({
 }: Props) {
   return (
     <Container className="flex relative flex-col md:flex-row md:h-[840px]">
-      <div className="flex justify-center size-full flex-col md:max-w-[470px] gap-y-4">
-        {/* <div className="relative self-start">
+      <div className="flex justify-center size-full flex-col md:max-w-[470px] gap-y-4 md:-mt-20">
+        <div className="relative self-start p-1.5 -m-1.5">
           <GradientOutline />
           <svg
-            className="text-black/8 size-12"
+            className="text-black/8 size-16"
             viewBox="0 0 66 66"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -46,13 +47,13 @@ export function HeroNew({
               transition={{ duration: 4, ease: "easeOut" }}
             />
           </svg>
-        </div> */}
+        </div>
         <h1 className="text-5xl font-medium tracking-tight text-black/85">
           <span className={styles.heroWord1}>Centralize</span>{" "}
           <span className={styles.heroWord2}>your</span>{" "}
           <span className={styles.heroWord3}>writing</span>
         </h1>
-        <p className="text-base/relaxed text-black/60 max-w-md">
+        <p className="text-base/relaxed text-black/60 max-w-md text-balance drop-shadow-text">
           <span className={styles.heroSentence1}>
             Lydie is a cloud-based writing workspace that adapts to your needs.
           </span>
@@ -61,6 +62,28 @@ export function HeroNew({
             An open-source alternative to Google Docs, Notion and others.
           </span>
         </p>
+        <div className="flex items-center gap-x-1.5 mt-4 relative self-start p-1.5 -m-1.5">
+          <GradientOutline />
+          <Button
+            href="https://app.lydie.co/auth"
+            size="lg"
+            intent="primary"
+            phCapture="hero_cta_clicked"
+          >
+            <span>Start writing for free</span>
+          </Button>
+          <Button
+            href="https://github.com/lydiehq/lydie"
+            size="lg"
+            target="_blank"
+            intent="ghost"
+            phCapture="github_clicked"
+          >
+            <div className="flex items-center gap-x-1.5">
+              <span>Star on GitHub</span>
+            </div>
+          </Button>
+        </div>
       </div>
       <div className="md:absolute top-12 left-1/2">
         <div className="rounded-2xl top-12 ring ring-outline-subtle flex flex-col w-full p-2 bg-white left-1/2">

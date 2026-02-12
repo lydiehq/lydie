@@ -1,0 +1,247 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { Container } from "@/components/Container";
+import Breadcrumbs from "@/components/Breadcrumbs.astro";
+import { Button } from "@/components/generic/Button";
+import { ChevronRightRegular } from "@fluentui/react-icons";
+import { CTASection } from "@/components/landing/CTASection";
+import { SectionHeader } from "@/components/landing/SectionHeader";
+import { FAQ } from "@/components/generic/FAQ";
+import { getRole, getAllRoles } from "@/data/roles";
+import {
+  getUseCaseDefinition,
+  getAllUseCaseSlugs,
+} from "@/data/use-case-definitions";
+import { getRoleUseCaseContent } from "@/data/role-use-cases";
+import { Heading } from "@/components/generic/Heading";
+import { getTemplatesBySlugs } from "@/data/templates";
+import TemplateThumbnail from "@/components/templates/TemplateThumbnail.astro";
+import { UseCaseSections } from "@/components/landing/UseCaseSections";
+import { resolveFeaturesMap } from "@/data/feature-showcases";
+import { UseCaseHero } from "@/components/landing/UseCaseHero";
+
+// Generate all valid role/use-case combinations that are visible
+export function getStaticPaths() {
+  const paths: Array<{ params: { role: string; useCase: string } }> = [];
+  const roles = getAllRoles().filter((role) => role.visible);
+  const useCases = getAllUseCaseSlugs();
+
+  for (const role of roles) {
+    for (const useCase of useCases) {
+      const content = getRoleUseCaseContent(role.slug, useCase);
+      if (content) {
+        paths.push({
+          params: { role: role.slug, useCase },
+        });
+      }
+    }
+  }
+
+  return paths;
+}
+
+const { role: roleSlug, useCase: useCaseSlug } = Astro.params;
+const role = getRole(roleSlug!);
+const useCaseDef = getUseCaseDefinition(useCaseSlug!);
+const content = getRoleUseCaseContent(roleSlug!, useCaseSlug!);
+
+if (!role || !useCaseDef || !content) {
+  return Astro.redirect("/404");
+}
+
+const {
+  meta,
+  hero,
+  content: bodyContent,
+  examples,
+  faqs,
+  statement,
+  workflowExample,
+  features,
+} = content;
+
+// Get templates for this role+use case combination (up to 3)
+const templateSlugs = content.templateSlugs?.slice(0, 3) ?? [];
+const templates =
+  templateSlugs.length > 0 ? await getTemplatesBySlugs(templateSlugs) : [];
+---
+
+<Layout title={`${meta.title} - Lydie`} description={meta.description}>
+  <Container className="flex flex-col gap-y-16 py-16">
+    <Breadcrumbs
+      items={[
+        { label: "Lydie for", href: "/for" },
+        { label: role.shortTitle, href: `/for/${roleSlug}` },
+        { label: useCaseDef.thumbnail.title },
+      ]}
+    />
+
+    <UseCaseHero
+      title={hero.title}
+      description={hero.description}
+      states={content.demoStates}
+      client:load
+    />
+    <section class="flex flex-col gap-y-6 max-w-[65ch]">
+      {
+        bodyContent.map((paragraph) => (
+          <p class="text-base/relaxed text-black/70">{paragraph}</p>
+        ))
+      }
+    </section>
+
+    {
+      statement && (
+        <section class="py-5">
+          <blockquote class="text-lg font-medium text-gray-900 text-center max-w-3xl mx-auto leading-relaxed text-balance">
+            "{statement}"
+          </blockquote>
+        </section>
+      )
+    }
+
+    {
+      workflowExample && (
+        <section class="flex flex-col gap-y-6">
+          <SectionHeader
+            title={workflowExample.title}
+            description={workflowExample.description}
+          />
+          <div class="bg-gray-50 rounded-xl p-6 sm:p-8">
+            <ol class="space-y-4">
+              {workflowExample.steps.map((step: string, index: number) => (
+                <li class="flex items-start gap-4">
+                  <span class="shrink-0 w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-medium">
+                    {index + 1}
+                  </span>
+                  <p class="text-gray-700 leading-relaxed pt-1">{step}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )
+    }
+
+    {/* Why {actors} love Lydie */}
+    {
+      role.terms?.actorPlural && (
+        <section class="flex flex-col gap-y-6">
+          <SectionHeader
+            title={`Why ${role.terms.actorPlural} love Lydie`}
+            description={`Discover why ${role.terms.actorPlural} choose Lydie for their work.`}
+          />
+        </section>
+      )
+    }
+
+    {
+      features && Object.keys(features).length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <UseCaseSections
+            sections={resolveFeaturesMap(features).map((showcase, index) => ({
+              illustration: showcase.illustration,
+              title: showcase.title,
+              content: showcase.description,
+              featureSlug: showcase.featureSlug,
+              index,
+              featureBadge: showcase.featureBadge,
+            }))}
+            client:load
+          />
+        </section>
+      )
+    }
+
+    {/* Templates Section */}
+    {
+      templates.length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <SectionHeader
+            title={`Templates for ${useCaseDef.thumbnail.title.toLowerCase()}`}
+            description={`Get started quickly with these pre-built templates for ${role.thumbnail.title.toLowerCase()}:`}
+          />
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {templates.map((template) => (
+              <TemplateThumbnail
+                name={template.name}
+                teaser={template.teaser}
+                href={`/templates/${template.slug}`}
+                slug={template.slug}
+                thumbnailSrc={template.thumbnailSrc}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {/* Examples */}
+    <!-- <section class="bg-gray-50 rounded-2xl p-8 sm:p-12">
+      <SectionHeader
+        title={`How ${role.shortTitle.toLowerCase()} use ${useCaseDef.thumbnail.title.toLowerCase()}`}
+        description={`Concrete examples of ${useCaseDef.thumbnail.title.toLowerCase()} for ${role.thumbnail.title.toLowerCase()}:`}
+        className="mb-8"
+      />
+      <div class="grid sm:grid-cols-3 gap-6">
+        {
+          examples.map((example) => (
+            <div class="flex flex-col gap-y-2">
+              <h3 class="font-semibold text-gray-900">{example.title}</h3>
+              <p class="text-gray-600 text-sm">{example.description}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section> -->
+
+    <!-- <section class="flex flex-col gap-y-8">
+      <SectionHeader
+        title={`Benefits of using Lydie for ${useCaseDef.thumbnail.title.toLowerCase()}`}
+      />
+      <div class="grid sm:grid-cols-2 gap-4">
+        {
+          useCaseDef.benefits.map((benefit) => (
+            <div class="flex items-start gap-x-3 p-4 rounded-lg border border-gray-200">
+              <div class="shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <svg
+                  class="w-3 h-3 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <p class="text-black/70">{benefit}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section> -->
+    {
+      faqs.length > 0 && (
+        <section class="max-w-2xl">
+          <FAQ items={faqs} client:load />
+        </section>
+      )
+    }
+    <!-- <section
+      class="flex flex-col gap-y-4 items-center text-center py-8 border-t border-gray-200"
+    >
+      <p class="text-black/60">
+        Explore more use cases for {role.thumbnail.title}
+      </p>
+      <Button href={`/for/${roleSlug}`} size="lg" intent="secondary">
+        <span>See all {role.thumbnail.title} workflows</span>
+        <ChevronRightRegular className="size-4" />
+      </Button>
+    </section> -->
+  </Container>
+  <CTASection />
+</Layout>
