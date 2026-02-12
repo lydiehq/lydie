@@ -11,12 +11,11 @@ import {
   getAllUseCaseSlugs,
 } from "../../data/use-case-definitions";
 import {
-  getRolesForUseCase,
-  getRoleUseCaseContent,
+  getRolesToDisplayForUseCase,
 } from "../../data/role-use-cases";
 import { getAllRoles } from "../../data/roles";
-import { UseCaseSections } from "../../components/landing/UseCaseSections";
-import { resolveFeaturesMap } from "../../data/feature-showcases";
+import { Sections } from "../../components/landing/Sections";
+import { resolveSections } from "../../data/sections";
 import { getTemplatesBySlugs } from "../../data/templates";
 import TemplateThumbnail from "../../components/templates/TemplateThumbnail.astro";
 import { getBlogPostsBySlugs } from "../../data/blog-posts";
@@ -39,22 +38,7 @@ if (!useCase) {
   return Astro.redirect("/404");
 }
 
-const roleUseCases = getRolesForUseCase(slug!);
 const allRoles = getAllRoles();
-
-const applicableRoles = roleUseCases
-  .map((ruc) => ({
-    role: allRoles.find((r) => r.slug === ruc.roleSlug),
-    content: ruc,
-  }))
-  .filter(
-    (
-      item,
-    ): item is {
-      role: NonNullable<typeof item.role>;
-      content: typeof item.content;
-    } => item.role !== undefined && item.role.visible,
-  );
 
 // Get templates for this use case (up to 3)
 const templateSlugs = useCase.templateSlugs?.slice(0, 3) ?? [];
@@ -66,27 +50,14 @@ const blogPostSlugs = useCase.blogPosts ?? [];
 const blogPosts =
   blogPostSlugs.length > 0 ? await getBlogPostsBySlugs(blogPostSlugs) : [];
 
-// Filter featured roles to only include visible role+use case combinations
-const visibleFeaturedRoles = useCase.featuredRoles
-  ? Object.entries(useCase.featuredRoles)
-      .filter(([roleSlug]) => {
-        const content = getRoleUseCaseContent(roleSlug, slug!);
-        return content ? true : false;
-      })
-      .map(([roleSlug, fallbackDescription]) => {
-        const content = getRoleUseCaseContent(roleSlug, slug!);
-        return {
-          roleSlug,
-          description: content?.thumbnail.description || fallbackDescription,
-        };
-      })
-  : [];
-
-const title = `${useCase.meta.title} - Lydie`;
-const description = useCase.meta.description;
+// Get roles to display (featured first, then auto-linked up to 4 total)
+const rolesToDisplay = getRolesToDisplayForUseCase(useCase);
 ---
 
-<Layout title={title} description={description}>
+<Layout
+  title={`${useCase.meta.title} - Lydie`}
+  description={useCase.meta.description ?? useCase.thumbnail.description}
+>
   <Container className="flex flex-col gap-y-16 py-16">
     <Breadcrumbs
       items={[
@@ -176,8 +147,8 @@ const description = useCase.meta.description;
       useCase.featureShowcases &&
         Object.keys(useCase.featureShowcases).length > 0 && (
           <section class="flex flex-col gap-y-8">
-            <UseCaseSections
-              sections={resolveFeaturesMap(useCase.featureShowcases).map(
+            <Sections
+              sections={resolveSections(useCase.featureShowcases).map(
                 (showcase, index) => ({
                   illustration: showcase.illustration,
                   title: showcase.title,
@@ -262,73 +233,32 @@ const description = useCase.meta.description;
     <Divider logo />
 
     {
-      (visibleFeaturedRoles.length > 0 || applicableRoles.length > 0) && (
+      rolesToDisplay.length > 0 && (
         <section class="flex flex-col gap-y-8">
           <SectionHeader
             title={`How different people use Lydie for ${useCase.thumbnail.title.toLowerCase()}`}
             description="See how professionals across different fields capture and organize their knowledge:"
           />
           <div class="grid sm:grid-cols-2 gap-6">
-            {/* Show visible featured roles first if available, otherwise fall back to applicable roles */}
-            {visibleFeaturedRoles.length > 0
-              ? visibleFeaturedRoles
-                  .slice(0, 4)
-                  .map(({ roleSlug, description }) => {
-                    const role = allRoles.find((r) => r.slug === roleSlug);
-                    if (!role) return null;
-                    return (
-                      <a
-                        href={`/for/${roleSlug}/${slug}`}
-                        class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
-                      >
-                        <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                          How {role.terms.actorPlural} use Lydie for{" "}
-                          {useCase.terms.act}
-                        </h3>
-                        <p class="text-gray-600 text-[15px]/relaxed">
-                          {description}
-                        </p>
-                        <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
-                          <span>Learn more</span>
-                          <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
-                        </div>
-                      </a>
-                    );
-                  })
-              : applicableRoles.slice(0, 4).map(({ role, content }) => (
-                  <a
-                    href={`/for/${role.slug}/${slug}`}
-                    class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
-                  >
-                    <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                      How {role.terms.actorPlural} use Lydie for{" "}
-                      {useCase.thumbnail.title.toLowerCase()}
-                    </h3>
-                    <p class="text-gray-600 text-[15px]/relaxed">
-                      {content.hero.description}
-                    </p>
-                    <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
-                      <span>Learn more</span>
-                      <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </a>
-                ))}
-          </div>
-
-          {/* Show "See all roles" link if there are more than 4 visible roles or more applicable roles */}
-          {(visibleFeaturedRoles.length > 0
-            ? visibleFeaturedRoles.length > 4
-            : applicableRoles.length > 4) && (
-            <div class="flex justify-center pt-4">
+            {rolesToDisplay.map(({ role, description }) => (
               <a
-                href="/for"
-                class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                href={`/for/${role.slug}/${slug}`}
+                class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
               >
-                Explore all roles
-                <ChevronRightRegular className="ml-2 size-4" />
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                  How {role.terms.actorPlural} use Lydie for{" "}
+                  {useCase.terms.act}
+                </h3>
+                <p class="text-gray-600 text-[15px]/relaxed">
+                  {description}
+                </p>
+                <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
+                  <span>Learn more</span>
+                  <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </a>
-            </div>
-          )}
+            ))}
+          </div>
         </section>
       )
     }

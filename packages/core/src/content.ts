@@ -533,10 +533,15 @@ export class LydieClient {
         console.log(`[Lydie] Slugs:`, slugs);
       }
 
-      const response = await fetch(url, {
-        method: "POST",
+      const params = new URLSearchParams();
+      if (slugs.length > 0) {
+        params.set("slugs", slugs.join(","));
+      }
+      const fullUrl = `${url}?${params.toString()}`;
+
+      const response = await fetch(fullUrl, {
+        method: "GET",
         headers: this.getHeaders(),
-        body: JSON.stringify({ slugs }),
       });
 
       if (this.debug) {

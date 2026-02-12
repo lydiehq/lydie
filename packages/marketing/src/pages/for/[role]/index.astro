@@ -8,7 +8,7 @@ import { CTASection } from "../../../components/landing/CTASection";
 import { SectionHeader } from "../../../components/landing/SectionHeader";
 import { FAQ } from "../../../components/generic/FAQ";
 import { getRole, getAllRoles } from "../../../data/roles";
-import { getUseCasesForRole } from "../../../data/role-use-cases";
+import { getUseCasesToDisplayForRole } from "../../../data/role-use-cases";
 import { Heading } from "../../../components/generic/Heading";
 import { getTemplatesBySlugs } from "../../../data/templates";
 import TemplateThumbnail from "../../../components/templates/TemplateThumbnail.astro";
@@ -31,9 +31,9 @@ if (!role || !role.visible) {
   return Astro.redirect("/404");
 }
 
-const roleUseCases = getUseCasesForRole(roleSlug!);
+const useCasesToDisplay = getUseCasesToDisplayForRole(role);
 
-const { meta, painPoints, workflows, faqs, ctaText } = role;
+const { meta, painPoints, faqs, ctaText } = role;
 
 // Look up comparison data if specified
 const comparison = role.comparison
@@ -46,10 +46,20 @@ const templates =
   templateSlugs.length > 0 ? await getTemplatesBySlugs(templateSlugs) : [];
 ---
 
-<Layout title={`${meta.title} - Lydie`} description={meta.description}>
+<Layout
+  title={`${meta.title} - Lydie`}
+  description={meta.description ?? role.hero.description}
+>
   <Container className="flex flex-col gap-y-16 py-16">
     <Breadcrumbs
-      items={[{ label: "Lydie for", href: "/for" }, { label: role.shortTitle }]}
+      items={[
+        { label: "Lydie for", href: "/for" },
+        {
+          label:
+            role.terms.actorPlural.charAt(0).toUpperCase() +
+            role.terms.actorPlural.slice(1),
+        },
+      ]}
     />
 
     <UseCaseHero
@@ -112,43 +122,43 @@ const templates =
         </section>
       )
     }
-
-    {/* Workflows / Use Cases */}
-    <section class="flex flex-col gap-y-8">
-      <SectionHeader
-        title={`Common workflows for ${role.thumbnail.title}`}
-        description={`How ${role.shortTitle.toLowerCase()} use Lydie to work smarter:`}
-      />
-      <div class="grid sm:grid-cols-2 gap-6">
-        {
-          workflows.map((workflow) => (
-            <a
-              href={`/for/${roleSlug}/${workflow.useCaseSlug}`}
-              class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
-            >
-              <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                {workflow.title}
-              </h3>
-              <p class="text-gray-600 text-[15px]/relaxed">
-                {workflow.description}
-              </p>
-              <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
-                <span>Learn more</span>
-                <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-            </a>
-          ))
-        }
-      </div>
-    </section>
+    {
+      useCasesToDisplay.length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <SectionHeader
+            title={`Use cases for ${role.thumbnail.title}`}
+            description={`How ${role.shortTitle.toLowerCase()} use Lydie to work smarter:`}
+          />
+          <div class="grid sm:grid-cols-2 gap-6">
+            {useCasesToDisplay.map(({ useCase, description, isFeatured }) => (
+              <a
+                href={`/for/${roleSlug}/${useCase.slug}`}
+                class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+              >
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                  {useCase.thumbnail.title}
+                </h3>
+                <p class="text-gray-600 text-[15px]/relaxed">
+                  {description}
+                </p>
+                <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
+                  <span>Learn more</span>
+                  <ChevronRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
 
     {/* Comparison Section */}
     {
       comparison && role.comparison && (
-        <section class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white">
+        <section class="bg-linear-to-br from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white">
           <div class="flex flex-col gap-y-4 max-w-2xl">
             <h2 class="text-2xl font-semibold">
-              Why teams choose Lydie over {comparison.name}
+              Why {role.terms.actorPlural} choose Lydie over {comparison.name}
             </h2>
             <p class="text-white/80 text-lg leading-relaxed">
               {role.comparison.description}

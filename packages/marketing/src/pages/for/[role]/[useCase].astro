@@ -16,8 +16,8 @@ import { getRoleUseCaseContent } from "@/data/role-use-cases";
 import { Heading } from "@/components/generic/Heading";
 import { getTemplatesBySlugs } from "@/data/templates";
 import TemplateThumbnail from "@/components/templates/TemplateThumbnail.astro";
-import { UseCaseSections } from "@/components/landing/UseCaseSections";
-import { resolveFeaturesMap } from "@/data/feature-showcases";
+import { Sections } from "@/components/landing/Sections";
+import { resolveSections } from "@/data/sections";
 import { UseCaseHero } from "@/components/landing/UseCaseHero";
 
 // Generate all valid role/use-case combinations that are visible
@@ -66,12 +66,20 @@ const templates =
   templateSlugs.length > 0 ? await getTemplatesBySlugs(templateSlugs) : [];
 ---
 
-<Layout title={`${meta.title} - Lydie`} description={meta.description}>
+<Layout
+  title={`${meta.title} - Lydie`}
+  description={meta.description ?? hero.description}
+>
   <Container className="flex flex-col gap-y-16 py-16">
     <Breadcrumbs
       items={[
         { label: "Lydie for", href: "/for" },
-        { label: role.shortTitle, href: `/for/${roleSlug}` },
+        {
+          label:
+            role.terms.actorPlural.charAt(0).toUpperCase() +
+            role.terms.actorPlural.slice(1),
+          href: `/for/${roleSlug}`,
+        },
         { label: useCaseDef.thumbnail.title },
       ]}
     />
@@ -138,8 +146,8 @@ const templates =
     {
       features && Object.keys(features).length > 0 && (
         <section class="flex flex-col gap-y-8">
-          <UseCaseSections
-            sections={resolveFeaturesMap(features).map((showcase, index) => ({
+          <Sections
+            sections={resolveSections(features).map((showcase, index) => ({
               illustration: showcase.illustration,
               title: showcase.title,
               content: showcase.description,
@@ -153,7 +161,6 @@ const templates =
       )
     }
 
-    {/* Templates Section */}
     {
       templates.length > 0 && (
         <section class="flex flex-col gap-y-8">

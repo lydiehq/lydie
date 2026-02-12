@@ -29,7 +29,7 @@ export function HeroNew({
   return (
     <Container className="flex relative flex-col md:flex-row md:h-[840px]">
       <div className="flex justify-center size-full flex-col md:max-w-[470px] gap-y-4 md:-mt-20">
-        <div className="relative self-start p-1.5 -m-1.5">
+        <div className="relative self-start p-0.5 -m-1.5">
           <GradientOutline />
           <svg
             className="text-black/8 size-16"

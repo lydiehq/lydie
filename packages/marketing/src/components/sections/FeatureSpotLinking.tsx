@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 
-import { CastShadow } from "../../generic/CastShadow";
-import { GradientOutline } from "../../generic/GradientOutline";
+import { CastShadow } from "@/components/generic/CastShadow";
+import { GradientOutline } from "@/components/generic/GradientOutline";
 
 export function FeatureSpotLinking() {
   return (

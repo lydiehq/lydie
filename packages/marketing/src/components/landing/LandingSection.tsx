@@ -4,6 +4,7 @@ import { ChevronRightRegular } from "@fluentui/react-icons";
 
 import { Button } from "../generic/Button";
 import { FeatureBadge } from "./FeatureIcon";
+import { SectionHeader } from "./SectionHeader";
 
 type ButtonConfig = {
   href: string;
@@ -32,7 +33,7 @@ type FeatureBadgeConfig = {
 };
 
 type LandingSectionProps = {
-  title: ReactNode;
+  title: string;
   description: string;
   illustration: ReactNode;
   primaryButton: ButtonConfig;
@@ -59,8 +60,7 @@ export function LandingSection({
           text={featureBadge.text}
         />
       )}
-      <h2 className="text-2xl sm:text-3xl tracking-tight font-medium text-black/85">{title}</h2>
-      <p className="text-base/relaxed text-black/60 text-balance">{description}</p>
+      <SectionHeader title={title} description={description} />
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mt-4">
         <Button href={primaryButton.href} size="md" intent="primary">
           <span>{primaryButton.label}</span>

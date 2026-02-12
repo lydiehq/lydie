@@ -1,7 +1,7 @@
-import { CastShadow } from "../../generic/CastShadow";
-import { GradientOutline } from "../../generic/GradientOutline";
-import { CommandMenuIllustration } from "../CommandMenuIllustration";
-import { SearchIllustration } from "../SearchIllustration";
+import { CastShadow } from "@/components/generic/CastShadow";
+import { GradientOutline } from "@/components/generic/GradientOutline";
+import { CommandMenuIllustration } from "@/components/landing/CommandMenuIllustration";
+import { SearchIllustration } from "@/components/landing/SearchIllustration";
 
 const searchSections = [
   {

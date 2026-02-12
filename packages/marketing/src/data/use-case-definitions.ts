@@ -1,8 +1,13 @@
 import type { DemoState } from "../components/landing/DemoStateSelector";
-import type { FeaturesMap } from "./feature-showcases";
+import type { SectionInput } from "./sections";
 
-// Valid role slugs from roles.ts
-export type RoleSlug = "researchers";
+/**
+ * Featured roles for a use case.
+ * Keys are role slugs, values can be:
+ * - true: use default description from the role+use case content
+ * - string: use this custom description
+ */
+export type FeaturedRoles = Record<string, true | string>;
 
 export interface UseCaseDefinition {
   slug: string;
@@ -19,24 +24,23 @@ export interface UseCaseDefinition {
   };
   meta: {
     title: string;
-    description: string;
+    description?: string;
   };
   statement?: string;
   /**
-   * Feature showcases to display on the use case page.
-   * Keys are feature identifiers (assistant, search, linking, collaboration).
-   * Values can be empty {} to use defaults, or override title/description/ctaText.
-   * Badge and slug are automatically inferred from the feature key.
+   * Sections to display on the use case page.
+   * Can be section IDs (e.g., "assistant", "opensource") or objects with overrides.
    */
-  featureShowcases?: FeaturesMap;
+  sections?: SectionInput[];
   templateSlugs?: string[];
   demoStates?: DemoState[];
   /**
    * Featured roles section - links to role-specific use case pages.
-   * Maps role slugs to teaser descriptions. Shows up to 4 roles,
-   * with a link to see all roles if more exist.
+   * Keys are role slugs, values can be true (for default description)
+   * or a custom description string.
+   * These are more prominent than auto-linked roles.
    */
-  featuredRoles?: Partial<Record<RoleSlug, string>>;
+  featuredRoles?: FeaturedRoles;
   /**
    * Common problems with this use case and how Lydie solves them.
    * Problem → solution narrative adds semantic depth and differentiation.
@@ -79,7 +83,7 @@ export interface UseCaseDefinition {
   blogPosts?: string[];
 }
 
-export const useCaseDefinitions: UseCaseDefinition[] = [
+export const useCaseDefinitions = [
   {
     slug: "note-taking",
     terms: {
@@ -127,25 +131,28 @@ export const useCaseDefinitions: UseCaseDefinition[] = [
         },
       ],
     },
-    featureShowcases: {
-      linking: {
+    sections: [
+      {
+        id: "linking",
         title: "Link your notes together",
         description:
           "Lydie's internal linking feature helps connect your notes together to build a web of knowledge.",
       },
-      assistant: {
+      {
+        id: "assistant",
         description:
           "Use the AI assistant to help organize and contextualize your notes. Summarize long documents, expand ideas, and get writing suggestions.",
       },
-      search: {
+      {
+        id: "search",
         title: "Don't lose track of your notes ever again",
         description:
           "Use powerful search to find any note in seconds. Lydie's command menu is always a single keystroke away.",
       },
-    },
+    ],
     featuredRoles: {
-      researchers:
-        "Organize literature reviews, capture insights from papers, and build a research knowledge base that compounds over time.",
+      researchers: true,
+      students: true,
     },
     workflowExample: {
       title: "Example workflow: capturing and connecting meeting notes",
@@ -216,20 +223,23 @@ export const useCaseDefinitions: UseCaseDefinition[] = [
     },
     statement:
       "The biggest obstacle of building and maintaining a personal knowledge base is things getting in your way. Lydie tries to stay as invisible as possible, so you can focus on your thinking and your work.",
-    featureShowcases: {
-      search: {
+    sections: [
+      {
+        id: "search",
         description: "Easily resurface previous thoughts and ideas with Lydie's powerful search.",
       },
-      linking: {
+      {
+        id: "linking",
         description:
           "Lydie's internal linking feature makes it the ideal platform for building up a personal knowledge base.",
       },
-      assistant: {
+      {
+        id: "assistant",
         title: "Meet your sparring partner",
         description:
           "You don't have to be alone when building your personal knowledge base. Lydie's AI assistant can help you structure your ideas and connect them together.",
       },
-    },
+    ],
     blogPosts: [
       "what-is-a-personal-knowledge-base",
       "how-to-structure-a-knowledge-base",
@@ -247,16 +257,139 @@ export const useCaseDefinitions: UseCaseDefinition[] = [
       },
     ],
   },
-];
+  {
+    slug: "content-management-system",
+    terms: {
+      act: "their content management system",
+    },
+    hero: {
+      title: "Use Lydie as a headless content management system",
+      description:
+        "Use Lydie as a modern, API-first content management system for your blog, docs, or marketing site. Write in a fast writing workspace, then fetch and serve content through Lydie's REST API to any website or app.",
+    },
+    thumbnail: {
+      title: "Content management system",
+      description: "Use Lydie as a headless CMS with a simple REST API.",
+    },
+    meta: {
+      title: "Headless CMS for Blogs, Docs & Websites",
+    },
+    statement:
+      "Your content shouldn’t be locked inside your writing tool. With Lydie’s REST API, your documents become structured content you can publish anywhere – your blog, marketing site, or documentation portal.",
+    problemsAndSolutions: {
+      title: "Common CMS problems (and how Lydie solves them)",
+      problems: [
+        {
+          problem: "Traditional CMSs are slow and painful to write in",
+          solution:
+            "Lydie is built as a fast writing workspace first, so writing long-form content and docs actually feels good.",
+        },
+        {
+          problem: "Content is locked into the CMS UI",
+          solution:
+            "Fetch documents via Lydie’s REST API and render them anywhere: blogs, docs sites, marketing pages, or apps.",
+        },
+        {
+          problem: "Hard to structure content without rigid schemas",
+          solution:
+            "Use documents and nested pages as flexible content primitives instead of fighting complex CMS schemas.",
+        },
+        {
+          problem: "Poor internal linking between content pieces",
+          solution:
+            "Internal linking lets you connect articles, docs, and references naturally – great for knowledge bases and documentation sites.",
+        },
+        {
+          problem: "CMS performance degrades with lots of content",
+          solution:
+            "Lydie is built to stay fast even with large document collections and long-form content.",
+        },
+      ],
+    },
+    workflowExample: {
+      title: "Example workflow: using Lydie as a headless CMS for a blog",
+      description:
+        "How teams use Lydie to power a blog or documentation site with a simple API-based setup.",
+      steps: [
+        "Write blog posts or docs in Lydie using structured documents",
+        "Organize content into folders or sections (e.g. /blog, /docs, /guides)",
+        "Fetch published documents via Lydie’s REST API",
+        "Render content in your frontend (Next.js, Astro, Nuxt, etc.)",
+        "Update content in Lydie and redeploy or revalidate your site",
+      ],
+    },
+    differentiation: {
+      title: "How Lydie differs from typical CMS tools",
+      points: [
+        {
+          label: "API-first",
+          description:
+            "Lydie works as a headless CMS – your frontend is completely decoupled from where content is written.",
+        },
+        {
+          label: "Writer-first experience",
+          description:
+            "Unlike many CMS dashboards, Lydie is optimized for long-form writing and structured thinking.",
+        },
+        {
+          label: "Docs-as-content model",
+          description:
+            "Documents double as both internal knowledge and publishable content for blogs and docs.",
+        },
+        {
+          label: "Built-in internal linking",
+          description: "Create connected content systems instead of isolated CMS pages.",
+        },
+      ],
+    },
+    sections: [
+      {
+        id: "linking",
+        title: "Create connected content",
+        description:
+          "Say goodbye to orphaned pages. Link articles, docs, and references together to build a navigable content system for your site or documentation.",
+      },
+      {
+        id: "search",
+        title: "Manage content at scale",
+        description:
+          "Instant search across all content makes it easy to maintain large blogs or documentation libraries.",
+      },
+      {
+        id: "assistant",
+        title: "Speed up content production",
+        description:
+          "Use the AI assistant to draft, summarize, and restructure content before publishing it through your API.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Can Lydie be used as a headless CMS?",
+        a: "Yes. Lydie exposes your documents through a REST API, allowing you to fetch and render content on any website or app.",
+      },
+      {
+        q: "What can I build with Lydie as a CMS?",
+        a: "You can power blogs, documentation sites, marketing pages, changelogs, or even lightweight help centers using Lydie as a content backend.",
+      },
+      {
+        q: "Is Lydie a replacement for traditional CMSs?",
+        a: "Not entirely. Lydie works best for smaller sites, blogs, documentation, and other text-heavy content. If you need fine-grained control over many small UI elements, complex content models, or highly custom publishing workflows, a traditional CMS is likely a better fit.",
+      },
+    ],
+    blogPosts: [],
+  },
+] as const satisfies readonly UseCaseDefinition[];
 
-export function getUseCaseDefinition(slug: string): UseCaseDefinition | undefined {
+export type UseCaseSlug = (typeof useCaseDefinitions)[number]["slug"];
+
+export function getUseCaseDefinition(slug: UseCaseSlug | string): UseCaseDefinition | undefined {
   return useCaseDefinitions.find((uc) => uc.slug === slug);
 }
 
-export function getAllUseCaseSlugs(): string[] {
+export function getAllUseCaseSlugs(): UseCaseSlug[] {
   return useCaseDefinitions.map((uc) => uc.slug);
 }
 
-export function getAllUseCaseDefinitions(): UseCaseDefinition[] {
+export function getAllUseCaseDefinitions(): readonly UseCaseDefinition[] {
   return useCaseDefinitions;
 }

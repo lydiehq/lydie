@@ -14,7 +14,7 @@ export function SpeedSection() {
     <LandingSection
       featureBadge={{
         icon: "speed",
-        color: "bg-green-500",
+        color: "green",
         text: "Speed",
       }}
       title="Don't lose your thoughts to loading screens"

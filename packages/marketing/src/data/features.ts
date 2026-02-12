@@ -1,3 +1,11 @@
+/**
+ * Feature page data - used for individual feature pages (/features/[slug])
+ * 
+ * For landing page sections, use @/data/sections instead.
+ * This file only contains data needed for the full feature pages with their
+ * detailed content, FAQs, and subpages.
+ */
+
 export interface FAQItem {
   q: string;
   a: string;
@@ -316,10 +324,6 @@ export const features: Feature[] = [
       {
         q: "How does search work in Lydie?",
         a: "Lydie uses full-text search across all your documents. You can search by content, titles, or use filters to narrow results. Search supports fuzzy matching to help you find what you're looking for even with typos.",
-      },
-      {
-        q: "Can I search within specific folders or tags?",
-        a: "Yes! Use filters to search within specific folders, by tags, or by document type. This helps you find exactly what you need in large knowledge bases.",
       },
     ],
     content: [

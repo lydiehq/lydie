@@ -1,11 +1,19 @@
 import type { DemoState } from "../components/landing/DemoStateSelector";
 import type { Comparison } from "./comparisons";
-import type { FeatureShowcaseInput } from "./feature-showcases";
+import type { SectionInput } from "./sections";
 
 export interface FAQItem {
   q: string;
   a: string;
 }
+
+/**
+ * Featured use cases for a role.
+ * Keys are use case slugs, values can be:
+ * - true: use default description from the use case
+ * - string: use this custom description
+ */
+export type FeaturedUseCases = Record<string, true | string>;
 
 export interface Role {
   slug: string;
@@ -24,14 +32,9 @@ export interface Role {
   };
   meta: {
     title: string;
-    description: string;
+    description?: string;
   };
   painPoints: string[];
-  workflows: {
-    title: string;
-    description: string;
-    useCaseSlug: string;
-  }[];
   /**
    * Link to a comparison page with a role-specific description.
    * The slug must reference a valid comparison in comparisons.ts
@@ -45,11 +48,10 @@ export interface Role {
   relatedFeatures?: string[];
   visible: boolean;
   /**
-   * Feature showcases to display on the role page.
-   * Can be simple feature keys (e.g., "assistant", "search") or full customization objects.
-   * Badge, slug, and defaults are automatically inferred from the feature key.
+   * Sections to display on the role page.
+   * Can be section IDs (e.g., "assistant", "opensource") or objects with overrides.
    */
-  featureShowcases?: FeatureShowcaseInput[];
+  sections?: SectionInput[];
   /**
    * Template slugs to display on the role page.
    * Up to 3 templates will be shown. If empty or not provided, no section is shown.
@@ -60,9 +62,16 @@ export interface Role {
    * If not provided, defaults to all states.
    */
   demoStates?: DemoState[];
+  /**
+   * Featured use cases to display on the role page.
+   * These are more prominent than auto-linked use cases.
+   * Keys are use case slugs, values can be true (for default description)
+   * or a custom description string.
+   */
+  featuredUseCases?: FeaturedUseCases;
 }
 
-export const roles: Role[] = [
+export const roles = [
   {
     slug: "researchers",
     shortTitle: "Researchers",
@@ -91,13 +100,9 @@ export const roles: Role[] = [
       "No good way to connect ideas and discover patterns",
       "Difficulty collaborating with co-authors and advisors",
     ],
-    workflows: [
-      {
-        title: "Literature Notes",
-        description: "Capture insights from papers with organized, searchable notes",
-        useCaseSlug: "note-taking",
-      },
-    ],
+    featuredUseCases: {
+      "note-taking": true,
+    },
     comparison: {
       slug: "notion",
       description:
@@ -125,16 +130,138 @@ export const roles: Role[] = [
     visible: true,
     relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
   },
-];
+  {
+    slug: "students",
+    shortTitle: "Students",
+    terms: {
+      actor: "student",
+      actorPlural: "students",
+    },
+    hero: {
+      title: "A writing workspace that keeps up with student life",
+      description:
+        "Notes, essays, and study materials scattered across apps make it hard to focus. Lydie gives you one place to capture lecture notes, connect ideas across courses, and get your writing done, without the clutter.",
+    },
+    thumbnail: {
+      title: "Writing Workspace for Students",
+      description:
+        "Take better notes, organize coursework, and write with confidence. Built for students who think in connections, not folders.",
+    },
+    meta: {
+      title: "Writing Workspace for Students",
+    },
+    painPoints: [
+      "Notes and sources scattered across Google Docs, Notion, and random files",
+      "Losing track of what you wrote for which course or assignment",
+      "Struggling to connect ideas across lectures and readings",
+      "Group projects that live in messy shared folders and endless threads",
+    ],
+    featuredUseCases: {
+      "note-taking": true,
+    },
+    comparison: {
+      slug: "evernote",
+      description:
+        "Lydie is an ideal alternative to Evernote for students, as it brings a simpler, more focused writing experience with linked notes and AI assistance for organizing coursework and drafting.",
+    },
+    faqs: [
+      {
+        q: "Is Lydie free?",
+        a: "Yes, Lydie is free to use. It includes unlimited documents, pages and collaborators and a generous amount of AI requests.",
+      },
+      {
+        q: "How can students use Lydie?",
+        a: "Students use Lydie to take lecture and reading notes, organize coursework by class or topic, draft essays and papers, and collaborate on group projects. You can link notes across courses to see connections and resurface ideas when writing.",
+      },
+      {
+        q: "Is Lydie good for essay writing?",
+        a: "Yes. Use Lydie to outline, draft, and revise. Keep your sources and notes linked so you can reference them as you write. AI can help with structure and clarity while you stay in control of the content.",
+      },
+      {
+        q: "Can I use Lydie for group projects?",
+        a: "Yes. Share pages or spaces with classmates. Edit together in real time, leave comments, and keep everything in one place instead of scattered across drives and chat.",
+      },
+      {
+        q: "How does Lydie help with studying?",
+        a: "Your notes become searchable and linked. Find anything quickly, see how concepts connect across courses, and use the AI assistant to summarize long readings or clarify ideas when you're reviewing.",
+      },
+    ],
+    ctaText: "Try Lydie for student life",
+    visible: true,
+    relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
+    templateSlugs: ["study-guide-xUnXnq"],
+  },
+  {
+    slug: "developers",
+    shortTitle: "Developers",
+    terms: {
+      actor: "developer",
+      actorPlural: "developers",
+    },
+    hero: {
+      title: "A writing workspace built for developers",
+      description:
+        "Docs, specs, notes, and ideas shouldn’t live in scattered tools. Lydie gives developers a fast, local-first writing workspace to think clearly, document decisions, and build shared knowledge alongside code.",
+    },
+    thumbnail: {
+      title: "Writing Workspace for Developers",
+      description:
+        "Document systems, write specs, and build a shared knowledge base for your team. Built for developers who value speed, structure, and privacy.",
+    },
+    meta: {
+      title: "Writing Workspace for Developers",
+      description:
+        "Document systems, write specs, and build a shared knowledge base for your team. A fast, local-first writing workspace built for developers.",
+    },
+    painPoints: [
+      "Docs scattered across Notion, README files, and random Google Docs",
+      "Outdated documentation that no one trusts",
+      "Losing architectural context over time",
+      "Hard to onboard new teammates without repeating yourself",
+    ],
+    featuredUseCases: {
+      "personal-knowledge-base": "Build a personal knowledge base for your code, architecture decisions, and learnings.",
+    },
+    comparison: {
+      slug: "notion",
+      description:
+        "Compared to Notion, Lydie stays fast with large technical docs, works local-first, and feels closer to how developers already think and write. It’s built for deep writing, not just databases and dashboards.",
+    },
+    faqs: [
+      {
+        q: "How do developers use Lydie?",
+        a: "Developers use Lydie to write technical documentation, RFCs, design docs, meeting notes, and personal knowledge bases. It’s a place to think through problems, capture decisions, and build shared context over time.",
+      },
+      {
+        q: "Is Lydie a replacement for README files?",
+        a: "Not exactly. README files are great for quick project context, while Lydie is better for longer-form docs like architecture notes, ADRs, onboarding guides, and evolving system documentation.",
+      },
+      {
+        q: "Can Lydie be used as an internal developer wiki?",
+        a: "Yes. Teams use Lydie as a lightweight internal knowledge base for engineering docs, onboarding guides, and technical decisions. Pages stay fast and searchable even as your documentation grows.",
+      },
+      {
+        q: "How does AI help developers?",
+        a: "AI can help summarize long docs, turn rough notes into clearer explanations, draft outlines for RFCs, and surface related pages when you’re writing or exploring your knowledge base.",
+      },
+    ],
+    ctaText: "Try Lydie for developers",
+    visible: true,
+    relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
+    templateSlugs: [],
+  },
+] as const satisfies readonly Role[];
 
-export function getRole(slug: string): Role | undefined {
+export type RoleSlug = (typeof roles)[number]["slug"];
+
+export function getRole(slug: RoleSlug | string): Role | undefined {
   return roles.find((role) => role.slug === slug);
 }
 
-export function getAllRoleSlugs(): string[] {
+export function getAllRoleSlugs(): RoleSlug[] {
   return roles.map((role) => role.slug);
 }
 
-export function getAllRoles(): Role[] {
+export function getAllRoles(): readonly Role[] {
   return roles;
 }

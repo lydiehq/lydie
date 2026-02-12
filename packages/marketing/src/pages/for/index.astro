@@ -7,10 +7,9 @@ import { GradientOutline } from "../../components/generic/GradientOutline";
 import { CTASection } from "../../components/landing/CTASection";
 import { SectionHeader } from "../../components/landing/SectionHeader";
 import { getAllRoles } from "../../data/roles";
-import { getAllUseCaseDefinitions } from "../../data/use-case-definitions";
+import { getUseCasesToDisplayForRole } from "../../data/role-use-cases";
 
 const roles = getAllRoles().filter((role) => role.visible);
-const useCases = getAllUseCaseDefinitions();
 
 const title = "Lydie for Every Role - Find Your Workflow";
 const description =
@@ -32,29 +31,32 @@ const description =
     <div class="max-w-6xl mx-auto w-full">
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {
-          roles.map((role) => (
-            <a
-              href={`/for/${role.slug}`}
-              class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
-            >
-              <div class="flex flex-col gap-y-2">
-                <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                  {role.thumbnail.title}
-                </h3>
-              </div>
-              <div class="flex flex-wrap gap-2 mt-auto">
-                {role.workflows.slice(0, 3).map((workflow) => (
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                    {workflow.title}
-                  </span>
-                ))}
-              </div>
-              <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors pt-2">
-                <span>Explore workflows</span>
-                <ArrowRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-            </a>
-          ))
+          roles.map((role) => {
+            const useCasesToDisplay = getUseCasesToDisplayForRole(role);
+            return (
+              <a
+                href={`/for/${role.slug}`}
+                class="group flex flex-col gap-y-4 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
+              >
+                <div class="flex flex-col gap-y-2">
+                  <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                    {role.thumbnail.title}
+                  </h3>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-auto">
+                  {useCasesToDisplay.slice(0, 3).map(({ useCase }) => (
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                      {useCase.thumbnail.title}
+                    </span>
+                  ))}
+                </div>
+                <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors pt-2">
+                  <span>Explore use cases</span>
+                  <ArrowRightRegular className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </a>
+            );
+          })
         }
       </div>
     </div>

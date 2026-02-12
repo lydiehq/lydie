@@ -1,8 +1,8 @@
 import { getColorById } from "@lydie/core/colors";
 import { motion } from "motion/react";
 
-import { CastShadow } from "../../generic/CastShadow";
-import { GradientOutline } from "../../generic/GradientOutline";
+import { CastShadow } from "@/components/generic/CastShadow";
+import { GradientOutline } from "@/components/generic/GradientOutline";
 
 const collaborators = [
   { name: "Sarah", color: getColorById("cyan")?.value ?? "#7DBCD6" },
@@ -57,33 +57,47 @@ export function FeatureSpotCollaboration() {
               <div className="h-1.5 bg-gray-100 rounded-full w-4/6" />
             </div>
 
-            {/* Animated cursor */}
-            <motion.div
-              initial={{ opacity: 0, x: 20, y: 10 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-              className="absolute bottom-4 right-4"
-            >
-              <div className="relative" style={{ color: collaborators[1].color }}>
-                {/* Cursor */}
-                <svg
-                  width="14"
-                  height="18"
-                  viewBox="0 0 14 18"
-                  fill="currentColor"
-                  className="drop-shadow-sm"
+            {/* Multiple collaborator cursors */}
+            {collaborators.map((collaborator, index) => {
+              // Position cursors at different locations
+              const positions = [
+                { bottom: "20%", right: "15%" },
+                { bottom: "35%", right: "25%" },
+                { bottom: "45%", right: "10%" },
+              ];
+              const pos = positions[index];
+
+              return (
+                <motion.div
+                  key={collaborator.name}
+                  initial={{ opacity: 0, x: 20, y: 10 }}
+                  animate={{ opacity: 1, x: 0, y: 0 }}
+                  transition={{ delay: 0.5 + index * 0.15, duration: 0.4 }}
+                  className="absolute"
+                  style={{ bottom: pos.bottom, right: pos.right }}
                 >
-                  <path d="M2.5 2L2.5 13.5C2.5 14.0523 2.94772 14.5 3.5 14.5H5.5C6.05228 14.5 6.5 14.0523 6.5 13.5V10.5H10.5C11.0523 10.5 11.5 10.0523 11.5 9.5V2C11.5 1.44772 11.0523 1 10.5 1H3.5C2.94772 1 2.5 1.44772 2.5 2Z" />
-                </svg>
-                {/* Label */}
-                <div
-                  className="absolute -top-4 left-2 px-1.5 py-0.5 rounded text-[0.5rem] font-medium text-white whitespace-nowrap"
-                  style={{ backgroundColor: collaborators[1].color }}
-                >
-                  Alex
-                </div>
-              </div>
-            </motion.div>
+                  <div className="relative" style={{ color: collaborator.color }}>
+                    {/* Cursor */}
+                    <svg
+                      width="14"
+                      height="18"
+                      viewBox="0 0 14 18"
+                      fill="currentColor"
+                      className="drop-shadow-sm"
+                    >
+                      <path d="M2.5 2L2.5 13.5C2.5 14.0523 2.94772 14.5 3.5 14.5H5.5C6.05228 14.5 6.5 14.0523 6.5 13.5V10.5H10.5C11.0523 10.5 11.5 10.0523 11.5 9.5V2C11.5 1.44772 11.0523 1 10.5 1H3.5C2.94772 1 2.5 1.44772 2.5 2Z" />
+                    </svg>
+                    {/* Label */}
+                    <div
+                      className="absolute -top-4 left-2 px-1.5 py-0.5 rounded text-[0.5rem] font-medium text-white whitespace-nowrap"
+                      style={{ backgroundColor: collaborator.color }}
+                    >
+                      {collaborator.name}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
 
             {/* Highlight animation */}
             <motion.div

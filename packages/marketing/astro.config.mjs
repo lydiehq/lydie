@@ -10,6 +10,9 @@ export default defineConfig({
   integrations: [mdx(), react()],
   output: "static",
   adapter: aws(),
+  devToolbar: {
+    enabled: false,
+  },
   vite: {
     plugins: [tailwindcss()],
     ssr: {
