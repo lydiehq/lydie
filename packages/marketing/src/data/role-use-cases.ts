@@ -1,7 +1,8 @@
 import type { DemoState } from "../components/landing/DemoStateSelector";
-import type { SectionInput } from "./sections";
 import type { Role, RoleSlug } from "./roles";
+import type { SectionInput } from "./sections";
 import type { UseCaseDefinition, UseCaseSlug } from "./use-case-definitions";
+
 import { getAllRoles } from "./roles";
 import { getAllUseCaseDefinitions } from "./use-case-definitions";
 
@@ -208,7 +209,8 @@ export const roleUseCaseContent: RoleUseCaseContent[] = [
     faqs: [
       {
         question: "Can I collaborate on notes with my classmates?",
-        answer: "Yes. Lydie supports real-time collaboration. Just invite your classmates to the page and start collaborating right away. See more about our collaboration features [here](/features/collaboration).",
+        answer:
+          "Yes. Lydie supports real-time collaboration. Just invite your classmates to the page and start collaborating right away. See more about our collaboration features [here](/features/collaboration).",
       },
     ],
     workflowExample: {

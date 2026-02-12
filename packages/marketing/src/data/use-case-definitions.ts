@@ -189,11 +189,13 @@ export const useCaseDefinitions = [
     faqs: [
       {
         question: "Is Lydie good for long notes?",
-        answer: "Yes. Lydie is designed for substantial writing, not just quick captures. Long-form docs stay fast and searchable.",
+        answer:
+          "Yes. Lydie is designed for substantial writing, not just quick captures. Long-form docs stay fast and searchable.",
       },
       {
         question: "Can I link notes together?",
-        answer: "Absolutely. Use internal linking to reference any page from any other. This creates a web of connected ideas that compounds over time.",
+        answer:
+          "Absolutely. Use internal linking to reference any page from any other. This creates a web of connected ideas that compounds over time.",
       },
     ],
     blogPosts: [
@@ -249,11 +251,13 @@ export const useCaseDefinitions = [
     faqs: [
       {
         question: "What is a personal knowledge base?",
-        answer: "A personal knowledge base is a collection of ideas and information gathered over time. For more information, read our [general article on personal knowledge bases](/blog/what-is-a-personal-knowledge-base).",
+        answer:
+          "A personal knowledge base is a collection of ideas and information gathered over time. For more information, read our [general article on personal knowledge bases](/blog/what-is-a-personal-knowledge-base).",
       },
       {
         question: "How do I start building my personal knowledge base?",
-        answer: "The best way to start building your personal knowledge base is to start capturing ideas as they come to you. Lydie is created with organic linking in mind, making it easy to connect ideas as you go. We advice you read our guide on [how to structure a knowledge base](/blog/how-to-structure-a-knowledge-base) to get started.",
+        answer:
+          "The best way to start building your personal knowledge base is to start capturing ideas as they come to you. Lydie is created with organic linking in mind, making it easy to connect ideas as you go. We advice you read our guide on [how to structure a knowledge base](/blog/how-to-structure-a-knowledge-base) to get started.",
       },
     ],
   },
@@ -365,15 +369,18 @@ export const useCaseDefinitions = [
     faqs: [
       {
         question: "Can Lydie be used as a headless CMS?",
-        answer: "Yes. Lydie exposes your documents through a REST API, allowing you to fetch and render content on any website or app.",
+        answer:
+          "Yes. Lydie exposes your documents through a REST API, allowing you to fetch and render content on any website or app.",
       },
       {
         question: "What can I build with Lydie as a CMS?",
-        answer: "You can power blogs, documentation sites, marketing pages, changelogs, or even lightweight help centers using Lydie as a content backend.",
+        answer:
+          "You can power blogs, documentation sites, marketing pages, changelogs, or even lightweight help centers using Lydie as a content backend.",
       },
       {
         question: "Is Lydie a replacement for traditional CMSs?",
-        answer: "Not entirely. Lydie works best for smaller sites, blogs, documentation, and other text-heavy content. If you need fine-grained control over many small UI elements, complex content models, or highly custom publishing workflows, a traditional CMS is likely a better fit.",
+        answer:
+          "Not entirely. Lydie works best for smaller sites, blogs, documentation, and other text-heavy content. If you need fine-grained control over many small UI elements, complex content models, or highly custom publishing workflows, a traditional CMS is likely a better fit.",
       },
     ],
     blogPosts: [],

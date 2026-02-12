@@ -1,6 +1,6 @@
 /**
  * Feature page data - used for individual feature pages (/features/[slug])
- * 
+ *
  * For landing page sections, use @/data/sections instead.
  * This file only contains data needed for the full feature pages with their
  * detailed content, FAQs, and subpages.
@@ -83,19 +83,23 @@ export const features: Feature[] = [
     faqs: [
       {
         question: "How does the AI assistant work in Lydie?",
-        answer: "Lydie's AI assistant is integrated directly into the editor using advanced language models. You can access it through slash commands, selected text actions, or the chat sidebar. The AI understands your document context and provides relevant suggestions, completions, and answers based on what you're working on.",
+        answer:
+          "Lydie's AI assistant is integrated directly into the editor using advanced language models. You can access it through slash commands, selected text actions, or the chat sidebar. The AI understands your document context and provides relevant suggestions, completions, and answers based on what you're working on.",
       },
       {
         question: "What can I use the AI assistant for?",
-        answer: "The AI assistant can help with writing and editing tasks like expanding bullet points into full paragraphs, summarizing long sections, improving grammar and style, brainstorming ideas, generating outlines, and answering questions about your document content. It's designed to enhance your workflow without replacing your creativity.",
+        answer:
+          "The AI assistant can help with writing and editing tasks like expanding bullet points into full paragraphs, summarizing long sections, improving grammar and style, brainstorming ideas, generating outlines, and answering questions about your document content. It's designed to enhance your workflow without replacing your creativity.",
       },
       {
         question: "Is my content secure when using AI features?",
-        answer: "Yes. Lydie processes AI requests securely and does not use your private document content to train AI models. Your data is transmitted over encrypted connections and processed according to strict privacy policies. We only send the necessary context to provide helpful AI responses.",
+        answer:
+          "Yes. Lydie processes AI requests securely and does not use your private document content to train AI models. Your data is transmitted over encrypted connections and processed according to strict privacy policies. We only send the necessary context to provide helpful AI responses.",
       },
       {
         question: "Do I need to pay extra for AI features?",
-        answer: "AI features are included in all Lydie plans with generous usage limits. Free plans include a monthly allowance of AI requests, while paid plans offer significantly higher limits. You can check your current usage and limits in your account settings.",
+        answer:
+          "AI features are included in all Lydie plans with generous usage limits. Free plans include a monthly allowance of AI requests, while paid plans offer significantly higher limits. You can check your current usage and limits in your account settings.",
       },
     ],
     content: [
@@ -120,15 +124,18 @@ export const features: Feature[] = [
         faqs: [
           {
             question: "How does document chat work?",
-            answer: "The AI can read and understand your documents, then answer questions about their content in natural language. You can ask specific questions, request summaries, or have the AI find and explain information from your documents. It's like having a knowledgeable assistant who has read everything in your workspace.",
+            answer:
+              "The AI can read and understand your documents, then answer questions about their content in natural language. You can ask specific questions, request summaries, or have the AI find and explain information from your documents. It's like having a knowledgeable assistant who has read everything in your workspace.",
           },
           {
             question: "Can the AI answer questions about multiple documents?",
-            answer: "Yes! The AI can search across all your documents to find relevant information and synthesize answers from multiple sources. This is particularly useful when you need to gather information spread across different notes, articles, or research documents.",
+            answer:
+              "Yes! The AI can search across all your documents to find relevant information and synthesize answers from multiple sources. This is particularly useful when you need to gather information spread across different notes, articles, or research documents.",
           },
           {
             question: "Does the AI provide sources for its answers?",
-            answer: "Yes. When the AI answers questions based on your documents, it can reference which documents it used and provide context about where the information came from. This makes it easy to verify answers and dive deeper into the original sources if needed.",
+            answer:
+              "Yes. When the AI answers questions based on your documents, it can reference which documents it used and provide context about where the information came from. This makes it easy to verify answers and dive deeper into the original sources if needed.",
           },
         ],
         content: [
@@ -159,15 +166,18 @@ export const features: Feature[] = [
         faqs: [
           {
             question: "How does AI help with document organization?",
-            answer: "The AI can analyze your documents, suggest logical categorization schemes, help you move documents to appropriate locations, and maintain an organized knowledge base. It understands document content and relationships, making intelligent suggestions about where documents should be filed and how they should be structured.",
+            answer:
+              "The AI can analyze your documents, suggest logical categorization schemes, help you move documents to appropriate locations, and maintain an organized knowledge base. It understands document content and relationships, making intelligent suggestions about where documents should be filed and how they should be structured.",
           },
           {
             question: "Can the AI automatically organize my documents?",
-            answer: "The AI assists with organization but doesn't automatically reorganize without your input. You can ask it to suggest organization schemes, recommend where specific documents should go, or help move multiple documents at once. This ensures you maintain control while benefiting from AI-powered assistance.",
+            answer:
+              "The AI assists with organization but doesn't automatically reorganize without your input. You can ask it to suggest organization schemes, recommend where specific documents should go, or help move multiple documents at once. This ensures you maintain control while benefiting from AI-powered assistance.",
           },
           {
             question: "Can I ask the AI to create new folders or restructure my workspace?",
-            answer: "Yes! You can describe your desired organization structure, and the AI can help implement it by moving documents, suggesting new folder hierarchies, and helping you maintain consistency. Whether you want to organize by project, topic, date, or any other scheme, the AI adapts to your needs.",
+            answer:
+              "Yes! You can describe your desired organization structure, and the AI can help implement it by moving documents, suggesting new folder hierarchies, and helping you maintain consistency. Whether you want to organize by project, topic, date, or any other scheme, the AI adapts to your needs.",
           },
         ],
         content: [
@@ -198,15 +208,18 @@ export const features: Feature[] = [
         faqs: [
           {
             question: "How does the AI research assistant find information?",
-            answer: "The AI research assistant combines web search capabilities with intelligent document search across your entire knowledge base. It can find relevant information from the web, locate specific details in your existing documents, and connect related ideas across different sources to provide comprehensive research results.",
+            answer:
+              "The AI research assistant combines web search capabilities with intelligent document search across your entire knowledge base. It can find relevant information from the web, locate specific details in your existing documents, and connect related ideas across different sources to provide comprehensive research results.",
           },
           {
             question: "Can the AI search the web for current information?",
-            answer: "Yes! The AI has integrated web search capabilities, allowing it to find up-to-date information, verify facts, and research topics beyond your local documents. This is particularly useful for fact-checking, finding current statistics, or researching new topics while you write.",
+            answer:
+              "Yes! The AI has integrated web search capabilities, allowing it to find up-to-date information, verify facts, and research topics beyond your local documents. This is particularly useful for fact-checking, finding current statistics, or researching new topics while you write.",
           },
           {
             question: "How does the AI search my existing documents?",
-            answer: "The AI can search across all your documents to find relevant information, quotes, references, and ideas. It understands context and can find semantically related content, not just exact keyword matches. This makes it easy to rediscover past research, find related notes, and connect ideas across your knowledge base.",
+            answer:
+              "The AI can search across all your documents to find relevant information, quotes, references, and ideas. It understands context and can find semantically related content, not just exact keyword matches. This makes it easy to rediscover past research, find related notes, and connect ideas across your knowledge base.",
           },
         ],
         content: [
@@ -236,15 +249,18 @@ export const features: Feature[] = [
         faqs: [
           {
             question: "How does the AI writing assistant help with content creation?",
-            answer: "The AI writing assistant can help you draft new documents from scratch, expand bullet points into full paragraphs, generate outlines, continue your writing, and suggest improvements to existing content. Simply describe what you want to write, and the AI will generate a draft that you can refine and customize.",
+            answer:
+              "The AI writing assistant can help you draft new documents from scratch, expand bullet points into full paragraphs, generate outlines, continue your writing, and suggest improvements to existing content. Simply describe what you want to write, and the AI will generate a draft that you can refine and customize.",
           },
           {
             question: "Can the AI write in my style or tone?",
-            answer: "Yes! The AI adapts to your writing style by understanding the context of your existing documents. You can also provide specific instructions about tone (professional, casual, technical, etc.) and the AI will adjust its suggestions accordingly. The more you use it, the better it understands your preferences.",
+            answer:
+              "Yes! The AI adapts to your writing style by understanding the context of your existing documents. You can also provide specific instructions about tone (professional, casual, technical, etc.) and the AI will adjust its suggestions accordingly. The more you use it, the better it understands your preferences.",
           },
           {
             question: "Does the AI replace human writers?",
-            answer: "No. The AI writing assistant is designed to augment your creativity, not replace it. Think of it as a collaborative writing partner that helps you overcome writer's block, speeds up drafting, and suggests ideas you might not have considered. The final content always reflects your voice, vision, and expertise.",
+            answer:
+              "No. The AI writing assistant is designed to augment your creativity, not replace it. Think of it as a collaborative writing partner that helps you overcome writer's block, speeds up drafting, and suggests ideas you might not have considered. The final content always reflects your voice, vision, and expertise.",
           },
         ],
         content: [
@@ -280,23 +296,28 @@ export const features: Feature[] = [
     faqs: [
       {
         question: "How does real-time collaboration work in Lydie?",
-        answer: "Lydie uses CRDT (Conflict-free Replicated Data Type) technology to enable real-time collaboration. When multiple users edit the same document simultaneously, all changes are synchronized instantly across all connected devices. Each user sees live cursors showing where others are working, and edits merge seamlessly without conflicts.",
+        answer:
+          "Lydie uses CRDT (Conflict-free Replicated Data Type) technology to enable real-time collaboration. When multiple users edit the same document simultaneously, all changes are synchronized instantly across all connected devices. Each user sees live cursors showing where others are working, and edits merge seamlessly without conflicts.",
       },
       {
         question: "Can I see who is currently viewing or editing a document?",
-        answer: "Yes! Lydie shows presence indicators and live cursors for all active collaborators. You'll see colored cursors with user names showing exactly where each person is working in the document. The sidebar also displays avatars of everyone currently viewing or editing.",
+        answer:
+          "Yes! Lydie shows presence indicators and live cursors for all active collaborators. You'll see colored cursors with user names showing exactly where each person is working in the document. The sidebar also displays avatars of everyone currently viewing or editing.",
       },
       {
         question: "What happens if two people edit the same text at the same time?",
-        answer: "Lydie's CRDT-based architecture automatically handles concurrent edits without conflicts. Both changes are preserved and merged intelligently. You never have to worry about 'version conflicts' or lost edits, even when multiple people type in the same area simultaneously.",
+        answer:
+          "Lydie's CRDT-based architecture automatically handles concurrent edits without conflicts. Both changes are preserved and merged intelligently. You never have to worry about 'version conflicts' or lost edits, even when multiple people type in the same area simultaneously.",
       },
       {
         question: "Do I need an internet connection to use collaboration features?",
-        answer: "Yes. Real-time collaboration requires an internet connection to sync changes between users.",
+        answer:
+          "Yes. Real-time collaboration requires an internet connection to sync changes between users.",
       },
       {
         question: "Is there a limit to how many people can collaborate on a document?",
-        answer: "There's no hard limit on the number of collaborators. However, for optimal performance, we recommend keeping documents to under 100 concurrent editors. For most teams and use cases, this is more than sufficient.",
+        answer:
+          "There's no hard limit on the number of collaborators. However, for optimal performance, we recommend keeping documents to under 100 concurrent editors. For most teams and use cases, this is more than sufficient.",
       },
     ],
     content: [
@@ -323,7 +344,8 @@ export const features: Feature[] = [
     faqs: [
       {
         question: "How does search work in Lydie?",
-        answer: "Lydie uses full-text search across all your documents. You can search by content, titles, or use filters to narrow results. Search supports fuzzy matching to help you find what you're looking for even with typos.",
+        answer:
+          "Lydie uses full-text search across all your documents. You can search by content, titles, or use filters to narrow results. Search supports fuzzy matching to help you find what you're looking for even with typos.",
       },
     ],
     content: [
@@ -349,11 +371,13 @@ export const features: Feature[] = [
     faqs: [
       {
         question: "What are bidirectional links?",
-        answer: "Bidirectional links create connections between documents in both directions. When you link from Document A to Document B, Document B automatically shows that it's linked from Document A. This helps you discover connections and navigate your knowledge base.",
+        answer:
+          "Bidirectional links create connections between documents in both directions. When you link from Document A to Document B, Document B automatically shows that it's linked from Document A. This helps you discover connections and navigate your knowledge base.",
       },
       {
         question: "How do I create links between documents?",
-        answer: "Simply type @ followed by the document name, or use the link menu in the editor. Lydie will suggest matching documents as you type, making it easy to connect related content.",
+        answer:
+          "Simply type @ followed by the document name, or use the link menu in the editor. Lydie will suggest matching documents as you type, making it easy to connect related content.",
       },
     ],
     content: [

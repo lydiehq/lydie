@@ -78,7 +78,6 @@ interface FAQProps {
 }
 
 export function FAQ({ title = "Frequently Asked Questions", items }: FAQProps) {
-
   return (
     <div className="gap-y-6 flex flex-col w-full">
       <h2 className="text-lg font-medium text-black/85">{title}</h2>

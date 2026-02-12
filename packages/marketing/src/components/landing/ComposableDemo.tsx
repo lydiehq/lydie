@@ -7,9 +7,8 @@ import type { DemoState } from "./DemoStateSelector";
 
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
-import { type CommandMenuSection } from "./CommandMenuIllustration";
+import { CommandMenuIllustration, type CommandMenuSection } from "./CommandMenuIllustration";
 import { STATE_CONFIG, DEFAULT_STATE_ORDER } from "./DemoStateSelector";
-import { SearchIllustration } from "./SearchIllustration";
 
 const collaborators = [
   { name: "Sarah", color: getColorById("cyan")?.value ?? "#7DBCD6" },
@@ -311,11 +310,25 @@ function SearchOverlay() {
   ];
 
   return (
-    <SearchIllustration
-      query={searchQuery}
-      placeholder="Type a command or search..."
-      sections={menuSections}
-    />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="absolute inset-0 z-30 flex items-start justify-center pt-16 px-4"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-white/25 backdrop-blur-[1px]" />
+
+      {/* Command Menu */}
+      <div className="relative w-full max-w-xl">
+        <CommandMenuIllustration
+          query={searchQuery}
+          placeholder="Type a command or search..."
+          sections={menuSections}
+        />
+      </div>
+    </motion.div>
   );
 }
 

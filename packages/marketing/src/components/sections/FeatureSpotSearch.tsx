@@ -1,16 +1,17 @@
 import { CastShadow } from "@/components/generic/CastShadow";
 import { GradientOutline } from "@/components/generic/GradientOutline";
-import { CommandMenuIllustration } from "@/components/landing/CommandMenuIllustration";
-import { SearchIllustration } from "@/components/landing/SearchIllustration";
+import {
+  CommandMenuIllustration,
+  type CommandMenuSection,
+} from "@/components/landing/CommandMenuIllustration";
 
-const searchSections = [
+const searchSections: CommandMenuSection[] = [
   {
     id: "documents",
     heading: "Quick results",
     items: [
-      { id: "doc-1", label: "Japan Trip Planning", icon: "document" as const },
-      { id: "doc-2", label: "Trip Master Plan", icon: "document" as const },
-      { id: "doc-3", label: "Meeting notes", icon: "document" as const },
+      { id: "doc-1", label: "Japan Trip Planning", icon: "document" },
+      { id: "doc-2", label: "Trip Master Plan", icon: "document" },
     ],
   },
 ];

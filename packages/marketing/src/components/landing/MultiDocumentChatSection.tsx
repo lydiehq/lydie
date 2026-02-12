@@ -1,7 +1,8 @@
 import { ChatRegular, ComposeRegular, SearchRegular } from "@fluentui/react-icons";
 
-import { Button } from "../generic/Button";
 import { FeatureSpotAI } from "@/components/sections";
+
+import { Button } from "../generic/Button";
 import { FeatureBadge } from "./FeatureIcon";
 import { LandingSection } from "./LandingSection";
 
