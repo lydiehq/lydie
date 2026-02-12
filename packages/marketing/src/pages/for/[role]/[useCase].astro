@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import Layout from "@/layouts/Layout.astro";
 import { Container } from "@/components/Container";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
@@ -16,6 +17,8 @@ import { getRoleUseCaseContent } from "@/data/role-use-cases";
 import { Heading } from "@/components/generic/Heading";
 import { getTemplatesBySlugs } from "@/data/templates";
 import TemplateThumbnail from "@/components/templates/TemplateThumbnail.astro";
+import { getBlogPostsBySlugs } from "@/data/blog-posts";
+import FormattedDate from "@/components/FormattedDate.astro";
 import { Sections } from "@/components/landing/Sections";
 import { resolveSections } from "@/data/sections";
 import { UseCaseHero } from "@/components/landing/UseCaseHero";
@@ -64,13 +67,18 @@ const {
 const templateSlugs = content.templateSlugs?.slice(0, 3) ?? [];
 const templates =
   templateSlugs.length > 0 ? await getTemplatesBySlugs(templateSlugs) : [];
+
+// Get blog posts for this role+use case combination
+const blogPostSlugs = content.blogPosts ?? [];
+const blogPosts =
+  blogPostSlugs.length > 0 ? await getBlogPostsBySlugs(blogPostSlugs) : [];
 ---
 
 <Layout
   title={`${meta.title} - Lydie`}
   description={meta.description ?? hero.description}
 >
-  <Container className="flex flex-col gap-y-16 py-16">
+  <Container className="flex flex-col gap-y-8 py-8">
     <Breadcrumbs
       items={[
         { label: "Lydie for", href: "/for" },
@@ -167,6 +175,51 @@ const templates =
                 slug={template.slug}
                 thumbnailSrc={template.thumbnailSrc}
               />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      blogPosts.length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <SectionHeader
+            title={`Learn more about ${useCaseDef.thumbnail.title.toLowerCase()}`}
+            description="Explore our articles on this topic:"
+          />
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {blogPosts.map((post) => (
+              <a
+                href={`/blog/${post.slug}`}
+                class="group flex flex-col gap-y-4"
+              >
+                <div class="rounded-lg shadow-surface aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
+                  <Image
+                    src={
+                      post.coverImage
+                        ? new URL(post.coverImage, Astro.site).toString()
+                        : "/blog.png"
+                    }
+                    alt=""
+                    width={640}
+                    height={360}
+                    layout="constrained"
+                    fit="cover"
+                    class="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div class="flex flex-col gap-y-2">
+                  <h3 class="text-base font-medium text-gray-900 group-hover:text-gray-700 transition-colors">
+                    {post.title}
+                  </h3>
+                  {post.createdAt && (
+                    <p class="text-xs text-gray-500">
+                      <FormattedDate date={new Date(post.createdAt)} />
+                    </p>
+                  )}
+                </div>
+              </a>
             ))}
           </div>
         </section>

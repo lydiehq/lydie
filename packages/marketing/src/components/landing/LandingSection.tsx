@@ -78,7 +78,7 @@ export function LandingSection({
   );
 
   return (
-    <div className="relative bg-white z-10">
+    <div className="relative z-10">
       <div className="grid grid-cols-1 md:grid-cols-2 z-0 gap-8 items-center">
         <div className={`relative flex size-full order-2 ${reverse ? "md:order-2" : "md:order-1"}`}>
           {illustration}

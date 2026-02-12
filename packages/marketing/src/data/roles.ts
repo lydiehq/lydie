@@ -68,6 +68,11 @@ export interface Role {
    * or a custom description string.
    */
   featuredUseCases?: FeaturedUseCases;
+  /**
+   * Array of article slugs from our blog.
+   * These will be displayed on the role page.
+   */
+  blogPosts?: string[];
 }
 
 export const roles = [
@@ -227,9 +232,9 @@ export const roles = [
       "note-taking": true,
     },
     comparison: {
-      slug: "notion",
+      slug: "confluence",
       description:
-        "Compared to Notion, Lydie stays fast with large technical docs, is open-source and feels closer to how developers already think and write. It's built for deep writing, not just databases and dashboards.",
+        "Tired of wrestling with Confluence's enterprise complexity? Lydie offers a lightweight, developer-friendly documentation platform with built-in AI, API access, and GitHub sync. Get all the power you need for technical docs without the enterprise bloat, vendor lock-in, and per-user pricing.",
     },
     faqs: [
       {
@@ -256,6 +261,130 @@ export const roles = [
     ctaText: "Try Lydie for developers",
     relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
     templateSlugs: [],
+  },
+  {
+    slug: "product-managers",
+    shortTitle: "Product Managers",
+    terms: {
+      actor: "product manager",
+      actorPlural: "product managers",
+    },
+    hero: {
+      title: "A workspace built for product thinking",
+      description:
+        "Product managers need to balance strategy, user feedback, and execution. Lydie helps you organize PRDs, track decisions, and keep your team aligned with structured, connected documentation.",
+    },
+    thumbnail: {
+      title: "Writing Workspace for Product Managers",
+      description:
+        "Write PRDs, track decisions, and align your team with structured documentation that connects.",
+    },
+    meta: {
+      title: "Writing Workspace for Product Managers",
+      description:
+        "Write PRDs, track decisions, and align your team with structured documentation that connects.",
+    },
+    painPoints: [
+      "Product requirements scattered across docs, slides, and tools",
+      "Decisions get lost in Slack threads and meeting notes",
+      "No single source of truth for product context",
+      "Difficult to onboard new team members with scattered information",
+    ],
+    featuredUseCases: {
+      "note-taking": true,
+      documentation: true,
+    },
+    comparison: {
+      slug: "confluence",
+      description:
+        "Escape Confluence's enterprise complexity and pricing. Lydie gives product managers a modern, AI-powered documentation platform to write PRDs, track decisions, and keep teams aligned. No more fighting with slow, clunky enterprise software just to document your product vision.",
+    },
+    faqs: [
+      {
+        question: "How can product managers use Lydie?",
+        answer:
+          "Product managers use Lydie to write product requirement documents, track strategic decisions, organize user research, and maintain a shared knowledge base for their team. Link PRDs to user feedback, market research, and technical specs for full context.",
+      },
+      {
+        question: "Is Lydie good for PRDs?",
+        answer:
+          "Yes. Lydie is designed for long-form structured documents like PRDs. Create nested pages for features, link to related documents, and use AI to help structure and clarify your thinking.",
+      },
+      {
+        question: "Can I collaborate with my team on product docs?",
+        answer:
+          "Yes. Share pages or spaces with engineers, designers, and stakeholders. Work together in real time with comments and collaborative editing. Keep everyone aligned with a single source of truth.",
+      },
+      {
+        question: "How does AI help product managers?",
+        answer:
+          "AI can help draft PRDs from rough notes, summarize user feedback, clarify ambiguous requirements, and suggest connections between related documents. Use it to speed up your writing without losing your voice.",
+      },
+    ],
+    ctaText: "Try Lydie for product management",
+    relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
+  },
+  {
+    slug: "designers",
+    shortTitle: "Designers",
+    terms: {
+      actor: "designer",
+      actorPlural: "designers",
+    },
+    hero: {
+      title: "A writing workspace built for design thinking",
+      description:
+        "Designers need to document processes, rationale, and research. Lydie helps you organize design docs, connect research to decisions, and collaborate with your team on a shared understanding.",
+    },
+    thumbnail: {
+      title: "Writing Workspace for Designers",
+      description:
+        "Document design processes, connect research to decisions, and collaborate on shared understanding. Built for UX, product, and visual designers.",
+    },
+    meta: {
+      title: "Writing Workspace for Designers",
+      description:
+        "Document design processes, connect research to decisions, and collaborate on shared understanding. Built for UX, product, and visual designers.",
+    },
+    painPoints: [
+      "Design rationale and decisions scattered across Figma comments and Slack",
+      "Research findings get lost and are hard to reference later",
+      "No structured way to document design system decisions",
+      "Difficult to align with product and engineering on design intent",
+    ],
+    featuredUseCases: {
+      "note-taking": true,
+      documentation: true,
+    },
+    comparison: {
+      slug: "notion",
+      description:
+        "Lydie gives designers a fast, focused writing experience for design docs and research. No complex databases or slow performance, just structured, connected documentation.",
+    },
+    faqs: [
+      {
+        question: "How can designers use Lydie?",
+        answer:
+          "Designers use Lydie to document design systems, write UX research summaries, track design decisions, and organize project documentation. Create structured pages that link design rationale, user research, and project context together.",
+      },
+      {
+        question: "Is Lydie good for design documentation?",
+        answer:
+          "Yes. Lydie is perfect for design docs, research summaries, and design system documentation. Link related pages, organize by project or component, and use AI to help structure your thoughts.",
+      },
+      {
+        question: "Can I collaborate with my design team?",
+        answer:
+          "Yes. Share design docs, research, and documentation with your team. Collaborate in real time with comments and collaborative editing. Keep design context and rationale accessible to everyone.",
+      },
+      {
+        question: "How does AI help with design documentation?",
+        answer:
+          "AI can help summarize user research, draft design rationale, clarify documentation structure, and suggest connections between related design decisions and research findings.",
+      },
+    ],
+    ctaText: "Try Lydie for design work",
+    relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
   },
 ] as const satisfies readonly Role[];
 

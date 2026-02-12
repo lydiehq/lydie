@@ -86,7 +86,7 @@ export function HeroNew({
         </div>
       </div>
       <div className="md:absolute top-12 left-1/2">
-        <div className="rounded-2xl top-12 ring ring-outline-subtle flex flex-col w-full p-2 bg-white left-1/2">
+        <div className="rounded-2xl top-12 ring ring-outline-subtle flex flex-col w-full p-2 left-1/2">
           <GradientOutline />
           <div className="flex items-center gap-x-1.5 mb-1.5">
             {[...Array(3)].map((_, i) => (

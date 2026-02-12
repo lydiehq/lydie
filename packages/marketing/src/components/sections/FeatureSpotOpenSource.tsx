@@ -23,28 +23,34 @@ export function FeatureSpotOpenSource() {
       aria-label="Open source code illustration showing lines of code with syntax highlighting in gray tones"
       className="w-full"
     >
-      <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full p-2 relative bg-white select-none">
-        <div className="flex items-center gap-x-1.5 mb-1.5">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-full size-3 ring ring-black/6 shrink-0" />
-          ))}
-        </div>
-        <div className="w-full rounded-lg border border-outline-subtle overflow-hidden p-1">
-          <div className="border-b border-gray-100 flex justify-between">
-            <div className="h-3 rounded-full w-12 bg-black/5" />
-            <div className="h-3 rounded-full w-12 bg-green-500" />
+      <CastShadow className="w-full relative">
+        <GradientOutline />
+        <div className="rounded-2xl shadow-surface flex flex-col p-2 relative bg-white select-none w-full">
+          <div className="flex items-center gap-x-1.5 mb-1.5">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-full size-3 ring ring-black/6 shrink-0" />
+            ))}
           </div>
-          <div className="p-4">
-            <div className="flex flex-col gap-y-2">
-              {codeLines.map((line) => (
-                <div key={line.lineNum} className="flex items-center gap-x-3">
-                  <div className={`h-3 rounded-full ${line.color}`} style={{ width: line.width }} />
-                </div>
-              ))}
+          <div className="w-full rounded-lg border border-outline-subtle overflow-hidden p-1">
+            <div className="border-b border-gray-100 flex justify-between">
+              <div className="h-3 rounded-full w-12 bg-black/5" />
+              <div className="h-3 rounded-full w-12 bg-green-500" />
+            </div>
+            <div className="p-4">
+              <div className="flex flex-col gap-y-2">
+                {codeLines.map((line) => (
+                  <div key={line.lineNum} className="flex items-center gap-x-3">
+                    <div
+                      className={`h-3 rounded-full ${line.color}`}
+                      style={{ width: line.width }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </CastShadow>
     </div>
   );
 }

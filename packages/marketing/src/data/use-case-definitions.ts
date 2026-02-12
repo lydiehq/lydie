@@ -386,6 +386,129 @@ export const useCaseDefinitions = [
     ],
     blogPosts: [],
   },
+  {
+    slug: "documentation",
+    terms: {
+      act: "documentation",
+    },
+    hero: {
+      title: "Documentation that actually gets written and maintained",
+      description:
+        "Documentation should be easy to create, quick to find, and painless to maintain. Lydie gives you a fast, structured workspace for writing product docs, API references, process documentation, and team knowledge bases.",
+    },
+    thumbnail: {
+      title: "Documentation",
+      description: "Write and maintain documentation that stays useful. Connected, searchable, and built to last.",
+    },
+    meta: {
+      title: "Documentation Tool for Teams & Products",
+      description:
+        "Create product docs, API references, and team knowledge bases that stay connected, searchable, and easy to maintain.",
+    },
+    statement:
+      "Documentation dies when writing feels painful. Lydie removes the friction so your team actually writes docs, keeps them current, and can find them when needed.",
+    problemsAndSolutions: {
+      title: "Common documentation problems (and how Lydie solves them)",
+      problems: [
+        {
+          problem: "Docs are scattered across tools and formats",
+          solution: "Everything lives in one searchable workspace with nested pages and clear structure.",
+        },
+        {
+          problem: "Documentation gets outdated quickly",
+          solution: "Fast, intuitive editing means updating docs feels effortless, not like a chore.",
+        },
+        {
+          problem: "Hard to find the right information when needed",
+          solution: "Powerful search and internal linking make any document discoverable in seconds.",
+        },
+        {
+          problem: "No clear structure or organization",
+          solution: "Use nested pages and internal links to create logical, navigable documentation hierarchies.",
+        },
+        {
+          problem: "Large docs become slow and unwieldy",
+          solution: "Lydie stays fast even with extensive documentation and long-form content.",
+        },
+      ],
+    },
+    workflowExample: {
+      title: "Example workflow: building a product documentation system",
+      description:
+        "See how teams use Lydie to create and maintain comprehensive documentation that stays current and useful.",
+      steps: [
+        "Create a structured hierarchy with overview, guides, and reference docs",
+        "Write documentation in Lydie with fast, distraction-free editing",
+        "Link related docs together so users can navigate naturally",
+        "Use AI to draft, expand, and clarify documentation content",
+        "Keep docs current with quick updates that don't feel like overhead",
+      ],
+    },
+    differentiation: {
+      title: "How Lydie differs from typical documentation tools",
+      points: [
+        {
+          label: "Fast writing experience",
+          description: "Documentation gets written because the editor feels fast and responsive.",
+        },
+        {
+          label: "Internal linking",
+          description: "Connect docs naturally so users can follow their curiosity and find related content.",
+        },
+        {
+          label: "Structured hierarchy",
+          description: "Nested pages provide clear organization without rigid folder constraints.",
+        },
+        {
+          label: "AI assistance",
+          description: "Draft new docs, expand outlines, and clarify complex sections with AI help.",
+        },
+      ],
+    },
+    sections: [
+      {
+        id: "search",
+        title: "Find docs instantly",
+        description:
+          "Powerful search across all documentation makes it easy to find what you need, even in large knowledge bases.",
+      },
+      {
+        id: "linking",
+        title: "Connect documentation",
+        description:
+          "Link related docs together to create navigable documentation that users can explore naturally.",
+      },
+      {
+        id: "assistant",
+        title: "Speed up documentation",
+        description:
+          "Use AI to draft new docs, expand on outlines, and clarify complex sections so documentation stays current.",
+      },
+    ],
+    featuredRoles: {
+      "product-managers": true,
+      designers: true,
+      developers: true,
+    },
+    faqs: [
+      {
+        question: "Is Lydie good for product documentation?",
+        answer:
+          "Yes. Lydie is designed for long-form structured documents, making it ideal for product docs, guides, and references. The fast editor and internal linking help you create comprehensive documentation.",
+      },
+      {
+        question: "Can I use Lydie for API documentation?",
+        answer:
+          "Yes. While not a dedicated API docs tool, Lydie works well for writing API guides, endpoint documentation, and integration guides. You can structure docs hierarchically and link related endpoints.",
+      },
+      {
+        question: "How does Lydie compare to tools like GitBook or Notion for docs?",
+        answer:
+          "Lydie is faster and more focused on the writing experience than Notion. Compared to GitBook, Lydie gives you more flexibility in structuring your documentation and doesn't lock you into a specific publishing format.",
+      },
+    ],
+    blogPosts: [],
+  },
 ] as const satisfies readonly UseCaseDefinition[];
 
 export type UseCaseSlug = (typeof useCaseDefinitions)[number]["slug"];
