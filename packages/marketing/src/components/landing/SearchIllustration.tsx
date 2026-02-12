@@ -3,16 +3,9 @@ import { motion } from "motion/react";
 import {
   CommandMenuIllustration,
   type CommandMenuIllustrationProps,
-  type CommandMenuItem,
-  type CommandMenuSection,
 } from "./CommandMenuIllustration";
 
-// Re-export types for backward compatibility
-export type { CommandMenuItem as SearchItem, CommandMenuSection as SearchSection };
-
-// Props interface extending the base component
 export interface SearchIllustrationProps extends CommandMenuIllustrationProps {
-  // Additional props specific to SearchIllustration
   backdrop?: boolean;
 }
 

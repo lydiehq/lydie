@@ -8,10 +8,6 @@ import {
   FeatureSpotSearch,
 } from "@/components/sections";
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export type SectionId =
   | "assistant"
   | "search"
@@ -19,8 +15,7 @@ export type SectionId =
   | "collaboration"
   | "opensource"
   | "performance"
-  | "integrations"
-  | "knowledgebase";
+  | "integrations";
 
 export type ColorId =
   | "coral"
@@ -55,7 +50,7 @@ export interface Section {
   ctaText?: string;
 }
 
-/** Input for resolving a section - either just the ID or with overrides */
+// Input for resolving a section - either just the ID or with overrides
 export type SectionInput =
   | SectionId
   | {
@@ -65,10 +60,6 @@ export type SectionInput =
       href?: string;
       ctaText?: string;
     };
-
-// ============================================================================
-// Section Registry - Single source of truth for all sections
-// ============================================================================
 
 export const sections: Record<SectionId, Section> = {
   assistant: {
@@ -88,7 +79,7 @@ export const sections: Record<SectionId, Section> = {
 
   search: {
     id: "search",
-    title: "Search",
+    title: "Powerful search",
     description:
       "Find anything in your workspace instantly. Powerful full-text search with filters, shortcuts, and smart suggestions.",
     badge: {
@@ -142,7 +133,7 @@ export const sections: Record<SectionId, Section> = {
       label: "Open Source",
     },
     illustration: FeatureSpotOpenSource,
-    href: "/blog/lydie-is-now-open-source",
+    href: "https://github.com/lydiehq/lydie",
     ctaText: "Read more",
   },
 
@@ -175,31 +166,9 @@ export const sections: Record<SectionId, Section> = {
     href: undefined,
     ctaText: undefined,
   },
-
-  knowledgebase: {
-    id: "knowledgebase",
-    title: "Knowledge base",
-    description:
-      "Organize your team's knowledge with nested pages, internal linking, and powerful search. Build a documentation system that grows with you.",
-    badge: {
-      icon: "linking",
-      color: "violet",
-      label: "Knowledge Base",
-    },
-    illustration: FeatureSpotLinking,
-    href: undefined,
-    ctaText: undefined,
-  },
 };
 
-// ============================================================================
-// Resolution Functions
-// ============================================================================
-
-/**
- * Resolve a section from input (ID string or object with overrides).
- * Returns the section with any overrides applied.
- */
+// Resolve a section from input (ID string or object with overrides).
 export function resolveSection(input: SectionInput): Section {
   const id = typeof input === "string" ? input : input.id;
   const base = sections[id];
@@ -221,36 +190,7 @@ export function resolveSection(input: SectionInput): Section {
   };
 }
 
-/**
- * Resolve multiple sections from an array of inputs.
- */
+// Resolve multiple sections from an array of inputs.
 export function resolveSections(inputs: SectionInput[]): Section[] {
   return inputs.map(resolveSection);
-}
-
-// ============================================================================
-// Backward Compatibility Helpers
-// ============================================================================
-
-/** @deprecated Use resolveSection instead */
-export function getFeatureShowcase(key: SectionId): Section | undefined {
-  return sections[key] ?? undefined;
-}
-
-/** @deprecated Use resolveSections instead */
-export function resolveFeaturesMap(
-  map: Partial<Record<SectionId, { title?: string; description?: string; ctaText?: string }>>,
-): Section[] {
-  return Object.entries(map).map(([id, overrides]) => {
-    const base = sections[id as SectionId];
-    if (!base) {
-      throw new Error(`Unknown section id: ${id}`);
-    }
-    return {
-      ...base,
-      ...(overrides?.title !== undefined && { title: overrides.title }),
-      ...(overrides?.description !== undefined && { description: overrides.description }),
-      ...(overrides?.ctaText !== undefined && { ctaText: overrides.ctaText }),
-    };
-  });
 }

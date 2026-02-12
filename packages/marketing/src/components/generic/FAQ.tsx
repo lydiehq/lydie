@@ -71,33 +71,19 @@ export interface FAQItem {
   answer: string;
 }
 
-/** Legacy format used in some data files */
-export interface LegacyFAQItem {
-  q: string;
-  a: string;
-}
-
 interface FAQProps {
   title?: string;
-  items: (FAQItem | LegacyFAQItem)[];
+  items: FAQItem[];
   className?: string;
 }
 
-function normalizeFAQItem(item: FAQItem | LegacyFAQItem): FAQItem {
-  if ("q" in item && "a" in item) {
-    return { question: item.q, answer: item.a };
-  }
-  return item as FAQItem;
-}
-
 export function FAQ({ title = "Frequently Asked Questions", items }: FAQProps) {
-  const normalizedItems = items.map(normalizeFAQItem);
 
   return (
     <div className="gap-y-6 flex flex-col w-full">
       <h2 className="text-lg font-medium text-black/85">{title}</h2>
       <div>
-        {normalizedItems.map((item, index) => (
+        {items.map((item, index) => (
           <FAQItemComponent
             key={index}
             question={item.question}

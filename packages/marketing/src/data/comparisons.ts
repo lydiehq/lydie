@@ -226,12 +226,6 @@ export const comparisons: Comparison[] = [
       "Switch from Confluence to Lydie for a modern, lightweight alternative. Built for teams who want simple yet powerful documentation without the complexity of enterprise tools. With native AI, real-time collaboration, and the freedom to self-host, Lydie makes team knowledge management effortless.",
     sections: [
       {
-        id: "knowledgebase",
-        title: "Better knowledge base organization",
-        description:
-          "Unlike Confluence's complex space hierarchy, Lydie offers a simpler, more intuitive way to organize your team's knowledge. Create nested pages, link related documents, and build a knowledge base that actually makes sense. No more getting lost in Confluence's maze of spaces and permissions.",
-      },
-      {
         id: "opensource",
         title: "Open-source alternative to Confluence",
         description:
@@ -466,12 +460,6 @@ export const comparisons: Comparison[] = [
         title: "Open-source alternative to Nuclino",
         description:
           "Nuclino keeps your knowledge locked in their cloud with no self-hosting option. As an open-source Nuclino alternative, Lydie gives you complete control over your knowledge base. Self-host on your own infrastructure or use our cloud version - the choice is yours, without vendor lock-in.",
-      },
-      {
-        id: "knowledgebase",
-        title: "Better knowledge base organization",
-        description:
-          "Like Nuclino, Lydie excels at organizing team knowledge with nested pages and intuitive structure. But with Lydie, you get the added benefits of open-source flexibility, self-hosting, and powerful integrations that Nuclino can't match.",
       },
       {
         id: "collaboration",

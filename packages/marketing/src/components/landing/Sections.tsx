@@ -18,7 +18,6 @@ const illustrationComponents = {
   opensource: FeatureSpotOpenSource,
   performance: FeatureSpotSearch,
   integrations: FeatureSpotAI,
-  knowledgebase: FeatureSpotLinking,
 } as const;
 
 interface SectionsProps {

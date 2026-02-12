@@ -9,7 +9,7 @@ export interface ConversionConfig {
   description: string;
   introText: string;
   howToSteps: string[];
-  faqs: { q: string; a: string }[];
+  faqs: { question: string; answer: string }[];
   keywords: string[];
   relatedSlugs: string[];
 }
@@ -34,20 +34,20 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Is this markdown to PDF converter free?",
-        a: "Yes, completely free with no hidden costs, watermarks, or sign-up required.",
+        question: "Is this markdown to PDF converter free?",
+        answer: "Yes, completely free with no hidden costs, watermarks, or sign-up required.",
       },
       {
-        q: "Do you store my files?",
-        a: "No. All conversions happen server-side and files are immediately deleted after conversion.",
+        question: "Do you store my files?",
+        answer: "No. All conversions happen server-side and files are immediately deleted after conversion.",
       },
       {
-        q: "What markdown features are supported?",
-        a: "We support full CommonMark syntax including headings, lists, code blocks, tables, links, and images.",
+        question: "What markdown features are supported?",
+        answer: "We support full CommonMark syntax including headings, lists, code blocks, tables, links, and images.",
       },
       {
-        q: "Is there a file size limit?",
-        a: "Yes, files are limited to 1MB of text content for optimal performance.",
+        question: "Is there a file size limit?",
+        answer: "Yes, files are limited to 1MB of text content for optimal performance.",
       },
     ],
     keywords: ["markdown to pdf", "convert markdown to pdf", "md to pdf online"],
@@ -72,16 +72,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Can I edit the DOCX file after conversion?",
-        a: "Yes! The converted DOCX file is fully editable in Microsoft Word, Google Docs, or any compatible word processor.",
+        question: "Can I edit the DOCX file after conversion?",
+        answer: "Yes! The converted DOCX file is fully editable in Microsoft Word, Google Docs, or any compatible word processor.",
       },
       {
-        q: "Are tables and images supported?",
-        a: "Yes, markdown tables and linked images are converted to their Word equivalents.",
+        question: "Are tables and images supported?",
+        answer: "Yes, markdown tables and linked images are converted to their Word equivalents.",
       },
       {
-        q: "Is formatting preserved?",
-        a: "Yes, headings, bold, italic, lists, and other formatting are preserved in the Word document.",
+        question: "Is formatting preserved?",
+        answer: "Yes, headings, bold, italic, lists, and other formatting are preserved in the Word document.",
       },
     ],
     keywords: ["markdown to word", "markdown to docx", "convert md to word"],
@@ -106,16 +106,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Is the HTML clean and semantic?",
-        a: "Yes, we generate clean, standards-compliant HTML without unnecessary markup.",
+        question: "Is the HTML clean and semantic?",
+        answer: "Yes, we generate clean, standards-compliant HTML without unnecessary markup.",
       },
       {
-        q: "Can I use this HTML on my website?",
-        a: "Absolutely! The generated HTML is ready to use in any web project.",
+        question: "Can I use this HTML on my website?",
+        answer: "Absolutely! The generated HTML is ready to use in any web project.",
       },
       {
-        q: "Does it support code blocks with syntax highlighting?",
-        a: "The HTML structure for code blocks is preserved, though you'll need to add your own syntax highlighting CSS.",
+        question: "Does it support code blocks with syntax highlighting?",
+        answer: "The HTML structure for code blocks is preserved, though you'll need to add your own syntax highlighting CSS.",
       },
     ],
     keywords: ["markdown to html", "md to html", "convert markdown to html online"],
@@ -140,16 +140,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Does it work with complex HTML?",
-        a: "Yes, we convert headings, paragraphs, lists, tables, links, and images from HTML to markdown.",
+        question: "Does it work with complex HTML?",
+        answer: "Yes, we convert headings, paragraphs, lists, tables, links, and images from HTML to markdown.",
       },
       {
-        q: "Are styles preserved?",
-        a: "Basic formatting like bold, italic, and links are preserved. CSS styling is not converted.",
+        question: "Are styles preserved?",
+        answer: "Basic formatting like bold, italic, and links are preserved. CSS styling is not converted.",
       },
       {
-        q: "Can I convert entire web pages?",
-        a: "Yes, though we recommend cleaning the HTML first to remove navigation, ads, and other non-content elements.",
+        question: "Can I convert entire web pages?",
+        answer: "Yes, though we recommend cleaning the HTML first to remove navigation, ads, and other non-content elements.",
       },
     ],
     keywords: ["html to markdown", "convert html to md", "html to markdown online"],
@@ -174,16 +174,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What happens to formatting?",
-        a: "All markdown formatting is removed, leaving only the plain text content.",
+        question: "What happens to formatting?",
+        answer: "All markdown formatting is removed, leaving only the plain text content.",
       },
       {
-        q: "Are links preserved?",
-        a: "Link text is preserved, but URLs are removed unless they're displayed as part of the text.",
+        question: "Are links preserved?",
+        answer: "Link text is preserved, but URLs are removed unless they're displayed as part of the text.",
       },
       {
-        q: "What about images?",
-        a: "Image alt text is preserved, but image references are removed.",
+        question: "What about images?",
+        answer: "Image alt text is preserved, but image references are removed.",
       },
     ],
     keywords: ["markdown to text", "strip markdown", "markdown to plain text"],
@@ -208,16 +208,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Does it preserve formatting?",
-        a: "Basic formatting like headings, bold, italic, lists, and tables are converted to markdown equivalents.",
+        question: "Does it preserve formatting?",
+        answer: "Basic formatting like headings, bold, italic, lists, and tables are converted to markdown equivalents.",
       },
       {
-        q: "What about images?",
-        a: "Images are referenced with markdown image syntax, but you'll need to save images separately.",
+        question: "What about images?",
+        answer: "Images are referenced with markdown image syntax, but you'll need to save images separately.",
       },
       {
-        q: "Can I convert Google Docs?",
-        a: "Export your Google Doc as .docx first, then use this converter.",
+        question: "Can I convert Google Docs?",
+        answer: "Export your Google Doc as .docx first, then use this converter.",
       },
     ],
     keywords: ["docx to markdown", "word to markdown", "convert word to md"],
@@ -238,16 +238,16 @@ export const conversionConfigs: ConversionConfig[] = [
     howToSteps: ["Paste your HTML content", 'Click "Convert to PDF"', "Download your PDF document"],
     faqs: [
       {
-        q: "Are styles preserved?",
-        a: "Basic HTML styling is preserved, though complex CSS may not render perfectly.",
+        question: "Are styles preserved?",
+        answer: "Basic HTML styling is preserved, though complex CSS may not render perfectly.",
       },
       {
-        q: "Can I convert a live website?",
-        a: "Copy the HTML source code from your browser and paste it here.",
+        question: "Can I convert a live website?",
+        answer: "Copy the HTML source code from your browser and paste it here.",
       },
       {
-        q: "What about page breaks?",
-        a: "The PDF will be generated with automatic page breaks based on content length.",
+        question: "What about page breaks?",
+        answer: "The PDF will be generated with automatic page breaks based on content length.",
       },
     ],
     keywords: ["html to pdf", "convert html to pdf", "web page to pdf"],
@@ -272,16 +272,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is reStructuredText?",
-        a: "reStructuredText (RST) is a markup language commonly used in Python documentation and Sphinx.",
+        question: "What is reStructuredText?",
+        answer: "reStructuredText (RST) is a markup language commonly used in Python documentation and Sphinx.",
       },
       {
-        q: "Are directives converted?",
-        a: "Common directives are converted to their markdown equivalents where possible.",
+        question: "Are directives converted?",
+        answer: "Common directives are converted to their markdown equivalents where possible.",
       },
       {
-        q: "Is this useful for Sphinx docs?",
-        a: "Yes, if you're migrating from Sphinx to a markdown-based documentation system.",
+        question: "Is this useful for Sphinx docs?",
+        answer: "Yes, if you're migrating from Sphinx to a markdown-based documentation system.",
       },
     ],
     keywords: ["rst to markdown", "restructuredtext to markdown", "convert rst to md"],
@@ -306,16 +306,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is EPUB?",
-        a: "EPUB is a standard e-book format supported by most e-readers like Kindle, Kobo, and Apple Books.",
+        question: "What is EPUB?",
+        answer: "EPUB is a standard e-book format supported by most e-readers like Kindle, Kobo, and Apple Books.",
       },
       {
-        q: "Can I add a cover image?",
-        a: "This converter creates a basic EPUB. You can add covers and metadata using e-book editing tools.",
+        question: "Can I add a cover image?",
+        answer: "This converter creates a basic EPUB. You can add covers and metadata using e-book editing tools.",
       },
       {
-        q: "Does it support chapters?",
-        a: "Yes, markdown headings are converted to chapter divisions in the EPUB.",
+        question: "Does it support chapters?",
+        answer: "Yes, markdown headings are converted to chapter divisions in the EPUB.",
       },
     ],
     keywords: ["markdown to epub", "convert markdown to ebook", "md to epub"],
@@ -340,16 +340,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is ODT?",
-        a: "ODT is the OpenDocument Text format, an open standard used by LibreOffice, OpenOffice, and Google Docs.",
+        question: "What is ODT?",
+        answer: "ODT is the OpenDocument Text format, an open standard used by LibreOffice, OpenOffice, and Google Docs.",
       },
       {
-        q: "Can I edit the ODT file?",
-        a: "Yes, ODT files are fully editable in LibreOffice Writer, OpenOffice Writer, and compatible applications.",
+        question: "Can I edit the ODT file?",
+        answer: "Yes, ODT files are fully editable in LibreOffice Writer, OpenOffice Writer, and compatible applications.",
       },
       {
-        q: "Is ODT better than DOCX?",
-        a: "ODT is an open standard, while DOCX is Microsoft's format. Both work well for most use cases.",
+        question: "Is ODT better than DOCX?",
+        answer: "ODT is an open standard, while DOCX is Microsoft's format. Both work well for most use cases.",
       },
     ],
     keywords: ["markdown to odt", "markdown to opendocument", "md to odt"],
@@ -373,16 +373,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Are line breaks preserved?",
-        a: "Yes, paragraph breaks and line breaks in the HTML are preserved in the text output.",
+        question: "Are line breaks preserved?",
+        answer: "Yes, paragraph breaks and line breaks in the HTML are preserved in the text output.",
       },
       {
-        q: "What happens to links?",
-        a: "Link text is preserved, but the URLs are removed.",
+        question: "What happens to links?",
+        answer: "Link text is preserved, but the URLs are removed.",
       },
       {
-        q: "Can I extract text from a website?",
-        a: "Yes, copy the HTML source and paste it here to extract just the text content.",
+        question: "Can I extract text from a website?",
+        answer: "Yes, copy the HTML source and paste it here to extract just the text content.",
       },
     ],
     keywords: ["html to text", "strip html tags", "html to plain text"],
@@ -407,12 +407,12 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Will Sphinx directives work?",
-        a: "Common RST directives are converted, though Sphinx-specific extensions may not be fully supported.",
+        question: "Will Sphinx directives work?",
+        answer: "Common RST directives are converted, though Sphinx-specific extensions may not be fully supported.",
       },
       {
-        q: "Is syntax highlighting preserved?",
-        a: "Code blocks are converted with proper HTML structure, but you'll need to add CSS for syntax highlighting.",
+        question: "Is syntax highlighting preserved?",
+        answer: "Code blocks are converted with proper HTML structure, but you'll need to add CSS for syntax highlighting.",
       },
     ],
     keywords: ["rst to html", "restructuredtext to html", "convert rst to html"],
@@ -437,16 +437,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is MediaWiki?",
-        a: "MediaWiki is the wiki software used by Wikipedia and thousands of other wikis.",
+        question: "What is MediaWiki?",
+        answer: "MediaWiki is the wiki software used by Wikipedia and thousands of other wikis.",
       },
       {
-        q: "Can I use this for Wikipedia?",
-        a: "Yes, the output is compatible with Wikipedia's markup syntax.",
+        question: "Can I use this for Wikipedia?",
+        answer: "Yes, the output is compatible with Wikipedia's markup syntax.",
       },
       {
-        q: "Are tables converted?",
-        a: "Yes, markdown tables are converted to MediaWiki table syntax.",
+        question: "Are tables converted?",
+        answer: "Yes, markdown tables are converted to MediaWiki table syntax.",
       },
     ],
     keywords: ["markdown to mediawiki", "markdown to wikipedia", "convert markdown to wiki"],
@@ -470,16 +470,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Are styles preserved?",
-        a: "Basic HTML formatting is converted to Word styles, though complex CSS may not translate perfectly.",
+        question: "Are styles preserved?",
+        answer: "Basic HTML formatting is converted to Word styles, though complex CSS may not translate perfectly.",
       },
       {
-        q: "Can I convert web pages?",
-        a: "Yes, copy the HTML source from a web page and convert it to a Word document.",
+        question: "Can I convert web pages?",
+        answer: "Yes, copy the HTML source from a web page and convert it to a Word document.",
       },
       {
-        q: "Is the DOCX editable?",
-        a: "Yes, the converted file is fully editable in Microsoft Word and compatible applications.",
+        question: "Is the DOCX editable?",
+        answer: "Yes, the converted file is fully editable in Microsoft Word and compatible applications.",
       },
     ],
     keywords: ["html to docx", "html to word", "convert html to word"],
@@ -503,16 +503,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "Are styles preserved?",
-        a: "Yes, Word styles are converted to inline HTML styles.",
+        question: "Are styles preserved?",
+        answer: "Yes, Word styles are converted to inline HTML styles.",
       },
       {
-        q: "What about images?",
-        a: "Images are embedded in the HTML, but you may want to extract and host them separately for web use.",
+        question: "What about images?",
+        answer: "Images are embedded in the HTML, but you may want to extract and host them separately for web use.",
       },
       {
-        q: "Is the HTML clean?",
-        a: "The HTML is semantic and relatively clean, though some Word-specific formatting may be verbose.",
+        question: "Is the HTML clean?",
+        answer: "The HTML is semantic and relatively clean, though some Word-specific formatting may be verbose.",
       },
     ],
     keywords: ["docx to html", "word to html", "convert word to html"],
@@ -537,12 +537,12 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is reStructuredText used for?",
-        a: "RST is commonly used in Python documentation and with the Sphinx documentation generator.",
+        question: "What is reStructuredText used for?",
+        answer: "RST is commonly used in Python documentation and with the Sphinx documentation generator.",
       },
       {
-        q: "Will it work with Sphinx?",
-        a: "Yes, the converted RST is compatible with Sphinx documentation systems.",
+        question: "Will it work with Sphinx?",
+        answer: "Yes, the converted RST is compatible with Sphinx documentation systems.",
       },
     ],
     keywords: ["markdown to rst", "markdown to restructuredtext", "convert md to rst"],
@@ -567,12 +567,12 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is ODT?",
-        a: "ODT is the OpenDocument Text format used by LibreOffice, OpenOffice, and other open-source office suites.",
+        question: "What is ODT?",
+        answer: "ODT is the OpenDocument Text format used by LibreOffice, OpenOffice, and other open-source office suites.",
       },
       {
-        q: "Is formatting preserved?",
-        a: "Basic formatting like headings, bold, italic, and lists are converted to markdown syntax.",
+        question: "Is formatting preserved?",
+        answer: "Basic formatting like headings, bold, italic, and lists are converted to markdown syntax.",
       },
     ],
     keywords: ["odt to markdown", "opendocument to markdown", "convert odt to md"],
@@ -597,12 +597,12 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is Textile?",
-        a: "Textile is a lightweight markup language similar to Markdown, once popular in blogging platforms.",
+        question: "What is Textile?",
+        answer: "Textile is a lightweight markup language similar to Markdown, once popular in blogging platforms.",
       },
       {
-        q: "Why convert to Markdown?",
-        a: "Markdown has become the de facto standard for documentation and content, with wider tool support.",
+        question: "Why convert to Markdown?",
+        answer: "Markdown has become the de facto standard for documentation and content, with wider tool support.",
       },
     ],
     keywords: ["textile to markdown", "convert textile to md", "textile markup converter"],
@@ -626,16 +626,16 @@ export const conversionConfigs: ConversionConfig[] = [
     ],
     faqs: [
       {
-        q: "What is Org Mode?",
-        a: "Org Mode is a powerful markup language and organization system for Emacs.",
+        question: "What is Org Mode?",
+        answer: "Org Mode is a powerful markup language and organization system for Emacs.",
       },
       {
-        q: "Are TODO items converted?",
-        a: "Basic TODO structures are converted, though advanced Org features may not have markdown equivalents.",
+        question: "Are TODO items converted?",
+        answer: "Basic TODO structures are converted, though advanced Org features may not have markdown equivalents.",
       },
       {
-        q: "What about tables?",
-        a: "Yes, Org tables are converted to markdown table syntax.",
+        question: "What about tables?",
+        answer: "Yes, Org tables are converted to markdown table syntax.",
       },
     ],
     keywords: ["org to markdown", "org mode to markdown", "convert org to md"],

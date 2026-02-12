@@ -916,8 +916,6 @@ export const schema = createSchema({
     stripeCustomersRelations,
     creditUsageLogRelations,
   ],
-  enableLegacyQueries: false,
-  enableLegacyMutators: false,
 });
 
 export type Schema = typeof schema;

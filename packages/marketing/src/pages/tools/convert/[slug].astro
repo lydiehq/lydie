@@ -40,15 +40,10 @@ const structuredData = {
   ],
 };
 
-const faqItems = config.faqs.map((faq) => ({
-  question: faq.q,
-  answer: faq.a,
-}));
-
 const faqData = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqItems.map((faq) => ({
+  mainEntity: config.faqs.map((faq) => ({
     "@type": "Question",
     name: faq.question,
     acceptedAnswer: {
@@ -100,7 +95,7 @@ const faqData = {
         <li>Archiving content in different formats</li>
       </ul>
     </div>
-    <FAQ items={faqItems} client:load />
+    <FAQ items={config.faqs} client:load />
     <RelatedConverters slugs={config.relatedSlugs} />
   </Container>
 </Layout>

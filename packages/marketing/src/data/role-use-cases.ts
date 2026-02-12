@@ -26,8 +26,8 @@ export interface RoleUseCaseContent {
     description: string;
   }[];
   faqs: {
-    q: string;
-    a: string;
+    question: string;
+    answer: string;
   }[];
   /**
    * Sections to showcase on the role+use case page.
@@ -207,8 +207,8 @@ export const roleUseCaseContent: RoleUseCaseContent[] = [
     ],
     faqs: [
       {
-        q: "Can I collaborate on notes with my classmates?",
-        a: "Yes. Lydie supports real-time collaboration. Just invite your classmates to the page and start collaborating right away. See more about our collaboration features [here](/features/collaboration).",
+        question: "Can I collaborate on notes with my classmates?",
+        answer: "Yes. Lydie supports real-time collaboration. Just invite your classmates to the page and start collaborating right away. See more about our collaboration features [here](/features/collaboration).",
       },
     ],
     workflowExample: {

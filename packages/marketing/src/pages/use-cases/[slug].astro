@@ -144,24 +144,11 @@ const rolesToDisplay = getRolesToDisplayForUseCase(useCase);
     } -->
 
     {
-      useCase.featureShowcases &&
-        Object.keys(useCase.featureShowcases).length > 0 && (
-          <section class="flex flex-col gap-y-8">
-            <Sections
-              sections={resolveSections(useCase.featureShowcases).map(
-                (showcase, index) => ({
-                  illustration: showcase.illustration,
-                  title: showcase.title,
-                  content: showcase.description,
-                  featureSlug: showcase.featureSlug,
-                  index,
-                  featureBadge: showcase.featureBadge,
-                }),
-              )}
-              client:load
-            />
-          </section>
-        )
+      useCase.sections && useCase.sections.length > 0 && (
+        <section class="flex flex-col gap-y-8">
+          <Sections sections={resolveSections(useCase.sections)} client:load />
+        </section>
+      )
     }
     {
       templates.length > 0 && (

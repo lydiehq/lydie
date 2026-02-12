@@ -3,8 +3,8 @@ import type { Comparison } from "./comparisons";
 import type { SectionInput } from "./sections";
 
 export interface FAQItem {
-  q: string;
-  a: string;
+  question: string;
+  answer: string;
 }
 
 /**
@@ -110,20 +110,20 @@ export const roles = [
     },
     faqs: [
       {
-        q: "How can researchers use Lydie?",
-        a: "Researchers use Lydie to organize literature reviews, take notes on papers, track research projects, and synthesize findings. Create pages for each paper with your notes and highlights. Link related concepts across your knowledge base.",
+        question: "How can researchers use Lydie?",
+        answer: "Researchers use Lydie to organize literature reviews, take notes on papers, track research projects, and synthesize findings. Create pages for each paper with your notes and highlights. Link related concepts across your knowledge base.",
       },
       {
-        q: "Can I use Lydie for academic writing?",
-        a: "Yes. Lydie works well for organizing your thoughts before writing. Create outlines, draft sections, and keep your sources organized. Export your work when you're ready to format it for submission.",
+        question: "Can I use Lydie for academic writing?",
+        answer: "Yes. Lydie works well for organizing your thoughts before writing. Create outlines, draft sections, and keep your sources organized. Export your work when you're ready to format it for submission.",
       },
       {
-        q: "How does AI help with research?",
-        a: "Lydie's AI can summarize academic papers, help you understand complex concepts, suggest connections between different sources, and assist with synthesizing findings across multiple documents.",
+        question: "How does AI help with research?",
+        answer: "Lydie's AI can summarize academic papers, help you understand complex concepts, suggest connections between different sources, and assist with synthesizing findings across multiple documents.",
       },
       {
-        q: "Can I collaborate with my research team?",
-        a: "Yes. Share pages or entire spaces with collaborators. Work together on literature reviews, methodology sections, or data analysis. Comments and real-time collaboration make it easy to give and receive feedback.",
+        question: "Can I collaborate with my research team?",
+        answer: "Yes. Share pages or entire spaces with collaborators. Work together on literature reviews, methodology sections, or data analysis. Comments and real-time collaboration make it easy to give and receive feedback.",
       },
     ],
     ctaText: "Try Lydie for research",
@@ -166,24 +166,24 @@ export const roles = [
     },
     faqs: [
       {
-        q: "Is Lydie free?",
-        a: "Yes, Lydie is free to use. It includes unlimited documents, pages and collaborators and a generous amount of AI requests.",
+        question: "Is Lydie free?",
+        answer: "Yes, Lydie is free to use. It includes unlimited documents, pages and collaborators and a generous amount of AI requests.",
       },
       {
-        q: "How can students use Lydie?",
-        a: "Students use Lydie to take lecture and reading notes, organize coursework by class or topic, draft essays and papers, and collaborate on group projects. You can link notes across courses to see connections and resurface ideas when writing.",
+        question: "How can students use Lydie?",
+        answer: "Students use Lydie to take lecture and reading notes, organize coursework by class or topic, draft essays and papers, and collaborate on group projects. You can link notes across courses to see connections and resurface ideas when writing.",
       },
       {
-        q: "Is Lydie good for essay writing?",
-        a: "Yes. Use Lydie to outline, draft, and revise. Keep your sources and notes linked so you can reference them as you write. AI can help with structure and clarity while you stay in control of the content.",
+        question: "Is Lydie good for essay writing?",
+        answer: "Yes. Use Lydie to outline, draft, and revise. Keep your sources and notes linked so you can reference them as you write. AI can help with structure and clarity while you stay in control of the content.",
       },
       {
-        q: "Can I use Lydie for group projects?",
-        a: "Yes. Share pages or spaces with classmates. Edit together in real time, leave comments, and keep everything in one place instead of scattered across drives and chat.",
+        question: "Can I use Lydie for group projects?",
+        answer: "Yes. Share pages or spaces with classmates. Edit together in real time, leave comments, and keep everything in one place instead of scattered across drives and chat.",
       },
       {
-        q: "How does Lydie help with studying?",
-        a: "Your notes become searchable and linked. Find anything quickly, see how concepts connect across courses, and use the AI assistant to summarize long readings or clarify ideas when you're reviewing.",
+        question: "How does Lydie help with studying?",
+        answer: "Your notes become searchable and linked. Find anything quickly, see how concepts connect across courses, and use the AI assistant to summarize long readings or clarify ideas when you're reviewing.",
       },
     ],
     ctaText: "Try Lydie for student life",
@@ -229,20 +229,20 @@ export const roles = [
     },
     faqs: [
       {
-        q: "How do developers use Lydie?",
-        a: "Developers use Lydie to write technical documentation, RFCs, design docs, meeting notes, and personal knowledge bases. It’s a place to think through problems, capture decisions, and build shared context over time.",
+        question: "How do developers use Lydie?",
+        answer: "Developers use Lydie to write technical documentation, RFCs, design docs, meeting notes, and personal knowledge bases. It’s a place to think through problems, capture decisions, and build shared context over time.",
       },
       {
-        q: "Is Lydie a replacement for README files?",
-        a: "Not exactly. README files are great for quick project context, while Lydie is better for longer-form docs like architecture notes, ADRs, onboarding guides, and evolving system documentation.",
+        question: "Is Lydie a replacement for README files?",
+        answer: "Not exactly. README files are great for quick project context, while Lydie is better for longer-form docs like architecture notes, ADRs, onboarding guides, and evolving system documentation.",
       },
       {
-        q: "Can Lydie be used as an internal developer wiki?",
-        a: "Yes. Teams use Lydie as a lightweight internal knowledge base for engineering docs, onboarding guides, and technical decisions. Pages stay fast and searchable even as your documentation grows.",
+        question: "Can Lydie be used as an internal developer wiki?",
+        answer: "Yes. Teams use Lydie as a lightweight internal knowledge base for engineering docs, onboarding guides, and technical decisions. Pages stay fast and searchable even as your documentation grows.",
       },
       {
-        q: "How does AI help developers?",
-        a: "AI can help summarize long docs, turn rough notes into clearer explanations, draft outlines for RFCs, and surface related pages when you’re writing or exploring your knowledge base.",
+        question: "How does AI help developers?",
+        answer: "AI can help summarize long docs, turn rough notes into clearer explanations, draft outlines for RFCs, and surface related pages when you’re writing or exploring your knowledge base.",
       },
     ],
     ctaText: "Try Lydie for developers",
