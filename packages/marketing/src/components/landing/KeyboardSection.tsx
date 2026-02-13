@@ -36,7 +36,7 @@ function Key({
   const showHighlighted = isHighlighted || isPressed;
 
   const baseClasses = clsx(
-    "relative h-[60px] ring-black/5 ring rounded-xl shadow-legit flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-200 flex-shrink-0 shadow-sm",
+    "h-[60px] ring-black/5 ring rounded-xl shadow-legit flex items-center justify-center text-[12px] font-semibold select-none transition-all duration-200 flex-shrink-0 shadow-sm",
     widthClasses[width] || widthClasses.normal,
     showHighlighted
       ? "bg-gradient-to-b from-[#3b82f6] to-[#2563eb] text-white border-[#1d4ed8] border-t-blue-400"
@@ -52,17 +52,18 @@ function Key({
         transform: rotate !== 0 ? `rotate(${rotate}deg)` : undefined,
       }}
     >
-      <CastShadow className="w-full" height={10} strength={1} lightAngle={145 + rotate}>
-        <div className={baseClasses}>
-          <div
-            className={clsx(
-              "absolute inset-1.5 rounded-lg ring ring-black/3 transition-colors duration-200",
-              showHighlighted ? "bg-blue-400" : "bg-white",
-            )}
-          />
-          <span className="relative z-10">{label}</span>
-          {showHighlighted && <div className="absolute inset-0 rounded-md bg-blue-400/20" />}
-        </div>
+      <div className={`${baseClasses} size-full absolute inset-0 z-10`}>
+        <div
+          className={clsx(
+            "absolute inset-1.5 rounded-lg ring ring-black/3 transition-colors duration-200 z-10",
+            showHighlighted ? "bg-blue-400" : "bg-white",
+          )}
+        />
+        <span className="relative z-10">{label}</span>
+        {showHighlighted && <div className="absolute inset-0 rounded-md bg-blue-400/20" />}
+      </div>
+      <CastShadow className="size-full" height={10} strength={1} lightAngle={145 + rotate}>
+        <div className={clsx("h-[60px] -m-[3px]", widthClasses[width])} />
       </CastShadow>
     </div>
   );
