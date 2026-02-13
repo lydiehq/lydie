@@ -54,13 +54,13 @@ const rolesToDisplay = getRolesToDisplayForUseCase(useCase);
 
 <Layout
   title={`${useCase.meta.title} - Lydie`}
-  description={useCase.meta.description ?? useCase.thumbnail.description}
+  description={useCase.meta.description ?? useCase.hero.description}
 >
   <Container className="flex flex-col gap-y-16 py-16">
     <Breadcrumbs
       items={[
         { label: "Use cases", href: "/use-cases" },
-        { label: useCase.thumbnail.title },
+        { label: useCase.terms.label },
       ]}
     />
     <UseCaseHero
@@ -152,7 +152,7 @@ const rolesToDisplay = getRolesToDisplayForUseCase(useCase);
       templates.length > 0 && (
         <section class="flex flex-col gap-y-8">
           <SectionHeader
-            title={`Templates for ${useCase.thumbnail.title.toLowerCase()}`}
+            title={`Templates for ${useCase.terms.act}`}
             description="Get started quickly with these pre-built templates:"
           />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -174,7 +174,7 @@ const rolesToDisplay = getRolesToDisplayForUseCase(useCase);
       blogPosts.length > 0 && (
         <section class="flex flex-col gap-y-8">
           <SectionHeader
-            title={`Learn more about ${useCase.thumbnail.title.toLowerCase()}`}
+            title={`Learn more about ${useCase.terms.act}`}
             description="Explore our articles on this topic:"
           />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -221,7 +221,7 @@ const rolesToDisplay = getRolesToDisplayForUseCase(useCase);
       rolesToDisplay.length > 0 && (
         <section class="flex flex-col gap-y-8">
           <SectionHeader
-            title={`How different people use Lydie for ${useCase.thumbnail.title.toLowerCase()}`}
+            title={`How different people use Lydie for ${useCase.terms.act}`}
             description="See how professionals across different fields capture and organize their knowledge:"
           />
           <div class="grid sm:grid-cols-2 gap-6">

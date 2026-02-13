@@ -5,7 +5,7 @@ const styles = cva({
   variants: {
     level: {
       1: "tracking-tight font-medium text-3xl",
-      2: "tracking-tight font-medium text-3xl",
+      2: "tracking-tight font-medium text-4xl",
       3: "text-lg font-semibold",
       4: "text-base font-semibold",
     },

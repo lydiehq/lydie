@@ -11,6 +11,7 @@ interface CastShadowProps {
   height?: number;
   lightAngle?: number;
   animate?: boolean;
+  borderRadius?: string | number;
 }
 
 function round(value: number, decimals: number): number {

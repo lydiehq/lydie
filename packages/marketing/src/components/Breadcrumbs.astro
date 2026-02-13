@@ -1,4 +1,6 @@
 ---
+import { ChevronRightRegular } from "@fluentui/react-icons";
+
 interface Crumb {
   label: string;
   href?: string | null;
@@ -25,7 +27,7 @@ const breadcrumbData = {
 ---
 
 <script type="application/ld+json" set:html={JSON.stringify(breadcrumbData)} />
-<nav class="flex text-[13px] text-gray-600" aria-label="Breadcrumb">
+<nav class="flex text-[13px] text-gray-400" aria-label="Breadcrumb">
   <ol class="inline-flex items-center gap-x-1.5">
     {
       items.map((crumb, index) => {
@@ -38,18 +40,7 @@ const breadcrumbData = {
           >
             <div class="flex items-center gap-x-1.5">
               {!isFirst && (
-                <svg
-                  class="size-4 text-gray-400"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
+                <ChevronRightRegular className="size-3 text-gray-400" />
               )}
               {crumb.href ? (
                 <a href={crumb.href} class="hover:text-gray-900">

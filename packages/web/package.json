@@ -16,7 +16,7 @@
     "test:e2e:ui": "bun sst shell playwright test -- --ui"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.84",
+    "@ai-sdk/react": "^3.0.87",
     "@floating-ui/dom": "^1.7.5",
     "@floating-ui/react": "^0.27.17",
     "@fluentui/react-icons": "catalog:",
@@ -57,7 +57,7 @@
     "jszip": "^3.10.1",
     "marked": "^17.0.2",
     "motion": "^12.34.0",
-    "posthog-js": "^1.345.5",
+    "posthog-js": "^1.347.0",
     "react": "catalog:",
     "react-aria": "^3.46.0",
     "react-aria-components": "^1.15.1",

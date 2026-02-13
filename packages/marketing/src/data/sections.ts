@@ -94,13 +94,13 @@ export const sections: Record<SectionId, Section> = {
 
   linking: {
     id: "linking",
-    title: "Internal Linking",
+    title: "Internal linking",
     description:
       "Connect your ideas with bidirectional links. Create a web of knowledge and discover connections between your documents.",
     badge: {
       icon: "linking",
       color: "violet",
-      label: "Internal Linking",
+      label: "Internal linking",
     },
     illustration: FeatureSpotLinking,
     href: "/features/linking",
@@ -109,7 +109,7 @@ export const sections: Record<SectionId, Section> = {
 
   collaboration: {
     id: "collaboration",
-    title: "Collaborative Editing",
+    title: "Collaborative editing",
     description:
       "Real-time collaboration with your team. See live cursors, instant updates, and seamless teamwork.",
     badge: {

@@ -22,6 +22,8 @@ import FormattedDate from "@/components/FormattedDate.astro";
 import { Sections } from "@/components/landing/Sections";
 import { resolveSections } from "@/data/sections";
 import { UseCaseHero } from "@/components/landing/UseCaseHero";
+import Divider from "@/components/landing/Divider.astro";
+import { GradientOutline } from "@/components/generic/GradientOutline";
 
 // Generate all valid role/use-case combinations (only those with role-use-case content)
 export function getStaticPaths() {
@@ -88,7 +90,7 @@ const blogPosts =
             role.terms.actorPlural.slice(1),
           href: `/for/${roleSlug}`,
         },
-        { label: useCaseDef.thumbnail.title },
+        { label: useCaseDef.terms.label },
       ]}
     />
 
@@ -98,139 +100,140 @@ const blogPosts =
       states={content.demoStates}
       client:load
     />
-    <section class="flex flex-col gap-y-6 max-w-[65ch]">
+    <div class="flex flex-col gap-y-24 py-24">
+      <section class="flex flex-col gap-y-6 max-w-[65ch] mx-auto">
+        {
+          bodyContent.map((paragraph) => (
+            <p class="text-base/relaxed text-black/70">{paragraph}</p>
+          ))
+        }
+      </section>
+
       {
-        bodyContent.map((paragraph) => (
-          <p class="text-base/relaxed text-black/70">{paragraph}</p>
-        ))
+        statement && (
+          <section class="py-5">
+            <blockquote class="text-lg font-medium text-gray-900 text-center max-w-3xl mx-auto leading-relaxed text-balance">
+              "{statement}"
+            </blockquote>
+          </section>
+        )
       }
-    </section>
 
-    {
-      statement && (
-        <section class="py-5">
-          <blockquote class="text-lg font-medium text-gray-900 text-center max-w-3xl mx-auto leading-relaxed text-balance">
-            "{statement}"
-          </blockquote>
-        </section>
-      )
-    }
-
-    {
-      workflowExample && (
-        <section class="flex flex-col gap-y-6">
-          <SectionHeader
-            title={workflowExample.title}
-            description={workflowExample.description}
-          />
-          <div class="bg-gray-50 rounded-xl p-6 sm:p-8">
-            <ol class="space-y-4">
-              {workflowExample.steps.map((step: string, index: number) => (
-                <li class="flex items-start gap-4">
-                  <span class="shrink-0 w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-medium">
-                    {index + 1}
-                  </span>
-                  <p class="text-gray-700 leading-relaxed pt-1">{step}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-      )
-    }
-
-    {/* Why {actors} love Lydie */}
-    {
-      role.terms?.actorPlural && (
-        <section class="flex flex-col gap-y-6">
-          <SectionHeader
-            title={`Why ${role.terms.actorPlural} love Lydie`}
-            description={`Discover why ${role.terms.actorPlural} choose Lydie for their work.`}
-          />
-        </section>
-      )
-    }
-
-    {
-      sections && sections.length > 0 && (
-        <section class="flex flex-col gap-y-8">
-          <Sections sections={resolveSections(sections)} client:load />
-        </section>
-      )
-    }
-
-    {
-      templates.length > 0 && (
-        <section class="flex flex-col gap-y-8">
-          <SectionHeader
-            title={`Templates for ${useCaseDef.thumbnail.title.toLowerCase()}`}
-            description={`Get started quickly with these pre-built templates for ${role.thumbnail.title.toLowerCase()}:`}
-          />
-          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map((template) => (
-              <TemplateThumbnail
-                name={template.name}
-                teaser={template.teaser}
-                href={`/templates/${template.slug}`}
-                slug={template.slug}
-                thumbnailSrc={template.thumbnailSrc}
+      {
+        workflowExample && (
+          <>
+            <Divider />
+            <section class="grid grid-cols-1 md:grid-cols-5 md:gap-12">
+              <SectionHeader
+                title={workflowExample.title}
+                description={workflowExample.description}
+                className="col-span-1 md:col-span-2"
               />
-            ))}
-          </div>
-        </section>
-      )
-    }
+              <div class="bg-gray-50 rounded-xl col-span-1 md:col-span-3 relative">
+                <GradientOutline />
+                <ol class="space-y-4">
+                  {workflowExample.steps.map((step: string, index: number) => (
+                    <li class="flex items-baseline gap-2">
+                      <span class="shrink-0 size-7 ring ring-black/6 shadow-legit rounded-full bg-white text-gray-700 flex items-center justify-center text-sm font-medium">
+                        {index + 1}
+                      </span>
+                      <p class="text-gray-700 text-sm/relaxed">{step}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </section>
+          </>
+        )
+      }
+      {
+        sections && sections.length > 0 && (
+          <>
+            <Divider />
+            <section class="flex flex-col">
+              <SectionHeader
+                title={`Why ${role.terms.actorPlural} love Lydie`}
+                description={`Discover why ${role.terms.actorPlural} choose Lydie for their work.`}
+              />
+              <Sections sections={resolveSections(sections)} client:load />
+            </section>
+          </>
+        )
+      }
 
-    {
-      blogPosts.length > 0 && (
-        <section class="flex flex-col gap-y-8">
-          <SectionHeader
-            title={`Learn more about ${useCaseDef.thumbnail.title.toLowerCase()}`}
-            description="Explore our articles on this topic:"
-          />
-          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogPosts.map((post) => (
-              <a
-                href={`/blog/${post.slug}`}
-                class="group flex flex-col gap-y-4"
-              >
-                <div class="rounded-lg shadow-surface aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
-                  <Image
-                    src={
-                      post.coverImage
-                        ? new URL(post.coverImage, Astro.site).toString()
-                        : "/blog.png"
-                    }
-                    alt=""
-                    width={640}
-                    height={360}
-                    layout="constrained"
-                    fit="cover"
-                    class="w-full h-full group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div class="flex flex-col gap-y-2">
-                  <h3 class="text-base font-medium text-gray-900 group-hover:text-gray-700 transition-colors">
-                    {post.title}
-                  </h3>
-                  {post.createdAt && (
-                    <p class="text-xs text-gray-500">
-                      <FormattedDate date={new Date(post.createdAt)} />
-                    </p>
-                  )}
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      )
-    }
+      {
+        templates.length > 0 && (
+          <section class="flex flex-col gap-y-8">
+            <SectionHeader
+              title={`Templates for ${useCaseDef.terms.act}`}
+              description={`Get started quickly with these pre-built templates for ${role.shortTitle.toLowerCase()}:`}
+            />
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {templates.map((template) => (
+                <TemplateThumbnail
+                  name={template.name}
+                  teaser={template.teaser}
+                  href={`/templates/${template.slug}`}
+                  slug={template.slug}
+                  thumbnailSrc={template.thumbnailSrc}
+                />
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      {
+        blogPosts.length > 0 && (
+          <section class="flex flex-col gap-y-8">
+            <SectionHeader
+              title={`Learn more about ${useCaseDef.terms.act}`}
+              description="Explore our articles on this topic:"
+            />
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.map((post) => (
+                <a
+                  href={`/blog/${post.slug}`}
+                  class="group flex flex-col gap-y-4"
+                >
+                  <div class="rounded-lg shadow-surface aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
+                    <Image
+                      src={
+                        post.coverImage
+                          ? new URL(post.coverImage, Astro.site).toString()
+                          : "/blog.png"
+                      }
+                      alt=""
+                      width={640}
+                      height={360}
+                      layout="constrained"
+                      fit="cover"
+                      class="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-y-2">
+                    <h3 class="text-base font-medium text-gray-900 group-hover:text-gray-700 transition-colors">
+                      {post.title}
+                    </h3>
+                    {post.createdAt && (
+                      <p class="text-xs text-gray-500">
+                        <FormattedDate date={new Date(post.createdAt)} />
+                      </p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )
+      }
+    </div>
 
     {/* Examples */}
     <!-- <section class="bg-gray-50 rounded-2xl p-8 sm:p-12">
       <SectionHeader
-        title={`How ${role.shortTitle.toLowerCase()} use ${useCaseDef.thumbnail.title.toLowerCase()}`}
-        description={`Concrete examples of ${useCaseDef.thumbnail.title.toLowerCase()} for ${role.thumbnail.title.toLowerCase()}:`}
+        title={`How ${role.shortTitle.toLowerCase()} use ${useCaseDef.terms.act}`}
+        description={`Concrete examples of ${useCaseDef.terms.act} for ${role.shortTitle.toLowerCase()}:`}
         className="mb-8"
       />
       <div class="grid sm:grid-cols-3 gap-6">
@@ -247,7 +250,7 @@ const blogPosts =
 
     <!-- <section class="flex flex-col gap-y-8">
       <SectionHeader
-        title={`Benefits of using Lydie for ${useCaseDef.thumbnail.title.toLowerCase()}`}
+        title={`Benefits of using Lydie for ${useCaseDef.terms.act}`}
       />
       <div class="grid sm:grid-cols-2 gap-4">
         {
@@ -276,7 +279,7 @@ const blogPosts =
     </section> -->
     {
       faqs.length > 0 && (
-        <section class="max-w-2xl">
+        <section class="max-w-xl mx-auto w-full">
           <FAQ items={faqs} client:load />
         </section>
       )
@@ -285,10 +288,10 @@ const blogPosts =
       class="flex flex-col gap-y-4 items-center text-center py-8 border-t border-gray-200"
     >
       <p class="text-black/60">
-        Explore more use cases for {role.thumbnail.title}
+        Explore more use cases for {role.shortTitle}
       </p>
       <Button href={`/for/${roleSlug}`} size="lg" intent="secondary">
-        <span>See all {role.thumbnail.title} workflows</span>
+        <span>See all {role.shortTitle} workflows</span>
         <ChevronRightRegular className="size-4" />
       </Button>
     </section> -->

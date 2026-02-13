@@ -111,7 +111,7 @@ const blogPosts =
       templates.length > 0 && (
         <section class="flex flex-col gap-y-8">
           <SectionHeader
-            title={`Templates for ${role.thumbnail.title}`}
+            title={`Templates for ${role.terms.actorPlural}`}
             description="Get started quickly with these pre-built templates:"
           />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -132,17 +132,17 @@ const blogPosts =
       useCasesToDisplay.length > 0 && (
         <section class="flex flex-col gap-y-8">
           <SectionHeader
-            title={`Use cases for ${role.thumbnail.title}`}
-            description={`How ${role.shortTitle.toLowerCase()} use Lydie to work smarter:`}
+            title={`Use cases for ${role.terms.actorPlural}`}
+            description={`How ${role.terms.actorPlural.toLowerCase()} use Lydie to work smarter:`}
           />
           <div class="grid sm:grid-cols-2 gap-6">
-            {useCasesToDisplay.map(({ useCase, description, isFeatured }) => (
+            {useCasesToDisplay.map(({ useCase, description }) => (
               <a
                 href={`/for/${roleSlug}/${useCase.slug}`}
                 class="group flex flex-col gap-y-3 p-6 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all duration-200"
               >
                 <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                  {useCase.thumbnail.title}
+                  {useCase.terms.label}
                 </h3>
                 <p class="text-gray-600 text-[15px]/relaxed">{description}</p>
                 <div class="flex items-center gap-x-1 text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors mt-auto pt-2">
@@ -159,7 +159,7 @@ const blogPosts =
       blogPosts.length > 0 && (
         <section class="flex flex-col gap-y-8">
           <SectionHeader
-            title={`Learn more about ${role.thumbnail.title.toLowerCase()}`}
+            title={`Learn more about ${role.terms.actorPlural.toLowerCase()}`}
             description="Explore our articles on this topic:"
           />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

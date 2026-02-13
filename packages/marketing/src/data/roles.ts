@@ -26,10 +26,6 @@ export interface Role {
     title: string;
     description: string;
   };
-  thumbnail: {
-    title: string;
-    description: string;
-  };
   meta: {
     title: string;
     description?: string;
@@ -88,11 +84,6 @@ export const roles = [
       description:
         "Organizing research, synthesizing findings, and building knowledge needs to be done in a way that works for you. Lydie is built to accompany you in your research, not fight against you.",
     },
-    thumbnail: {
-      title: "Writing Workspace for Researchers",
-      description:
-        "Organize research, synthesize findings, and build knowledge that compounds. Built for academics, scientists, and independent researchers.",
-    },
     meta: {
       title: "Writing Workspace for Researchers",
       description:
@@ -148,11 +139,6 @@ export const roles = [
       title: "A writing workspace that keeps up with student life",
       description:
         "Notes, essays, and study materials scattered across apps make it hard to focus. Lydie gives you one place to capture lecture notes, connect ideas across courses, and get your writing done, without the clutter.",
-    },
-    thumbnail: {
-      title: "Writing Workspace for Students",
-      description:
-        "Take better notes, organize coursework, and write with confidence. Built for students who think in connections, not folders.",
     },
     meta: {
       title: "Writing Workspace for Students",
@@ -214,11 +200,6 @@ export const roles = [
       description:
         "Docs, specs, and ideas shouldn't be scattered across five different tools. Lydie gives developers a fast, intuitive, and extendable workspace to think clearly, document decisions, and build shared knowledge right next to their code.",
     },
-    thumbnail: {
-      title: "Writing Workspace for Developers",
-      description:
-        "Document systems, write specs, and build a shared knowledge base for your team. Built for developers who value speed, structure, and privacy.",
-    },
     meta: {
       title: "The Best Writing Workspace for Developers",
     },
@@ -273,11 +254,6 @@ export const roles = [
       title: "A workspace built for product thinking",
       description:
         "Product managers need to balance strategy, user feedback, and execution. Lydie helps you organize PRDs, track decisions, and keep your team aligned with structured, connected documentation.",
-    },
-    thumbnail: {
-      title: "Writing Workspace for Product Managers",
-      description:
-        "Write PRDs, track decisions, and align your team with structured documentation that connects.",
     },
     meta: {
       title: "Writing Workspace for Product Managers",
@@ -336,11 +312,6 @@ export const roles = [
       description:
         "Designers need to document processes, rationale, and research. Lydie helps you organize design docs, connect research to decisions, and collaborate with your team on a shared understanding.",
     },
-    thumbnail: {
-      title: "Writing Workspace for Designers",
-      description:
-        "Document design processes, connect research to decisions, and collaborate on shared understanding. Built for UX, product, and visual designers.",
-    },
     meta: {
       title: "Writing Workspace for Designers",
       description:
@@ -385,6 +356,125 @@ export const roles = [
     ],
     ctaText: "Try Lydie for design work",
     relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
+  },
+  {
+    slug: "writers",
+    shortTitle: "Writers",
+    terms: {
+      actor: "writer",
+      actorPlural: "writers",
+    },
+    hero: {
+      title: "A writing workspace built for serious writers",
+      description:
+        "Writers need a workspace that gets out of the way and lets ideas flow. Lydie gives you a fast, distraction-free environment for drafting, organizing research, and building a body of work that grows over time.",
+    },
+    meta: {
+      title: "Writing Workspace for Writers",
+      description:
+        "Draft articles, organize research, and build a connected writing practice. Built for bloggers, authors, and content creators.",
+    },
+    painPoints: [
+      "Ideas scattered across notebooks, apps, and random files",
+      "Research and sources hard to reference while writing",
+      "No good way to connect related articles and themes",
+      "Slow, bloated tools that interrupt the writing flow",
+    ],
+    featuredUseCases: {
+      "note-taking": true,
+      "personal-knowledge-base": true,
+    },
+    comparison: {
+      slug: "notion",
+      description:
+        "Unlike Notion which slows down and distracts with database features, Lydie gives writers a fast, focused writing experience designed for long-form content creation.",
+    },
+    faqs: [
+      {
+        question: "How can writers use Lydie?",
+        answer:
+          "Writers use Lydie to draft articles, organize research materials, track article ideas, and build a personal knowledge base of topics and themes. Link related articles together to see how ideas develop over time.",
+      },
+      {
+        question: "Is Lydie good for long-form writing?",
+        answer:
+          "Yes. Lydie is built for substantial writing projects. The fast editor stays responsive even with long articles, and the clean interface helps you focus on your words without distractions.",
+      },
+      {
+        question: "Can I organize research in Lydie?",
+        answer:
+          "Yes. Create pages for research notes, sources, and references. Link them to your drafts so you can easily cite and reference your research while writing. Use AI to help summarize and synthesize research materials.",
+      },
+      {
+        question: "How does AI help writers?",
+        answer:
+          "AI can help overcome writer's block, suggest improvements to your drafts, summarize research materials, and find connections between your articles. It assists your writing without taking over your voice.",
+      },
+    ],
+    ctaText: "Try Lydie for writing",
+    relatedFeatures: ["assistant", "search", "linking"],
+  },
+  {
+    slug: "engineering-managers",
+    shortTitle: "Engineering Managers",
+    terms: {
+      actor: "engineering manager",
+      actorPlural: "engineering managers",
+    },
+    hero: {
+      title: "A workspace for engineering leadership",
+      description:
+        "Engineering managers need to track team decisions, document processes, and keep technical context organized. Lydie helps you maintain team knowledge, write effective docs, and stay aligned with your engineers.",
+    },
+    meta: {
+      title: "Writing Workspace for Engineering Managers",
+      description:
+        "Track team decisions, document processes, and maintain technical knowledge. Built for engineering leaders who value clear communication.",
+    },
+    painPoints: [
+      "Team decisions and context scattered across meetings and Slack",
+      "Onboarding new engineers requires repeating the same information",
+      "Technical documentation gets outdated and loses trust",
+      "No single source of truth for team processes and decisions",
+    ],
+    featuredUseCases: {
+      "note-taking": true,
+      documentation: true,
+    },
+    comparison: {
+      slug: "confluence",
+      description:
+        "Escape Confluence's complexity and slow performance. Lydie gives engineering managers a lightweight, fast platform for team docs and decision tracking that engineers actually enjoy using.",
+    },
+    faqs: [
+      {
+        question: "How can engineering managers use Lydie?",
+        answer:
+          "Engineering managers use Lydie to document team processes, track architectural decisions, maintain onboarding guides, and organize meeting notes. Create a shared knowledge base that helps your team stay aligned and reduces repetitive explanations.",
+      },
+      {
+        question: "Is Lydie good for team documentation?",
+        answer:
+          "Yes. Lydie is designed for technical documentation that teams actually maintain. The fast editor means updating docs isn't a chore, and internal linking helps connect related processes and decisions.",
+      },
+      {
+        question: "Can I use Lydie for 1:1 notes and team meetings?",
+        answer:
+          "Yes. Create structured pages for 1:1s, team meetings, and retrospectives. Link notes to relevant documentation and track action items over time. Everything stays organized and searchable.",
+      },
+      {
+        question: "How does AI help engineering managers?",
+        answer:
+          "AI can help summarize meeting notes, draft process documentation, clarify technical explanations, and suggest connections between related docs. Use it to speed up documentation while keeping it accurate and useful.",
+      },
+    ],
+    ctaText: "Try Lydie for engineering leadership",
+    relatedFeatures: ["assistant", "search", "linking", "collaborative-editing"],
+    templateSlugs: [
+      "11-meeting-notes-template-13iQau",
+      "classic-meeting-notes-template-PB2be8",
+      "standard-operating-procedure-88H9qV",
+    ],
   },
 ] as const satisfies readonly Role[];
 

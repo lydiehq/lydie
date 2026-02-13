@@ -12,13 +12,12 @@ export type FeaturedRoles = Record<string, true | string>;
 export interface UseCaseDefinition {
   slug: string;
   terms: {
+    /** Short label for the use case, e.g., "Note-taking", "Documentation" */
+    label: string;
+    /** Grammatical form for sentences like "use Lydie for ___", e.g., "note-taking", "documentation" */
     act: string;
   };
   hero: {
-    title: string;
-    description: string;
-  };
-  thumbnail: {
     title: string;
     description: string;
   };
@@ -87,16 +86,13 @@ export const useCaseDefinitions = [
   {
     slug: "note-taking",
     terms: {
+      label: "Note-taking",
       act: "note-taking",
     },
     hero: {
       title: "A note-taking workspace that doesn't fight against you",
       description:
         "Taking notes is not just about writing things down. It's about capturing ideas, connecting them over time and being able to resurface these notes when you need them again. Lydie is a fast, structured note-taking workspace designed for long-form thinking and knowledge building, not just quick scraps of text.",
-    },
-    thumbnail: {
-      title: "Note-taking",
-      description: "Enhance your note-taking workflow with Lydie's powerful features.",
     },
     meta: {
       title: "Best Note-taking App",
@@ -156,7 +152,7 @@ export const useCaseDefinitions = [
       developers: true,
     },
     workflowExample: {
-      title: "Example workflow: capturing and connecting meeting notes",
+      title: "Capturing and connecting meeting notes",
       description:
         "See how teams use Lydie to turn scattered meeting notes into actionable knowledge.",
       steps: [
@@ -208,16 +204,13 @@ export const useCaseDefinitions = [
   {
     slug: "personal-knowledge-base",
     terms: {
+      label: "Personal knowledge base",
       act: "keeping a personal knowledge base",
     },
     hero: {
       title: "Build a personal knowledge base that actually works for you",
       description:
         "Lydie helps you capture, organize and connect ideas when they come. No more digging through dozens of files or forgetting what you wrote last week.",
-    },
-    thumbnail: {
-      title: "Personal knowledge base",
-      description: "Lydie is the ideal tool for setting up your personal knowledge base.",
     },
     meta: {
       title: "Best Tool for Your Personal Knowledge Base",
@@ -261,20 +254,88 @@ export const useCaseDefinitions = [
           "The best way to start building your personal knowledge base is to start capturing ideas as they come to you. Lydie is created with organic linking in mind, making it easy to connect ideas as you go. We advice you read our guide on [how to structure a knowledge base](/blog/how-to-structure-a-knowledge-base) to get started.",
       },
     ],
+    featuredRoles: {
+      researchers: true,
+      writers: true,
+      students: true,
+      developers: true,
+    },
+    problemsAndSolutions: {
+      title: "Common personal knowledge base problems",
+      problems: [
+        {
+          problem: "Ideas get scattered across different tools",
+          solution:
+            "Everything lives in one workspace where notes, ideas, and research connect together.",
+        },
+        {
+          problem: "Hard to resurface old ideas when needed",
+          solution:
+            "Powerful search and internal linking help you find and connect ideas from months ago.",
+        },
+        {
+          problem: "Knowledge stays isolated instead of compounding",
+          solution:
+            "Link related notes together to build a web of connected ideas that grows more valuable.",
+        },
+        {
+          problem: "Tools get slow as your knowledge base grows",
+          solution: "Lydie stays fast even with thousands of notes and extensive content.",
+        },
+        {
+          problem: "No structure or organization system",
+          solution:
+            "Use nested pages and links to create a flexible hierarchy that works for your thinking.",
+        },
+      ],
+    },
+    workflowExample: {
+      title: "Building your personal knowledge base",
+      description:
+        "See how knowledge workers use Lydie to create a personal knowledge base that compounds over time.",
+      steps: [
+        "Capture ideas, notes, and insights in a structured format as they come",
+        "Link related notes together to build connections between ideas",
+        "Use search to resurface relevant notes when working on new projects",
+        "Build concept pages that synthesize insights from multiple sources",
+        "Use AI to help structure, expand, and find connections in your knowledge base",
+      ],
+    },
+    differentiation: {
+      title: "How Lydie differs from typical knowledge base tools",
+      points: [
+        {
+          label: "Designed for connected thinking",
+          description:
+            "Internal linking is built-in, not an afterthought. Connect ideas naturally.",
+        },
+        {
+          label: "Fast with large knowledge bases",
+          description:
+            "Performance stays snappy even as your knowledge base grows to thousands of notes.",
+        },
+        {
+          label: "Flexible structure",
+          description:
+            "Nested pages and links give you freedom to organize how you think, not rigid folders.",
+        },
+        {
+          label: "AI for knowledge synthesis",
+          description: "Use AI to find connections, summarize concepts, and expand on your ideas.",
+        },
+      ],
+    },
   },
   {
     slug: "content-management-system",
     terms: {
+      label: "Content management system",
       act: "their content management system",
     },
     hero: {
       title: "Use Lydie as a headless content management system",
       description:
         "Use Lydie as a modern, API-first content management system for your blog, docs, or marketing site. Write in a fast writing workspace, then fetch and serve content through Lydie's REST API to any website or app.",
-    },
-    thumbnail: {
-      title: "Content management system",
-      description: "Use Lydie as a headless CMS with a simple REST API.",
     },
     meta: {
       title: "Headless CMS for Blogs, Docs & Websites",
@@ -312,7 +373,7 @@ export const useCaseDefinitions = [
       ],
     },
     workflowExample: {
-      title: "Example workflow: using Lydie as a headless CMS for a blog",
+      title: "Using Lydie as a headless CMS for a blog",
       description:
         "How teams use Lydie to power a blog or documentation site with a simple API-based setup.",
       steps: [
@@ -389,16 +450,13 @@ export const useCaseDefinitions = [
   {
     slug: "documentation",
     terms: {
+      label: "Documentation",
       act: "documentation",
     },
     hero: {
       title: "Documentation that actually gets written and maintained",
       description:
         "Documentation should be easy to create, quick to find, and painless to maintain. Lydie gives you a fast, structured workspace for writing product docs, API references, process documentation, and team knowledge bases.",
-    },
-    thumbnail: {
-      title: "Documentation",
-      description: "Write and maintain documentation that stays useful. Connected, searchable, and built to last.",
     },
     meta: {
       title: "Documentation Tool for Teams & Products",
@@ -412,19 +470,23 @@ export const useCaseDefinitions = [
       problems: [
         {
           problem: "Docs are scattered across tools and formats",
-          solution: "Everything lives in one searchable workspace with nested pages and clear structure.",
+          solution:
+            "Everything lives in one searchable workspace with nested pages and clear structure.",
         },
         {
           problem: "Documentation gets outdated quickly",
-          solution: "Fast, intuitive editing means updating docs feels effortless, not like a chore.",
+          solution:
+            "Fast, intuitive editing means updating docs feels effortless, not like a chore.",
         },
         {
           problem: "Hard to find the right information when needed",
-          solution: "Powerful search and internal linking make any document discoverable in seconds.",
+          solution:
+            "Powerful search and internal linking make any document discoverable in seconds.",
         },
         {
           problem: "No clear structure or organization",
-          solution: "Use nested pages and internal links to create logical, navigable documentation hierarchies.",
+          solution:
+            "Use nested pages and internal links to create logical, navigable documentation hierarchies.",
         },
         {
           problem: "Large docs become slow and unwieldy",
@@ -433,7 +495,7 @@ export const useCaseDefinitions = [
       ],
     },
     workflowExample: {
-      title: "Example workflow: building a product documentation system",
+      title: "Building a product documentation system",
       description:
         "See how teams use Lydie to create and maintain comprehensive documentation that stays current and useful.",
       steps: [
@@ -453,7 +515,8 @@ export const useCaseDefinitions = [
         },
         {
           label: "Internal linking",
-          description: "Connect docs naturally so users can follow their curiosity and find related content.",
+          description:
+            "Connect docs naturally so users can follow their curiosity and find related content.",
         },
         {
           label: "Structured hierarchy",
@@ -461,7 +524,8 @@ export const useCaseDefinitions = [
         },
         {
           label: "AI assistance",
-          description: "Draft new docs, expand outlines, and clarify complex sections with AI help.",
+          description:
+            "Draft new docs, expand outlines, and clarify complex sections with AI help.",
         },
       ],
     },

@@ -8,18 +8,18 @@ interface Props {
 const { logo = false } = Astro.props;
 ---
 
-<div
-  class:list={[
-    "flex items-center w-full max-w-5xl mx-auto bg-[#f9f9f9]",
-    logo && "gap-2",
-  ]}
-  role="presentation"
->
+<div class="flex items-center w-full max-w-5xl mx-auto" role="presentation">
   <hr
-    class="flex-1 border-0 h-px bg-linear-to-r from-transparent to-black/6 from-0% to-15%"
+    class="flex-1 border-0 h-px bg-linear-to-r from-transparent to-outline-subtle from-0% to-15%"
   />
-  {logo && <Logo className="text-outline-subtle size-4 shrink-0" />}
+  {
+    logo && (
+      <div class="rounded-full p-1.5 bg-[#f9f9f9]">
+        <Logo className="text-outline-subtle size-4 shrink-0" />
+      </div>
+    )
+  }
   <hr
-    class="flex-1 border-0 h-px bg-linear-to-r from-black/6 to-transparent from-85% to-100%"
+    class="flex-1 border-0 h-px bg-linear-to-r from-outline-subtle to-transparent from-85% to-100%"
   />
 </div>
