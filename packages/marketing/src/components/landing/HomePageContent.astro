@@ -92,7 +92,6 @@ const faqItems = [
   >
   </div>
 </div> -->
-<Divider logo />
 <Container className="pb-24 pt-16 hidden flex-col md:flex">
   <DemoWithSelector
     client:visible
@@ -106,22 +105,14 @@ const faqItems = [
   </DemoWithSelector>
 </Container>
 <Divider />
-<Container className="relative my-24 flex flex-col gap-y-24">
+<Container className="relative my-24 flex flex-col gap-y-48">
   <MultiDocumentChatSection />
-  <!-- <Divider logo />
-  <SpeedSection /> -->
+  <SpeedSection />
 </Container>
 
 <Divider />
-
-<Container>
-  <KeyboardSection client:visible />
-</Container>
-
+<KeyboardSection client:visible />
 <Divider />
-
-<!-- <DarkModeSection client:load /> -->
-
 <Container size="sm" className="py-16">
   <div class="md:px-12">
     <FAQ items={faqItems} client:load />

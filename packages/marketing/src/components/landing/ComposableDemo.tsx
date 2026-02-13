@@ -1,7 +1,9 @@
+import { BotRegular } from "@fluentui/react-icons";
 import { getColorById } from "@lydie/core/colors";
 import { CollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { AnimatePresence, motion } from "motion/react";
+import * as React from "react";
 
 import type { DemoState } from "./DemoStateSelector";
 
@@ -138,54 +140,238 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
 export { STATE_CONFIG, DEFAULT_STATE_ORDER };
 export type { DemoState };
 
-const DEMO_MESSAGES = [
-  {
-    id: "user-1",
-    type: "user",
-    content: "Help me make this itinerary more exciting and fun",
-  },
-  {
-    id: "assistant-1",
-    type: "assistant",
-    content: "Here are some ways to make your Japan trip more exciting:",
-  },
-  {
-    id: "assistant-2",
-    type: "assistant",
-    content:
-      "🎌 Add a traditional tea ceremony experience in Kyoto\n🍜 Include a ramen tour in Tokyo's best districts\n🗻 Plan a sunrise hike at Mt. Fuji\n🎮 Visit an arcade in Akihabara",
-  },
-];
-
 type MessageProps = {
   content: string;
 };
 
-function UserMessage({ content }: MessageProps) {
+function DemoUserMessage({ content }: MessageProps) {
   return (
-    <div className="flex self-end justify-end max-w-[85%]">
-      <div className="bg-white shadow-md ring ring-black/4 rounded-2xl rounded-tr-md px-3 py-2 text-sm text-gray-600 leading-relaxed">
+    <div className="flex justify-end">
+      <div className="bg-gray-100 max-w-[85%] rounded-2xl rounded-tr-md px-3 py-2 text-sm text-gray-600 leading-relaxed">
         {content}
       </div>
     </div>
   );
 }
 
-function AssistantMessage({ content }: MessageProps) {
+function DemoAssistantMessage({ content }: MessageProps) {
   return (
-    <div className="flex self-start justify-start max-w-[85%] flex-col gap-y-1.5">
-      <div className=" bg-white ring ring-black/4 shadow-md rounded-2xl rounded-tl-md px-3 py-2 text-sm text-gray-600 leading-relaxed">
-        {content}
+    <div className="flex self-start justify-start max-w-[95%] flex-col gap-y-1.5">
+      <div className="flex items-center gap-x-1.5">
+        <div className="rounded-full size-6 ring ring-outline-subtle flex items-center justify-center bg-white">
+          <BotRegular className="size-4 text-black/30" />
+        </div>
+        <span className="text-[0.8125rem] text-gray-500">Assistant</span>
+      </div>
+      <div className="flex self-start justify-start max-w-[95%] flex-col gap-y-1.5 pl-7">
+        <div className="bg-white ring ring-black/4 rounded-2xl rounded-tl-md px-3 py-2 text-sm text-gray-600 leading-relaxed shadow-sm">
+          {content}
+        </div>
       </div>
     </div>
+  );
+}
+
+type StatusItem = {
+  id: string;
+  loadingText: string;
+  completeText: string;
+};
+
+const STATUS_ITEMS: StatusItem[] = [
+  {
+    id: "search",
+    loadingText: 'Searching workspace for "Japan" and "itinerary"...',
+    completeText: 'Searched workspace for "Japan" and "itinerary"',
+  },
+  {
+    id: "read",
+    loadingText: "Reading documents...",
+    completeText: "Read 2 documents",
+  },
+  {
+    id: "found",
+    loadingText: "Finding related documents...",
+    completeText: "Found: Trip Master Plan",
+  },
+];
+
+function LoadingSpinner() {
+  return (
+    <motion.div
+      className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-500 rounded-full"
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+    />
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      className="w-3.5 h-3.5 text-green-600"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={3}
+    >
+      <motion.path
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  );
+}
+
+function StatusItemRow({
+  item,
+  isActive,
+  isComplete,
+  delay,
+}: {
+  item: StatusItem;
+  isActive: boolean;
+  isComplete: boolean;
+  delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -12 }}
+      animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0.4, x: 0 }}
+      transition={{
+        delay,
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
+      className="flex items-center gap-x-2"
+    >
+      <div className="w-4 h-4 flex items-center justify-center">
+        {isComplete ? (
+          <CheckIcon />
+        ) : isActive ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+        )}
+      </div>
+      <span className={`text-sm leading-relaxed ${isComplete ? "text-gray-600" : "text-gray-500"}`}>
+        {isComplete ? item.completeText : item.loadingText}
+      </span>
+    </motion.div>
   );
 }
 
 function AIAssistantSidebar() {
+  // Animation sequence timing (in seconds)
+  const SEQUENCE = {
+    userMessage: 0,
+    searchStart: 0.6,
+    searchComplete: 2.0,
+    readStart: 2.2,
+    readComplete: 4.0,
+    foundStart: 4.2,
+    foundComplete: 5.5,
+    assistantResponse: 6.0,
+    userFollowUp: 8.5,
+    assistantSuggestions: 10.0,
+    assistantConfirm: 13.0,
+  };
+
+  const [animationState, setAnimationState] = React.useState({
+    showUserMessage: false,
+    showSearch: false,
+    searchComplete: false,
+    showRead: false,
+    readComplete: false,
+    showFound: false,
+    foundComplete: false,
+    showAssistantResponse: false,
+    showUserFollowUp: false,
+    showAssistantSuggestions: false,
+    showAssistantConfirm: false,
+  });
+
+  React.useEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showUserMessage: true })),
+        SEQUENCE.userMessage * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showSearch: true })),
+        SEQUENCE.searchStart * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, searchComplete: true })),
+        SEQUENCE.searchComplete * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showRead: true })),
+        SEQUENCE.readStart * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, readComplete: true })),
+        SEQUENCE.readComplete * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showFound: true })),
+        SEQUENCE.foundStart * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, foundComplete: true })),
+        SEQUENCE.foundComplete * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showAssistantResponse: true })),
+        SEQUENCE.assistantResponse * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showUserFollowUp: true })),
+        SEQUENCE.userFollowUp * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showAssistantSuggestions: true })),
+        SEQUENCE.assistantSuggestions * 1000,
+      ),
+    );
+    timers.push(
+      setTimeout(
+        () => setAnimationState((s) => ({ ...s, showAssistantConfirm: true })),
+        SEQUENCE.assistantConfirm * 1000,
+      ),
+    );
+
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 30, width: 0 }}
-      animate={{ opacity: 1, x: 0, width: 320 }}
+      animate={{ opacity: 1, x: 0, width: 340 }}
       exit={{ opacity: 0, x: 30, width: 0 }}
       transition={{
         type: "spring",
@@ -193,18 +379,72 @@ function AIAssistantSidebar() {
         damping: 35,
         opacity: { duration: 0.2 },
       }}
-      className="shrink-0 flex flex-col overflow-hidden"
+      className="shrink-0 flex flex-col overflow-hidden px-3 py-4"
     >
-      <div className="flex flex-col gap-y-1.5">
-        {DEMO_MESSAGES.map((message) => (
-          <div key={message.id}>
-            {message.type === "user" ? (
-              <UserMessage content={message.content} />
-            ) : (
-              <AssistantMessage content={message.content} />
-            )}
-          </div>
-        ))}
+      <div className="flex flex-col gap-y-5">
+        {/* User Message 1 */}
+        <AnimatePresence>
+          {animationState.showUserMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <DemoUserMessage content="How can we make this itinerary better?" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Status Items */}
+        <AnimatePresence>
+          {(animationState.showSearch || animationState.showRead || animationState.showFound) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col gap-y-2.5 pl-2"
+            >
+              {STATUS_ITEMS.map((item) => {
+                const isActive =
+                  (item.id === "search" && animationState.showSearch) ||
+                  (item.id === "read" && animationState.showRead) ||
+                  (item.id === "found" && animationState.showFound);
+                const isComplete =
+                  (item.id === "search" && animationState.searchComplete) ||
+                  (item.id === "read" && animationState.readComplete) ||
+                  (item.id === "found" && animationState.foundComplete);
+                const shouldShow = isActive || isComplete;
+
+                return (
+                  shouldShow && (
+                    <StatusItemRow
+                      key={item.id}
+                      item={item}
+                      isActive={isActive && !isComplete}
+                      isComplete={isComplete}
+                      delay={0}
+                    />
+                  )
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Assistant Response */}
+        <AnimatePresence>
+          {animationState.showAssistantResponse && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <DemoAssistantMessage
+                content="Based on your Trip Master Plan and other documents, I suggest we add a traditional tea ceremony in Kyoto and include a day trip to Nara to see the deer park. These would complement your existing Tokyo and Osaka plans nicely.
+              Would you like me to add these suggestions to your itinerary?"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
@@ -342,13 +582,52 @@ function LinkingOverlay() {
       className="absolute left-1/2 bottom-[calc(100%+0.75rem)] -translate-x-1/2 z-30 editor-content-reset"
     >
       <div className="bg-white rounded-xl shadow-legit ring ring-black/4 overflow-hidden w-[240px]">
-        <div className="flex flex-col gap-3 p-2">
-          <div className="flex flex-col gap-y-0.5 w-full p-1 rounded-lg ring ring-black/4 bg-gray-100">
-            <div className="h-3 w-[85%] rounded-md bg-black/5"></div>
-            <div className="h-3 w-[90%] rounded-md bg-black/5"></div>
-            <div className="h-3 w-[75%] rounded-md bg-black/5"></div>
-            <div className="h-3 w-[90%] rounded-md bg-black/5"></div>
-            <div className="h-3 w-[80%] rounded-md bg-black/5"></div>
+        <div className="flex flex-col gap-2 p-2">
+          <div className="border border-black/6 h-20 bg-gray-50 rounded-lg overflow-hidden relative">
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.1 }}
+              className="bg-white shadow-legit rounded-lg h-32 absolute inset-x-8 top-4 p-2 flex flex-col gap-y-1"
+            >
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "40%" }}
+                transition={{ delay: 0.2, duration: 1, ease: [0.17, 0.67, 0.33, 1] }}
+                exit={{ width: 0 }}
+                className="h-2 bg-black/5 rounded-sm"
+              />
+              <div className="h-px w-full bg-gray-100"></div>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "70%" }}
+                exit={{ width: 0 }}
+                transition={{ delay: 0.25, duration: 1, ease: [0.17, 0.67, 0.33, 1] }}
+                className="h-2 bg-black/5 rounded-sm"
+              />
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "90%" }}
+                transition={{ delay: 0.3, duration: 1, ease: [0.17, 0.67, 0.33, 1] }}
+                exit={{ width: 0 }}
+                className="h-2 bg-black/5 rounded-sm"
+              />
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "60%" }}
+                transition={{ delay: 0.35, duration: 1, ease: [0.17, 0.67, 0.33, 1] }}
+                exit={{ width: 0 }}
+                className="h-2 bg-black/5 rounded-sm"
+              />
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "90%" }}
+                transition={{ delay: 0.4, duration: 1, ease: [0.17, 0.67, 0.33, 1] }}
+                exit={{ width: 0 }}
+                className="h-2 bg-black/5 rounded-sm"
+              />
+            </motion.div>
           </div>
           <span className="text-sm font-medium text-gray-900">Trip Master Plan</span>
         </div>
@@ -394,13 +673,7 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
         </p>
 
         <div className="relative">
-          <p
-            className={`text-gray-700 leading-relaxed mb-4 ${
-              currentState === "assistant"
-                ? "rounded-sm bg-blue-100/50 ring-2 ring-blue-400/40 px-2 py-1"
-                : ""
-            }`}
-          >
+          <p className="text-gray-700 leading-relaxed mb-4">
             For must-see spots and hidden gems, we&apos;re building off the
             {showCollaboration && (
               <motion.span
@@ -436,12 +709,12 @@ function DocumentContent({ currentState }: { currentState: DemoState }) {
               className="relative inline"
               animate={{
                 backgroundColor:
-                  currentState === "linking" ? "rgba(59, 130, 246, 0.12)" : "transparent",
+                  currentState === "linking" ? "rgba(20, 20, 20, 0.05)" : "transparent",
               }}
               transition={{ duration: 0.2 }}
             >
               <span
-                className={`text-sm font-medium decoration-2 ${currentState === "linking" ? "text-blue-600 underline underline-offset-2" : "text-gray-900"}`}
+                className={`text-sm font-medium decoration-2 ${currentState === "linking" ? "text-gray-900" : "text-gray-900"}`}
               >
                 Trip Master Plan
               </span>

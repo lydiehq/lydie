@@ -24,7 +24,8 @@ export function HeroNew({
   imageHeight,
 }: Props) {
   return (
-    <div className="mask-b-from-75% mask-b-to-95%">
+    // <div className="mask-b-from-75% mask-b-to-95%">
+    <div>
       <Container className="flex relative flex-col md:flex-row md:h-[840px] py-8 md:py-0">
         <div className="flex justify-center text-center items-center md:items-start md:text-left size-full flex-col md:max-w-[350px] gap-y-4 md:-mt-20 ">
           <div className="relative self-start md:block hidden">

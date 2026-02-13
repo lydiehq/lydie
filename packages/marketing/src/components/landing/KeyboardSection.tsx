@@ -161,7 +161,7 @@ export function KeyboardSection() {
   const isKeyPressed = (key: string) => pressedKeys.has(key);
 
   return (
-    <div className="py-16 flex flex-col items-center gap-y-6">
+    <div className="py-48 flex flex-col items-center gap-y-6 relative z-10">
       <SectionHeader
         eyebrow="Keyboard shortcuts"
         title="Everything at your fingertips"
@@ -172,7 +172,7 @@ export function KeyboardSection() {
       <div className="relative w-full md:w-[1200px] h-[400px] flex flex-col md:block items-center gap-6">
         {/* Command Menu - responsive positioning */}
         <div className="md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 px-4 md:px-0 w-full md:w-auto z-0">
-          <CastShadow className="w-full" strength={0.2}>
+          <CastShadow className="w-full" strength={0.18}>
             <div className="size-full relative">
               <GradientOutline />
               <div className="rounded-xl absolute inset-0 bg-black/20" />
@@ -187,25 +187,12 @@ export function KeyboardSection() {
           </CastShadow>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-24 -bottom-[40px]">
-          <Key
-            label="⌘"
-            width="cmd"
-            isHighlighted={true}
-            rotate={-15}
-            dataKey="meta"
-            isPressed={isKeyPressed("meta")}
-          />
+        <div className="absolute left-1/2 -translate-x-24 -top-[240px]">
+          <Key label="⌘" width="cmd" rotate={-15} dataKey="meta" isPressed={isKeyPressed("meta")} />
         </div>
 
-        <div className="absolute left-1/2 -bottom-[60px]">
-          <Key
-            label="K"
-            isHighlighted={true}
-            rotate={9}
-            dataKey="k"
-            isPressed={isKeyPressed("k")}
-          />
+        <div className="absolute left-1/2 -top-[220px]">
+          <Key label="K" rotate={9} dataKey="k" isPressed={isKeyPressed("k")} />
         </div>
 
         {/* L - positioned top-left */}
