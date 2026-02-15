@@ -140,6 +140,7 @@
         "@tiptap/react": "catalog:",
         "@tiptap/suggestion": "^3.19.0",
         "@tiptap/y-tiptap": "catalog:",
+        "linkifyjs": "^4.3.2",
         "lowlight": "^3.3.0",
         "yjs": "catalog:",
       },

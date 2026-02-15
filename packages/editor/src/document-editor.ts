@@ -58,7 +58,8 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     CharacterCount,
     E.Link.configure({
       openOnClick: false,
-      protocols: ["internal"],
+      // "internal" protocol is registered at module load time in
+      protocols: [],
     }),
     E.KeyboardShortcutExtension,
     E.DocumentComponent.configure(options?.documentComponent),

@@ -54,12 +54,7 @@ type Props = {
   isOpenInTabs?: boolean;
 };
 
-export const DocumentTreeItem = memo(function DocumentTreeItem({
-  item,
-  renderItem,
-  isCurrent,
-  isOpenInTabs,
-}: Props) {
+export function DocumentTreeItem({ item, renderItem, isCurrent, isOpenInTabs }: Props) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -215,7 +210,7 @@ export const DocumentTreeItem = memo(function DocumentTreeItem({
       {item.children && <Collection items={item.children}>{renderItem}</Collection>}
     </TreeItem>
   );
-});
+}
 
 function getDisplayName(name: string): string {
   return name.trim() || "Untitled document";

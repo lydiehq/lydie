@@ -34,7 +34,9 @@ export function createTestEditor(content = "", extensions: Extensions = []): Edi
       }),
       Link.configure({
         openOnClick: false,
-        protocols: ["internal"],
+        // "internal" protocol is registered at module load time in
+        // @lydie/editor/extensions/link.ts
+        protocols: [],
       }),
       ...extensions,
     ],
