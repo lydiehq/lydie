@@ -3,17 +3,15 @@ import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { useNavigate } from "@tanstack/react-router";
-import { cva } from "cva";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
 import React from "react";
-import { Tab, TabList, Tabs, type Key } from "react-aria-components";
 import {
-  Tooltip as AriaTooltip,
-  type TooltipProps as AriaTooltipProps,
-  TooltipTrigger,
-  OverlayArrow,
-  composeRenderProps,
+  GridList,
+  GridListItem,
+  type Key,
+  useDragAndDrop,
+  DropIndicator,
 } from "react-aria-components";
 
 import type { TabMode } from "@/atoms/tabs";
@@ -25,6 +23,8 @@ import {
   activeTabIdAtom,
   makeTabPersistentAtom,
   syncDocumentTabAtom,
+  insertTabAtPositionAtom,
+  reorderTabsAtom,
 } from "@/atoms/tabs";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 
@@ -38,8 +38,110 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
   const setActiveTab = useSetAtom(activateDocumentTabAtom);
   const closeTab = useSetAtom(closeDocumentTabAtom);
   const makePersistent = useSetAtom(makeTabPersistentAtom);
+  const insertTabAtPosition = useSetAtom(insertTabAtPositionAtom);
+  const reorderTabs = useSetAtom(reorderTabsAtom);
 
   const navigate = useNavigate();
+
+  // Set up drag and drop
+  const { dragAndDropHooks } = useDragAndDrop({
+    // Allow dragging tabs to reorder
+    getItems(keys) {
+      return [...keys].map((key) => {
+        const tab = tabs.find((t) => t.documentId === key);
+        return {
+          "lydie-tab": JSON.stringify({ id: key, title: tab?.title || "Untitled" }),
+          "text/plain": tab?.title || "Untitled",
+        };
+      });
+    },
+
+    // Accept documents from the tree
+    acceptedDragTypes: ["lydie-item"],
+    getDropOperation: () => "copy",
+
+    // Handle external documents dropped between tabs
+    async onInsert(e) {
+      const items = await Promise.all(
+        e.items
+          .filter((item) => item.kind === "text")
+          .map(async (item) => {
+            const text = await (item as any).getText("lydie-item");
+            return JSON.parse(text) as { id: string; name: string; type: string };
+          }),
+      );
+
+      for (const doc of items) {
+        if (doc.type === "document") {
+          // Calculate position from target
+          const targetKey = e.target.key as string;
+          const targetIndex = tabs.findIndex((t) => t.documentId === targetKey);
+          let position: number;
+
+          if (e.target.dropPosition === "before") {
+            position = targetIndex;
+          } else if (e.target.dropPosition === "after") {
+            position = targetIndex + 1;
+          } else {
+            position = tabs.length;
+          }
+
+          insertTabAtPosition({ documentId: doc.id, title: doc.name, position });
+
+          navigate({
+            to: "/w/$organizationSlug/$id",
+            params: { organizationSlug, id: doc.id },
+          });
+        }
+      }
+    },
+
+    // Handle reordering tabs within the list
+    onReorder(e) {
+      const targetKey = e.target.key as string;
+      const targetIndex = tabs.findIndex((t) => t.documentId === targetKey);
+      const draggedKeys = [...e.keys].map((k) => String(k));
+
+      if (e.target.dropPosition === "before") {
+        reorderTabs({ draggedIds: draggedKeys, targetIndex });
+      } else if (e.target.dropPosition === "after") {
+        reorderTabs({ draggedIds: draggedKeys, targetIndex: targetIndex + 1 });
+      }
+    },
+
+    // Handle documents dropped on the root (append to end)
+    async onRootDrop(e) {
+      const items = await Promise.all(
+        e.items
+          .filter((item) => item.kind === "text")
+          .map(async (item) => {
+            const text = await (item as any).getText("lydie-item");
+            return JSON.parse(text) as { id: string; name: string; type: string };
+          }),
+      );
+
+      for (const doc of items) {
+        if (doc.type === "document") {
+          insertTabAtPosition({ documentId: doc.id, title: doc.name, position: tabs.length });
+
+          navigate({
+            to: "/w/$organizationSlug/$id",
+            params: { organizationSlug, id: doc.id },
+          });
+        }
+      }
+    },
+
+    // Render custom drop indicator
+    renderDropIndicator(target) {
+      return (
+        <DropIndicator
+          target={target}
+          className="w-0.5 h-[28px] bg-blue-500 mx-0.5 animate-pulse self-center"
+        />
+      );
+    },
+  });
 
   const handleClose = useCallback(
     (e: React.MouseEvent, documentId: string) => {
@@ -49,10 +151,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
       if (nextActiveId) {
         navigate({
           to: "/w/$organizationSlug/$id",
-          params: {
-            organizationSlug,
-            id: nextActiveId,
-          },
+          params: { organizationSlug, id: nextActiveId },
         });
       } else {
         navigate({
@@ -79,10 +178,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
       setActiveTab(documentId);
       navigate({
         to: "/w/$organizationSlug/$id",
-        params: {
-          organizationSlug,
-          id: documentId,
-        },
+        params: { organizationSlug, id: documentId },
       });
     },
     [navigate, organizationSlug, setActiveTab],
@@ -96,57 +192,57 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
 
   return (
     <div className="flex items-center pt-1.5 min-w-0 pr-6">
-      <Tabs
-        selectedKey={selectedKey}
-        onSelectionChange={handleSelectionChange}
-        className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide"
+      <GridList
+        aria-label="Open documents"
+        selectionMode="single"
+        selectedKeys={selectedKey ? new Set([selectedKey]) : new Set()}
+        onSelectionChange={(keys) => {
+          const key = [...keys][0];
+          if (key) handleSelectionChange(key);
+        }}
+        className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide gap-px"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
         }}
+        items={tabs}
+        dragAndDropHooks={dragAndDropHooks}
       >
-        <TabList aria-label="Open documents" className="flex shrink-0 gap-px">
-          {tabs.map((tab) => (
-            <TooltipTrigger key={tab.documentId} delay={800} closeDelay={200}>
-              <Tab
-                id={tab.documentId}
-                onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}
-                className={(renderProps) =>
-                  `group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-2 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
-                    renderProps.isSelected
-                      ? "bg-black/5"
-                      : "bg-gray-50 text-gray-600 hover:bg-black/3"
-                  } ${tab.mode === "preview" ? "italic" : ""}`
-                }
-              >
-                {(renderProps) => (
-                  <>
-                    <DocumentThumbnailIcon
-                      className="size-4 shrink-0"
-                      active={renderProps.isSelected}
-                    />
-                    <span className="flex-1 truncate text-sm font-medium text-gray-700 pr-5">
-                      {tab.title || "Untitled"}
-                    </span>
-                    {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
-                    <button
-                      type="button"
-                      onClick={(e) => handleClose(e, tab.documentId)}
-                      aria-label={`Close ${tab.title || "Untitled"}`}
-                      className="absolute right-1 opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-1 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
-                    >
-                      <Dismiss12Filled
-                        className={sidebarItemIconStyles({ className: "size-2.5" })}
-                      />
-                    </button>
-                  </>
-                )}
-              </Tab>
-              <DocumentTooltip>{tab.title || "Untitled"}</DocumentTooltip>
-            </TooltipTrigger>
-          ))}
-        </TabList>
-      </Tabs>
+        {(tab) => (
+          <GridListItem
+            key={tab.documentId}
+            id={tab.documentId}
+            textValue={tab.title || "Untitled"}
+            className={({ isSelected, isDropTarget }) =>
+              `group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-2 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
+                isSelected ? "bg-black/5" : "bg-gray-50 text-gray-600 hover:bg-black/3"
+              } ${tab.mode === "preview" ? "italic" : ""} ${
+                isDropTarget ? "ring-2 ring-blue-500 ring-inset" : ""
+              }`
+            }
+            onAction={() => handleSelectionChange(tab.documentId)}
+            onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}
+          >
+            {({ isSelected }) => (
+              <>
+                <DocumentThumbnailIcon className="size-4 shrink-0" active={isSelected} size="sm" />
+                <span className="flex-1 truncate text-sm font-medium text-gray-700 pr-5">
+                  {tab.title || "Untitled"}
+                </span>
+                {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
+                <button
+                  type="button"
+                  onClick={(e) => handleClose(e, tab.documentId)}
+                  aria-label={`Close ${tab.title || "Untitled"}`}
+                  className="absolute right-1 opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-1 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
+                >
+                  <Dismiss12Filled className={sidebarItemIconStyles({ className: "size-2.5" })} />
+                </button>
+              </>
+            )}
+          </GridListItem>
+        )}
+      </GridList>
       <Button
         intent="ghost"
         rounded
@@ -192,34 +288,4 @@ export function useDocumentTabSync(
       makePersistent(documentId);
     }
   }, [documentId, makePersistent]);
-}
-
-export interface TooltipProps extends Omit<AriaTooltipProps, "children"> {
-  children: React.ReactNode;
-  hotkeys?: string[];
-}
-
-const tooltipStyles = cva({
-  base: "group bg-black/85 text-white text-[12px] rounded-sm will-change-transform px-2 py-0.5",
-  variants: {
-    isEntering: {
-      true: "animate-in fade-in placement-bottom:slide-in-from-top-1 placement-top:slide-in-from-bottom-1 placement-left:slide-in-from-right-1 placement-right:slide-in-from-left-1 ease-out duration-75",
-    },
-  },
-});
-
-function DocumentTooltip({ children }: AriaTooltipProps) {
-  return (
-    <AriaTooltip
-      placement="bottom"
-      offset={8}
-      className={composeRenderProps("", (className, renderProps) =>
-        tooltipStyles({ ...renderProps, className }),
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <span>{children as string}</span>
-      </div>
-    </AriaTooltip>
-  );
 }

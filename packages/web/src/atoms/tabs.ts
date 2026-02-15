@@ -241,3 +241,75 @@ export const openBackgroundTabAtom = atom(
     }
   },
 );
+
+// Action: Insert a tab at a specific position (used for drag and drop)
+export const insertTabAtPositionAtom = atom(
+  null,
+  (
+    _get,
+    set,
+    {
+      documentId,
+      title,
+      position,
+    }: { documentId: string; title: string; position: number },
+  ) => {
+    const currentTabs = _get(storedTabsAtom);
+    const existingIndex = findTabIndex(currentTabs, documentId);
+
+    let newTabs: DocumentTab[];
+
+    if (existingIndex !== -1) {
+      // Tab exists - move it to the new position and make it persistent
+      const tab = { ...currentTabs[existingIndex], mode: "persistent" as const };
+      const withoutExisting = currentTabs.filter((_, i) => i !== existingIndex);
+      // Adjust position if removing existing tab shifted indices
+      const adjustedPosition = existingIndex < position ? position - 1 : position;
+      newTabs = [
+        ...withoutExisting.slice(0, adjustedPosition),
+        tab,
+        ...withoutExisting.slice(adjustedPosition),
+      ];
+    } else {
+      // Insert new tab at position
+      const newTab: DocumentTab = { documentId, title, mode: "persistent" as const };
+      newTabs = [
+        ...currentTabs.slice(0, position),
+        newTab,
+        ...currentTabs.slice(position),
+      ];
+
+      // Handle max tabs limit
+      if (newTabs.length > MAX_TABS) {
+        // Remove oldest preview tab, or oldest persistent if no previews
+        const oldestPreviewIndex = newTabs.findIndex((t) => t.mode === "preview");
+        const removeIndex = oldestPreviewIndex !== -1 ? oldestPreviewIndex : 0;
+        newTabs = newTabs.filter((_, i) => i !== removeIndex);
+      }
+    }
+
+    set(storedTabsAtom, newTabs);
+    set(storedActiveTabIdAtom, documentId);
+  },
+);
+
+// Action: Reorder tabs (used for drag and drop reordering)
+export const reorderTabsAtom = atom(
+  null,
+  (_get, set, { draggedIds, targetIndex }: { draggedIds: string[]; targetIndex: number }) => {
+    const currentTabs = _get(storedTabsAtom);
+    
+    // Remove dragged tabs from current positions
+    const draggedTabs = currentTabs.filter((t) => draggedIds.includes(t.documentId));
+    const remainingTabs = currentTabs.filter((t) => !draggedIds.includes(t.documentId));
+    
+    // Insert dragged tabs at target position
+    const newTabs = [
+      ...remainingTabs.slice(0, targetIndex),
+      ...draggedTabs,
+      ...remainingTabs.slice(targetIndex),
+    ];
+    
+    set(storedTabsAtom, newTabs);
+  },
+);

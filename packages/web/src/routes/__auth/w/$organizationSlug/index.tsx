@@ -1,5 +1,6 @@
 import { Document16Regular, Star16Filled } from "@fluentui/react-icons";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -28,7 +29,7 @@ function DocumentItem({
       params={{ organizationSlug, id: doc.id }}
       className="flex items-center gap-2 h-10 px-2 rounded-lg hover:bg-black/3 transition-colors group"
     >
-      <DocumentIcon className="size-4 icon-muted group-hover:text-gray-600" />
+      <DocumentThumbnailIcon size="lg" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">
           {doc.title || "Untitled document"}

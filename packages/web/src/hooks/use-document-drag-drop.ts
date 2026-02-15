@@ -193,6 +193,20 @@ export function useDocumentDragDrop({ allDocuments }: UseDocumentDragDropOptions
         }));
     },
 
+    onDragStart(e) {
+      // Store dragged item info for external drop targets (like tab bar)
+      const firstKey = [...e.keys][0];
+      const item = createItemFromId(firstKey as string);
+      if (item) {
+        (window as any).__dragData = { docId: item.id, docName: item.name };
+      }
+    },
+
+    onDragEnd() {
+      // Clean up global drag data
+      (window as any).__dragData = null;
+    },
+
     acceptedDragTypes: ["lydie-item"],
     getDropOperation: () => "move",
 
@@ -390,8 +404,6 @@ export function useDocumentDragDrop({ allDocuments }: UseDocumentDragDropOptions
         moveDocument(item.id, null, null, item.published);
       }
     },
-
-    onDragEnd(e) {},
   });
 
   return { dragAndDropHooks };

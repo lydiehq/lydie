@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@fluentui/react-icons": "^2.0.319",
+    "@lydie/core": "workspace:*",
     "@tiptap/core": "catalog:",
     "@tiptap/react": "catalog:",
     "clsx": "^2.1.1",

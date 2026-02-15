@@ -1,12 +1,14 @@
+import { COLORS } from "@lydie/core/colors";
 import clsx from "clsx";
 import { type VariantProps, cva } from "cva";
 
 const wrapperStyles = cva({
-  base: "shadow-surface bg-white flex flex-col z-1 relative",
+  base: "shadow-document-icon bg-white flex flex-col z-1 relative justify-center",
   variants: {
     size: {
-      md: "h-4 w-3.5 rounded-[3px] p-0.5 gap-px",
-      lg: "h-6 w-6 rounded-[4px] p-1 gap-0.5",
+      sm: "aspect-[12/14] w-3 rounded-[2.5px] p-[2px] gap-px",
+      md: "aspect-[12/15] w-3.5 rounded-[3px] p-[2px] gap-px",
+      lg: "aspect-[12/15] w-5 rounded-[4px] p-1 gap-0.5",
     },
   },
   defaultVariants: {
@@ -15,33 +17,15 @@ const wrapperStyles = cva({
 });
 
 const barStyles = cva({
-  base: "transition-all duration-200 rounded-xs",
+  base: "transition-all duration-200 rounded-xs shrink-0 h-0.5",
   variants: {
-    size: {
-      md: "h-0.5",
-      lg: "h-1",
-    },
     active: {
-      true: "bg-black/40",
-      false: "bg-black/20",
+      true: "bg-black/30",
+      false: "bg-black/15",
     },
   },
   defaultVariants: {
-    size: "md",
     active: false,
-  },
-});
-
-const iconStyles = cva({
-  base: "text-black/35 absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2",
-  variants: {
-    size: {
-      md: "size-[11px]",
-      lg: "size-4",
-    },
-  },
-  defaultVariants: {
-    size: "md",
   },
 });
 
@@ -53,9 +37,20 @@ type Props = DocumentThumbnailIconVariants & {
   showFoldDecoration?: boolean;
 };
 
-const bars = [40, 80, 70, 90, 60];
+const bars = [80, 70, 90, 60];
 
-const COLOR = "#A8B8E8";
+const COLOR = COLORS[0].value;
+
+/** Darken a hex color by a factor 0–1 (e.g. 0.2 = 20% darker). */
+function darkenHex(hex: string, amount: number): string {
+  const n = hex.replace("#", "");
+  const r = Math.max(0, Math.round(parseInt(n.slice(0, 2), 16) * (1 - amount)));
+  const g = Math.max(0, Math.round(parseInt(n.slice(2, 4), 16) * (1 - amount)));
+  const b = Math.max(0, Math.round(parseInt(n.slice(4, 6), 16) * (1 - amount)));
+  return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+const FOLD_SHADOW_AMOUNT = 0.2;
 
 export function DocumentThumbnailIcon({
   className,
@@ -64,18 +59,19 @@ export function DocumentThumbnailIcon({
   size = "md",
 }: Props) {
   if (showFoldDecoration) {
+    const darker = darkenHex(COLOR, FOLD_SHADOW_AMOUNT);
     return (
       <div className={clsx("relative", className)}>
         <div
-          className="absolute -top-0.5 w-2.5 left-0 h-0.5 rounded-t-lg"
-          style={{ backgroundColor: COLOR }}
+          className="absolute -top-0.5 w-2 left-0 h-0.5 rounded-t-lg"
+          style={{ backgroundColor: darker }}
         />
         <div
           className="h-[12px] w-[13px] rounded-b-[3px] rounded-r-[1.5px]"
-          style={{ backgroundColor: COLOR }}
+          style={{ backgroundColor: darker }}
         ></div>
         <div
-          className="absolute border border-[#f8f8f8] left-0 -right-[3px] bottom-0 top-[2px] -skew-x-10 rounded-[3px]"
+          className="absolute ring border border-black/10 ring-[#f8f8f8] left-px -right-[2px] bottom-0 top-[3px] -skew-x-14 rounded-[2px]"
           style={{ backgroundColor: COLOR }}
         ></div>
       </div>
@@ -86,7 +82,7 @@ export function DocumentThumbnailIcon({
     <div className={clsx("relative", className)}>
       <div className={wrapperStyles({ size })}>
         {bars.map((bar) => (
-          <div key={bar} className={barStyles({ size, active })} style={{ width: `${bar}%` }} />
+          <div key={bar} className={barStyles({ active })} style={{ width: `${bar}%` }} />
         ))}
       </div>
     </div>
