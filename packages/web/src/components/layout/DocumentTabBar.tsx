@@ -1,9 +1,10 @@
-import { DismissRegular } from "@fluentui/react-icons";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { Dismiss12Filled } from "@fluentui/react-icons";
+import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect } from "react";
-import { Tab, TabList, Tabs, TabPanels, type Key } from "react-aria-components";
+import { Button, Tab, TabList, Tabs, TabPanels, type Key } from "react-aria-components";
 
 import {
   activateDocumentTabAtom,
@@ -90,26 +91,18 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                 } ${tab.isPreview ? "italic" : ""}`
               }
             >
-              <DocumentIcon className="size-4 shrink-0 icon-muted" />
+              <DocumentThumbnailIcon className="size-4 shrink-0" />
               <span className="flex-1 truncate text-sm font-medium text-gray-700">
                 {tab.title || "Untitled"}
               </span>
               {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
-              <span
-                onClick={() => handleClose(tab.documentId)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    handleClose(tab.documentId);
-                  }
-                }}
-                className="opacity-0 group-selected:opacity-100 p-0.5 rounded hover:bg-gray-200 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer"
-                // oxlint-disable-next-line jsx_a11y/prefer-tag-over-role
-                role="button"
-                tabIndex={0}
+              <Button
+                onPress={() => handleClose(tab.documentId)}
                 aria-label={`Close ${tab.title || "Untitled"}`}
+                className="opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-0.5 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
               >
-                <DismissRegular className="size-3.5 text-gray-500" />
-              </span>
+                <Dismiss12Filled className={sidebarItemIconStyles({ className: "size-3" })} />
+              </Button>
             </Tab>
           ))}
         </TabList>

@@ -1,5 +1,7 @@
 import { atom } from "jotai";
 
+import { storedActiveTabIdAtom, storedDocumentTabsAtom } from "./tabs-storage";
+
 export interface DocumentTab {
   documentId: string;
   title: string;
@@ -159,17 +161,17 @@ class TabManager {
 // Singleton instance
 export const tabManager = new TabManager();
 
-// Jotai atoms for reactive access
-export const documentTabsAtom = atom<DocumentTab[]>([]);
-export const activeTabIdAtom = atom<string | null>(null);
+// Jotai atoms for reactive access (backed by localStorage)
+export const documentTabsAtom = atom<DocumentTab[]>((get) => get(storedDocumentTabsAtom));
+export const activeTabIdAtom = atom<string | null>((get) => get(storedActiveTabIdAtom));
 
 // Action atoms for modifying tabs
 export const openDocumentTabAtom = atom(
   null,
   (_get, set, { documentId, title }: { documentId: string; title: string }) => {
     tabManager.openTab(documentId, title);
-    set(documentTabsAtom, tabManager.getTabs());
-    set(activeTabIdAtom, tabManager.getActiveTabId());
+    set(storedDocumentTabsAtom, tabManager.getTabs());
+    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
   },
 );
 
@@ -177,8 +179,8 @@ export const closeDocumentTabAtom = atom(
   null,
   (_get, set, documentId: string) => {
     const nextActiveId = tabManager.closeTab(documentId);
-    set(documentTabsAtom, tabManager.getTabs());
-    set(activeTabIdAtom, tabManager.getActiveTabId());
+    set(storedDocumentTabsAtom, tabManager.getTabs());
+    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
     return nextActiveId;
   },
 );
@@ -187,7 +189,7 @@ export const activateDocumentTabAtom = atom(
   null,
   (_get, set, documentId: string) => {
     tabManager.activateTab(documentId);
-    set(activeTabIdAtom, tabManager.getActiveTabId());
+    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
   },
 );
 
@@ -195,7 +197,7 @@ export const markTabDirtyAtom = atom(
   null,
   (_get, set, { documentId, isDirty }: { documentId: string; isDirty: boolean }) => {
     tabManager.markDirty(documentId, isDirty);
-    set(documentTabsAtom, tabManager.getTabs());
+    set(storedDocumentTabsAtom, tabManager.getTabs());
   },
 );
 
@@ -203,7 +205,7 @@ export const updateTabTitleAtom = atom(
   null,
   (_get, set, { documentId, title }: { documentId: string; title: string }) => {
     tabManager.updateTitle(documentId, title);
-    set(documentTabsAtom, tabManager.getTabs());
+    set(storedDocumentTabsAtom, tabManager.getTabs());
   },
 );
 
@@ -211,7 +213,7 @@ export const replacePreviewTabAtom = atom(
   null,
   (_get, set, { documentId, title }: { documentId: string; title: string }) => {
     tabManager.replacePreviewTab(documentId, title);
-    set(documentTabsAtom, tabManager.getTabs());
-    set(activeTabIdAtom, tabManager.getActiveTabId());
+    set(storedDocumentTabsAtom, tabManager.getTabs());
+    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
   },
 );

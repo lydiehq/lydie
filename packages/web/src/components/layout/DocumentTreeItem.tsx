@@ -4,7 +4,6 @@ import {
   Add12Regular,
   ArrowClockwiseRegular,
   ArrowRightRegular,
-  CollectionsEmpty16Filled,
   CubeRegular,
   DocumentHeart24Filled,
   FolderSyncRegular,
@@ -16,13 +15,15 @@ import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { queries } from "@lydie/zero/queries";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { useAtomValue } from "jotai";
 import { type ReactElement, useState } from "react";
 import { Button, MenuTrigger, TreeItem, TreeItemContent } from "react-aria-components";
 import { Collection } from "react-aria-components";
 
+import { documentTabsAtom } from "@/atoms/tabs";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
@@ -58,6 +59,9 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
   const { id: currentDocId } = useParams({ strict: false });
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const openTabs = useAtomValue(documentTabsAtom);
+  const isOpenInTabs = item.type === "document" && openTabs.some((t) => t.documentId === item.id);
 
   const isCurrentDocument = item.type === "document" && currentDocId === item.id;
   const isCurrent = isCurrentDocument;
@@ -150,6 +154,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                   hasChildren={item.children !== undefined && item.children.length > 0}
                   isMenuOpen={isMenuOpen}
                   isFavorited={item.isFavorited ?? false}
+                  inTabRegistry={isOpenInTabs}
                 />
               )}
 
@@ -286,44 +291,34 @@ function DocumentTreeItemIcon({
   hasChildren,
   isMenuOpen,
   isFavorited,
+  inTabRegistry,
 }: {
   isExpanded: boolean;
   hasChildren: boolean;
   isMenuOpen: boolean;
   isFavorited: boolean;
+  inTabRegistry?: boolean;
 }) {
   // If no children, show document icon (heart when favorited, default otherwise)
   if (!hasChildren) {
     return (
       <div className="text-gray-500 p-1 -ml-1 flex">
-        {isFavorited ? (
-          <DocumentHeart24Filled
-            className={sidebarItemIconStyles({
-              className: "size-4 shrink-0",
-            })}
-          />
-        ) : (
-          <DocumentIcon
-            className={sidebarItemIconStyles({
-              className: "size-4 shrink-0",
-            })}
-          />
-        )}
+        <DocumentThumbnailIcon active={inTabRegistry} />
       </div>
     );
   }
 
-  // Collections always use the same icon regardless of favorite status
-
+  // Pages with children: show document lines icon with fold decoration + chevron (shows on row hover)
+  // Favorite icon is not shown for items with children
   return (
     <Button
-      className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/chevron relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center group-pressed/chevron:bg-black/80"
+      className="text-gray-500 p-1 -ml-1 flex items-center relative size-5 rounded-md hover:bg-black/5 group/chevron group-hover:text-gray-700"
       slot="chevron"
     >
-      <CollectionsEmpty16Filled
-        className={sidebarItemIconStyles({
-          className: `size-4 shrink-0 transition-[opacity_100ms,transform_200ms] ${isMenuOpen ? "opacity-0" : "group-hover:opacity-0"}`,
-        })}
+      <DocumentThumbnailIcon
+        className={isMenuOpen ? "opacity-0" : "group-hover:opacity-0 transition-opacity"}
+        active={inTabRegistry}
+        showFoldDecoration
       />
       <CollapseArrow
         className={sidebarItemIconStyles({
