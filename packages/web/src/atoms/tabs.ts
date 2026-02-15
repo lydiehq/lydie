@@ -10,7 +10,7 @@ export interface DocumentTab {
   mode?: TabMode;
 }
 
-const STORAGE_KEY = "lydie-document-tabs-v2";
+const STORAGE_KEY = "lydie:document:tabs";
 const MAX_TABS = 10;
 
 // Storage-backed atoms
@@ -63,6 +63,14 @@ export const openPreviewTabAtom = atom(
   null,
   (_get, set, { documentId, title }: { documentId: string; title: string }) => {
     const currentTabs = _get(storedTabsAtom);
+    const existingIndex = findTabIndex(currentTabs, documentId);
+
+    // If document already exists (as any type of tab), just activate it
+    if (existingIndex !== -1) {
+      set(storedActiveTabIdAtom, documentId);
+      return;
+    }
+
     const previewIndex = currentTabs.findIndex((t) => t.mode === "preview");
 
     let newTabs: DocumentTab[];

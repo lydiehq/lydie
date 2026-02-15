@@ -1,5 +1,3 @@
-import type { TooltipTriggerProps } from "react-aria";
-
 import { Add12Filled, Dismiss12Filled } from "@fluentui/react-icons";
 import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
@@ -13,7 +11,7 @@ import { Tab, TabList, Tabs, type Key } from "react-aria-components";
 import {
   Tooltip as AriaTooltip,
   type TooltipProps as AriaTooltipProps,
-  TooltipTrigger as AriaTooltipTrigger,
+  TooltipTrigger,
   OverlayArrow,
   composeRenderProps,
 } from "react-aria-components";
@@ -109,7 +107,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
       >
         <TabList aria-label="Open documents" className="flex shrink-0 gap-px">
           {tabs.map((tab) => (
-            <TooltipTrigger key={tab.documentId} delay={500}>
+            <TooltipTrigger key={tab.documentId} delay={1000}>
               <Tab
                 id={tab.documentId}
                 onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}
@@ -142,7 +140,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                   </>
                 )}
               </Tab>
-              <Tooltip placement="bottom">{tab.title || "Untitled"}</Tooltip>
+              <DocumentTooltip>{tab.title || "Untitled"}</DocumentTooltip>
             </TooltipTrigger>
           ))}
         </TabList>
@@ -199,7 +197,7 @@ export interface TooltipProps extends Omit<AriaTooltipProps, "children"> {
   hotkeys?: string[];
 }
 
-const styles = cva({
+const tooltipStyles = cva({
   base: "group bg-black/85 text-white text-[12px] rounded-sm will-change-transform px-2 py-0.5",
   variants: {
     isEntering: {
@@ -208,51 +206,18 @@ const styles = cva({
   },
 });
 
-export function Tooltip({ children, hotkeys, offset = 14, ...props }: TooltipProps) {
+function DocumentTooltip({ children }: AriaTooltipProps) {
   return (
     <AriaTooltip
-      {...props}
-      offset={offset}
-      className={composeRenderProps(props.className, (className, renderProps) =>
-        styles({ ...renderProps, className }),
+      placement="bottom"
+      offset={8}
+      className={composeRenderProps("", (className, renderProps) =>
+        tooltipStyles({ ...renderProps, className }),
       )}
     >
-      <OverlayArrow>
-        <svg
-          width={8}
-          height={8}
-          viewBox="0 0 8 8"
-          className="fill-black/85 forced-colors:fill-[Canvas] group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90"
-        >
-          <path d="M0 0 L4 4 L8 0" />
-        </svg>
-      </OverlayArrow>
       <div className="flex items-center gap-2">
-        <span>{children}</span>
-        {hotkeys && hotkeys.length > 0 && (
-          <div className="flex items-center gap-0.5">
-            {hotkeys.map((key, index) => (
-              <kbd
-                key={index}
-                className="px-1 text-[10px] font-medium text-white/80 border border-white/20 rounded"
-              >
-                {key}
-              </kbd>
-            ))}
-          </div>
-        )}
+        <span>{children as string}</span>
       </div>
     </AriaTooltip>
-  );
-}
-
-export function TooltipTrigger({
-  children,
-  ...props
-}: TooltipTriggerProps & { children: React.ReactNode }) {
-  return (
-    <AriaTooltipTrigger {...props} delay={props.delay || 200} closeDelay={props.closeDelay || 0}>
-      {children}
-    </AriaTooltipTrigger>
   );
 }
