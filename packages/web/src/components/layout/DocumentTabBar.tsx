@@ -3,13 +3,7 @@ import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect } from "react";
-import {
-  Tab,
-  TabList,
-  Tabs,
-  TabPanels,
-  type Key,
-} from "react-aria-components";
+import { Tab, TabList, Tabs, TabPanels, type Key } from "react-aria-components";
 
 import {
   activateDocumentTabAtom,
@@ -75,14 +69,10 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
 
   return (
     <div className="flex items-center pt-1.5">
-      <Tabs
-        selectedKey={selectedKey}
-        onSelectionChange={handleSelectionChange}
-        className="flex-1"
-      >
+      <Tabs selectedKey={selectedKey} onSelectionChange={handleSelectionChange} className="flex-1">
         <TabList
           aria-label="Open documents"
-          className="flex gap-1 overflow-x-auto scrollbar-hide"
+          className="flex gap-px overflow-x-auto scrollbar-hide"
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
@@ -93,10 +83,10 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
               key={tab.documentId}
               id={tab.documentId}
               className={(renderProps) =>
-                `group flex items-center gap-2 px-2 h-[32px] py-1.5 min-w-[120px] max-w-[200px] rounded-xl cursor-pointer select-none transition-colors duration-150 ${
+                `group flex items-center gap-2 px-2 h-[28px] py-1.5 min-w-[120px] max-w-[200px] rounded-lg select-none transition-colors duration-150 ${
                   renderProps.isSelected
                     ? "bg-black/5"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                    : "bg-gray-50 text-gray-600 hover:bg-black/3"
                 } ${tab.isPreview ? "italic" : ""}`
               }
             >
@@ -104,9 +94,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
               <span className="flex-1 truncate text-sm font-medium text-gray-700">
                 {tab.title || "Untitled"}
               </span>
-              {tab.isDirty && (
-                <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />
-              )}
+              {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
               <span
                 onClick={() => handleClose(tab.documentId)}
                 onKeyDown={(e) => {
@@ -114,7 +102,8 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                     handleClose(tab.documentId);
                   }
                 }}
-                className="opacity-0 group-data-[selected]:opacity-100 p-0.5 rounded hover:bg-gray-200 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer"
+                className="opacity-0 group-selected:opacity-100 p-0.5 rounded hover:bg-gray-200 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer"
+                // oxlint-disable-next-line jsx_a11y/prefer-tag-over-role
                 role="button"
                 tabIndex={0}
                 aria-label={`Close ${tab.title || "Untitled"}`}
@@ -134,10 +123,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
  * Hook to sync the current document with the tab bar.
  * Call this from the document route component.
  */
-export function useDocumentTabSync(
-  documentId: string | undefined,
-  title: string | undefined,
-) {
+export function useDocumentTabSync(documentId: string | undefined, title: string | undefined) {
   const openTab = useSetAtom(openDocumentTabAtom);
   const updateTitle = useSetAtom(updateTabTitleAtom);
 
