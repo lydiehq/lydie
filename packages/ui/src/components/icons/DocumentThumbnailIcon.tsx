@@ -6,7 +6,7 @@ const wrapperStyles = cva({
   base: "shadow-document-icon bg-white flex flex-col z-1 relative justify-center",
   variants: {
     size: {
-      sm: "aspect-[12/14] w-3 rounded-[2.5px] p-[2px] gap-px",
+      sm: "aspect-[12/14] w-3.5 rounded-[2.5px] p-[2px] gap-px",
       md: "aspect-[12/15] w-3.5 rounded-[3px] p-[2px] gap-px",
       lg: "aspect-[12/15] w-5 rounded-[4px] p-1 gap-0.5",
     },
@@ -20,7 +20,7 @@ const barStyles = cva({
   base: "transition-all duration-200 rounded-xs shrink-0 h-0.5",
   variants: {
     active: {
-      true: "bg-black/30",
+      true: "bg-black/25",
       false: "bg-black/15",
     },
   },

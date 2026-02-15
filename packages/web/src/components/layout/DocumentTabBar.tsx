@@ -214,7 +214,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
             id={tab.documentId}
             textValue={tab.title || "Untitled"}
             className={({ isSelected, isDropTarget }) =>
-              `group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-2 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
+              `group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-1.5 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
                 isSelected ? "bg-black/5" : "bg-gray-50 text-gray-600 hover:bg-black/3"
               } ${tab.mode === "preview" ? "italic" : ""} ${
                 isDropTarget ? "ring-2 ring-blue-500 ring-inset" : ""
