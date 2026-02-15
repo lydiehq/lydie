@@ -184,13 +184,14 @@ test.describe("real-time collaboration - different users", () => {
 
       // User1 clicks in the middle and adds text
       await user1ContentEditor.click();
-      // Position cursor between "Start" and "End"
-      await user1ContentEditor.press("End");
-      await user1ContentEditor.press("ArrowLeft"); // Move before "End"
-      await user1ContentEditor.press("ArrowLeft");
-      await user1ContentEditor.press("ArrowLeft");
-      await user1ContentEditor.press("ArrowLeft");
-      await user1ContentEditor.pressSequentially("Middle ", { delay: 50 });
+      // Navigate to position after "Start " (between "Start" and "End")
+      await user1ContentEditor.press("Home");
+      await user1ContentEditor.press("ArrowRight");
+      await user1ContentEditor.press("ArrowRight");
+      await user1ContentEditor.press("ArrowRight");
+      await user1ContentEditor.press("ArrowRight");
+      await user1ContentEditor.press("ArrowRight");
+      await user1ContentEditor.type("Middle ");
 
       // Verify User2 sees the change
       await expect(user2ContentEditor).toContainText("Start Middle End", {

@@ -34,17 +34,18 @@ function RouteComponent() {
   const { data: sessionData, isLoading } = useQuery(getSessionQuery());
 
   useEffect(() => {
+    // Clear persisted cache when on auth page
+    try {
+      localStorage.removeItem(QUERY_CACHE_KEY);
+    } catch {
+      // Ignore errors
+    }
+
     // Only redirect once after initial load completes (not on background refetch)
     if (!isLoading && !hasCheckedAuth.current) {
       hasCheckedAuth.current = true;
 
       if (!sessionData?.user) {
-        // Clear persisted cache to prevent stale data
-        try {
-          localStorage.removeItem(QUERY_CACHE_KEY);
-        } catch {
-          // Ignore errors
-        }
         // Use href for external route navigation
         const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
         void router.navigate({
