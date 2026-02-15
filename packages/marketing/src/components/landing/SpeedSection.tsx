@@ -18,7 +18,7 @@ export function SpeedSection() {
         text: "Speed",
       }}
       title="Don't lose your thoughts to loading screens"
-      description="While other tools leave you waiting, Lydie's local-first sync engine keeps navigation and actions near-instant. No loading screens. No waiting. Just flow."
+      description="While other tools leave you waiting, Lydie's infrastructure keeps navigation and actions near-instant."
       illustration={illustration}
       primaryButton={{
         href: "https://app.lydie.co/auth",

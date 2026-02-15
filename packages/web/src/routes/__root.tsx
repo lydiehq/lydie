@@ -18,14 +18,14 @@ import { editorFontSizeAtom } from "@/atoms/workspace-settings";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
-import { getSessionQuery, type ExtendedSessionData } from "@/lib/auth/session";
+import { getSessionQuery, loadSession, type ExtendedSessionData } from "@/lib/auth/session";
 import { identifyUser } from "@/lib/posthog";
 import { getZeroInstance } from "@/lib/zero/instance";
 import { getFontSizePixels } from "@/stores/font-size";
 
 declare module "react-aria-components" {
   interface RouterConfig {
-    href: ToOptions["to"];
+    href: ToOptions;
     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
   }
 }
@@ -82,28 +82,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   pendingComponent: LoadingScreen,
   errorComponent: ErrorPage,
   beforeLoad: async ({ context: { queryClient } }) => {
-    // Check if we have cached session data (persister restores before render)
-    const cachedData = queryClient.getQueryData<ExtendedSessionData>(getSessionQuery().queryKey);
-
-    // If we have cached session with a user, use it immediately for fast load
-    // but trigger background refetch to validate (staleTime: 0 ensures this)
-    if (cachedData?.user) {
-      void queryClient.fetchQuery(getSessionQuery());
-
-      return {
-        zero: getZeroInstance(cachedData),
-        auth: cachedData,
-      };
-    }
-
-    // No cached session - fetch fresh data (handles post-OAuth or not logged in)
-    const sessionData = (await queryClient.fetchQuery(getSessionQuery())) as
-      | ExtendedSessionData
-      | undefined;
+    // Load session - uses cache when fresh (5 min staleTime), fetches if stale/missing
+    const { auth } = await loadSession(queryClient);
 
     return {
-      zero: getZeroInstance(sessionData),
-      auth: sessionData,
+      zero: getZeroInstance(auth),
+      auth,
     };
   },
   component: () => {
@@ -112,7 +96,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const fontSizeOption = useAtomValue(editorFontSizeAtom);
     const [isRedirecting, setIsRedirecting] = useState(false);
 
-    // Load session - uses cached data immediately, then refetches with staleTime: 0
+    // Load session - uses cached data immediately, then revalidates with staleTime: 0
     const { data: sessionData, isLoading } = useQuery(getSessionQuery()) as {
       data: ExtendedSessionData | undefined;
       isLoading: boolean;
@@ -134,7 +118,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           !pathname.startsWith("/auth")
         ) {
           setIsRedirecting(true);
-          void router.navigate({ to: "/new" });
+          void router.navigate({ href: "/new" });
         }
       }
     }, [isLoading, sessionData, router]);
@@ -166,7 +150,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return (
       <>
         <HeadContent />
-        <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
+        <RouterProvider navigate={(to, options) => router.navigate({ ...(to ?? {}), ...options })}>
           <ZeroProvider zero={zeroInstance}>
             <ConfirmDialog />
             <Outlet />

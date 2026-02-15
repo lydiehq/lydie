@@ -1,7 +1,7 @@
 import type { Zero } from "@rocicorp/zero";
 import type { PersistedClient } from "@tanstack/react-query-persist-client";
 
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import {
   QueryClient,
   type Query,
@@ -93,12 +93,10 @@ function sanitizeDehydratedState(state: unknown): unknown {
   };
 }
 
-// Create persister for localStorage with sanitization
-const persister = createSyncStoragePersister({
+const persister = createAsyncStoragePersister({
   storage: window.localStorage,
   key: "lydie:query:cache:session",
   serialize: (data) => {
-    // Sanitize to remove tokens before storing
     const sanitized = sanitizeDehydratedState(data);
     return JSON.stringify(sanitized);
   },

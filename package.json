@@ -51,7 +51,6 @@
     "@ai-sdk/gateway": "^3.0.45",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
-    "@tanstack/query-sync-storage-persister": "^5.90.22",
     "@tanstack/react-query-persist-client": "^5.90.22",
     "@tiptap/extension-code": "^3.19.0",
     "framer-motion": "^12.34.0"

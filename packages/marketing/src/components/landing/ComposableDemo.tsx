@@ -37,6 +37,8 @@ const documents = [
 ];
 
 export function ComposableDemo({ activeState }: ComposableDemoProps) {
+  const newLocal =
+    "size-5.5 rounded-md border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-linear-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-pink-300";
   return (
     <section className="flex flex-col items-center overflow-visible w-full" aria-hidden="true">
       <div className="relative size-full p-1.5 -m-1.5">
@@ -49,7 +51,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
           </div>
           <div className="flex gap-x-2">
             <CastShadow className="w-full rounded-b-xl rounded-t-lg">
-              <div className="flex flex-1 h-[580px] rounded-b-xl rounded-t-lg bg-white shadow-xl ring ring-black/8 relative">
+              <div className="flex overflow-hidden flex-1 h-[580px] rounded-b-xl rounded-t-lg bg-white shadow-xl ring ring-black/8 relative">
                 <motion.div
                   className="flex flex-1 min-w-0"
                   animate={{
@@ -70,7 +72,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                     <div className="w-52 flex flex-col p-1">
                       <div className="w-full p-1 mb-2">
                         <div className="flex items-center gap-x-2">
-                          <div className="size-5.5 rounded-md border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-pink-300"></div>
+                          <div className={newLocal}></div>
                           <span className="text-xs font-medium text-gray-400">My notes</span>
                         </div>
                       </div>
@@ -139,25 +141,25 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                   </motion.div>
                 </motion.div>
                 <AnimatePresence>{activeState === "search" && <SearchOverlay />}</AnimatePresence>
-                <AnimatePresence>
-                  {activeState === "assistant" && (
-                    <motion.div
-                      key="assistant-sidebar"
-                      className="absolute inset-y-12 -right-12 bg-white ring ring-black/8 shadow-2xl rounded-xl h-full w-[380px]"
-                      initial={{ opacity: 0, x: 24 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 24 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 35,
-                      }}
-                    >
-                      <AIAssistantSidebar />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
+              <AnimatePresence>
+                {activeState === "assistant" && (
+                  <motion.div
+                    key="assistant-sidebar"
+                    className="absolute inset-y-12 -right-12 bg-white ring ring-black/8 shadow-2xl rounded-xl h-full w-[380px]"
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 24 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 35,
+                    }}
+                  >
+                    <AIAssistantSidebar />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </CastShadow>
           </div>
         </div>

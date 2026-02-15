@@ -3,7 +3,12 @@ import type { QueryClient } from "@tanstack/react-query";
 import { authClient } from "@/utils/auth";
 
 export const SESSION_QUERY_KEY = ["auth", "getSession"];
-const STALE_TIME = 5 * 60 * 1000;
+
+// 5 minutes - how long cached session data is considered fresh
+const SESSION_CACHE_STALE_TIME = 5 * 60 * 1000;
+
+// 30 seconds - minimum time between background revalidation calls
+const REVALIDATION_THROTTLE_MS = 30 * 1000;
 
 type SessionData = Awaited<ReturnType<typeof authClient.getSession>>["data"];
 
@@ -20,7 +25,13 @@ export type ExtendedSessionData = SessionData & {
   };
 };
 
-// Query configuration for React Query
+// Fetch session data from the server
+async function fetchSession() {
+  const response = await authClient.getSession();
+  return response.data;
+}
+
+// Query configuration for use in components (always revalidates on mount)
 export function getSessionQuery() {
   return {
     queryKey: SESSION_QUERY_KEY,
@@ -40,18 +51,35 @@ export type LoadSessionResult = {
   }>;
 };
 
-// Fetch session data from the server
-async function fetchSession() {
-  const response = await authClient.getSession();
-  return response.data;
+// Get cached session without triggering a fetch
+export function getCachedSession(queryClient: QueryClient): ExtendedSessionData | undefined {
+  return queryClient.getQueryData<ExtendedSessionData>(SESSION_QUERY_KEY);
 }
 
-// Load session data, using cache when available
+// Check if session has been loaded at least once
+export function hasLoadedSession(queryClient: QueryClient): boolean {
+  const state = queryClient.getQueryState(SESSION_QUERY_KEY);
+  return Boolean(state?.dataUpdatedAt);
+}
+
+// Throttled background revalidation - prevents spam on rapid route changes
+let lastRevalidationTime = 0;
+
+export function shouldThrottleRevalidation(): boolean {
+  const now = Date.now();
+  if (now - lastRevalidationTime < REVALIDATION_THROTTLE_MS) {
+    return true;
+  }
+  lastRevalidationTime = now;
+  return false;
+}
+
+// Load session data for route loaders - uses cache when fresh
 export async function loadSession(queryClient: QueryClient): Promise<LoadSessionResult> {
   const data = (await queryClient.ensureQueryData({
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
-    staleTime: STALE_TIME,
+    staleTime: SESSION_CACHE_STALE_TIME,
     retry: 2,
   })) as ExtendedSessionData;
 

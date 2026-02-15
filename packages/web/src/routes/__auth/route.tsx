@@ -1,10 +1,10 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Outlet, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { AssistantPreferencesProvider } from "@/context/assistant-preferences.context";
-import { getSessionQuery, type ExtendedSessionData } from "@/lib/auth/session";
+import { getSessionQuery, hasLoadedSession, type ExtendedSessionData } from "@/lib/auth/session";
 
 const QUERY_CACHE_KEY = "lydie:query:cache:session";
 
@@ -14,8 +14,8 @@ export const Route = createFileRoute("/__auth")({
   beforeLoad: ({ context }) => {
     const auth = context.auth as ExtendedSessionData | undefined;
 
-    // Redirect to auth page if user is not authenticated
-    if (!auth?.user) {
+    // Only redirect if we have confirmed there's no session (data was fetched)
+    if (!auth?.user && hasLoadedSession(context.queryClient)) {
       throw redirect({
         to: "/auth",
         search: {
@@ -28,7 +28,6 @@ export const Route = createFileRoute("/__auth")({
 
 function RouteComponent() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const hasCheckedAuth = useRef(false);
 
   // Load session - uses cached data immediately, then refetches with staleTime: 0
@@ -53,7 +52,7 @@ function RouteComponent() {
         });
       }
     }
-  }, [isLoading, sessionData, router, queryClient]);
+  }, [isLoading, sessionData, router]);
 
   // Show loading while checking auth
   if (isLoading) {
