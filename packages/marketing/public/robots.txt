@@ -1,7 +1,10 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+Disallow: /playground/
 
 Sitemap: https://lydie.co/sitemap-index.xml
+
+
 
 

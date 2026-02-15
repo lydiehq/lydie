@@ -148,6 +148,11 @@ test.describe("document tabs", () => {
     // Navigate back to workspace
     await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
 
+    // Close the existing persistent tab so we can test preview behavior
+    const existingTab = tabList.getByRole("tab", { name: "Preview Document" });
+    await existingTab.getByLabel(/^Close/).click();
+    await expect(existingTab).not.toBeVisible();
+
     // Single click on document in sidebar
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
     await sidebarTree.getByRole("row", { name: "Preview Document" }).click();
@@ -209,6 +214,11 @@ test.describe("document tabs", () => {
     // Navigate back to workspace
     await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
 
+    // Close the existing persistent tab so we can test preview behavior
+    const existingTab = tabList.getByRole("tab", { name: "Convert to Hard Tab" });
+    await existingTab.getByLabel(/^Close/).click();
+    await expect(existingTab).not.toBeVisible();
+
     // Single click to open as preview
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
     await sidebarTree.getByRole("row", { name: "Convert to Hard Tab" }).click();
@@ -238,6 +248,15 @@ test.describe("document tabs", () => {
 
     // Navigate back to workspace
     await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+
+    // Close existing persistent tabs so we can test preview replacement behavior
+    const firstTab = tabList.getByRole("tab", { name: "First Preview Doc" });
+    await firstTab.getByLabel(/^Close/).click();
+    await expect(firstTab).not.toBeVisible();
+
+    const secondTab = tabList.getByRole("tab", { name: "Second Preview Doc" });
+    await secondTab.getByLabel(/^Close/).click();
+    await expect(secondTab).not.toBeVisible();
 
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
 

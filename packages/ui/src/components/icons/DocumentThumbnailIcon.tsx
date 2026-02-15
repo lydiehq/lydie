@@ -1,4 +1,3 @@
-import { Database16Filled } from "@fluentui/react-icons";
 import clsx from "clsx";
 import { type VariantProps, cva } from "cva";
 
@@ -56,21 +55,32 @@ type Props = DocumentThumbnailIconVariants & {
 
 const bars = [40, 80, 70, 90, 60];
 
+const COLOR = "#A8B8E8";
+
 export function DocumentThumbnailIcon({
   className,
   active = false,
   showFoldDecoration = false,
   size = "md",
 }: Props) {
-  // if (showFoldDecoration) {
-  //   return (
-  //     <div className={clsx("relative", className)}>
-  //       <div className={wrapperStyles({ size })}>
-  //         <Database16Filled className={iconStyles({ size })} />
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (showFoldDecoration) {
+    return (
+      <div className={clsx("relative", className)}>
+        <div
+          className="absolute -top-0.5 w-2.5 left-0 h-0.5 rounded-t-lg"
+          style={{ backgroundColor: COLOR }}
+        />
+        <div
+          className="h-[12px] w-[13px] rounded-b-[3px] rounded-r-[1.5px]"
+          style={{ backgroundColor: COLOR }}
+        ></div>
+        <div
+          className="absolute border border-[#f8f8f8] left-0 -right-[3px] bottom-0 top-[2px] -skew-x-10 rounded-[3px]"
+          style={{ backgroundColor: COLOR }}
+        ></div>
+      </div>
+    );
+  }
 
   return (
     <div className={clsx("relative", className)}>
