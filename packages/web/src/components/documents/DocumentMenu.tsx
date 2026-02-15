@@ -1,18 +1,10 @@
 import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
 
-import { Button } from "@lydie/ui/components/generic/Button";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Label } from "@lydie/ui/components/generic/Field";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
-import { Modal } from "@lydie/ui/components/generic/Modal";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
-import { format } from "date-fns";
-import { useState } from "react";
-import { Heading } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useOrganization } from "@/context/organization.context";
@@ -31,8 +23,6 @@ export function DocumentMenu({
   documentName,
   placement = "bottom end",
 }: DocumentMenuProps) {
-  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
-
   const z = useZero();
   const { deleteDocument, publishDocument } = useDocumentActions();
   const { id: currentDocId } = useParams({ strict: false });
@@ -78,80 +68,14 @@ export function DocumentMenu({
   };
 
   return (
-    <>
-      <Menu placement={placement}>
-        <MenuItem onAction={() => setIsInfoDialogOpen(true)}>Info</MenuItem>
-        <MenuItem onAction={handleToggleFavorite}>
-          {document?.is_favorited ? "Unfavorite" : "Favorite"}
-        </MenuItem>
-        {document?.integration_link_id && !document?.published && (
-          <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
-        )}
-        <MenuItem onAction={handleDelete}>Delete</MenuItem>
-      </Menu>
-      <Modal isOpen={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen} isDismissable size="md">
-        <Dialog>
-          <div className="p-3">
-            <Heading slot="title" className="text-sm font-medium text-gray-700">
-              Document Info
-            </Heading>
-          </div>
-          <Separator />
-          <div className="p-3 space-y-4">
-            {document ? (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs text-gray-500">Title</Label>
-                  <p className="text-sm text-gray-900 mt-1">{document.title}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500">Slug</Label>
-                  <p className="text-sm text-gray-900 mt-1 font-mono">{document.slug}</p>
-                </div>
-                <div role="group" aria-labelledby="publication-status-label">
-                  <Label id="publication-status-label" className="text-xs text-gray-500">
-                    Publication Status
-                  </Label>
-                  <div className="mt-1">
-                    <span
-                      className={`text-xs px-2 py-1 rounded inline-block ${
-                        document.published
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {document.published ? "Published" : "Draft"}
-                    </span>
-                  </div>
-                </div>
-                {document.created_at && (
-                  <div>
-                    <Label className="text-xs text-gray-500">Created</Label>
-                    <p className="text-sm text-gray-900 mt-1">
-                      {format(new Date(document.created_at), "PPpp")}
-                    </p>
-                  </div>
-                )}
-                {document.updated_at && (
-                  <div>
-                    <Label className="text-xs text-gray-500">Last Updated</Label>
-                    <p className="text-sm text-gray-900 mt-1">
-                      {format(new Date(document.updated_at), "PPpp")}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">Loading...</div>
-            )}
-            <div className="flex justify-end">
-              <Button intent="secondary" onPress={() => setIsInfoDialogOpen(false)} size="sm">
-                Close
-              </Button>
-            </div>
-          </div>
-        </Dialog>
-      </Modal>
-    </>
+    <Menu placement={placement}>
+      <MenuItem onAction={handleToggleFavorite}>
+        {document?.is_favorited ? "Unfavorite" : "Favorite"}
+      </MenuItem>
+      {document?.integration_link_id && !document?.published && (
+        <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
+      )}
+      <MenuItem onAction={handleDelete}>Delete</MenuItem>
+    </Menu>
   );
 }

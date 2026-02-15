@@ -40,7 +40,7 @@ export function ConfirmDialog() {
             <Button intent="secondary" onPress={handleClose} size="sm">
               Cancel
             </Button>
-            <Button onPress={handleConfirm} size="sm">
+            <Button onPress={handleConfirm} size="sm" autoFocus>
               Confirm
             </Button>
           </div>

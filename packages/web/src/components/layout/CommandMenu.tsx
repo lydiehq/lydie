@@ -9,7 +9,7 @@ import {
   SettingsRegular,
 } from "@fluentui/react-icons";
 import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -424,7 +424,7 @@ export function CommandMenu() {
                       onPointerUp={(e) => handleDocumentClick(e as unknown as React.MouseEvent, item)}
                       className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
                     >
-                      <DocumentIcon className="size-4 text-gray-400 shrink-0 mr-2" />
+                      <DocumentThumbnailIcon size="lg" className="shrink-0 mr-2" />
                       <Text slot="label" className="flex-1 min-w-0 truncate text-start">
                         {item.label}
                       </Text>

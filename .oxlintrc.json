@@ -3,6 +3,7 @@
   "ignorePatterns": ["build/**", "node_modules/**", "public/**", "*.d.ts"],
   "plugins": ["oxc", "react", "typescript", "import", "jsx-a11y", "eslint"],
   "rules": {
-    "react/no-children-prop": "off"
+    "react/no-children-prop": "off",
+    "jsx-a11y/no-autofocus": "off"
   }
 }

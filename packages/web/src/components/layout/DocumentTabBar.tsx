@@ -107,7 +107,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
       >
         <TabList aria-label="Open documents" className="flex shrink-0 gap-px">
           {tabs.map((tab) => (
-            <TooltipTrigger key={tab.documentId} delay={1000}>
+            <TooltipTrigger key={tab.documentId} delay={800} closeDelay={200}>
               <Tab
                 id={tab.documentId}
                 onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}
@@ -133,9 +133,11 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                       type="button"
                       onClick={(e) => handleClose(e, tab.documentId)}
                       aria-label={`Close ${tab.title || "Untitled"}`}
-                      className="absolute right-1 opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-0.5 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
+                      className="absolute right-1 opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-1 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
                     >
-                      <Dismiss12Filled className={sidebarItemIconStyles({ className: "size-3" })} />
+                      <Dismiss12Filled
+                        className={sidebarItemIconStyles({ className: "size-2.5" })}
+                      />
                     </button>
                   </>
                 )}
