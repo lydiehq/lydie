@@ -5,13 +5,12 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "react-aria-components";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
-import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
 import { isFloatingAssistantDockedAtom as isDockedAtom } from "@/atoms/workspace-settings";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
@@ -79,14 +78,9 @@ function RouteLayout() {
   const [floatingAssistantContainer, setFloatingAssistantContainer] =
     useState<HTMLDivElement | null>(null);
   const [size, setSize] = useState(280); // pixels
-  const setIsSidebarCollapsed = useSetAtom(isSidebarCollapsedAtom);
+  const isCollapsed = size === COLLAPSED_SIZE;
   const routerState = useRouterState();
   const isDocked = useAtomValue(isDockedAtom);
-
-  // Sync sidebar collapsed state to atom
-  useEffect(() => {
-    setIsSidebarCollapsed(size === COLLAPSED_SIZE);
-  }, [size, setIsSidebarCollapsed]);
 
   const toggleSidebar = useCallback(() => {
     if (!sidebarPanelRef.current) return;
@@ -192,7 +186,7 @@ function RouteLayout() {
             defaultSize="280px"
             onResize={(nextSize) => setSize(nextSize.inPixels)}
           >
-            <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
+            <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
           </Panel>
           <PanelResizer />
           <Panel className="relative flex flex-col">
@@ -201,7 +195,7 @@ function RouteLayout() {
               <Outlet />
             </div>
             <FloatingSidebarToggleButton
-              isCollapsed={size === COLLAPSED_SIZE}
+              isCollapsed={isCollapsed}
               isEditorPage={!!currentDocumentId}
             />
           </Panel>

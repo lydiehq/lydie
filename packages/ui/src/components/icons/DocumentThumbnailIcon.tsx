@@ -76,11 +76,7 @@ export function DocumentThumbnailIcon({
     <div className={clsx("relative", className)}>
       <div className={wrapperStyles({ size })}>
         {bars.map((bar) => (
-          <div
-            key={bar}
-            className={barStyles({ size, active })}
-            style={{ width: `${bar}%` }}
-          />
+          <div key={bar} className={barStyles({ size, active })} style={{ width: `${bar}%` }} />
         ))}
       </div>
     </div>

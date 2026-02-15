@@ -9,7 +9,7 @@ import { getDocumentEditorExtensions } from "@lydie/editor";
 import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
@@ -61,10 +61,10 @@ export function useDocumentEditor({
   // Track if component is mounted
   const isMountedRef = useRef(true);
 
-  // Get or create connection from the global manager
-  const [connection] = useState(() => {
+  // Get or create connection from the global manager - updates when doc.id changes
+  const connection = useMemo(() => {
     return documentConnectionManager.getConnection(doc.id, doc.yjs_state);
-  });
+  }, [doc.id, doc.yjs_state]);
 
   // Keep connection alive while this component is mounted
   useEffect(() => {

@@ -2,11 +2,9 @@ import type { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import type { Editor } from "@tiptap/core";
 
-import { Database16Filled } from "@fluentui/react-icons";
 import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useRef } from "react";
-import * as Y from "yjs";
 
 import { BottomBar } from "./BottomBar";
 import { BubbleMenu } from "./BubbleMenu";

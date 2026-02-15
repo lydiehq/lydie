@@ -421,7 +421,9 @@ export function CommandMenu() {
                       id={item.id}
                       textValue={item.label}
                       onAction={() => handleCommand(item.action)}
-                      onPointerUp={(e) => handleDocumentClick(e as unknown as React.MouseEvent, item)}
+                      onPointerUp={(e) =>
+                        handleDocumentClick(e as unknown as React.MouseEvent, item)
+                      }
                       className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
                     >
                       <DocumentThumbnailIcon size="lg" className="shrink-0 mr-2" />

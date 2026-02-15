@@ -3,6 +3,7 @@
 export {
   activeDocumentIdAtom,
   activeEditorInstanceAtom,
+  editorCache,
   editorRegistry,
   pendingChangeStatusAtom,
   pendingEditorChangeAtom,

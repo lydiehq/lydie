@@ -16,13 +16,13 @@ import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/gene
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { queries } from "@lydie/zero/queries";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import { useAtomValue, useSetAtom } from "jotai";
-import { type ReactElement, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useSetAtom } from "jotai";
+import { memo, type ReactElement, useRef, useState } from "react";
 import { Button, MenuTrigger, TreeItem, TreeItemContent } from "react-aria-components";
 import { Collection } from "react-aria-components";
 
-import { documentTabsAtom, openBackgroundTabAtom, openPersistentTabAtom, openPreviewTabAtom } from "@/atoms/tabs";
+import { openBackgroundTabAtom, openPersistentTabAtom, openPreviewTabAtom } from "@/atoms/tabs";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
@@ -50,18 +50,18 @@ type Props = {
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<QueryResultType<typeof queries.organizations.documents>>["documents"];
+  isCurrent: boolean;
+  isOpenInTabs?: boolean;
 };
 
-export function DocumentTreeItem({ item, renderItem }: Props) {
-  const { id: currentDocId } = useParams({ strict: false });
+export const DocumentTreeItem = memo(function DocumentTreeItem({
+  item,
+  renderItem,
+  isCurrent,
+  isOpenInTabs,
+}: Props) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const openTabs = useAtomValue(documentTabsAtom);
-  const isOpenInTabs = item.type === "document" && openTabs.some((t) => t.documentId === item.id);
-
-  const isCurrentDocument = item.type === "document" && currentDocId === item.id;
-  const isCurrent = isCurrentDocument;
 
   const isIntegrationLink = item.type === "integration-link";
   const isGroup = item.type === "integration-group";
@@ -215,7 +215,7 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
       {item.children && <Collection items={item.children}>{renderItem}</Collection>}
     </TreeItem>
   );
-}
+});
 
 function getDisplayName(name: string): string {
   return name.trim() || "Untitled document";

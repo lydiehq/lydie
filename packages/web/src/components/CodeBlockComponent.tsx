@@ -1,7 +1,7 @@
 import { ChevronDownRegular } from "@fluentui/react-icons";
 import { ListBox, ListBoxItem } from "@lydie/ui/components/generic/ListBox";
 import { NodeViewContent, type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { type Key, useCallback, useEffect, useMemo, useState } from "react";
+import { type Key, useCallback, useMemo } from "react";
 import {
   Autocomplete,
   Button,
@@ -49,7 +49,7 @@ function LanguageSelect({
 }
 
 export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewProps) {
-  const defaultLanguage = node.attrs?.language || "null";
+  const selectedKey = node.attrs?.language || "null";
 
   const lowlight = useMemo(() => {
     const codeBlockExtension = editor.extensionManager.extensions.find(
@@ -66,20 +66,9 @@ export function CodeBlockComponent({ node, updateAttributes, editor }: NodeViewP
     ];
   }, [lowlight]);
 
-  const [selectedKey, setSelectedKey] = useState<string | null>(defaultLanguage);
-
-  useEffect(() => {
-    const currentLanguage = node.attrs?.language || "null";
-    if (currentLanguage !== selectedKey) {
-      setSelectedKey(currentLanguage);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [node.attrs?.language]);
-
   const handleSelectionChange = useCallback(
     (key: Key | null) => {
       const keyString = key === null ? null : String(key);
-      setSelectedKey(keyString);
       updateAttributes({ language: keyString === "null" ? null : keyString });
     },
     [updateAttributes],

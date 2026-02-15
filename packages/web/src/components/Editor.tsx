@@ -3,21 +3,15 @@ import type { QueryResultType } from "@rocicorp/zero";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import {
-  activeDocumentIdAtom,
-  editorRegistry,
-  pendingChangeStatusAtom,
-  pendingEditorChangeAtom,
-} from "@/atoms/editor";
+import { editorCache, pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
 import {
   isFloatingAssistantDockedAtom as isDockedAtom,
   isFloatingAssistantOpenAtom as isOpenAtom,
 } from "@/atoms/workspace-settings";
-import { useDocumentEditor } from "@/lib/editor/document-editor";
-import { useTitleEditor } from "@/lib/editor/title-editor";
+import { useAuth } from "@/context/auth.context";
 import { useZero } from "@/services/zero";
 import { applyContentChanges } from "@/utils/document-changes";
 import { applyTitleChange } from "@/utils/title-changes";
@@ -42,94 +36,95 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
 
 function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
   const z = useZero();
-  const [title, setTitle] = useState(doc.title || "");
+  const { user } = useAuth();
   const isLocked = doc.is_locked ?? false;
 
-  const setActiveDocumentId = useSetAtom(activeDocumentIdAtom);
   const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom);
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
   const isDocked = useAtomValue(isDockedAtom);
   const isAssistantOpen = useAtomValue(isOpenAtom);
 
-  // Track if we've registered this document
-  const isRegisteredRef = useRef(false);
+  // Track initialization state and last synced title
+  const initializedRef = useRef(false);
+  const lastSyncedRef = useRef<{ id: string; title: string } | null>(null);
 
   // When assistant is undocked and open, shift content left to avoid overlap
-  // Only apply on screens smaller than 2xl (1536px) to avoid unnecessary adjustments on ultrawide monitors
   const shouldShiftContent = !isDocked && isAssistantOpen;
 
-  const handleTitleUpdate = (newTitle: string) => {
-    const finalTitle = newTitle.trim();
-    setTitle(finalTitle);
-  };
+  // Get or create cached editors synchronously during render
+  // This ensures editors are available immediately on first render
+  const cached = user
+    ? editorCache.getOrCreate(doc.id, user.id, doc.yjs_state, isLocked, doc.title || "")
+    : null;
 
-  const contentEditor = useDocumentEditor({
-    doc,
-    onUpdate: () => {
-      // Keep the document connection alive while editing
-      editorRegistry.touch(doc.id);
-    },
-  });
+  // Sync title during render when document changes (no useEffect needed)
+  // This is acceptable for imperative APIs like TipTap outside React's render cycle
+  if (cached) {
+    const needsSync =
+      lastSyncedRef.current?.id !== doc.id || lastSyncedRef.current?.title !== (doc.title || "");
 
-  const titleEditor = useTitleEditor({
-    initialTitle: doc.title || "",
-    onUpdate: handleTitleUpdate,
-    onEnter: () => {
-      if (contentEditor.editor) {
-        contentEditor.editor.commands.focus(0);
-      }
-    },
-    onBlur: () => {
-      const finalTitle = title.trim();
-      z.mutate(
-        mutators.document.update({
-          documentId: doc.id,
-          title: finalTitle,
-          organizationId: doc.organization_id,
-        }),
-      );
-    },
-    editable: !isLocked,
-  });
+    if (needsSync && !cached.titleEditor.isFocused) {
+      const expectedTitle = doc.title || "";
+      cached.titleEditor.commands.setContent({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 1 },
+            content: expectedTitle ? [{ type: "text", text: expectedTitle }] : [],
+          },
+        ],
+      });
+      lastSyncedRef.current = { id: doc.id, title: expectedTitle };
+    }
+  }
 
-  // Register editors with the registry when both are ready
+  // Track initialization - ensures we only run side effects once per mount
   useEffect(() => {
-    if (!contentEditor.editor || !titleEditor.editor) return;
-    if (isRegisteredRef.current) return;
+    if (!cached) return;
+    if (initializedRef.current) return;
 
-    // Register this document's editors
-    editorRegistry.register(doc.id, contentEditor.editor, titleEditor.editor);
-    isRegisteredRef.current = true;
+    initializedRef.current = true;
 
-    // Set as active document
-    setActiveDocumentId(doc.id);
+    // Touch the cache to update LRU timestamp
+    editorCache.touch(doc.id);
 
-    // Cleanup function
     return () => {
-      // Only unregister if we're actually unmounting (not just re-rendering)
-      // The registry will handle cleanup of old instances
+      initializedRef.current = false;
     };
-  }, [contentEditor.editor, titleEditor.editor, doc.id, setActiveDocumentId]);
+  }, [cached, doc.id]);
 
-  // Cleanup on unmount
+  // Handle title blur - save to database
   useEffect(() => {
-    return () => {
-      if (isRegisteredRef.current) {
-        // Don't destroy editors here - let the registry manage lifecycle
-        // This allows for tab switching without losing editor state
-        editorRegistry.unregister(doc.id, false);
-        isRegisteredRef.current = false;
+    if (!cached) return;
+
+    const handleBlur = () => {
+      const finalTitle = cached.titleEditor.getText().trim();
+      if (finalTitle !== doc.title) {
+        z.mutate(
+          mutators.document.update({
+            documentId: doc.id,
+            title: finalTitle,
+            organizationId: doc.organization_id,
+          }),
+        );
       }
     };
-  }, [doc.id]);
+
+    // Add blur listener to title editor
+    const titleDom = cached.titleEditor.view.dom as HTMLElement;
+    titleDom.addEventListener("blur", handleBlur, true);
+
+    return () => {
+      titleDom.removeEventListener("blur", handleBlur, true);
+    };
+  }, [cached, doc.id, doc.title, doc.organization_id, z]);
 
   // Apply pending changes
   useEffect(() => {
     if (!pendingChange) return;
     if (pendingChange.documentId !== doc.id) return;
-
-    const instance = editorRegistry.get(doc.id);
-    if (!instance) return;
+    if (!cached) return;
 
     const applyPendingChange = async () => {
       setPendingChangeStatus("applying");
@@ -139,9 +134,9 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
         let contentSuccess = true;
         let titleSuccess = true;
 
-        if (pendingChange.title && instance.titleEditor) {
+        if (pendingChange.title) {
           const titleResult = await applyTitleChange(
-            instance.titleEditor,
+            cached.titleEditor,
             pendingChange.title,
             doc.id,
             pendingChange.organizationId,
@@ -153,9 +148,9 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
           }
         }
 
-        if (pendingChange.replace && instance.contentEditor) {
+        if (pendingChange.replace) {
           const result = await applyContentChanges(
-            instance.contentEditor,
+            cached.contentEditor,
             [
               {
                 search: pendingChange.search,
@@ -201,17 +196,19 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [doc.id, pendingChange, setPendingChange, setPendingChangeStatus, z]);
+  }, [cached, doc.id, pendingChange, setPendingChange, setPendingChangeStatus, z]);
 
-  if (!contentEditor.editor || !titleEditor.editor) {
+  // Render EditorView with cached editors
+  // If no cached editors yet (waiting for user), return null
+  if (!cached) {
     return null;
   }
 
   return (
     <EditorView
       doc={doc}
-      contentEditor={contentEditor.editor}
-      titleEditor={titleEditor.editor}
+      contentEditor={cached.contentEditor}
+      titleEditor={cached.titleEditor}
       isLocked={isLocked}
       shouldShiftContent={shouldShiftContent}
       organizationId={organizationId}

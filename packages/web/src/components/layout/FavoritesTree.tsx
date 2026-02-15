@@ -2,9 +2,12 @@ import type { ReactElement } from "react";
 
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useMemo } from "react";
+import { useParams } from "@tanstack/react-router";
+import { useAtomValue } from "jotai";
+import { useCallback, useMemo } from "react";
 import { Tree } from "react-aria-components";
 
+import { documentTabsAtom } from "@/atoms/tabs";
 import { useOrganization } from "@/context/organization.context";
 
 import { DocumentTreeItem } from "./DocumentTreeItem";
@@ -20,6 +23,7 @@ type TreeItem = {
 
 export function FavoritesTree() {
   const { organization } = useOrganization();
+  const { id: currentDocId } = useParams({ strict: false });
 
   const [orgData] = useQuery(
     queries.organizations.documents({
@@ -47,9 +51,20 @@ export function FavoritesTree() {
   }, [orgData?.documents]);
 
   const documents = orgData?.documents || [];
+  const openTabs = useAtomValue(documentTabsAtom);
+  const openTabIds = useMemo(() => new Set(openTabs.map((t) => t.documentId)), [openTabs]);
 
-  const renderItem = (item: TreeItem): ReactElement => (
-    <DocumentTreeItem item={item} renderItem={renderItem} documents={documents} />
+  const renderItem = useCallback(
+    (item: TreeItem): ReactElement => (
+      <DocumentTreeItem
+        item={item}
+        renderItem={renderItem}
+        documents={documents}
+        isCurrent={item.id === currentDocId}
+        isOpenInTabs={openTabIds.has(item.id)}
+      />
+    ),
+    [documents, currentDocId, openTabIds],
   );
 
   // Don't render the tree if there are no favorites

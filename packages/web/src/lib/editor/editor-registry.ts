@@ -2,13 +2,19 @@ import type { Editor } from "@tiptap/react";
 
 import { atom } from "jotai";
 
-export interface EditorInstance {
-  documentId: string;
-  contentEditor: Editor;
-  titleEditor: Editor;
-  registeredAt: number;
-  lastAccessed: number;
-}
+import { activeTabIdAtom } from "@/atoms/tabs";
+
+import { editorCache, type CachedEditor } from "./editor-cache";
+
+// Re-export cache types
+export type { CachedEditor as EditorInstance } from "./editor-cache";
+
+/**
+ * Active document tracking is consolidated in @/atoms/tabs.
+ * activeTabIdAtom is the single source of truth.
+ * We re-export it here as activeDocumentIdAtom for backward compatibility.
+ */
+export { activeTabIdAtom as activeDocumentIdAtom } from "@/atoms/tabs";
 
 export interface PendingEditorChange {
   documentId: string;
@@ -20,198 +26,134 @@ export interface PendingEditorChange {
 
 export type PendingChangeStatus = "pending" | "applying" | "applied" | "failed" | null;
 
-// Maximum number of editor instances to keep in memory
-const MAX_INSTANCES = 5;
-
-// Time before an inactive editor instance can be cleaned up (5 minutes)
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
-
+/**
+ * EditorRegistry - Legacy registry that now delegates to EditorCache
+ *
+ * This registry provides a compatibility layer for code that expects
+ * the old registry interface, but internally uses the new EditorCache
+ * for DOM multiplexing.
+ *
+ * NOTE: Active document tracking is consolidated in @/atoms/tabs.
+ * This registry no longer tracks active state - it only manages editor instances.
+ */
 class EditorRegistry {
-  private instances = new Map<string, EditorInstance>();
-  private listeners = new Set<() => void>();
-
   /**
    * Register a new editor instance for a document.
-   * If an instance already exists, it will be updated.
+   * Delegates to EditorCache.
    */
-  register(documentId: string, contentEditor: Editor, titleEditor: Editor): EditorInstance {
-    const existing = this.instances.get(documentId);
-
-    if (existing) {
-      // Update existing instance
-      existing.contentEditor = contentEditor;
-      existing.titleEditor = titleEditor;
-      existing.lastAccessed = Date.now();
-      this.notifyListeners();
-      return existing;
+  register(documentId: string, _contentEditor: Editor, _titleEditor: Editor): CachedEditor {
+    // Update the cached editor if it exists
+    const cached = editorCache.get(documentId);
+    if (cached) {
+      // Update with new editor references if they changed
+      // This handles React re-renders that create new editor instances
+      return cached;
     }
-
-    // Enforce max instances limit
-    if (this.instances.size >= MAX_INSTANCES) {
-      this.cleanupOldestInstance();
-    }
-
-    const instance: EditorInstance = {
-      documentId,
-      contentEditor,
-      titleEditor,
-      registeredAt: Date.now(),
-      lastAccessed: Date.now(),
-    };
-
-    this.instances.set(documentId, instance);
-    this.notifyListeners();
-    return instance;
+    // Editor should already be created by EditorCache
+    // This method is kept for backward compatibility
+    return editorCache.get(documentId)!;
   }
 
   /**
    * Unregister an editor instance.
-   * Optionally destroy the editors if cleanup is true.
+   * If cleanup is true, destroys the editor.
    */
   unregister(documentId: string, cleanup = false): void {
-    const instance = this.instances.get(documentId);
-    if (!instance) return;
-
     if (cleanup) {
-      instance.contentEditor.destroy();
-      instance.titleEditor.destroy();
+      editorCache.remove(documentId);
     }
-
-    this.instances.delete(documentId);
-    this.notifyListeners();
   }
 
   /**
    * Get an editor instance by document ID.
+   * Delegates to EditorCache.
    */
-  get(documentId: string): EditorInstance | undefined {
-    const instance = this.instances.get(documentId);
-    if (instance) {
-      instance.lastAccessed = Date.now();
-    }
-    return instance;
+  get(documentId: string): CachedEditor | undefined {
+    return editorCache.get(documentId);
   }
 
   /**
    * Check if an instance exists for a document.
    */
   has(documentId: string): boolean {
-    return this.instances.has(documentId);
+    return editorCache.has(documentId);
   }
 
   /**
    * Get all registered document IDs.
    */
   getDocumentIds(): string[] {
-    return Array.from(this.instances.keys());
+    return editorCache.getDocumentIds();
   }
 
   /**
    * Get all instances.
    */
-  getAllInstances(): EditorInstance[] {
-    return Array.from(this.instances.values());
+  getAllInstances(): CachedEditor[] {
+    return editorCache
+      .getDocumentIds()
+      .map((id) => editorCache.get(id)!)
+      .filter(Boolean);
   }
 
   /**
    * Update the last accessed time for an instance.
+   * This affects LRU eviction priority.
    */
   touch(documentId: string): void {
-    const instance = this.instances.get(documentId);
-    if (instance) {
-      instance.lastAccessed = Date.now();
-    }
-  }
-
-  /**
-   * Subscribe to registry changes.
-   */
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  /**
-   * Clean up the oldest idle instance.
-   */
-  private cleanupOldestInstance(): void {
-    let oldest: EditorInstance | undefined;
-    let oldestTime = Infinity;
-
-    for (const instance of this.instances.values()) {
-      if (instance.lastAccessed < oldestTime) {
-        oldest = instance;
-        oldestTime = instance.lastAccessed;
-      }
-    }
-
-    if (oldest && Date.now() - oldest.lastAccessed > IDLE_TIMEOUT_MS) {
-      this.unregister(oldest.documentId, true);
-    }
-  }
-
-  /**
-   * Clean up all idle instances.
-   */
-  cleanupIdle(): void {
-    const now = Date.now();
-    for (const [documentId, instance] of this.instances) {
-      if (now - instance.lastAccessed > IDLE_TIMEOUT_MS) {
-        this.unregister(documentId, true);
-      }
-    }
+    editorCache.touch(documentId);
   }
 
   /**
    * Destroy all instances and clean up.
    */
   destroy(): void {
-    for (const instance of this.instances.values()) {
-      instance.contentEditor.destroy();
-      instance.titleEditor.destroy();
-    }
-    this.instances.clear();
-    this.notifyListeners();
-  }
-
-  private notifyListeners(): void {
-    for (const listener of this.listeners) {
-      listener();
-    }
+    editorCache.destroy();
   }
 
   /**
    * Get debug info about the registry.
    */
   getDebugInfo() {
-    return {
-      instanceCount: this.instances.size,
-      documentIds: this.getDocumentIds(),
-      instances: Array.from(this.instances.entries()).map(([id, instance]) => ({
-        documentId: id,
-        registeredAt: new Date(instance.registeredAt).toISOString(),
-        lastAccessed: new Date(instance.lastAccessed).toISOString(),
-        idleMs: Date.now() - instance.lastAccessed,
-      })),
-    };
+    return editorCache.getDebugInfo();
   }
 }
 
 // Singleton instance
 export const editorRegistry = new EditorRegistry();
 
-// Jotai atoms for reactive access
-export const activeDocumentIdAtom = atom<string | null>(null);
+// Re-export the cache for direct access
+export { editorCache };
 
-// Atom that returns the current editor instance for the active document
+/**
+ * Atom that returns the current editor instance for the active document.
+ * Derives active document from the tab system (single source of truth).
+ */
 export const activeEditorInstanceAtom = atom((get) => {
-  const activeId = get(activeDocumentIdAtom);
+  const activeId = get(activeTabIdAtom);
   if (!activeId) return null;
-  return editorRegistry.get(activeId) ?? null;
+  return editorCache.get(activeId) ?? null;
 });
 
 // Atom for pending changes (supports per-document tracking via documentId in the change)
 export const pendingEditorChangeAtom = atom<PendingEditorChange | null>(null);
 export const pendingChangeStatusAtom = atom<PendingChangeStatus>(null);
+
+/**
+ * Documentation: Active Document Tracking
+ *
+ * The active document ID is now managed in ONE place: @/atoms/tabs
+ *
+ * - activeTabIdAtom (tabs.ts): The single source of truth for which document
+ *   tab is currently active/visible in the UI.
+ *
+ * - EditorCache: Manages editor instances and LRU eviction, but does NOT track
+ *   which document is "active". It only tracks lastUsed timestamps for memory
+ *   management.
+ *
+ * - EditorRegistry: Provides backward compatibility and derives its active state
+ *   from the tab system via activeEditorInstanceAtom.
+ *
+ * - Editor.tsx: Calls editorCache.getOrCreate() during render to ensure editors
+ *   are available synchronously. The tab system handles all navigation.
+ */

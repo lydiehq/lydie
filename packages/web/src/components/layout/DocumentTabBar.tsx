@@ -99,7 +99,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
       <Tabs
         selectedKey={selectedKey}
         onSelectionChange={handleSelectionChange}
-        className="flex min-w-0 flex-1 flex-row items-center overflow-x-auto scrollbar-hide"
+        className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",

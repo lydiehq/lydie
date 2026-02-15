@@ -63,12 +63,7 @@ function RouteComponent() {
   return (
     <div className="h-screen py-1 pr-1 flex flex-col pl-1">
       <Surface>
-        <Editor
-          doc={doc}
-          key={id}
-          organizationId={organization.id}
-          organizationSlug={organization.slug}
-        />
+        <Editor doc={doc} organizationId={organization.id} organizationSlug={organization.slug} />
       </Surface>
     </div>
   );

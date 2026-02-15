@@ -6,11 +6,12 @@ import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { atom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Tree } from "react-aria-components";
 
+import { documentTabsAtom } from "@/atoms/tabs";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
@@ -250,10 +251,25 @@ export function DocumentTree() {
     return items;
   }, [connections, extensionLinks, buildLinkItems]);
 
-  const treeItems = [...linkGroups, ...buildTreeItems(null)];
+  const treeItems = useMemo(
+    () => [...linkGroups, ...buildTreeItems(null)],
+    [linkGroups, buildTreeItems],
+  );
 
-  const renderItem = (item: TreeItem): ReactElement => (
-    <DocumentTreeItem item={item} renderItem={renderItem} documents={documents} />
+  const openTabs = useAtomValue(documentTabsAtom);
+  const openTabIds = useMemo(() => new Set(openTabs.map((t) => t.documentId)), [openTabs]);
+
+  const renderItem = useCallback(
+    (item: TreeItem): ReactElement => (
+      <DocumentTreeItem
+        item={item}
+        renderItem={renderItem}
+        documents={documents}
+        isCurrent={item.id === currentDocId}
+        isOpenInTabs={item.type === "document" ? openTabIds.has(item.id) : false}
+      />
+    ),
+    [documents, currentDocId, openTabIds],
   );
 
   const { dragAndDropHooks } = useDocumentDragDrop({
