@@ -1,6 +1,5 @@
 import { atom } from "jotai";
-
-import { storedActiveTabIdAtom, storedDocumentTabsAtom } from "./tabs-storage";
+import { atomWithStorage } from "jotai/utils";
 
 export interface DocumentTab {
   documentId: string;
@@ -9,211 +8,174 @@ export interface DocumentTab {
   isPreview?: boolean;
 }
 
-// Maximum number of open tabs
+const STORAGE_KEY = "lydie-document-tabs";
 const MAX_TABS = 10;
 
-class TabManager {
-  private tabs: DocumentTab[] = [];
-  private activeTabId: string | null = null;
-  private listeners = new Set<() => void>();
+// Storage-backed atoms
+const storedTabsAtom = atomWithStorage<DocumentTab[]>(STORAGE_KEY, []);
+const storedActiveTabIdAtom = atomWithStorage<string | null>(
+  `${STORAGE_KEY}-active`,
+  null,
+);
 
-  /**
-   * Open a new tab or activate an existing one.
-   */
-  openTab(documentId: string, title: string, isPreview = false): void {
-    const existingIndex = this.tabs.findIndex((t) => t.documentId === documentId);
+// Read-only derived atoms
+export const documentTabsAtom = atom((get) => get(storedTabsAtom));
+export const activeTabIdAtom = atom((get) => get(storedActiveTabIdAtom));
 
-    if (existingIndex !== -1) {
-      // Tab already exists, just activate it
-      this.activeTabId = documentId;
-      // If it was a preview tab and we're now "committing" to it, mark it as non-preview
-      if (!isPreview && this.tabs[existingIndex].isPreview) {
-        this.tabs[existingIndex].isPreview = false;
-      }
-    } else {
-      // Add new tab
-      if (this.tabs.length >= MAX_TABS) {
-        // Remove the oldest non-preview tab
-        const oldestNonPreviewIndex = this.tabs.findIndex((t) => !t.isPreview);
-        if (oldestNonPreviewIndex !== -1) {
-          this.tabs.splice(oldestNonPreviewIndex, 1);
-        } else {
-          // All tabs are previews, remove the oldest
-          this.tabs.shift();
-        }
-      }
+// Helper to find tab index
+const findTabIndex = (tabs: DocumentTab[], documentId: string) =>
+  tabs.findIndex((t) => t.documentId === documentId);
 
-      this.tabs.push({ documentId, title, isPreview });
-      this.activeTabId = documentId;
-    }
-
-    this.notifyListeners();
-  }
-
-  /**
-   * Close a tab by document ID.
-   */
-  closeTab(documentId: string): string | null {
-    const index = this.tabs.findIndex((t) => t.documentId === documentId);
-    if (index === -1) return this.activeTabId;
-
-    const wasActive = this.tabs[index].documentId === this.activeTabId;
-    this.tabs.splice(index, 1);
-
-    if (wasActive) {
-      // Activate the tab to the left, or the first tab, or null
-      const newActive = this.tabs[index - 1] || this.tabs[0] || null;
-      this.activeTabId = newActive?.documentId ?? null;
-    }
-
-    this.notifyListeners();
-    return this.activeTabId;
-  }
-
-  /**
-   * Activate a tab by document ID.
-   */
-  activateTab(documentId: string): void {
-    if (this.tabs.find((t) => t.documentId === documentId)) {
-      this.activeTabId = documentId;
-      this.notifyListeners();
-    }
-  }
-
-  /**
-   * Mark a tab as dirty (unsaved changes).
-   */
-  markDirty(documentId: string, isDirty: boolean): void {
-    const tab = this.tabs.find((t) => t.documentId === documentId);
-    if (tab && tab.isDirty !== isDirty) {
-      tab.isDirty = isDirty;
-      this.notifyListeners();
-    }
-  }
-
-  /**
-   * Update the title of a tab.
-   */
-  updateTitle(documentId: string, title: string): void {
-    const tab = this.tabs.find((t) => t.documentId === documentId);
-    if (tab && tab.title !== title) {
-      tab.title = title;
-      this.notifyListeners();
-    }
-  }
-
-  /**
-   * Replace the current preview tab with a new document.
-   * This is used when clicking on documents without opening them fully.
-   */
-  replacePreviewTab(documentId: string, title: string): void {
-    const previewIndex = this.tabs.findIndex((t) => t.isPreview);
-    if (previewIndex !== -1) {
-      // Replace the existing preview tab
-      this.tabs[previewIndex] = { documentId, title, isPreview: true };
-    } else {
-      // Add a new preview tab
-      this.openTab(documentId, title, true);
-      return;
-    }
-    this.activeTabId = documentId;
-    this.notifyListeners();
-  }
-
-  /**
-   * Get all tabs.
-   */
-  getTabs(): DocumentTab[] {
-    return [...this.tabs];
-  }
-
-  /**
-   * Get the active tab ID.
-   */
-  getActiveTabId(): string | null {
-    return this.activeTabId;
-  }
-
-  /**
-   * Check if a document has an open tab.
-   */
-  hasTab(documentId: string): boolean {
-    return this.tabs.some((t) => t.documentId === documentId);
-  }
-
-  /**
-   * Subscribe to tab changes.
-   */
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  private notifyListeners(): void {
-    for (const listener of this.listeners) {
-      listener();
-    }
-  }
-}
-
-// Singleton instance
-export const tabManager = new TabManager();
-
-// Jotai atoms for reactive access (backed by localStorage)
-export const documentTabsAtom = atom<DocumentTab[]>((get) => get(storedDocumentTabsAtom));
-export const activeTabIdAtom = atom<string | null>((get) => get(storedActiveTabIdAtom));
-
-// Action atoms for modifying tabs
+// Action: Open or activate a tab
 export const openDocumentTabAtom = atom(
   null,
   (_get, set, { documentId, title }: { documentId: string; title: string }) => {
-    tabManager.openTab(documentId, title);
-    set(storedDocumentTabsAtom, tabManager.getTabs());
-    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
+    const currentTabs = _get(storedTabsAtom);
+    const existingIndex = findTabIndex(currentTabs, documentId);
+
+    let newTabs: DocumentTab[];
+
+    if (existingIndex !== -1) {
+      // Tab exists - activate it and commit from preview if needed
+      newTabs = currentTabs.map((tab, i) =>
+        i === existingIndex ? { ...tab, isPreview: false } : tab,
+      );
+    } else {
+      // Add new tab, respecting max limit
+      newTabs = [...currentTabs, { documentId, title, isPreview: false }];
+      if (newTabs.length > MAX_TABS) {
+        // Remove oldest non-preview, or oldest if all are previews
+        const oldestNonPreviewIndex = newTabs.findIndex((t) => !t.isPreview);
+        const removeIndex =
+          oldestNonPreviewIndex !== -1
+            ? oldestNonPreviewIndex
+            : 0;
+        newTabs = newTabs.filter((_, i) => i !== removeIndex);
+      }
+    }
+
+    set(storedTabsAtom, newTabs);
+    set(storedActiveTabIdAtom, documentId);
   },
 );
 
+// Action: Close a tab and return next active ID
 export const closeDocumentTabAtom = atom(
   null,
-  (_get, set, documentId: string) => {
-    const nextActiveId = tabManager.closeTab(documentId);
-    set(storedDocumentTabsAtom, tabManager.getTabs());
-    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
+  (_get, set, documentId: string): string | null => {
+    const currentTabs = _get(storedTabsAtom);
+    const currentActiveId = _get(storedActiveTabIdAtom);
+    const index = findTabIndex(currentTabs, documentId);
+
+    if (index === -1) return currentActiveId;
+
+    const wasActive = currentTabs[index].documentId === currentActiveId;
+    const newTabs = currentTabs.filter((t) => t.documentId !== documentId);
+
+    let nextActiveId = currentActiveId;
+    if (wasActive) {
+      nextActiveId =
+        newTabs[index - 1]?.documentId ?? newTabs[0]?.documentId ?? null;
+      set(storedActiveTabIdAtom, nextActiveId);
+    }
+
+    set(storedTabsAtom, newTabs);
     return nextActiveId;
   },
 );
 
+// Action: Activate a tab
 export const activateDocumentTabAtom = atom(
   null,
   (_get, set, documentId: string) => {
-    tabManager.activateTab(documentId);
-    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
+    const currentTabs = _get(storedTabsAtom);
+    if (findTabIndex(currentTabs, documentId) !== -1) {
+      set(storedActiveTabIdAtom, documentId);
+    }
   },
 );
 
+// Action: Mark tab dirty state
 export const markTabDirtyAtom = atom(
   null,
   (_get, set, { documentId, isDirty }: { documentId: string; isDirty: boolean }) => {
-    tabManager.markDirty(documentId, isDirty);
-    set(storedDocumentTabsAtom, tabManager.getTabs());
+    const currentTabs = _get(storedTabsAtom);
+    const newTabs = currentTabs.map((tab) =>
+      tab.documentId === documentId ? { ...tab, isDirty } : tab,
+    );
+    set(storedTabsAtom, newTabs);
   },
 );
 
+// Action: Update tab title
 export const updateTabTitleAtom = atom(
   null,
   (_get, set, { documentId, title }: { documentId: string; title: string }) => {
-    tabManager.updateTitle(documentId, title);
-    set(storedDocumentTabsAtom, tabManager.getTabs());
+    const currentTabs = _get(storedTabsAtom);
+    const newTabs = currentTabs.map((tab) =>
+      tab.documentId === documentId ? { ...tab, title } : tab,
+    );
+    set(storedTabsAtom, newTabs);
   },
 );
 
+// Action: Replace preview tab (for single-click navigation)
 export const replacePreviewTabAtom = atom(
   null,
   (_get, set, { documentId, title }: { documentId: string; title: string }) => {
-    tabManager.replacePreviewTab(documentId, title);
-    set(storedDocumentTabsAtom, tabManager.getTabs());
-    set(storedActiveTabIdAtom, tabManager.getActiveTabId());
+    const currentTabs = _get(storedTabsAtom);
+    const previewIndex = currentTabs.findIndex((t) => t.isPreview);
+
+    let newTabs: DocumentTab[];
+    if (previewIndex !== -1) {
+      // Replace existing preview
+      newTabs = currentTabs.map((tab, i) =>
+        i === previewIndex ? { documentId, title, isPreview: true } : tab,
+      );
+    } else {
+      // Add new preview tab
+      newTabs = [...currentTabs, { documentId, title, isPreview: true }];
+      if (newTabs.length > MAX_TABS) {
+        const oldestNonPreviewIndex = newTabs.findIndex((t) => !t.isPreview);
+        const removeIndex =
+          oldestNonPreviewIndex !== -1 ? oldestNonPreviewIndex : 0;
+        newTabs = newTabs.filter((_, i) => i !== removeIndex);
+      }
+    }
+
+    set(storedTabsAtom, newTabs);
+    set(storedActiveTabIdAtom, documentId);
+  },
+);
+
+// Combined action for syncing document on mount/title change
+export const syncDocumentTabAtom = atom(
+  null,
+  (
+    _get,
+    set,
+    {
+      documentId,
+      title,
+      mode = "open",
+    }: { documentId: string; title: string; mode?: "open" | "preview" },
+  ) => {
+    const currentTabs = _get(storedTabsAtom);
+    const existingIndex = findTabIndex(currentTabs, documentId);
+
+    if (existingIndex !== -1) {
+      // Tab exists - update title and activate
+      const newTabs = currentTabs.map((tab, i) =>
+        i === existingIndex ? { ...tab, title, isPreview: false } : tab,
+      );
+      set(storedTabsAtom, newTabs);
+      set(storedActiveTabIdAtom, documentId);
+    } else if (mode === "preview") {
+      // Add as preview tab
+      set(replacePreviewTabAtom, { documentId, title });
+    } else {
+      // Open as regular tab
+      set(openDocumentTabAtom, { documentId, title });
+    }
   },
 );

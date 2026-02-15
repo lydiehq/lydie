@@ -3,7 +3,7 @@ import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Button, Tab, TabList, Tabs, TabPanels, type Key } from "react-aria-components";
 
 import {
@@ -11,8 +11,7 @@ import {
   closeDocumentTabAtom,
   documentTabsAtom,
   activeTabIdAtom,
-  openDocumentTabAtom,
-  updateTabTitleAtom,
+  syncDocumentTabAtom,
 } from "@/atoms/tabs";
 
 interface DocumentTabBarProps {
@@ -91,18 +90,27 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                 } ${tab.isPreview ? "italic" : ""}`
               }
             >
-              <DocumentThumbnailIcon className="size-4 shrink-0" />
-              <span className="flex-1 truncate text-sm font-medium text-gray-700">
-                {tab.title || "Untitled"}
-              </span>
-              {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
-              <Button
-                onPress={() => handleClose(tab.documentId)}
-                aria-label={`Close ${tab.title || "Untitled"}`}
-                className="opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-0.5 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
-              >
-                <Dismiss12Filled className={sidebarItemIconStyles({ className: "size-3" })} />
-              </Button>
+              {(renderProps) => (
+                <>
+                  <DocumentThumbnailIcon
+                    className="size-4 shrink-0"
+                    active={renderProps.isSelected}
+                  />
+                  <span className="flex-1 truncate text-sm font-medium text-gray-700">
+                    {tab.title || "Untitled"}
+                  </span>
+                  {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
+                  <Button
+                    onPress={() => handleClose(tab.documentId)}
+                    aria-label={`Close ${tab.title || "Untitled"}`}
+                    className="opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-0.5 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
+                  >
+                    <Dismiss12Filled
+                      className={sidebarItemIconStyles({ className: "size-3" })}
+                    />
+                  </Button>
+                </>
+              )}
             </Tab>
           ))}
         </TabList>
@@ -116,19 +124,22 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
  * Hook to sync the current document with the tab bar.
  * Call this from the document route component.
  */
-export function useDocumentTabSync(documentId: string | undefined, title: string | undefined) {
-  const openTab = useSetAtom(openDocumentTabAtom);
-  const updateTitle = useSetAtom(updateTabTitleAtom);
+export function useDocumentTabSync(
+  documentId: string | undefined,
+  title: string | undefined,
+  mode: "open" | "preview" = "open",
+) {
+  const syncTab = useSetAtom(syncDocumentTabAtom);
+  const syncedRef = useRef<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
-    if (documentId && title) {
-      openTab({ documentId, title });
-    }
-  }, [documentId, title, openTab]);
+    if (!documentId || !title) return;
 
-  useEffect(() => {
-    if (documentId && title) {
-      updateTitle({ documentId, title });
-    }
-  }, [documentId, title, updateTitle]);
+    // Only sync if document ID or title actually changed
+    const last = syncedRef.current;
+    if (last?.id === documentId && last?.title === title) return;
+
+    syncTab({ documentId, title, mode });
+    syncedRef.current = { id: documentId, title };
+  }, [documentId, title, mode, syncTab]);
 }

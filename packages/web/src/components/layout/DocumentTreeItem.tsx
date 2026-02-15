@@ -5,7 +5,6 @@ import {
   ArrowClockwiseRegular,
   ArrowRightRegular,
   CubeRegular,
-  DocumentHeart24Filled,
   FolderSyncRegular,
   MoreHorizontalRegular,
   ReOrderRegular,
@@ -35,7 +34,6 @@ type Props = {
     name: string;
     type: "document" | "integration-link" | "integration-group";
     isLocked?: boolean;
-    isFavorited?: boolean;
     children?: Array<{
       id: string;
       name: string;
@@ -45,7 +43,6 @@ type Props = {
       integrationType?: string;
       syncStatus?: string | null;
       isLocked?: boolean;
-      isFavorited?: boolean;
     }>;
     integrationLinkId?: string | null;
     integrationType?: string;
@@ -153,7 +150,6 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
                   isExpanded={isExpanded}
                   hasChildren={item.children !== undefined && item.children.length > 0}
                   isMenuOpen={isMenuOpen}
-                  isFavorited={item.isFavorited ?? false}
                   inTabRegistry={isOpenInTabs}
                 />
               )}
@@ -290,13 +286,11 @@ function DocumentTreeItemIcon({
   isExpanded,
   hasChildren,
   isMenuOpen,
-  isFavorited,
   inTabRegistry,
 }: {
   isExpanded: boolean;
   hasChildren: boolean;
   isMenuOpen: boolean;
-  isFavorited: boolean;
   inTabRegistry?: boolean;
 }) {
   // If no children, show document icon (heart when favorited, default otherwise)
