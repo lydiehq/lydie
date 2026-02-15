@@ -155,7 +155,10 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
           <DocumentsSection />
         </div>
         <div className="px-2">{isFreePlan && !userIsAdmin && <UsageStats />}</div>
-        <BottomBar />
+        <div className="flex flex-col gap-y-4 px-2.5 pb-1">
+          <FeedbackWidget />
+          {/* {userIsAdmin && <ZeroConnectionStatus />} */}
+        </div>
       </div>
     </div>
   );
@@ -246,13 +249,4 @@ const DocumentsSection = memo(function DocumentsSection() {
       </DisclosurePanel>
     </Disclosure>
   );
-}
-
-function BottomBar() {
-  return (
-    <div className="flex flex-col gap-y-4 px-2.5 pb-1">
-      <FeedbackWidget />
-      {/* {userIsAdmin && <ZeroConnectionStatus />} */}
-    </div>
-  );
-}
+});

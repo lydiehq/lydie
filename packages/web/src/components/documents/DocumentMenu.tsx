@@ -3,7 +3,7 @@ import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Input, Label } from "@lydie/ui/components/generic/Field";
-import { Menu, MenuItem, MenuSeparator } from "@lydie/ui/components/generic/Menu";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Modal } from "@lydie/ui/components/generic/Modal";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
@@ -23,8 +23,6 @@ import { useZero } from "@/services/zero";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { isAdmin } from "@/utils/admin";
 
-import { CreateTemplateDialog } from "./CreateTemplateDialog";
-
 type DocumentMenuProps = {
   documentId: string;
   documentName: string;
@@ -38,7 +36,6 @@ export function DocumentMenu({
 }: DocumentMenuProps) {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
-  const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(documentName);
 
   const z = useZero();
@@ -127,14 +124,6 @@ export function DocumentMenu({
           <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
         )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
-        {userIsAdmin && (
-          <>
-            <MenuSeparator />
-            <MenuItem onAction={() => setIsCreateTemplateDialogOpen(true)}>
-              Create template
-            </MenuItem>
-          </>
-        )}
       </Menu>
 
       <Modal isOpen={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen} isDismissable>
@@ -240,13 +229,6 @@ export function DocumentMenu({
           </div>
         </Dialog>
       </Modal>
-
-      <CreateTemplateDialog
-        isOpen={isCreateTemplateDialogOpen}
-        onOpenChange={setIsCreateTemplateDialogOpen}
-        documentId={documentId}
-        onSuccess={() => setIsCreateTemplateDialogOpen(false)}
-      />
     </>
   );
 }
