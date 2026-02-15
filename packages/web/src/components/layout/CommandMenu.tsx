@@ -13,7 +13,7 @@ import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { type ComponentType, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
@@ -30,6 +30,7 @@ import {
   useFilter,
 } from "react-aria-components";
 
+import { openBackgroundTabAtom } from "@/atoms/tabs";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { commandMenuOpenAtom } from "@/stores/command-menu";
@@ -64,6 +65,7 @@ export function CommandMenu() {
   const navigate = useNavigate();
   const { organization } = useOrganization();
   const [search, setSearch] = useState("");
+  const openBackgroundTab = useSetAtom(openBackgroundTabAtom);
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
 
@@ -294,6 +296,25 @@ export function CommandMenu() {
     publishDocument,
   ]);
 
+  // Handle document click - supports cmd+click to open in background
+  const handleDocumentClick = useCallback(
+    (e: React.MouseEvent, item: DocumentItem) => {
+      if (e.metaKey || e.ctrlKey) {
+        // Cmd/Ctrl+click: open in background tab without navigating or closing menu
+        e.preventDefault();
+        e.stopPropagation();
+        openBackgroundTab({
+          documentId: item.documentId,
+          title: item.label,
+        });
+        return;
+      }
+      // Normal click: navigate and close menu
+      handleCommand(item.action);
+    },
+    [handleCommand, openBackgroundTab],
+  );
+
   // Create document items from search results
   const documentItems = useMemo<DocumentItem[]>(() => {
     if (search.length < 2) {
@@ -400,10 +421,7 @@ export function CommandMenu() {
                       id={item.id}
                       textValue={item.label}
                       onAction={() => handleCommand(item.action)}
-                      onFocus={() => {
-                        alert(0);
-                        console.log("focus", item.label);
-                      }}
+                      onPointerUp={(e) => handleDocumentClick(e as unknown as React.MouseEvent, item)}
                       className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
                     >
                       <DocumentIcon className="size-4 text-gray-400 shrink-0 mr-2" />

@@ -4,8 +4,8 @@ import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Editor } from "@/components/Editor";
-import { Surface } from "@/components/layout/Surface";
 import { useDocumentTabSync } from "@/components/layout/DocumentTabBar";
+import { Surface } from "@/components/layout/Surface";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 

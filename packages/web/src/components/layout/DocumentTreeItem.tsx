@@ -17,12 +17,12 @@ import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { queries } from "@lydie/zero/queries";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useAtomValue } from "jotai";
-import { type ReactElement, useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { type ReactElement, useRef, useState } from "react";
 import { Button, MenuTrigger, TreeItem, TreeItemContent } from "react-aria-components";
 import { Collection } from "react-aria-components";
 
-import { documentTabsAtom } from "@/atoms/tabs";
+import { documentTabsAtom, openBackgroundTabAtom, openPersistentTabAtom, openPreviewTabAtom } from "@/atoms/tabs";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
@@ -67,6 +67,10 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
   const isGroup = item.type === "integration-group";
   const isLocked = item.isLocked ?? false;
 
+  const openPersistentTab = useSetAtom(openPersistentTabAtom);
+  const openPreviewTab = useSetAtom(openPreviewTabAtom);
+  const lastClickTimeRef = useRef<number>(0);
+
   const handleAction = () => {
     if (isGroup && item.integrationType) {
       navigate({
@@ -86,11 +90,46 @@ export function DocumentTreeItem({ item, renderItem }: Props) {
     }
   };
 
+  const openBackgroundTab = useSetAtom(openBackgroundTabAtom);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (item.type !== "document") return;
+
+    // Check if this is a hard open (cmd+click or double click)
+    const isCmdClick = e.metaKey && e.button === 0;
+    const now = Date.now();
+    const isDoubleClick = now - lastClickTimeRef.current < 300;
+    lastClickTimeRef.current = now;
+
+    const isPersistentOpen = isCmdClick || isDoubleClick;
+
+    if (isCmdClick) {
+      // Cmd+click: open in background tab without navigating
+      e.preventDefault();
+      e.stopPropagation();
+      openBackgroundTab({ documentId: item.id, title: item.name });
+      return;
+    }
+
+    if (isPersistentOpen) {
+      openPersistentTab({ documentId: item.id, title: item.name });
+    } else {
+      openPreviewTab({ documentId: item.id, title: item.name });
+    }
+
+    navigate({
+      to: "/w/$organizationSlug/$id",
+      params: { id: item.id },
+      from: "/w/$organizationSlug",
+    });
+  };
+
   return (
     <TreeItem
       id={item.id}
       textValue={item.name}
       onAction={handleAction}
+      onClick={handleClick}
       className={composeTailwindRenderProps(
         focusRing,
         sidebarItemStyles({

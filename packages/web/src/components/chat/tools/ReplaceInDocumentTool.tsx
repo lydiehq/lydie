@@ -12,10 +12,7 @@ import { useEffect } from "react";
 import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
 
-import {
-  pendingChangeStatusAtom,
-  pendingEditorChangeAtom,
-} from "@/atoms/editor";
+import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useActiveDocumentId, useEditorRegistry } from "@/hooks/use-editor";
@@ -86,7 +83,7 @@ export function ReplaceInDocumentTool({
 
   // Get active document editors as fallback
   const activeInstance = activeDocumentId ? registry.get(activeDocumentId) : undefined;
-  
+
   // Use target document's editors if available, otherwise fall back to active document's editors
   const editor = targetInstance?.contentEditor ?? activeInstance?.contentEditor ?? null;
   const titleEditor = targetInstance?.titleEditor ?? activeInstance?.titleEditor ?? null;
@@ -300,7 +297,7 @@ export function ReplaceInDocumentTool({
     const needsTitleEditor = !!newTitle;
     const hasContentEditor = !!editor;
     const hasTitleEditor = !!titleEditor;
-    
+
     if ((needsContentEditor && !hasContentEditor) || (needsTitleEditor && !hasTitleEditor)) {
       console.log("Editors not ready, using pending change mechanism", {
         needsContentEditor,
@@ -308,11 +305,11 @@ export function ReplaceInDocumentTool({
         needsTitleEditor,
         hasTitleEditor,
       });
-      
+
       setIsApplying(true);
       setApplyStatus("Waiting for editor to initialize...");
       setErrorMessage("");
-      
+
       // Store the pending change - Editor.tsx useEffect will apply it
       setPendingChange({
         documentId: currentDocId,
@@ -322,7 +319,7 @@ export function ReplaceInDocumentTool({
         organizationId,
       });
       setPendingChangeStatus("pending");
-      
+
       // Safety timeout in case editor never initializes
       applyTimeoutRef.current = setTimeout(() => {
         if (isApplying) {
@@ -334,7 +331,7 @@ export function ReplaceInDocumentTool({
           setPendingChange(null);
         }
       }, 10000);
-      
+
       return;
     }
 

@@ -137,6 +137,122 @@ test.describe("document tabs", () => {
     await expect(tabList.getByRole("tab", { name: "Updated Title" })).toBeVisible();
     await expect(tabList.getByRole("tab", { name: "Original Title" })).not.toBeVisible();
   });
+
+  test("single click opens preview tab (italic style)", async ({ page, organization }) => {
+    // Create a document
+    await createDocument(page, organization.slug, {
+      title: "Preview Document",
+      content: "Preview content",
+    });
+
+    // Navigate back to workspace
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+
+    // Single click on document in sidebar
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+    await sidebarTree.getByRole("row", { name: "Preview Document" }).click();
+
+    // Tab should appear with italic style (preview mode)
+    const previewTab = tabList.getByRole("tab", { name: "Preview Document" });
+    await expect(previewTab).toBeVisible();
+    await expect(previewTab).toHaveClass(/italic/);
+  });
+
+  test("double click on sidebar opens hard tab (non-italic)", async ({ page, organization }) => {
+    // Create a document
+    await createDocument(page, organization.slug, {
+      title: "Hard Open Document",
+      content: "Hard open content",
+    });
+
+    // Navigate back to workspace
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+
+    // Double click on document in sidebar
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+    await sidebarTree.getByRole("row", { name: "Hard Open Document" }).dblclick();
+
+    // Tab should appear without italic style (hard open)
+    const hardTab = tabList.getByRole("tab", { name: "Hard Open Document" });
+    await expect(hardTab).toBeVisible();
+    await expect(hardTab).not.toHaveClass(/italic/);
+  });
+
+  test("cmd+click on sidebar opens hard tab", async ({ page, organization }) => {
+    // Create a document
+    await createDocument(page, organization.slug, {
+      title: "Cmd Click Document",
+      content: "Cmd click content",
+    });
+
+    // Navigate back to workspace
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+
+    // Cmd+click on document in sidebar
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+    const row = sidebarTree.getByRole("row", { name: "Cmd Click Document" });
+    await row.click({ modifiers: ["Meta"] });
+
+    // Tab should appear without italic style (hard open)
+    const hardTab = tabList.getByRole("tab", { name: "Cmd Click Document" });
+    await expect(hardTab).toBeVisible();
+    await expect(hardTab).not.toHaveClass(/italic/);
+  });
+
+  test("double click on preview tab converts to hard tab", async ({ page, organization }) => {
+    // Create a document
+    await createDocument(page, organization.slug, {
+      title: "Convert to Hard Tab",
+      content: "Convert content",
+    });
+
+    // Navigate back to workspace
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+
+    // Single click to open as preview
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+    await sidebarTree.getByRole("row", { name: "Convert to Hard Tab" }).click();
+
+    // Verify it's a preview tab (italic)
+    const previewTab = tabList.getByRole("tab", { name: "Convert to Hard Tab" });
+    await expect(previewTab).toHaveClass(/italic/);
+
+    // Double click the tab to convert to hard tab
+    await previewTab.dblclick();
+
+    // Tab should no longer have italic style
+    await expect(previewTab).not.toHaveClass(/italic/);
+  });
+
+  test("preview tab is replaced when opening another document", async ({ page, organization }) => {
+    // Create two documents
+    await createDocument(page, organization.slug, {
+      title: "First Preview Doc",
+      content: "First content",
+    });
+
+    await createDocument(page, organization.slug, {
+      title: "Second Preview Doc",
+      content: "Second content",
+    });
+
+    // Navigate back to workspace
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+
+    // Single click first document (opens as preview)
+    await sidebarTree.getByRole("row", { name: "First Preview Doc" }).click();
+    await expect(tabList.getByRole("tab", { name: "First Preview Doc" })).toBeVisible();
+
+    // Single click second document (should replace preview)
+    await sidebarTree.getByRole("row", { name: "Second Preview Doc" }).click();
+
+    // Second document should be visible
+    await expect(tabList.getByRole("tab", { name: "Second Preview Doc" })).toBeVisible();
+    // First document should be replaced (no longer visible)
+    await expect(tabList.getByRole("tab", { name: "First Preview Doc" })).not.toBeVisible();
+  });
 });
 
 async function createDocument(

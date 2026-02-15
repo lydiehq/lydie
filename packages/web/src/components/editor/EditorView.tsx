@@ -2,6 +2,7 @@ import type { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import type { Editor } from "@tiptap/core";
 
+import { Database16Filled } from "@fluentui/react-icons";
 import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useRef } from "react";
@@ -64,6 +65,9 @@ export function EditorView({
             organizationId={doc.organization_id}
             coverImage={doc.cover_image}
           />
+          <div className="size-12 bg-black/5 shrink-0 rounded-xl relative">
+            <Database16Filled className="size-8 text-black/35 absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2" />
+          </div>
 
           <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 

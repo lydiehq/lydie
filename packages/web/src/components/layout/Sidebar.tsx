@@ -70,7 +70,7 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
 
   return (
     <div className="flex flex-col grow max-h-screen">
-      <div className="flex justify-between items-center p-3">
+      <div className="flex justify-between items-center px-3 pt-1.5 pb-1">
         <OrganizationMenu isCollapsed={isCollapsed} />
         <TooltipTrigger delay={500}>
           <RACButton
@@ -183,7 +183,7 @@ const FavoritesSection = memo(function FavoritesSection() {
   return (
     <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
       <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
-        <Eyebrow>Favorites</Eyebrow>
+        <Eyebrow className="ml-1">Favorites</Eyebrow>
         <Heading>
           <RACButton
             slot="trigger"
@@ -216,7 +216,7 @@ const DocumentsSection = memo(function DocumentsSection() {
       onExpandedChange={setIsExpanded}
     >
       <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
-        <Eyebrow>Documents</Eyebrow>
+        <Eyebrow className="ml-1">Documents</Eyebrow>
         <Heading>
           <RACButton
             slot="trigger"

@@ -2,8 +2,10 @@ import { createId } from "@lydie/core/id";
 import { mutators } from "@lydie/zero/mutators";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouter } from "@tanstack/react-router";
+import { useSetAtom } from "jotai";
 import { toast } from "sonner";
 
+import { closeDocumentTabAtom, openPersistentTabAtom } from "@/atoms/tabs";
 import { useOrganization } from "@/context/organization.context";
 import { trackEvent } from "@/lib/posthog";
 import { useZero } from "@/services/zero";
@@ -13,6 +15,8 @@ export function useDocumentActions() {
   const navigate = useNavigate();
   const { navigate: routerNavigate } = useRouter();
   const { organization } = useOrganization();
+  const openPersistentTab = useSetAtom(openPersistentTabAtom);
+  const closeDocumentTab = useSetAtom(closeDocumentTabAtom);
 
   const createDocument = async (
     parentId?: string,
@@ -21,6 +25,8 @@ export function useDocumentActions() {
     title?: string,
   ) => {
     const id = createId();
+    const documentTitle = title || "Untitled";
+
     z.mutate(
       mutators.document.create({
         id,
@@ -31,6 +37,9 @@ export function useDocumentActions() {
         title,
       }),
     );
+
+    // Immediately open the tab so it appears before navigation completes
+    openPersistentTab({ documentId: id, title: documentTitle });
 
     trackEvent("document_created", {
       has_parent: !!parentId,
@@ -62,6 +71,9 @@ export function useDocumentActions() {
         trackEvent("document_deleted", {
           has_integration: !!integrationLinkId,
         });
+
+        // Remove the tab from the tab bar
+        closeDocumentTab(documentId);
 
         toast.success("Document deleted");
 

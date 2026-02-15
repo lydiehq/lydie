@@ -75,12 +75,12 @@ export function OrganizationMenu({ isCollapsed }: Props) {
           className={composeTailwindRenderProps(
             focusRing,
             clsx(
-              "group flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-lg overflow-hidden aria-expanded:bg-black/3",
+              "group flex justify-between items-center gap-x-2 hover:bg-black/3 rounded-lg overflow-hidden aria-expanded:bg-black/3 h-[28px]",
               !isCollapsed && "px-1.5 py-0.5 -mx-1.5",
             ),
           )}
         >
-          <OrganizationAvatar name={avatarName} color={avatarColor} size="md" />
+          <OrganizationAvatar name={avatarName} color={avatarColor} size="sm" />
           {!isCollapsed && (
             <>
               <div className="font-medium text-gray-700 text-sm whitespace-nowrap truncate">

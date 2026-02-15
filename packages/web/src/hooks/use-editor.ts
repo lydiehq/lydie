@@ -1,10 +1,6 @@
 import { useAtomValue } from "jotai";
 
-import {
-  activeDocumentIdAtom,
-  activeEditorInstanceAtom,
-  editorRegistry,
-} from "@/atoms/editor";
+import { activeDocumentIdAtom, activeEditorInstanceAtom, editorRegistry } from "@/atoms/editor";
 
 /**
  * Get the full editor instance for the currently active document.
@@ -24,7 +20,7 @@ export function useActiveDocumentId() {
 /**
  * Get the editor registry singleton.
  * Use this to access editors for specific documents.
- * 
+ *
  * Example:
  *   const registry = useEditorRegistry();
  *   const instance = registry.get(documentId);
