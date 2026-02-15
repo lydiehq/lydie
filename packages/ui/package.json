@@ -18,7 +18,7 @@
     "react-aria": "^3.46.0",
     "react-aria-components": "^1.15.1",
     "react-dom": "catalog:",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.1"
   },
   "devDependencies": {
     "@types/node": "^25.2.3",

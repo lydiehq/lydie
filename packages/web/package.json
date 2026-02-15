@@ -67,7 +67,7 @@
     "react-stately": "^3.44.0",
     "sonner": "^2.0.7",
     "streamdown": "^2.2.0",
-    "tailwind-merge": "^3.4.0",
+    "tailwind-merge": "^3.4.1",
     "tailwind-scrollbar": "^4.0.2",
     "tailwindcss": "^4.1.18",
     "tippy.js": "^6.3.7",
