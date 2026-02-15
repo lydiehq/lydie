@@ -15,7 +15,7 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import { useAtom, useSetAtom } from "jotai";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 
 import { isFavoritesExpandedAtom, isDocumentsExpandedAtom } from "@/atoms/workspace-settings";
@@ -37,7 +37,7 @@ type Props = {
   onToggle: () => void;
 };
 
-export function Sidebar({ isCollapsed, onToggle }: Props) {
+export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
   const { organization } = useOrganization();
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
@@ -159,9 +159,9 @@ export function Sidebar({ isCollapsed, onToggle }: Props) {
       </div>
     </div>
   );
-}
+});
 
-function FavoritesSection() {
+const FavoritesSection = memo(function FavoritesSection() {
   const [isExpanded, setIsExpanded] = useAtom(isFavoritesExpandedAtom);
   const { organization } = useOrganization();
   const [orgData] = useQuery(
@@ -200,9 +200,9 @@ function FavoritesSection() {
       </DisclosurePanel>
     </Disclosure>
   );
-}
+});
 
-function DocumentsSection() {
+const DocumentsSection = memo(function DocumentsSection() {
   const [isExpanded, setIsExpanded] = useAtom(isDocumentsExpandedAtom);
   const { createDocument } = useDocumentActions();
 

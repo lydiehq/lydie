@@ -7,7 +7,7 @@
     "./*": "./src/*"
   },
   "dependencies": {
-    "@fluentui/react-icons": "^2.0.318",
+    "@fluentui/react-icons": "^2.0.319",
     "@tiptap/core": "catalog:",
     "@tiptap/react": "catalog:",
     "clsx": "^2.1.1",

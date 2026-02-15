@@ -48,7 +48,7 @@
     "fmt:check": "oxfmt --check"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.45",
+    "@ai-sdk/gateway": "^3.0.46",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/react-query-persist-client": "^5.90.22",
@@ -61,10 +61,10 @@
     "@tsconfig/node20": "^20.1.9",
     "@types/bun": "^1.3.9",
     "@vitest/ui": "^4.0.18",
-    "jsdom": "^28.0.0",
+    "jsdom": "^28.1.0",
     "oxfmt": "^0.32.0",
     "oxlint": "^1.47.0",
-    "oxlint-tsgolint": "^0.12.1",
+    "oxlint-tsgolint": "^0.12.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
