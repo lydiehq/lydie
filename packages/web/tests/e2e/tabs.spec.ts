@@ -253,6 +253,48 @@ test.describe("document tabs", () => {
     // First document should be replaced (no longer visible)
     await expect(tabList.getByRole("tab", { name: "First Preview Doc" })).not.toBeVisible();
   });
+
+  test("preview tabs always appear at the end of the tab bar", async ({ page, organization }) => {
+    // Create two persistent documents
+    await createDocument(page, organization.slug, {
+      title: "Persistent Doc 1",
+      content: "Persistent content 1",
+    });
+
+    await createDocument(page, organization.slug, {
+      title: "Persistent Doc 2",
+      content: "Persistent content 2",
+    });
+
+    // Create a third document that will be opened as preview
+    await createDocument(page, organization.slug, {
+      title: "Preview Doc",
+      content: "Preview content",
+    });
+
+    // Navigate back to workspace
+    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+
+    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
+
+    // Single click the third document (opens as preview)
+    await sidebarTree.getByRole("row", { name: "Preview Doc" }).click();
+    await expect(tabList.getByRole("tab", { name: "Preview Doc" })).toBeVisible();
+
+    // Get all tabs and verify order
+    const allTabs = tabList.getByRole("tab");
+    await expect(allTabs).toHaveCount(3);
+
+    // Preview tab should be the last one
+    const tabTexts = await allTabs.allTextContents();
+    expect(tabTexts[0]).toBe("Persistent Doc 1");
+    expect(tabTexts[1]).toBe("Persistent Doc 2");
+    expect(tabTexts[2]).toBe("Preview Doc");
+
+    // Verify preview tab has italic style
+    const previewTab = tabList.getByRole("tab", { name: "Preview Doc" });
+    await expect(previewTab).toHaveClass(/italic/);
+  });
 });
 
 async function createDocument(

@@ -62,15 +62,15 @@ export function DocumentThumbnailIcon({
   showFoldDecoration = false,
   size = "md",
 }: Props) {
-  if (showFoldDecoration) {
-    return (
-      <div className={clsx("relative", className)}>
-        <div className={wrapperStyles({ size })}>
-          <Database16Filled className={iconStyles({ size })} />
-        </div>
-      </div>
-    );
-  }
+  // if (showFoldDecoration) {
+  //   return (
+  //     <div className={clsx("relative", className)}>
+  //       <div className={wrapperStyles({ size })}>
+  //         <Database16Filled className={iconStyles({ size })} />
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className={clsx("relative", className)}>

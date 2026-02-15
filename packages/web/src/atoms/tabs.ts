@@ -13,12 +13,20 @@ export interface DocumentTab {
 const STORAGE_KEY = "lydie:document:tabs";
 const MAX_TABS = 10;
 
-// Storage-backed atoms
 const storedTabsAtom = atomWithStorage<DocumentTab[]>(STORAGE_KEY, []);
 const storedActiveTabIdAtom = atomWithStorage<string | null>(`${STORAGE_KEY}-active`, null);
 
 // Read-only derived atoms
-export const documentTabsAtom = atom((get) => get(storedTabsAtom));
+export const documentTabsAtom = atom((get) => {
+  const tabs = get(storedTabsAtom);
+  // Sort tabs: persistent tabs first, then preview tabs at the end
+  return [...tabs].sort((a, b) => {
+    const aIsPreview = a.mode === "preview";
+    const bIsPreview = b.mode === "preview";
+    if (aIsPreview === bIsPreview) return 0;
+    return aIsPreview ? 1 : -1;
+  });
+});
 export const activeTabIdAtom = atom((get) => get(storedActiveTabIdAtom));
 
 // Helper to find tab index
