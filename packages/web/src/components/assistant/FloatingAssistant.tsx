@@ -104,7 +104,6 @@ export function FloatingAssistant({
             layoutId={LAYOUT_ID.container}
             className="fixed right-4 bottom-4 z-30 rounded-2xl bg-white shadow-popover size-10 flex items-center justify-center hover:bg-gray-50"
             aria-label="Open AI Assistant"
-            role="region"
           >
             <motion.div layoutId={LAYOUT_ID.icon}>
               <PersonChatFilled className="size-4.5 icon-muted" aria-hidden="true" />

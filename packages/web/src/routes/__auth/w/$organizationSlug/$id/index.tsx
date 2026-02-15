@@ -5,6 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Editor } from "@/components/Editor";
 import { Surface } from "@/components/layout/Surface";
+import { useDocumentTabSync } from "@/components/layout/DocumentTabBar";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
@@ -37,6 +38,7 @@ function RouteComponent() {
   );
 
   useDocumentTitle(doc?.title, { suffix: "" });
+  useDocumentTabSync(doc?.id, doc?.title);
 
   if (!doc && status.type === "complete") {
     return (

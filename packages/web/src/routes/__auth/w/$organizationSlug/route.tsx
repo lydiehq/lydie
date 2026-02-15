@@ -15,6 +15,7 @@ import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
 import { isFloatingAssistantDockedAtom as isDockedAtom } from "@/atoms/workspace-settings";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
+import { DocumentTabBar } from "@/components/layout/DocumentTabBar";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarIcon } from "@/components/layout/SidebarIcon";
@@ -194,8 +195,11 @@ function RouteLayout() {
             <Sidebar isCollapsed={size === COLLAPSED_SIZE} onToggle={toggleSidebar} />
           </Panel>
           <PanelResizer />
-          <Panel className="relative">
-            <Outlet />
+          <Panel className="relative flex flex-col">
+            <div className="flex-1 relative overflow-hidden">
+              <DocumentTabBar organizationSlug={params.organizationSlug} />
+              <Outlet />
+            </div>
             <FloatingSidebarToggleButton
               isCollapsed={size === COLLAPSED_SIZE}
               isEditorPage={!!currentDocumentId}

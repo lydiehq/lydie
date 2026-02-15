@@ -1,11 +1,37 @@
 import { useAtomValue } from "jotai";
 
-import { documentEditorAtom, titleEditorAtom } from "@/atoms/editor";
+import {
+  activeDocumentIdAtom,
+  activeEditorInstanceAtom,
+  editorRegistry,
+} from "@/atoms/editor";
 
-export function useDocumentEditor() {
-  return useAtomValue(documentEditorAtom);
+/**
+ * Get the full editor instance for the currently active document.
+ * Returns both content and title editors, plus metadata.
+ */
+export function useActiveEditor() {
+  return useAtomValue(activeEditorInstanceAtom);
 }
 
-export function useTitleEditor() {
-  return useAtomValue(titleEditorAtom);
+/**
+ * Get the ID of the currently active document.
+ */
+export function useActiveDocumentId() {
+  return useAtomValue(activeDocumentIdAtom);
+}
+
+/**
+ * Get the editor registry singleton.
+ * Use this to access editors for specific documents.
+ * 
+ * Example:
+ *   const registry = useEditorRegistry();
+ *   const instance = registry.get(documentId);
+ *   if (instance) {
+ *     instance.contentEditor.commands.setContent('...');
+ *   }
+ */
+export function useEditorRegistry() {
+  return editorRegistry;
 }

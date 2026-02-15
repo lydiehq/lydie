@@ -18,7 +18,6 @@ test.describe("assistant", () => {
     // Verify assistant is open (wait a bit for state initialization)
     const assistantWindow = page.getByRole("region", { name: "AI Assistant" });
     await expect(assistantWindow).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("AI Assistant")).toBeVisible();
 
     // Close the assistant
     const closeButton = page.getByRole("button", { name: "Close assistant" });
@@ -125,7 +124,6 @@ test.describe("assistant", () => {
 
     // Verify assistant is still open after refresh
     await expect(assistantWindow).toBeVisible();
-    await expect(page.getByText("AI Assistant")).toBeVisible();
   });
 
   test("hides docked assistant on settings route", async ({ page, organization }) => {

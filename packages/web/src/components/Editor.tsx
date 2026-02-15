@@ -3,14 +3,14 @@ import type { QueryResultType } from "@rocicorp/zero";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
-  documentEditorAtom,
+  activeDocumentIdAtom,
+  editorRegistry,
   pendingChangeStatusAtom,
   pendingEditorChangeAtom,
-  titleEditorAtom,
 } from "@/atoms/editor";
 import {
   isFloatingAssistantDockedAtom as isDockedAtom,
@@ -45,12 +45,14 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
   const [title, setTitle] = useState(doc.title || "");
   const isLocked = doc.is_locked ?? false;
 
-  const setDocumentEditor = useSetAtom(documentEditorAtom);
-  const setTitleEditor = useSetAtom(titleEditorAtom);
+  const setActiveDocumentId = useSetAtom(activeDocumentIdAtom);
   const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom);
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
   const isDocked = useAtomValue(isDockedAtom);
   const isAssistantOpen = useAtomValue(isOpenAtom);
+
+  // Track if we've registered this document
+  const isRegisteredRef = useRef(false);
 
   // When assistant is undocked and open, shift content left to avoid overlap
   // Only apply on screens smaller than 2xl (1536px) to avoid unnecessary adjustments on ultrawide monitors
@@ -63,9 +65,9 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
 
   const contentEditor = useDocumentEditor({
     doc,
-    onCreate: setDocumentEditor,
-    onDestroy: () => {
-      setDocumentEditor(null);
+    onUpdate: () => {
+      // Keep the document connection alive while editing
+      editorRegistry.touch(doc.id);
     },
   });
 
@@ -87,18 +89,47 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
         }),
       );
     },
-    onCreate: setTitleEditor,
-    onDestroy: () => {
-      setTitleEditor(null);
-    },
     editable: !isLocked,
   });
 
+  // Register editors with the registry when both are ready
+  useEffect(() => {
+    if (!contentEditor.editor || !titleEditor.editor) return;
+    if (isRegisteredRef.current) return;
+
+    // Register this document's editors
+    editorRegistry.register(doc.id, contentEditor.editor, titleEditor.editor);
+    isRegisteredRef.current = true;
+
+    // Set as active document
+    setActiveDocumentId(doc.id);
+
+    // Cleanup function
+    return () => {
+      // Only unregister if we're actually unmounting (not just re-rendering)
+      // The registry will handle cleanup of old instances
+    };
+  }, [contentEditor.editor, titleEditor.editor, doc.id, setActiveDocumentId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isRegisteredRef.current) {
+        // Don't destroy editors here - let the registry manage lifecycle
+        // This allows for tab switching without losing editor state
+        editorRegistry.unregister(doc.id, false);
+        isRegisteredRef.current = false;
+      }
+    };
+  }, [doc.id]);
+
+  // Apply pending changes
   useEffect(() => {
     if (!pendingChange) return;
-    if (!contentEditor.editor && !titleEditor.editor) return;
-
     if (pendingChange.documentId !== doc.id) return;
+
+    const instance = editorRegistry.get(doc.id);
+    if (!instance) return;
 
     const applyPendingChange = async () => {
       setPendingChangeStatus("applying");
@@ -108,9 +139,9 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
         let contentSuccess = true;
         let titleSuccess = true;
 
-        if (pendingChange.title && titleEditor.editor) {
+        if (pendingChange.title && instance.titleEditor) {
           const titleResult = await applyTitleChange(
-            titleEditor.editor,
+            instance.titleEditor,
             pendingChange.title,
             doc.id,
             pendingChange.organizationId,
@@ -122,9 +153,9 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
           }
         }
 
-        if (pendingChange.replace && contentEditor.editor) {
+        if (pendingChange.replace && instance.contentEditor) {
           const result = await applyContentChanges(
-            contentEditor.editor,
+            instance.contentEditor,
             [
               {
                 search: pendingChange.search,
@@ -170,15 +201,7 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [
-    contentEditor.editor,
-    titleEditor.editor,
-    doc.id,
-    pendingChange,
-    setPendingChange,
-    setPendingChangeStatus,
-    z,
-  ]);
+  }, [doc.id, pendingChange, setPendingChange, setPendingChangeStatus, z]);
 
   if (!contentEditor.editor || !titleEditor.editor) {
     return null;

@@ -12,10 +12,13 @@ import { useEffect } from "react";
 import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
 
-import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
+import {
+  pendingChangeStatusAtom,
+  pendingEditorChangeAtom,
+} from "@/atoms/editor";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useDocumentEditor, useTitleEditor } from "@/hooks/use-editor";
+import { useActiveDocumentId, useEditorRegistry } from "@/hooks/use-editor";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
 import { applyContentChanges } from "@/utils/document-changes";
@@ -68,16 +71,33 @@ export function ReplaceInDocumentTool({
   const navigate = useNavigate();
   const params = useParams({ strict: false });
   const z = useZero();
+  const registry = useEditorRegistry();
+  const activeDocumentId = useActiveDocumentId();
 
-  const editor = useDocumentEditor();
-  const titleEditor = useTitleEditor();
+  // Get target document ID
+  const targetDocumentId = tool.input?.documentId || tool.output?.documentId;
+
+  // Look up editors in the registry for the target document
+  const targetInstance = targetDocumentId
+    ? registry.get(targetDocumentId)
+    : activeDocumentId
+      ? registry.get(activeDocumentId)
+      : undefined;
+
+  // Get active document editors as fallback
+  const activeInstance = activeDocumentId ? registry.get(activeDocumentId) : undefined;
+  
+  // Use target document's editors if available, otherwise fall back to active document's editors
+  const editor = targetInstance?.contentEditor ?? activeInstance?.contentEditor ?? null;
+  const titleEditor = targetInstance?.titleEditor ?? activeInstance?.titleEditor ?? null;
+
   const setPendingChange = useSetAtom(pendingEditorChangeAtom);
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
   const pendingChange = useAtomValue(pendingEditorChangeAtom);
   const pendingChangeStatus = useAtomValue(pendingChangeStatusAtom);
   const { createDocument } = useDocumentActions();
 
-  const targetDocumentId = tool.input?.documentId || tool.output?.documentId;
+  // Extract other tool data
   const newTitle = tool.input?.title || tool.output?.title;
   const replaceText = tool.input?.replace || tool.output?.replace || "";
   const searchText = tool.input?.search || tool.output?.search || "";
@@ -274,30 +294,47 @@ export function ReplaceInDocumentTool({
       return;
     }
 
-    if (!editor && !titleEditor) {
-      const error = "Editor not ready. Please try reloading the document.";
-      setErrorMessage(error);
-      console.error("Apply failed: No editors available", {
-        hasEditor: !!editor,
-        hasTitleEditor: !!titleEditor,
-        needsContent: !!replaceText,
-        needsTitle: !!newTitle,
+    // If editors aren't ready, use the pending change mechanism
+    // The Editor component's useEffect will apply changes once editors are initialized
+    const needsContentEditor = !!replaceText;
+    const needsTitleEditor = !!newTitle;
+    const hasContentEditor = !!editor;
+    const hasTitleEditor = !!titleEditor;
+    
+    if ((needsContentEditor && !hasContentEditor) || (needsTitleEditor && !hasTitleEditor)) {
+      console.log("Editors not ready, using pending change mechanism", {
+        needsContentEditor,
+        hasContentEditor,
+        needsTitleEditor,
+        hasTitleEditor,
       });
-      return;
-    }
-
-    // Check specific editor requirements
-    if (replaceText && !editor) {
-      const error = "Content editor not ready. Please reload the document.";
-      setErrorMessage(error);
-      console.error("Apply failed: Content editor missing but content provided");
-      return;
-    }
-
-    if (newTitle && !titleEditor) {
-      const error = "Title editor not ready. Please reload the document.";
-      setErrorMessage(error);
-      console.error("Apply failed: Title editor missing but title provided");
+      
+      setIsApplying(true);
+      setApplyStatus("Waiting for editor to initialize...");
+      setErrorMessage("");
+      
+      // Store the pending change - Editor.tsx useEffect will apply it
+      setPendingChange({
+        documentId: currentDocId,
+        title: newTitle,
+        search: searchText,
+        replace: replaceText,
+        organizationId,
+      });
+      setPendingChangeStatus("pending");
+      
+      // Safety timeout in case editor never initializes
+      applyTimeoutRef.current = setTimeout(() => {
+        if (isApplying) {
+          console.error("Editor initialization timeout - resetting state");
+          setIsApplying(false);
+          setApplyStatus("");
+          setErrorMessage("Editor failed to initialize. Please try reloading the document.");
+          setPendingChangeStatus(null);
+          setPendingChange(null);
+        }
+      }, 10000);
+      
       return;
     }
 
