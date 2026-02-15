@@ -2,7 +2,7 @@ import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
 
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Input, Label } from "@lydie/ui/components/generic/Field";
+import { Label } from "@lydie/ui/components/generic/Field";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Modal } from "@lydie/ui/components/generic/Modal";
 import { Separator } from "@lydie/ui/components/layout/Separator";
@@ -11,17 +11,14 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
-import { Form, Heading } from "react-aria-components";
-import { TextField } from "react-aria-components";
+import { useState } from "react";
+import { Heading } from "react-aria-components";
 import { toast } from "sonner";
 
-import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useZero } from "@/services/zero";
 import { confirmDialog } from "@/stores/confirm-dialog";
-import { isAdmin } from "@/utils/admin";
 
 type DocumentMenuProps = {
   documentId: string;
@@ -34,48 +31,16 @@ export function DocumentMenu({
   documentName,
   placement = "bottom end",
 }: DocumentMenuProps) {
-  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
-  const [renameValue, setRenameValue] = useState(documentName);
 
   const z = useZero();
   const { deleteDocument, publishDocument } = useDocumentActions();
   const { id: currentDocId } = useParams({ strict: false });
   const { organization } = useOrganization();
-  const { user } = useAuth();
 
   const [document] = useQuery(
     queries.documents.byId({ organizationId: organization.id, documentId }),
   );
-  const userIsAdmin = isAdmin(user);
-
-  useEffect(() => {
-    if (isRenameDialogOpen) {
-      setRenameValue(documentName);
-    }
-  }, [isRenameDialogOpen, documentName]);
-
-  const handleRename = () => {
-    if (!renameValue.trim()) {
-      toast.error("Document name cannot be empty");
-      return;
-    }
-
-    try {
-      z.mutate(
-        mutators.document.update({
-          documentId,
-          organizationId: organization.id,
-          title: renameValue.trim(),
-        }),
-      );
-
-      toast.success("Document renamed");
-      setIsRenameDialogOpen(false);
-    } catch {
-      toast.error("Failed to rename document");
-    }
-  };
 
   const handleDelete = () => {
     if (document?.integration_link_id) {
@@ -116,7 +81,6 @@ export function DocumentMenu({
     <>
       <Menu placement={placement}>
         <MenuItem onAction={() => setIsInfoDialogOpen(true)}>Info</MenuItem>
-        <MenuItem onAction={() => setIsRenameDialogOpen(true)}>Rename</MenuItem>
         <MenuItem onAction={handleToggleFavorite}>
           {document?.is_favorited ? "Unfavorite" : "Favorite"}
         </MenuItem>
@@ -125,47 +89,6 @@ export function DocumentMenu({
         )}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
       </Menu>
-
-      <Modal isOpen={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen} isDismissable>
-        <Dialog>
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleRename();
-            }}
-          >
-            <div className="p-3">
-              <Heading slot="title" className="text-sm font-medium text-gray-700">
-                Rename Document
-              </Heading>
-            </div>
-            <Separator />
-            <div className="p-3 space-y-4">
-              <TextField value={renameValue} onChange={setRenameValue}>
-                <Label>Document Name</Label>
-                <Input />
-              </TextField>
-              <div className="flex justify-end gap-2">
-                <Button
-                  intent="secondary"
-                  onPress={() => {
-                    setIsRenameDialogOpen(false);
-                    setRenameValue(documentName);
-                  }}
-                  size="sm"
-                  type="button"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm">
-                  Rename
-                </Button>
-              </div>
-            </div>
-          </Form>
-        </Dialog>
-      </Modal>
-
       <Modal isOpen={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen} isDismissable size="md">
         <Dialog>
           <div className="p-3">
