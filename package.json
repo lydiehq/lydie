@@ -7,7 +7,7 @@
       "packages/*"
     ],
     "catalog": {
-      "@fluentui/react-icons": "^2.0.318",
+      "@fluentui/react-icons": "^2.0.319",
       "@rocicorp/zero": "0.25.12",
       "sst": "3.17.21",
       "zod": "^4.3.6",
@@ -16,9 +16,9 @@
       "yjs": "^13.6.29",
       "drizzle-orm": "^1.0.0-beta.15-859cf75",
       "better-auth": "1.4.7-beta.2",
-      "@ai-sdk/google": "^3.0.26",
-      "@ai-sdk/openai": "^3.0.27",
-      "ai": "^6.0.82",
+      "@ai-sdk/google": "^3.0.29",
+      "@ai-sdk/openai": "^3.0.29",
+      "ai": "^6.0.86",
       "@tiptap/core": "^3.19.0",
       "@tiptap/pm": "^3.19.0",
       "@tiptap/react": "^3.19.0",
