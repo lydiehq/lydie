@@ -53,6 +53,7 @@
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/react-query-persist-client": "^5.90.22",
     "@tiptap/extension-code": "^3.19.0",
+    "@tiptap/extension-table-of-contents": "^3.19.0",
     "framer-motion": "^12.34.0"
   },
   "devDependencies": {

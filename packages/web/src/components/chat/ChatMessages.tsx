@@ -140,11 +140,7 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
   return (
     <div className="flex flex-col gap-y-1.5">
       <div className="flex justify-start w-full gap-y-1 flex-col">
-        <ReasoningParts
-          message={message}
-          isLastMessage={isLastMessage}
-          isStreaming={isStreaming}
-        />
+        <ReasoningParts message={message} isLastMessage={isLastMessage} isStreaming={isStreaming} />
         <div className="flex flex-col">
           {groupMessageParts(message.parts).map((group, index) => {
             if (group.type === "research-group") {

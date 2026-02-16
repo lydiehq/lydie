@@ -17,6 +17,7 @@ import { ListKit } from "@tiptap/extension-list";
 import { Paragraph } from "@tiptap/extension-paragraph";
 import { Strike } from "@tiptap/extension-strike";
 import { TableKit } from "@tiptap/extension-table";
+import { TableOfContents, type TableOfContentsOptions } from "@tiptap/extension-table-of-contents";
 import { Text } from "@tiptap/extension-text";
 import { Underline } from "@tiptap/extension-underline";
 import { TrailingNode, Selection } from "@tiptap/extensions";
@@ -30,9 +31,11 @@ export interface GetDocumentEditorExtensionsOptions {
   onboardingTextPractice?: Partial<E.OnboardingTextPracticeOptions>;
   onboardingAssistantTask?: Partial<E.OnboardingAssistantTaskOptions>;
   slashCommands?: Partial<E.SlashCommandsOptions>;
+  mentionCommands?: Partial<E.MentionCommandsOptions>;
   placeholder?: Partial<E.PlaceholderOptions>;
   collaboration?: Partial<CollaborationOptions>;
   collaborationCaret?: Partial<CollaborationCaretOptions>;
+  tableOfContents?: Partial<TableOfContentsOptions>;
 }
 
 export function getDocumentEditorExtensions(options?: GetDocumentEditorExtensionsOptions) {
@@ -69,11 +72,17 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.IndentHandlerExtension,
     E.ImageUpload,
     E.Placeholder.configure(options?.placeholder),
+    TableOfContents.configure(options?.tableOfContents),
   ];
 
   // Add slash commands if configured
   if (options?.slashCommands) {
     extensions.push(E.SlashCommandsExtension.configure(options.slashCommands));
+  }
+
+  // Add mention commands if configured
+  if (options?.mentionCommands) {
+    extensions.push(E.MentionCommandsExtension.configure(options.mentionCommands));
   }
 
   // Add collaboration extensions if configured

@@ -2,7 +2,10 @@
  * Extract plain text from HTML by stripping tags.
  */
 function extractTextFromHTML(html: string): string {
-  return html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -72,10 +75,7 @@ function findTextInDocument(
  * Find a range in the document matching the pattern "startText...endText".
  * Returns { from: number, to: number } for the range to replace.
  */
-function findRangeInDocument(
-  editor: any,
-  pattern: string,
-): { from: number; to: number } | null {
+function findRangeInDocument(editor: any, pattern: string): { from: number; to: number } | null {
   // Handle append pattern: "...endText"
   if (pattern.startsWith("...")) {
     const endText = extractTextFromHTML(pattern.substring(3));
@@ -175,11 +175,7 @@ function restoreEditorScrollPosition(
  * Apply a replacement using collaborative-friendly commands.
  * This properly integrates with Yjs and maintains undo history.
  */
-function applyCollaborativeChange(
-  editor: any,
-  pattern: string,
-  replacement: string,
-): boolean {
+function applyCollaborativeChange(editor: any, pattern: string, replacement: string): boolean {
   // Save scroll position before making changes
   const scrollPosition = getEditorScrollPosition(editor);
 
@@ -193,12 +189,7 @@ function applyCollaborativeChange(
 
     // Use selectAll + deleteSelection + insertContent for Yjs tracking
     try {
-      editor
-        .chain()
-        .selectAll()
-        .deleteSelection()
-        .insertContent(replacement)
-        .run();
+      editor.chain().selectAll().deleteSelection().insertContent(replacement).run();
       restoreEditorScrollPosition(editor, scrollPosition);
       return true;
     } catch (error) {
@@ -274,7 +265,11 @@ async function llmFallback(
       // Save scroll position before making changes
       const scrollPosition = getEditorScrollPosition(editor);
       // Use collaborative-friendly commands (without .focus() to preserve scroll position)
-      editor.chain().deleteRange({ from: range.from, to: range.to }).insertContentAt(range.from, replacement).run();
+      editor
+        .chain()
+        .deleteRange({ from: range.from, to: range.to })
+        .insertContentAt(range.from, replacement)
+        .run();
       restoreEditorScrollPosition(editor, scrollPosition);
       return true;
     }

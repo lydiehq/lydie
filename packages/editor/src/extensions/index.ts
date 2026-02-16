@@ -24,6 +24,9 @@ export type { OnboardingAssistantTaskOptions } from "./onboarding/onboarding-ass
 export { SlashCommandsExtension } from "./slash-commands";
 export type { SlashCommandsOptions } from "./slash-commands";
 
+export { MentionCommandsExtension } from "./mention-commands";
+export type { MentionCommandsOptions } from "./mention-commands";
+
 export { Placeholder } from "./placeholder";
 export type { PlaceholderOptions, PlaceholderAttributes } from "./placeholder";
 
