@@ -1,6 +1,7 @@
 import { Add12Filled, Dismiss12Filled } from "@fluentui/react-icons";
 import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
+import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -12,6 +13,8 @@ import {
   type Key,
   useDragAndDrop,
   DropIndicator,
+  TooltipTrigger,
+  Button as RACButton,
 } from "react-aria-components";
 
 import type { TabMode } from "@/atoms/tabs";
@@ -26,7 +29,11 @@ import {
   insertTabAtPositionAtom,
   reorderTabsAtom,
 } from "@/atoms/tabs";
+import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
 import { useDocumentActions } from "@/hooks/use-document-actions";
+import { composeTailwindRenderProps, focusRing } from "@/utils/focus-ring";
+
+import { SidebarIcon } from "./SidebarIcon";
 
 interface DocumentTabBarProps {
   organizationSlug: string;
@@ -185,6 +192,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
   );
 
   const { createDocument } = useDocumentActions();
+  const isSidebarCollapsed = useAtomValue(isSidebarCollapsedAtom);
 
   if (tabs.length === 0) return null;
 
@@ -192,6 +200,24 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
 
   return (
     <div className="flex items-center pt-1.5 min-w-0 pr-6">
+      {isSidebarCollapsed && (
+        <TooltipTrigger delay={500}>
+          <RACButton
+            className={composeTailwindRenderProps(
+              focusRing,
+              "p-1 rounded hover:bg-black/5 text-gray-700 group mr-1",
+            )}
+            onPress={() => {
+              // Dispatch custom event to toggle sidebar
+              window.dispatchEvent(new CustomEvent("toggle-sidebar"));
+            }}
+            aria-label="Expand sidebar"
+          >
+            <SidebarIcon direction="left" collapsed={true} />
+          </RACButton>
+          <Tooltip>Expand sidebar</Tooltip>
+        </TooltipTrigger>
+      )}
       <GridList
         aria-label="Open documents"
         selectionMode="single"

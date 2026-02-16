@@ -1,157 +1,238 @@
-function normalizeHTML(html: string): string {
-  return html
-    .replace(/<(\w+)[^>]*>/g, "<$1>")
-    .replace(/<li><p><a>/g, "<li><a>")
-    .replace(/<\/a><\/p><\/li>/g, "</a></li>")
-    .replace(/<p><a>/g, "<a>")
-    .replace(/<\/a><\/p>/g, "</a>")
-    .replace(/\s+/g, " ")
-    .trim();
+/**
+ * Extract plain text from HTML by stripping tags.
+ */
+function extractTextFromHTML(html: string): string {
+  return html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 }
 
-function mapNormalizedToOriginal(
-  originalHTML: string,
-  _normalizedHTML: string,
-  normalizedIndex: number,
-): number {
-  let originalIndex = 0;
-  let normalizedCounter = 0;
+/**
+ * Find text position in ProseMirror document and return the position.
+ * Returns { from: number, to: number } if found, null otherwise.
+ */
+function findTextInDocument(
+  editor: any,
+  searchText: string,
+  searchFrom: number = 0,
+): { from: number; to: number } | null {
+  const normalizedSearch = searchText.toLowerCase().trim();
+  if (!normalizedSearch) return null;
 
-  while (originalIndex < originalHTML.length && normalizedCounter < normalizedIndex) {
-    const char = originalHTML[originalIndex];
+  let accumulatedText = "";
+  const textNodes: Array<{ text: string; from: number; to: number }> = [];
 
-    if (char === "<") {
-      const tagEnd = originalHTML.indexOf(">", originalIndex);
-      if (tagEnd !== -1) {
-        const tagContent = originalHTML.substring(originalIndex + 1, tagEnd);
-        const tagName = tagContent.split(/\s/)[0];
-        normalizedCounter += 2 + tagName.length;
-        originalIndex = tagEnd + 1;
-        continue;
-      }
+  // Collect all text nodes with their positions
+  editor.state.doc.descendants((node: any, pos: number) => {
+    if (node.isText) {
+      const nodeText = node.text || "";
+      textNodes.push({
+        text: nodeText,
+        from: pos,
+        to: pos + nodeText.length,
+      });
+      accumulatedText += nodeText;
+    }
+    return true;
+  });
+
+  // Find the search text in accumulated content
+  const searchIndex = accumulatedText.toLowerCase().indexOf(normalizedSearch, searchFrom);
+  if (searchIndex === -1) return null;
+
+  // Map back to document positions
+  let currentIndex = 0;
+  let startPos: number | null = null;
+  let endPos: number | null = null;
+
+  for (const node of textNodes) {
+    const nodeStart = currentIndex;
+    const nodeEnd = currentIndex + node.text.length;
+
+    // Check if this node contains the start of our match
+    if (startPos === null && nodeEnd > searchIndex) {
+      startPos = node.from + (searchIndex - nodeStart);
     }
 
-    if (/\s/.test(char)) {
-      normalizedCounter++;
-      while (originalIndex + 1 < originalHTML.length && /\s/.test(originalHTML[originalIndex + 1])) {
-        originalIndex++;
-      }
-      originalIndex++;
-      continue;
+    // Check if this node contains the end of our match
+    if (startPos !== null && endPos === null && nodeEnd >= searchIndex + normalizedSearch.length) {
+      endPos = node.from + (searchIndex + normalizedSearch.length - nodeStart);
+      break;
     }
 
-    normalizedCounter++;
-    originalIndex++;
+    currentIndex = nodeEnd;
   }
 
-  return originalIndex;
+  if (startPos !== null && endPos !== null) {
+    return { from: startPos, to: endPos };
+  }
+
+  return null;
 }
 
-function parseEllipsisPattern(
-  currentHTML: string,
+/**
+ * Find a range in the document matching the pattern "startText...endText".
+ * Returns { from: number, to: number } for the range to replace.
+ */
+function findRangeInDocument(
+  editor: any,
   pattern: string,
-): { startIndex: number; endIndex: number } | null {
-  if (!pattern) {
-    return { startIndex: 0, endIndex: currentHTML.length };
-  }
-
-  // Append pattern: "...end"
+): { from: number; to: number } | null {
+  // Handle append pattern: "...endText"
   if (pattern.startsWith("...")) {
-    const endPattern = pattern.substring(3).trim();
-    if (!endPattern) return null;
+    const endText = extractTextFromHTML(pattern.substring(3));
+    if (!endText) return null;
 
-    const endIndex = currentHTML.lastIndexOf(endPattern);
-    if (endIndex !== -1) {
-      return { startIndex: endIndex, endIndex: endIndex + endPattern.length };
-    }
+    // Find the end text - for append, we want to find the last occurrence
+    const result = findTextInDocument(editor, endText);
+    if (!result) return null;
 
-    const normalizedCurrent = normalizeHTML(currentHTML);
-    const normalizedEnd = normalizeHTML(endPattern);
-    const normalizedIndex = normalizedCurrent.lastIndexOf(normalizedEnd);
-    if (normalizedIndex !== -1) {
-      const actualEndIndex = mapNormalizedToOriginal(currentHTML, normalizedCurrent, normalizedIndex);
-      return { startIndex: actualEndIndex, endIndex: actualEndIndex + endPattern.length };
-    }
-    return null;
+    // For append, we replace from the start of the found text to its end
+    // The replacement should include the anchor text + new content
+    return { from: result.from, to: result.to };
   }
 
-  // Prepend pattern: "start..."
+  // Handle prepend pattern: "startText..."
   if (pattern.endsWith("...")) {
-    const startPattern = pattern.substring(0, pattern.length - 3).trim();
-    if (!startPattern) return null;
+    const startText = extractTextFromHTML(pattern.substring(0, pattern.length - 3));
+    if (!startText) return null;
 
-    const startIndex = currentHTML.indexOf(startPattern);
-    if (startIndex !== -1) {
-      return { startIndex, endIndex: startIndex + startPattern.length };
-    }
+    // Find the start text - for prepend, we want the first occurrence
+    const result = findTextInDocument(editor, startText);
+    if (!result) return null;
 
-    const normalizedCurrent = normalizeHTML(currentHTML);
-    const normalizedStart = normalizeHTML(startPattern);
-    const normalizedIndex = normalizedCurrent.indexOf(normalizedStart);
-    if (normalizedIndex !== -1) {
-      const actualStartIndex = mapNormalizedToOriginal(currentHTML, normalizedCurrent, normalizedIndex);
-      return { startIndex: actualStartIndex, endIndex: actualStartIndex + startPattern.length };
-    }
-    return null;
+    // For prepend, we replace from the start to the end of the found text
+    return { from: result.from, to: result.to };
   }
 
-  // Range pattern: "start...end"
+  // Handle range pattern: "startText...endText"
   const ellipsisIndex = pattern.indexOf("...");
   if (ellipsisIndex === -1) return null;
 
   const startPattern = pattern.substring(0, ellipsisIndex).trim();
   const endPattern = pattern.substring(ellipsisIndex + 3).trim();
 
-  let startIndex = currentHTML.indexOf(startPattern);
-  if (startIndex === -1) {
-    const normalizedCurrent = normalizeHTML(currentHTML);
-    const normalizedStart = normalizeHTML(startPattern);
-    const normalizedIdx = normalizedCurrent.indexOf(normalizedStart);
-    if (normalizedIdx === -1) return null;
-    startIndex = mapNormalizedToOriginal(currentHTML, normalizedCurrent, normalizedIdx);
+  const startText = extractTextFromHTML(startPattern);
+  const endText = endPattern ? extractTextFromHTML(endPattern) : "";
+
+  if (!startText) return null;
+
+  // Find the start position
+  const startResult = findTextInDocument(editor, startText);
+  if (!startResult) return null;
+
+  // If no end pattern, replace from start to end of document
+  if (!endText) {
+    return { from: startResult.from, to: editor.state.doc.content.size };
   }
 
-  let endIndex = -1;
-  if (endPattern) {
-    const searchFrom = startIndex + startPattern.length;
-    endIndex = currentHTML.indexOf(endPattern, searchFrom);
+  // Find the end position, starting search after the start text
+  const endResult = findTextInDocument(editor, endText, startResult.to);
+  if (!endResult) return null;
 
-    if (endIndex === -1) {
-      const normalizedCurrent = normalizeHTML(currentHTML);
-      const normalizedEnd = normalizeHTML(endPattern);
-      const normalizedStartIdx = normalizeHTML(currentHTML.substring(0, searchFrom)).length;
-      const normalizedSearchArea = normalizedCurrent.substring(normalizedStartIdx);
-      const normalizedEndIdx = normalizedSearchArea.indexOf(normalizedEnd);
-
-      if (normalizedEndIdx === -1) return null;
-      endIndex = mapNormalizedToOriginal(currentHTML, normalizedCurrent, normalizedStartIdx + normalizedEndIdx);
-    }
-    endIndex += endPattern.length;
-  } else {
-    endIndex = currentHTML.length;
-  }
-
-  if (endIndex < startIndex) return null;
-  return { startIndex, endIndex };
+  // Return the full range from start of startText to end of endText
+  return { from: startResult.from, to: endResult.to };
 }
 
-function applyChange(editor: any, pattern: string, replacement: string): boolean {
-  const currentHTML = editor.getHTML();
+/**
+ * Get the current scroll position of the editor container.
+ */
+function getEditorScrollPosition(editor: any): { scrollTop: number; scrollLeft: number } | null {
+  try {
+    const dom = editor.view.dom as HTMLElement;
+    const scrollContainer = dom.closest("[data-editor-scroll-container]") || dom.parentElement;
+    if (scrollContainer) {
+      return {
+        scrollTop: scrollContainer.scrollTop,
+        scrollLeft: scrollContainer.scrollLeft,
+      };
+    }
+  } catch {
+    // Ignore errors
+  }
+  return null;
+}
 
-  if (!pattern && !editor.isEmpty) {
-    console.warn("Cannot use empty pattern on non-empty document");
+/**
+ * Restore the scroll position of the editor container.
+ */
+function restoreEditorScrollPosition(
+  editor: any,
+  position: { scrollTop: number; scrollLeft: number } | null,
+): void {
+  if (!position) return;
+  try {
+    const dom = editor.view.dom as HTMLElement;
+    const scrollContainer = dom.closest("[data-editor-scroll-container]") || dom.parentElement;
+    if (scrollContainer) {
+      scrollContainer.scrollTop = position.scrollTop;
+      scrollContainer.scrollLeft = position.scrollLeft;
+    }
+  } catch {
+    // Ignore errors
+  }
+}
+
+/**
+ * Apply a replacement using collaborative-friendly commands.
+ * This properly integrates with Yjs and maintains undo history.
+ */
+function applyCollaborativeChange(
+  editor: any,
+  pattern: string,
+  replacement: string,
+): boolean {
+  // Save scroll position before making changes
+  const scrollPosition = getEditorScrollPosition(editor);
+
+  // Full document replacement
+  if (!pattern) {
+    if (editor.isEmpty) {
+      editor.commands.setContent(replacement);
+      restoreEditorScrollPosition(editor, scrollPosition);
+      return true;
+    }
+
+    // Use selectAll + deleteSelection + insertContent for Yjs tracking
+    try {
+      editor
+        .chain()
+        .selectAll()
+        .deleteSelection()
+        .insertContent(replacement)
+        .run();
+      restoreEditorScrollPosition(editor, scrollPosition);
+      return true;
+    } catch (error) {
+      console.error("Failed to apply full document replacement:", error);
+      return false;
+    }
+  }
+
+  // Find the range in the document
+  const range = findRangeInDocument(editor, pattern);
+  if (!range) {
+    console.warn("Could not find pattern in document:", pattern);
     return false;
   }
 
-  const range = parseEllipsisPattern(currentHTML, pattern);
-  if (!range) return false;
+  // Use collaborative-friendly commands: deleteRange + insertContentAt
+  // Note: We don't call .focus() to avoid scrolling to the cursor position
+  try {
+    editor
+      .chain()
+      .deleteRange({ from: range.from, to: range.to })
+      .insertContentAt(range.from, replacement)
+      .run();
+    restoreEditorScrollPosition(editor, scrollPosition);
+    return true;
+  } catch (error) {
+    console.error("Failed to apply collaborative change:", error);
+    return false;
+  }
+}
 
-  const before = currentHTML.substring(0, range.startIndex);
-  const after = currentHTML.substring(range.endIndex);
-  const newHTML = before + replacement + after;
-
-  editor.commands.setContent(newHTML);
-  return true;
+function applyChange(editor: any, pattern: string, replacement: string): boolean {
+  // Use collaborative-friendly approach that maintains Yjs integration
+  return applyCollaborativeChange(editor, pattern, replacement);
 }
 
 async function llmFallback(
@@ -172,8 +253,12 @@ async function llmFallback(
           "Content-Type": "application/json",
           "X-Organization-Id": organizationId,
         },
-        body: JSON.stringify({ currentHTML, selectionWithEllipsis: pattern, replaceText: replacement }),
-      }
+        body: JSON.stringify({
+          currentHTML,
+          selectionWithEllipsis: pattern,
+          replaceText: replacement,
+        }),
+      },
     );
 
     if (!response.ok) return false;
@@ -181,11 +266,28 @@ async function llmFallback(
     const result = await response.json();
     if (!result.success || !result.exactMatch) return false;
 
-    if (currentHTML.includes(result.exactMatch)) {
-      const newHTML = currentHTML.replace(result.exactMatch, replacement);
-      editor.commands.setContent(newHTML);
+    // Find the exact match text in the document
+    const matchText = extractTextFromHTML(result.exactMatch);
+    const range = findTextInDocument(editor, matchText);
+
+    if (range) {
+      // Save scroll position before making changes
+      const scrollPosition = getEditorScrollPosition(editor);
+      // Use collaborative-friendly commands (without .focus() to preserve scroll position)
+      editor.chain().deleteRange({ from: range.from, to: range.to }).insertContentAt(range.from, replacement).run();
+      restoreEditorScrollPosition(editor, scrollPosition);
       return true;
     }
+
+    // Fallback: if we can't find the text directly, create a pattern and try collaborative approach
+    const textContent = extractTextFromHTML(result.exactMatch);
+    if (textContent.length > 20) {
+      const startPart = textContent.substring(0, Math.min(30, textContent.length));
+      const endPart = textContent.substring(Math.max(0, textContent.length - 30));
+      const fallbackPattern = `${startPart}...${endPart}`;
+      return applyCollaborativeChange(editor, fallbackPattern, replacement);
+    }
+
     return false;
   } catch {
     return false;
@@ -206,15 +308,20 @@ export async function applyContentChanges(
 }> {
   let appliedChanges = 0;
   let usedLLMFallback = false;
-  const currentSelection = editor.state.selection;
+
+  // Save scroll position at the start
+  const initialScrollPosition = getEditorScrollPosition(editor);
 
   for (const change of changes) {
     const { selectionWithEllipsis, replace } = change;
 
     if (!selectionWithEllipsis) {
-      editor.commands.setContent(replace);
-      appliedChanges++;
-      onProgress?.(appliedChanges, changes.length, false);
+      // Full document replacement - use collaborative-friendly approach
+      const success = applyCollaborativeChange(editor, "", replace);
+      if (success) {
+        appliedChanges++;
+        onProgress?.(appliedChanges, changes.length, false);
+      }
       continue;
     }
 
@@ -237,13 +344,8 @@ export async function applyContentChanges(
     }
   }
 
-  if (appliedChanges > 0) {
-    try {
-      editor.commands.setTextSelection(currentSelection);
-    } catch {
-      editor.commands.focus("end");
-    }
-  }
+  // Restore scroll position after all changes are applied
+  restoreEditorScrollPosition(editor, initialScrollPosition);
 
   return {
     success: appliedChanges > 0,

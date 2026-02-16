@@ -16,9 +16,9 @@ import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/gene
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { queries } from "@lydie/zero/queries";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
-import { memo, type ReactElement, useRef, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 import { Button, MenuTrigger, TreeItem, TreeItemContent } from "react-aria-components";
 import { Collection } from "react-aria-components";
 
@@ -50,13 +50,16 @@ type Props = {
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<QueryResultType<typeof queries.organizations.documents>>["documents"];
-  isCurrent: boolean;
   isOpenInTabs?: boolean;
 };
 
-export function DocumentTreeItem({ item, renderItem, isCurrent, isOpenInTabs }: Props) {
+export function DocumentTreeItem({ item, renderItem, isOpenInTabs }: Props) {
+  const { id: currentDocId } = useParams({ strict: false });
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const isCurrentDocument = item.type === "document" && currentDocId === item.id;
+  const isCurrent = isCurrentDocument;
 
   const isIntegrationLink = item.type === "integration-link";
   const isGroup = item.type === "integration-group";

@@ -9,7 +9,6 @@ import { useQuery } from "@rocicorp/zero/react";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
 
-import { Surface } from "@/components/layout/Surface";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
@@ -109,36 +108,34 @@ export function TrashPage() {
   const hasDocuments = treeItems.length > 0;
 
   return (
-    <div className="h-screen p-1">
-      <Surface className="overflow-y-auto size-full">
-        <div className="max-w-4xl mx-auto p-8">
-          <div className="mb-8">
-            <h1 className="text-2xl font-medium text-gray-900 mb-2">Trash</h1>
-            <p className="text-gray-500">
-              Documents in trash are kept for 30 days before being permanently deleted.
-            </p>
-          </div>
-
-          {hasDocuments ? (
-            <div className="space-y-1">
-              {treeItems.map((item) => (
-                <TrashTreeItem
-                  key={item.id}
-                  item={item}
-                  onRestore={handleRestore}
-                  isRestoring={restoringIds.has(item.id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Delete16Regular className="size-12 text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-2">Trash is empty</p>
-              <p className="text-sm text-gray-400">Deleted documents will appear here.</p>
-            </div>
-          )}
+    <div className="overflow-y-auto h-full">
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-medium text-gray-900 mb-2">Trash</h1>
+          <p className="text-gray-500">
+            Documents in trash are kept for 30 days before being permanently deleted.
+          </p>
         </div>
-      </Surface>
+
+        {hasDocuments ? (
+          <div className="space-y-1">
+            {treeItems.map((item) => (
+              <TrashTreeItem
+                key={item.id}
+                item={item}
+                onRestore={handleRestore}
+                isRestoring={restoringIds.has(item.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Delete16Regular className="size-12 text-gray-300 mb-4" />
+            <p className="text-gray-500 mb-2">Trash is empty</p>
+            <p className="text-sm text-gray-400">Deleted documents will appear here.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

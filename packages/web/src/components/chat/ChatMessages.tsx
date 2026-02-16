@@ -6,7 +6,7 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import { Button, DialogTrigger } from "react-aria-components";
 import { Streamdown } from "streamdown";
 import { StickToBottom } from "use-stick-to-bottom";
@@ -14,6 +14,7 @@ import { StickToBottom } from "use-stick-to-bottom";
 import { useOrganization } from "@/context/organization.context";
 import { type ParsedTextSegment, parseReferences } from "@/utils/parse-references";
 
+import { ReasoningParts } from "./Reasoning";
 import { streamdownHeadings } from "./streamdown/headings";
 import { CreateDocumentTool } from "./tools/CreateDocumentTool";
 import { MoveDocumentsTool } from "./tools/MoveDocumentsTool";
@@ -134,9 +135,16 @@ const AssistantMessageWithTools = memo(function AssistantMessageWithTools({
     });
   };
 
+  const isStreaming = status === "streaming";
+
   return (
     <div className="flex flex-col gap-y-1.5">
       <div className="flex justify-start w-full gap-y-1 flex-col">
+        <ReasoningParts
+          message={message}
+          isLastMessage={isLastMessage}
+          isStreaming={isStreaming}
+        />
         <div className="flex flex-col">
           {groupMessageParts(message.parts).map((group, index) => {
             if (group.type === "research-group") {
@@ -252,8 +260,9 @@ const MessagePart = memo(function MessagePart({
     return <ShowDocumentsTool tool={part} />;
   }
 
+  // Reasoning parts are handled by ReasoningParts component at message level
   if (part.type === "reasoning") {
-    return <ReasoningPart reasoning={part.text} />;
+    return null;
   }
 
   if (part.type?.startsWith("tool-") && import.meta.env.DEV) {
@@ -274,36 +283,6 @@ const MessagePart = memo(function MessagePart({
 
   return null;
 });
-
-function ReasoningPart({ reasoning }: { reasoning: string }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <div className="my-2">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-x-1.5 text-gray-500 text-xs hover:text-gray-700 transition-colors"
-      >
-        <svg
-          className={`size-3 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-        <span>Reasoning</span>
-      </button>
-      {isExpanded && (
-        <div className="mt-1.5 p-2 bg-gray-50 rounded-md border border-gray-100">
-          <pre className="text-gray-600 text-xs whitespace-pre-wrap font-mono leading-relaxed">
-            {reasoning}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-}
 
 const THINKING_ANIMATION_VALUES = "0.7;.15;0.7";
 

@@ -97,7 +97,8 @@ export function ReplaceInDocumentTool({
   // Extract other tool data
   const newTitle = tool.input?.title || tool.output?.title;
   const replaceText = tool.input?.replace || tool.output?.replace || "";
-  const selectionWithEllipsis = tool.input?.selectionWithEllipsis || tool.output?.selectionWithEllipsis || "";
+  const selectionWithEllipsis =
+    tool.input?.selectionWithEllipsis || tool.output?.selectionWithEllipsis || "";
 
   // Reset state when a new tool call starts
   useEffect(() => {

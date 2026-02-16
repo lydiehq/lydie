@@ -7,12 +7,14 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { editorCache, pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
+import { documentTabsAtom, makeTabPersistentAtom } from "@/atoms/tabs";
 import {
   isFloatingAssistantDockedAtom as isDockedAtom,
   isFloatingAssistantOpenAtom as isOpenAtom,
 } from "@/atoms/workspace-settings";
 import { useAuth } from "@/context/auth.context";
 import { useZero } from "@/services/zero";
+import { isAdmin } from "@/utils/admin";
 import { applyContentChanges } from "@/utils/document-changes";
 import { applyTitleChange } from "@/utils/title-changes";
 
@@ -43,10 +45,13 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
   const isDocked = useAtomValue(isDockedAtom);
   const isAssistantOpen = useAtomValue(isOpenAtom);
+  const makeTabPersistent = useSetAtom(makeTabPersistentAtom);
+  const tabs = useAtomValue(documentTabsAtom);
 
   // Track initialization state and last synced title
   const initializedRef = useRef(false);
   const lastSyncedRef = useRef<{ id: string; title: string } | null>(null);
+  const hasMadePersistentRef = useRef(false);
 
   // When assistant is undocked and open, shift content left to avoid overlap
   const shouldShiftContent = !isDocked && isAssistantOpen;
@@ -93,6 +98,38 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
       initializedRef.current = false;
     };
   }, [cached, doc.id]);
+
+  // Convert preview tab to persistent when user starts editing
+  useEffect(() => {
+    if (!cached) return;
+    if (isLocked) return;
+    if (hasMadePersistentRef.current) return;
+
+    const currentTab = tabs.find((t) => t.documentId === doc.id);
+    if (!currentTab || currentTab.mode !== "preview") return;
+
+    const handleContentUpdate = () => {
+      if (!hasMadePersistentRef.current) {
+        hasMadePersistentRef.current = true;
+        makeTabPersistent(doc.id);
+      }
+    };
+
+    const handleTitleUpdate = () => {
+      if (!hasMadePersistentRef.current) {
+        hasMadePersistentRef.current = true;
+        makeTabPersistent(doc.id);
+      }
+    };
+
+    cached.contentEditor.on("update", handleContentUpdate);
+    cached.titleEditor.on("update", handleTitleUpdate);
+
+    return () => {
+      cached.contentEditor.off("update", handleContentUpdate);
+      cached.titleEditor.off("update", handleTitleUpdate);
+    };
+  }, [cached, doc.id, isLocked, makeTabPersistent, tabs]);
 
   // Handle title blur - save to database
   useEffect(() => {
@@ -209,6 +246,8 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
       doc={doc}
       contentEditor={cached.contentEditor}
       titleEditor={cached.titleEditor}
+      provider={cached.provider}
+      isAdmin={isAdmin(user)}
       isLocked={isLocked}
       shouldShiftContent={shouldShiftContent}
       organizationId={organizationId}

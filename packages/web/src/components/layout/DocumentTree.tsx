@@ -265,7 +265,6 @@ export function DocumentTree() {
         item={item}
         renderItem={renderItem}
         documents={documents}
-        isCurrent={item.id === currentDocId}
         isOpenInTabs={item.type === "document" ? openTabIds.has(item.id) : false}
       />
     ),

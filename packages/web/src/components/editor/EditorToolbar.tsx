@@ -16,7 +16,6 @@ import {
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
-import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import {
   BlockquoteIcon,
   BoldIcon,
@@ -160,27 +159,6 @@ export function EditorToolbar({ editor, doc }: Props) {
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
       <Toolbar aria-label="Editor formatting" className="flex items-center">
         <div className="flex items-center">
-          {isSidebarCollapsed && (
-            <>
-              <TooltipTrigger delay={500}>
-                <RACButton
-                  className={composeTailwindRenderProps(
-                    focusRing,
-                    "p-1 rounded hover:bg-black/5 text-gray-700 group mr-1",
-                  )}
-                  onPress={() => {
-                    // Dispatch custom event to toggle sidebar
-                    window.dispatchEvent(new CustomEvent("toggle-sidebar"));
-                  }}
-                  aria-label="Expand sidebar"
-                >
-                  <SidebarIcon direction="left" collapsed={true} />
-                </RACButton>
-                <Tooltip>Expand sidebar</Tooltip>
-              </TooltipTrigger>
-              <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
-            </>
-          )}
           <Group aria-label="Block type" className="flex items-center gap-1">
             <BlockTypeDropdown editor={editor} />
           </Group>

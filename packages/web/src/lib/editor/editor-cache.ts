@@ -9,8 +9,13 @@ import { ReactNodeViewRenderer } from "@tiptap/react";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
+import {
+  createMentionMenuSuggestion,
+  getMentionCommandAction,
+} from "@/components/editor/MentionMenu";
 import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/OnboardingAssistantTaskView";
 import { OnboardingTextPracticeView } from "@/components/editor/onboarding/OnboardingTextPracticeView";
+import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { PlaceholderComponent } from "@/components/PlaceholderComponent";
 
 import { documentConnectionManager } from "./document-connection-manager";
@@ -62,7 +67,14 @@ class EditorCache {
     }
 
     // Create new editor instance
-    const cached = this.createEditor(documentId, userId, userName, yjsState, isLocked, initialTitle);
+    const cached = this.createEditor(
+      documentId,
+      userId,
+      userName,
+      yjsState,
+      isLocked,
+      initialTitle,
+    );
     this.editors.set(documentId, cached);
 
     // Evict oldest if over limit
@@ -235,6 +247,22 @@ class EditorCache {
           provider: connection.provider,
           user: { name: userName, color: "#808080" },
           render: renderCollaborationCaret,
+        },
+        slashCommands: {
+          suggestion: {
+            ...createSlashMenuSuggestion(),
+            command: ({ editor, range, props }: any) => {
+              getSlashCommandAction(props, editor, range)();
+            },
+          },
+        },
+        mentionCommands: {
+          suggestion: {
+            ...createMentionMenuSuggestion(),
+            command: ({ editor, range, props }: any) => {
+              getMentionCommandAction(props, editor, range)();
+            },
+          },
         },
       }),
       editorProps: {

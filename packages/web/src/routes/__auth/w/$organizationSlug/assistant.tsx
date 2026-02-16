@@ -16,7 +16,6 @@ import { isAssistantSidebarOpenAtom } from "@/atoms/workspace-settings";
 import { AssistantChat } from "@/components/assistant/AssistantChat";
 import { AssistantHeader } from "@/components/assistant/AssistantHeader";
 import { AssistantSidebar } from "@/components/assistant/AssistantSidebar";
-import { Surface } from "@/components/layout/Surface";
 import { useAssistantPreferences } from "@/context/assistant-preferences.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
@@ -123,32 +122,30 @@ function AssistantLayout() {
   }, [navigate, organizationSlug, conversationId]);
 
   return (
-    <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Surface className="overflow-hidden size-full flex flex-col">
-        <AssistantHeader
-          conversationTitle={existingConversation?.title ?? null}
-          onToggleSidebar={toggleSidebar}
-          sidebarOpen={sidebarOpen}
-        />
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex-1 flex flex-col h-full mx-auto w-full max-w-xl px-4">
-            <AssistantChat
-              organizationId={organization.id}
-              initialPrompt={initialPrompt}
-              showEmptyState={isNewConversation}
-              messages={messages}
-              sendMessage={sendMessage}
-              stop={stop}
-              status={status}
-              alert={alert}
-              setAlert={setAlert}
-              isNewConversation={isNewConversation}
-              onNavigateToChat={handleNavigateToChat}
-            />
-          </div>
-          <AssistantSidebar isOpen={sidebarOpen} conversationId={conversationId} />
+    <div className="flex flex-col h-full overflow-hidden">
+      <AssistantHeader
+        conversationTitle={existingConversation?.title ?? null}
+        onToggleSidebar={toggleSidebar}
+        sidebarOpen={sidebarOpen}
+      />
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 flex flex-col h-full mx-auto w-full max-w-xl px-4">
+          <AssistantChat
+            organizationId={organization.id}
+            initialPrompt={initialPrompt}
+            showEmptyState={isNewConversation}
+            messages={messages}
+            sendMessage={sendMessage}
+            stop={stop}
+            status={status}
+            alert={alert}
+            setAlert={setAlert}
+            isNewConversation={isNewConversation}
+            onNavigateToChat={handleNavigateToChat}
+          />
         </div>
-      </Surface>
+        <AssistantSidebar isOpen={sidebarOpen} conversationId={conversationId} />
+      </div>
     </div>
   );
 }

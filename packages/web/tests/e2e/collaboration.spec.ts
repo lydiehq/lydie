@@ -148,15 +148,14 @@ test.describe("real-time collaboration - different users", () => {
         },
       );
 
-        // Verify both users have the same final content
-        const user1Content = await getEditorTextContent(user1ContentEditor);
-        const user2Content = await getEditorTextContent(user2ContentEditor);
-        expect(user1Content).toBe(user2Content);
-      } finally {
-        await user2Context.close();
-      }
-    },
-  );
+      // Verify both users have the same final content
+      const user1Content = await getEditorTextContent(user1ContentEditor);
+      const user2Content = await getEditorTextContent(user2ContentEditor);
+      expect(user1Content).toBe(user2Content);
+    } finally {
+      await user2Context.close();
+    }
+  });
 
   test("changes sync when user edits in the middle of text", async ({
     page: user1Page,
@@ -545,14 +544,16 @@ test.describe("real-time collaboration - different users", () => {
 
       // User1 should see a collaboration caret element
       // The CollaborationCaret extension adds span elements with pointer-events-none and border classes
-      const collaborationCursor = user1Page.locator('span.pointer-events-none.border-l.border-r.relative');
+      const collaborationCursor = user1Page.locator(
+        "span.pointer-events-none.border-l.border-r.relative",
+      );
 
       // Wait for the collaboration cursor to appear
       await expect(collaborationCursor).toBeVisible({ timeout: 5000 });
 
       // Optionally, check for the user name label if it's rendered
       // Labels are divs with select-none and absolute positioning inside the caret
-      const userLabel = user1Page.locator('div.select-none.absolute');
+      const userLabel = user1Page.locator("div.select-none.absolute");
       if ((await userLabel.count()) > 0) {
         await expect(userLabel.first()).toContainText(user2.user.name, {
           timeout: 5000,
@@ -569,42 +570,39 @@ async function getEditorTextContent(editorLocator: any): Promise<string> {
   return await editorLocator.evaluate((el: HTMLElement) => {
     // Walk the DOM tree and collect text from text nodes only
     // Skip any elements that are collaboration carets or their labels
-    let text = '';
-    const walker = document.createTreeWalker(
-      el,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode: (node: Node) => {
-          // Check if the node is inside a collaboration caret element
-          let parent: HTMLElement | null = node.parentElement;
-          while (parent) {
-            if (parent.classList) {
-              // Check for collaboration caret elements
-              // Carets have specific class combinations: pointer-events-none with border classes
-              const isCaret = parent.classList.contains('pointer-events-none') &&
-                (parent.classList.contains('border-l') || parent.classList.contains('break-normal'));
-              
-              // Check for collaboration caret label elements  
-              // Labels have specific class combinations: select-none with absolute positioning
-              const isLabel = parent.classList.contains('select-none') &&
-                parent.classList.contains('absolute');
-              
-              if (isCaret || isLabel) {
-                return NodeFilter.FILTER_REJECT;
-              }
+    let text = "";
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node: Node) => {
+        // Check if the node is inside a collaboration caret element
+        let parent: HTMLElement | null = node.parentElement;
+        while (parent) {
+          if (parent.classList) {
+            // Check for collaboration caret elements
+            // Carets have specific class combinations: pointer-events-none with border classes
+            const isCaret =
+              parent.classList.contains("pointer-events-none") &&
+              (parent.classList.contains("border-l") || parent.classList.contains("break-normal"));
+
+            // Check for collaboration caret label elements
+            // Labels have specific class combinations: select-none with absolute positioning
+            const isLabel =
+              parent.classList.contains("select-none") && parent.classList.contains("absolute");
+
+            if (isCaret || isLabel) {
+              return NodeFilter.FILTER_REJECT;
             }
-            parent = parent.parentElement;
           }
-          return NodeFilter.FILTER_ACCEPT;
+          parent = parent.parentElement;
         }
-      }
-    );
-    
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+
     let node: Node | null;
     while ((node = walker.nextNode())) {
       text += node.textContent;
     }
-    
+
     return text;
   });
 }
@@ -614,7 +612,7 @@ async function waitForEditorReady(page: Page) {
   // Wait for the editor to be present and the ProseMirror element to be visible
   const editor = page.getByLabel("Document content").locator('[contenteditable="true"]').first();
   await editor.waitFor({ state: "visible", timeout: 10000 });
-  
+
   // Give the editor a moment to initialize (Hocuspocus connection + Yjs sync)
   await page.waitForTimeout(500);
 }

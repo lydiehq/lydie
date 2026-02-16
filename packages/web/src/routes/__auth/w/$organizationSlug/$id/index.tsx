@@ -5,7 +5,6 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Editor } from "@/components/Editor";
 import { useDocumentTabSync } from "@/components/layout/DocumentTabBar";
-import { Surface } from "@/components/layout/Surface";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
@@ -42,29 +41,18 @@ function RouteComponent() {
 
   if (!doc && status.type === "complete") {
     return (
-      <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-        <Surface className="flex items-center justify-center">
-          <div className="flex flex-col items-center justify-center gap-y-2">
-            <span className="text-sm font-medium text-gray-900">Document not found</span>
-            <p className="text-sm text-gray-500">
-              {" "}
-              The document you are looking for does not exist.
-            </p>
-            <Button size="sm" href={`/w/${organization?.slug}`}>
-              Go back
-            </Button>
-          </div>
-        </Surface>
+      <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center justify-center gap-y-2">
+          <span className="text-sm font-medium text-gray-900">Document not found</span>
+          <p className="text-sm text-gray-500"> The document you are looking for does not exist.</p>
+          <Button size="sm" href={`/w/${organization?.slug}`}>
+            Go back
+          </Button>
+        </div>
       </div>
     );
   }
   if (!doc) return null;
 
-  return (
-    <div className="h-screen py-1 pr-1 flex flex-col pl-1">
-      <Surface>
-        <Editor doc={doc} organizationId={organization.id} organizationSlug={organization.slug} />
-      </Surface>
-    </div>
-  );
+  return <Editor doc={doc} organizationId={organization.id} organizationSlug={organization.slug} />;
 }

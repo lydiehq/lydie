@@ -1,3 +1,4 @@
+import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import type { Editor } from "@tiptap/core";
@@ -6,12 +7,15 @@ import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useRef } from "react";
 
+import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
+
 import { BottomBar } from "./BottomBar";
 import { BubbleMenu } from "./BubbleMenu";
 import { CoverImageEditor } from "./CoverImageEditor";
 import { DocumentMetadataTabs } from "./DocumentMetadataTabs";
 import { EditorToolbar } from "./EditorToolbar";
 import { LinkPopover } from "./link-popover/LinkPopover";
+import { TableOfContentsMinimap } from "./TableOfContentsMinimap";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
@@ -19,6 +23,8 @@ export interface Props {
   doc: DocumentType;
   contentEditor: Editor;
   titleEditor: Editor;
+  provider: HocuspocusProvider | null;
+  isAdmin: boolean;
   isLocked: boolean;
   shouldShiftContent: boolean;
   organizationId: string;
@@ -29,12 +35,17 @@ export function EditorView({
   doc,
   contentEditor,
   titleEditor,
+  provider,
+  isAdmin,
   isLocked,
   shouldShiftContent,
   organizationId,
   organizationSlug,
 }: Props) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Preload documents for the @ mention feature
+  usePreloadMentionDocuments(organizationId);
 
   return (
     <div
@@ -51,6 +62,9 @@ export function EditorView({
           This page is managed by an integration and cannot be edited.
         </div>
       )}
+
+      {/* Fixed minimap positioned outside scroll container */}
+      <TableOfContentsMinimap editor={contentEditor} containerRef={scrollContainerRef} />
 
       <div
         ref={scrollContainerRef}
@@ -92,7 +106,7 @@ export function EditorView({
         />
       </div>
 
-      <BottomBar editor={contentEditor} />
+      <BottomBar editor={contentEditor} provider={provider} isAdmin={isAdmin} />
     </div>
   );
 }

@@ -5,19 +5,23 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "react-aria-components";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
-import { isFloatingAssistantDockedAtom as isDockedAtom } from "@/atoms/workspace-settings";
+import {
+  isFloatingAssistantDockedAtom as isDockedAtom,
+  isSidebarCollapsedAtom,
+} from "@/atoms/workspace-settings";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
 import { DocumentTabBar } from "@/components/layout/DocumentTabBar";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarIcon } from "@/components/layout/SidebarIcon";
+import { Surface } from "@/components/layout/Surface";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
 import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
@@ -79,8 +83,14 @@ function RouteLayout() {
     useState<HTMLDivElement | null>(null);
   const [size, setSize] = useState(280); // pixels
   const isCollapsed = size === COLLAPSED_SIZE;
+  const [, setSidebarCollapsed] = useAtom(isSidebarCollapsedAtom);
   const routerState = useRouterState();
   const isDocked = useAtomValue(isDockedAtom);
+
+  // Sync collapsed state to atom so child components can read it
+  useEffect(() => {
+    setSidebarCollapsed(isCollapsed);
+  }, [isCollapsed, setSidebarCollapsed]);
 
   const toggleSidebar = useCallback(() => {
     if (!sidebarPanelRef.current) return;
@@ -190,9 +200,13 @@ function RouteLayout() {
           </Panel>
           <PanelResizer />
           <Panel className="relative flex flex-col">
-            <div className="flex-1 relative overflow-hidden">
+            <div className="flex-1 relative overflow-hidden flex flex-col">
               <DocumentTabBar organizationSlug={params.organizationSlug} />
-              <Outlet />
+              <div className="flex-1 min-h-0 p-1">
+                <Surface className="h-full overflow-hidden">
+                  <Outlet />
+                </Surface>
+              </div>
             </div>
             <FloatingSidebarToggleButton
               isCollapsed={isCollapsed}
