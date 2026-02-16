@@ -248,11 +248,7 @@ export const insertTabAtPositionAtom = atom(
   (
     _get,
     set,
-    {
-      documentId,
-      title,
-      position,
-    }: { documentId: string; title: string; position: number },
+    { documentId, title, position }: { documentId: string; title: string; position: number },
   ) => {
     const currentTabs = _get(storedTabsAtom);
     const existingIndex = findTabIndex(currentTabs, documentId);
@@ -273,11 +269,7 @@ export const insertTabAtPositionAtom = atom(
     } else {
       // Insert new tab at position
       const newTab: DocumentTab = { documentId, title, mode: "persistent" as const };
-      newTabs = [
-        ...currentTabs.slice(0, position),
-        newTab,
-        ...currentTabs.slice(position),
-      ];
+      newTabs = [...currentTabs.slice(0, position), newTab, ...currentTabs.slice(position)];
 
       // Handle max tabs limit
       if (newTabs.length > MAX_TABS) {
@@ -298,18 +290,18 @@ export const reorderTabsAtom = atom(
   null,
   (_get, set, { draggedIds, targetIndex }: { draggedIds: string[]; targetIndex: number }) => {
     const currentTabs = _get(storedTabsAtom);
-    
+
     // Remove dragged tabs from current positions
     const draggedTabs = currentTabs.filter((t) => draggedIds.includes(t.documentId));
     const remainingTabs = currentTabs.filter((t) => !draggedIds.includes(t.documentId));
-    
+
     // Insert dragged tabs at target position
     const newTabs = [
       ...remainingTabs.slice(0, targetIndex),
       ...draggedTabs,
       ...remainingTabs.slice(targetIndex),
     ];
-    
+
     set(storedTabsAtom, newTabs);
   },
 );

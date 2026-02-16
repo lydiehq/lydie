@@ -49,6 +49,7 @@ class EditorCache {
   getOrCreate(
     documentId: string,
     userId: string,
+    userName: string,
     yjsState: string | null,
     isLocked: boolean,
     initialTitle: string,
@@ -61,7 +62,7 @@ class EditorCache {
     }
 
     // Create new editor instance
-    const cached = this.createEditor(documentId, userId, yjsState, isLocked, initialTitle);
+    const cached = this.createEditor(documentId, userId, userName, yjsState, isLocked, initialTitle);
     this.editors.set(documentId, cached);
 
     // Evict oldest if over limit
@@ -163,6 +164,7 @@ class EditorCache {
   private createEditor(
     documentId: string,
     userId: string,
+    userName: string,
     yjsState: string | null,
     isLocked: boolean,
     initialTitle: string,
@@ -231,7 +233,7 @@ class EditorCache {
         collaboration: { document: connection.ydoc },
         collaborationCaret: {
           provider: connection.provider,
-          user: { name: "User", color: "#808080" },
+          user: { name: userName, color: "#808080" },
           render: renderCollaborationCaret,
         },
       }),

@@ -181,7 +181,11 @@ const FavoritesSection = memo(function FavoritesSection() {
   }
 
   return (
-    <Disclosure className="group" isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
+    <Disclosure
+      className="group flex flex-col"
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
+    >
       <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
         <Eyebrow className="ml-1">Favorites</Eyebrow>
         <Heading>
@@ -196,7 +200,7 @@ const FavoritesSection = memo(function FavoritesSection() {
           </RACButton>
         </Heading>
       </div>
-      <DisclosurePanel className="h-(--disclosure-panel-height) overflow-clip">
+      <DisclosurePanel className="grow overflow-clip">
         <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2">
           <FavoritesTree />
         </div>
@@ -211,7 +215,7 @@ const DocumentsSection = memo(function DocumentsSection() {
 
   return (
     <Disclosure
-      className="group overflow-y-hidden"
+      className="group overflow-y-hidden flex flex-col"
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
     >
@@ -244,7 +248,7 @@ const DocumentsSection = memo(function DocumentsSection() {
           </TooltipTrigger>
         </div>
       </div>
-      <DisclosurePanel className="overflow-y-auto h-full scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2">
+      <DisclosurePanel className="overflow-y-auto grow scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2">
         <DocumentTree />
       </DisclosurePanel>
     </Disclosure>

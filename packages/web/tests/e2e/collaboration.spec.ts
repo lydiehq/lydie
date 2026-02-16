@@ -23,6 +23,10 @@ test.describe("real-time collaboration - same user (two tabs)", () => {
         // Tab 2 navigates to the same document
         await tab2.goto(documentUrl, { waitUntil: "networkidle" });
 
+        // Wait for both editors to be ready
+        await waitForEditorReady(tab1);
+        await waitForEditorReady(tab2);
+
         const tab1ContentEditor = tab1
           .getByLabel("Document content")
           .locator('[contenteditable="true"]')
@@ -33,9 +37,9 @@ test.describe("real-time collaboration - same user (two tabs)", () => {
           .locator('[contenteditable="true"]')
           .first();
 
-        // Verify both tabs see initial content
+        // Verify both tabs see initial content (with longer timeout for sync)
         await expect(tab1ContentEditor).toContainText("Initial content");
-        await expect(tab2ContentEditor).toContainText("Initial content");
+        await expect(tab2ContentEditor).toContainText("Initial content", { timeout: 10000 });
 
         // Tab 1 adds text
         await tab1ContentEditor.click();
@@ -63,8 +67,8 @@ test.describe("real-time collaboration - same user (two tabs)", () => {
         );
 
         // Verify both tabs have the same final content
-        const tab1Content = await tab1ContentEditor.textContent();
-        const tab2Content = await tab2ContentEditor.textContent();
+        const tab1Content = await getEditorTextContent(tab1ContentEditor);
+        const tab2Content = await getEditorTextContent(tab2ContentEditor);
         expect(tab1Content).toBe(tab2Content);
       } finally {
         await tab2.close();
@@ -98,6 +102,10 @@ test.describe("real-time collaboration - different users", () => {
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
 
+      // Wait for both editors to be ready
+      await waitForEditorReady(user1Page);
+      await waitForEditorReady(user2Page);
+
       // Get editors for both users
       const user1ContentEditor = user1Page
         .getByLabel("Document content")
@@ -109,9 +117,9 @@ test.describe("real-time collaboration - different users", () => {
         .locator('[contenteditable="true"]')
         .first();
 
-      // Verify both users see initial content
+      // Verify both users see initial content (with longer timeout for sync)
       await expect(user1ContentEditor).toContainText("Initial content");
-      await expect(user2ContentEditor).toContainText("Initial content");
+      await expect(user2ContentEditor).toContainText("Initial content", { timeout: 10000 });
 
       // User1 adds text
       await user1ContentEditor.click();
@@ -140,14 +148,15 @@ test.describe("real-time collaboration - different users", () => {
         },
       );
 
-      // Verify both users have the same final content
-      const user1Content = await user1ContentEditor.textContent();
-      const user2Content = await user2ContentEditor.textContent();
-      expect(user1Content).toBe(user2Content);
-    } finally {
-      await user2Context.close();
-    }
-  });
+        // Verify both users have the same final content
+        const user1Content = await getEditorTextContent(user1ContentEditor);
+        const user2Content = await getEditorTextContent(user2ContentEditor);
+        expect(user1Content).toBe(user2Content);
+      } finally {
+        await user2Context.close();
+      }
+    },
+  );
 
   test("changes sync when user edits in the middle of text", async ({
     page: user1Page,
@@ -171,6 +180,10 @@ test.describe("real-time collaboration - different users", () => {
 
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
+
+      // Wait for both editors to be ready
+      await waitForEditorReady(user1Page);
+      await waitForEditorReady(user2Page);
 
       const user1ContentEditor = user1Page
         .getByLabel("Document content")
@@ -224,6 +237,10 @@ test.describe("real-time collaboration - different users", () => {
 
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
+
+      // Wait for both pages to be ready
+      await waitForEditorReady(user1Page);
+      await waitForEditorReady(user2Page);
 
       const user1TitleEditor = user1Page
         .getByLabel("Document title")
@@ -290,6 +307,10 @@ test.describe("real-time collaboration - different users", () => {
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
 
+      // Wait for both pages to be ready
+      await waitForEditorReady(user1Page);
+      await waitForEditorReady(user2Page);
+
       const user1TitleEditor = user1Page
         .getByLabel("Document title")
         .locator('[contenteditable="true"]')
@@ -314,7 +335,7 @@ test.describe("real-time collaboration - different users", () => {
       await expect(user1TitleEditor).toHaveText("Initial Title");
       await expect(user2TitleEditor).toHaveText("Initial Title");
       await expect(user1ContentEditor).toContainText("Initial content");
-      await expect(user2ContentEditor).toContainText("Initial content");
+      await expect(user2ContentEditor).toContainText("Initial content", { timeout: 10000 });
 
       // User1 starts typing in the title (but doesn't blur yet)
       await user1TitleEditor.click();
@@ -380,6 +401,10 @@ test.describe("real-time collaboration - different users", () => {
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
 
+      // Wait for both editors to be ready
+      await waitForEditorReady(user1Page);
+      await waitForEditorReady(user2Page);
+
       const user1ContentEditor = user1Page
         .getByLabel("Document content")
         .locator('[contenteditable="true"]')
@@ -438,6 +463,10 @@ test.describe("real-time collaboration - different users", () => {
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
 
+      // Wait for both editors to be ready
+      await waitForEditorReady(user1Page);
+      await waitForEditorReady(user2Page);
+
       const user1ContentEditor = user1Page
         .getByLabel("Document content")
         .locator('[contenteditable="true"]')
@@ -470,8 +499,8 @@ test.describe("real-time collaboration - different users", () => {
       await expect(user2ContentEditor).toContainText(":End", { timeout: 5000 });
 
       // Verify the content is identical
-      const user1Content = await user1ContentEditor.textContent();
-      const user2Content = await user2ContentEditor.textContent();
+      const user1Content = await getEditorTextContent(user1ContentEditor);
+      const user2Content = await getEditorTextContent(user2ContentEditor);
       expect(user1Content).toBe(user2Content);
     } finally {
       await user2Context.close();
@@ -502,6 +531,10 @@ test.describe("real-time collaboration - different users", () => {
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
 
+      // Wait for both editors to be ready
+      await waitForEditorReady(user1Page);
+      await waitForEditorReady(user2Page);
+
       const user2ContentEditor = user2Page
         .getByLabel("Document content")
         .locator('[contenteditable="true"]')
@@ -511,16 +544,15 @@ test.describe("real-time collaboration - different users", () => {
       await user2ContentEditor.click();
 
       // User1 should see a collaboration caret element
-      // The CollaborationCaret extension adds elements with class 'collaboration-cursor__caret'
-      // Note: The actual class name may vary based on your Tiptap configuration
-      const collaborationCursor = user1Page.locator(".collaboration-cursor__caret");
+      // The CollaborationCaret extension adds span elements with pointer-events-none and border classes
+      const collaborationCursor = user1Page.locator('span.pointer-events-none.border-l.border-r.relative');
 
       // Wait for the collaboration cursor to appear
       await expect(collaborationCursor).toBeVisible({ timeout: 5000 });
 
       // Optionally, check for the user name label if it's rendered
-      // This depends on your CollaborationCaret configuration
-      const userLabel = user1Page.locator(".collaboration-cursor__label");
+      // Labels are divs with select-none and absolute positioning inside the caret
+      const userLabel = user1Page.locator('div.select-none.absolute');
       if ((await userLabel.count()) > 0) {
         await expect(userLabel.first()).toContainText(user2.user.name, {
           timeout: 5000,
@@ -532,12 +564,70 @@ test.describe("real-time collaboration - different users", () => {
   });
 });
 
+// Helper function to get editor text content excluding collaboration carets
+async function getEditorTextContent(editorLocator: any): Promise<string> {
+  return await editorLocator.evaluate((el: HTMLElement) => {
+    // Walk the DOM tree and collect text from text nodes only
+    // Skip any elements that are collaboration carets or their labels
+    let text = '';
+    const walker = document.createTreeWalker(
+      el,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node: Node) => {
+          // Check if the node is inside a collaboration caret element
+          let parent: HTMLElement | null = node.parentElement;
+          while (parent) {
+            if (parent.classList) {
+              // Check for collaboration caret elements
+              // Carets have specific class combinations: pointer-events-none with border classes
+              const isCaret = parent.classList.contains('pointer-events-none') &&
+                (parent.classList.contains('border-l') || parent.classList.contains('break-normal'));
+              
+              // Check for collaboration caret label elements  
+              // Labels have specific class combinations: select-none with absolute positioning
+              const isLabel = parent.classList.contains('select-none') &&
+                parent.classList.contains('absolute');
+              
+              if (isCaret || isLabel) {
+                return NodeFilter.FILTER_REJECT;
+              }
+            }
+            parent = parent.parentElement;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+    
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      text += node.textContent;
+    }
+    
+    return text;
+  });
+}
+
+// Helper function to wait for editor to be ready
+async function waitForEditorReady(page: Page) {
+  // Wait for the editor to be present and the ProseMirror element to be visible
+  const editor = page.getByLabel("Document content").locator('[contenteditable="true"]').first();
+  await editor.waitFor({ state: "visible", timeout: 10000 });
+  
+  // Give the editor a moment to initialize (Hocuspocus connection + Yjs sync)
+  await page.waitForTimeout(500);
+}
+
 // Helper function to create a document and return its URL
 async function createDocument(
   page: Page,
   options: { title: string; content: string },
 ): Promise<string> {
   await page.getByRole("button", { name: "Create new document" }).click();
+
+  // Wait for the editor to be ready
+  await waitForEditorReady(page);
 
   const titleEditor = page.getByLabel("Document title").locator('[contenteditable="true"]').first();
   await titleEditor.click();

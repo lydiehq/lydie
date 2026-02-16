@@ -10,7 +10,6 @@ export default defineConfig({
   // Retry on CI only
   retries: Resource.App.stage === "production" ? 2 : 0,
   // Reporter to use
-  reporter: [["html"], ["list"]],
   timeout: 15_000,
   // Shared settings for all the projects below
   use: {

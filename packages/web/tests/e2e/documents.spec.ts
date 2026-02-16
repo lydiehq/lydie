@@ -1,19 +1,17 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures/auth.fixture";
-// import { triggerCommandMenuShortcut } from "./utils/command-menu";
+import { createDocument, gotoWorkspace } from "./utils/document";
 
 test.describe("documents", () => {
   test("can create a new document", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
-    await createDocument(page, organization.slug, {
-      title: "Test Document",
-      content: "",
-    });
+    await gotoWorkspace(page, organization.slug);
+    await createDocument(page, { title: "Test Document", content: "" });
+    await expect(page.getByRole("row", { name: "Test Document" })).toBeVisible();
   });
 
   test("can create new document in folder", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+    await gotoWorkspace(page, organization.slug);
     await page.getByRole("button", { name: "Create new folder" }).click();
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
     await sidebarTree
@@ -21,14 +19,12 @@ test.describe("documents", () => {
       .getByRole("button", { name: "Folder options" })
       .click();
     await page.getByRole("menuitem", { name: "Create document in folder" }).click();
-    // TODO: better way of figuring out if a document has actually been created?
+
     const titleEditor = page
       .getByLabel("Document title")
       .locator('[contenteditable="true"]')
       .first();
-    // Verify the editor exists and is empty (new documents start with empty title)
     await expect(titleEditor).toBeVisible();
-    await expect(titleEditor).toHaveText("");
 
     await titleEditor.click();
     await titleEditor.fill("Document in Folder");
@@ -38,37 +34,28 @@ test.describe("documents", () => {
       name: "Document in Folder",
     });
     await expect(documentSidebarItem).toBeVisible();
-    // expect to be a descendant of the folder row
     await expect(documentSidebarItem).toHaveAttribute("aria-level", "2");
   });
 
   test("can update document content", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
+    await gotoWorkspace(page, organization.slug);
     const content = "Hello, World!";
-    await createDocument(page, organization.slug, {
-      title: "Test Document",
-      content,
-    });
+    await createDocument(page, { title: "Test Document", content });
 
     const contentEditor = page
       .getByLabel("Document content")
       .locator('[contenteditable="true"]')
       .first();
 
-    // Wait for auto-save (TODO: test this better and allow ctrl+s to work)
-    await page.waitForTimeout(1000);
-
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload();
+    await waitForWorkspace(page);
     await expect(contentEditor).toContainText(content);
   });
 
   test("can delete a document from sidebar", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
-    // Set up a document with title and content (setup, not what we're testing)
-    await createDocument(page, organization.slug, {
-      title: "Document to Delete",
-      content: "Some content",
-    });
+    await gotoWorkspace(page, organization.slug);
+    await createDocument(page, { title: "Document to Delete", content: "Some content" });
+
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
     const documentSidebarItem = sidebarTree.getByRole("row", {
       name: "Document to Delete",
@@ -76,20 +63,15 @@ test.describe("documents", () => {
     await documentSidebarItem.getByRole("button", { name: "Document options" }).click();
     await page.getByRole("menuitem", { name: "Delete" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Confirm" }).click();
-    // Assert that we are redirected to the home page
+
     await page.waitForURL(`/w/${organization.slug}`);
     await expect(documentSidebarItem).not.toBeVisible();
   });
 
   test("can update document title", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
-    // Set up a document with initial title (setup)
-    await createDocument(page, organization.slug, {
-      title: "Initial Title",
-      content: "Some content",
-    });
+    await gotoWorkspace(page, organization.slug);
+    await createDocument(page, { title: "Initial Title", content: "Some content" });
 
-    // Now test updating the title (this is what we're testing)
     const titleEditor = page
       .getByLabel("Document title")
       .locator('[contenteditable="true"]')
@@ -98,21 +80,14 @@ test.describe("documents", () => {
     await titleEditor.fill("My new document title");
     await titleEditor.blur();
 
-    // Expect document to have new title in sidebar
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
     await expect(sidebarTree.getByRole("row", { name: "My new document title" })).toBeVisible();
   });
 
   test("can publish document", async ({ page, organization }) => {
-    await page.goto(`/w/${organization.slug}`, { waitUntil: "networkidle" });
-    // Set up a document with title and content (setup, not what we're testing)
-    await createDocument(page, organization.slug, {
-      title: "Test Document",
-      content: "This is test content",
-    });
+    await gotoWorkspace(page, organization.slug);
+    await createDocument(page, { title: "Test Document", content: "This is test content" });
 
-    // for some reason triggering the command menu with shortcut didn't work
-    // here (despite bluring the editor). TODO: figure out why.
     await page.getByRole("button", { name: "Quick Action" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.getByRole("dialog").getByRole("option", { name: "Publish document" }).click();
@@ -132,24 +107,7 @@ test.describe("documents", () => {
   });
 });
 
-async function createDocument(
-  page: Page,
-  _organizationSlug: string,
-  options: { title: string; content: string },
-) {
-  await page.getByRole("button", { name: "Create new document" }).click();
-
-  const titleEditor = page.getByLabel("Document title").locator('[contenteditable="true"]').first();
-  await titleEditor.click();
-  await titleEditor.fill(options.title);
-  await titleEditor.blur();
-
-  const contentEditor = page
-    .getByLabel("Document content")
-    .locator('[contenteditable="true"]')
-    .first();
-  await contentEditor.fill(options.content);
-
-  // Wait for auto-save
-  await page.waitForTimeout(1000);
+async function waitForWorkspace(page: Page): Promise<void> {
+  await page.waitForLoadState("domcontentloaded");
+  await page.getByRole("button", { name: "Quick Action" }).waitFor({ state: "visible" });
 }

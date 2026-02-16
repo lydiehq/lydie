@@ -54,7 +54,7 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
   // Get or create cached editors synchronously during render
   // This ensures editors are available immediately on first render
   const cached = user
-    ? editorCache.getOrCreate(doc.id, user.id, doc.yjs_state, isLocked, doc.title || "")
+    ? editorCache.getOrCreate(doc.id, user.id, user.name, doc.yjs_state, isLocked, doc.title || "")
     : null;
 
   // Sync title during render when document changes (no useEffect needed)
