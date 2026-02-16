@@ -6,7 +6,7 @@ import { z } from "zod";
 
 const requestSchema = z.object({
   currentHTML: z.string(),
-  searchText: z.string(),
+  selectionWithEllipsis: z.string(),
   replaceText: z.string(),
 });
 
@@ -18,23 +18,28 @@ export const LLMReplaceRoute = new Hono<{
 }>().post("/", async (c) => {
   try {
     const body = await c.req.json();
-    const { currentHTML, searchText } = requestSchema.parse(body);
+    const { currentHTML, selectionWithEllipsis } = requestSchema.parse(body);
 
-    const prompt = `You are helping to locate content in an HTML document for replacement. The search text provided may not match exactly due to HTML attribute differences, whitespace, or formatting variations.
+    const ellipsisIndex = selectionWithEllipsis.indexOf("...");
+    let startPattern = "";
+    let endPattern = "";
 
-Current document HTML:
+    if (ellipsisIndex !== -1) {
+      startPattern = selectionWithEllipsis.substring(0, ellipsisIndex).trim();
+      endPattern = selectionWithEllipsis.substring(ellipsisIndex + 3).trim();
+    }
+
+    const prompt = `Find content in this HTML document matching the pattern "${startPattern}...${endPattern}".
+
+Document:
 ${currentHTML}
 
-Search text (may not match exactly due to formatting):
-${searchText}
+Find the exact substring that:
+1. Starts with "${startPattern}" ${startPattern ? "(or document start if empty)" : ""}
+2. Ends with "${endPattern}" ${endPattern ? "(or document end if empty)" : ""}
+3. Includes everything in between
 
-Your task: Find the exact substring from the current document that best matches the search text intent. Return ONLY the exact substring from the document, with no explanations, quotes, or other text.
-
-Rules:
-- The substring must exist verbatim in the current document
-- Include any HTML tags that are part of the content
-- Match the intent and meaning of the search text
-- If the search text is not found at all, return "NOT_FOUND"`;
+Return ONLY the exact substring from the document, or "NOT_FOUND" if no match.`;
 
     const { text } = await generateText({
       model: google("gemini-2.5-flash-lite"),
@@ -45,18 +50,10 @@ Rules:
     const exactMatch = text.trim();
 
     if (exactMatch === "NOT_FOUND" || !currentHTML.includes(exactMatch)) {
-      return c.json({
-        success: false,
-        error: "Could not find matching content in document",
-        exactMatch: exactMatch === "NOT_FOUND" ? null : exactMatch,
-      });
+      return c.json({ success: false, exactMatch: null });
     }
 
-    return c.json({
-      success: true,
-      exactMatch,
-      originalSearch: searchText,
-    });
+    return c.json({ success: true, exactMatch });
   } catch (error) {
     console.error("LLM replace error:", error);
 
@@ -64,9 +61,6 @@ Rules:
       throw new VisibleError("invalid_request_parameters", "Invalid request parameters");
     }
 
-    throw new VisibleError(
-      "failed_to_process_replacement",
-      "Failed to process replacement. Please try selecting the content more precisely.",
-    );
+    throw new VisibleError("failed_to_process_replacement", "Failed to process replacement");
   }
 });

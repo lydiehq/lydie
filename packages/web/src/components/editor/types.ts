@@ -15,7 +15,7 @@ export interface PendingEditorChange {
   documentId: string;
   organizationId: string;
   title?: string;
-  search?: string;
+  selectionWithEllipsis?: string;
   replace?: string;
 }
 

@@ -19,7 +19,7 @@ export { activeTabIdAtom as activeDocumentIdAtom } from "@/atoms/tabs";
 export interface PendingEditorChange {
   documentId: string;
   title?: string;
-  search: string;
+  selectionWithEllipsis: string;
   replace: string;
   organizationId: string;
 }

@@ -34,13 +34,13 @@ export interface ReplaceInDocumentToolProps {
     input?: {
       documentId?: string;
       title?: string;
-      search?: string;
+      selectionWithEllipsis?: string;
       replace?: string;
     };
     output?: {
       documentId?: string;
       title?: string;
-      search?: string;
+      selectionWithEllipsis?: string;
       replace?: string;
     };
     errorText?: string;
@@ -97,7 +97,7 @@ export function ReplaceInDocumentTool({
   // Extract other tool data
   const newTitle = tool.input?.title || tool.output?.title;
   const replaceText = tool.input?.replace || tool.output?.replace || "";
-  const searchText = tool.input?.search || tool.output?.search || "";
+  const selectionWithEllipsis = tool.input?.selectionWithEllipsis || tool.output?.selectionWithEllipsis || "";
 
   // Reset state when a new tool call starts
   useEffect(() => {
@@ -127,7 +127,7 @@ export function ReplaceInDocumentTool({
     const isMatchingPendingChange =
       pendingChange &&
       pendingChange.documentId === (targetDocumentId || params.id) &&
-      pendingChange.search === searchText &&
+      pendingChange.selectionWithEllipsis === selectionWithEllipsis &&
       pendingChange.replace === replaceText &&
       pendingChange.title === newTitle;
 
@@ -192,7 +192,7 @@ export function ReplaceInDocumentTool({
     pendingChangeStatus,
     targetDocumentId,
     params.id,
-    searchText,
+    selectionWithEllipsis,
     replaceText,
     newTitle,
     isApplying,
@@ -213,7 +213,7 @@ export function ReplaceInDocumentTool({
   const isInputStreaming = tool.state === "input-streaming";
   const isCallStreaming = tool.state === "call-streaming";
   const hasOutput = tool.state === "output-available" || tool.output != null;
-  const isFullReplacement = searchText === "";
+  const isFullReplacement = selectionWithEllipsis === "";
 
   useLayoutEffect(() => {
     if (contentRef.current) {
@@ -250,7 +250,7 @@ export function ReplaceInDocumentTool({
       setPendingChange({
         documentId: targetDocumentId,
         title: newTitle,
-        search: searchText,
+        selectionWithEllipsis,
         replace: replaceText,
         organizationId,
       });
@@ -314,7 +314,7 @@ export function ReplaceInDocumentTool({
       setPendingChange({
         documentId: currentDocId,
         title: newTitle,
-        search: searchText,
+        selectionWithEllipsis,
         replace: replaceText,
         organizationId,
       });
@@ -376,7 +376,7 @@ export function ReplaceInDocumentTool({
           editor,
           [
             {
-              search: searchText,
+              selectionWithEllipsis,
               replace: replaceText,
             },
           ],
@@ -464,7 +464,7 @@ export function ReplaceInDocumentTool({
       toolInput: tool.input,
       toolOutput: tool.output,
       toolError: tool.errorText,
-      searchLength: searchText.length,
+      selectionLength: selectionWithEllipsis.length,
       replaceLength: replaceText.length,
       isInputStreaming,
       isCallStreaming,
@@ -485,7 +485,7 @@ export function ReplaceInDocumentTool({
 
     console.group("🐛 Replace In Document Tool Debug Info");
     console.log("Tool object:", tool);
-    console.log("Search text:", searchText);
+    console.log("Selection with ellipsis:", selectionWithEllipsis);
     console.log("Replace text:", replaceText);
     console.log("State flags:", {
       isInputStreaming,

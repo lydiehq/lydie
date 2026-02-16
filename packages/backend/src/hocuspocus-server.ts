@@ -1,6 +1,7 @@
 import { Database } from "@hocuspocus/extension-database";
 import { Hocuspocus, onAuthenticatePayload } from "@hocuspocus/server";
 import { authClient } from "@lydie/core/auth";
+import { registerHocuspocusAccessor } from "@lydie/core/document-state";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 import { createId } from "@lydie/core/id";
 import { db } from "@lydie/database";
@@ -197,3 +198,21 @@ export const hocuspocus = new Hocuspocus({
 
   debounce: 5000,
 });
+
+/**
+ * Get the current document state directly from Hocuspocus memory.
+ * This returns the real-time state without waiting for debounced DB saves.
+ * Returns null if the document is not currently loaded in memory.
+ */
+export function getHocuspocusDocumentState(documentId: string): Uint8Array | null {
+  const document = hocuspocus.documents.get(documentId);
+
+  if (!document) {
+    return null;
+  }
+
+  return Y.encodeStateAsUpdate(document);
+}
+
+// Register the accessor so the core package can read real-time document state
+registerHocuspocusAccessor(getHocuspocusDocumentState);

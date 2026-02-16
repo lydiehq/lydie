@@ -153,7 +153,7 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
             cached.contentEditor,
             [
               {
-                search: pendingChange.search,
+                selectionWithEllipsis: pendingChange.selectionWithEllipsis,
                 replace: pendingChange.replace,
               },
             ],

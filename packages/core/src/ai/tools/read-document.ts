@@ -4,6 +4,7 @@ import { and, eq, ilike } from "drizzle-orm";
 import { z } from "zod";
 
 import { serializeToHTML } from "../../serialization/html";
+import { getHocuspocusDocumentState, isHocuspocusAvailable } from "../../document-state";
 import { convertYjsToJson } from "../../yjs-to-json";
 
 export const readDocument = (userId: string, organizationId: string) =>
@@ -23,8 +24,12 @@ CRITICAL: Always read before editing. Use this to understand document structure,
         .boolean()
         .describe("Whether to include document metadata like creation date, slug, etc.")
         .default(false),
+      preferFresh: z
+        .boolean()
+        .describe("Whether to prefer real-time document state from collaborative editing session (if available). Default: true")
+        .default(true),
     }),
-    execute: async function* ({ documentId, documentTitle, includeMetadata = false }) {
+    execute: async function* ({ documentId, documentTitle, includeMetadata = false, preferFresh = true }) {
       if (!documentId && !documentTitle) {
         yield {
           state: "error",
@@ -93,7 +98,19 @@ CRITICAL: Always read before editing. Use this to understand document structure,
         documentTitle: document.title,
       };
 
-      const jsonContent = convertYjsToJson(document.yjsState);
+      // Try to get real-time state from Hocuspocus if available and requested
+      let yjsState: string | null = document.yjsState;
+      let source = "database";
+
+      if (preferFresh && documentId && isHocuspocusAvailable()) {
+        const hocuspocusState = getHocuspocusDocumentState(documentId);
+        if (hocuspocusState) {
+          yjsState = Buffer.from(hocuspocusState).toString("base64");
+          source = "real-time";
+        }
+      }
+
+      const jsonContent = convertYjsToJson(yjsState);
 
       let htmlContent: string;
       try {
@@ -107,6 +124,7 @@ CRITICAL: Always read before editing. Use this to understand document structure,
         id: document.id,
         title: document.title,
         content: htmlContent,
+        source, // Indicates whether content came from "database" or "real-time"
       };
 
       if (includeMetadata) {
@@ -117,7 +135,7 @@ CRITICAL: Always read before editing. Use this to understand document structure,
 
       yield {
         state: "success",
-        message: `Successfully retrieved document: "${document.title}"`,
+        message: `Successfully retrieved document: "${document.title}" (${source})`,
         document: result,
       };
     },
