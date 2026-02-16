@@ -18,6 +18,12 @@ export const replaceInDocument = () =>
 **Selection Format (Ellipsis Pattern):**
 Use \`selectionWithEllipsis\` with three dots (...) as separator.
 
+**CRITICAL: Patterns MUST contain actual text content, not just HTML tags.**
+- ❌ BAD: \`<div>...</div>\` - no text content to match
+- ❌ BAD: \`<p>...</p>\` - no text content to match
+- ✅ GOOD: \`<h2>Introduction...</h2>\` - contains "Introduction" text
+- ✅ GOOD: \`...end of the story.</p>\` - contains "end of the story" text
+
 **Three Patterns:**
 
 1. **APPEND after content** - Pattern: "...endText"
@@ -39,6 +45,7 @@ Use \`selectionWithEllipsis\` with three dots (...) as separator.
      replace: "<h2>New Section</h2><p>New content...</p>"
 
 **Rules:**
+- **NEVER use structural tags alone** like \`<div>...</div>\` or \`<p>...</p>\` - always include text content
 - For APPEND/PREPEND: Include the anchor text in your replacement
 - For RANGE: Replace everything between start and end
 - Include closing tags (</p>, </h2>) for precision
@@ -52,22 +59,17 @@ Use \`selectionWithEllipsis\` with three dots (...) as separator.
 
 **Task Lists:** <ul data-type="taskList"><li data-type="taskItem" data-checked="true">Task</li></ul>`,
     inputSchema: z.object({
-      documentId: z
-        .string()
-        .describe("ID of the document to modify."),
-      title: z
-        .string()
-        .optional()
-        .describe("New title for the document (plain text, no HTML)."),
+      documentId: z.string().describe("ID of the document to modify."),
+      title: z.string().optional().describe("New title for the document (plain text, no HTML)."),
       selectionWithEllipsis: z
         .string()
         .describe(
-          'Target content using ellipsis pattern: "...end" (append), "start..." (prepend), or "start...end" (replace). Use "" only for empty documents.'
+          'Target content using ellipsis pattern: "...end" (append), "start..." (prepend), or "start...end" (replace). Use "" only for empty documents.',
         ),
       replace: z
         .string()
         .describe(
-          'Replacement text in HTML. For append/prepend, include anchor text + new content. Empty string deletes.'
+          "Replacement text in HTML. For append/prepend, include anchor text + new content. Empty string deletes.",
         ),
     }),
     execute: async function ({ documentId, title, selectionWithEllipsis, replace }) {

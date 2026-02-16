@@ -3,8 +3,8 @@ import { tool } from "ai";
 import { and, eq, ilike } from "drizzle-orm";
 import { z } from "zod";
 
-import { serializeToHTML } from "../../serialization/html";
 import { getHocuspocusDocumentState, isHocuspocusAvailable } from "../../document-state";
+import { serializeToHTML } from "../../serialization/html";
 import { convertYjsToJson } from "../../yjs-to-json";
 
 export const readDocument = (userId: string, organizationId: string) =>
@@ -26,10 +26,17 @@ CRITICAL: Always read before editing. Use this to understand document structure,
         .default(false),
       preferFresh: z
         .boolean()
-        .describe("Whether to prefer real-time document state from collaborative editing session (if available). Default: true")
+        .describe(
+          "Whether to prefer real-time document state from collaborative editing session (if available). Default: true",
+        )
         .default(true),
     }),
-    execute: async function* ({ documentId, documentTitle, includeMetadata = false, preferFresh = true }) {
+    execute: async function* ({
+      documentId,
+      documentTitle,
+      includeMetadata = false,
+      preferFresh = true,
+    }) {
       if (!documentId && !documentTitle) {
         yield {
           state: "error",

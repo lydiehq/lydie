@@ -150,31 +150,72 @@ export const hocuspocus = new Hocuspocus({
     }),
   ],
 
-  async onAuthenticate({ documentName, request }: onAuthenticatePayload): Promise<any> {
+  async onAuthenticate({ documentName, request, token }: onAuthenticatePayload): Promise<any> {
     if (!request?.headers) {
+      console.error("[Hocuspocus Auth] No request headers available");
       throw new Error("Authentication required");
     }
+
+    // Log request details for debugging
+    // request.headers is IncomingHttpHeaders from Node.js
+    const headers = request.headers;
+    const cookieHeader = headers.cookie;
+
+    console.log("[Hocuspocus Auth] Authentication attempt", {
+      documentName,
+      hasToken: !!token,
+      tokenValue: token ? `${token.substring(0, 20)}...` : null,
+      hasCookies: !!cookieHeader,
+      cookieLength: typeof cookieHeader === "string" ? cookieHeader.length : 0,
+      headerNames: Object.keys(headers),
+    });
 
     try {
       const session = await authClient.api.getSession({
         headers: request.headers as any,
       });
 
+      console.log("[Hocuspocus Auth] Session result", {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+      });
+
       if (!session?.user) {
+        console.error("[Hocuspocus Auth] No user in session");
         throw new Error("Invalid authentication");
       }
 
       const hasAccess = await verifyDocumentAccess(documentName, session.user.id);
 
+      console.log("[Hocuspocus Auth] Access check", {
+        userId: session.user.id,
+        documentName,
+        hasAccess,
+      });
+
       if (!hasAccess) {
+        console.error(
+          "[Hocuspocus Auth] Access denied for user",
+          session.user.id,
+          "to document",
+          documentName,
+        );
         throw new Error("Access denied");
       }
+
+      console.log("[Hocuspocus Auth] Authentication successful for user", session.user.id);
 
       return {
         id: session.user.id,
         name: session.user.name,
       };
-    } catch {
+    } catch (error) {
+      console.error("[Hocuspocus Auth] Authentication error:", error);
+      // Re-throw the original error for better debugging
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error("Authentication failed");
     }
   },
