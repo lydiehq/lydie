@@ -1,12 +1,53 @@
+import { motion } from "motion/react";
+
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
 import { LandingSection } from "./LandingSection";
+
+const BAR_COUNT = 25;
+const MAX_HEIGHT = 280;
+
+function SoundWaveBars() {
+  // Generate bars with upward exponential curve
+  const bars = Array.from({ length: BAR_COUNT }, (_, i) => {
+    const normalized = i / (BAR_COUNT - 1);
+    // Exponential curve: starts lower, goes up up up
+    const height = MAX_HEIGHT * Math.pow(normalized, 1.5);
+    return { id: i, height };
+  });
+
+  return (
+    <div className="flex items-end justify-center gap-1 h-full px-8 py-12 size-full">
+      {bars.map((bar, index) => (
+        <motion.div
+          key={bar.id}
+          className="w-2 bg-[#9bceb2] rounded-full will-change-transform"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: bar.height, opacity: 1 }}
+          transition={{
+            height: {
+              duration: 0.6,
+              delay: index * 0.05,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            },
+            opacity: {
+              duration: 0.3,
+              delay: index * 0.05,
+            },
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function SpeedSection() {
   const illustration = (
     <CastShadow className="w-full">
       <GradientOutline />
-      <div className="h-[380px] rounded-xl shadow-legit overflow-hidden bg-white" />
+      <div className="h-[380px] rounded-xl shadow-legit overflow-hidden bg-white">
+        <SoundWaveBars />
+      </div>
     </CastShadow>
   );
 
