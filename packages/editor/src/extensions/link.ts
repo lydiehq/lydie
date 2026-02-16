@@ -1,46 +1,46 @@
 import { Link as TiptapLink } from "@tiptap/extension-link";
 import { registerCustomProtocol } from "linkifyjs";
 
-// Register the internal protocol at module load time to avoid
-// "already initialized" warnings when editors are destroyed/recreated.
-// This must happen before any Link extension instances are created.
 registerCustomProtocol("internal");
 
 export const Link = TiptapLink.extend({
-  // Override onDestroy to prevent calling reset(), which would clear
-  // the registered protocols and cause warnings on subsequent editor
-  // creations. We manage protocol registration at the module level.
-  onDestroy() {
-    // Intentionally not calling this.parent?.() to avoid reset()
-  },
+  onDestroy() {},
 
   addAttributes() {
     return {
       ...this.parent?.(),
-      href: {
+      href: { default: null },
+      target: { default: this.options.HTMLAttributes.target },
+      rel: { default: this.options.HTMLAttributes.rel },
+      class: { default: this.options.HTMLAttributes.class },
+      kind: {
         default: null,
+        parseHTML: (element) => element.getAttribute("data-kind"),
+        renderHTML: (attributes) =>
+          attributes.kind ? { "data-kind": attributes.kind } : {},
       },
-      target: {
-        default: this.options.HTMLAttributes.target,
-      },
-      rel: {
-        default: this.options.HTMLAttributes.rel,
-      },
-      class: {
-        default: this.options.HTMLAttributes.class,
-      },
-      "data-internal": {
+      refId: {
         default: null,
-        parseHTML: (element) => element.getAttribute("data-internal"),
-        renderHTML: (attributes) => {
-          if (attributes.href?.startsWith("internal://")) {
-            return {
-              "data-internal": "",
-            };
-          }
-          return {};
-        },
+        parseHTML: (element) => element.getAttribute("data-ref-id"),
+        renderHTML: (attributes) =>
+          attributes.refId ? { "data-ref-id": attributes.refId } : {},
       },
     };
   },
 });
+
+export function isInternalLink(href: string): boolean {
+  return href.startsWith("/");
+}
+
+export function extractDocumentIdFromInternalLink(href: string): string | null {
+  return href.startsWith("/") ? href.replace(/^\//, "") : null;
+}
+
+export function createInternalLinkAttrs(refId: string, slug: string) {
+  return {
+    kind: "internal",
+    refId,
+    href: `/${slug}`,
+  };
+}

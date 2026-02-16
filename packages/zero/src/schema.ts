@@ -95,6 +95,16 @@ const documentVersions = table("document_versions")
   })
   .primaryKey("id");
 
+const documentLinks = table("document_links")
+  .columns({
+    id: string(),
+    source_document_id: string(),
+    target_document_id: string(),
+    last_verified_slug: string().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
 const documentPublications = table("document_publications")
   .columns({
     id: string(),
@@ -279,6 +289,18 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["document_id"],
     destSchema: documentVersions,
   }),
+  // Links FROM this document TO other documents
+  outgoingLinks: many({
+    sourceField: ["id"],
+    destField: ["source_document_id"],
+    destSchema: documentLinks,
+  }),
+  // Links TO this document FROM other documents (backlinks)
+  incomingLinks: many({
+    sourceField: ["id"],
+    destField: ["target_document_id"],
+    destSchema: documentLinks,
+  }),
 }));
 
 const documentVersionsRelations = relationships(documentVersions, ({ one }) => ({
@@ -291,6 +313,19 @@ const documentVersionsRelations = relationships(documentVersions, ({ one }) => (
     sourceField: ["user_id"],
     destField: ["id"],
     destSchema: users,
+  }),
+}));
+
+const documentLinksRelations = relationships(documentLinks, ({ one, many }) => ({
+  sourceDocument: one({
+    sourceField: ["source_document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  targetDocument: one({
+    sourceField: ["target_document_id"],
+    destField: ["id"],
+    destSchema: documents,
   }),
 }));
 
@@ -856,6 +891,7 @@ export const schema = createSchema({
     users,
     documents,
     documentVersions,
+    documentLinks,
     organizations,
     members,
     invitations,
@@ -887,6 +923,7 @@ export const schema = createSchema({
   relationships: [
     documentsRelations,
     documentVersionsRelations,
+    documentLinksRelations,
     organizationsRelations,
     membersRelations,
     invitationsRelations,

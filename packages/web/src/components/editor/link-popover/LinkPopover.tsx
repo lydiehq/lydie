@@ -40,40 +40,26 @@ type PopoverState =
   | { mode: "view"; href: string; text: string; linkElement: HTMLElement }
   | { mode: "edit"; href: string; text: string; linkElement: HTMLElement | null };
 
-interface InternalDocument {
-  title: string | null;
-}
-
 interface SearchDocument {
   id: string;
   title: string | null;
+  slug: string | null;
 }
 
 interface LinkPopoverProps {
   editor: Editor;
-  organizationId: string;
-  organizationSlug: string;
-  internalDocument: InternalDocument | null | undefined;
+  internalDocument: { title: string | null } | null | undefined;
   onNavigate: (documentId: string) => void;
   searchResults?: SearchDocument[];
   onSearchChange?: (searchTerm: string) => void;
 }
 
-interface ViewModeContentProps {
-  editor: Editor;
-  href: string;
-  internalDocument: InternalDocument | null | undefined;
-  onNavigate: (documentId: string) => void;
-  organizationSlug: string;
+function isInternalLink(href: string): boolean {
+  return href.startsWith("/");
 }
 
-interface EditModeContentProps {
-  editor: Editor;
-  initialHref: string;
-  initialText: string;
-  organizationId: string;
-  searchResults?: SearchDocument[];
-  onSearchChange?: (searchTerm: string) => void;
+function extractDocumentIdFromInternalLink(href: string): string | null {
+  return href.startsWith("/") ? href.replace(/^\//, "") : null;
 }
 
 function extractDomain(url: string): string {
@@ -91,19 +77,6 @@ function isValidURL(url: string): boolean {
   } catch {
     return false;
   }
-}
-
-function isInternalLink(href: string): boolean {
-  return href.startsWith("internal://");
-}
-
-function extractDocumentIdFromInternalLink(href: string): string | null {
-  if (!isInternalLink(href)) return null;
-  return href.replace("internal://", "");
-}
-
-function createInternalLink(documentId: string): string {
-  return `internal://${documentId}`;
 }
 
 function findLinkElementAtSelection(editor: Editor): HTMLElement | null {
@@ -130,21 +103,16 @@ function getLinkStateFromEditor(editor: Editor): PopoverState {
   const isCollapsed = from === to;
   const isLinkActive = editor.isActive("link");
 
-  // If link is active but selection is not collapsed, check if it's edit mode
   if (isLinkActive && !isCollapsed) {
     const linkAttrs = editor.getAttributes("link");
     const href = linkAttrs.href || "";
-
-    // Get link text from selection
     const text = editor.state.doc.textBetween(from, to);
     const linkElement = findLinkElementAtSelection(editor);
 
-    // Empty href means it was triggered by Cmd+K or link button - open in edit mode
     if (href === "") {
       return { mode: "edit", href, text, linkElement };
     }
 
-    // If the entire link is selected (selection matches link range), open in edit mode
     const { $from } = editor.state.selection;
     const linkMarkType = editor.schema.marks.link;
     const range = getMarkRange($from, linkMarkType);
@@ -155,28 +123,22 @@ function getLinkStateFromEditor(editor: Editor): PopoverState {
     return { mode: "closed" };
   }
 
-  // Collapsed selection
   if (!isLinkActive || !isCollapsed) {
     return { mode: "closed" };
   }
 
   const linkAttrs = editor.getAttributes("link");
   const href = linkAttrs.href || "";
-
-  // Get link text from mark range
   const { $from } = editor.state.selection;
   const linkMarkType = editor.schema.marks.link;
   const range = getMarkRange($from, linkMarkType);
   const text = range ? editor.state.doc.textBetween(range.from, range.to) : "";
-
   const linkElement = findLinkElementAtSelection(editor);
 
-  // Empty href means it was triggered by Cmd+K - open in edit mode
   if (href === "") {
     return { mode: "edit", href, text, linkElement };
   }
 
-  // Non-empty href with link element - open in view mode
   if (linkElement) {
     return { mode: "view", href, text, linkElement };
   }
@@ -191,7 +153,6 @@ function useLinkState(editor: Editor): PopoverState {
     const updateState = () => {
       const newState = getLinkStateFromEditor(editor);
       setState((prev) => {
-        // Only update if state actually changed to prevent unnecessary re-renders
         if (prev.mode !== newState.mode) return newState;
         if (prev.mode === "closed" && newState.mode === "closed") return prev;
         if (
@@ -219,125 +180,36 @@ function useLinkState(editor: Editor): PopoverState {
   return state;
 }
 
-export function LinkPopoverBase({
-  editor,
-  organizationId,
-  organizationSlug,
-  internalDocument,
-  onNavigate,
-  searchResults = [],
-  onSearchChange,
-}: LinkPopoverProps) {
-  const linkState = useLinkState(editor);
-  const isOpen = linkState.mode !== "closed";
-
-  const { refs, floatingStyles, context } = useFloating({
-    open: isOpen,
-    placement: "top",
-    whileElementsMounted: autoUpdate,
-    middleware: [offset(8), flip({ fallbackAxisSideDirection: "end" }), shift({ padding: 8 })],
-  });
-
-  const dismiss = useDismiss(context, {
-    escapeKey: true,
-    outsidePress: true,
-  });
-  const role = useRole(context);
-  const { getFloatingProps } = useInteractions([dismiss, role]);
-
-  // Set reference element when link state changes
-  useEffect(() => {
-    if (linkState.mode !== "closed" && linkState.linkElement) {
-      refs.setReference(linkState.linkElement);
-    } else if (linkState.mode === "edit" && !linkState.linkElement) {
-      // For Cmd+K without existing link, create virtual element at cursor
-      const { from } = editor.state.selection;
-      const coords = editor.view.coordsAtPos(from);
-      refs.setReference({
-        getBoundingClientRect: () => ({
-          x: coords.left,
-          y: coords.top,
-          top: coords.top,
-          left: coords.left,
-          bottom: coords.bottom,
-          right: coords.right,
-          width: 0,
-          height: coords.bottom - coords.top,
-        }),
-      });
-    }
-  }, [linkState, refs, editor]);
-
-  if (!isOpen) {
-    return null;
-  }
-
-  return (
-    <FloatingPortal>
-      <FloatingFocusManager
-        context={context}
-        modal={false}
-        initialFocus={linkState.mode === "edit" ? 0 : -1}
-      >
-        <div
-          ref={refs.setFloating}
-          style={floatingStyles}
-          {...getFloatingProps()}
-          className="z-50 bg-white rounded-lg shadow-popover p-1 flex flex-col"
-          data-testid="link-popover"
-        >
-          {linkState.mode === "edit" ? (
-            <EditModeContent
-              editor={editor}
-              initialHref={linkState.href}
-              initialText={linkState.text}
-              organizationId={organizationId}
-              searchResults={searchResults}
-              onSearchChange={onSearchChange}
-            />
-          ) : linkState.mode === "view" ? (
-            <ViewModeContent
-              editor={editor}
-              href={linkState.href}
-              internalDocument={internalDocument}
-              onNavigate={onNavigate}
-              organizationSlug={organizationSlug}
-            />
-          ) : null}
-        </div>
-      </FloatingFocusManager>
-    </FloatingPortal>
-  );
-}
-
 function EditModeContent({
   editor,
   initialHref,
   initialText,
   searchResults = [],
   onSearchChange,
-}: EditModeContentProps) {
+}: {
+  editor: Editor;
+  initialHref: string;
+  initialText: string;
+  searchResults?: SearchDocument[];
+  onSearchChange?: (searchTerm: string) => void;
+}) {
   const { contains } = useFilter({ sensitivity: "base" });
 
-  // Local state for form inputs - initialized from link state
   const [linkInputValue, setLinkInputValue] = useState(() =>
     isInternalLink(initialHref) ? "" : initialHref,
   );
   const [linkLabelValue, setLinkLabelValue] = useState(initialText);
   const linkInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter the search results to determine if menu is effectively open
   const filteredResults = searchResults?.filter((doc) =>
     contains(doc.title || "Untitled document", linkInputValue),
   );
   const isMenuOpen = filteredResults && filteredResults.length > 0;
 
-  // Notify parent of search changes
   useEffect(() => {
     onSearchChange?.(linkInputValue);
   }, [linkInputValue, onSearchChange]);
 
-  // Focus link input when creating a new link
   useEffect(() => {
     if (initialHref === "" && linkInputRef.current) {
       linkInputRef.current.focus();
@@ -345,7 +217,6 @@ function EditModeContent({
   }, [initialHref]);
 
   const handleClose = useCallback(() => {
-    // Remove the empty link mark if we're closing without saving
     if (initialHref === "") {
       editor.chain().focus().unsetLink().run();
     } else {
@@ -367,13 +238,38 @@ function EditModeContent({
       return;
     }
 
-    // Get current link range
+    const isExternal = trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://");
+    const isInternalPath = trimmedUrl.startsWith("/");
+
+    let linkAttrs: Record<string, string>;
+    if (isExternal) {
+      linkAttrs = {
+        kind: "external",
+        href: trimmedUrl,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      };
+    } else if (isInternalPath) {
+      const refId = trimmedUrl.replace(/^\//, "");
+      linkAttrs = {
+        kind: "internal",
+        refId,
+        href: trimmedUrl,
+      };
+    } else {
+      linkAttrs = {
+        kind: "external",
+        href: trimmedUrl.startsWith("//") ? trimmedUrl : `https://${trimmedUrl}`,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      };
+    }
+
     const { $from } = editor.state.selection;
     const linkMarkType = editor.schema.marks.link;
     const range = getMarkRange($from, linkMarkType);
 
     if (range) {
-      // Replace existing link content
       editor
         .chain()
         .focus()
@@ -382,18 +278,17 @@ function EditModeContent({
         .insertContent({
           type: "text",
           text: trimmedLabel,
-          marks: [{ type: "link", attrs: { href: trimmedUrl } }],
+          marks: [{ type: "link", attrs: linkAttrs }],
         })
         .run();
     } else {
-      // Insert new link at cursor
       editor
         .chain()
         .focus()
         .insertContent({
           type: "text",
           text: trimmedLabel,
-          marks: [{ type: "link", attrs: { href: trimmedUrl } }],
+          marks: [{ type: "link", attrs: linkAttrs }],
         })
         .run();
     }
@@ -401,11 +296,14 @@ function EditModeContent({
 
   const handleDocumentSelect = useCallback(
     (docId: string) => {
-      const href = createInternalLink(docId);
       const doc = searchResults?.find((d) => d.id === docId);
       const label = linkLabelValue.trim() || doc?.title || "Untitled document";
+      const linkAttrs = {
+        kind: "internal" as const,
+        refId: docId,
+        href: doc?.slug ? `/${doc.slug}` : `/${docId}`,
+      };
 
-      // Get current link range
       const { $from } = editor.state.selection;
       const linkMarkType = editor.schema.marks.link;
       const range = getMarkRange($from, linkMarkType);
@@ -419,7 +317,7 @@ function EditModeContent({
           .insertContent({
             type: "text",
             text: label,
-            marks: [{ type: "link", attrs: { href } }],
+            marks: [{ type: "link", attrs: linkAttrs }],
           })
           .run();
       } else {
@@ -429,7 +327,7 @@ function EditModeContent({
           .insertContent({
             type: "text",
             text: label,
-            marks: [{ type: "link", attrs: { href } }],
+            marks: [{ type: "link", attrs: linkAttrs }],
           })
           .run();
       }
@@ -440,8 +338,6 @@ function EditModeContent({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter") {
-        // Don't submit if the autocomplete menu is open with results
-        // Let the Autocomplete handle Enter for menu item selection
         if (isMenuOpen && searchResults && searchResults.length > 0) {
           return;
         }
@@ -471,10 +367,7 @@ function EditModeContent({
       <Autocomplete inputValue={linkInputValue} onInputChange={setLinkInputValue} filter={contains}>
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-2 grow">
-            <TextField
-              className="flex flex-col outline-none placeholder-gray-500"
-              aria-label="Search or paste a link"
-            >
+            <TextField className="flex flex-col outline-none placeholder-gray-500" aria-label="Search or paste a link">
               <Label className="text-xs text-gray-600 px-1">Link</Label>
               <Input
                 ref={linkInputRef}
@@ -506,7 +399,17 @@ function EditModeContent({
   );
 }
 
-function ViewModeContent({ editor, href, internalDocument, onNavigate }: ViewModeContentProps) {
+function ViewModeContent({
+  editor,
+  href,
+  internalDocument,
+  onNavigate,
+}: {
+  editor: Editor;
+  href: string;
+  internalDocument: { title: string | null } | null | undefined;
+  onNavigate: (documentId: string) => void;
+}) {
   const isInternal = isInternalLink(href);
   const domain = extractDomain(href);
 
@@ -528,7 +431,6 @@ function ViewModeContent({ editor, href, internalDocument, onNavigate }: ViewMod
   }, [href, isInternal, onNavigate]);
 
   const handleEditLink = useCallback(() => {
-    // Set empty href to trigger edit mode
     editor.chain().focus().extendMarkRange("link").setLink({ href: "" }).run();
   }, [editor]);
 
@@ -551,11 +453,7 @@ function ViewModeContent({ editor, href, internalDocument, onNavigate }: ViewMod
             }}
           />
         ) : null}
-        <div
-          className="text-xs text-gray-700 truncate"
-          title={displayText}
-          data-testid="link-display-text"
-        >
+        <div className="text-xs text-gray-700 truncate" title={displayText} data-testid="link-display-text">
           {displayText}
         </div>
       </div>
@@ -610,28 +508,104 @@ function LinkPopoverButton(props: LinkPopoverButtonProps) {
   );
 }
 
-interface LinkPopoverContainerProps {
-  editor: Editor;
-  organizationId: string;
-  organizationSlug: string;
+export function LinkPopoverBase({
+  editor,
+  internalDocument,
+  onNavigate,
+  searchResults = [],
+  onSearchChange,
+}: LinkPopoverProps) {
+  const linkState = useLinkState(editor);
+  const isOpen = linkState.mode !== "closed";
+
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    placement: "top",
+    whileElementsMounted: autoUpdate,
+    middleware: [offset(8), flip({ fallbackAxisSideDirection: "end" }), shift({ padding: 8 })],
+  });
+
+  const dismiss = useDismiss(context, {
+    escapeKey: true,
+    outsidePress: true,
+  });
+  const role = useRole(context);
+  const { getFloatingProps } = useInteractions([dismiss, role]);
+
+  useEffect(() => {
+    if (linkState.mode !== "closed" && linkState.linkElement) {
+      refs.setReference(linkState.linkElement);
+    } else if (linkState.mode === "edit" && !linkState.linkElement) {
+      const { from } = editor.state.selection;
+      const coords = editor.view.coordsAtPos(from);
+      refs.setReference({
+        getBoundingClientRect: () => ({
+          x: coords.left,
+          y: coords.top,
+          top: coords.top,
+          left: coords.left,
+          bottom: coords.bottom,
+          right: coords.right,
+          width: 0,
+          height: coords.bottom - coords.top,
+        }),
+      });
+    }
+  }, [linkState, refs, editor]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <FloatingPortal>
+      <FloatingFocusManager context={context} modal={false} initialFocus={linkState.mode === "edit" ? 0 : -1}>
+        <div
+          ref={refs.setFloating}
+          style={floatingStyles}
+          {...getFloatingProps()}
+          className="z-50 bg-white rounded-lg shadow-popover p-1 flex flex-col"
+          data-testid="link-popover"
+        >
+          {linkState.mode === "edit" ? (
+            <EditModeContent
+              editor={editor}
+              initialHref={linkState.href}
+              initialText={linkState.text}
+              searchResults={searchResults}
+              onSearchChange={onSearchChange}
+            />
+          ) : linkState.mode === "view" ? (
+            <ViewModeContent
+              editor={editor}
+              href={linkState.href}
+              internalDocument={internalDocument}
+              onNavigate={onNavigate}
+            />
+          ) : null}
+        </div>
+      </FloatingFocusManager>
+    </FloatingPortal>
+  );
 }
 
 export function LinkPopover({
   editor,
   organizationId,
   organizationSlug,
-}: LinkPopoverContainerProps) {
+}: {
+  editor: Editor;
+  organizationId: string;
+  organizationSlug: string;
+}) {
   const navigate = useNavigate({ from: "/w/$organizationSlug" });
   const linkState = useLinkState(editor);
 
-  // Track search term for document search
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Get document ID for internal links
   const documentId =
     linkState.mode !== "closed" ? extractDocumentIdFromInternalLink(linkState.href) : null;
 
-  // Fetch internal document for view mode
   const [internalDocument] = useQuery(
     queries.documents.byId({
       organizationId: organizationId,
@@ -639,7 +613,6 @@ export function LinkPopover({
     }),
   );
 
-  // Fetch search results for edit mode
   const [searchResults] = useQuery(
     queries.documents.search({
       organizationId: organizationId,
@@ -647,12 +620,11 @@ export function LinkPopover({
     }),
   );
 
-  // Handle navigation to internal documents
   const handleNavigate = useCallback(
     (docId: string) => {
-      navigate({
-        to: "/w/$organizationSlug/$id",
-        params: { organizationSlug: organizationSlug, id: docId },
+      void navigate({
+        to: "/w/$organizationSlug/$id" as ".",
+        params: { organizationSlug: organizationSlug as string, id: docId },
       });
     },
     [navigate, organizationSlug],
@@ -661,8 +633,6 @@ export function LinkPopover({
   return (
     <LinkPopoverBase
       editor={editor}
-      organizationId={organizationId}
-      organizationSlug={organizationSlug}
       internalDocument={internalDocument}
       searchResults={searchResults ?? []}
       onNavigate={handleNavigate}

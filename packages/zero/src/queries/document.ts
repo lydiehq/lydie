@@ -145,4 +145,37 @@ export const documentQueries = {
         .limit(limit);
     },
   ),
+
+  // Get backlinks for a document (documents that link TO this document)
+  // Uses the document_links table for instant backlink queries
+  backlinks: defineQuery(
+    z.object({
+      organizationId: z.string(),
+      documentId: z.string(),
+    }),
+    ({ args: { organizationId, documentId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.document_links
+        .where("target_document_id", documentId)
+        .related("sourceDocument", (q: any) =>
+          q.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        );
+    },
+  ),
+
+  // Get outgoing links for a document (documents this document links TO)
+  outgoingLinks: defineQuery(
+    z.object({
+      organizationId: z.string(),
+      documentId: z.string(),
+    }),
+    ({ args: { organizationId, documentId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.document_links
+        .where("source_document_id", documentId)
+        .related("targetDocument", (q: any) =>
+          q.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        );
+    },
+  ),
 };

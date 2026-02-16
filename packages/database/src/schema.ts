@@ -613,6 +613,42 @@ export const documentVersionsTable = pgTable(
   ],
 );
 
+/**
+ * Document Links Table - Internal Link Integrity System
+ *
+ * Tracks all internal links between documents for:
+ * - Instant backlink queries
+ * - Automatic link updates when slugs change
+ * - Broken link detection
+ */
+export const documentLinksTable = pgTable(
+  "document_links",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    sourceDocumentId: text("source_document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    targetDocumentId: text("target_document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    lastVerifiedSlug: text("last_verified_slug"), // Target's slug at time of indexing
+    ...timestamps,
+  },
+  (table) => [
+    // Index for finding all links FROM a document (when re-indexing source)
+    index("document_links_source_idx").on(table.sourceDocumentId),
+    // Index for finding all links TO a document (backlinks)
+    index("document_links_target_idx").on(table.targetDocumentId),
+    // Composite index for efficient backlink queries with metadata
+    index("document_links_target_source_idx").on(table.targetDocumentId, table.sourceDocumentId),
+    // Prevent duplicate links between same documents
+    uniqueIndex("document_links_unique_idx").on(table.sourceDocumentId, table.targetDocumentId),
+  ],
+);
+
 export const templatesTable = pgTable(
   "templates",
   {

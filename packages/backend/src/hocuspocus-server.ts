@@ -4,6 +4,7 @@ import { authClient } from "@lydie/core/auth";
 import { registerHocuspocusAccessor } from "@lydie/core/document-state";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
 import { createId } from "@lydie/core/id";
+import { indexDocumentLinks, validateInternalLinks } from "@lydie/core/links";
 import { db } from "@lydie/database";
 import { documentVersionsTable, documentsTable, membersTable } from "@lydie/database/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -140,12 +141,34 @@ export const hocuspocus = new Hocuspocus({
             yjsState: base64State,
           },
           db,
-        ).catch((error) => {
+        ).catch((error: unknown) => {
           console.error(
             `Failed to generate content embeddings for document ${documentName}:`,
             error,
           );
         });
+
+        // Index internal links for backlink tracking
+        indexDocumentLinks(documentName, base64State, db).catch((error: unknown) => {
+          console.error(`Failed to index internal links for document ${documentName}:`, error);
+        });
+
+        // Optional: Validate internal links and log broken links
+        // This runs asynchronously and doesn't block the save operation
+        validateInternalLinks(documentName, base64State, db)
+          .then((validationResults: Array<{ targetDocumentId: string; exists: boolean }>) => {
+            const broken = validationResults.filter((l: { exists: boolean }) => !l.exists);
+            if (broken.length > 0) {
+              console.warn(
+                `Document ${documentName} contains ${broken.length} broken internal links:`,
+                broken.map((l: { targetDocumentId: string }) => l.targetDocumentId),
+              );
+            }
+          })
+          .catch((error: unknown) => {
+            // Validation errors shouldn't block saving
+            console.error(`Link validation error for document ${documentName}:`, error);
+          });
       },
     }),
   ],
