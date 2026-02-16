@@ -73,6 +73,7 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.ImageUpload,
     E.Placeholder.configure(options?.placeholder),
     TableOfContents.configure(options?.tableOfContents),
+    E.ProposedChange,
   ];
 
   // Add slash commands if configured

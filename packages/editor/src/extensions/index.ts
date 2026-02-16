@@ -32,3 +32,6 @@ export type { PlaceholderOptions, PlaceholderAttributes } from "./placeholder";
 
 export { VersionHistory } from "./version-history";
 export type { VersionHistoryOptions, VersionHistoryStorage } from "./version-history";
+
+export { ProposedChange } from "./proposed-change";
+export type { ProposedChangeOptions, ProposedChangeStorage } from "./proposed-change";

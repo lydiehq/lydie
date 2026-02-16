@@ -12,13 +12,17 @@ import { useEffect } from "react";
 import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
 
-import { pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
+import {
+  pendingChangeStatusAtom,
+  pendingEditorChangeAtom,
+  proposedChangeAtom,
+} from "@/atoms/editor";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useActiveDocumentId, useEditorRegistry } from "@/hooks/use-editor";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
-import { applyContentChanges } from "@/utils/document-changes";
+import { applyContentChanges, findChangeRange } from "@/utils/document-changes";
 import { countWords } from "@/utils/text";
 import { applyTitleChange } from "@/utils/title-changes";
 
@@ -208,6 +212,11 @@ export function ReplaceInDocumentTool({
         })
       : null,
   );
+
+  // Proposed change diff state
+  const setProposedChange = useSetAtom(proposedChangeAtom);
+  const proposedChange = useAtomValue(proposedChangeAtom);
+  const isPreviewing = proposedChange?.toolCallId === tool.toolCallId;
 
   // Only disable during input streaming (when AI is generating the tool parameters)
   // Don't disable during call-streaming or after output is available
@@ -524,6 +533,90 @@ export function ReplaceInDocumentTool({
     }
   };
 
+  const handlePreview = async () => {
+    if (!editor || !replaceText) {
+      setErrorMessage("Editor not available. Please wait for the document to load.");
+      return;
+    }
+
+    const currentDocId = targetDocumentId || params.id;
+    if (!currentDocId) {
+      setErrorMessage("No document selected.");
+      return;
+    }
+
+    // If we're already previewing this change, clear it
+    if (isPreviewing) {
+      editor.commands.clearProposedChange?.();
+      setProposedChange(null);
+      return;
+    }
+
+    // Clear any existing proposed change first
+    if (proposedChange) {
+      const existingEditor = registry.get(proposedChange.documentId)?.contentEditor;
+      existingEditor?.commands.clearProposedChange?.();
+    }
+
+    // Find the range in the document
+    const rangeResult = findChangeRange(editor, selectionWithEllipsis);
+
+    if (!rangeResult.success) {
+      setErrorMessage(rangeResult.error || "Could not find the text to replace in the document.");
+      return;
+    }
+
+    // Show the proposed change in the editor
+    if (editor.commands.showProposedChange) {
+      editor.commands.showProposedChange(rangeResult.from, rangeResult.to, replaceText);
+
+      // Store the proposed change state
+      setProposedChange({
+        documentId: currentDocId,
+        toolCallId: tool.toolCallId,
+        selectionWithEllipsis,
+        replace: replaceText,
+        title: newTitle,
+        isPreviewing: true,
+      });
+
+      // Scroll to the change
+      try {
+        const dom = editor.view.dom as HTMLElement;
+        const scrollContainer = dom.closest("[data-editor-scroll-container]") || dom.parentElement;
+        if (scrollContainer) {
+          const coords = editor.view.coordsAtPos(rangeResult.from);
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const relativeTop = coords.top - containerRect.top + scrollContainer.scrollTop;
+          scrollContainer.scrollTo({
+            top: Math.max(0, relativeTop - 100),
+            behavior: "smooth",
+          });
+        }
+      } catch {
+        // Ignore scroll errors
+      }
+    } else {
+      setErrorMessage("Diff preview is not available. Please apply the change directly.");
+    }
+  };
+
+  // Listen for accept/reject from the editor extension
+  useEffect(() => {
+    if (!isPreviewing) return;
+
+    // Check if the proposed change has been accepted or rejected
+    const extension = editor?.extensionManager.extensions.find(
+      (ext: any) => ext.name === "proposedChange",
+    );
+
+    if (extension && !extension.storage.isActive) {
+      // The change was either accepted or rejected
+      setIsApplied(true);
+      setProposedChange(null);
+    }
+  }, [editor, isPreviewing, setProposedChange]);
+
   const isError = tool.state === "output-error";
   const roundedWordCount = Math.floor(wordCount / 10) * 10;
 
@@ -665,6 +758,16 @@ export function ReplaceInDocumentTool({
                     isDisabled={isInputStreaming}
                   >
                     Create page with content
+                  </Button>
+                )}
+                {replaceText && !isFullReplacement && (
+                  <Button
+                    intent="secondary"
+                    size="xs"
+                    onPress={handlePreview}
+                    isDisabled={isApplied || isApplying || isInputStreaming || !editor}
+                  >
+                    {isPreviewing ? "Hide Preview" : "Preview"}
                   </Button>
                 )}
                 <Button

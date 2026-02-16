@@ -289,6 +289,78 @@ async function llmFallback(
   }
 }
 
+/**
+ * Find the document range for a given pattern without applying changes.
+ * Returns the range { from, to } and the current content HTML at that range.
+ * This is used for diff visualization to show what will be changed.
+ */
+export function findChangeRange(
+  editor: any,
+  pattern: string,
+): {
+  from: number;
+  to: number;
+  currentHTML: string;
+  success: boolean;
+  error?: string;
+} {
+  // Full document replacement
+  if (!pattern) {
+    return {
+      from: 0,
+      to: editor.state.doc.content.size,
+      currentHTML: editor.getHTML(),
+      success: true,
+    };
+  }
+
+  // Find the range in the document
+  const range = findRangeInDocument(editor, pattern);
+  if (!range) {
+    return {
+      from: 0,
+      to: 0,
+      currentHTML: "",
+      success: false,
+      error: "Could not find the specified text in the document",
+    };
+  }
+
+  // Extract the current HTML content at this range
+  try {
+    const fragment = editor.state.doc.slice(range.from, range.to).content;
+    const tempDoc = editor.state.doc.type.create(null, fragment);
+    const currentHTML = editor.schema.serializers?.DOM?.serializeFragment
+      ? editor.schema.serializers.DOM.serializeFragment(tempDoc.content, { document })
+      : "";
+
+    // Simple fallback: get text content and wrap in span
+    const serializer =
+      editor.view.domSerializer || editor.schema?.DOMSerializer?.fromSchema(editor.schema);
+    let html = "";
+    if (serializer) {
+      const domFragment = serializer.serializeFragment(fragment);
+      const tempDiv = document.createElement("div");
+      tempDiv.appendChild(domFragment);
+      html = tempDiv.innerHTML;
+    }
+
+    return {
+      from: range.from,
+      to: range.to,
+      currentHTML: html || currentHTML,
+      success: true,
+    };
+  } catch (error) {
+    return {
+      from: range.from,
+      to: range.to,
+      currentHTML: "",
+      success: true,
+    };
+  }
+}
+
 export async function applyContentChanges(
   editor: any,
   changes: Array<{ selectionWithEllipsis: string; replace: string }>,

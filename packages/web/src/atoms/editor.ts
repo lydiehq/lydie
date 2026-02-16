@@ -14,3 +14,26 @@ export type {
   PendingEditorChange,
   PendingChangeStatus,
 } from "@/lib/editor/editor-registry";
+
+// Proposed change diff view state
+import { atom } from "jotai";
+
+export interface ProposedChangeState {
+  documentId: string;
+  toolCallId: string;
+  selectionWithEllipsis: string;
+  replace: string;
+  title?: string;
+  isPreviewing: boolean;
+}
+
+/**
+ * Tracks the currently active proposed change for diff visualization.
+ * When set, the document shows the diff view with Accept/Reject buttons.
+ */
+export const proposedChangeAtom = atom<ProposedChangeState | null>(null);
+
+/**
+ * Tracks whether a proposed change is currently being applied.
+ */
+export const isApplyingProposedChangeAtom = atom<boolean>(false);
