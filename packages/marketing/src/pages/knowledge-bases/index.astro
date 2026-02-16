@@ -1,0 +1,503 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { SectionHeader } from "@/components/landing/SectionHeader";
+import Breadcrumbs from "@/components/Breadcrumbs.astro";
+---
+
+<Layout
+  title="Knowledge Bases: The Complete Guide"
+  description="Learn what a knowledge base is, how to build one, and how to use it to improve your productivity. The comprehensive resource for understanding knowledge management systems."
+>
+  <Container className="flex flex-col gap-y-16 pb-20">
+    <Breadcrumbs items={[{ label: "Knowledge Bases" }]} />
+    
+    <div class="max-w-3xl">
+      <SectionHeader
+        title="The Complete Guide to Knowledge Bases"
+        description="Everything you need to understand, build, and optimize knowledge bases for your team or business. From basic concepts to advanced implementation strategies."
+        level={1}
+      />
+    </div>
+
+    <!-- Intro Section with Substantial Content -->
+    <div class="max-w-3xl prose prose-lg">
+      <p class="text-lg/relaxed text-black/70 leading-relaxed">
+        A knowledge base is a centralized repository of information that organizations use to store, 
+        organize, and share knowledge with their teams and customers. Whether you are building an 
+        internal wiki for your employees or a customer-facing help center, understanding the fundamentals 
+        of knowledge management is essential for modern businesses.
+      </p>
+      <p class="text-black/70 leading-relaxed mt-4">
+        In today's information-driven economy, organizations generate vast amounts of data, documentation, 
+        and institutional knowledge. Without a proper system to capture, organize, and distribute this 
+        information, valuable insights get lost, employees waste time searching for answers, and customer 
+        support becomes inefficient. A well-designed knowledge base serves as the single source of truth 
+        for your organization, ensuring that the right people have access to the right information at 
+        the right time.
+      </p>
+      <p class="text-black/70 leading-relaxed mt-4">
+        The concept of knowledge bases has evolved significantly over the past two decades. What started 
+        as simple document repositories has transformed into sophisticated, AI-powered platforms that 
+        can understand context, provide intelligent recommendations, and even generate new content. 
+        Modern knowledge bases integrate with your existing tools, support real-time collaboration, 
+        and adapt to how your team actually works.
+      </p>
+    </div>
+
+    <!-- Main Content Sections -->
+    <div class="max-w-3xl flex flex-col gap-y-16">
+      <!-- Section 1: What Is a Knowledge Base? -->
+      <section class="border-t border-black/10 pt-10">
+        <h2 class="text-2xl font-semibold text-black mb-5">What Is a Knowledge Base?</h2>
+        <div class="prose prose-lg max-w-none text-black/70 leading-relaxed space-y-4">
+          <p>
+            At its core, a knowledge base is a self-service online library of information about a product, 
+            service, department, or topic. It helps customers and employees find answers to common questions 
+            without needing to contact support or colleagues directly. Think of it as a digital encyclopedia 
+            specifically tailored to your organization's needs and expertise.
+          </p>
+          <p>
+            The architecture of a knowledge base typically consists of several key components working together. 
+            First, there's the content layer, where your articles, documents, and resources live. This content 
+            is organized through a hierarchical structure of categories and subcategories, making it navigable 
+            even as your knowledge base scales to thousands of articles. Then there's the search functionality, 
+            which uses algorithms to understand user intent and surface the most relevant content. Modern 
+            knowledge bases also include analytics to track what users are searching for, which articles are 
+            most helpful, and where gaps in your content exist.
+          </p>
+          <p>
+            Knowledge bases serve different purposes depending on their audience. An internal knowledge base 
+            might focus on company policies, standard operating procedures, and tribal knowledge that employees 
+            have accumulated over years of experience. An external knowledge base, on the other hand, typically 
+            focuses on product documentation, troubleshooting guides, FAQs, and best practices that help 
+            customers succeed with your product or service.
+          </p>
+          <p>
+            The effectiveness of a knowledge base is measured not just by the volume of content it contains, 
+            but by how easily users can find what they need. A knowledge base with 100 well-organized, 
+            clearly-written articles is often more valuable than one with 1,000 poorly structured documents. 
+            This is why content strategy, information architecture, and user experience design are critical 
+            components of knowledge base success.
+          </p>
+        </div>
+        <a
+          href="/resources/knowledge-bases/what-is"
+          class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group mt-5"
+        >
+          Read the full guide
+          <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </section>
+
+      <!-- Section 2: Types of Knowledge Bases -->
+      <section class="border-t border-black/10 pt-10">
+        <h2 class="text-2xl font-semibold text-black mb-5">Types of Knowledge Bases</h2>
+        <div class="prose prose-lg max-w-none text-black/70 leading-relaxed space-y-4">
+          <p>
+            Knowledge bases come in various forms depending on their purpose and audience. Understanding 
+            the different types helps you choose the right approach for your organization's needs. The 
+            landscape of knowledge management has expanded to include specialized solutions for different 
+            use cases, industries, and organizational structures.
+          </p>
+          <p>
+            <strong>Internal Knowledge Bases</strong> are designed for employees and internal stakeholders. 
+            These systems house proprietary information, company policies, employee handbooks, training 
+            materials, and process documentation. They often integrate with HR systems, project management 
+            tools, and communication platforms. Security is paramount for internal knowledge bases, with 
+            access controls that ensure sensitive information is only available to authorized personnel. 
+            These systems help preserve institutional knowledge as employees join and leave the organization, 
+            reducing the impact of turnover on organizational memory.
+          </p>
+          <p>
+            <strong>External Knowledge Bases</strong> are customer-facing systems designed to help users 
+            help themselves. These typically include product documentation, troubleshooting guides, FAQs, 
+            video tutorials, and community forums. The goal is to reduce support ticket volume while 
+            empowering customers to find solutions quickly. External knowledge bases often feature public 
+            search engine optimization to ensure customers can find answers through Google and other search 
+            engines, not just through your website's navigation.
+          </p>
+          <p>
+            <strong>Hybrid Knowledge Bases</strong> serve both internal and external audiences with shared 
+            infrastructure but differentiated access and content. This approach is common in organizations 
+            where product documentation is relevant to both customers and support staff, or where certain 
+            internal processes have external implications. Hybrid systems require careful content governance 
+            to ensure information is appropriately segmented while avoiding duplication.
+          </p>
+          <p>
+            <strong>AI-Powered Knowledge Bases</strong> represent the cutting edge of knowledge management 
+            technology. These systems use natural language processing to understand user queries, machine 
+            learning to improve search results over time, and generative AI to create new content or 
+            summarize existing information. They can provide conversational interfaces that feel more like 
+            chatting with a knowledgeable colleague than searching a traditional database.
+          </p>
+        </div>
+        <a
+          href="/resources/knowledge-bases/types"
+          class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group mt-5"
+        >
+          Explore knowledge base types
+          <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </section>
+
+      <!-- Section 3: Internal vs External -->
+      <section class="border-t border-black/10 pt-10">
+        <h2 class="text-2xl font-semibold text-black mb-5">Internal vs External Knowledge Bases</h2>
+        <div class="prose prose-lg max-w-none text-black/70 leading-relaxed space-y-4">
+          <p>
+            The distinction between internal knowledge bases (for employees) and external knowledge bases 
+            (for customers) shapes your content strategy, access controls, and success metrics. While both 
+            types share common underlying technology, their purposes, audiences, and implementation details 
+            differ significantly.
+          </p>
+          <p>
+            Internal knowledge bases focus on operational efficiency and institutional memory. They contain 
+            information that is often proprietary, confidential, or only relevant to employees. This includes 
+            detailed process documentation that might change frequently, internal contact directories, 
+            project documentation, meeting notes, and strategic planning documents. The tone of internal 
+            content is typically more casual and assumes familiarity with company culture and terminology. 
+            Success metrics for internal knowledge bases focus on employee productivity, time saved, and 
+            reduction in repetitive questions.
+          </p>
+          <p>
+            External knowledge bases, by contrast, are public-facing marketing and support tools. Every 
+            article is an opportunity to demonstrate expertise, build trust with potential customers, and 
+            improve search engine rankings. External content must be polished, professional, and accessible 
+            to users with varying levels of technical expertise. Success is measured through customer 
+            satisfaction scores, reduction in support tickets, and organic traffic growth. External 
+            knowledge bases also serve a sales function, helping prospects understand your product's 
+            capabilities before they ever speak with a sales representative.
+          </p>
+          <p>
+            Many organizations maintain both types simultaneously, with careful curation of what content 
+            belongs where. Some information starts as internal documentation and gets refined for external 
+            publication once it has been tested and proven valuable. This workflow ensures external content 
+            is accurate and comprehensive while preserving the agility of internal documentation.
+          </p>
+        </div>
+        <a
+          href="/resources/knowledge-bases/internal-vs-external"
+          class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group mt-5"
+        >
+          Compare internal and external
+          <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </section>
+
+      <!-- Section 4: Benefits of Knowledge Bases -->
+      <section class="border-t border-black/10 pt-10">
+        <h2 class="text-2xl font-semibold text-black mb-5">Benefits of Knowledge Bases</h2>
+        <div class="prose prose-lg max-w-none text-black/70 leading-relaxed space-y-4">
+          <p>
+            Implementing a knowledge base can reduce support tickets by up to 60%, improve employee 
+            onboarding, and preserve institutional knowledge. The benefits extend across every department 
+            and touchpoint in your organization, creating compounding returns on your investment in 
+            knowledge management infrastructure.
+          </p>
+          <p>
+            <strong>For Customer Support:</strong> A well-maintained knowledge base is your first line of 
+            defense against support ticket volume. When customers can find answers to common questions 
+            without contacting support, your team can focus on complex issues that truly require human 
+            intervention. This reduces costs, improves response times for critical issues, and increases 
+            customer satisfaction through immediate answers. Studies show that 70% of customers prefer 
+            self-service over contacting support, making a knowledge base essential for meeting customer 
+            expectations.
+          </p>
+          <p>
+            <strong>For Employee Onboarding:</strong> New employees face a steep learning curve when joining 
+            an organization. A comprehensive internal knowledge base accelerates onboarding by providing 
+            self-paced access to company information, processes, and historical context. Instead of 
+            interrupting colleagues with basic questions, new hires can find answers independently, 
+            allowing them to become productive more quickly while reducing the burden on existing team 
+            members.
+          </p>
+          <p>
+            <strong>For Knowledge Retention:</strong> Organizations lose valuable institutional knowledge 
+            every time an experienced employee leaves. Without a knowledge base, that expertise walks out 
+            the door. By systematically documenting processes, decisions, and tribal knowledge, you create 
+            a permanent record that persists regardless of personnel changes. This is particularly valuable 
+            for complex processes, niche technical knowledge, and historical context that isn't obvious 
+            from current systems.
+          </p>
+          <p>
+            <strong>For Consistency:</strong> When everyone has access to the same information, you ensure 
+            consistency in how work is performed, how customers are served, and how decisions are made. 
+            This reduces errors, maintains quality standards, and ensures that best practices are followed 
+            across the organization. Sales teams can quote accurate information, support teams can provide 
+            consistent answers, and operations teams can follow standardized procedures.
+          </p>
+          <p>
+            <strong>For Scalability:</strong> As your organization grows, the complexity of communication 
+            increases exponentially. A knowledge base provides a scalable foundation for growth, allowing 
+            you to onboard new team members, expand into new markets, and add new products without 
+            proportionally increasing the overhead of training and communication. What works for a team 
+            of 10 can scale to a team of 1,000 with the right knowledge infrastructure.
+          </p>
+        </div>
+        <a
+          href="/resources/knowledge-bases/benefits"
+          class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group mt-5"
+        >
+          See all benefits
+          <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </section>
+
+      <!-- Section 5: Knowledge Base Software -->
+      <section class="border-t border-black/10 pt-10">
+        <h2 class="text-2xl font-semibold text-black mb-5">Knowledge Base Software</h2>
+        <div class="prose prose-lg max-w-none text-black/70 leading-relaxed space-y-4">
+          <p>
+            Choosing the right knowledge base software depends on your team size, technical requirements, 
+            and integration needs. Compare leading solutions and find the best fit for your use case. The 
+            market for knowledge base software has exploded in recent years, with options ranging from 
+            simple wiki tools to sophisticated enterprise platforms.
+          </p>
+          <p>
+            <strong>Standalone Knowledge Base Platforms:</strong> These dedicated tools like Help Scout, 
+            Zendesk Guide, and Document360 focus exclusively on knowledge management. They offer robust 
+            features specifically designed for creating, organizing, and publishing help content. These 
+            platforms typically excel at analytics, providing detailed insights into search behavior, 
+            article performance, and user satisfaction. They're ideal for organizations that want a 
+            specialized solution without the complexity of broader content management systems.
+          </p>
+          <p>
+            <strong>All-in-One Customer Support Suites:</strong> Platforms like Zendesk, Freshdesk, and 
+            Intercom include knowledge base functionality as part of broader customer support ecosystems. 
+            These solutions offer tight integration between your knowledge base and ticketing system, 
+            allowing support agents to quickly insert relevant articles into ticket responses and track 
+            which articles successfully resolve issues. If your primary use case is customer support, 
+            these integrated solutions often provide the smoothest workflow.
+          </p>
+          <p>
+            <strong>Wiki and Documentation Platforms:</strong> Tools like Confluence, Notion, and GitBook 
+            offer flexible environments for creating and organizing documentation. While not purpose-built 
+            for customer-facing knowledge bases, they excel at internal documentation and collaborative 
+            content creation. Many organizations use these platforms for internal knowledge management 
+            and export or sync content to customer-facing solutions.
+          </p>
+          <p>
+            <strong>Modern AI-Native Platforms:</strong> Next-generation knowledge bases like Lydie are 
+            built from the ground up with artificial intelligence at their core. These platforms offer 
+            intelligent search that understands natural language queries, AI-powered content suggestions, 
+            automatic categorization, and even content generation capabilities. They represent the future 
+            of knowledge management, where finding information feels like asking a knowledgeable colleague 
+            rather than searching a database.
+          </p>
+          <p>
+            When evaluating knowledge base software, consider factors like ease of use for content creators, 
+            customization options for branding, mobile responsiveness, API availability for integrations, 
+            analytics capabilities, and pricing scalability. The best choice depends on your specific 
+            requirements, existing technology stack, and growth plans.
+          </p>
+        </div>
+        <a
+          href="/resources/knowledge-bases/software"
+          class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group mt-5"
+        >
+          Compare software options
+          <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </section>
+
+      <!-- Section 6: How to Structure a Knowledge Base -->
+      <section class="border-t border-black/10 pt-10">
+        <h2 class="text-2xl font-semibold text-black mb-5">How to Structure a Knowledge Base</h2>
+        <div class="prose prose-lg max-w-none text-black/70 leading-relaxed space-y-4">
+          <p>
+            The structure of your knowledge base determines how easily users can find information. Learn 
+            best practices for organizing content, creating effective hierarchies, and implementing search 
+            functionality. A well-structured knowledge base feels intuitive, reducing the cognitive load 
+            on users and helping them find answers quickly.
+          </p>
+          <p>
+            <strong>Information Architecture Principles:</strong> Start by understanding how your users 
+            think about and search for information. Conduct user research to identify common questions, 
+            pain points, and mental models. Use card sorting exercises to understand how users naturally 
+            categorize information. Your knowledge base structure should reflect user mental models rather 
+            than internal organizational structures, which may not be obvious to external users.
+          </p>
+          <p>
+            <strong>Category Hierarchy:</strong> Organize content into a logical hierarchy of categories 
+            and subcategories. Aim for a balance between breadth and depth. Too many top-level categories 
+            overwhelm users with choices, while too few make it difficult to find specific content. A 
+            good rule of thumb is to have 5-9 top-level categories, with each category containing 
+            subcategories that drill down into more specific topics. Ensure category names use language 
+            your audience understands—avoid internal jargon that might confuse users.
+          </p>
+          <p>
+            <strong>Content Templates:</strong> Consistency in content structure helps users know what 
+            to expect and scan for relevant information quickly. Develop templates for different content 
+            types: how-to guides should follow a consistent format with clear prerequisites, step-by-step 
+            instructions, and expected outcomes. Troubleshooting articles should present problems and 
+            solutions in a predictable pattern. FAQ pages should group related questions and provide 
+            concise, scannable answers.
+          </p>
+          <p>
+            <strong>Cross-Linking Strategy:</strong> Create a web of interconnected content by linking 
+            related articles throughout your knowledge base. When a user finds one answer, they should 
+            easily discover related topics that might be relevant. This not only improves the user 
+            experience but also helps search engines understand the relationships between your content, 
+            improving SEO. Include "Related Articles," "See Also," or "Next Steps" sections at the end 
+            of articles to guide users through their journey.
+          </p>
+          <p>
+            <strong>Search Optimization:</strong> Structure your content with search in mind. Use clear, 
+            descriptive titles that include keywords users are likely to search for. Break content into 
+            scannable sections with descriptive headings. Include synonyms and alternative phrasings that 
+            users might use when searching. Implement search analytics to understand what users are 
+            looking for and identify content gaps where searches return no results.
+          </p>
+        </div>
+        <a
+          href="/resources/knowledge-bases/structure"
+          class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group mt-5"
+        >
+          Learn structuring best practices
+          <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </section>
+    </div>
+
+    <!-- Related Resources Grid -->
+    <div class="max-w-4xl pt-8">
+      <h2 class="text-xl font-semibold text-black mb-6">Deep Dive Resources</h2>
+      <div class="grid md:grid-cols-2 gap-5">
+        <a
+          href="/resources/knowledge-bases/knowledge-flow"
+          class="group block p-6 bg-white border border-black/10 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-black group-hover:text-blue-600 transition-colors">
+                The Knowledge Flow Loop
+              </h3>
+              <p class="mt-1 text-sm text-black/60 line-clamp-2">
+                Understand how information moves through your organization and how to optimize the flow.
+              </p>
+            </div>
+            <svg class="flex-shrink-0 w-5 h-5 text-black/30 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+
+        <a
+          href="/resources/knowledge-bases/getting-started"
+          class="group block p-6 bg-white border border-black/10 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-black group-hover:text-blue-600 transition-colors">
+                Building Your First Knowledge Base
+              </h3>
+              <p class="mt-1 text-sm text-black/60 line-clamp-2">
+                A step-by-step guide to planning, creating, and launching your knowledge base.
+              </p>
+            </div>
+            <svg class="flex-shrink-0 w-5 h-5 text-black/30 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+
+        <a
+          href="/resources/knowledge-bases/templates"
+          class="group block p-6 bg-white border border-black/10 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-black group-hover:text-blue-600 transition-colors">
+                Knowledge Base Templates
+              </h3>
+              <p class="mt-1 text-sm text-black/60 line-clamp-2">
+                Ready-to-use templates for common knowledge base pages and structures.
+              </p>
+            </div>
+            <svg class="flex-shrink-0 w-5 h-5 text-black/30 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+
+        <a
+          href="/resources/knowledge-bases/metrics"
+          class="group block p-6 bg-white border border-black/10 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-black group-hover:text-blue-600 transition-colors">
+                Measuring Knowledge Base Success
+              </h3>
+              <p class="mt-1 text-sm text-black/60 line-clamp-2">
+                Key metrics and KPIs to track the effectiveness of your knowledge base.
+              </p>
+            </div>
+            <svg class="flex-shrink-0 w-5 h-5 text-black/30 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="max-w-3xl bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+      <h2 class="text-xl font-semibold text-black mb-3">
+        Ready to Build Your Knowledge Base?
+      </h2>
+      <p class="text-black/60 mb-6 leading-relaxed">
+        Lydie provides an AI-native platform for creating, managing, and optimizing your knowledge base. 
+        Start with our intelligent templates and scale as your needs grow. Our platform combines powerful 
+        organization tools with cutting-edge AI to help you create a knowledge base that actually gets used.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a
+          href="/signup"
+          class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Start Free Trial
+        </a>
+        <a
+          href="/demo"
+          class="inline-flex items-center justify-center px-5 py-2.5 bg-white text-black font-medium rounded-lg border border-black/10 hover:border-black/20 transition-colors"
+        >
+          Request Demo
+        </a>
+      </div>
+    </div>
+  </Container>
+</Layout>

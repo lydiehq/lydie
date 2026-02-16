@@ -2,9 +2,11 @@ import type { QueryResultType } from "@rocicorp/zero";
 
 import {
   AddFilled,
+  ChevronDownRegular,
   ClockRegular,
   ColumnRegular,
   DeleteFilled,
+  LayoutRowTwoRegular,
   ListFilled,
   MoreVerticalRegular,
   RowChildFilled,
@@ -27,20 +29,16 @@ import {
   TaskListIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons";
 import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { Editor } from "@tiptap/react";
-import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import {
-  Button as RACButton,
   Group,
   MenuTrigger,
   Separator,
   Toolbar,
   TooltipTrigger,
 } from "react-aria-components";
-
-import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
-import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -91,6 +89,51 @@ export function EditorToolbar({ editor, doc }: Props) {
   const { deleteDocument, publishDocument, unpublishDocument } = useDocumentActions();
   const { uploadImage } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Query document components for this organization
+  const [documentComponents] = useQuery(
+    organization
+      ? queries.components.byOrganization({
+          organizationId: organization.id,
+        })
+      : null,
+  );
+
+  // Function to insert a document component
+  const insertDocumentComponent = (
+    name: string,
+    properties: Record<string, { type: string; fields?: Array<{ name: string; type: string }> }>,
+  ) => {
+    // Build schemas for array properties
+    const schemas: Record<string, { fields: Array<{ name: string; type: string }> }> = {};
+    const initialProperties: Record<string, unknown> = {};
+
+    for (const [key, config] of Object.entries(properties)) {
+      if (config.type === "array" && config.fields) {
+        schemas[key] = { fields: config.fields };
+        initialProperties[key] = []; // Initialize with empty array
+      } else if (config.type === "boolean") {
+        initialProperties[key] = false;
+      } else if (config.type === "number") {
+        initialProperties[key] = 0;
+      } else {
+        initialProperties[key] = "";
+      }
+    }
+
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "documentComponent",
+        attrs: {
+          name,
+          properties: initialProperties,
+          schemas,
+        },
+      })
+      .run();
+  };
 
   // Track active states for all formatting options
   useEffect(() => {
@@ -152,8 +195,6 @@ export function EditorToolbar({ editor, doc }: Props) {
   const handleUnpublish = async () => {
     unpublishDocument(doc.id);
   };
-
-  const isSidebarCollapsed = useAtomValue(isSidebarCollapsedAtom);
 
   return (
     <div className="flex justify-between items-center p-1 border-b border-gray-200 gap-1">
@@ -450,45 +491,40 @@ export function EditorToolbar({ editor, doc }: Props) {
             )}
           </Group>
 
-          {/* <Separator
-            orientation="vertical"
-            className="mx-1 h-6 w-px bg-gray-200"
-          /> */}
+          {documentComponents && documentComponents.length > 0 && (
+            <>
+              <Separator
+                orientation="vertical"
+                className="mx-1 h-6 w-px bg-gray-200"
+              />
 
-          {/* <MenuTrigger>
-            <RACButton className="flex items-center gap-1">
-              <Layout className="size-4" />
-              <span>Insert Block</span>
-              <ChevronDown className="size-3" />
-            </RACButton>
-            <Menu>
-              {documentComponents.map((component) => (
-                <MenuItem
-                  key={component.id}
-                  onAction={() => {
-                    insertDocumentComponent(
-                      component.name,
-                      component.properties as Record<string, { type: string }>
-                    );
-                  }}
-                >
-                  {component.name}
-                </MenuItem>
-              ))}
-              <MenuItem
-                onAction={() => {
-                  const name = prompt("Enter block name");
-                  if (name) {
-                    insertDocumentComponent(name, {});
-                  } else if (name !== null) {
-                    toast.error("Document component name cannot be empty.");
-                  }
-                }}
-              >
-                + Create New Document Component
-              </MenuItem>
-            </Menu>
-          </MenuTrigger> */}
+              <MenuTrigger>
+                <TooltipTrigger delay={500}>
+                  <Button intent="ghost" size="sm" className="gap-1">
+                    <LayoutRowTwoRegular className="size-4" />
+                    <span>Component</span>
+                    <ChevronDownRegular className="size-3" />
+                  </Button>
+                  <Tooltip placement="bottom">Insert Component</Tooltip>
+                </TooltipTrigger>
+                <Menu>
+                  {documentComponents.map((component) => (
+                    <MenuItem
+                      key={component.id}
+                      onAction={() => {
+                        insertDocumentComponent(
+                          component.name,
+                          component.properties as Record<string, { type: string; fields?: Array<{ name: string; type: string }> }>
+                        );
+                      }}
+                    >
+                      {component.name}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </MenuTrigger>
+            </>
+          )}
         </div>
       </Toolbar>
 
@@ -513,6 +549,7 @@ export function EditorToolbar({ editor, doc }: Props) {
           </Menu>
         </MenuTrigger>
         <DocumentSettingsDialog
+          key={doc.id}
           isOpen={isSettingsOpen}
           onOpenChange={setIsSettingsOpen}
           doc={doc}

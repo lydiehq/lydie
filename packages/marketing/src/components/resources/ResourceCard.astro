@@ -1,0 +1,62 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  href: string;
+  icon?: "document" | "compare" | "structure" | "software" | "benefits";
+}
+
+const { title, description, href, icon = "document" } = Astro.props;
+
+const iconPaths: Record<string, string> = {
+  document: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+  compare: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4",
+  structure: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z",
+  software: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4",
+  benefits: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+};
+---
+
+<a
+  href={href}
+  class="group block p-6 bg-white border border-black/10 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all duration-200"
+>
+  <div class="flex items-start gap-4">
+    <div class="flex-shrink-0 w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+      <svg
+        class="w-5 h-5 text-blue-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width={2}
+          d={iconPaths[icon]}
+        />
+      </svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <h3 class="text-lg font-semibold text-black group-hover:text-blue-600 transition-colors">
+        {title}
+      </h3>
+      <p class="mt-1 text-sm text-black/60 line-clamp-2">
+        {description}
+      </p>
+    </div>
+    <svg
+      class="flex-shrink-0 w-5 h-5 text-black/30 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width={2}
+        d="M9 5l7 7-7 7"
+      />
+    </svg>
+  </div>
+</a>

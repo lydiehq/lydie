@@ -8,7 +8,7 @@ import { TabPanel } from "react-aria-components";
 
 import { Link } from "@/components/generic/Link";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { focusRing } from "@/utils/focus-ring";
+import { focusRing } from "@lydie/ui/components/generic/utils";
 
 import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";
 
@@ -79,6 +79,7 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
     >
       <TabPanel id="fields">
         <CustomFieldsEditor
+          key={doc.id}
           ref={customFieldsEditorRef}
           documentId={doc.id}
           organizationId={doc.organization_id}

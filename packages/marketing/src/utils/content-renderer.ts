@@ -20,6 +20,11 @@ export interface ImageComponentProps {
 export interface ContentRendererComponents {
   /** Custom image renderer - receives image attributes and returns HTML string */
   image?: (props: ImageComponentProps) => string;
+  /** Custom component renderers for document components - key is component name */
+  linkGrid?: (props: Record<string, any>) => string;
+  comparisonGrid?: (props: Record<string, any>) => string;
+  visualFramework?: (props: Record<string, any>) => string;
+  flowSteps?: (props: Record<string, any>) => string;
 }
 
 /**
@@ -168,9 +173,20 @@ export async function renderContent(
         return await serializer.codeBlockWithShiki([rawCode], n.attrs?.language);
       }
       case "customBlock":
-        return serializer.customBlock(n.attrs?.name || "", n.attrs?.properties || {});
-      case "documentComponent":
-        return serializer.customBlock(n.attrs?.name || "", n.attrs?.properties || {});
+      case "documentComponent": {
+        const componentName = n.attrs?.name || "";
+        const properties = n.attrs?.properties || {};
+
+        // Check if we have a custom renderer for this component
+        const componentRenderer = (components as Record<string, (props: Record<string, any>) => string | undefined>)[componentName];
+        if (componentRenderer) {
+          const result = componentRenderer(properties);
+          if (result) return result;
+        }
+
+        // Fall back to default serializer
+        return serializer.customBlock(componentName, properties);
+      }
       case "table":
         return serializer.table(childHtmls);
       case "tableRow":

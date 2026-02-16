@@ -1,0 +1,72 @@
+---
+export const prerender = false;
+
+// ISR-like caching: CDN caches for 1 hour, serves stale for 24 hours while revalidating
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+);
+
+import Layout from "../../layouts/Layout.astro";
+import { Container } from "../../components/Container";
+import { SectionHeader } from "../../components/landing/SectionHeader";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+
+// Define which pillars to display and their slugs in Lydie
+const pillars = [
+  {
+    slug: "knowledge-bases",
+    title: "Knowledge Bases",
+    description: "Learn what a knowledge base is, how to build one, and how to use it to improve your productivity.",
+    href: "/resources/knowledge-bases",
+  },
+  {
+    slug: "note-taking",
+    title: "Note Taking",
+    description: "Discover effective note-taking strategies, methods, and tools to capture and organize your ideas.",
+    href: "/resources/note-taking",
+  },
+];
+---
+
+<Layout
+  title="Resources - Lydie"
+  description="Explore our comprehensive guides on knowledge management, note-taking, and productivity."
+>
+  <div class="py-8">
+    <Container>
+      <Breadcrumbs items={[{ label: "Resources" }]} />
+      
+      <div class="max-w-3xl mt-8">
+        <SectionHeader
+          title="Resources"
+          description="Comprehensive guides and articles to help you master knowledge management, improve your writing, and boost your productivity."
+          level={1}
+        />
+      </div>
+
+      {/* Pillars Grid */}
+      <div class="mt-12 grid md:grid-cols-2 gap-6">
+        {pillars.map((pillar) => (
+          <a
+            href={pillar.href}
+            class="group block p-8 bg-white border border-gray-200 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all"
+          >
+            <h2 class="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-3">
+              {pillar.title}
+            </h2>
+            <p class="text-gray-600 leading-relaxed">
+              {pillar.description}
+            </p>
+            <div class="mt-4 flex items-center text-blue-600 font-medium">
+              Explore {pillar.title}
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </a>
+        ))}
+      </div>
+    </Container>
+  </div>
+</Layout>

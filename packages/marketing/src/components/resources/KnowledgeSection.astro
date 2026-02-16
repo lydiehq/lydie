@@ -1,0 +1,40 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  href?: string;
+  linkText?: string;
+}
+
+const { title, description, href, linkText } = Astro.props;
+---
+
+<section class="border-t border-black/10 pt-10">
+  <h2 class="text-2xl font-semibold text-black mb-4">{title}</h2>
+  <div class="prose prose-lg max-w-none text-black/70 leading-relaxed">
+    <p>{description}</p>
+  </div>
+  {
+    href && (
+      <a
+        href={href}
+        class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group mt-4"
+      >
+        {linkText || "Learn more"}
+        <svg
+          class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </a>
+    )
+  }
+</section>

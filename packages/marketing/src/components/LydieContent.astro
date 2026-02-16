@@ -7,6 +7,12 @@ import {
   type ImageComponentProps,
   blogImageComponent,
 } from "../utils/content-renderer";
+import {
+  linkGridComponent,
+  comparisonGridComponent,
+  visualFrameworkComponent,
+  flowStepsComponent,
+} from "../utils/custom-components";
 
 interface Props {
   content: ContentNode;
@@ -74,6 +80,11 @@ const { html, images } = await renderContent(content, {
   components: {
     // Use default image component for first pass
     image: blogImageComponent,
+    // Custom document components
+    linkGrid: linkGridComponent,
+    comparisonGrid: comparisonGridComponent,
+    visualFramework: visualFrameworkComponent,
+    flowSteps: flowStepsComponent,
   },
 });
 

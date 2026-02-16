@@ -88,9 +88,70 @@ export const ExternalApi = new Hono()
       documents: documentsWithPaths,
     });
   })
-  .get("/documents/:slug", async (c) => {
+  .get("/documents/by-parent/:slug", async (c) => {
+    console.log("[External API] Hit /documents/by-parent/:slug route");
     const organizationId = c.get("organizationId");
     const slug = c.req.param("slug");
+    console.log(`[External API] slug param: ${slug}, org: ${organizationId}`);
+
+    // First get the parent document by slug (parent doesn't need to be published)
+    const parentResult = await db
+      .select({ id: documentsTable.id })
+      .from(documentsTable)
+      .where(
+        and(
+          eq(documentsTable.slug, slug),
+          eq(documentsTable.organizationId, organizationId),
+          isNull(documentsTable.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    if (parentResult.length === 0) {
+      return c.json({ documents: [] });
+    }
+
+    const parentId = parentResult[0].id;
+
+    // Get all children of this document (direct children only)
+    const children = await db
+      .select({
+        id: documentsTable.id,
+        title: documentsTable.title,
+        slug: documentsTable.slug,
+        published: documentsTable.published,
+        customFields: documentsTable.customFields,
+        coverImage: documentsTable.coverImage,
+        createdAt: documentsTable.createdAt,
+        updatedAt: documentsTable.updatedAt,
+      })
+      .from(documentsTable)
+      .where(
+        and(
+          eq(documentsTable.organizationId, organizationId),
+          isNull(documentsTable.deletedAt),
+          eq(documentsTable.published, true),
+          eq(documentsTable.parentId, parentId),
+        ),
+      )
+      .orderBy(desc(documentsTable.createdAt));
+
+    const childrenWithPaths = children.map((doc) => ({
+      ...doc,
+      path: "/",
+      fullPath: `/${doc.slug}`,
+      customFields: doc.customFields || null,
+    }));
+
+    return c.json({
+      documents: childrenWithPaths,
+    });
+  })
+  .get("/documents/:slug", async (c) => {
+    console.log("[External API] Hit /documents/:slug route (generic)");
+    const organizationId = c.get("organizationId");
+    const slug = c.req.param("slug");
+    console.log(`[External API] slug param: ${slug}, org: ${organizationId}`);
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
 
@@ -153,4 +214,64 @@ export const ExternalApi = new Hono()
     };
 
     return c.json(response);
+  })
+  .get("/documents/:slug/children", async (c) => {
+    const organizationId = c.get("organizationId");
+    const slug = c.req.param("slug");
+
+    // First get the parent document by slug
+    const parentResult = await db
+      .select({ id: documentsTable.id })
+      .from(documentsTable)
+      .where(
+        and(
+          eq(documentsTable.slug, slug),
+          eq(documentsTable.organizationId, organizationId),
+          isNull(documentsTable.deletedAt),
+          eq(documentsTable.published, true),
+        ),
+      )
+      .limit(1);
+
+    if (parentResult.length === 0) {
+      throw new HTTPException(404, {
+        message: "Parent document not found",
+      });
+    }
+
+    const parentId = parentResult[0].id;
+
+    // Get all children of this document
+    const children = await db
+      .select({
+        id: documentsTable.id,
+        title: documentsTable.title,
+        slug: documentsTable.slug,
+        published: documentsTable.published,
+        customFields: documentsTable.customFields,
+        coverImage: documentsTable.coverImage,
+        createdAt: documentsTable.createdAt,
+        updatedAt: documentsTable.updatedAt,
+      })
+      .from(documentsTable)
+      .where(
+        and(
+          eq(documentsTable.organizationId, organizationId),
+          isNull(documentsTable.deletedAt),
+          eq(documentsTable.published, true),
+          eq(documentsTable.parentId, parentId),
+        ),
+      )
+      .orderBy(documentsTable.sortOrder, documentsTable.createdAt);
+
+    const childrenWithPaths = children.map((doc) => ({
+      ...doc,
+      path: `/${slug}`,
+      fullPath: `/${slug}/${doc.slug}`,
+      customFields: doc.customFields || null,
+    }));
+
+    return c.json({
+      documents: childrenWithPaths,
+    });
   });

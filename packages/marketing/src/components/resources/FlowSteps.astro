@@ -1,0 +1,49 @@
+---
+interface Props {
+  title: string;
+  steps: Array<{
+    title: string;
+    description: string;
+  }>;
+  direction?: "horizontal" | "vertical";
+}
+
+const { title, steps, direction = "horizontal" } = Astro.props;
+
+const isHorizontal = direction === "horizontal";
+---
+
+<div class="my-10">
+  <h4 class="text-sm font-semibold text-black/50 uppercase tracking-wide mb-5">{title}</h4>
+  <div class:list={["relative", isHorizontal ? "overflow-x-auto pb-4" : ""]}>
+    <div
+      class:list={[
+        "flex gap-5",
+        isHorizontal ? "min-w-max" : "flex-col",
+      ]}
+    >
+      {
+        steps.map((step, index) => (
+          <div class:list={["relative", isHorizontal ? "w-72 flex-shrink-0" : "w-full"]}>
+            <div class="bg-white rounded-xl border border-black/10 p-6 relative z-10 h-full">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">
+                  {index + 1}
+                </span>
+                {index < steps.length - 1 && isHorizontal && (
+                  <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4">
+                    <svg class="w-4 h-4 text-black/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <h4 class="font-semibold text-black mb-2">{step.title}</h4>
+              <p class="text-sm text-black/60 leading-relaxed">{step.description}</p>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>

@@ -41,7 +41,7 @@ const subpageData: FeatureSubpage | undefined = getFeatureSubpage(
 );
 
 if (!feature || !subpageData) {
-  return Astro.redirect("/404");
+  return new Response(null, { status: 404 });
 }
 
 const {
@@ -55,8 +55,6 @@ const {
   accentColor,
   secondaryAccentColor,
 } = subpageData;
-
-
 
 // Parse content sections to separate paragraphs from headings
 const contentSections = content.map((section) => {

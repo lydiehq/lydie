@@ -1,0 +1,38 @@
+---
+interface Props {
+  title: string;
+  items: Array<{
+    label: string;
+    description: string;
+    icon?: string;
+  }>;
+  columns?: 2 | 3 | 4;
+}
+
+const { title, items, columns = 2 } = Astro.props;
+
+const columnClasses = {
+  2: "md:grid-cols-2",
+  3: "md:grid-cols-3",
+  4: "md:grid-cols-4",
+};
+---
+
+<div class="my-10">
+  <h4 class="text-sm font-semibold text-black/50 uppercase tracking-wide mb-5">{title}</h4>
+  <div class:list={["grid gap-5", columnClasses[columns]]}>
+    {
+      items.map((item) => (
+        <div class="flex items-start gap-4 p-5 bg-white rounded-xl border border-black/5 hover:border-black/10 transition-colors">
+          {item.icon && (
+            <span class="text-2xl flex-shrink-0">{item.icon}</span>
+          )}
+          <div>
+            <p class="font-semibold text-black mb-1">{item.label}</p>
+            <p class="text-sm text-black/60 leading-relaxed">{item.description}</p>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>

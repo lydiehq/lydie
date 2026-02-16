@@ -568,6 +568,80 @@ export class LydieClient {
       throw error;
     }
   }
+
+  async getDocumentChildren(slug: string): Promise<{ documents: DocumentListItem[] }> {
+    try {
+      const url = `${this.getBaseUrl()}/documents/${slug}/children`;
+
+      if (this.debug) {
+        console.log(`[Lydie] Fetching document children from url: ${url}`);
+      }
+
+      const response = await fetch(url, {
+        headers: this.getHeaders(),
+      });
+
+      if (this.debug) {
+        console.log(
+          `[Lydie] Document children fetch response status: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(`[Lydie] Failed to fetch document children: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as { documents: DocumentListItem[] };
+
+      if (this.debug) {
+        console.log(`[Lydie] Successfully fetched ${data.documents.length} child documents`);
+      }
+
+      return data;
+    } catch (error) {
+      if (this.debug) {
+        console.error("[Lydie] Error fetching document children:", error);
+      }
+      throw error;
+    }
+  }
+
+  async getDocumentsByParent(parentSlug: string): Promise<{ documents: DocumentListItem[] }> {
+    try {
+      const url = `${this.getBaseUrl()}/documents/by-parent/${parentSlug}`;
+
+      if (this.debug) {
+        console.log(`[Lydie] Fetching documents by parent from url: ${url}`);
+      }
+
+      const response = await fetch(url, {
+        headers: this.getHeaders(),
+      });
+
+      if (this.debug) {
+        console.log(
+          `[Lydie] Documents by parent fetch response status: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(`[Lydie] Failed to fetch documents by parent: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as { documents: DocumentListItem[] };
+
+      if (this.debug) {
+        console.log(`[Lydie] Successfully fetched ${data.documents.length} documents by parent`);
+      }
+
+      return data;
+    } catch (error) {
+      if (this.debug) {
+        console.error("[Lydie] Error fetching documents by parent:", error);
+      }
+      throw error;
+    }
+  }
 }
 
 export function extractTableOfContents(content: ContentNode): TocItem[] {

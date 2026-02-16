@@ -1,0 +1,136 @@
+---
+export const prerender = false;
+
+// ISR-like caching: CDN caches for 1 hour, serves stale for 24 hours while revalidating
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+);
+
+import Layout from "@/layouts/Layout.astro";
+import { Container } from "@/components/Container";
+import Breadcrumbs from "@/components/Breadcrumbs.astro";
+import { lydieClient } from "@/utils/lydie-client";
+import { renderContent, blogImageComponent } from "@/utils/content-renderer";
+import {
+  linkGridComponent,
+  comparisonGridComponent,
+} from "@/utils/custom-components";
+
+const { pillar } = Astro.params;
+
+if (!pillar) {
+  throw new Error("Pillar is required");
+}
+
+// Map pillar slugs to document slugs in Lydie
+const pillarSlugMap: Record<string, string> = {
+  "knowledge-bases": "knowledge-bases",
+  "note-taking": "note-taking",
+};
+
+const documentSlug = pillarSlugMap[pillar] || pillar;
+
+let pillarDocument: any = null;
+let childDocuments: any[] = [];
+let contentHtml = "";
+
+console.log(`[Resource Hub] Fetching pillar: ${documentSlug}`);
+
+try {
+  // Fetch the pillar document
+  pillarDocument = await lydieClient.getDocument(documentSlug, { toc: true });
+
+  // Fetch children of this document (same pattern as blog)
+  const { documents: children } =
+    await lydieClient.getDocumentsByParent(documentSlug);
+  childDocuments = children;
+
+  // Render the content with custom components
+  const { html } = await renderContent(pillarDocument.jsonContent, {
+    components: {
+      image: blogImageComponent,
+      linkGrid: linkGridComponent,
+      comparisonGrid: comparisonGridComponent,
+    },
+    linkResolver: (ref) => {
+      if (ref.type === "internal" && ref.slug) {
+        return `/resources/${pillar}/${ref.slug}`;
+      }
+      return ref.href;
+    },
+  });
+  contentHtml = html;
+} catch (error) {
+  console.error(
+    `[Resource Hub] Failed to fetch pillar ${documentSlug}:`,
+    error,
+  );
+  return new Response(null, { status: 404 });
+}
+---
+
+<Layout
+  title={pillarDocument.title}
+  description={pillarDocument.customFields?.description ||
+    `Learn about ${pillarDocument.title}`}
+>
+  <div class="py-8">
+    <Container>
+      <Breadcrumbs
+        items={[
+          { label: "Resources", href: "/resources" },
+          { label: pillarDocument.title },
+        ]}
+      />
+
+      <article class="max-w-3xl mx-auto">
+        <header class="mb-12 mt-8">
+          <h1 class="text-3xl font-semibold text-gray-900 mb-4">
+            {pillarDocument.title}
+          </h1>
+          {
+            pillarDocument.customFields?.description && (
+              <p class="text-lg text-gray-600">
+                {pillarDocument.customFields.description}
+              </p>
+            )
+          }
+        </header>
+
+        {/* Main Content */}
+        <div class="prose prose-lg max-w-none">
+          <Fragment set:html={contentHtml} />
+        </div>
+
+        {/* Child Articles Grid */}
+        {
+          childDocuments.length > 0 && (
+            <section class="mt-16 pt-8 border-t border-gray-200">
+              <h2 class="text-2xl font-semibold text-gray-900 mb-6">
+                Related Articles
+              </h2>
+              <div class="grid md:grid-cols-2 gap-5">
+                {childDocuments.map((doc) => (
+                  <a
+                    href={`/resources/${pillar}/${doc.slug}`}
+                    class="group block p-6 bg-white border border-gray-200 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all"
+                  >
+                    <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
+                      {doc.title}
+                    </h3>
+                    {doc.customFields?.excerpt && (
+                      <p class="text-sm text-gray-600 line-clamp-2">
+                        {doc.customFields.excerpt}
+                      </p>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </section>
+          )
+        }
+      </article>
+    </Container>
+  </div>
+</Layout>

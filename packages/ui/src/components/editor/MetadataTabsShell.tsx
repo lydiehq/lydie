@@ -16,7 +16,7 @@ type MetadataTabsShellProps = {
   onAdd: () => void;
   addButtonLabel: string;
   children: React.ReactNode;
-  focusRing?: string;
+  focusRing?: string | ((props: { isFocusVisible: boolean }) => string);
 };
 
 function MetadataDisclosureHeader() {

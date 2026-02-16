@@ -24,7 +24,7 @@ const { slug } = Astro.params;
 const feature: Feature | undefined = getFeature(slug!);
 
 if (!feature) {
-  return Astro.redirect("/404");
+  return new Response(null, { status: 404 });
 }
 
 const {
@@ -42,8 +42,6 @@ const {
   accentColor,
   secondaryAccentColor,
 } = feature;
-
-
 
 // Parse content sections to separate paragraphs from headings
 const contentSections = content.map((section) => {

@@ -14,14 +14,18 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import { lydieClient } from "../../utils/lydie-client";
 
+// Slug of the parent "Blog" page in Lydie
+const BLOG_PARENT_SLUG = "blog";
+
 let posts: any[] = [];
 
 try {
-  console.log("Fetching blog posts...", import.meta.env.LYDIE_API_KEY);
-  const { documents } = await lydieClient.getDocuments();
+  console.log("[Blog] Fetching blog posts from parent:", BLOG_PARENT_SLUG);
+  const { documents } = await lydieClient.getDocumentsByParent(BLOG_PARENT_SLUG);
   posts = documents;
+  console.log(`[Blog] Successfully fetched ${posts.length} blog posts`);
 } catch (error) {
-  console.error("Failed to fetch blog posts:", error);
+  console.error("[Blog] Failed to fetch blog posts:", error);
   posts = [];
 }
 
