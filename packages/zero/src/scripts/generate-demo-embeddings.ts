@@ -1,14 +1,14 @@
-import type { ContentNode } from "@lydie/core/content";
+import { writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "url";
 
+import type { ContentNode } from "@lydie/core/content";
 import { generateParagraphChunks, generateSimpleChunks } from "@lydie/core/embedding/chunking";
 import { generateManyEmbeddings, generateTitleEmbedding } from "@lydie/core/embedding/generation";
 import { extractSections } from "@lydie/core/embedding/section-hashing";
 import { serializeToPlainText } from "@lydie/core/serialization/text";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
-import { writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "url";
 
 import { demoContent } from "../onboarding/onboarding-content";
 

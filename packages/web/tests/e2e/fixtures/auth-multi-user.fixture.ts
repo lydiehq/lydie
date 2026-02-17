@@ -1,11 +1,11 @@
-import type { InferSelectModel } from "drizzle-orm";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 import { createId } from "@lydie/core/id";
 import { db, membersTable, organizationsTable, sessionsTable, usersTable } from "@lydie/database";
 import { test as baseTest } from "@playwright/test";
+import type { InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
-import * as fs from "node:fs";
-import * as path from "node:path";
 
 import { createTestUser } from "../utils/db";
 import { createSession, createStorageState } from "./auth.fixture";

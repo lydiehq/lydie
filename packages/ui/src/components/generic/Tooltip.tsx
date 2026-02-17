@@ -1,7 +1,6 @@
-import type { TooltipTriggerProps } from "react-aria";
-
 import { cva } from "cva";
 import React from "react";
+import type { TooltipTriggerProps } from "react-aria";
 import {
   Tooltip as AriaTooltip,
   type TooltipProps as AriaTooltipProps,

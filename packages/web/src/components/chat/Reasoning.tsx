@@ -1,9 +1,8 @@
-import type { ReactNode } from "react";
-
 import { BrainSparkleFilled, ChevronDownRegular } from "@fluentui/react-icons";
 import { clsx } from "clsx";
 import { cva } from "cva";
 import { AnimatePresence, motion } from "motion/react";
+import type { ReactNode } from "react";
 import * as React from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";

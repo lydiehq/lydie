@@ -24,7 +24,7 @@
     "@lydie/integrations": "workspace:*",
     "@lydie/zero": "workspace:*",
     "@rocicorp/zero": "catalog:",
-    "@sentry/node": "^10.38.0",
+    "@sentry/node": "^10.39.0",
     "@tiptap/y-tiptap": "catalog:",
     "ai": "catalog:",
     "better-auth": "catalog:",

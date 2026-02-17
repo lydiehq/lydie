@@ -1,6 +1,3 @@
-import type { Editor, Range } from "@tiptap/core";
-import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
-
 import { ListFilled, TextNumberListLtrFilled } from "@fluentui/react-icons";
 import {
   BoldIcon,
@@ -13,7 +10,9 @@ import {
   TableIcon,
   TaskListIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons";
+import type { Editor, Range } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
+import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 
@@ -42,6 +41,7 @@ const iconMap: Record<string, any> = {
   taskList: TaskListIcon,
   table: TableIcon,
   image: ImageIcon,
+  database: TableIcon, // Using TableIcon as database icon
 };
 
 // Filter out text formatting actions (bold, italic, strike) from slash menu

@@ -1,6 +1,5 @@
-import type { Editor } from "@tiptap/react";
-
 import { mutators } from "@lydie/zero/mutators";
+import type { Editor } from "@tiptap/react";
 
 // Apply title change to the document
 export async function applyTitleChange(

@@ -1,6 +1,5 @@
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { Editor } from "@tiptap/core";
-
 import { useEditorState } from "@tiptap/react";
 import { useEffect, useState } from "react";
 

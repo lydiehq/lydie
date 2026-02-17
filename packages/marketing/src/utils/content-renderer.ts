@@ -97,6 +97,7 @@ export interface RenderContentOptions {
     id?: string;
     slug?: string;
     title?: string;
+    parentSlug?: string;
     type?: "internal" | "external";
   }) => string;
 }
@@ -178,7 +179,9 @@ export async function renderContent(
         const properties = n.attrs?.properties || {};
 
         // Check if we have a custom renderer for this component
-        const componentRenderer = (components as Record<string, (props: Record<string, any>) => string | undefined>)[componentName];
+        const componentRenderer = (
+          components as Record<string, (props: Record<string, any>) => string | undefined>
+        )[componentName];
         if (componentRenderer) {
           const result = componentRenderer(properties);
           if (result) return result;
@@ -233,6 +236,7 @@ function renderMarks(
           mark.attrs?.["document-id"],
           mark.attrs?.["document-slug"],
           mark.attrs?.["document-title"],
+          mark.attrs?.["document-parent-slug"],
         );
       default:
         return wrapped;

@@ -1,6 +1,5 @@
-import type { RefObject } from "react";
-
 import { DismissRegular, SearchFilled } from "@fluentui/react-icons";
+import type { RefObject } from "react";
 import {
   SearchField as AriaSearchField,
   type SearchFieldProps as AriaSearchFieldProps,

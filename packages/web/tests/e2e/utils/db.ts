@@ -1,8 +1,7 @@
-import type { InferSelectModel } from "drizzle-orm";
-
 import { createId } from "@lydie/core/id";
 import { createOrganization } from "@lydie/core/organization";
 import { db, organizationsTable, usersTable } from "@lydie/database";
+import type { InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 
 type User = InferSelectModel<typeof usersTable>;

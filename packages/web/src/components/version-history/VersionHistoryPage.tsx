@@ -1,9 +1,8 @@
-import type { QueryResultType } from "@rocicorp/zero";
-
 import { ArrowLeftRegular, ClockRegular, PersonRegular } from "@fluentui/react-icons";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";

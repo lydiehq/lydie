@@ -11,6 +11,7 @@ import Layout from "@/layouts/Layout.astro";
 import { Container } from "@/components/Container";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
 import { lydieClient } from "@/utils/lydie-client";
+import { createLinkResolver } from "@/utils/route-registry";
 import { renderContent, blogImageComponent } from "@/utils/content-renderer";
 import {
   linkGridComponent,
@@ -53,13 +54,7 @@ try {
       linkGrid: linkGridComponent,
       comparisonGrid: comparisonGridComponent,
     },
-    linkResolver: (ref) => {
-      if (ref.type === "internal" && ref.slug) {
-        // Check if it's a child of the same pillar
-        return `/resources/${pillar}/${ref.slug}`;
-      }
-      return ref.href;
-    },
+    linkResolver: createLinkResolver(),
   });
   contentHtml = html;
 } catch (error) {

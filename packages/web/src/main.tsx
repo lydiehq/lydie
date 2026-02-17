@@ -1,12 +1,11 @@
 import type { Zero } from "@rocicorp/zero";
-import type { PersistedClient } from "@tanstack/react-query-persist-client";
-
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import {
   QueryClient,
   type Query,
   type QueryClient as QueryClientType,
 } from "@tanstack/react-query";
+import type { PersistedClient } from "@tanstack/react-query-persist-client";
 import {
   persistQueryClientRestore,
   persistQueryClientSubscribe,
@@ -24,12 +23,11 @@ import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 
-import type { authClient } from "./utils/auth.ts";
-
 import { ErrorPage } from "./components/layout/ErrorPage.tsx";
 import { initPostHog } from "./lib/posthog.ts";
 import reportWebVitals from "./reportWebVitals.ts";
 import { routeTree } from "./routeTree.gen";
+import type { authClient } from "./utils/auth.ts";
 
 export interface RouterContext {
   queryClient: QueryClientType;

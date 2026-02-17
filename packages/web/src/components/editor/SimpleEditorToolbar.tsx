@@ -1,5 +1,3 @@
-import type { Editor } from "@tiptap/react";
-
 import {
   ListFilled,
   TextNumberListLtrFilled,
@@ -13,6 +11,7 @@ import {
   CodeIcon,
   ItalicIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons";
+import type { Editor } from "@tiptap/react";
 import { Group, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
 
 type Props = {

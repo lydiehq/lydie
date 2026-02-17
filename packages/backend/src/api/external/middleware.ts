@@ -1,5 +1,6 @@
-import { apiKeysTable, db } from "@lydie/database";
 import { createHash } from "crypto";
+
+import { apiKeysTable, db } from "@lydie/database";
 import { eq } from "drizzle-orm";
 import { MiddlewareHandler } from "hono";
 import { rateLimiter } from "hono-rate-limiter";

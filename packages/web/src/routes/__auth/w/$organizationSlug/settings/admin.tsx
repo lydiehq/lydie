@@ -1,6 +1,5 @@
-import type { ContentNode } from "@lydie/core/content";
-
 import { ArrowDownloadRegular } from "@fluentui/react-icons";
+import type { ContentNode } from "@lydie/core/content";
 import { serializeToMarkdown } from "@lydie/core/serialization/markdown";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";

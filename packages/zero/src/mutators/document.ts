@@ -136,6 +136,8 @@ export const documentMutators = {
           is_favorited: false,
           parent_id: parentId || null,
           sort_order: minSortOrder - 1,
+          properties: {},
+          page_config: { showChildrenInSidebar: true, defaultView: "documents" },
         }),
       );
     },
@@ -241,6 +243,7 @@ export const documentMutators = {
         }
       }
 
+      // Update document with new parent
       await tx.mutate.documents.update(
         withUpdatedTimestamp({
           id: documentId,
@@ -434,6 +437,90 @@ export const documentMutators = {
         withUpdatedTimestamp({
           id: documentId,
           deleted_at: null,
+        }),
+      );
+    },
+  ),
+
+  // Update document properties (for database/collection fields)
+  updateProperties: defineMutator(
+    z.object({
+      documentId: z.string(),
+      organizationId: z.string(),
+      properties: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+    }),
+    async ({ tx, ctx, args: { documentId, organizationId, properties } }) => {
+      hasOrganizationAccess(ctx, organizationId);
+
+      const document = await getDocumentById(tx, documentId, organizationId);
+
+      if (!document) {
+        throw notFoundError("Document", documentId);
+      }
+
+      // Merge new properties with existing ones
+      const currentProperties = (document.properties || {}) as Record<
+        string,
+        string | number | boolean | null
+      >;
+
+      await tx.mutate.documents.update(
+        withUpdatedTimestamp({
+          id: documentId,
+          properties: {
+            ...currentProperties,
+            ...properties,
+          },
+        }),
+      );
+    },
+  ),
+
+  // Update child schema (defines what properties child documents have)
+  updateChildSchema: defineMutator(
+    z.object({
+      documentId: z.string(),
+      organizationId: z.string(),
+      childSchema: z.array(
+        z.object({
+          field: z.string(),
+          type: z.enum(["text", "datetime", "select", "file", "boolean", "number"]),
+          required: z.boolean(),
+          options: z.array(z.string()).optional(),
+        }),
+      ),
+    }),
+    async ({ tx, ctx, args: { documentId, organizationId, childSchema } }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      await verifyDocumentAccess(tx, documentId, organizationId);
+
+      await tx.mutate.documents.update(
+        withUpdatedTimestamp({
+          id: documentId,
+          child_schema: childSchema,
+        }),
+      );
+    },
+  ),
+
+  // Update page configuration
+  updatePageConfig: defineMutator(
+    z.object({
+      documentId: z.string(),
+      organizationId: z.string(),
+      pageConfig: z.object({
+        showChildrenInSidebar: z.boolean(),
+        defaultView: z.enum(["documents", "table"]),
+      }),
+    }),
+    async ({ tx, ctx, args: { documentId, organizationId, pageConfig } }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      await verifyDocumentAccess(tx, documentId, organizationId);
+
+      await tx.mutate.documents.update(
+        withUpdatedTimestamp({
+          id: documentId,
+          page_config: pageConfig,
         }),
       );
     },

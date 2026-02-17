@@ -1,10 +1,9 @@
-import type { QueryResultType } from "@rocicorp/zero";
-
 import { ArrowCounterclockwise16Regular, Delete16Regular } from "@fluentui/react-icons";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useMemo, useState } from "react";

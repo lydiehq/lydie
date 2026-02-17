@@ -1,7 +1,8 @@
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
-import styles from "./Hero.module.css";
 import { HeroBackground } from "./HeroBackground";
+
+import styles from "./Hero.module.css";
 
 type Props = {
   imageSrc: string;

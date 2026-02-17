@@ -1,7 +1,6 @@
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-
 import { templatesTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
 import { generateTitleEmbedding } from "./generation";
 

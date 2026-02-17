@@ -1,14 +1,13 @@
-import type { QueryResultType } from "@rocicorp/zero";
-import type { ReactElement } from "react";
-import type { Key } from "react-aria-components";
-
 import { getIntegrationMetadata } from "@lydie/integrations/metadata";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
 import { useAtom, useAtomValue } from "jotai";
 import { atom } from "jotai";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Key } from "react-aria-components";
 import { Tree } from "react-aria-components";
 
 import { documentTabsAtom } from "@/atoms/tabs";

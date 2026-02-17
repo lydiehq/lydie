@@ -1,6 +1,3 @@
-import type { ReactElement } from "react";
-import type { Key } from "react-aria-components";
-
 import { CollectionsEmpty16Filled } from "@fluentui/react-icons";
 import { Placeholder } from "@lydie/editor/extensions";
 import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/editor/styles";
@@ -8,7 +5,9 @@ import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
+import type { Key } from "react-aria-components";
 import { Button, Collection, Tree, TreeItem, TreeItemContent } from "react-aria-components";
 
 import { PlaceholderComponent } from "./PlaceholderComponent";

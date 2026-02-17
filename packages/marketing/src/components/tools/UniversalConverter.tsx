@@ -7,7 +7,6 @@ import {
 import React, { useState } from "react";
 
 import type { ConversionConfig } from "../../data/conversions";
-
 import { Button } from "../generic/Button";
 import { ToolHeader } from "./ToolHeader";
 

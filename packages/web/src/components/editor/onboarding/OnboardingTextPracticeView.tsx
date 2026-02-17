@@ -1,5 +1,4 @@
 import type { OnboardingTextPracticeTask } from "@lydie/editor/extensions";
-
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useEffect, useRef } from "react";

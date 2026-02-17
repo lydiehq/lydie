@@ -14,7 +14,6 @@ import type {
   PushOptions,
   SyncResult,
 } from "@lydie/core/integrations/types";
-
 import { createErrorResult } from "@lydie/core/integrations/types";
 import { deserializeFromHTML, serializeToHTML } from "@lydie/core/serialization/html";
 import { Resource } from "sst";

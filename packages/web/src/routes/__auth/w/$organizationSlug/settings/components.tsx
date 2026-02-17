@@ -102,14 +102,19 @@ function RouteComponent() {
   const handleEdit = (component: any) => {
     setEditingId(component.id);
     form.setFieldValue("name", component.name);
-    
+
     // Convert properties object back to array format
-    const propertiesRecord = component.properties as Record<string, { type: string; fields?: ArrayField[] }>;
-    const propertiesArray: PropertyField[] = Object.entries(propertiesRecord).map(([key, config]) => ({
-      key,
-      type: config.type as PropertyField["type"],
-      fields: config.fields,
-    }));
+    const propertiesRecord = component.properties as Record<
+      string,
+      { type: string; fields?: ArrayField[] }
+    >;
+    const propertiesArray: PropertyField[] = Object.entries(propertiesRecord).map(
+      ([key, config]) => ({
+        key,
+        type: config.type as PropertyField["type"],
+        fields: config.fields,
+      }),
+    );
     form.setFieldValue("properties", propertiesArray);
   };
 
@@ -122,7 +127,7 @@ function RouteComponent() {
         }),
       );
       toast.success("Component deleted successfully");
-      
+
       // If we were editing this component, reset the form
       if (editingId === componentId) {
         setEditingId(null);
@@ -194,12 +199,7 @@ function RouteComponent() {
                     )}
 
                     {field.state.value.map((_prop, index) => (
-                      <PropertyRow
-                        key={index}
-                        form={form}
-                        field={field}
-                        index={index}
-                      />
+                      <PropertyRow key={index} form={form} field={field} index={index} />
                     ))}
                   </div>
                 )}
@@ -293,15 +293,7 @@ function RouteComponent() {
 }
 
 // Property Row Component
-function PropertyRow({
-  form,
-  field,
-  index,
-}: {
-  form: any;
-  field: any;
-  index: number;
-}) {
+function PropertyRow({ form, field, index }: { form: any; field: any; index: number }) {
   const updatePropertyAtIndex = (updates: Partial<PropertyField>) => {
     const currentProps = form.getFieldValue("properties") as PropertyField[];
     const newProps = [...currentProps];
@@ -328,7 +320,11 @@ function PropertyRow({
     });
   };
 
-  const updateArrayField = (currentProp: PropertyField, fieldIndex: number, updates: Partial<ArrayField>) => {
+  const updateArrayField = (
+    currentProp: PropertyField,
+    fieldIndex: number,
+    updates: Partial<ArrayField>,
+  ) => {
     if (currentProp.fields) {
       const newFields = currentProp.fields.map((f: ArrayField, i: number) =>
         i === fieldIndex ? { ...f, ...updates } : f,
@@ -412,7 +408,12 @@ function PropertyRow({
             <div className="border-t border-gray-200 pt-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-600">Object Fields</span>
-                <Button type="button" onPress={() => addArrayField(prop)} intent="secondary" size="xs">
+                <Button
+                  type="button"
+                  onPress={() => addArrayField(prop)}
+                  intent="secondary"
+                  size="xs"
+                >
                   <AddRegular className="size-3 mr-1" />
                   Add Field
                 </Button>
@@ -432,7 +433,9 @@ function PropertyRow({
                     <select
                       value={arrayField.type}
                       onChange={(e) =>
-                        updateArrayField(prop, fieldIndex, { type: e.target.value as ArrayField["type"] })
+                        updateArrayField(prop, fieldIndex, {
+                          type: e.target.value as ArrayField["type"],
+                        })
                       }
                       className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                     >

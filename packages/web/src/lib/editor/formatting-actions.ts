@@ -4,6 +4,7 @@ export type FormattingAction = {
   id: string;
   label: string;
   icon?: any;
+  description?: string;
   isActive?: (editor: Editor) => boolean;
   execute: (editor: Editor) => void;
   group?: string;
@@ -134,6 +135,22 @@ export const insertActions: FormattingAction[] = [
     isActive: (editor) => editor.isActive("table"),
     execute: (editor) =>
       editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+    group: "insert",
+  },
+  {
+    id: "database",
+    label: "Database view",
+    description: "Embed a filtered view of another page",
+    execute: (editor) => {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "databaseBlock",
+          attrs: {},
+        })
+        .run();
+    },
     group: "insert",
   },
 ];

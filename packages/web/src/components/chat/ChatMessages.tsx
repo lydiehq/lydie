@@ -1,6 +1,5 @@
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
-
 import { MoreVerticalRegular } from "@fluentui/react-icons";
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";

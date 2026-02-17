@@ -1,7 +1,6 @@
-import type Stripe from "stripe";
-
 import { db, schema } from "@lydie/database";
 import { eq } from "drizzle-orm";
+import type Stripe from "stripe";
 
 import { stripe, STRIPE_PRICE_IDS } from "./config";
 import { getMemberCount } from "./seat-management";

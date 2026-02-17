@@ -1,6 +1,5 @@
-import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
-
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
+import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";

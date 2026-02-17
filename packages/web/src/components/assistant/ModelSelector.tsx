@@ -1,6 +1,5 @@
-import type { LLMModel } from "@lydie/core/ai/models";
-
 import { ChevronDownRegular } from "@fluentui/react-icons";
+import type { LLMModel } from "@lydie/core/ai/models";
 import {
   getAllModels,
   getDefaultModel,

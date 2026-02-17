@@ -1,9 +1,8 @@
-import type Stripe from "stripe";
-
 import { stripe } from "@lydie/core/billing/config";
 import { handleWebhookEvent } from "@lydie/core/billing/webhooks";
 import { Hono } from "hono";
 import { Resource } from "sst";
+import type Stripe from "stripe";
 
 export const stripeWebhookRouter = new Hono();
 

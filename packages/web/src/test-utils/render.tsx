@@ -1,12 +1,10 @@
-import type { RenderOptions, RenderResult } from "@testing-library/react";
-import type { ReactElement, ReactNode } from "react";
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { RenderOptions, RenderResult } from "@testing-library/react";
 import { render } from "@testing-library/react";
+import type { ReactElement, ReactNode } from "react";
 import { I18nProvider } from "react-aria-components";
 
 import type { MockOrganization } from "./factories";
-
 import { createMockOrganization } from "./factories";
 
 /**

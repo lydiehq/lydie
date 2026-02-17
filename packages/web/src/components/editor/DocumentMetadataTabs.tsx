@@ -1,23 +1,29 @@
-import type { QueryResultType } from "@rocicorp/zero";
-
 import { ArrowBidirectionalLeftRightFilled, ArrowRightFilled } from "@fluentui/react-icons";
 import { MetadataTabsShell } from "@lydie/ui/components/editor/MetadataTabsShell";
+import { focusRing } from "@lydie/ui/components/generic/utils";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { TabPanel } from "react-aria-components";
 
 import { Link } from "@/components/generic/Link";
-import { focusRing } from "@lydie/ui/components/generic/utils";
 
-import { CustomFieldsEditor, type CustomFieldsEditorRef } from "./CustomFieldsEditor";
+import { InlinePropertyEditor } from "./InlinePropertyEditor";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
+type SchemaField = {
+  field: string;
+  type: "text" | "number" | "select" | "boolean" | "datetime" | "file";
+  required: boolean;
+  options?: string[];
+};
 
 type Props = {
   doc: DocumentType;
-  initialFields?: Record<string, string | number>;
+  // Schema from parent page (if this is a child document)
+  parentSchema?: SchemaField[];
 };
 
 function LinksPanel({ doc }: { doc: DocumentType }) {
@@ -28,7 +34,7 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
     queries.documents.backlinks({
       organizationId,
       documentId: doc.id,
-    })
+    }),
   );
 
   // Fetch outgoing links (docs this doc links TO)
@@ -36,7 +42,7 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
     queries.documents.outgoingLinks({
       organizationId,
       documentId: doc.id,
-    })
+    }),
   );
 
   const backlinkCount = backlinks?.length || 0;
@@ -65,14 +71,15 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
             {backlinks?.map((link) => (
               <Link
                 key={link.id}
-                to={`/w/$organizationSlug/${link.sourceDocument.id}`}
+                to={`/w/$organizationSlug/${link.source_document_id}`}
                 from="/w/$organizationSlug"
                 className="px-2 py-1.5 rounded-md hover:bg-black/5 transition-all duration-75 flex justify-between"
               >
                 <div className="flex gap-x-1.5 items-center">
                   <DocumentIcon className="size-4 text-gray-400" />
                   <span className="truncate text-sm font-medium text-gray-600">
-                    {link.sourceDocument.title || "Untitled document"}
+                    {(link.sourceDocument as { title?: string } | undefined)?.title ||
+                      "Untitled document"}
                   </span>
                 </div>
               </Link>
@@ -93,14 +100,15 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
             {outgoingLinks?.map((link) => (
               <Link
                 key={link.id}
-                to={`/w/$organizationSlug/${link.targetDocument.id}`}
+                to={`/w/$organizationSlug/${link.target_document_id}`}
                 from="/w/$organizationSlug"
                 className="px-2 py-1.5 rounded-md hover:bg-black/5 transition-all duration-75 flex justify-between"
               >
                 <div className="flex gap-x-1.5 items-center">
                   <DocumentIcon className="size-4 text-gray-400" />
                   <span className="truncate text-sm font-medium text-gray-600">
-                    {link.targetDocument.title || "Untitled document"}
+                    {(link.targetDocument as { title?: string } | undefined)?.title ||
+                      "Untitled document"}
                   </span>
                 </div>
               </Link>
@@ -112,7 +120,43 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
   );
 }
 
-export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
+function PropertiesPanel({
+  doc,
+  parentSchema,
+}: {
+  doc: DocumentType;
+  parentSchema?: SchemaField[];
+}) {
+  const organizationId = doc.organization_id;
+  const properties = (doc.properties as Record<string, string | number | boolean | null>) || {};
+
+  // If no parent schema, show message
+  if (!parentSchema || parentSchema.length === 0) {
+    return (
+      <div className="ring ring-black/4 rounded-xl p-4 flex items-center justify-center">
+        <span className="text-sm text-gray-500">
+          No properties defined. Add properties on the parent page.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-0.5">
+      {parentSchema.map((fieldDef) => (
+        <InlinePropertyEditor
+          key={fieldDef.field}
+          documentId={doc.id}
+          organizationId={organizationId}
+          fieldDef={fieldDef}
+          value={properties[fieldDef.field] ?? null}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function DocumentMetadataTabs({ doc, parentSchema }: Props) {
   const organizationId = doc.organization_id;
 
   // Fetch link counts for the badge
@@ -120,24 +164,22 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
     queries.documents.backlinks({
       organizationId,
       documentId: doc.id,
-    })
+    }),
   );
   const [outgoingLinks] = useQuery(
     queries.documents.outgoingLinks({
       organizationId,
       documentId: doc.id,
-    })
+    }),
   );
 
   const linkCount = (backlinks?.length || 0) + (outgoingLinks?.length || 0);
-  const customFieldsEditorRef = useRef<CustomFieldsEditorRef>(null);
   const [selectedKey, setSelectedKey] = useState<string>("fields");
   const [isExpanded, setIsExpanded] = useState(true);
 
   const handleAdd = () => {
-    if (selectedKey === "fields") {
-      customFieldsEditorRef.current?.addField();
-    }
+    // No-op since we don't have an "add field" button in this view
+    // Fields are managed on the parent page
   };
 
   return (
@@ -148,17 +190,11 @@ export function DocumentMetadataTabs({ doc, initialFields = {} }: Props) {
       onExpandedChange={setIsExpanded}
       documentCount={linkCount}
       onAdd={handleAdd}
-      addButtonLabel={selectedKey === "fields" ? "Add field" : undefined}
+      addButtonLabel=""
       focusRing={focusRing}
     >
       <TabPanel id="fields">
-        <CustomFieldsEditor
-          key={doc.id}
-          ref={customFieldsEditorRef}
-          documentId={doc.id}
-          organizationId={doc.organization_id}
-          initialFields={initialFields}
-        />
+        <PropertiesPanel doc={doc} parentSchema={parentSchema} />
       </TabPanel>
       <TabPanel id="documents">
         <LinksPanel doc={doc} />

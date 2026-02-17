@@ -1,5 +1,4 @@
 import type { VariantProps } from "cva";
-
 import { cva } from "cva";
 import { type JSX } from "react";
 import { Heading as RACHeading } from "react-aria-components";

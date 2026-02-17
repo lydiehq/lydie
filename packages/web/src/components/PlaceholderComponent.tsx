@@ -1,5 +1,4 @@
 import type { NodeViewProps } from "@tiptap/react";
-
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import { useCallback, useEffect, useRef } from "react";
 

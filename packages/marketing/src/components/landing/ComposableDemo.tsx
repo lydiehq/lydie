@@ -5,11 +5,10 @@ import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { AnimatePresence, motion } from "motion/react";
 import * as React from "react";
 
-import type { DemoState } from "./DemoStateSelector";
-
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
 import { CommandMenuIllustration, type CommandMenuSection } from "./CommandMenuIllustration";
+import type { DemoState } from "./DemoStateSelector";
 import { STATE_CONFIG, DEFAULT_STATE_ORDER } from "./DemoStateSelector";
 
 const collaborators = [

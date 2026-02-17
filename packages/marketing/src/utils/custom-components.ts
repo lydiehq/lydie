@@ -32,13 +32,14 @@ export function linkGridComponent(properties: Record<string, any>): string {
     return '<div class="my-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">[Link Grid: No links configured]</div>';
   }
 
-  const linksHtml = links.map((link) => {
-    const href = link.href || "#";
-    const title = link.title || "Untitled";
-    const description = link.description || "";
-    const icon = link.icon || "";
-    
-    return `
+  const linksHtml = links
+    .map((link) => {
+      const href = link.href || "#";
+      const title = link.title || "Untitled";
+      const description = link.description || "";
+      const icon = link.icon || "";
+
+      return `
       <a href="${escapeHtml(href)}" class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all">
         <div class="flex items-start gap-3">
           ${icon ? `<span class="text-2xl">${escapeHtml(icon)}</span>` : ""}
@@ -51,7 +52,8 @@ export function linkGridComponent(properties: Record<string, any>): string {
         </div>
       </a>
     `;
-  }).join("");
+    })
+    .join("");
 
   return `
     <div class="my-8 grid md:grid-cols-2 gap-4">
@@ -72,14 +74,16 @@ export function comparisonGridComponent(properties: Record<string, any>): string
     return '<div class="my-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">[Comparison Grid: No items configured]</div>';
   }
 
-  const gridClass = columns === 2 ? "md:grid-cols-2" : columns === 3 ? "md:grid-cols-3" : "md:grid-cols-1";
+  const gridClass =
+    columns === 2 ? "md:grid-cols-2" : columns === 3 ? "md:grid-cols-3" : "md:grid-cols-1";
 
-  const itemsHtml = items.map((item) => {
-    const label = item.label || "";
-    const description = item.description || "";
-    const icon = item.icon || "";
-    
-    return `
+  const itemsHtml = items
+    .map((item) => {
+      const label = item.label || "";
+      const description = item.description || "";
+      const icon = item.icon || "";
+
+      return `
       <div class="p-4 bg-white border border-gray-200 rounded-lg">
         <div class="flex items-start gap-3">
           ${icon ? `<span class="text-xl">${escapeHtml(icon)}</span>` : ""}
@@ -90,7 +94,8 @@ export function comparisonGridComponent(properties: Record<string, any>): string
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   return `
     <div class="my-8 grid ${gridClass} gap-4">
@@ -106,7 +111,7 @@ export function comparisonGridComponent(properties: Record<string, any>): string
 export function visualFrameworkComponent(properties: Record<string, any>): string {
   const title = properties.title || "";
   const description = properties.description || "";
-  
+
   return `
     <div class="my-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
       ${title ? `<h3 class="text-lg font-semibold text-gray-900 mb-2">${escapeHtml(title)}</h3>` : ""}
@@ -125,22 +130,21 @@ export function visualFrameworkComponent(properties: Record<string, any>): strin
 export function flowStepsComponent(properties: Record<string, any>): string {
   const steps = properties.steps || [];
   const direction = properties.direction || "horizontal";
-  
+
   if (steps.length === 0) {
     return '<div class="my-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">[Flow Steps: No steps configured]</div>';
   }
 
   const isHorizontal = direction === "horizontal";
-  const containerClass = isHorizontal 
-    ? "flex flex-col md:flex-row gap-4" 
-    : "flex flex-col gap-4";
+  const containerClass = isHorizontal ? "flex flex-col md:flex-row gap-4" : "flex flex-col gap-4";
 
-  const stepsHtml = steps.map((step: any, index: number) => {
-    const title = step.title || "";
-    const description = step.description || "";
-    const stepNumber = index + 1;
-    
-    return `
+  const stepsHtml = steps
+    .map((step: any, index: number) => {
+      const title = step.title || "";
+      const description = step.description || "";
+      const stepNumber = index + 1;
+
+      return `
       <div class="flex-1 relative">
         <div class="p-4 bg-white border border-gray-200 rounded-lg h-full">
           <div class="flex items-center gap-3 mb-2">
@@ -151,16 +155,21 @@ export function flowStepsComponent(properties: Record<string, any>): string {
           </div>
           ${description ? `<p class="text-sm text-gray-600">${escapeHtml(description)}</p>` : ""}
         </div>
-        ${isHorizontal && index < steps.length - 1 ? `
+        ${
+          isHorizontal && index < steps.length - 1
+            ? `
           <div class="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2 text-gray-300">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
             </svg>
           </div>
-        ` : ""}
+        `
+            : ""
+        }
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   return `
     <div class="my-8 ${containerClass}">
