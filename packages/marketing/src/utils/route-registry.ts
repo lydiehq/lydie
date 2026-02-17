@@ -60,18 +60,16 @@ const ROUTE_REGISTRY: RouteConfig[] = [
  */
 export function resolveLink(slug: string, parentSlug?: string): string | null {
   if (!parentSlug) {
-    // Default to blog if no parent specified (backwards compatibility)
-    return `/blog/${slug}`;
+    return null;
   }
 
   const route = ROUTE_REGISTRY.find((r) => r.parentSlug === parentSlug);
 
   if (!route) {
-    // Unknown parent - default to blog
     console.warn(
-      `[RouteRegistry] Unknown parent slug "${parentSlug}" for document "${slug}", defaulting to /blog/`,
+      `[RouteRegistry] Unknown parent slug "${parentSlug}" for document "${slug}"`,
     );
-    return `/blog/${slug}`;
+    return null;
   }
 
   return route.pattern.replace(":slug", slug);

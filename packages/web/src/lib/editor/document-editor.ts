@@ -8,7 +8,7 @@ import type { Slice } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { createElement, useCallback, useEffect, useMemo, useRef } from "react";
 import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
@@ -111,7 +111,15 @@ export function useDocumentEditor({
           addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
         },
         collectionBlock: {
-          addNodeView: () => ReactNodeViewRenderer(CollectionBlockComponent),
+          addNodeView: () => {
+            const orgId = doc.organization_id;
+            return ReactNodeViewRenderer((nodeViewProps) =>
+              createElement(CollectionBlockComponent, {
+                ...nodeViewProps,
+                organizationId: orgId,
+              }),
+            );
+          },
         },
         onboardingTextPractice: {
           addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),

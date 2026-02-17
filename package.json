@@ -2,6 +2,9 @@
   "name": "lydie",
   "version": "1.0.0",
   "private": true,
+  "resolutions": {
+    "prosemirror-view": "1.41.5"
+  },
   "workspaces": {
     "packages": [
       "packages/*"

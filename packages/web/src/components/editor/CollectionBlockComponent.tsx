@@ -1,29 +1,41 @@
 import { DismissFilled, FolderFilled, SearchFilled } from "@fluentui/react-icons";
-import type { CollectionField } from "@lydie/core/collection";
+import type { PropertyDefinition } from "@lydie/core/collection";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { NodeViewWrapper, type NodeViewRendererProps } from "@tiptap/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import { useOrganization } from "@/context/organization.context";
-import { useZero } from "@/services/zero";
+const collectionByIdQuery = queries.collections.byId as any;
+const documentsByCollectionQuery = queries.collections.documentsByCollection as any;
+const collectionsByOrganizationQuery = queries.collections.byOrganization as any;
 
-export function CollectionBlockComponent(props: NodeViewRendererProps) {
-  const { node, editor, getPos } = props;
+type Props = NodeViewRendererProps & {
+  organizationId: string;
+};
+
+function formatCellValue(value: unknown) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  return JSON.stringify(value);
+}
+
+export function CollectionBlockComponent(props: Props) {
+  const { node, editor, getPos, organizationId } = props;
   const { collectionId, filters, sortField, sortDirection, viewMode } = node.attrs;
-  useZero();
   const [isEditing, setIsEditing] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Get organization from context
-  const { organization } = useOrganization();
-  const organizationId = organization?.id || "";
-
   // Query the collection for its schema
   const [collection] = useQuery(
-    collectionId
-      ? queries.collections.byId({
+    collectionId && organizationId
+      ? collectionByIdQuery({
           organizationId,
           collectionId,
         })
@@ -32,8 +44,8 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
 
   // Query documents in the collection
   const [documents] = useQuery(
-    collectionId
-      ? queries.collections.documentsByCollection({
+    collectionId && organizationId
+      ? documentsByCollectionQuery({
           organizationId,
           collectionId,
         })
@@ -41,21 +53,75 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
   );
 
   // Query all collections for the picker
-  const [collections] = useQuery(queries.collections.byOrganization({ organizationId }));
+  const [collections] = useQuery(
+    organizationId
+      ? collectionsByOrganizationQuery({
+          organizationId,
+        })
+      : null,
+  );
 
-  const schema = (collection?.collection_schema || []) as CollectionField[];
+  const collectionData = collection as any;
+  const documentsData = useMemo(() => (documents ?? []) as any[], [documents]);
+  const collectionsData = useMemo(
+    () =>
+      (collections ?? []) as unknown as Array<{
+        document_id: string;
+        document?: { title?: string };
+      }>,
+    [collections],
+  );
+
+  const schema = (collectionData?.properties || []) as PropertyDefinition[];
+  const availableCollections: Array<{ id: string; name: string }> = collectionsData.map(
+    (entry) => ({
+      id: entry.document_id,
+      name: entry.document?.title || "Untitled",
+    }),
+  );
+  const collectionName =
+    ((collectionData?.document as { title?: string } | undefined)?.title as string | undefined) ||
+    "Untitled";
+
+  const extractFieldValues = useCallback(
+    (doc: { fieldValues?: unknown }) => {
+      const fieldValues = (doc.fieldValues || []) as Array<{
+        values?: unknown;
+        collectionSchema?: { document_id?: string };
+      }>;
+
+      const row =
+        fieldValues.find((value) => value.collectionSchema?.document_id === collectionId) ??
+        fieldValues[0];
+
+      if (typeof row?.values === "object" && row.values !== null) {
+        return row.values as Record<string, unknown>;
+      }
+
+      return {};
+    },
+    [collectionId],
+  );
+
+  const documentPropertiesById = useMemo(() => {
+    const propertiesById = new Map<string, Record<string, unknown>>();
+
+    for (const doc of documentsData) {
+      propertiesById.set(doc.id, extractFieldValues(doc));
+    }
+
+    return propertiesById;
+  }, [documentsData, extractFieldValues]);
 
   // Apply filters and sorting
   const filteredDocuments = useMemo(() => {
-    if (!documents) return [];
-
-    let result = [...documents];
+    let result = [...documentsData];
 
     // Apply filters
     if (filters && Object.keys(filters).length > 0) {
       result = result.filter((doc) => {
         return Object.entries(filters).every(([key, value]) => {
-          const properties = (doc.properties || {}) as Record<string, unknown>;
+          const properties = documentPropertiesById.get(doc.id) || {};
           return properties[key] === value;
         });
       });
@@ -64,8 +130,8 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
     // Apply sorting
     if (sortField) {
       result.sort((a, b) => {
-        const aProps = (a.properties || {}) as Record<string, unknown>;
-        const bProps = (b.properties || {}) as Record<string, unknown>;
+        const aProps = documentPropertiesById.get(a.id) || {};
+        const bProps = documentPropertiesById.get(b.id) || {};
         const aVal = aProps[sortField] as string | number | null;
         const bVal = bProps[sortField] as string | number | null;
 
@@ -79,7 +145,7 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
     }
 
     return result;
-  }, [documents, filters, sortField, sortDirection]);
+  }, [documentPropertiesById, documentsData, filters, sortField, sortDirection]);
 
   const handleUpdate = (attrs: Partial<typeof node.attrs>) => {
     const pos = getPos();
@@ -107,10 +173,10 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
 
   // Filter collections based on search query
   const filteredCollections = useMemo(() => {
-    if (!searchQuery.trim()) return collections?.slice(0, 5) || [];
+    if (!searchQuery.trim()) return availableCollections.slice(0, 5);
     const query = searchQuery.toLowerCase();
-    return (collections || []).filter((c) => c.name.toLowerCase().includes(query)).slice(0, 8);
-  }, [collections, searchQuery]);
+    return availableCollections.filter((c) => c.name.toLowerCase().includes(query)).slice(0, 8);
+  }, [availableCollections, searchQuery]);
 
   // Empty state - no collection selected
   if (!collectionId) {
@@ -181,10 +247,10 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
           ) : (
             <div className="space-y-2">
               {/* Show available collections */}
-              {collections && collections.length > 0 && (
+              {availableCollections.length > 0 && (
                 <div className="space-y-1">
                   <div className="text-xs text-gray-500 mb-2">Available collections:</div>
-                  {collections.slice(0, 3).map((c) => (
+                  {availableCollections.slice(0, 3).map((c) => (
                     <button
                       key={c.id}
                       onClick={() => handleSelectCollection(c)}
@@ -230,7 +296,7 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
         {/* Header with filter/sort controls */}
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{collection?.name || "Untitled"}</span>
+            <span className="font-medium text-sm">{collectionName}</span>
             {Object.keys(filters).length > 0 && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
                 Filtered
@@ -258,8 +324,8 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
                 <option value="">—</option>
                 <option value="title">Title</option>
                 {schema.map((field) => (
-                  <option key={field.field} value={field.field}>
-                    {field.field}
+                  <option key={field.name} value={field.name}>
+                    {field.name}
                   </option>
                 ))}
               </select>
@@ -283,8 +349,8 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
                 <tr>
                   <th className="px-4 py-2 text-left font-medium text-gray-600">Title</th>
                   {schema.map((field) => (
-                    <th key={field.field} className="px-4 py-2 text-left font-medium text-gray-600">
-                      {field.field}
+                    <th key={field.name} className="px-4 py-2 text-left font-medium text-gray-600">
+                      {field.name}
                     </th>
                   ))}
                 </tr>
@@ -294,11 +360,11 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
                   <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-2 font-medium">{doc.title || "Untitled"}</td>
                     {schema.map((field) => {
-                      const properties = (doc.properties || {}) as Record<string, unknown>;
-                      const value = properties[field.field];
+                      const properties = documentPropertiesById.get(doc.id) || {};
+                      const value = properties[field.name];
                       return (
-                        <td key={field.field} className="px-4 py-2 text-gray-600">
-                          {value !== null && value !== undefined ? String(value) : "—"}
+                        <td key={field.name} className="px-4 py-2 text-gray-600">
+                          {formatCellValue(value)}
                         </td>
                       );
                     })}
@@ -314,15 +380,15 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
                   {schema.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-2">
                       {schema.slice(0, 3).map((field) => {
-                        const properties = (doc.properties || {}) as Record<string, unknown>;
-                        const value = properties[field.field];
+                        const properties = documentPropertiesById.get(doc.id) || {};
+                        const value = properties[field.name];
                         if (value === null || value === undefined) return null;
                         return (
                           <span
-                            key={field.field}
+                            key={field.name}
                             className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
                           >
-                            {field.field}: {String(value)}
+                            {field.name}: {formatCellValue(value)}
                           </span>
                         );
                       })}

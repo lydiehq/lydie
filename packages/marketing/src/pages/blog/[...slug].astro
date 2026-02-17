@@ -6,11 +6,10 @@ Astro.response.headers.set(
   "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
-import { type Document } from "@lydie-app/sdk";
 import { Image } from "astro:assets";
 import BlogPost from "../../layouts/BlogPost.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import { lydieClient } from "../../utils/lydie-client";
+import * as lydieApi from "../../utils/lydie-client";
 import { createLinkResolver } from "../../utils/route-registry";
 import FormattedDate from "../../components/FormattedDate.astro";
 import LydieContent from "../../components/LydieContent.astro";
@@ -19,11 +18,34 @@ import { Container } from "../../components/Container";
 
 const { slug } = Astro.params;
 
-let document: Document;
+const BLOG_COLLECTION_ID = "YchJ11QUiAPpY8FC";
+
+type BlogDocument = Awaited<
+  ReturnType<typeof lydieApi.getCollectionDocuments>
+>["documents"][number];
+type RelatedDocument = {
+  id: string;
+  title: string;
+  createdAt?: string;
+  coverImage?: string;
+  fields?: { slug?: string };
+};
+
+let document: BlogDocument;
 try {
-  document = await lydieClient.getDocument(slug!, {
-    related: true,
-  });
+  const { documents } = await lydieApi.getCollectionDocuments(
+    BLOG_COLLECTION_ID,
+    {
+      includeRelated: true,
+      filters: { slug: slug! },
+    },
+  );
+
+  if (!documents[0]) {
+    throw new Error("Document not found");
+  }
+
+  document = documents[0];
 } catch (error) {
   console.error(`Failed to fetch document with slug "${slug}":`, error);
   // Return 404 response for missing or errored documents
@@ -35,15 +57,20 @@ try {
 
 const blogPostProps = {
   title: document.title,
-  description: (document as any).customFields?.excerpt || "",
+  description: String(document.fields?.excerpt || ""),
 };
 
-const articleUrl = new URL(`/blog/${document.slug}`, Astro.site);
-const imageUrl = document.coverImage
-  ? new URL(document.coverImage, Astro.site)
-  : new URL("/blog.png", Astro.site);
-const coverImageSrc = document.coverImage ? imageUrl.toString() : "/blog.png";
-const excerpt = (document as any).customFields?.excerpt || "";
+const articleUrl = new URL(
+  `/blog/${document.fields?.slug || document.id}`,
+  Astro.site,
+);
+const imageUrl =
+  typeof document.coverImage === "string"
+    ? new URL(document.coverImage, Astro.site)
+    : new URL("/blog.png", Astro.site);
+const coverImageSrc =
+  typeof document.coverImage === "string" ? imageUrl.toString() : "/blog.png";
+const excerpt = String(document.fields?.excerpt || "");
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -87,9 +114,9 @@ const structuredData = {
           <header class="flex flex-col gap-y-4 mb-4 text-center">
             <Heading className="text-4xl">{document.title}</Heading>
             {
-              (document as any).customFields?.excerpt && (
+              document.fields?.excerpt && (
                 <p class="text-base text-gray-600">
-                  {(document as any).customFields.excerpt}
+                  {String(document.fields.excerpt)}
                 </p>
               )
             }
@@ -122,34 +149,38 @@ const structuredData = {
             <span class="text-gray-500 text-sm"> Related posts </span>
             <div class="grid md:grid-cols-2 grid-cols-1 gap-2">
               {
-                document.related?.map((post: any) => (
-                  <a
-                    href={`/blog/${post.slug}`}
-                    class="rounded-lg bg-black/2 p-4 flex md:h-32 flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline bg-center bg-cover bg-no-repeat"
-                    style={
-                      post.coverImage
-                        ? `background-image: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(${post.coverImage})`
-                        : ""
-                    }
-                  >
-                    <span
-                      class="text-base font-medium text-ellipsis overflow-hidden whitespace-nowrap"
-                      class:list={[
-                        post.coverImage ? "text-white" : "text-gray-900",
-                      ]}
+                (document.related as RelatedDocument[] | undefined)?.map(
+                  (post) => (
+                    <a
+                      href={`/blog/${post.fields?.slug || post.id}`}
+                      class="rounded-lg bg-black/2 p-4 flex md:h-32 flex-col justify-end hover:bg-black/5 transition-colors duration-75 no-underline bg-center bg-cover bg-no-repeat"
+                      style={
+                        post.coverImage
+                          ? `background-image: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(${post.coverImage})`
+                          : ""
+                      }
                     >
-                      {post.title}
-                    </span>
-                    <p
-                      class="text-sm"
-                      class:list={[
-                        post.coverImage ? "text-white/80" : "text-gray-500",
-                      ]}
-                    >
-                      <FormattedDate date={new Date(post.createdAt)} />
-                    </p>
-                  </a>
-                ))
+                      <span
+                        class="text-base font-medium text-ellipsis overflow-hidden whitespace-nowrap"
+                        class:list={[
+                          post.coverImage ? "text-white" : "text-gray-900",
+                        ]}
+                      >
+                        {post.title}
+                      </span>
+                      <p
+                        class="text-sm"
+                        class:list={[
+                          post.coverImage ? "text-white/80" : "text-gray-500",
+                        ]}
+                      >
+                        <FormattedDate
+                          date={new Date(post.createdAt || Date.now())}
+                        />
+                      </p>
+                    </a>
+                  ),
+                )
               }
             </div>
           </div>

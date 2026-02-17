@@ -1,7 +1,7 @@
 import { createId } from "@lydie/core/id";
 import { deserializeFromHTML } from "@lydie/core/serialization/html";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
-import { defineMutator, type ReadonlyJSONValue } from "@rocicorp/zero";
+import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
 
 import { hasOrganizationAccess, isAuthenticated } from "../auth";
@@ -525,78 +525,6 @@ export const documentMutators = {
     },
   ),
 
-  // DEPRECATED: Use collection.updateFieldValues instead
-  // This mutator is kept for backwards compatibility but redirects to collection mutator
-  updateProperties: defineMutator(
-    z.object({
-      documentId: z.string(),
-      organizationId: z.string(),
-      properties: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
-    }),
-    async ({ tx, ctx, args: { documentId, organizationId, properties } }) => {
-      hasOrganizationAccess(ctx, organizationId);
-
-      const document = await getDocumentById(tx, documentId, organizationId);
-
-      if (!document) {
-        throw notFoundError("Document", documentId);
-      }
-
-      if (!document.nearest_collection_id) {
-        throw new Error("Document does not belong to a collection");
-      }
-
-      // Get the collection schema
-      let collectionSchemaResult: { id: string } | undefined;
-      try {
-        collectionSchemaResult = await tx.run(
-          zql.collection_schemas.where("document_id", document.nearest_collection_id).one(),
-        );
-      } catch {
-        // Collection schema not found
-      }
-
-      if (!collectionSchemaResult) {
-        throw new Error("Collection schema not found");
-      }
-
-      const collectionSchema = collectionSchemaResult;
-
-      // Update field values
-      let fieldValuesResult: { id: string; values: ReadonlyJSONValue } | undefined;
-      try {
-        fieldValuesResult = await tx.run(
-          zql.document_field_values
-            .where("document_id", documentId)
-            .where("collection_schema_id", collectionSchema.id)
-            .one(),
-        );
-      } catch {
-        // No existing field values, will create new
-      }
-
-      const newValues = properties as unknown as ReadonlyJSONValue;
-
-      if (fieldValuesResult) {
-        const currentValues = (fieldValuesResult.values || {}) as Record<string, unknown>;
-        const mergedValues = { ...currentValues, ...properties } as unknown as ReadonlyJSONValue;
-        await tx.mutate.document_field_values.update({
-          id: fieldValuesResult.id,
-          values: mergedValues,
-        });
-      } else {
-        await tx.mutate.document_field_values.insert(
-          withTimestamps({
-            id: createId(),
-            document_id: documentId,
-            collection_schema_id: collectionSchema.id,
-            values: newValues,
-            orphaned_values: {} as ReadonlyJSONValue,
-          }),
-        );
-      }
-    },
-  ),
 };
 
 /**

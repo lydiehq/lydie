@@ -29,6 +29,7 @@ type TreeItem = {
   syncStatus?: string | null;
   isLocked?: boolean;
   isFavorited?: boolean;
+  isCollection?: boolean;
 };
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
@@ -147,6 +148,7 @@ export function DocumentTree() {
           children: children.length > 0 ? children : undefined,
           isLocked: doc.is_locked ?? false,
           isFavorited: doc.is_favorited ?? false,
+          isCollection: !!doc.collectionSchema,
         };
       });
     },
@@ -174,6 +176,7 @@ export function DocumentTree() {
             integrationLinkId: doc.integration_link_id,
             isLocked: doc.is_locked ?? false,
             isFavorited: doc.is_favorited ?? false,
+            isCollection: !!doc.collectionSchema,
           };
         });
       };

@@ -4,9 +4,11 @@ import { renderCollaborationCaret } from "@lydie/ui/components/editor/Collaborat
 import type { Editor } from "@tiptap/react";
 import { Editor as TipTapEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import { createElement } from "react";
 import type * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
+import { CollectionBlockComponent } from "@/components/editor/CollectionBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
 import {
   createMentionMenuSuggestion,
@@ -57,6 +59,7 @@ class EditorCache {
     yjsState: string | null,
     isLocked: boolean,
     initialTitle: string,
+    organizationId: string,
   ): CachedEditor {
     const existing = this.editors.get(documentId);
 
@@ -73,6 +76,7 @@ class EditorCache {
       yjsState,
       isLocked,
       initialTitle,
+      organizationId,
     );
     this.editors.set(documentId, cached);
 
@@ -179,6 +183,7 @@ class EditorCache {
     yjsState: string | null,
     isLocked: boolean,
     initialTitle: string,
+    organizationId: string,
   ): CachedEditor {
     // Get connection from manager
     const connection = documentConnectionManager.getConnection(documentId, yjsState);
@@ -231,6 +236,17 @@ class EditorCache {
         },
         codeBlock: {
           addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
+        },
+        collectionBlock: {
+          addNodeView: () => {
+            const orgId = organizationId;
+            return ReactNodeViewRenderer((nodeViewProps) =>
+              createElement(CollectionBlockComponent, {
+                ...nodeViewProps,
+                organizationId: orgId,
+              }),
+            );
+          },
         },
         onboardingTextPractice: {
           addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),

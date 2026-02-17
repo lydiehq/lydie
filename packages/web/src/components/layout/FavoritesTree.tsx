@@ -18,6 +18,7 @@ type TreeItem = {
   children?: TreeItem[];
   isLocked?: boolean;
   isFavorited?: boolean;
+  isCollection?: boolean;
 };
 
 export function FavoritesTree() {
@@ -46,6 +47,7 @@ export function FavoritesTree() {
       type: "document" as const,
       isLocked: doc.is_locked ?? false,
       isFavorited: true,
+      isCollection: !!doc.collectionSchema,
     }));
   }, [orgData?.documents]);
 

@@ -20,7 +20,7 @@ export const collectionQueries = {
       hasOrganizationAccess(ctx, organizationId);
       return zql.collection_schemas
         .where("organization_id", organizationId)
-        .related("document", (q: any) => q.where("deleted_at", "IS", null).orderBy("title", "asc"));
+        .related("document", (q) => q.where("deleted_at", "IS", null).orderBy("title", "asc"));
     },
   ),
 
@@ -33,8 +33,8 @@ export const collectionQueries = {
         .where("document_id", collectionId)
         .where("organization_id", organizationId)
         .one()
-        .related("document", (q: any) => q.where("deleted_at", "IS", null))
-        .related("fieldValues", (q: any) => q.related("document").orderBy("created_at", "desc"));
+        .related("document", (q) => q.where("deleted_at", "IS", null))
+        .related("fieldValues", (q) => q.related("document").orderBy("created_at", "desc"));
     },
   ),
 
@@ -49,7 +49,7 @@ export const collectionQueries = {
         .where("deleted_at", "IS", null)
         .where("parent_id", collectionId) // Direct children only
         .orderBy("created_at", "desc")
-        .related("fieldValues");
+        .related("fieldValues", (q) => q.related("collectionSchema"));
     },
   ),
 
@@ -65,7 +65,7 @@ export const collectionQueries = {
         .where("deleted_at", "IS", null)
         .where("path", "LIKE", `${path}/%`)
         .orderBy("path", "asc")
-        .related("fieldValues");
+        .related("fieldValues", (q) => q.related("collectionSchema"));
     },
   ),
 
@@ -79,8 +79,8 @@ export const collectionQueries = {
         .where("organization_id", organizationId)
         .where("deleted_at", "IS", null)
         .one()
-        .related("nearestCollection", (q: any) => q.related("collectionSchema"))
-        .related("fieldValues", (q: any) => q.related("collectionSchema"));
+        .related("nearestCollection", (q) => q.related("collectionSchema"))
+        .related("fieldValues", (q) => q.related("collectionSchema"));
     },
   ),
 
@@ -96,12 +96,12 @@ export const collectionQueries = {
         .where("deleted_at", "IS", null)
         .one()
         .related("collectionSchema")
-        .related("parent", (q: any) =>
+        .related("parent", (q) =>
           // Walk up the tree to get ancestor collections
           q
             .where("deleted_at", "IS", null)
             .related("collectionSchema")
-            .related("parent", (q2: any) =>
+            .related("parent", (q2) =>
               q2.where("deleted_at", "IS", null).related("collectionSchema"),
             ),
         );

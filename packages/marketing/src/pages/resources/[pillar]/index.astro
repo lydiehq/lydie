@@ -10,7 +10,7 @@ Astro.response.headers.set(
 import Layout from "@/layouts/Layout.astro";
 import { Container } from "@/components/Container";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
-import { lydieClient } from "@/utils/lydie-client";
+import * as lydieApi from "@/utils/lydie-client";
 import { renderContent, blogImageComponent } from "@/utils/content-renderer";
 import {
   linkGridComponent,
@@ -31,19 +31,32 @@ const pillarSlugMap: Record<string, string> = {
 
 const documentSlug = pillarSlugMap[pillar] || pillar;
 
-let pillarDocument: any = null;
-let childDocuments: any[] = [];
+type CollectionDocument = {
+  id: string;
+  title: string;
+  fields?: Record<string, string | number | boolean | null>;
+};
+
+let pillarDocument: CollectionDocument | null = null;
+let childDocuments: CollectionDocument[] = [];
 let contentHtml = "";
 
 console.log(`[Resource Hub] Fetching pillar: ${documentSlug}`);
 
 try {
   // Fetch the pillar document
-  pillarDocument = await lydieClient.getDocument(documentSlug, { toc: true });
+  const { documents: pillarDocuments } = await lydieApi.getCollectionDocuments(documentSlug, {
+    includeToc: true,
+  });
+
+  pillarDocument = (pillarDocuments[0] as CollectionDocument | undefined) || null;
+
+  if (!pillarDocument) {
+    throw new Error("Pillar not found");
+  }
 
   // Fetch children of this document (same pattern as blog)
-  const { documents: children } =
-    await lydieClient.getDocumentsByParent(documentSlug);
+  const { documents: children } = await lydieApi.getCollectionDocuments(documentSlug);
   childDocuments = children;
 
   // Render the content with custom components
@@ -71,28 +84,28 @@ try {
 ---
 
 <Layout
-  title={pillarDocument.title}
-  description={pillarDocument.customFields?.description ||
-    `Learn about ${pillarDocument.title}`}
+  title={pillarDocument?.title || "Resources"}
+  description={pillarDocument?.fields?.description ||
+    `Learn about ${pillarDocument?.title || "Resources"}`}
 >
   <div class="py-8">
     <Container>
       <Breadcrumbs
         items={[
           { label: "Resources", href: "/resources" },
-          { label: pillarDocument.title },
+          { label: pillarDocument?.title || "Resources" },
         ]}
       />
 
       <article class="max-w-3xl mx-auto">
         <header class="mb-12 mt-8">
           <h1 class="text-3xl font-semibold text-gray-900 mb-4">
-            {pillarDocument.title}
+            {pillarDocument?.title}
           </h1>
           {
-            pillarDocument.customFields?.description && (
+            pillarDocument.fields?.description && (
               <p class="text-lg text-gray-600">
-                {pillarDocument.customFields.description}
+                {pillarDocument.fields.description}
               </p>
             )
           }
@@ -113,15 +126,15 @@ try {
               <div class="grid md:grid-cols-2 gap-5">
                 {childDocuments.map((doc) => (
                   <a
-                    href={`/resources/${pillar}/${doc.slug}`}
+                    href={`/resources/${pillar}/${doc.fields?.slug || doc.id}`}
                     class="group block p-6 bg-white border border-gray-200 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all"
                   >
                     <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
                       {doc.title}
                     </h3>
-                    {doc.customFields?.excerpt && (
+                    {doc.fields?.excerpt && (
                       <p class="text-sm text-gray-600 line-clamp-2">
-                        {doc.customFields.excerpt}
+                        {doc.fields.excerpt}
                       </p>
                     )}
                   </a>

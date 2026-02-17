@@ -1,5 +1,5 @@
 import { ArrowBidirectionalLeftRightFilled, ArrowRightFilled } from "@fluentui/react-icons";
-import type { CollectionField } from "@lydie/core/collection";
+import type { PropertyDefinition } from "@lydie/core/collection";
 import { MetadataTabsShell } from "@lydie/ui/components/editor/MetadataTabsShell";
 import { focusRing } from "@lydie/ui/components/generic/utils";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
@@ -19,8 +19,7 @@ export type FieldValues = Record<string, string | number | boolean | null>;
 
 type Props = {
   doc: DocumentType;
-  // Schema from collection (if this document belongs to a collection)
-  collectionSchema?: CollectionField[];
+  collectionSchema?: PropertyDefinition[];
 };
 
 function LinksPanel({ doc }: { doc: DocumentType }) {
@@ -122,7 +121,7 @@ function PropertiesPanel({
   collectionSchema,
 }: {
   doc: DocumentType;
-  collectionSchema?: CollectionField[];
+  collectionSchema?: PropertyDefinition[];
 }) {
   const organizationId = doc.organization_id;
 
@@ -136,8 +135,15 @@ function PropertiesPanel({
       : null,
   );
 
-  // Extract field values from the query result
-  const fieldValues: FieldValues = (fieldValuesData?.[0]?.values as FieldValues) || {};
+  const fieldRows = fieldValuesData ?? [];
+  const activeFieldRow =
+    fieldRows.find(
+      (row) =>
+        (row.collectionSchema as { document_id?: string } | undefined)?.document_id ===
+        doc.nearest_collection_id,
+    ) ?? fieldRows[0];
+  const fieldValues: FieldValues = (activeFieldRow?.values as FieldValues) || {};
+  const collectionSchemaId = activeFieldRow?.collection_schema_id;
 
   // If no collection schema, show message
   if (!collectionSchema || collectionSchema.length === 0) {
@@ -154,11 +160,12 @@ function PropertiesPanel({
     <div className="space-y-0.5">
       {collectionSchema.map((fieldDef) => (
         <InlinePropertyEditor
-          key={fieldDef.field}
+          key={fieldDef.name}
           documentId={doc.id}
           organizationId={organizationId}
+          collectionSchemaId={collectionSchemaId}
           fieldDef={fieldDef}
-          value={fieldValues[fieldDef.field] ?? null}
+          value={fieldValues[fieldDef.name] ?? null}
         />
       ))}
     </div>

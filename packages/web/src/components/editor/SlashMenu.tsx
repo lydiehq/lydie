@@ -179,8 +179,7 @@ export function createSlashMenuSuggestion(
 
       return {
         onStart: (props: SuggestionProps) => {
-          // Guard against destroyed editor
-          if (!props.editor.isEditable && !props.editor.isDestroyed) {
+          if (props.editor.isDestroyed) {
             return;
           }
 
