@@ -1,5 +1,4 @@
 import type { NodeViewRenderer } from "@tiptap/core";
-
 import { Node, nodeInputRule } from "@tiptap/core";
 
 export interface PlaceholderOptions {

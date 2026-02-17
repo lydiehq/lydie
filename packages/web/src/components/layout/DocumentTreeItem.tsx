@@ -1,5 +1,3 @@
-import type { QueryResultType } from "@rocicorp/zero";
-
 import {
   Add12Regular,
   ArrowClockwiseRegular,
@@ -16,6 +14,7 @@ import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/gene
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
 import { type ReactElement, useRef, useState } from "react";

@@ -1,8 +1,7 @@
-import type { Editor, Range } from "@tiptap/core";
-import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
-
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import type { Editor, Range } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
+import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 

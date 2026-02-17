@@ -4,6 +4,7 @@ import { Container } from "../Container";
 import { Button } from "../generic/Button";
 import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
+
 import styles from "./Hero.module.css";
 
 type Props = {

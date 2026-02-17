@@ -1,5 +1,4 @@
 import type { NodeViewRenderer } from "@tiptap/core";
-
 import { Node } from "@tiptap/core";
 
 export interface DocumentComponentOptions {

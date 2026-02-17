@@ -1,6 +1,5 @@
-import type { ReactNode } from "react";
-
 import { ChevronRightRegular } from "@fluentui/react-icons";
+import type { ReactNode } from "react";
 
 import { Button } from "../generic/Button";
 import { FeatureBadge } from "./FeatureIcon";

@@ -1,6 +1,3 @@
-import type { Editor } from "@tiptap/core";
-import type { ComponentType, SVGProps } from "react";
-
 import {
   FloatingFocusManager,
   FloatingPortal,
@@ -20,7 +17,9 @@ import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
+import type { Editor } from "@tiptap/core";
 import { getMarkRange } from "@tiptap/core";
+import type { ComponentType, SVGProps } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Autocomplete,
@@ -367,7 +366,10 @@ function EditModeContent({
       <Autocomplete inputValue={linkInputValue} onInputChange={setLinkInputValue} filter={contains}>
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-2 grow">
-            <TextField className="flex flex-col outline-none placeholder-gray-500" aria-label="Search or paste a link">
+            <TextField
+              className="flex flex-col outline-none placeholder-gray-500"
+              aria-label="Search or paste a link"
+            >
               <Label className="text-xs text-gray-600 px-1">Link</Label>
               <Input
                 ref={linkInputRef}
@@ -453,7 +455,11 @@ function ViewModeContent({
             }}
           />
         ) : null}
-        <div className="text-xs text-gray-700 truncate" title={displayText} data-testid="link-display-text">
+        <div
+          className="text-xs text-gray-700 truncate"
+          title={displayText}
+          data-testid="link-display-text"
+        >
           {displayText}
         </div>
       </div>
@@ -559,7 +565,11 @@ export function LinkPopoverBase({
 
   return (
     <FloatingPortal>
-      <FloatingFocusManager context={context} modal={false} initialFocus={linkState.mode === "edit" ? 0 : -1}>
+      <FloatingFocusManager
+        context={context}
+        modal={false}
+        initialFocus={linkState.mode === "edit" ? 0 : -1}
+      >
         <div
           ref={refs.setFloating}
           style={floatingStyles}

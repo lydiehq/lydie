@@ -178,7 +178,10 @@ export const documentsTable = pgTable(
       onDelete: "set null",
     }),
     externalId: text("external_id"),
-    customFields: jsonb("custom_fields").$type<Record<string, string | number>>(),
+    // Document properties - like Notion's database properties, stored directly on each document
+    properties: jsonb("properties")
+      .$type<Record<string, string | number | boolean | null>>()
+      .default({}),
     coverImage: text("cover_image"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
@@ -188,6 +191,18 @@ export const documentsTable = pgTable(
     isLocked: boolean("is_locked").notNull().default(false),
     isFavorited: boolean("is_favorited").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
+    // Schema for child documents (when this page acts as a database/collection)
+    // Null means no schema = regular page with free-form child pages
+    childSchema: jsonb("child_schema").$type<
+      Array<{ field: string; type: string; required: boolean; options?: string[] }>
+    >(),
+    // Page display configuration
+    pageConfig: jsonb("page_config")
+      .$type<{
+        showChildrenInSidebar: boolean;
+        defaultView: "documents" | "table";
+      }>()
+      .default({ showChildrenInSidebar: true, defaultView: "documents" }),
     ...timestamps,
   },
   (table) => [

@@ -1,6 +1,5 @@
-import type { HocuspocusProvider } from "@hocuspocus/provider";
-
 import { PeopleRegular } from "@fluentui/react-icons";
+import type { HocuspocusProvider } from "@hocuspocus/provider";
 import { useEffect, useState } from "react";
 
 type AwarenessUser = {

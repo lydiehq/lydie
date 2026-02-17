@@ -1,6 +1,5 @@
 import type { Editor } from "@tiptap/core";
 import type { TableOfContentDataItem } from "@tiptap/extension-table-of-contents";
-
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 

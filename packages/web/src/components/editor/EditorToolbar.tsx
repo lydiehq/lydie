@@ -1,5 +1,3 @@
-import type { QueryResultType } from "@rocicorp/zero";
-
 import {
   AddFilled,
   ChevronDownRegular,
@@ -29,16 +27,12 @@ import {
   TaskListIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { Editor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
-import {
-  Group,
-  MenuTrigger,
-  Separator,
-  Toolbar,
-  TooltipTrigger,
-} from "react-aria-components";
+import { Group, MenuTrigger, Separator, Toolbar, TooltipTrigger } from "react-aria-components";
+
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -493,10 +487,7 @@ export function EditorToolbar({ editor, doc }: Props) {
 
           {documentComponents && documentComponents.length > 0 && (
             <>
-              <Separator
-                orientation="vertical"
-                className="mx-1 h-6 w-px bg-gray-200"
-              />
+              <Separator orientation="vertical" className="mx-1 h-6 w-px bg-gray-200" />
 
               <MenuTrigger>
                 <TooltipTrigger delay={500}>
@@ -514,7 +505,10 @@ export function EditorToolbar({ editor, doc }: Props) {
                       onAction={() => {
                         insertDocumentComponent(
                           component.name,
-                          component.properties as Record<string, { type: string; fields?: Array<{ name: string; type: string }> }>
+                          component.properties as Record<
+                            string,
+                            { type: string; fields?: Array<{ name: string; type: string }> }
+                          >,
                         );
                       }}
                     >

@@ -1,10 +1,9 @@
 import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 
-import type { ChatAlertState } from "@/components/editor/ChatAlert";
-
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ChatMessages } from "@/components/chat/ChatMessages";
+import type { ChatAlertState } from "@/components/editor/ChatAlert";
 import { ChatAlert } from "@/components/editor/ChatAlert";
 import { useAssistantPreferences } from "@/context/assistant-preferences.context";
 

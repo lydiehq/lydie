@@ -1,8 +1,7 @@
+import { queries } from "@lydie/zero/queries";
 import type { Zero } from "@rocicorp/zero";
 import type { QueryResultType } from "@rocicorp/zero";
 import type { QueryClient } from "@tanstack/react-query";
-
-import { queries } from "@lydie/zero/queries";
 
 import { preloadWorkspaceData } from "@/lib/zero/instance";
 

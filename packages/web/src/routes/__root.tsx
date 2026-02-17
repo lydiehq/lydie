@@ -12,8 +12,6 @@ import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { RouterProvider } from "react-aria-components";
 
-import type { RouterContext } from "@/main";
-
 import { editorFontSizeAtom } from "@/atoms/workspace-settings";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { ErrorPage } from "@/components/layout/ErrorPage";
@@ -21,6 +19,7 @@ import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { getSessionQuery, loadSession, type ExtendedSessionData } from "@/lib/auth/session";
 import { identifyUser } from "@/lib/posthog";
 import { getZeroInstance } from "@/lib/zero/instance";
+import type { RouterContext } from "@/main";
 import { getFontSizePixels } from "@/stores/font-size";
 
 declare module "react-aria-components" {

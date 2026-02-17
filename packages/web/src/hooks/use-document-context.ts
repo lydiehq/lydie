@@ -3,7 +3,6 @@ import { useQuery } from "@rocicorp/zero/react";
 import { useCallback, useMemo, useState } from "react";
 
 import type { ChatContextItem } from "@/components/chat/ChatContextList";
-
 import { useOrganization } from "@/context/organization.context";
 
 interface UseDocumentContextOptions {

@@ -1,5 +1,4 @@
 import type { ContentNode, TextNode } from "@lydie-app/sdk";
-
 import { HTMLSerializer } from "@lydie/core/serialization/html";
 import { codeToHtml } from "shiki";
 
@@ -9,6 +8,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
     id?: string;
     slug?: string;
     title?: string;
+    parentSlug?: string;
     type?: "internal" | "external";
   }) => string;
 
@@ -19,6 +19,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
       id?: string;
       slug?: string;
       title?: string;
+      parentSlug?: string;
       type?: "internal" | "external";
     }) => string;
   }) {
@@ -31,6 +32,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
     documentId?: string,
     documentSlug?: string,
     documentTitle?: string,
+    documentParentSlug?: string,
   ): string {
     if (this.linkResolver) {
       const href = this.linkResolver({
@@ -38,6 +40,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
         id: documentId,
         slug: documentSlug,
         title: documentTitle,
+        parentSlug: documentParentSlug,
         type: "internal",
       });
       const titleAttr = documentTitle ? ` title="${this.escape(documentTitle)}"` : "";

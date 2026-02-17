@@ -1,8 +1,7 @@
-import type { Document } from "@lydie/zero/schema";
-
 import { SearchFilled } from "@fluentui/react-icons";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
+import type { Document } from "@lydie/zero/schema";
 import { useQuery } from "@rocicorp/zero/react";
 import React, { useState } from "react";
 import { Input } from "react-aria-components";

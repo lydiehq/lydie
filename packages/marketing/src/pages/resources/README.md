@@ -5,6 +5,7 @@ This implementation creates a dynamic resource hub using the Lydie API. It suppo
 ## Architecture
 
 ### API Changes
+
 - **New endpoint**: `GET /api/v1/{organizationId}/documents/:slug/children`
   - Returns all published child documents of a given parent document
   - Used to build the "Related Articles" sections on pillar pages
@@ -28,9 +29,11 @@ This implementation creates a dynamic resource hub using the Lydie API. It suppo
 Custom components are defined in Lydie and rendered on the marketing site. Available components:
 
 #### 1. Link Grid (`link-grid`)
+
 A grid of link cards with icons, titles, and descriptions.
 
 **Properties:**
+
 - `links` (array of objects):
   - `title` (string): Link title
   - `href` (string): URL
@@ -38,14 +41,17 @@ A grid of link cards with icons, titles, and descriptions.
   - `description` (string, optional): Short description
 
 **Usage in Lydie:**
+
 1. Create a component named "link-grid"
 2. Add a property "links" of type "List of Objects"
 3. Add fields: title (text), href (text), icon (text), description (text)
 
 #### 2. Comparison Grid (`comparison-grid`)
+
 A grid for comparing items side by side.
 
 **Properties:**
+
 - `items` (array of objects):
   - `label` (string): Item label
   - `description` (string): Item description
@@ -53,17 +59,21 @@ A grid for comparing items side by side.
 - `columns` (number): Number of columns (2 or 3)
 
 #### 3. Visual Framework (`visual-framework`)
+
 A highlighted content box with gradient background.
 
 **Properties:**
+
 - `title` (string): Section title
 - `description` (string): Section description
 - `content` (string): Main content
 
 #### 4. Flow Steps (`flow-steps`)
+
 A horizontal or vertical step-by-step flow.
 
 **Properties:**
+
 - `steps` (array of objects):
   - `title` (string): Step title
   - `description` (string): Step description
@@ -94,6 +104,7 @@ A horizontal or vertical step-by-step flow.
 ### Caching Strategy
 
 All pages use ISR-like caching:
+
 - `max-age=3600` (1 hour) - Browser cache
 - `s-maxage=3600` (1 hour) - CDN cache
 - `stale-while-revalidate=86400` (24 hours) - Serve stale while revalidating

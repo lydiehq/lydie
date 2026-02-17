@@ -12,7 +12,6 @@ import type {
   PushOptions,
   SyncResult,
 } from "@lydie/core/integrations/types";
-
 import { createErrorResult } from "@lydie/core/integrations/types";
 import {
   deserializeFromMarkdown,

@@ -1,11 +1,9 @@
-import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
-
 import { useChat } from "@ai-sdk/react";
+import type { DocumentChatAgentUIMessage } from "@lydie/core/ai/agents/document-agent/index";
 import { DefaultChatTransport } from "ai";
 import { useCallback, useRef, useState } from "react";
 
 import type { ChatAlertState } from "@/components/editor/ChatAlert";
-
 import { useOrganization } from "@/context/organization.context";
 import { isUsageLimitError, parseChatError } from "@/utils/chat-error-handler";
 

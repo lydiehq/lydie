@@ -44,6 +44,7 @@ export interface LinkReference {
   id?: string;
   slug?: string;
   title?: string;
+  parentSlug?: string;
   type?: "internal" | "external";
 }
 
@@ -104,6 +105,7 @@ export interface Mark {
     "document-id"?: string;
     "document-slug"?: string;
     "document-title"?: string;
+    "document-parent-slug"?: string;
     [key: string]: any;
   };
 }

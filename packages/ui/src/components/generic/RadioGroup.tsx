@@ -1,6 +1,5 @@
-import type { ReactNode } from "react";
-
 import { cva } from "cva";
+import type { ReactNode } from "react";
 import {
   Radio as RACRadio,
   RadioGroup as RACRadioGroup,

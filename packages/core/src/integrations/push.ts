@@ -2,9 +2,8 @@ import { db } from "@lydie/database";
 import { documentsTable, integrationConnectionsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
-import type { Integration, SyncDocument } from "./types";
-
 import { convertYjsToJson } from "../yjs-to-json";
+import type { Integration, SyncDocument } from "./types";
 import { validateCustomFields } from "./validation";
 
 export interface PushDocumentOptions {

@@ -18,7 +18,6 @@ import {
 } from "react-aria-components";
 
 import type { TabMode } from "@/atoms/tabs";
-
 import {
   activateDocumentTabAtom,
   closeDocumentTabAtom,

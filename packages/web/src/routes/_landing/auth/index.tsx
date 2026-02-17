@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "@/utils/auth";
+
 import "@/styles/grainy-gradient.css";
 
 export const Route = createFileRoute("/_landing/auth/")({

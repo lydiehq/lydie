@@ -1,7 +1,6 @@
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-
 import { documentLinksTable, documentsTable } from "@lydie/database";
 import { and, eq, inArray, not } from "drizzle-orm";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
 import { convertJsonToYjs, convertYjsToJson } from "./yjs-to-json";
 
@@ -269,12 +268,7 @@ export async function validateInternalLinks(
   const existingDocs = await db
     .select({ id: documentsTable.id })
     .from(documentsTable)
-    .where(
-      and(
-        inArray(documentsTable.id, targetIds),
-        not(eq(documentsTable.id, documentId)),
-      ),
-    );
+    .where(and(inArray(documentsTable.id, targetIds), not(eq(documentsTable.id, documentId))));
 
   const existingIds = new Set(existingDocs.map((d: { id: string }) => d.id));
 

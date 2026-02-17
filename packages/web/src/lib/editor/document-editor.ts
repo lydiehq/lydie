@@ -1,12 +1,11 @@
-import type { queries } from "@lydie/zero/queries";
-import type { QueryResultType } from "@rocicorp/zero";
-import type { Slice } from "@tiptap/pm/model";
-import type { EditorView } from "@tiptap/pm/view";
-
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { COLORS } from "@lydie/core/colors";
 import { getDocumentEditorExtensions } from "@lydie/editor";
 import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
+import type { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
+import type { Slice } from "@tiptap/pm/model";
+import type { EditorView } from "@tiptap/pm/view";
 import { Editor, useEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -14,6 +13,7 @@ import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
+import { DatabaseBlockComponent } from "@/components/editor/DatabaseBlockComponent";
 import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/OnboardingAssistantTaskView";
 import { OnboardingTextPracticeView } from "@/components/editor/onboarding/OnboardingTextPracticeView";
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
@@ -109,6 +109,9 @@ export function useDocumentEditor({
         },
         codeBlock: {
           addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
+        },
+        databaseBlock: {
+          addNodeView: () => ReactNodeViewRenderer(DatabaseBlockComponent),
         },
         onboardingTextPractice: {
           addNodeView: () => ReactNodeViewRenderer(OnboardingTextPracticeView),

@@ -1,7 +1,6 @@
+import { Link } from "@lydie/editor/extensions";
 import type { Editor } from "@tiptap/core";
 import type { Extensions } from "@tiptap/react";
-
-import { Link } from "@lydie/editor/extensions";
 import { Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 

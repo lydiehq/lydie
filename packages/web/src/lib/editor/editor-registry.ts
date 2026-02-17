@@ -1,5 +1,4 @@
 import type { Editor } from "@tiptap/react";
-
 import { atom } from "jotai";
 
 import { activeTabIdAtom } from "@/atoms/tabs";

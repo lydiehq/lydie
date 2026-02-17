@@ -1,7 +1,6 @@
+import { Alert24Filled, Check24Filled, Dismiss12Filled } from "@fluentui/react-icons";
 import type { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
-
-import { Alert24Filled, Check24Filled, Dismiss12Filled } from "@fluentui/react-icons";
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 
 import { Card } from "@/components/layout/Card";

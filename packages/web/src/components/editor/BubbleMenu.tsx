@@ -1,5 +1,3 @@
-import type { Editor } from "@tiptap/core";
-
 import { TextStrikethroughFilled } from "@fluentui/react-icons";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
@@ -11,6 +9,7 @@ import {
   LinkIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons";
 import { Separator } from "@lydie/ui/components/layout/Separator";
+import type { Editor } from "@tiptap/core";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 import { useEffect, useState } from "react";
 import { TooltipTrigger } from "react-aria-components";

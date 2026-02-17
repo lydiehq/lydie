@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import {
   Add16Filled,
   ChevronRightRegular,
@@ -8,6 +6,7 @@ import {
   Home16Filled,
 } from "@fluentui/react-icons";
 import { cva } from "cva";
+import type { ReactNode } from "react";
 import {
   Button,
   Collection,

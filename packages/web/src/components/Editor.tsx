@@ -1,7 +1,6 @@
-import type { QueryResultType } from "@rocicorp/zero";
-
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";

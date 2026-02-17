@@ -1,5 +1,4 @@
 import type { Editor, RawCommands } from "@tiptap/core";
-
 import { Extension } from "@tiptap/core";
 import * as Y from "yjs";
 

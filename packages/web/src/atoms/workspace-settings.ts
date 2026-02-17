@@ -1,6 +1,5 @@
-import type { WritableAtom } from "jotai";
-
 import { getDefaultModel } from "@lydie/core/ai/models";
+import type { WritableAtom } from "jotai";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 

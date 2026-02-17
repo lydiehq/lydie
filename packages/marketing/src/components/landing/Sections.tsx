@@ -7,7 +7,6 @@ import {
 } from "@/components/sections";
 
 import type { Section } from "../../data/sections";
-
 import { LandingSection } from "./LandingSection";
 
 const illustrationComponents = {

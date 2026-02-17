@@ -1,9 +1,8 @@
 import type { DemoState } from "../components/landing/DemoStateSelector";
 import type { Role, RoleSlug } from "./roles";
+import { getAllRoles } from "./roles";
 import type { SectionInput } from "./sections";
 import type { UseCaseDefinition, UseCaseSlug } from "./use-case-definitions";
-
-import { getAllRoles } from "./roles";
 import { getAllUseCaseDefinitions } from "./use-case-definitions";
 
 export interface RoleUseCaseContent {

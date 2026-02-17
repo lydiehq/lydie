@@ -1,5 +1,4 @@
 import type { AppType } from "@lydie/backend/api";
-
 import { hc } from "hono/client";
 import { useCallback } from "react";
 

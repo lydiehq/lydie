@@ -1,5 +1,3 @@
-import type { QueryResultType } from "@rocicorp/zero";
-
 import { ArrowClockwiseRegular, LinkRegular, MoreHorizontalRegular } from "@fluentui/react-icons";
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
@@ -8,6 +6,7 @@ import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Modal } from "@lydie/ui/components/generic/Modal";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
+import type { QueryResultType } from "@rocicorp/zero";
 import { useZero } from "@rocicorp/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
 import { formatDistanceToNow } from "date-fns";

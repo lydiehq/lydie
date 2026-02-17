@@ -1,11 +1,10 @@
 import type { HocuspocusProvider } from "@hocuspocus/provider";
-import type { Editor } from "@tiptap/react";
-import type * as Y from "yjs";
-
 import { getDocumentEditorExtensions, getTitleExtensions } from "@lydie/editor";
 import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
+import type { Editor } from "@tiptap/react";
 import { Editor as TipTapEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import type * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";

@@ -38,7 +38,7 @@
     "@tanstack/react-router": "^1.160.0",
     "@tanstack/react-router-devtools": "^1.160.0",
     "@tanstack/react-router-with-query": "^1.130.17",
-    "@tanstack/router-plugin": "^1.160.0",
+    "@tanstack/router-plugin": "^1.160.1",
     "@tiptap/core": "catalog:",
     "@tiptap/extension-mention": "catalog:",
     "@tiptap/extension-placeholder": "catalog:",

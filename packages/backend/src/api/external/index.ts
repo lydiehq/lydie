@@ -1,7 +1,7 @@
 import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { db, documentsTable } from "@lydie/database";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -113,38 +113,19 @@ export const ExternalApi = new Hono()
 
     const parentId = parentResult[0].id;
 
-    // Get all children of this document (direct children only)
-    const children = await db
-      .select({
-        id: documentsTable.id,
-        title: documentsTable.title,
-        slug: documentsTable.slug,
-        published: documentsTable.published,
-        customFields: documentsTable.customFields,
-        coverImage: documentsTable.coverImage,
-        createdAt: documentsTable.createdAt,
-        updatedAt: documentsTable.updatedAt,
-      })
-      .from(documentsTable)
-      .where(
-        and(
-          eq(documentsTable.organizationId, organizationId),
-          isNull(documentsTable.deletedAt),
-          eq(documentsTable.published, true),
-          eq(documentsTable.parentId, parentId),
-        ),
-      )
-      .orderBy(desc(documentsTable.createdAt));
+    // Get ALL descendants (children, grandchildren, etc.)
+    const allDescendants = await getAllDescendants(parentId, organizationId, db);
+    console.log(`[External API] Found ${allDescendants.length} total descendants`);
 
-    const childrenWithPaths = children.map((doc) => ({
+    const descendantsWithPaths = allDescendants.map((doc) => ({
       ...doc,
-      path: "/",
-      fullPath: `/${doc.slug}`,
+      path: `/${slug}`,
+      fullPath: buildFullPath(doc, allDescendants, slug),
       customFields: doc.customFields || null,
     }));
 
     return c.json({
-      documents: childrenWithPaths,
+      documents: descendantsWithPaths,
     });
   })
   .get("/documents/:slug", async (c) => {
@@ -275,3 +256,104 @@ export const ExternalApi = new Hono()
       documents: childrenWithPaths,
     });
   });
+
+// Get all descendants using recursive CTE
+async function getAllDescendants(
+  parentId: string,
+  organizationId: string,
+  db: typeof import("@lydie/database").db,
+): Promise<
+  Array<{
+    id: string;
+    title: string | null;
+    slug: string;
+    parentId: string | null;
+    published: boolean;
+    customFields: any;
+    coverImage: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }>
+> {
+  console.log(`[getAllDescendants] Starting with parentId=${parentId}, orgId=${organizationId}`);
+
+  // Traverse ALL descendants (regardless of published status)
+  // but only return published ones
+  const result = await db.execute(sql`
+    WITH RECURSIVE all_descendants AS (
+      -- Anchor: direct children of parent (any status)
+      SELECT
+        d.id,
+        d.title,
+        d.slug,
+        d.parent_id,
+        d.published,
+        d.custom_fields,
+        d.cover_image,
+        d.created_at,
+        d.updated_at
+      FROM documents d
+      WHERE d.parent_id = ${parentId}
+        AND d.organization_id = ${organizationId}
+        AND d.deleted_at IS NULL
+
+      UNION ALL
+
+      -- Recursive: children of the previous level (traverse ALL, not just published)
+      SELECT
+        d.id,
+        d.title,
+        d.slug,
+        d.parent_id,
+        d.published,
+        d.custom_fields,
+        d.cover_image,
+        d.created_at,
+        d.updated_at
+      FROM documents d
+      INNER JOIN all_descendants ds ON d.parent_id = ds.id
+      WHERE d.organization_id = ${organizationId}
+        AND d.deleted_at IS NULL
+    )
+    -- Only return published documents
+    SELECT * FROM all_descendants 
+    WHERE published = true
+    ORDER BY created_at DESC
+  `);
+
+  console.log(`[getAllDescendants] SQL returned ${result.length} rows`);
+  if (result.length > 0) {
+    console.log(`[getAllDescendants] First row:`, result[0]);
+  }
+
+  return result.map((row) => ({
+    id: row.id as string,
+    title: row.title as string | null,
+    slug: row.slug as string,
+    parentId: row.parent_id as string | null,
+    published: row.published as boolean,
+    customFields: row.custom_fields,
+    coverImage: row.cover_image as string | null,
+    createdAt: row.created_at as Date,
+    updatedAt: row.updated_at as Date,
+  }));
+}
+
+// Build full path from ancestor chain
+function buildFullPath(
+  doc: { id: string; parentId: string | null; slug: string },
+  allDocs: Array<{ id: string; parentId: string | null; slug: string }>,
+  rootSlug: string,
+): string {
+  const path: string[] = [doc.slug];
+  let current = doc;
+
+  while (current.parentId) {
+    const parent = allDocs.find((d) => d.id === current.parentId);
+    if (!parent) break;
+    path.unshift(parent.slug);
+    current = parent;
+  }
+
+  return `/${rootSlug}/${path.join("/")}`;
+}

@@ -11,6 +11,7 @@ import { Image } from "astro:assets";
 import BlogPost from "../../layouts/BlogPost.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { lydieClient } from "../../utils/lydie-client";
+import { createLinkResolver } from "../../utils/route-registry";
 import FormattedDate from "../../components/FormattedDate.astro";
 import LydieContent from "../../components/LydieContent.astro";
 import { Heading } from "../../components/generic/Heading";
@@ -113,18 +114,7 @@ const structuredData = {
           <div class="prose mt-12">
             <LydieContent
               content={document.jsonContent}
-              linkResolver={(ref) => {
-                // Resolve internal links to /blog/[slug]
-                // The slug is now embedded in the internal-link mark attrs
-                if (ref.type === "internal" && ref.slug) {
-                  return `/blog/${ref.slug}`;
-                }
-                // Fallback to document ID if slug not available
-                if (ref.type === "internal" && ref.id) {
-                  return `/blog/${ref.id}`;
-                }
-                return ref.href || "#";
-              }}
+              linkResolver={createLinkResolver()}
             />
           </div>
           <hr class="my-8 border-gray-200" />

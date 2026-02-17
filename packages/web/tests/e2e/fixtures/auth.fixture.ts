@@ -1,4 +1,5 @@
-import type { InferSelectModel } from "drizzle-orm";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 import { base64 } from "@better-auth/utils/base64";
 import { createHMAC } from "@better-auth/utils/hmac";
@@ -6,9 +7,8 @@ import { createRandomStringGenerator } from "@better-auth/utils/random";
 import { createId } from "@lydie/core/id";
 import { db, organizationsTable, sessionsTable, usersTable } from "@lydie/database";
 import { test as baseTest } from "@playwright/test";
+import type { InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
-import * as fs from "node:fs";
-import * as path from "node:path";
 import { Resource } from "sst";
 
 import { createTestUser } from "../utils/db";

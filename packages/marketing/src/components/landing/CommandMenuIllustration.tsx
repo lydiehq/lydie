@@ -1,5 +1,3 @@
-import type { ComponentType } from "react";
-
 import {
   AddRegular,
   ArrowUploadRegular,
@@ -12,6 +10,7 @@ import {
 } from "@fluentui/react-icons";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { clsx } from "clsx";
+import type { ComponentType } from "react";
 
 // Icon components matching the real command menu
 export const COMMAND_MENU_ICONS = {

@@ -71,13 +71,15 @@ const documents = table("documents")
     yjs_state: string().optional(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
-    custom_fields: json().optional(),
+    properties: json(), // Document properties (like Notion database properties)
     cover_image: string().optional(),
     published: boolean(),
     deleted_at: number().optional(),
     is_locked: boolean(),
     is_favorited: boolean(),
     sort_order: number(),
+    child_schema: json().optional(), // Schema for child documents (null = no schema = regular page)
+    page_config: json(), // { showChildrenInSidebar: boolean, defaultView: "documents" | "table" }
     ...timestamps,
   })
   .primaryKey("id");
