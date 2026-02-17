@@ -10,6 +10,11 @@ import {
   onboardingSchedulerRoleLinkable,
 } from "./onboarding";
 import { secret } from "./secret";
+import {
+  workspaceExportBucket,
+  workspaceExportProcessorFunction,
+  workspaceExportProcessorFunctionLinkable,
+} from "./workspace-export";
 import { assetsRouter, organizationAssetsBucket } from "./web";
 
 const commonSecrets = [
@@ -68,6 +73,9 @@ export const backend = new sst.aws.Service("Backend", {
     onboardingEmailProcessorFunctionLinkable,
     onboardingSchedulerRole,
     onboardingSchedulerRoleLinkable,
+    workspaceExportBucket,
+    workspaceExportProcessorFunction,
+    workspaceExportProcessorFunctionLinkable,
   ],
   permissions: [
     { actions: ["scheduler:CreateSchedule"], resources: ["*"] },

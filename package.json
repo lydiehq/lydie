@@ -9,7 +9,7 @@
     "catalog": {
       "@fluentui/react-icons": "^2.0.319",
       "@rocicorp/zero": "0.25.12",
-      "sst": "3.17.21",
+      "sst": "v3.18.6",
       "zod": "^4.3.6",
       "react": "^19.2.4",
       "react-dom": "^19.2.4",

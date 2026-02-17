@@ -23,11 +23,17 @@ interface ParsedMDXContent {
   slug?: string;
   content: any; // TipTap JSON structure
   components: MDXComponent[];
+  properties?: Record<string, string | number | boolean | null>;
+  childSchema?: Array<{ field: string; type: string; required: boolean; options?: string[] }>;
+  pageConfig?: { showChildrenInSidebar: boolean; defaultView: "documents" | "table" };
 }
 
 interface MDXFrontmatter {
   title?: string;
   slug?: string;
+  properties?: Record<string, string | number | boolean | null>;
+  childSchema?: Array<{ field: string; type: string; required: boolean; options?: string[] }>;
+  pageConfig?: { showChildrenInSidebar: boolean; defaultView: "documents" | "table" };
   [key: string]: any;
 }
 
@@ -94,12 +100,20 @@ function parseMDXContent(
     }
   }
 
+  // Extract database-specific fields from frontmatter
+  const properties = frontmatter.properties as Record<string, string | number | boolean | null> | undefined;
+  const childSchema = frontmatter.childSchema as Array<{ field: string; type: string; required: boolean; options?: string[] }> | undefined;
+  const pageConfig = frontmatter.pageConfig as { showChildrenInSidebar: boolean; defaultView: "documents" | "table" } | undefined;
+
   const result = {
     title,
     slug,
     content: tipTapContent,
     components,
     customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+    properties,
+    childSchema,
+    pageConfig,
   };
 
   return result;
@@ -243,6 +257,9 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         organizationId,
         parentId: finalParentId || null,
         customFields: parsed.customFields || null,
+        properties: parsed.properties || null,
+        childSchema: parsed.childSchema || null,
+        pageConfig: parsed.pageConfig || null,
         published: false,
       };
 

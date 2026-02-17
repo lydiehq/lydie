@@ -1,4 +1,5 @@
 import {
+  ArrowDownloadFilled,
   ArrowUploadFilled,
   ChevronLeft16Filled,
   CubeFilled,
@@ -92,6 +93,12 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
         icon: TabDesktopMultiple16Filled,
+      },
+      {
+        path: "/w/$organizationSlug/settings/export",
+        label: "Export",
+        icon: ArrowDownloadFilled,
+        adminOnly: true,
       },
       {
         path: "/w/$organizationSlug/settings/import",

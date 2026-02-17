@@ -127,6 +127,18 @@ declare module "sst" {
       "type": "sst.aws.StaticSite"
       "url": string
     }
+    "WorkspaceExports": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "WorkspaceImportProcessorFunction": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
+    "WorkspaceImportProcessorFunctionLinkable": {
+      "arn": string
+      "type": "sst.sst.Linkable"
+    }
     "Zero": {
       "service": string
       "type": "sst.aws.Service"
