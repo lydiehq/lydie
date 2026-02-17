@@ -22,6 +22,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "sst": "catalog:"
+    "sst": "3.18.6"
   }
 }

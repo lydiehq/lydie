@@ -39,6 +39,6 @@
     "@types/aws-lambda": "^8.10.160",
     "@types/node": "^25.2.3",
     "@types/ws": "^8.18.1",
-    "sst": "catalog:"
+    "sst": "3.18.6"
   }
 }
