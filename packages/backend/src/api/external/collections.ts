@@ -1,5 +1,11 @@
+import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
-import { db, collectionSchemasTable, documentFieldValuesTable, documentsTable } from "@lydie/database";
+import {
+  db,
+  collectionSchemasTable,
+  documentFieldValuesTable,
+  documentsTable,
+} from "@lydie/database";
 import { desc, eq, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -7,37 +13,6 @@ import { HTTPException } from "hono/http-exception";
 import { extractTableOfContents } from "../../utils/toc";
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
 import { apiKeyAuth, externalRateLimit } from "./middleware";
-
-// Default and max limits for pagination
-const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
-
-// Type for document list response (no content body)
-type DocumentListItem = {
-  id: string;
-  title: string | null;
-  fields: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// Type for paginated response
-type PaginatedDocumentsResponse = {
-  data: DocumentListItem[];
-  pagination: {
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-};
-
-// Type for document select (without yjsState for list queries)
-type DocumentSelect = {
-  id: string;
-  title: string | null;
-  fieldValues: Record<string, unknown> | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
 
 /**
  * Parse filter parameters from query string
@@ -57,48 +32,69 @@ function parseFilters(query: Record<string, string>): Record<string, string> {
 }
 
 /**
- * Build cursor condition for pagination
- * Cursor is a base64-encoded JSON object with id and createdAt
+ * Resolve collection identifier (ID or unique property value) to collection ID
+ * First tries to find by ID, then queries by unique properties defined in collection schemas
  */
-function buildCursorCondition(
-  cursor: string | undefined,
-): SQL | undefined {
-  if (!cursor) return undefined;
+async function resolveCollectionId(
+  organizationId: string,
+  identifier: string,
+): Promise<string | null> {
+  // First try to find by ID (fast path for UUIDs)
+  const byId = await db
+    .select({ id: documentsTable.id })
+    .from(documentsTable)
+    .innerJoin(
+      collectionSchemasTable,
+      eq(documentsTable.id, collectionSchemasTable.documentId),
+    )
+    .where(
+      sql`${documentsTable.id} = ${identifier} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+    )
+    .limit(1);
 
-  try {
-    const decoded = JSON.parse(Buffer.from(cursor, "base64").toString());
-    if (decoded.id && decoded.createdAt) {
-      return sql`(${documentsTable.createdAt}, ${documentsTable.id}) < (${decoded.createdAt}, ${decoded.id})`;
-    }
-  } catch {
-    // Invalid cursor format, ignore it
+  if (byId.length > 0) {
+    return byId[0].id;
   }
 
-  return undefined;
-}
+  // Get all collection schemas for this organization to find unique properties
+  const schemas = await db
+    .select({
+      documentId: collectionSchemasTable.documentId,
+      properties: collectionSchemasTable.properties,
+    })
+    .from(collectionSchemasTable)
+    .innerJoin(
+      documentsTable,
+      eq(collectionSchemasTable.documentId, documentsTable.id),
+    )
+    .where(
+      sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+    );
 
-/**
- * Encode cursor for next page
- */
-function encodeCursor(item: DocumentSelect): string {
-  const cursorData = {
-    id: item.id,
-    createdAt: item.createdAt.toISOString(),
-  };
-  return Buffer.from(JSON.stringify(cursorData)).toString("base64");
-}
+  // Build a query that checks all unique properties across all collections
+  for (const schema of schemas) {
+    if (!schema.properties) continue;
 
-/**
- * Transform document to list item (no content body)
- */
-function transformToDocumentListItem(doc: DocumentSelect): DocumentListItem {
-  return {
-    id: doc.id,
-    title: doc.title,
-    fields: doc.fieldValues || {},
-    createdAt: doc.createdAt.toISOString(),
-    updatedAt: doc.updatedAt.toISOString(),
-  };
+    const uniqueProperties = schema.properties.filter((p) => p.unique);
+
+    for (const prop of uniqueProperties) {
+      // Query document_field_values for a match on this unique property
+      const result = await db
+        .select({ documentId: documentFieldValuesTable.documentId })
+        .from(documentFieldValuesTable)
+        .where(
+          sql`${documentFieldValuesTable.collectionSchemaId} = ${schema.documentId} AND ${documentFieldValuesTable.values}->>${prop.name} = ${identifier}`,
+        )
+        .limit(1);
+
+      if (result.length > 0) {
+        // Return the collection ID (the document that has the collection schema)
+        return schema.documentId;
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -127,6 +123,55 @@ function buildDocumentWhereConditions(
 }
 
 /**
+ * Transform document to response format with full content
+ */
+async function transformToDocumentResponse(
+  doc: typeof documentsTable.$inferSelect,
+  fieldValues: Record<string, unknown>,
+  includeRelated: boolean,
+  includeToc: boolean,
+): Promise<Record<string, unknown>> {
+  // Convert YJS state to JSON content
+  let jsonContent: ReturnType<typeof convertYjsToJson> = null;
+  if (doc.yjsState) {
+    const rawContent = convertYjsToJson(doc.yjsState);
+    jsonContent = await transformDocumentLinksToInternalLinkMarks(rawContent);
+  }
+
+  // Extract table of contents if requested
+  let toc: Array<{ id: string; level: number; text: string }> = [];
+  if (includeToc && jsonContent) {
+    try {
+      toc = extractTableOfContents(jsonContent);
+    } catch (error) {
+      console.error("Error extracting table of contents:", error);
+    }
+  }
+
+  // Find related documents if requested
+  let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
+  if (includeRelated && doc.id) {
+    try {
+      related = await findRelatedDocuments(doc.id, doc.organizationId, 5);
+    } catch (error) {
+      console.error("Error fetching related documents:", error);
+    }
+  }
+
+  const { yjsState: _, ...docWithoutYjs } = doc;
+
+  return {
+    ...docWithoutYjs,
+    fields: fieldValues,
+    jsonContent,
+    path: "/",
+    fullPath: `/${doc.slug || doc.id}`,
+    ...(includeRelated && { related }),
+    ...(includeToc && { toc }),
+  };
+}
+
+/**
  * Collections API - External API for querying collection documents
  * Uses API key authentication
  */
@@ -134,54 +179,50 @@ export const CollectionsApi = new Hono()
   .use(apiKeyAuth)
   .use(externalRateLimit)
   /**
-   * List documents in a collection
+   * List documents in a collection with full content
    * GET /v1/:idOrSlug/collections/:collectionId/documents
    *
    * Query params:
-   * - limit: number (default 20, max 100)
-   * - cursor: string (base64-encoded pagination cursor)
    * - filter[fieldName]: string (filter by field value)
+   * - include_related: boolean (include related documents)
+   * - include_toc: boolean (include table of contents)
    *
-   * Response excludes content body (yjsState)
+   * Response includes content body (yjsState converted to JSON)
    */
   .get("/collections/:collectionId/documents", async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionId = c.req.param("collectionId");
+    const collectionIdentifier = c.req.param("collectionId");
+    const includeRelated = c.req.query("include_related") === "true";
+    const includeToc = c.req.query("include_toc") === "true";
+
+    // Resolve collection identifier (ID or slug) to actual collection ID
+    const collectionId = await resolveCollectionId(
+      organizationId,
+      collectionIdentifier,
+    );
+
+    if (!collectionId) {
+      throw new HTTPException(404, {
+        message: "Collection not found",
+      });
+    }
 
     // Parse query parameters
     const query = c.req.query();
-    const limit = Math.min(
-      Math.max(
-        Number.parseInt(query.limit || String(DEFAULT_LIMIT), 10),
-        1,
-      ),
-      MAX_LIMIT,
-    );
-    const cursor = query.cursor;
     const filters = parseFilters(query);
 
     // Build where conditions
-    let whereConditions = buildDocumentWhereConditions(
+    const whereConditions = buildDocumentWhereConditions(
       organizationId,
       collectionId,
       filters,
     );
 
-    // Add cursor condition if provided
-    const cursorCondition = buildCursorCondition(cursor);
-    if (cursorCondition) {
-      whereConditions = sql`${whereConditions} AND ${cursorCondition}`;
-    }
-
-    // Fetch documents with their field values
-    // Join with document_field_values to get all documents belonging to this collection
+    // Fetch all documents with their field values and full content
     const documents = await db
       .select({
-        id: documentsTable.id,
-        title: documentsTable.title,
+        document: documentsTable,
         fieldValues: documentFieldValuesTable.values,
-        createdAt: documentsTable.createdAt,
-        updatedAt: documentsTable.updatedAt,
       })
       .from(documentsTable)
       .innerJoin(
@@ -190,54 +231,101 @@ export const CollectionsApi = new Hono()
       )
       .innerJoin(
         collectionSchemasTable,
-        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
+        eq(
+          documentFieldValuesTable.collectionSchemaId,
+          collectionSchemasTable.id,
+        ),
       )
       .where(
         sql`${whereConditions} AND ${collectionSchemasTable.documentId} = ${collectionId}`,
       )
-      .orderBy(desc(documentsTable.createdAt), desc(documentsTable.id))
-      .limit(limit + 1);
+      .orderBy(desc(documentsTable.createdAt), desc(documentsTable.id));
 
-    // Determine if there's a next page
-    const hasMore = documents.length > limit;
-    const data = documents.slice(0, limit);
+    // Transform to response format with full content
+    const response = await Promise.all(
+      documents.map((doc) =>
+        transformToDocumentResponse(
+          doc.document,
+          doc.fieldValues || {},
+          includeRelated,
+          includeToc,
+        ),
+      ),
+    );
 
-    // Generate next cursor if there are more results
-    const nextCursor = hasMore && data.length > 0
-      ? encodeCursor(data[data.length - 1] as DocumentSelect)
-      : null;
-
-    // Transform to response format
-    const response: PaginatedDocumentsResponse = {
-      data: data.map((doc) => transformToDocumentListItem(doc as DocumentSelect)),
-      pagination: {
-        nextCursor,
-        hasMore,
-      },
-    };
-
-    return c.json(response);
+    return c.json({ documents: response });
   })
   /**
-   * Fetch single document by ID
-   * GET /v1/:idOrSlug/documents/:documentId
+   * Fetch single document by ID or unique property value
+   * GET /v1/:idOrSlug/documents/:documentIdOrPropertyValue
    *
    * Response includes content body (yjsState converted to JSON)
    */
-  .get("/documents/:documentId", async (c) => {
+  .get("/documents/:documentIdOrPropertyValue", async (c) => {
     const organizationId = c.get("organizationId");
-    const documentId = c.req.param("documentId");
+    const identifier = c.req.param("documentIdOrPropertyValue");
+    const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
 
-    // Fetch the document
-    const documentResult = await db
+    // Try to fetch by ID first (fast path)
+    let documentResult = await db
       .select()
       .from(documentsTable)
       .where(
-        sql`${documentsTable.id} = ${documentId} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+        sql`${documentsTable.id} = ${identifier} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
       )
       .limit(1);
-    
+
+    // If not found by ID, try by unique collection property values
+    if (documentResult.length === 0) {
+      // Get all collection schemas to find unique properties
+      const schemas = await db
+        .select({
+          id: collectionSchemasTable.id,
+          properties: collectionSchemasTable.properties,
+        })
+        .from(collectionSchemasTable)
+        .innerJoin(
+          documentsTable,
+          eq(collectionSchemasTable.documentId, documentsTable.id),
+        )
+        .where(
+          sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+        );
+
+      // Search through schemas for any unique property matching the identifier
+      for (const schema of schemas) {
+        if (!schema.properties) continue;
+
+        const uniqueProperties = schema.properties.filter((p) => p.unique);
+
+        for (const prop of uniqueProperties) {
+          // Query document_field_values for a match on this unique property
+          const fieldValueResult = await db
+            .select({ documentId: documentFieldValuesTable.documentId })
+            .from(documentFieldValuesTable)
+            .where(
+              sql`${documentFieldValuesTable.collectionSchemaId} = ${schema.id} AND ${documentFieldValuesTable.values}->>${prop.name} = ${identifier}`,
+            )
+            .limit(1);
+
+          if (fieldValueResult.length > 0) {
+            // Fetch the full document
+            documentResult = await db
+              .select()
+              .from(documentsTable)
+              .where(
+                sql`${documentsTable.id} = ${fieldValueResult[0].documentId} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+              )
+              .limit(1);
+            break;
+          }
+        }
+
+        if (documentResult.length > 0) break;
+      }
+    }
+
     const document = documentResult[0];
 
     if (!document) {
@@ -254,42 +342,25 @@ export const CollectionsApi = new Hono()
       .from(documentFieldValuesTable)
       .innerJoin(
         collectionSchemasTable,
-        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
+        eq(
+          documentFieldValuesTable.collectionSchemaId,
+          collectionSchemasTable.id,
+        ),
       )
       .where(
-        sql`${documentFieldValuesTable.documentId} = ${documentId} AND ${collectionSchemasTable.documentId} = ${document.nearestCollectionId}`,
+        sql`${documentFieldValuesTable.documentId} = ${document.id} AND ${collectionSchemasTable.documentId} = ${document.nearestCollectionId}`,
       )
       .limit(1);
 
     const fieldValues = fieldValuesResult[0]?.values || {};
 
-    // Convert YJS state to JSON content
-    let jsonContent: ReturnType<typeof convertYjsToJson> = null;
-    if (document.yjsState) {
-      const rawContent = convertYjsToJson(document.yjsState);
-      jsonContent = await transformDocumentLinksToInternalLinkMarks(rawContent);
-    }
-
-    // Extract table of contents if requested
-    let toc: Array<{ id: string; level: number; text: string }> = [];
-    if (includeToc && jsonContent) {
-      try {
-        toc = extractTableOfContents(jsonContent);
-      } catch (error) {
-        console.error("Error extracting table of contents:", error);
-      }
-    }
-
-    // Build response
-    const response = {
-      id: document.id,
-      title: document.title,
-      fields: fieldValues as Record<string, unknown>,
-      content: jsonContent,
-      createdAt: document.createdAt.toISOString(),
-      updatedAt: document.updatedAt.toISOString(),
-      ...(includeToc && { toc }),
-    };
+    // Transform to response format with full content
+    const response = await transformToDocumentResponse(
+      document,
+      fieldValues,
+      includeRelated,
+      includeToc,
+    );
 
     return c.json(response);
   });

@@ -101,9 +101,15 @@ function parseMDXContent(
   }
 
   // Extract database-specific fields from frontmatter
-  const properties = frontmatter.properties as Record<string, string | number | boolean | null> | undefined;
-  const childSchema = frontmatter.childSchema as Array<{ field: string; type: string; required: boolean; options?: string[] }> | undefined;
-  const pageConfig = frontmatter.pageConfig as { showChildrenInSidebar: boolean; defaultView: "documents" | "table" } | undefined;
+  const properties = frontmatter.properties as
+    | Record<string, string | number | boolean | null>
+    | undefined;
+  const childSchema = frontmatter.childSchema as
+    | Array<{ field: string; type: string; required: boolean; options?: string[] }>
+    | undefined;
+  const pageConfig = frontmatter.pageConfig as
+    | { showChildrenInSidebar: boolean; defaultView: "documents" | "table" }
+    | undefined;
 
   const result = {
     title,

@@ -140,9 +140,16 @@ export function createMentionMenuSuggestion() {
         >
       >;
       let popup: TippyInstance[];
+      let isActive = false;
 
       return {
         onStart: (props: SuggestionProps) => {
+          // Guard against destroyed editor
+          if (!props.editor.isEditable && !props.editor.isDestroyed) {
+            return;
+          }
+
+          isActive = true;
           component = new ReactRenderer(MentionMenuList, {
             props: {
               items: props.items as MentionItem[],
@@ -167,6 +174,8 @@ export function createMentionMenuSuggestion() {
         },
 
         onUpdate(props: SuggestionProps) {
+          if (!isActive) return;
+
           component.updateProps({
             items: props.items as MentionItem[],
             command: props.command as (item: MentionItem) => void,
@@ -182,6 +191,8 @@ export function createMentionMenuSuggestion() {
         },
 
         onKeyDown(props: SuggestionKeyDownProps) {
+          if (!isActive) return false;
+
           if (props.event.key === "Escape") {
             popup[0]?.hide();
             return true;
@@ -191,6 +202,7 @@ export function createMentionMenuSuggestion() {
         },
 
         onExit() {
+          isActive = false;
           popup[0]?.destroy();
           component.destroy();
         },

@@ -1,4 +1,8 @@
-import { fromLegacyField, type CollectionField, type PropertyDefinition } from "@lydie/core/collection";
+import {
+  fromLegacyField,
+  type CollectionField,
+  type PropertyDefinition,
+} from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 
@@ -22,7 +26,13 @@ type Props = {
   isAdmin: boolean;
 };
 
-export function PropertyManager({ documentId, organizationId, schema, isCollection, isAdmin }: Props) {
+export function PropertyManager({
+  documentId,
+  organizationId,
+  schema,
+  isCollection,
+  isAdmin,
+}: Props) {
   const z = useZero();
   const [isAdding, setIsAdding] = useState(false);
   const [newProperty, setNewProperty] = useState<{
@@ -90,9 +100,7 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
   };
 
   const handleRemoveProperty = async (fieldName: string) => {
-    const updatedSchema = schema
-      .filter((f) => f.field !== fieldName)
-      .map(fromLegacyField);
+    const updatedSchema = schema.filter((f) => f.field !== fieldName).map(fromLegacyField);
 
     await z.mutate(
       mutators.collection.updateSchema({
@@ -106,7 +114,7 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
   // If not admin, just show readonly list of properties (for parent collection context)
   if (!isAdmin) {
     if (schema.length === 0) return null;
-    
+
     return (
       <div className="flex flex-wrap gap-2">
         {schema.map((field) => (

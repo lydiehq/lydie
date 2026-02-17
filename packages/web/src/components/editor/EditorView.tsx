@@ -71,7 +71,8 @@ export function EditorView({
       : null,
   );
 
-  const parentCollectionSchema = (parentCollectionData?.properties as PropertyDefinition[] | null) ?? [];
+  const parentCollectionSchema =
+    (parentCollectionData?.properties as PropertyDefinition[] | null) ?? [];
   const parentCollectionSchemaForProps = parentCollectionSchema.map(toLegacyField);
 
   // View mode state for collection pages (only admins can use table view)
@@ -156,7 +157,11 @@ export function EditorView({
             <>
               <DocumentMetadataTabs
                 doc={doc}
-                collectionSchema={parentCollectionSchemaForProps.length > 0 ? parentCollectionSchemaForProps : undefined}
+                collectionSchema={
+                  parentCollectionSchemaForProps.length > 0
+                    ? parentCollectionSchemaForProps
+                    : undefined
+                }
               />
 
               <LinkPopover

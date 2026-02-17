@@ -27,11 +27,7 @@ export const documentQueries = {
         .where("deleted_at", "IS", null)
         .one()
         .related("parent")
-        .related("children", (q) =>
-          q
-            .where("deleted_at", "IS", null)
-            .orderBy("created_at", "asc"),
-        )
+        .related("children", (q) => q.where("deleted_at", "IS", null).orderBy("created_at", "asc"))
         .related("organization");
     },
   ),
@@ -74,11 +70,7 @@ export const documentQueries = {
         .where("organization_id", organizationId)
         .where("deleted_at", "IS", null)
         .related("parent")
-        .related("children", (q) =>
-          q
-            .where("deleted_at", "IS", null)
-            .orderBy("created_at", "asc"),
-        )
+        .related("children", (q) => q.where("deleted_at", "IS", null).orderBy("created_at", "asc"))
         .related("organization")
         .orderBy("updated_at", "desc")
         .limit(limit);
@@ -116,9 +108,7 @@ export const documentQueries = {
         .where("deleted_at", "IS NOT", null)
         .related("parent")
         .related("children", (q) =>
-          q
-            .where("deleted_at", "IS NOT", null)
-            .orderBy("created_at", "asc"),
+          q.where("deleted_at", "IS NOT", null).orderBy("created_at", "asc"),
         )
         .orderBy("deleted_at", "desc")
         .limit(limit);

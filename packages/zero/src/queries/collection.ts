@@ -20,9 +20,7 @@ export const collectionQueries = {
       hasOrganizationAccess(ctx, organizationId);
       return zql.collection_schemas
         .where("organization_id", organizationId)
-        .related("document", (q: any) =>
-          q.where("deleted_at", "IS", null).orderBy("title", "asc"),
-        );
+        .related("document", (q: any) => q.where("deleted_at", "IS", null).orderBy("title", "asc"));
     },
   ),
 
@@ -35,12 +33,8 @@ export const collectionQueries = {
         .where("document_id", collectionId)
         .where("organization_id", organizationId)
         .one()
-        .related("document", (q: any) =>
-          q.where("deleted_at", "IS", null),
-        )
-        .related("fieldValues", (q: any) =>
-          q.related("document").orderBy("created_at", "desc"),
-        );
+        .related("document", (q: any) => q.where("deleted_at", "IS", null))
+        .related("fieldValues", (q: any) => q.related("document").orderBy("created_at", "desc"));
     },
   ),
 
@@ -85,9 +79,7 @@ export const collectionQueries = {
         .where("organization_id", organizationId)
         .where("deleted_at", "IS", null)
         .one()
-        .related("nearestCollection", (q: any) =>
-          q.related("collectionSchema"),
-        )
+        .related("nearestCollection", (q: any) => q.related("collectionSchema"))
         .related("fieldValues", (q: any) => q.related("collectionSchema"));
     },
   ),
@@ -110,9 +102,7 @@ export const collectionQueries = {
             .where("deleted_at", "IS", null)
             .related("collectionSchema")
             .related("parent", (q2: any) =>
-              q2
-                .where("deleted_at", "IS", null)
-                .related("collectionSchema"),
+              q2.where("deleted_at", "IS", null).related("collectionSchema"),
             ),
         );
     },
@@ -123,9 +113,7 @@ export const collectionQueries = {
     z.object({ organizationId: z.string(), documentId: z.string() }),
     ({ args: { organizationId, documentId }, ctx }) => {
       hasOrganizationAccess(ctx, organizationId);
-      return zql.document_field_values
-        .where("document_id", documentId)
-        .related("collectionSchema");
+      return zql.document_field_values.where("document_id", documentId).related("collectionSchema");
     },
   ),
 };
