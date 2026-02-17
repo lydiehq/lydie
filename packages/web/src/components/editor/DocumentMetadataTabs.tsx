@@ -15,6 +15,8 @@ import { InlinePropertyEditor } from "./InlinePropertyEditor";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
+export type FieldValues = Record<string, string | number | boolean | null>;
+
 type Props = {
   doc: DocumentType;
   // Schema from collection (if this document belongs to a collection)
@@ -123,7 +125,19 @@ function PropertiesPanel({
   collectionSchema?: CollectionField[];
 }) {
   const organizationId = doc.organization_id;
-  const properties = (doc.properties as Record<string, string | number | boolean | null>) || {};
+  
+  // Fetch field values for this document from the document_field_values table
+  const [fieldValuesData] = useQuery(
+    doc.nearest_collection_id
+      ? queries.collections.documentFieldValues({
+          organizationId,
+          documentId: doc.id,
+        })
+      : null,
+  );
+
+  // Extract field values from the query result
+  const fieldValues: FieldValues = fieldValuesData?.[0]?.values as FieldValues || {};
 
   // If no collection schema, show message
   if (!collectionSchema || collectionSchema.length === 0) {
@@ -144,7 +158,7 @@ function PropertiesPanel({
           documentId={doc.id}
           organizationId={organizationId}
           fieldDef={fieldDef}
-          value={properties[fieldDef.field] ?? null}
+          value={fieldValues[fieldDef.field] ?? null}
         />
       ))}
     </div>

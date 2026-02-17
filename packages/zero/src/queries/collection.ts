@@ -5,59 +5,78 @@ import { hasOrganizationAccess } from "../auth";
 import { zql } from "../schema";
 
 /**
- * Queries for collections
+ * Collection Queries
  *
- * A Collection IS a Page - specifically, a Page with a schema attached.
- * When a Page has a schema, it becomes a Collection and its children are entries.
+ * Collections are Documents with a corresponding row in collection_schemas.
+ * A Document becomes a Collection implicitly when a schema row is created.
+ * Documents inherit properties from ancestor Collections via the path column.
  */
 
 export const collectionQueries = {
-  // Get all Collections (Pages with collection_schema) in an organization
+  // Get all Collections (Documents with a collection_schemas row) in an organization
   byOrganization: defineQuery(
     z.object({ organizationId: z.string() }),
     ({ args: { organizationId }, ctx }) => {
       hasOrganizationAccess(ctx, organizationId);
-      // Collections are Pages with a collection_schema field
-      return zql.documents
+      return zql.collection_schemas
         .where("organization_id", organizationId)
-        .where("collection_schema", "IS NOT", null)
-        .where("deleted_at", "IS", null)
-        .orderBy("title", "asc");
-    },
-  ),
-
-  // Get a specific Collection (Page with collection_schema) by ID
-  byId: defineQuery(
-    z.object({ organizationId: z.string(), collectionId: z.string() }),
-    ({ args: { organizationId, collectionId }, ctx }) => {
-      hasOrganizationAccess(ctx, organizationId);
-      return zql.documents
-        .where("id", collectionId)
-        .where("organization_id", organizationId)
-        .where("collection_schema", "IS NOT", null)
-        .where("deleted_at", "IS", null)
-        .one()
-        .related("entries", (q) =>
-          q.where("deleted_at", "IS", null).orderBy("created_at", "desc"),
+        .related("document", (q: any) =>
+          q.where("deleted_at", "IS", null).orderBy("title", "asc"),
         );
     },
   ),
 
-  // Get entries (documents) in a Collection
+  // Get a specific Collection by ID (the Document that has a schema)
+  byId: defineQuery(
+    z.object({ organizationId: z.string(), collectionId: z.string() }),
+    ({ args: { organizationId, collectionId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.collection_schemas
+        .where("document_id", collectionId)
+        .where("organization_id", organizationId)
+        .one()
+        .related("document", (q: any) =>
+          q.where("deleted_at", "IS", null),
+        )
+        .related("fieldValues", (q: any) =>
+          q.related("document").orderBy("created_at", "desc"),
+        );
+    },
+  ),
+
+  // Get Documents that belong to a Collection (direct children)
   documentsByCollection: defineQuery(
     z.object({ organizationId: z.string(), collectionId: z.string() }),
     ({ args: { organizationId, collectionId }, ctx }) => {
       hasOrganizationAccess(ctx, organizationId);
       return zql.documents
-        .where("collection_id", collectionId)
+        .where("nearest_collection_id", collectionId)
         .where("organization_id", organizationId)
         .where("deleted_at", "IS", null)
-        .orderBy("created_at", "desc");
+        .where("parent_id", collectionId) // Direct children only
+        .orderBy("created_at", "desc")
+        .related("fieldValues");
     },
   ),
 
-  // Get a document with its Collection (parent Page with schema)
-  documentsWithCollection: defineQuery(
+  // Get all descendants of a Collection (for nested collections)
+  allDocumentsByCollection: defineQuery(
+    z.object({ organizationId: z.string(), collectionId: z.string(), path: z.string() }),
+    ({ args: { organizationId, collectionId, path }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      // Use path LIKE query to get all descendants
+      return zql.documents
+        .where("nearest_collection_id", collectionId)
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
+        .where("path", "LIKE", `${path}/%`)
+        .orderBy("path", "asc")
+        .related("fieldValues");
+    },
+  ),
+
+  // Get a Document with its nearest Collection
+  documentWithCollection: defineQuery(
     z.object({ organizationId: z.string(), documentId: z.string() }),
     ({ args: { organizationId, documentId }, ctx }) => {
       hasOrganizationAccess(ctx, organizationId);
@@ -66,34 +85,47 @@ export const collectionQueries = {
         .where("organization_id", organizationId)
         .where("deleted_at", "IS", null)
         .one()
-        .related("collection");
+        .related("nearestCollection", (q: any) =>
+          q.related("collectionSchema"),
+        )
+        .related("fieldValues", (q: any) => q.related("collectionSchema"));
     },
   ),
 
-  // Get Collection entries with inherited schema from ancestor Collections
-  // This walks up the parent chain to collect all schema fields
-  documentsWithInheritedSchema: defineQuery(
+  // Get Collection schema with all ancestor schemas for inheritance resolution
+  collectionWithInheritedSchema: defineQuery(
     z.object({ organizationId: z.string(), collectionId: z.string() }),
     ({ args: { organizationId, collectionId }, ctx }) => {
       hasOrganizationAccess(ctx, organizationId);
+      // Get the collection document with its schema
       return zql.documents
         .where("id", collectionId)
         .where("organization_id", organizationId)
         .where("deleted_at", "IS", null)
         .one()
-        .related("parent", (q) =>
+        .related("collectionSchema")
+        .related("parent", (q: any) =>
+          // Walk up the tree to get ancestor collections
           q
-            .where("collection_schema", "IS NOT", null)
             .where("deleted_at", "IS", null)
-            .related("parent", (q2) =>
+            .related("collectionSchema")
+            .related("parent", (q2: any) =>
               q2
-                .where("collection_schema", "IS NOT", null)
-                .where("deleted_at", "IS", null),
+                .where("deleted_at", "IS", null)
+                .related("collectionSchema"),
             ),
-        )
-        .related("entries", (q) =>
-          q.where("deleted_at", "IS", null).orderBy("created_at", "desc"),
         );
+    },
+  ),
+
+  // Get field values for a specific document
+  documentFieldValues: defineQuery(
+    z.object({ organizationId: z.string(), documentId: z.string() }),
+    ({ args: { organizationId, documentId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.document_field_values
+        .where("document_id", documentId)
+        .related("collectionSchema");
     },
   ),
 };

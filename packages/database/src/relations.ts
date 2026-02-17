@@ -12,6 +12,30 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.documentsTable.organizationId,
       to: r.organizationsTable.id,
     }),
+    parent: r.one.documentsTable({
+      from: r.documentsTable.parentId,
+      to: r.documentsTable.id,
+    }),
+    // Nearest collection this document belongs to
+    nearestCollection: r.one.documentsTable({
+      from: r.documentsTable.nearestCollectionId,
+      to: r.documentsTable.id,
+    }),
+    // Documents that have this document as their nearest collection
+    collectionDocuments: r.many.documentsTable({
+      from: r.documentsTable.id,
+      to: r.documentsTable.nearestCollectionId,
+    }),
+    // Collection schema if this document is a Collection
+    collectionSchema: r.one.collectionSchemasTable({
+      from: r.documentsTable.id,
+      to: r.collectionSchemasTable.documentId,
+    }),
+    // Field values for this document
+    fieldValues: r.many.documentFieldValuesTable({
+      from: r.documentsTable.id,
+      to: r.documentFieldValuesTable.documentId,
+    }),
     integrationLink: r.one.integrationLinksTable({
       from: r.documentsTable.integrationLinkId,
       to: r.integrationLinksTable.id,
@@ -22,6 +46,34 @@ export const relations = defineRelations(schema, (r) => ({
     publications: r.many.documentPublicationsTable(),
     versions: r.many.documentVersionsTable(),
   },
+
+  collectionSchemasTable: {
+    document: r.one.documentsTable({
+      from: r.collectionSchemasTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    organization: r.one.organizationsTable({
+      from: r.collectionSchemasTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    // All field values for documents in this collection
+    fieldValues: r.many.documentFieldValuesTable({
+      from: r.collectionSchemasTable.id,
+      to: r.documentFieldValuesTable.collectionSchemaId,
+    }),
+  },
+
+  documentFieldValuesTable: {
+    document: r.one.documentsTable({
+      from: r.documentFieldValuesTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    collectionSchema: r.one.collectionSchemasTable({
+      from: r.documentFieldValuesTable.collectionSchemaId,
+      to: r.collectionSchemasTable.id,
+    }),
+  },
+
   documentVersionsTable: {
     document: r.one.documentsTable({
       from: r.documentVersionsTable.documentId,
@@ -32,18 +84,21 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.usersTable.id,
     }),
   },
+
   documentEmbeddingsTable: {
     document: r.one.documentsTable({
       from: r.documentEmbeddingsTable.documentId,
       to: r.documentsTable.id,
     }),
   },
+
   documentTitleEmbeddingsTable: {
     document: r.one.documentsTable({
       from: r.documentTitleEmbeddingsTable.documentId,
       to: r.documentsTable.id,
     }),
   },
+
   assistantAgentsTable: {
     user: r.one.usersTable({
       from: r.assistantAgentsTable.userId,
@@ -91,6 +146,7 @@ export const relations = defineRelations(schema, (r) => ({
     members: r.many.membersTable(),
     invitations: r.many.invitationsTable(),
     documents: r.many.documentsTable(),
+    collectionSchemas: r.many.collectionSchemasTable(),
     assistantConversations: r.many.assistantConversationsTable(),
     assistantAgents: r.many.assistantAgentsTable(),
     apiKeys: r.many.apiKeysTable(),
