@@ -203,7 +203,7 @@ function RouteLayout() {
             <div className="flex-1 relative overflow-hidden flex flex-col">
               <DocumentTabBar organizationSlug={params.organizationSlug} />
               <div className="flex-1 min-h-0 p-1">
-                <Surface className="h-full overflow-hidden">
+                <Surface className="h-full overflow-y-auto">
                   <Outlet />
                 </Surface>
               </div>

@@ -1,10 +1,10 @@
-import type { ContentNode } from "@lydie/core/content";
-
 import { S3Client } from "@aws-sdk/client-s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import type { ContentNode } from "@lydie/core/content";
 import { serializeToMarkdown } from "@lydie/core/serialization/markdown";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
-import { db } from "@lydie/database";
+import { db, documentsTable } from "@lydie/database";
+import { and, eq, isNull } from "drizzle-orm";
 
 const s3Client = new S3Client({ region: "us-east-1" });
 
@@ -109,12 +109,12 @@ function sanitizeFilename(title: string): string {
 }
 
 async function getDocumentsForExport(organizationId: string): Promise<DocumentWithChildren[]> {
-  // Get all non-deleted documents for the organization
-  const allDocs = await db.query.documentsTable.findMany({
-    where: {
-      AND: [{ organizationId }, { deletedAt: null }],
-    },
-  });
+  const allDocs = await db
+    .select()
+    .from(documentsTable)
+    .where(
+      and(eq(documentsTable.organizationId, organizationId), isNull(documentsTable.deletedAt)),
+    );
 
   // Build a map for quick lookup
   const docMap = new Map<string, DocumentWithChildren>();

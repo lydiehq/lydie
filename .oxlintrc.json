@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["build/**", "node_modules/**", "public/**", "*.d.ts"],
+  "ignorePatterns": ["build/**", "node_modules/**", "public/**", "*.d.ts", "sst-env.d.ts"],
   "plugins": ["oxc", "react", "typescript", "import", "jsx-a11y", "eslint"],
   "rules": {
     "react/no-children-prop": "off",
