@@ -1,7 +1,7 @@
 import { createId } from "@lydie/core/id";
 import { deserializeFromHTML } from "@lydie/core/serialization/html";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
-import { defineMutator } from "@rocicorp/zero";
+import { defineMutator, type ReadonlyJSONValue } from "@rocicorp/zero";
 import { z } from "zod";
 
 import { hasOrganizationAccess, isAuthenticated } from "../auth";
@@ -99,8 +99,11 @@ export const documentMutators = {
       const minSortOrder =
         siblings.length > 0
           ? siblings.reduce(
-              (min, doc) => Math.min(min, doc.sort_order ?? 0),
-              siblings[0]?.sort_order ?? 0,
+              (min, doc) => {
+                const sortOrder = (doc as { sort_order?: number }).sort_order ?? 0;
+                return Math.min(min, sortOrder);
+              },
+              (siblings[0] as { sort_order?: number }).sort_order ?? 0,
             )
           : 0;
 
@@ -122,6 +125,19 @@ export const documentMutators = {
         yjsState = convertJsonToYjs(emptyContent);
       }
 
+      // Calculate path based on parent
+      let path = id;
+      let nearestCollectionId: string | null = null;
+      
+      if (parentId) {
+        const parent = await getDocumentById(tx, parentId, organizationId);
+        if (parent) {
+          path = `${parent.path}/${id}`;
+          // Inherit nearest_collection_id from parent
+          nearestCollectionId = parent.nearest_collection_id || null;
+        }
+      }
+
       await tx.mutate.documents.insert(
         withTimestamps({
           id,
@@ -135,12 +151,44 @@ export const documentMutators = {
           is_favorited: false,
           parent_id: parentId || null,
           sort_order: minSortOrder - 1,
-          properties: {},
-          config: { showChildrenInSidebar: true, defaultView: "documents" },
+          path,
+          nearest_collection_id: nearestCollectionId,
+          show_children_in_sidebar: false,
         }),
       );
+
+      // If this document belongs to a collection, create field values row
+      if (nearestCollectionId) {
+        let collectionSchema = null;
+        try {
+          collectionSchema = await tx.run(
+            zql.collection_schemas.where("document_id", nearestCollectionId).one(),
+          );
+        } catch {
+          // No collection schema found
+        }
+        
+        if (collectionSchema) {
+          const properties = collectionSchema.properties as Array<{ name: string }>;
+          const nullValues: Record<string, null> = {};
+          for (const prop of properties) {
+            nullValues[prop.name] = null;
+          }
+
+          await tx.mutate.document_field_values.insert(
+            withTimestamps({
+              id: createId(),
+              document_id: id,
+              collection_schema_id: collectionSchema.id,
+              values: nullValues,
+              orphaned_values: {},
+            }),
+          );
+        }
+      }
     },
   ),
+
   update: defineMutator(
     z.object({
       documentId: z.string(),
@@ -240,13 +288,30 @@ export const documentMutators = {
         }
       }
 
-      // Update document with new parent
+      // Get new parent info for path and collection calculation
+      let newPath = documentId;
+      let newNearestCollectionId: string | null = null;
+      
+      if (parentId) {
+        const parent = await getDocumentById(tx, parentId, organizationId);
+        if (parent) {
+          newPath = `${parent.path}/${documentId}`;
+          newNearestCollectionId = parent.nearest_collection_id || null;
+        }
+      }
+
+      // Update document with new parent, path, and nearest_collection_id
       await tx.mutate.documents.update(
         withUpdatedTimestamp({
           id: documentId,
           parent_id: parentId || null,
+          path: newPath,
+          nearest_collection_id: newNearestCollectionId,
         }),
       );
+
+      // Update all descendants' paths and nearest_collection_id
+      await updateDescendantPaths(tx, documentId, newPath, newNearestCollectionId, organizationId);
     },
   ),
 
@@ -314,14 +379,35 @@ export const documentMutators = {
           .where("deleted_at", "IS", null),
       );
 
-      const maxSortOrder = siblings.reduce((max, doc) => Math.max(max, doc.sort_order ?? 0), 0);
+      const maxSortOrder = siblings.reduce((max, doc) => {
+        const sortOrder = (doc as { sort_order?: number }).sort_order ?? 0;
+        return Math.max(max, sortOrder);
+      }, 0);
       updates.sort_order = maxSortOrder + 1;
+
+      // Calculate new path and nearest_collection_id
+      let newPath = documentId;
+      let newNearestCollectionId: string | null = null;
+      
+      if (targetParentId) {
+        const parent = await getDocumentById(tx, targetParentId, organizationId);
+        if (parent) {
+          newPath = `${parent.path}/${documentId}`;
+          newNearestCollectionId = parent.nearest_collection_id || null;
+        }
+      }
+      
+      updates.path = newPath;
+      updates.nearest_collection_id = newNearestCollectionId;
 
       if (targetParentId !== undefined) updates.parent_id = targetParentId;
       if (targetIntegrationLinkId !== undefined)
         updates.integration_link_id = targetIntegrationLinkId;
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
+
+      // Update all descendants' paths and nearest_collection_id
+      await updateDescendantPaths(tx, documentId, newPath, newNearestCollectionId, organizationId);
     },
   ),
 
@@ -439,7 +525,8 @@ export const documentMutators = {
     },
   ),
 
-  // Update document properties (for database/collection fields)
+  // DEPRECATED: Use collection.updateFieldValues instead
+  // This mutator is kept for backwards compatibility but redirects to collection mutator
   updateProperties: defineMutator(
     z.object({
       documentId: z.string(),
@@ -455,129 +542,92 @@ export const documentMutators = {
         throw notFoundError("Document", documentId);
       }
 
-      // Merge new properties with existing ones
-      const currentProperties = (document.properties || {}) as Record<
-        string,
-        string | number | boolean | null
-      >;
-
-      await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          properties: {
-            ...currentProperties,
-            ...properties,
-          },
-        }),
-      );
-    },
-  ),
-
-  // Update collection schema (defines what properties child entries have)
-  // This makes the page a Collection if it wasn't one already
-  updateCollectionSchema: defineMutator(
-    z.object({
-      documentId: z.string(),
-      organizationId: z.string(),
-      collectionSchema: z.array(
-        z.object({
-          field: z.string(),
-          type: z.enum(["text", "datetime", "select", "file", "boolean", "number"]),
-          required: z.boolean(),
-          options: z.array(z.string()).optional(),
-        }),
-      ),
-    }),
-    async ({ tx, ctx, args: { documentId, organizationId, collectionSchema } }) => {
-      hasOrganizationAccess(ctx, organizationId);
-      await verifyDocumentAccess(tx, documentId, organizationId);
-
-      await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          collection_schema: collectionSchema,
-        }),
-      );
-    },
-  ),
-
-  // Make a page into a Collection by adding its first schema field
-  makeCollection: defineMutator(
-    z.object({
-      documentId: z.string(),
-      organizationId: z.string(),
-      collectionSchema: z.array(
-        z.object({
-          field: z.string(),
-          type: z.enum(["text", "datetime", "select", "file", "boolean", "number"]),
-          required: z.boolean(),
-          options: z.array(z.string()).optional(),
-        }),
-      ),
-    }),
-    async ({ tx, ctx, args: { documentId, organizationId, collectionSchema } }) => {
-      hasOrganizationAccess(ctx, organizationId);
-      await verifyDocumentAccess(tx, documentId, organizationId);
-
-      // Get the document to update its children
-      const document = await getDocumentById(tx, documentId, organizationId);
-      if (!document) {
-        throw notFoundError("Document", documentId);
+      if (!document.nearest_collection_id) {
+        throw new Error("Document does not belong to a collection");
       }
 
-      // Update the page to add collection_schema (making it a Collection)
-      await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          collection_schema: collectionSchema,
-          // Ensure config exists with defaults
-          config: document.config || {
-            showChildrenInSidebar: true,
-            defaultView: "table",
-          },
-        }),
-      );
+      // Get the collection schema
+      let collectionSchemaResult: { id: string } | undefined;
+      try {
+        collectionSchemaResult = await tx.run(
+          zql.collection_schemas.where("document_id", document.nearest_collection_id).one(),
+        );
+      } catch {
+        // Collection schema not found
+      }
 
-      // Set collection_id on all existing children
-      // This makes existing children into entries of this new Collection
-      const children = await tx.run(
-        zql.documents
-          .where("parent_id", documentId)
-          .where("organization_id", organizationId)
-          .where("deleted_at", "IS", null),
-      );
+      if (!collectionSchemaResult) {
+        throw new Error("Collection schema not found");
+      }
 
-      for (const child of children) {
-        await tx.mutate.documents.update(
-          withUpdatedTimestamp({
-            id: child.id,
-            collection_id: documentId,
+      const collectionSchema = collectionSchemaResult;
+
+      // Update field values
+      let fieldValuesResult: { id: string; values: ReadonlyJSONValue } | undefined;
+      try {
+        fieldValuesResult = await tx.run(
+          zql.document_field_values
+            .where("document_id", documentId)
+            .where("collection_schema_id", collectionSchema.id)
+            .one(),
+        );
+      } catch {
+        // No existing field values, will create new
+      }
+
+      const newValues = properties as unknown as ReadonlyJSONValue;
+
+      if (fieldValuesResult) {
+        const currentValues = (fieldValuesResult.values || {}) as Record<string, unknown>;
+        const mergedValues = { ...currentValues, ...properties } as unknown as ReadonlyJSONValue;
+        await tx.mutate.document_field_values.update({
+          id: fieldValuesResult.id,
+          values: mergedValues,
+        });
+      } else {
+        await tx.mutate.document_field_values.insert(
+          withTimestamps({
+            id: createId(),
+            document_id: documentId,
+            collection_schema_id: collectionSchema.id,
+            values: newValues,
+            orphaned_values: {} as ReadonlyJSONValue,
           }),
         );
       }
     },
   ),
-
-  // Update page/collection configuration
-  updateConfig: defineMutator(
-    z.object({
-      documentId: z.string(),
-      organizationId: z.string(),
-      config: z.object({
-        showChildrenInSidebar: z.boolean(),
-        defaultView: z.enum(["documents", "table"]),
-      }),
-    }),
-    async ({ tx, ctx, args: { documentId, organizationId, config } }) => {
-      hasOrganizationAccess(ctx, organizationId);
-      await verifyDocumentAccess(tx, documentId, organizationId);
-
-      await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          config,
-        }),
-      );
-    },
-  ),
 };
+
+/**
+ * Helper function to update all descendant paths and nearest_collection_id
+ */
+async function updateDescendantPaths(
+  tx: any,
+  parentId: string,
+  parentPath: string,
+  parentNearestCollectionId: string | null,
+  organizationId: string,
+): Promise<void> {
+  const children = await tx.run(
+    zql.documents
+      .where("parent_id", parentId)
+      .where("organization_id", organizationId)
+      .where("deleted_at", "IS", null),
+  );
+
+  for (const child of children) {
+    const newPath = `${parentPath}/${child.id}`;
+    
+    await tx.mutate.documents.update(
+      withUpdatedTimestamp({
+        id: child.id,
+        path: newPath,
+        nearest_collection_id: parentNearestCollectionId,
+      }),
+    );
+
+    // Recursively update this child's descendants
+    await updateDescendantPaths(tx, child.id, newPath, parentNearestCollectionId, organizationId);
+  }
+}

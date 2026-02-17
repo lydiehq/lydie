@@ -1,4 +1,4 @@
-import type { CollectionField } from "@lydie/core/collection";
+import { fromLegacyField, type CollectionField, type PropertyDefinition } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 
@@ -9,8 +9,9 @@ const PROPERTY_TYPES = [
   { value: "number", label: "Number" },
   { value: "select", label: "Select" },
   { value: "boolean", label: "Checkbox" },
-  { value: "datetime", label: "Date & Time" },
-  { value: "file", label: "File" },
+  { value: "date", label: "Date" },
+  { value: "multi-select", label: "Multi Select" },
+  { value: "relation", label: "Relation" },
 ] as const;
 
 type Props = {
@@ -18,31 +19,35 @@ type Props = {
   organizationId: string;
   schema: CollectionField[];
   isCollection: boolean;
+  isAdmin: boolean;
 };
 
-export function PropertyManager({ documentId, organizationId, schema, isCollection }: Props) {
+export function PropertyManager({ documentId, organizationId, schema, isCollection, isAdmin }: Props) {
   const z = useZero();
   const [isAdding, setIsAdding] = useState(false);
   const [newProperty, setNewProperty] = useState<{
-    field: string;
-    type: CollectionField["type"];
+    name: string;
+    type: PropertyDefinition["type"];
     required: boolean;
+    unique: boolean;
     options: string;
   }>({
-    field: "",
+    name: "",
     type: "text",
     required: false,
+    unique: false,
     options: "",
   });
 
   const handleAddProperty = async () => {
-    if (!newProperty.field.trim()) return;
+    if (!newProperty.name.trim()) return;
 
-    const fieldDef: CollectionField = {
-      field: newProperty.field.trim(),
+    const propDef: PropertyDefinition = {
+      name: newProperty.name.trim(),
       type: newProperty.type,
       required: newProperty.required,
-      ...(newProperty.type === "select" && newProperty.options
+      unique: newProperty.unique,
+      ...(newProperty.type === "select" || newProperty.type === "multi-select"
         ? {
             options: newProperty.options
               .split(",")
@@ -52,7 +57,7 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
         : {}),
     };
 
-    const updatedSchema = [...schema, fieldDef];
+    const updatedSchema = [...schema.map(fromLegacyField), propDef];
 
     if (isCollection) {
       // Page is already a collection, just update the schema
@@ -60,40 +65,62 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
         mutators.collection.updateSchema({
           collectionId: documentId,
           organizationId,
-          schema: updatedSchema,
+          properties: updatedSchema,
         }),
       );
     } else {
-      // Page is not a collection yet - adding first field makes it a collection
+      // Page is not a collection yet - adding first property makes it a collection
       await z.mutate(
-        mutators.document.makeCollection({
+        mutators.collection.createSchema({
           documentId,
           organizationId,
-          collectionSchema: updatedSchema,
+          properties: updatedSchema,
         }),
       );
     }
 
     setIsAdding(false);
     setNewProperty({
-      field: "",
+      name: "",
       type: "text",
       required: false,
+      unique: false,
       options: "",
     });
   };
 
   const handleRemoveProperty = async (fieldName: string) => {
-    const updatedSchema = schema.filter((f) => f.field !== fieldName);
+    const updatedSchema = schema
+      .filter((f) => f.field !== fieldName)
+      .map(fromLegacyField);
 
     await z.mutate(
       mutators.collection.updateSchema({
         collectionId: documentId,
         organizationId,
-        schema: updatedSchema,
+        properties: updatedSchema,
       }),
     );
   };
+
+  // If not admin, just show readonly list of properties (for parent collection context)
+  if (!isAdmin) {
+    if (schema.length === 0) return null;
+    
+    return (
+      <div className="flex flex-wrap gap-2">
+        {schema.map((field) => (
+          <div
+            key={field.field}
+            className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm"
+          >
+            <span className="font-medium">{field.field}</span>
+            <span className="text-gray-400 text-xs">({field.type})</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -114,7 +141,7 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
             >
               <span className="font-medium">{field.field}</span>
               <span className="text-blue-500 text-xs">({field.type})</span>
-              {isCollection && (
+              {isCollection && isAdmin && (
                 <button
                   onClick={() => handleRemoveProperty(field.field)}
                   className="ml-1 text-blue-400 hover:text-blue-600"
@@ -135,8 +162,8 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
             <label className="block text-xs font-medium text-gray-600 mb-1">Property name</label>
             <input
               type="text"
-              value={newProperty.field}
-              onChange={(e) => setNewProperty((p) => ({ ...p, field: e.target.value }))}
+              value={newProperty.name}
+              onChange={(e) => setNewProperty((p) => ({ ...p, name: e.target.value }))}
               placeholder="e.g., status, priority, dueDate"
               className="w-full px-2 py-1.5 text-sm border rounded"
               autoFocus
@@ -150,7 +177,7 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
               onChange={(e) =>
                 setNewProperty((p) => ({
                   ...p,
-                  type: e.target.value as CollectionField["type"],
+                  type: e.target.value as PropertyDefinition["type"],
                 }))
               }
               className="w-full px-2 py-1.5 text-sm border rounded"
@@ -163,7 +190,7 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
             </select>
           </div>
 
-          {newProperty.type === "select" && (
+          {(newProperty.type === "select" || newProperty.type === "multi-select") && (
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
                 Options (comma-separated)
@@ -178,23 +205,38 @@ export function PropertyManager({ documentId, organizationId, schema, isCollecti
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="required"
-              checked={newProperty.required}
-              onChange={(e) => setNewProperty((p) => ({ ...p, required: e.target.checked }))}
-              className="rounded border-gray-300"
-            />
-            <label htmlFor="required" className="text-sm text-gray-600">
-              Required
-            </label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="required"
+                checked={newProperty.required}
+                onChange={(e) => setNewProperty((p) => ({ ...p, required: e.target.checked }))}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="required" className="text-sm text-gray-600">
+                Required
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="unique"
+                checked={newProperty.unique}
+                onChange={(e) => setNewProperty((p) => ({ ...p, unique: e.target.checked }))}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="unique" className="text-sm text-gray-600">
+                Unique
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-2">
             <button
               onClick={handleAddProperty}
-              disabled={!newProperty.field.trim()}
+              disabled={!newProperty.name.trim()}
               className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCollection ? "Add Property" : "Make Collection"}

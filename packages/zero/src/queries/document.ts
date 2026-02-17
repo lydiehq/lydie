@@ -30,7 +30,6 @@ export const documentQueries = {
         .related("children", (q) =>
           q
             .where("deleted_at", "IS", null)
-            .orderBy("sort_order", "asc")
             .orderBy("created_at", "asc"),
         )
         .related("organization");
@@ -78,7 +77,6 @@ export const documentQueries = {
         .related("children", (q) =>
           q
             .where("deleted_at", "IS", null)
-            .orderBy("sort_order", "asc")
             .orderBy("created_at", "asc"),
         )
         .related("organization")
@@ -120,7 +118,6 @@ export const documentQueries = {
         .related("children", (q) =>
           q
             .where("deleted_at", "IS NOT", null)
-            .orderBy("sort_order", "asc")
             .orderBy("created_at", "asc"),
         )
         .orderBy("deleted_at", "desc")

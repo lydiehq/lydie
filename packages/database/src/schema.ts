@@ -164,6 +164,7 @@ export const documentsTable = pgTable(
       .$default(() => createId()),
     title: text("title").notNull(),
     slug: text("slug"),
+    // Note: body field removed - using yjsState exclusively for content storage
     yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
@@ -171,11 +172,17 @@ export const documentsTable = pgTable(
     parentId: text("parent_id").references((): PgColumn<any> => documentsTable.id, {
       onDelete: "set null",
     }),
-    // Collection (parent Page with schema) this document belongs to
-    // Every Page belongs to exactly one Collection (either a parent Collection or the workspace's "General" Collection)
-    collectionId: text("collection_id").references((): PgColumn<any> => documentsTable.id, {
-      onDelete: "set null",
-    }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    // Materialized path: slash-separated ancestor ids including own id
+    // Example: "uuid1/uuid2/uuid3" where uuid3 is this document's id
+    path: text("path"),
+    customFields: jsonb("custom_fields").$type<Record<string, string | number>>(), // TODO: remove
+    // Denormalized: id of the nearest ancestor that has a collection_schemas row
+    // null if no ancestor is a Collection
+    nearestCollectionId: text("nearest_collection_id").references(
+      (): PgColumn<any> => documentsTable.id,
+      { onDelete: "set null" },
+    ),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
@@ -183,21 +190,9 @@ export const documentsTable = pgTable(
       onDelete: "set null",
     }),
     externalId: text("external_id"),
-    // Document properties - values for Collection schema fields
-    properties: jsonb("properties")
-      .$type<Record<string, string | number | boolean | null>>()
-      .default({}),
-    // Collection schema - when present, this Page IS a Collection
-    // Its direct children become entries that must conform to this schema
-    collectionSchema: jsonb("collection_schema")
-      .$type<Array<{ field: string; type: string; required: boolean; options?: string[] }>>(),
-    // Collection configuration (only relevant when collection_schema is present)
-    config: jsonb("config")
-      .$type<{
-        showChildrenInSidebar: boolean;
-        defaultView: "documents" | "table";
-      }>()
-      .default({ showChildrenInSidebar: true, defaultView: "documents" }),
+    // Controls sidebar visibility for children of this Document
+    // Only relevant when this Document is a Collection (has collection_schemas row)
+    showChildrenInSidebar: boolean("show_children_in_sidebar").notNull().default(false),
     coverImage: text("cover_image"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
@@ -206,26 +201,114 @@ export const documentsTable = pgTable(
     deletedAt: timestamp("deleted_at"),
     isLocked: boolean("is_locked").notNull().default(false),
     isFavorited: boolean("is_favorited").notNull().default(false),
-    sortOrder: integer("sort_order").notNull().default(0),
     ...timestamps,
   },
   (table) => [
     index("documents_parent_id_idx").on(table.parentId),
-    index("documents_collection_id_idx").on(table.collectionId),
-    // GIN index on properties for efficient JSONB filtering
-    index("documents_properties_gin_idx").using("gin", table.properties),
+    index("documents_path_idx").on(table.path), // For LIKE prefix queries
+    index("documents_nearest_collection_id_idx").on(table.nearestCollectionId),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
-    // Index for finding all Collections (Pages with collection_schema) in an organization
-    index("documents_collection_schema_idx")
-      .on(table.organizationId, table.id)
-      .where(sql`${table.collectionSchema} IS NOT NULL AND ${table.deletedAt} IS NULL`),
     // Below indexes are important for performance, don't delete!
-    index("documents_org_sort_created_id_not_deleted_idx")
-      .on(table.organizationId, table.sortOrder, sql`${table.createdAt} DESC`, table.id)
+    index("documents_org_created_id_not_deleted_idx")
+      .on(table.organizationId, sql`${table.createdAt} DESC`, table.id)
       .where(sql`${table.deletedAt} IS NULL`),
-    index("documents_org_parent_not_deleted_sort_created_id_idx")
-      .on(table.organizationId, table.parentId, table.sortOrder, table.createdAt, table.id)
+    index("documents_org_parent_not_deleted_created_id_idx")
+      .on(table.organizationId, table.parentId, table.createdAt, table.id)
       .where(sql`${table.deletedAt} IS NULL`),
+  ],
+);
+
+/**
+ * Collection Schemas Table
+ *
+ * A Collection is a Document with a corresponding row in this table.
+ * This table stores the schema definition (properties array) for Collections.
+ * When a row is deleted, the Document reverts to being a plain Document.
+ */
+export const collectionSchemasTable = pgTable(
+  "collection_schemas",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    // 1-to-1 with a Document - this Document becomes a Collection
+    documentId: text("document_id")
+      .notNull()
+      .unique()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    // Array of property definitions for this Collection
+    // Properties are inherited by all child Documents
+    properties: jsonb("properties")
+      .$type<
+        Array<{
+          name: string;
+          type: "text" | "number" | "date" | "select" | "multi-select" | "boolean" | "relation";
+          required: boolean;
+          unique: boolean;
+          options?: string[]; // For select/multi-select types
+          derived?: {
+            sourceField: string;
+            transform: "slugify";
+            editable: boolean;
+            warnOnChangeAfterPublish?: boolean;
+          } | null;
+        }>
+      >()
+      .notNull()
+      .default([]),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("collection_schemas_document_id_idx").on(table.documentId),
+    index("collection_schemas_organization_id_idx").on(table.organizationId),
+  ],
+);
+
+/**
+ * Document Field Values Table
+ *
+ * Stores field values for Documents that belong to Collections.
+ * Each row represents a Document's values for a specific Collection schema.
+ * Documents can have multiple rows if they belong to multiple Collections via inheritance.
+ */
+export const documentFieldValuesTable = pgTable(
+  "document_field_values",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    // The Collection schema this row conforms to
+    collectionSchemaId: text("collection_schema_id")
+      .notNull()
+      .references(() => collectionSchemasTable.id, { onDelete: "cascade" }),
+    // Field values as a key-value map
+    // Example: { "slug": "how-we-scaled", "status": "published", "published_at": "2026-01-15" }
+    values: jsonb("values")
+      .$type<Record<string, string | number | boolean | null>>()
+      .notNull()
+      .default({}),
+    // Preserved values from a previous Collection after a move
+    // Flagged for review, never deleted automatically
+    orphanedValues: jsonb("orphaned_values")
+      .$type<Record<string, string | number | boolean | null>>()
+      .default({}),
+    ...timestamps,
+  },
+  (table) => [
+    index("document_field_values_document_id_idx").on(table.documentId),
+    index("document_field_values_collection_schema_id_idx").on(table.collectionSchemaId),
+    // GIN index for efficient JSONB field lookups
+    index("document_field_values_gin_idx").using("gin", table.values),
+    // Unique constraint: one row per document per collection schema
+    uniqueIndex("document_field_values_unique_idx").on(table.documentId, table.collectionSchemaId),
   ],
 );
 

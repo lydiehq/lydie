@@ -1,19 +1,19 @@
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
-import { db, documentsTable } from "@lydie/database";
-import { desc, sql, type SQL } from "drizzle-orm";
+import { db, collectionSchemasTable, documentFieldValuesTable, documentsTable } from "@lydie/database";
+import { desc, eq, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 import { extractTableOfContents } from "../../utils/toc";
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
-import { apiKeyAuth, externalRateLimit } from "../external/middleware";
+import { apiKeyAuth, externalRateLimit } from "./middleware";
 
 // Default and max limits for pagination
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
-// Type for entry list response (no content body)
-type EntryListItem = {
+// Type for document list response (no content body)
+type DocumentListItem = {
   id: string;
   title: string | null;
   fields: Record<string, unknown>;
@@ -22,19 +22,19 @@ type EntryListItem = {
 };
 
 // Type for paginated response
-type PaginatedEntriesResponse = {
-  data: EntryListItem[];
+type PaginatedDocumentsResponse = {
+  data: DocumentListItem[];
   pagination: {
     nextCursor: string | null;
     hasMore: boolean;
   };
 };
 
-// Type for entry select (without yjsState for list queries)
-type EntrySelect = {
+// Type for document select (without yjsState for list queries)
+type DocumentSelect = {
   id: string;
   title: string | null;
-  properties: Record<string, string | number | boolean | null> | null;
+  fieldValues: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -80,7 +80,7 @@ function buildCursorCondition(
 /**
  * Encode cursor for next page
  */
-function encodeCursor(item: EntrySelect): string {
+function encodeCursor(item: DocumentSelect): string {
   const cursorData = {
     id: item.id,
     createdAt: item.createdAt.toISOString(),
@@ -89,42 +89,36 @@ function encodeCursor(item: EntrySelect): string {
 }
 
 /**
- * Transform document to entry list item (no content body)
+ * Transform document to list item (no content body)
  */
-function transformToEntryListItem(doc: EntrySelect): EntryListItem {
-  // Fields come from properties only - no special first-class fields
-  const fields: Record<string, unknown> = {
-    ...(doc.properties || {}),
-  };
-
+function transformToDocumentListItem(doc: DocumentSelect): DocumentListItem {
   return {
     id: doc.id,
     title: doc.title,
-    fields,
+    fields: doc.fieldValues || {},
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };
 }
 
 /**
- * Build where conditions for entry queries
- * All filters are applied to the properties JSONB field
+ * Build where conditions for document queries
  */
-function buildEntryWhereConditions(
+function buildDocumentWhereConditions(
   organizationId: string,
   collectionId: string,
   filters: Record<string, string>,
 ): SQL {
   const conditions: SQL[] = [
     sql`${documentsTable.organizationId} = ${organizationId}`,
-    sql`${documentsTable.collectionId} = ${collectionId}`,
+    sql`${documentsTable.nearestCollectionId} = ${collectionId}`,
     sql`${documentsTable.deletedAt} IS NULL`,
   ];
 
-  // Apply property filters - all fields are in properties JSONB
+  // Apply property filters on field values
   for (const [fieldName, value] of Object.entries(filters)) {
     conditions.push(
-      sql`${documentsTable.properties}->>${fieldName} = ${value}`,
+      sql`${documentFieldValuesTable.values}->>${fieldName} = ${value}`,
     );
   }
 
@@ -132,12 +126,16 @@ function buildEntryWhereConditions(
   return conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`);
 }
 
-export const V1Api = new Hono()
+/**
+ * Collections API - External API for querying collection documents
+ * Uses API key authentication
+ */
+export const CollectionsApi = new Hono()
   .use(apiKeyAuth)
   .use(externalRateLimit)
   /**
-   * List entries in a collection
-   * GET /v1/collections/:collectionId/entries
+   * List documents in a collection
+   * GET /v1/:idOrSlug/collections/:collectionId/documents
    *
    * Query params:
    * - limit: number (default 20, max 100)
@@ -146,7 +144,7 @@ export const V1Api = new Hono()
    *
    * Response excludes content body (yjsState)
    */
-  .get("/collections/:collectionId/entries", async (c) => {
+  .get("/collections/:collectionId/documents", async (c) => {
     const organizationId = c.get("organizationId");
     const collectionId = c.req.param("collectionId");
 
@@ -163,7 +161,7 @@ export const V1Api = new Hono()
     const filters = parseFilters(query);
 
     // Build where conditions
-    let whereConditions = buildEntryWhereConditions(
+    let whereConditions = buildDocumentWhereConditions(
       organizationId,
       collectionId,
       filters,
@@ -175,32 +173,43 @@ export const V1Api = new Hono()
       whereConditions = sql`${whereConditions} AND ${cursorCondition}`;
     }
 
-    // Fetch entries (limit + 1 to determine if there's a next page)
-    const entries = await db
+    // Fetch documents with their field values
+    // Join with document_field_values to get all documents belonging to this collection
+    const documents = await db
       .select({
         id: documentsTable.id,
         title: documentsTable.title,
-        properties: documentsTable.properties,
+        fieldValues: documentFieldValuesTable.values,
         createdAt: documentsTable.createdAt,
         updatedAt: documentsTable.updatedAt,
       })
       .from(documentsTable)
-      .where(whereConditions)
+      .innerJoin(
+        documentFieldValuesTable,
+        eq(documentsTable.id, documentFieldValuesTable.documentId),
+      )
+      .innerJoin(
+        collectionSchemasTable,
+        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
+      )
+      .where(
+        sql`${whereConditions} AND ${collectionSchemasTable.documentId} = ${collectionId}`,
+      )
       .orderBy(desc(documentsTable.createdAt), desc(documentsTable.id))
       .limit(limit + 1);
 
     // Determine if there's a next page
-    const hasMore = entries.length > limit;
-    const data = entries.slice(0, limit);
+    const hasMore = documents.length > limit;
+    const data = documents.slice(0, limit);
 
     // Generate next cursor if there are more results
     const nextCursor = hasMore && data.length > 0
-      ? encodeCursor(data[data.length - 1] as EntrySelect)
+      ? encodeCursor(data[data.length - 1] as DocumentSelect)
       : null;
 
     // Transform to response format
-    const response: PaginatedEntriesResponse = {
-      data: data.map((doc) => transformToEntryListItem(doc as EntrySelect)),
+    const response: PaginatedDocumentsResponse = {
+      data: data.map((doc) => transformToDocumentListItem(doc as DocumentSelect)),
       pagination: {
         nextCursor,
         hasMore,
@@ -210,37 +219,54 @@ export const V1Api = new Hono()
     return c.json(response);
   })
   /**
-   * Fetch single entry by ID
-   * GET /v1/entries/:entryId
+   * Fetch single document by ID
+   * GET /v1/:idOrSlug/documents/:documentId
    *
    * Response includes content body (yjsState converted to JSON)
    */
-  .get("/entries/:entryId", async (c) => {
+  .get("/documents/:documentId", async (c) => {
     const organizationId = c.get("organizationId");
-    const entryId = c.req.param("entryId");
+    const documentId = c.req.param("documentId");
     const includeToc = c.req.query("include_toc") === "true";
 
-    // Fetch the entry
-    const entryResult = await db
+    // Fetch the document
+    const documentResult = await db
       .select()
       .from(documentsTable)
       .where(
-        sql`${documentsTable.id} = ${entryId} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+        sql`${documentsTable.id} = ${documentId} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
       )
       .limit(1);
     
-    const entry = entryResult[0];
+    const document = documentResult[0];
 
-    if (!entry) {
+    if (!document) {
       throw new HTTPException(404, {
-        message: "Entry not found",
+        message: "Document not found",
       });
     }
 
+    // Fetch field values for this document
+    const fieldValuesResult = await db
+      .select({
+        values: documentFieldValuesTable.values,
+      })
+      .from(documentFieldValuesTable)
+      .innerJoin(
+        collectionSchemasTable,
+        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
+      )
+      .where(
+        sql`${documentFieldValuesTable.documentId} = ${documentId} AND ${collectionSchemasTable.documentId} = ${document.nearestCollectionId}`,
+      )
+      .limit(1);
+
+    const fieldValues = fieldValuesResult[0]?.values || {};
+
     // Convert YJS state to JSON content
     let jsonContent: ReturnType<typeof convertYjsToJson> = null;
-    if (entry.yjsState) {
-      const rawContent = convertYjsToJson(entry.yjsState);
+    if (document.yjsState) {
+      const rawContent = convertYjsToJson(document.yjsState);
       jsonContent = await transformDocumentLinksToInternalLinkMarks(rawContent);
     }
 
@@ -254,19 +280,14 @@ export const V1Api = new Hono()
       }
     }
 
-    // Build fields object from properties only
-    const fields: Record<string, unknown> = {
-      ...(entry.properties || {}),
-    };
-
     // Build response
     const response = {
-      id: entry.id,
-      title: entry.title,
-      fields,
+      id: document.id,
+      title: document.title,
+      fields: fieldValues as Record<string, unknown>,
       content: jsonContent,
-      createdAt: entry.createdAt.toISOString(),
-      updatedAt: entry.updatedAt.toISOString(),
+      createdAt: document.createdAt.toISOString(),
+      updatedAt: document.updatedAt.toISOString(),
       ...(includeToc && { toc }),
     };
 

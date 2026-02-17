@@ -60,29 +60,62 @@ const invitations = table("invitations")
   })
   .primaryKey("id");
 
+/**
+ * Documents Table
+ * The core content primitive
+ */
 const documents = table("documents")
   .columns({
     id: string(),
     title: string(),
     slug: string().optional(),
+    sort_order: number(),
+    yjs_state: string(),
+    // Note: body field removed - using yjsState exclusively for content storage
     user_id: string(),
     parent_id: string().optional(),
-    // Collection (parent Page with schema) this document belongs to
-    collection_id: string().optional(),
+    // Materialized path: slash-separated ancestor ids including own id
+    path: string(),
+    // Denormalized: id of the nearest ancestor Collection
+    nearest_collection_id: string().optional(),
     organization_id: string(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
-    properties: json(), // Document field values
-    // Collection schema - when present, this Page IS a Collection
-    collection_schema: json().optional(),
-    // Collection configuration (when collection_schema is present)
-    config: json(),
+    show_children_in_sidebar: boolean(),
     cover_image: string().optional(),
     published: boolean(),
     deleted_at: number().optional(),
     is_locked: boolean(),
     is_favorited: boolean(),
-    sort_order: number(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+/**
+ * Collection Schemas Table
+ * A Collection is a Document with a row in this table
+ */
+const collectionSchemas = table("collection_schemas")
+  .columns({
+    id: string(),
+    document_id: string(),
+    organization_id: string(),
+    properties: json(), // Array of property definitions
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+/**
+ * Document Field Values Table
+ * Stores field values for Documents that belong to Collections
+ */
+const documentFieldValues = table("document_field_values")
+  .columns({
+    id: string(),
+    document_id: string(),
+    collection_schema_id: string(),
+    values: json(), // Field values as key-value map
+    orphaned_values: json().optional(), // Preserved values from previous Collection
     ...timestamps,
   })
   .primaryKey("id");
@@ -156,6 +189,24 @@ const assistantConversations = table("assistant_conversations")
   })
   .primaryKey("id");
 
+const assistantAgentsRelations = relationships(assistantAgents, ({ one, many }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  conversations: many({
+    sourceField: ["id"],
+    destField: ["agent_id"],
+    destSchema: assistantConversations,
+  }),
+}));
+
 const assistantMessages = table("assistant_messages")
   .columns({
     id: string(),
@@ -166,6 +217,37 @@ const assistantMessages = table("assistant_messages")
     created_at: number(),
   })
   .primaryKey("id");
+
+const assistantConversationsRelations = relationships(assistantConversations, ({ one, many }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  agent: one({
+    sourceField: ["agent_id"],
+    destField: ["id"],
+    destSchema: assistantAgents,
+  }),
+  messages: many({
+    sourceField: ["id"],
+    destField: ["conversation_id"],
+    destSchema: assistantMessages,
+  }),
+}));
+
+const assistantMessagesRelations = relationships(assistantMessages, ({ one }) => ({
+  conversation: one({
+    sourceField: ["conversation_id"],
+    destField: ["id"],
+    destSchema: assistantConversations,
+  }),
+}));
 
 export const documentComponents = table("document_components")
   .columns({
@@ -274,17 +356,29 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["parent_id"],
     destSchema: documents,
   }),
-  // Collection is a self-reference - a Collection is just a Page with a schema
-  collection: one({
-    sourceField: ["collection_id"],
+  // Nearest collection this document belongs to
+  nearestCollection: one({
+    sourceField: ["nearest_collection_id"],
     destField: ["id"],
     destSchema: documents,
   }),
-  // Entries are documents that have this document as their collection
-  entries: many({
+  // Documents that have this document as their nearest collection
+  collectionDocuments: many({
     sourceField: ["id"],
-    destField: ["collection_id"],
+    destField: ["nearest_collection_id"],
     destSchema: documents,
+  }),
+  // Collection schema if this document is a Collection
+  collectionSchema: one({
+    sourceField: ["id"],
+    destField: ["document_id"],
+    destSchema: collectionSchemas,
+  }),
+  // Field values for this document
+  fieldValues: many({
+    sourceField: ["id"],
+    destField: ["document_id"],
+    destSchema: documentFieldValues,
   }),
   organization: one({
     sourceField: ["organization_id"],
@@ -320,6 +414,38 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
   }),
 }));
 
+const collectionSchemasRelations = relationships(collectionSchemas, ({ one, many }) => ({
+  document: one({
+    sourceField: ["document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  // All field values for documents in this collection
+  fieldValues: many({
+    sourceField: ["id"],
+    destField: ["collection_schema_id"],
+    destSchema: documentFieldValues,
+  }),
+}));
+
+const documentFieldValuesRelations = relationships(documentFieldValues, ({ one }) => ({
+  document: one({
+    sourceField: ["document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  collectionSchema: one({
+    sourceField: ["collection_schema_id"],
+    destField: ["id"],
+    destSchema: collectionSchemas,
+  }),
+}));
+
 const documentVersionsRelations = relationships(documentVersions, ({ one }) => ({
   document: one({
     sourceField: ["document_id"],
@@ -333,7 +459,7 @@ const documentVersionsRelations = relationships(documentVersions, ({ one }) => (
   }),
 }));
 
-const documentLinksRelations = relationships(documentLinks, ({ one, many }) => ({
+const documentLinksRelations = relationships(documentLinks, ({ one }) => ({
   sourceDocument: one({
     sourceField: ["source_document_id"],
     destField: ["id"],
@@ -351,6 +477,11 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     sourceField: ["id"],
     destField: ["organization_id"],
     destSchema: documents,
+  }),
+  collectionSchemas: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: collectionSchemas,
   }),
   members: many({
     sourceField: ["id"],
@@ -425,6 +556,88 @@ const invitationsRelations = relationships(invitations, ({ one }) => ({
   }),
 }));
 
+const sessionsTable = table("sessions")
+  .columns({
+    id: string(),
+    expires_at: number(),
+    token: string(),
+    ip_address: string().optional(),
+    user_agent: string().optional(),
+    user_id: string(),
+    active_organization_id: string().optional(),
+    active_team_id: string().optional(),
+    impersonated_by: string().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const sessionsRelations = relationships(sessionsTable, ({ one }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
+const accountsTable = table("accounts")
+  .columns({
+    id: string(),
+    account_id: string(),
+    provider_id: string(),
+    user_id: string(),
+    access_token: string().optional(),
+    refresh_token: string().optional(),
+    id_token: string().optional(),
+    access_token_expires_at: number().optional(),
+    refresh_token_expires_at: number().optional(),
+    scope: string().optional(),
+    password: string().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const accountsRelations = relationships(accountsTable, ({ one }) => ({
+  user: one({
+    sourceField: ["user_id"],
+    destField: ["id"],
+    destSchema: users,
+  }),
+}));
+
+const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+}));
+
+const documentComponentsRelations = relationships(documentComponents, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+}));
+
+const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  assistantConversation: one({
+    sourceField: ["conversation_id"],
+    destField: ["id"],
+    destSchema: assistantConversations,
+  }),
+  message: one({
+    sourceField: ["message_id"],
+    destField: ["id"],
+    destSchema: assistantMessages,
+  }),
+}));
+
 const usersRelations = relationships(users, ({ many, one }) => ({
   members: many({
     sourceField: ["id"],
@@ -445,89 +658,6 @@ const usersRelations = relationships(users, ({ many, one }) => ({
     sourceField: ["id"],
     destField: ["user_id"],
     destSchema: userSettings,
-  }),
-}));
-
-const documentComponentsRelations = relationships(documentComponents, ({ one }) => ({
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-}));
-
-const apiKeysRelations = relationships(apiKeys, ({ one }) => ({
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-}));
-
-const assistantAgentsRelations = relationships(assistantAgents, ({ one, many }) => ({
-  user: one({
-    sourceField: ["user_id"],
-    destField: ["id"],
-    destSchema: users,
-  }),
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-  conversations: many({
-    sourceField: ["id"],
-    destField: ["agent_id"],
-    destSchema: assistantConversations,
-  }),
-}));
-
-const assistantConversationsRelations = relationships(assistantConversations, ({ one, many }) => ({
-  user: one({
-    sourceField: ["user_id"],
-    destField: ["id"],
-    destSchema: users,
-  }),
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-  agent: one({
-    sourceField: ["agent_id"],
-    destField: ["id"],
-    destSchema: assistantAgents,
-  }),
-  messages: many({
-    sourceField: ["id"],
-    destField: ["conversation_id"],
-    destSchema: assistantMessages,
-  }),
-}));
-
-const assistantMessagesRelations = relationships(assistantMessages, ({ one }) => ({
-  conversation: one({
-    sourceField: ["conversation_id"],
-    destField: ["id"],
-    destSchema: assistantConversations,
-  }),
-}));
-
-const llmUsageRelations = relationships(llmUsage, ({ one }) => ({
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-  assistantConversation: one({
-    sourceField: ["conversation_id"],
-    destField: ["id"],
-    destSchema: assistantConversations,
-  }),
-  message: one({
-    sourceField: ["message_id"],
-    destField: ["id"],
-    destSchema: assistantMessages,
   }),
 }));
 
@@ -595,7 +725,6 @@ const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
     destSchema: integrationConnections,
   }),
 }));
-
 const integrationActivityLogs = table("integration_activity_logs")
   .columns({
     id: string(),
@@ -614,7 +743,6 @@ const integrationActivityLogsRelations = relationships(integrationActivityLogs, 
     destSchema: integrationConnections,
   }),
 }));
-
 const feedbackSubmissions = table("feedback_submissions")
   .columns({
     id: string(),
@@ -782,7 +910,6 @@ const templatesRelations = relationships(templates, ({ many }) => ({
     destSchema: templateFaqs,
   }),
 }));
-
 const templateDocumentsRelations = relationships(templateDocuments, ({ one, many }) => ({
   template: one({
     sourceField: ["template_id"],
@@ -800,7 +927,6 @@ const templateDocumentsRelations = relationships(templateDocuments, ({ one, many
     destSchema: templateDocuments,
   }),
 }));
-
 const templateInstallationsRelations = relationships(templateInstallations, ({ one }) => ({
   template: one({
     sourceField: ["template_id"],
@@ -823,7 +949,6 @@ const templateInstallationsRelations = relationships(templateInstallations, ({ o
     destSchema: documents,
   }),
 }));
-
 const templateCategoriesRelations = relationships(templateCategories, ({ many }) => ({
   assignments: many({
     sourceField: ["id"],
@@ -831,7 +956,6 @@ const templateCategoriesRelations = relationships(templateCategories, ({ many })
     destSchema: templateCategoryAssignments,
   }),
 }));
-
 const templateCategoryAssignmentsRelations = relationships(
   templateCategoryAssignments,
   ({ one }) => ({
@@ -847,7 +971,6 @@ const templateCategoryAssignmentsRelations = relationships(
     }),
   }),
 );
-
 const templateFaqsRelations = relationships(templateFaqs, ({ one }) => ({
   template: one({
     sourceField: ["template_id"],
@@ -907,6 +1030,8 @@ export const schema = createSchema({
   tables: [
     users,
     documents,
+    collectionSchemas,
+    documentFieldValues,
     documentVersions,
     documentLinks,
     organizations,
@@ -936,9 +1061,13 @@ export const schema = createSchema({
     userWorkspaceCredits,
     stripeCustomers,
     creditUsageLog,
+    sessionsTable,
+    accountsTable,
   ],
   relationships: [
     documentsRelations,
+    collectionSchemasRelations,
+    documentFieldValuesRelations,
     documentVersionsRelations,
     documentLinksRelations,
     organizationsRelations,
@@ -969,6 +1098,8 @@ export const schema = createSchema({
     userWorkspaceCreditsRelations,
     stripeCustomersRelations,
     creditUsageLogRelations,
+    sessionsRelations,
+    accountsRelations,
   ],
 });
 

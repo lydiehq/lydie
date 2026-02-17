@@ -6,7 +6,6 @@ import { HTTPException } from "hono/http-exception";
 
 import { AssistantRoute } from "./assistant";
 import { BillingRoute } from "./billing";
-import { DatabaseRoute } from "./database";
 import { DocumentContentRoute } from "./document-content";
 import { ImagesRoute } from "./images";
 import { IntegrationsRoute } from "./integrations";
@@ -37,7 +36,6 @@ const organizationScopedRouter = new Hono<{
   .route("/images", ImagesRoute)
   .route("/billing", BillingRoute)
   .route("/document-content", DocumentContentRoute)
-  .route("/database", DatabaseRoute)
   .route("/workspace-export", WorkspaceExportRoute);
 
 export const InternalApi = new Hono()
