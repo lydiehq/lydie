@@ -22,6 +22,21 @@ type Props = {
   schema: CollectionField[];
 };
 
+// Extract field values from the fieldValues relationship
+function extractFieldValues(
+  fieldValues: readonly { values: unknown }[] | null | undefined,
+): Record<string, string | number | boolean | null> {
+  if (!fieldValues || fieldValues.length === 0) {
+    return {};
+  }
+  // fieldValues is an array, take the first one (should only be one per collection)
+  const values = fieldValues[0]?.values;
+  if (typeof values === "object" && values !== null) {
+    return values as Record<string, string | number | boolean | null>;
+  }
+  return {};
+}
+
 export function RecordsTable({ collectionId, organizationId, organizationSlug, schema }: Props) {
   const z = useZero();
   const [documentsResult] = useQuery(
@@ -32,7 +47,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
     documentsResult?.map((doc) => ({
       id: doc.id,
       title: doc.title,
-      properties: (doc.properties || {}) as Record<string, string | number | boolean | null>,
+      properties: extractFieldValues(doc.fieldValues),
       createdAt: new Date(doc.created_at).toISOString(),
       updatedAt: new Date(doc.updated_at).toISOString(),
     })) || [];
@@ -117,13 +132,23 @@ function EditableField({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<string>(String(value ?? ""));
 
+  // Reset editValue when entering edit mode to match current value
+  const startEditing = () => {
+    setEditValue(String(value ?? ""));
+    setIsEditing(true);
+  };
+
   const handleSave = () => {
     let newValue: string | number | boolean | null = editValue;
 
     if (fieldDef.type === "boolean") {
       newValue = editValue === "true";
+    } else if (fieldDef.type === "number") {
+      newValue = editValue === "" ? null : Number(editValue);
     } else if (fieldDef.type === "datetime") {
-      newValue = editValue;
+      newValue = editValue === "" ? null : editValue;
+    } else if (editValue === "") {
+      newValue = null;
     }
 
     onSave(newValue);
@@ -133,10 +158,10 @@ function EditableField({
   if (!isEditing) {
     return (
       <div
-        onClick={() => setIsEditing(true)}
+        onClick={startEditing}
         className="cursor-pointer rounded px-2 py-1 hover:bg-gray-100"
       >
-        {value ? String(value) : <span className="text-gray-400">-</span>}
+        {value !== null && value !== undefined ? String(value) : <span className="text-gray-400">-</span>}
       </div>
     );
   }
@@ -144,9 +169,10 @@ function EditableField({
   if (fieldDef.type === "select" && fieldDef.options) {
     return (
       <select
-        value={String(value ?? "")}
+        value={editValue}
         onChange={(e) => {
-          onSave(e.target.value);
+          const newValue = e.target.value === "" ? null : e.target.value;
+          onSave(newValue);
           setIsEditing(false);
         }}
         onBlur={() => setIsEditing(false)}
@@ -165,7 +191,7 @@ function EditableField({
 
   return (
     <input
-      type={fieldDef.type === "datetime" ? "datetime-local" : "text"}
+      type={fieldDef.type === "datetime" ? "datetime-local" : fieldDef.type === "number" ? "number" : "text"}
       value={editValue}
       onChange={(e) => setEditValue(e.target.value)}
       onBlur={handleSave}

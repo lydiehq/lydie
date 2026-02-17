@@ -10,12 +10,12 @@ import {
   onboardingSchedulerRoleLinkable,
 } from "./onboarding";
 import { secret } from "./secret";
+import { assetsRouter, organizationAssetsBucket } from "./web";
 import {
   workspaceExportBucket,
   workspaceExportProcessorFunction,
   workspaceExportProcessorFunctionLinkable,
 } from "./workspace-export";
-import { assetsRouter, organizationAssetsBucket } from "./web";
 
 const commonSecrets = [
   secret.googleAiStudioApiKey,

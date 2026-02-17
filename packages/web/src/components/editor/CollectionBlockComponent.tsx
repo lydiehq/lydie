@@ -97,7 +97,11 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
   const handleRemoveBlock = () => {
     const pos = getPos();
     if (typeof pos === "number") {
-      editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: pos, to: pos + node.nodeSize })
+        .run();
     }
   };
 
@@ -105,9 +109,7 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
   const filteredCollections = useMemo(() => {
     if (!searchQuery.trim()) return collections?.slice(0, 5) || [];
     const query = searchQuery.toLowerCase();
-    return (collections || [])
-      .filter((c) => c.name.toLowerCase().includes(query))
-      .slice(0, 8);
+    return (collections || []).filter((c) => c.name.toLowerCase().includes(query)).slice(0, 8);
   }, [collections, searchQuery]);
 
   // Empty state - no collection selected
@@ -230,7 +232,9 @@ export function CollectionBlockComponent(props: NodeViewRendererProps) {
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">{collection?.name || "Untitled"}</span>
             {Object.keys(filters).length > 0 && (
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Filtered</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                Filtered
+              </span>
             )}
           </div>
           <button

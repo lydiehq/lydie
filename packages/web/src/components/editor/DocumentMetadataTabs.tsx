@@ -125,7 +125,7 @@ function PropertiesPanel({
   collectionSchema?: CollectionField[];
 }) {
   const organizationId = doc.organization_id;
-  
+
   // Fetch field values for this document from the document_field_values table
   const [fieldValuesData] = useQuery(
     doc.nearest_collection_id
@@ -137,7 +137,7 @@ function PropertiesPanel({
   );
 
   // Extract field values from the query result
-  const fieldValues: FieldValues = fieldValuesData?.[0]?.values as FieldValues || {};
+  const fieldValues: FieldValues = (fieldValuesData?.[0]?.values as FieldValues) || {};
 
   // If no collection schema, show message
   if (!collectionSchema || collectionSchema.length === 0) {

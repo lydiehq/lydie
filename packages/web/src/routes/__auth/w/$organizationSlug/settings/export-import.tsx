@@ -72,10 +72,8 @@ function RouteComponent() {
 
     try {
       const client = await createClient();
-      
-      const response = await client.internal["workspace-export"]
-        .$post()
-        .then((res) => res.json());
+
+      const response = await client.internal["workspace-export"].$post().then((res) => res.json());
 
       if (response.success) {
         setCurrentJob({
@@ -453,18 +451,14 @@ function RouteComponent() {
             <div className="flex-1">
               <h3 className="text-lg font-medium text-gray-900">Export Workspace</h3>
               <p className="text-gray-600 mt-1">
-                Export all documents as Markdown files with YAML frontmatter containing document properties,
-                database schemas, and page configuration.
+                Export all documents as Markdown files with YAML frontmatter containing document
+                properties, database schemas, and page configuration.
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button
-              onPress={handleExport}
-              isPending={isExporting}
-              isDisabled={isExporting}
-            >
+            <Button onPress={handleExport} isPending={isExporting} isDisabled={isExporting}>
               {isExporting ? "Exporting..." : "Export Workspace"}
             </Button>
           </div>
@@ -526,8 +520,8 @@ function RouteComponent() {
             <div className="flex-1">
               <h3 className="text-lg font-medium text-gray-900">Import MDX Files</h3>
               <p className="text-gray-600 mt-1">
-                Upload MDX files to create new documents. Custom components will be automatically detected
-                and created. You can drag and drop a folder to preserve the page hierarchy.
+                Upload MDX files to create new documents. Custom components will be automatically
+                detected and created. You can drag and drop a folder to preserve the page hierarchy.
               </p>
             </div>
           </div>
@@ -582,7 +576,9 @@ function RouteComponent() {
                           )}
                           <span className="flex-1 truncate">
                             {fileWithPath.folderPath && (
-                              <span className="text-purple-600 mr-1">{fileWithPath.folderPath}/</span>
+                              <span className="text-purple-600 mr-1">
+                                {fileWithPath.folderPath}/
+                              </span>
                             )}
                             {fileWithPath.file.name}
                           </span>
@@ -671,13 +667,17 @@ function RouteComponent() {
                                 {result.newComponentsCreated &&
                                   result.newComponentsCreated.length > 0 && (
                                     <p>
-                                      Created new components: {result.newComponentsCreated.join(", ")}
+                                      Created new components:{" "}
+                                      {result.newComponentsCreated.join(", ")}
                                     </p>
                                   )}
                               </div>
                             )}
 
-                            <Button size="sm" onPress={() => handleViewDocument(result.documentId!)}>
+                            <Button
+                              size="sm"
+                              onPress={() => handleViewDocument(result.documentId!)}
+                            >
                               View Document
                             </Button>
                           </div>

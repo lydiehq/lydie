@@ -27,7 +27,15 @@ export const collectionMutators = {
         .array(
           z.object({
             name: z.string(),
-            type: z.enum(["text", "number", "date", "select", "multi-select", "boolean", "relation"]),
+            type: z.enum([
+              "text",
+              "number",
+              "date",
+              "select",
+              "multi-select",
+              "boolean",
+              "relation",
+            ]),
             required: z.boolean(),
             unique: z.boolean(),
             options: z.array(z.string()).optional(),
@@ -320,14 +328,12 @@ async function findNearestCollection(tx: any, parentId: string | null): Promise<
   } catch {
     return null;
   }
-  
+
   if (!parent) return null;
 
   let hasSchema = null;
   try {
-    hasSchema = await tx.run(
-      zql.collection_schemas.where("document_id", parentId).one(),
-    );
+    hasSchema = await tx.run(zql.collection_schemas.where("document_id", parentId).one());
   } catch {
     // Not a collection
   }

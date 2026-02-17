@@ -45,7 +45,16 @@ export type FieldValues = Record<string, string | number | boolean | null>;
  */
 export type CollectionField = {
   field: string;
-  type: "text" | "datetime" | "select" | "file" | "boolean" | "number" | "date" | "multi-select" | "relation";
+  type:
+    | "text"
+    | "datetime"
+    | "select"
+    | "file"
+    | "boolean"
+    | "number"
+    | "date"
+    | "multi-select"
+    | "relation";
   required: boolean;
   options?: string[];
 };
@@ -56,7 +65,14 @@ export type CollectionField = {
 export function toLegacyField(prop: PropertyDefinition): CollectionField {
   return {
     field: prop.name,
-    type: prop.type === "date" ? "datetime" : prop.type === "multi-select" ? "select" : prop.type === "relation" ? "text" : prop.type,
+    type:
+      prop.type === "date"
+        ? "datetime"
+        : prop.type === "multi-select"
+          ? "select"
+          : prop.type === "relation"
+            ? "text"
+            : prop.type,
     required: prop.required,
     options: prop.options,
   };
@@ -152,20 +168,20 @@ export function mergeInheritedSchema(
 ): PropertyDefinition[] {
   // Start with parent properties (inherited)
   const inheritedProperties = parentSchemas.flat();
-  
+
   // Create a map of property names to avoid duplicates
   const propertyMap = new Map<string, PropertyDefinition>();
-  
+
   // Add inherited properties first
   for (const prop of inheritedProperties) {
     propertyMap.set(prop.name, prop);
   }
-  
+
   // Add child properties (these can override inherited properties)
   for (const prop of childSchema) {
     propertyMap.set(prop.name, prop);
   }
-  
+
   return Array.from(propertyMap.values());
 }
 

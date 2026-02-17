@@ -175,9 +175,16 @@ export function createSlashMenuSuggestion(
         >
       >;
       let popup: TippyInstance[];
+      let isActive = false;
 
       return {
         onStart: (props: SuggestionProps) => {
+          // Guard against destroyed editor
+          if (!props.editor.isEditable && !props.editor.isDestroyed) {
+            return;
+          }
+
+          isActive = true;
           component = new ReactRenderer(SlashMenuList, {
             props: {
               items: props.items as SlashMenuItem[],
@@ -202,6 +209,8 @@ export function createSlashMenuSuggestion(
         },
 
         onUpdate(props: SuggestionProps) {
+          if (!isActive) return;
+
           component.updateProps({
             items: props.items as SlashMenuItem[],
             command: props.command as (item: SlashMenuItem) => void,
@@ -217,6 +226,8 @@ export function createSlashMenuSuggestion(
         },
 
         onKeyDown(props: SuggestionKeyDownProps) {
+          if (!isActive) return false;
+
           if (props.event.key === "Escape") {
             popup[0]?.hide();
             return true;
@@ -226,6 +237,7 @@ export function createSlashMenuSuggestion(
         },
 
         onExit() {
+          isActive = false;
           popup[0]?.destroy();
           component.destroy();
         },

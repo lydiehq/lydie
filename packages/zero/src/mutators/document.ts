@@ -128,7 +128,7 @@ export const documentMutators = {
       // Calculate path based on parent
       let path = id;
       let nearestCollectionId: string | null = null;
-      
+
       if (parentId) {
         const parent = await getDocumentById(tx, parentId, organizationId);
         if (parent) {
@@ -167,7 +167,7 @@ export const documentMutators = {
         } catch {
           // No collection schema found
         }
-        
+
         if (collectionSchema) {
           const properties = collectionSchema.properties as Array<{ name: string }>;
           const nullValues: Record<string, null> = {};
@@ -291,7 +291,7 @@ export const documentMutators = {
       // Get new parent info for path and collection calculation
       let newPath = documentId;
       let newNearestCollectionId: string | null = null;
-      
+
       if (parentId) {
         const parent = await getDocumentById(tx, parentId, organizationId);
         if (parent) {
@@ -388,7 +388,7 @@ export const documentMutators = {
       // Calculate new path and nearest_collection_id
       let newPath = documentId;
       let newNearestCollectionId: string | null = null;
-      
+
       if (targetParentId) {
         const parent = await getDocumentById(tx, targetParentId, organizationId);
         if (parent) {
@@ -396,7 +396,7 @@ export const documentMutators = {
           newNearestCollectionId = parent.nearest_collection_id || null;
         }
       }
-      
+
       updates.path = newPath;
       updates.nearest_collection_id = newNearestCollectionId;
 
@@ -618,7 +618,7 @@ async function updateDescendantPaths(
 
   for (const child of children) {
     const newPath = `${parentPath}/${child.id}`;
-    
+
     await tx.mutate.documents.update(
       withUpdatedTimestamp({
         id: child.id,
