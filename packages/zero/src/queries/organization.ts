@@ -53,7 +53,8 @@ export const organizationQueries = {
           q
             .where("deleted_at", "IS", null)
             .orderBy("sort_order", "asc")
-            .orderBy("created_at", "desc"),
+            .orderBy("created_at", "desc")
+            .related("collectionSchema"),
         );
     },
   ),
@@ -104,7 +105,8 @@ export const organizationQueries = {
           q
             .where("deleted_at", "IS", null)
             .orderBy("sort_order", "asc")
-            .orderBy("created_at", "desc"),
+            .orderBy("created_at", "desc")
+            .related("collectionSchema"),
         )
         .related("integrationConnections", (q) =>
           q.orderBy("created_at", "desc").related("links", (links) => links),

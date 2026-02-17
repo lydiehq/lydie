@@ -235,7 +235,10 @@ export const collectionMutators = {
 
       for (const doc of affectedDocs) {
         // Walk up the parent chain to find the new nearest collection
-        const newNearestCollectionId = await findNearestCollection(tx, doc.parent_id);
+        const newNearestCollectionId = await findNearestCollection(
+          tx as unknown as { run: (query: unknown) => Promise<unknown> },
+          doc.parent_id,
+        );
 
         await tx.mutate.documents.update({
           id: doc.id,
@@ -253,7 +256,7 @@ export const collectionMutators = {
       documentId: z.string(),
       collectionSchemaId: z.string(),
       organizationId: z.string(),
-      values: z.any(), // Accept any JSON value - Zero will validate at runtime
+      values: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
     }),
     async ({ tx, ctx, args: { documentId, collectionSchemaId, organizationId, values } }) => {
       hasOrganizationAccess(ctx, organizationId);
@@ -318,20 +321,25 @@ export const collectionMutators = {
 /**
  * Helper function to find the nearest ancestor Collection
  */
-async function findNearestCollection(tx: any, parentId: string | null): Promise<string | null> {
+async function findNearestCollection(
+  tx: { run: (query: unknown) => Promise<unknown> },
+  parentId: string | null,
+): Promise<string | null> {
   if (!parentId) return null;
 
   // Check if this parent is a collection
-  let parent = null;
+  let parent: { parent_id: string | null } | null = null;
   try {
-    parent = await tx.run(zql.documents.where("id", parentId).one());
+    parent = (await tx.run(zql.documents.where("id", parentId).one())) as {
+      parent_id: string | null;
+    } | null;
   } catch {
     return null;
   }
 
   if (!parent) return null;
 
-  let hasSchema = null;
+  let hasSchema: unknown = null;
   try {
     hasSchema = await tx.run(zql.collection_schemas.where("document_id", parentId).one());
   } catch {

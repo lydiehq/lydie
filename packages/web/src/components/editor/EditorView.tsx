@@ -1,5 +1,5 @@
 import type { HocuspocusProvider } from "@hocuspocus/provider";
-import { toLegacyField, type PropertyDefinition } from "@lydie/core/collection";
+import type { PropertyDefinition } from "@lydie/core/collection";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
@@ -58,7 +58,6 @@ export function EditorView({
   // Check if this document IS a Collection (has a collection_schemas row)
   const isCollection = collectionSchemaData !== null && collectionSchemaData !== undefined;
   const collectionSchema = (collectionSchemaData?.properties as PropertyDefinition[] | null) ?? [];
-  const collectionSchemaForProps = collectionSchema.map(toLegacyField);
   const showChildrenInSidebar = doc.show_children_in_sidebar ?? false;
 
   // If this document belongs to a parent collection, get that collection's schema
@@ -73,7 +72,6 @@ export function EditorView({
 
   const parentCollectionSchema =
     (parentCollectionData?.properties as PropertyDefinition[] | null) ?? [];
-  const parentCollectionSchemaForProps = parentCollectionSchema.map(toLegacyField);
 
   // View mode state for collection pages (only admins can use table view)
   const [viewMode, setViewMode] = useState<"documents" | "table">(
@@ -116,7 +114,7 @@ export function EditorView({
           <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
           {/* Properties section: Only show if admin OR if document belongs to a parent collection */}
-          {(isAdmin || parentCollectionSchemaForProps.length > 0) && (
+          {(isAdmin || parentCollectionSchema.length > 0) && (
             <div className="my-4 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">
@@ -130,7 +128,7 @@ export function EditorView({
               <PropertyManager
                 documentId={doc.id}
                 organizationId={organizationId}
-                schema={collectionSchemaForProps}
+                schema={collectionSchema}
                 isCollection={isCollection}
                 isAdmin={isAdmin}
               />
@@ -147,20 +145,20 @@ export function EditorView({
 
           {/* Collection view in table mode: Only show for admins */}
           {isCollection && isAdmin && viewMode === "table" ? (
-            <RecordsTable
-              collectionId={doc.id}
-              organizationId={organizationId}
-              organizationSlug={organizationSlug}
-              schema={collectionSchemaForProps}
-            />
+            <div className="shrink-0 pb-5">
+              <RecordsTable
+                collectionId={doc.id}
+                organizationId={organizationId}
+                organizationSlug={organizationSlug}
+                schema={collectionSchema}
+              />
+            </div>
           ) : (
             <>
               <DocumentMetadataTabs
                 doc={doc}
                 collectionSchema={
-                  parentCollectionSchemaForProps.length > 0
-                    ? parentCollectionSchemaForProps
-                    : undefined
+                  parentCollectionSchema.length > 0 ? parentCollectionSchema : undefined
                 }
               />
 

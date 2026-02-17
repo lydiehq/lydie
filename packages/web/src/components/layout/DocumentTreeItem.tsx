@@ -1,6 +1,7 @@
 import {
   Add12Regular,
   ArrowClockwiseRegular,
+  DatabaseRegular,
   ArrowRightRegular,
   CubeRegular,
   FolderSyncRegular,
@@ -42,10 +43,12 @@ type Props = {
       integrationType?: string;
       syncStatus?: string | null;
       isLocked?: boolean;
+      isCollection?: boolean;
     }>;
     integrationLinkId?: string | null;
     integrationType?: string;
     syncStatus?: string | null;
+    isCollection?: boolean;
   };
   renderItem: (item: any) => ReactElement;
   documents: NonNullable<QueryResultType<typeof queries.organizations.documents>>["documents"];
@@ -182,12 +185,19 @@ export function DocumentTreeItem({ item, renderItem, isOpenInTabs }: Props) {
               )}
 
               {item.type === "document" && (
-                <DocumentTreeItemIcon
-                  isExpanded={isExpanded}
-                  hasChildren={item.children !== undefined && item.children.length > 0}
-                  isMenuOpen={isMenuOpen}
-                  inTabRegistry={isOpenInTabs}
-                />
+                <>
+                  <DocumentTreeItemIcon
+                    isExpanded={isExpanded}
+                    hasChildren={item.children !== undefined && item.children.length > 0}
+                    isMenuOpen={isMenuOpen}
+                    inTabRegistry={isOpenInTabs}
+                  />
+                  {item.isCollection && (
+                    <div className="absolute z-1 bg-white rounded-md p-0">
+                      <DatabaseRegular className="" />
+                    </div>
+                  )}
+                </>
               )}
 
               <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>

@@ -1,4 +1,4 @@
-import type { CollectionField } from "@lydie/core/collection";
+import type { PropertyDefinition } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 
@@ -7,11 +7,18 @@ import { useZero } from "@/services/zero";
 type Props = {
   documentId: string;
   organizationId: string;
-  fieldDef: CollectionField;
+  collectionSchemaId?: string;
+  fieldDef: PropertyDefinition;
   value: string | number | boolean | null;
 };
 
-export function InlinePropertyEditor({ documentId, organizationId, fieldDef, value }: Props) {
+export function InlinePropertyEditor({
+  documentId,
+  organizationId,
+  collectionSchemaId,
+  fieldDef,
+  value,
+}: Props) {
   const z = useZero();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<string>(
@@ -29,11 +36,17 @@ export function InlinePropertyEditor({ documentId, organizationId, fieldDef, val
       finalValue = null;
     }
 
+    if (!collectionSchemaId) {
+      setIsEditing(false);
+      return;
+    }
+
     await z.mutate(
-      mutators.document.updateProperties({
+      mutators.collection.updateFieldValues({
         documentId,
+        collectionSchemaId,
         organizationId,
-        properties: { [fieldDef.field]: finalValue },
+        values: { [fieldDef.name]: finalValue },
       }),
     );
 
@@ -50,7 +63,7 @@ export function InlinePropertyEditor({ documentId, organizationId, fieldDef, val
       >
         <div className="flex items-baseline gap-1.5 flex-1 min-w-0 px-2 py-1.5">
           <span className="w-[25%] text-sm font-medium text-gray-900 shrink-0">
-            {fieldDef.field}
+            {fieldDef.name}
           </span>
           <span className="flex-1 text-sm text-gray-600 min-w-0">
             {displayValue ?? <span className="text-gray-400 italic">Empty</span>}
@@ -63,7 +76,7 @@ export function InlinePropertyEditor({ documentId, organizationId, fieldDef, val
   return (
     <div className="flex items-start min-h-[28px] rounded-md text-sm px-2 py-1.5">
       <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
-        <span className="w-[25%] text-sm font-medium text-gray-900 shrink-0">{fieldDef.field}</span>
+        <span className="w-[25%] text-sm font-medium text-gray-900 shrink-0">{fieldDef.name}</span>
         <div className="flex-1 min-w-0">
           <FieldInput
             fieldDef={fieldDef}
@@ -85,13 +98,13 @@ function FieldInput({
   onSave,
   onCancel,
 }: {
-  fieldDef: CollectionField;
+  fieldDef: PropertyDefinition;
   value: string;
   onChange: (value: string) => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
-  if (fieldDef.type === "select" && fieldDef.options) {
+  if ((fieldDef.type === "select" || fieldDef.type === "multi-select") && fieldDef.options) {
     return (
       <select
         value={value}
@@ -133,7 +146,7 @@ function FieldInput({
       type={
         fieldDef.type === "number"
           ? "number"
-          : fieldDef.type === "datetime"
+          : fieldDef.type === "date"
             ? "datetime-local"
             : "text"
       }

@@ -11,8 +11,6 @@ import {
   GridList,
   GridListItem,
   type Key,
-  useDragAndDrop,
-  DropIndicator,
   TooltipTrigger,
   Button as RACButton,
 } from "react-aria-components";
@@ -25,8 +23,6 @@ import {
   activeTabIdAtom,
   makeTabPersistentAtom,
   syncDocumentTabAtom,
-  insertTabAtPositionAtom,
-  reorderTabsAtom,
 } from "@/atoms/tabs";
 import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -44,110 +40,8 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
   const setActiveTab = useSetAtom(activateDocumentTabAtom);
   const closeTab = useSetAtom(closeDocumentTabAtom);
   const makePersistent = useSetAtom(makeTabPersistentAtom);
-  const insertTabAtPosition = useSetAtom(insertTabAtPositionAtom);
-  const reorderTabs = useSetAtom(reorderTabsAtom);
 
   const navigate = useNavigate();
-
-  // Set up drag and drop
-  const { dragAndDropHooks } = useDragAndDrop({
-    // Allow dragging tabs to reorder
-    getItems(keys) {
-      return [...keys].map((key) => {
-        const tab = tabs.find((t) => t.documentId === key);
-        return {
-          "lydie-tab": JSON.stringify({ id: key, title: tab?.title || "Untitled" }),
-          "text/plain": tab?.title || "Untitled",
-        };
-      });
-    },
-
-    // Accept documents from the tree
-    acceptedDragTypes: ["lydie-item"],
-    getDropOperation: () => "copy",
-
-    // Handle external documents dropped between tabs
-    async onInsert(e) {
-      const items = await Promise.all(
-        e.items
-          .filter((item) => item.kind === "text")
-          .map(async (item) => {
-            const text = await (item as any).getText("lydie-item");
-            return JSON.parse(text) as { id: string; name: string; type: string };
-          }),
-      );
-
-      for (const doc of items) {
-        if (doc.type === "document") {
-          // Calculate position from target
-          const targetKey = e.target.key as string;
-          const targetIndex = tabs.findIndex((t) => t.documentId === targetKey);
-          let position: number;
-
-          if (e.target.dropPosition === "before") {
-            position = targetIndex;
-          } else if (e.target.dropPosition === "after") {
-            position = targetIndex + 1;
-          } else {
-            position = tabs.length;
-          }
-
-          insertTabAtPosition({ documentId: doc.id, title: doc.name, position });
-
-          navigate({
-            to: "/w/$organizationSlug/$id",
-            params: { organizationSlug, id: doc.id },
-          });
-        }
-      }
-    },
-
-    // Handle reordering tabs within the list
-    onReorder(e) {
-      const targetKey = e.target.key as string;
-      const targetIndex = tabs.findIndex((t) => t.documentId === targetKey);
-      const draggedKeys = [...e.keys].map((k) => String(k));
-
-      if (e.target.dropPosition === "before") {
-        reorderTabs({ draggedIds: draggedKeys, targetIndex });
-      } else if (e.target.dropPosition === "after") {
-        reorderTabs({ draggedIds: draggedKeys, targetIndex: targetIndex + 1 });
-      }
-    },
-
-    // Handle documents dropped on the root (append to end)
-    async onRootDrop(e) {
-      const items = await Promise.all(
-        e.items
-          .filter((item) => item.kind === "text")
-          .map(async (item) => {
-            const text = await (item as any).getText("lydie-item");
-            return JSON.parse(text) as { id: string; name: string; type: string };
-          }),
-      );
-
-      for (const doc of items) {
-        if (doc.type === "document") {
-          insertTabAtPosition({ documentId: doc.id, title: doc.name, position: tabs.length });
-
-          navigate({
-            to: "/w/$organizationSlug/$id",
-            params: { organizationSlug, id: doc.id },
-          });
-        }
-      }
-    },
-
-    // Render custom drop indicator
-    renderDropIndicator(target) {
-      return (
-        <DropIndicator
-          target={target}
-          className="w-0.5 h-[28px] bg-blue-500 mx-0.5 animate-pulse self-center"
-        />
-      );
-    },
-  });
 
   const handleClose = useCallback(
     (e: React.MouseEvent, documentId: string) => {
@@ -231,19 +125,16 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
           msOverflowStyle: "none",
         }}
         items={tabs}
-        dragAndDropHooks={dragAndDropHooks}
       >
         {(tab) => (
           <GridListItem
             key={tab.documentId}
             id={tab.documentId}
             textValue={tab.title || "Untitled"}
-            className={({ isSelected, isDropTarget }) =>
+            className={({ isSelected }) =>
               `group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-1.5 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
                 isSelected ? "bg-black/5" : "bg-gray-50 text-gray-600 hover:bg-black/3"
-              } ${tab.mode === "preview" ? "italic" : ""} ${
-                isDropTarget ? "ring-2 ring-blue-500 ring-inset" : ""
-              }`
+              } ${tab.mode === "preview" ? "italic" : ""}`
             }
             onAction={() => handleSelectionChange(tab.documentId)}
             onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}

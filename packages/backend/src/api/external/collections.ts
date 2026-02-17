@@ -31,6 +31,55 @@ function parseFilters(query: Record<string, string>): Record<string, string> {
   return filters;
 }
 
+type SchemaWithProperties = {
+  id: string;
+  documentId?: string;
+  properties: unknown;
+};
+
+function getUniquePropertyNames(properties: unknown): string[] {
+  if (!Array.isArray(properties)) {
+    return [];
+  }
+
+  return properties
+    .map((property) => {
+      if (typeof property !== "object" || property === null) {
+        return null;
+      }
+
+      const candidate = property as { name?: unknown; unique?: unknown };
+      if (candidate.unique === true && typeof candidate.name === "string") {
+        return candidate.name;
+      }
+
+      return null;
+    })
+    .filter((name): name is string => name !== null);
+}
+
+function buildUniquePropertyMatchWhere(
+  schemas: SchemaWithProperties[],
+  identifier: string,
+): SQL | null {
+  const conditions: SQL[] = [];
+
+  for (const schema of schemas) {
+    const uniqueNames = getUniquePropertyNames(schema.properties);
+    for (const propertyName of uniqueNames) {
+      conditions.push(
+        sql`(${documentFieldValuesTable.collectionSchemaId} = ${schema.id} AND ${documentFieldValuesTable.values}->>${propertyName} = ${identifier})`,
+      );
+    }
+  }
+
+  if (conditions.length === 0) {
+    return null;
+  }
+
+  return conditions.reduce((acc, condition) => sql`${acc} OR ${condition}`);
+}
+
 /**
  * Resolve collection identifier (ID or unique property value) to collection ID
  * First tries to find by ID, then queries by unique properties defined in collection schemas
@@ -59,6 +108,7 @@ async function resolveCollectionId(
   // Get all collection schemas for this organization to find unique properties
   const schemas = await db
     .select({
+      id: collectionSchemasTable.id,
       documentId: collectionSchemasTable.documentId,
       properties: collectionSchemasTable.properties,
     })
@@ -71,27 +121,23 @@ async function resolveCollectionId(
       sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
     );
 
-  // Build a query that checks all unique properties across all collections
-  for (const schema of schemas) {
-    if (!schema.properties) continue;
+  const uniquePropertyMatchWhere = buildUniquePropertyMatchWhere(schemas, identifier);
+  if (!uniquePropertyMatchWhere) {
+    return null;
+  }
 
-    const uniqueProperties = schema.properties.filter((p) => p.unique);
+  const uniqueMatch = await db
+    .select({ collectionId: collectionSchemasTable.documentId })
+    .from(documentFieldValuesTable)
+    .innerJoin(
+      collectionSchemasTable,
+      eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
+    )
+    .where(uniquePropertyMatchWhere)
+    .limit(1);
 
-    for (const prop of uniqueProperties) {
-      // Query document_field_values for a match on this unique property
-      const result = await db
-        .select({ documentId: documentFieldValuesTable.documentId })
-        .from(documentFieldValuesTable)
-        .where(
-          sql`${documentFieldValuesTable.collectionSchemaId} = ${schema.documentId} AND ${documentFieldValuesTable.values}->>${prop.name} = ${identifier}`,
-        )
-        .limit(1);
-
-      if (result.length > 0) {
-        // Return the collection ID (the document that has the collection schema)
-        return schema.documentId;
-      }
-    }
+  if (uniqueMatch.length > 0) {
+    return uniqueMatch[0].collectionId;
   }
 
   return null;
@@ -159,13 +205,17 @@ async function transformToDocumentResponse(
   }
 
   const { yjsState: _, ...docWithoutYjs } = doc;
+  const resolvedSlug =
+    typeof fieldValues.slug === "string" && fieldValues.slug.length > 0
+      ? fieldValues.slug
+      : doc.id;
 
   return {
     ...docWithoutYjs,
     fields: fieldValues,
     jsonContent,
     path: "/",
-    fullPath: `/${doc.slug || doc.id}`,
+    fullPath: `/${resolvedSlug}`,
     ...(includeRelated && { related }),
     ...(includeToc && { toc }),
   };
@@ -293,36 +343,22 @@ export const CollectionsApi = new Hono()
           sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
         );
 
-      // Search through schemas for any unique property matching the identifier
-      for (const schema of schemas) {
-        if (!schema.properties) continue;
+      const uniquePropertyMatchWhere = buildUniquePropertyMatchWhere(schemas, identifier);
 
-        const uniqueProperties = schema.properties.filter((p) => p.unique);
+      if (uniquePropertyMatchWhere) {
+        const documentsByUniqueProperty = await db
+          .select({ document: documentsTable })
+          .from(documentFieldValuesTable)
+          .innerJoin(
+            documentsTable,
+            eq(documentFieldValuesTable.documentId, documentsTable.id),
+          )
+          .where(
+            sql`${uniquePropertyMatchWhere} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+          )
+          .limit(1);
 
-        for (const prop of uniqueProperties) {
-          // Query document_field_values for a match on this unique property
-          const fieldValueResult = await db
-            .select({ documentId: documentFieldValuesTable.documentId })
-            .from(documentFieldValuesTable)
-            .where(
-              sql`${documentFieldValuesTable.collectionSchemaId} = ${schema.id} AND ${documentFieldValuesTable.values}->>${prop.name} = ${identifier}`,
-            )
-            .limit(1);
-
-          if (fieldValueResult.length > 0) {
-            // Fetch the full document
-            documentResult = await db
-              .select()
-              .from(documentsTable)
-              .where(
-                sql`${documentsTable.id} = ${fieldValueResult[0].documentId} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
-              )
-              .limit(1);
-            break;
-          }
-        }
-
-        if (documentResult.length > 0) break;
+        documentResult = documentsByUniqueProperty.map((result) => result.document);
       }
     }
 

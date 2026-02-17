@@ -22,6 +22,7 @@ export interface Document {
   id: string;
   title: string;
   slug: string;
+  fields: Record<string, string | number | boolean | null>;
   jsonContent: ContentNode;
   userId: string;
   folderId: string | null;
@@ -54,6 +55,7 @@ export interface DocumentListItem {
   id: string;
   title: string;
   slug: string;
+  fields: Record<string, string | number | boolean | null>;
   path: string;
   fullPath: string;
   published: boolean;
@@ -430,6 +432,41 @@ export class LydieClient {
       }
       throw error;
     }
+  }
+
+  async getCollectionDocuments(
+    collectionId: string,
+    options?: {
+      filters?: Record<string, string | number | boolean>;
+      related?: boolean;
+      toc?: boolean;
+    },
+  ): Promise<{ documents: Document[] }> {
+    const params = new URLSearchParams();
+    if (options?.related) {
+      params.set("include_related", "true");
+    }
+    if (options?.toc) {
+      params.set("include_toc", "true");
+    }
+    if (options?.filters) {
+      for (const [field, value] of Object.entries(options.filters)) {
+        params.set(`filter[${field}]`, String(value));
+      }
+    }
+
+    const url = `${this.getBaseUrl()}/collections/${collectionId}/documents`;
+    const fullUrl = `${url}${params.toString() ? `?${params.toString()}` : ""}`;
+
+    const response = await fetch(fullUrl, {
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`[Lydie] Failed to fetch collection documents: ${response.statusText}`);
+    }
+
+    return (await response.json()) as { documents: Document[] };
   }
 
   async getDocumentByPath(

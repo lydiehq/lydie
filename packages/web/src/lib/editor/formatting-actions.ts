@@ -142,13 +142,25 @@ export const insertActions: FormattingAction[] = [
     label: "Collection view",
     description: "Embed a filtered view of a collection",
     execute: (editor) => {
+      const insertAt = editor.state.selection.from;
       editor
         .chain()
         .focus()
-        .insertContent({
-          type: "collectionBlock",
-          attrs: {},
-        })
+        .insertContentAt(insertAt, [
+          {
+            type: "collectionBlock",
+            attrs: {
+              collectionId: null,
+              filters: {},
+              sortField: null,
+              sortDirection: "asc",
+              viewMode: "table",
+            },
+          },
+          {
+            type: "paragraph",
+          },
+        ])
         .run();
     },
     group: "insert",

@@ -12,16 +12,20 @@ import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
-import { lydieClient } from "../../utils/lydie-client";
+import * as lydieApi from "../../utils/lydie-client";
 
-// Slug of the parent "Blog" page in Lydie
-const BLOG_PARENT_SLUG = "blog";
+const BLOG_COLLECTION_ID = "YchJ11QUiAPpY8FC";
 
-let posts: any[] = [];
+type BlogListDocument = Awaited<
+  ReturnType<typeof lydieApi.getCollectionDocuments>
+>["documents"][number];
+
+let posts: BlogListDocument[] = [];
 
 try {
-  console.log("[Blog] Fetching blog posts from parent:", BLOG_PARENT_SLUG);
-  const { documents } = await lydieClient.getDocumentsByParent(BLOG_PARENT_SLUG);
+  console.log("[Blog] Fetching posts from collection:", BLOG_COLLECTION_ID);
+  const { documents } =
+    await lydieApi.getCollectionDocuments(BLOG_COLLECTION_ID);
   posts = documents;
   console.log(`[Blog] Successfully fetched ${posts.length} blog posts`);
 } catch (error) {
@@ -57,7 +61,10 @@ const remainingPosts = sortedPosts.slice(1);
       {
         featuredPost && (
           <section class="overflow-visible -mx-2 px-2">
-            <a href={`/blog/${featuredPost.slug}`} class="block group">
+            <a
+              href={`/blog/${featuredPost.fields?.slug || featuredPost.id}`}
+              class="block group"
+            >
               <div class="rounded-xl bg-transparent group-hover:bg-gray-50 transition-colors duration-150 -m-2 p-2">
                 <div class="flex gap-x-4 items-center">
                   <div class="rounded-lg shadow-surface h-60 aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
@@ -82,9 +89,9 @@ const remainingPosts = sortedPosts.slice(1);
                     <h2 class="text-xl font-medium text-gray-900">
                       {featuredPost.title}
                     </h2>
-                    {featuredPost.customFields?.excerpt && (
+                    {featuredPost.fields?.excerpt && (
                       <p class="text-gray-600 text-base">
-                        {featuredPost.customFields.excerpt}
+                        {featuredPost.fields.excerpt}
                       </p>
                     )}
                     <p class="text-gray-500 text-xs">
@@ -106,7 +113,7 @@ const remainingPosts = sortedPosts.slice(1);
               {remainingPosts.map((post) => (
                 <li>
                   <a
-                    href={`/blog/${post.slug}`}
+                    href={`/blog/${post.fields?.slug || post.id}`}
                     class="flex flex-col gap-y-3 group"
                   >
                     <div class="flex gap-x-4 items-center">
@@ -159,9 +166,9 @@ const remainingPosts = sortedPosts.slice(1);
                       </div>
                     </div>
                     <div class="flex-1 flex flex-col gap-y-1">
-                      {post.customFields?.excerpt && (
+                      {post.fields?.excerpt && (
                         <p class="text-sm/relaxed text-gray-600 line-clamp-2 max-w-lg">
-                          {post.customFields.excerpt}
+                          {post.fields.excerpt}
                         </p>
                       )}
                     </div>

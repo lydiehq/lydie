@@ -10,7 +10,7 @@ Astro.response.headers.set(
 import Layout from "@/layouts/Layout.astro";
 import { Container } from "@/components/Container";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
-import { lydieClient } from "@/utils/lydie-client";
+import * as lydieApi from "@/utils/lydie-client";
 import { createLinkResolver } from "@/utils/route-registry";
 import { renderContent, blogImageComponent } from "@/utils/content-renderer";
 import {
@@ -32,18 +32,33 @@ const pillarSlugMap: Record<string, string> = {
 
 const pillarSlug = pillarSlugMap[pillar] || pillar;
 
-let articleDocument: any = null;
+type ArticleDocument = {
+  id: string;
+  title: string;
+  jsonContent: unknown;
+  fields?: Record<string, string | number | boolean | null>;
+  toc?: Array<{ id: string; level: number; text: string }>;
+  related?: Array<{ id: string; title: string; fields?: { slug?: string } }>;
+};
+
+let articleDocument: ArticleDocument | null = null;
 let contentHtml = "";
-let toc: any[] = [];
+let toc: Array<{ id: string; level: number; text: string }> = [];
 
 console.log(`[Resource Hub] Fetching article: ${pillarSlug}/${article}`);
 
 try {
-  // Fetch the article document
-  articleDocument = await lydieClient.getDocument(article, {
-    toc: true,
-    related: true,
+  const { documents } = await lydieApi.getCollectionDocuments(pillarSlug, {
+    includeToc: true,
+    includeRelated: true,
+    filters: { slug: article },
   });
+
+  articleDocument = (documents[0] as ArticleDocument | undefined) || null;
+
+  if (!articleDocument) {
+    throw new Error("Article not found");
+  }
 
   toc = articleDocument.toc || [];
 
@@ -64,9 +79,9 @@ try {
 ---
 
 <Layout
-  title={articleDocument.title}
-  description={articleDocument.customFields?.description ||
-    articleDocument.title}
+  title={articleDocument?.title || "Article"}
+  description={articleDocument?.fields?.description ||
+    articleDocument?.title || "Article"}
 >
   <div class="py-8">
     <Container>
@@ -108,12 +123,12 @@ try {
         <article class="flex-1 max-w-3xl">
           <header class="mb-8">
             <h1 class="text-3xl font-semibold text-gray-900">
-              {articleDocument.title}
+            {articleDocument?.title}
             </h1>
             {
-              articleDocument.customFields?.description && (
+              articleDocument?.fields?.description && (
                 <p class="text-lg text-gray-600 mt-4">
-                  {articleDocument.customFields.description}
+                  {articleDocument.fields?.description}
                 </p>
               )
             }
@@ -125,15 +140,15 @@ try {
 
           {/* Related Articles */}
           {
-            articleDocument.related && articleDocument.related.length > 0 && (
+            articleDocument?.related && articleDocument.related.length > 0 && (
               <section class="mt-16 pt-8 border-t border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-900 mb-6">
                   Related Articles
                 </h2>
                 <div class="grid gap-4">
-                  {articleDocument.related.map((doc: any) => (
+                  {articleDocument.related.map((doc) => (
                     <a
-                      href={`/resources/${pillar}/${doc.slug}`}
+                      href={`/resources/${pillar}/${doc.fields?.slug || doc.id}`}
                       class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all"
                     >
                       <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">

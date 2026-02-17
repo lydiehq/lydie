@@ -1,8 +1,4 @@
-import {
-  fromLegacyField,
-  type CollectionField,
-  type PropertyDefinition,
-} from "@lydie/core/collection";
+import type { PropertyDefinition } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 
@@ -21,7 +17,7 @@ const PROPERTY_TYPES = [
 type Props = {
   documentId: string;
   organizationId: string;
-  schema: CollectionField[];
+  schema: PropertyDefinition[];
   isCollection: boolean;
   isAdmin: boolean;
 };
@@ -67,7 +63,7 @@ export function PropertyManager({
         : {}),
     };
 
-    const updatedSchema = [...schema.map(fromLegacyField), propDef];
+    const updatedSchema = [...schema, propDef];
 
     if (isCollection) {
       // Page is already a collection, just update the schema
@@ -100,7 +96,7 @@ export function PropertyManager({
   };
 
   const handleRemoveProperty = async (fieldName: string) => {
-    const updatedSchema = schema.filter((f) => f.field !== fieldName).map(fromLegacyField);
+    const updatedSchema = schema.filter((f) => f.name !== fieldName);
 
     await z.mutate(
       mutators.collection.updateSchema({
@@ -119,10 +115,10 @@ export function PropertyManager({
       <div className="flex flex-wrap gap-2">
         {schema.map((field) => (
           <div
-            key={field.field}
+            key={field.name}
             className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm"
           >
-            <span className="font-medium">{field.field}</span>
+            <span className="font-medium">{field.name}</span>
             <span className="text-gray-400 text-xs">({field.type})</span>
           </div>
         ))}
@@ -142,19 +138,19 @@ export function PropertyManager({
       {/* Existing properties list */}
       {schema.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {schema.map((field) => (
-            <div
-              key={field.field}
-              className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm"
-            >
-              <span className="font-medium">{field.field}</span>
-              <span className="text-blue-500 text-xs">({field.type})</span>
-              {isCollection && isAdmin && (
-                <button
-                  onClick={() => handleRemoveProperty(field.field)}
-                  className="ml-1 text-blue-400 hover:text-blue-600"
-                  title="Remove property"
-                >
+        {schema.map((field) => (
+          <div
+            key={field.name}
+            className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm"
+          >
+            <span className="font-medium">{field.name}</span>
+            <span className="text-blue-500 text-xs">({field.type})</span>
+            {isCollection && isAdmin && (
+              <button
+                onClick={() => handleRemoveProperty(field.name)}
+                className="ml-1 text-blue-400 hover:text-blue-600"
+                title="Remove property"
+              >
                   ×
                 </button>
               )}
