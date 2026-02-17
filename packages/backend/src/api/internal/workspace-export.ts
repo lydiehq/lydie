@@ -32,8 +32,8 @@ export const WorkspaceExportRoute = new Hono<{
 }>()
   // POST /workspace-export - Start a new export
   .post("/", async (c) => {
-    const { organizationId } = c.get();
-    const userId = c.get().user.id;
+    const organizationId = c.get("organizationId");
+    const userId = c.get("user").id;
 
     const exportId = createId();
 
@@ -98,7 +98,7 @@ export const WorkspaceExportRoute = new Hono<{
   // GET /workspace-export/:exportId - Get export status
   .get("/:exportId", async (c) => {
     const { exportId } = c.req.param();
-    const { organizationId } = c.get();
+    const organizationId = c.get("organizationId");
 
     const job = exportJobs.get(exportId);
 
@@ -118,7 +118,7 @@ export const WorkspaceExportRoute = new Hono<{
   // GET /workspace-export/:exportId/download - Get download URL for specific file
   .get("/:exportId/download", async (c) => {
     const { exportId } = c.req.param();
-    const { organizationId } = c.get();
+    const organizationId = c.get("organizationId");
     const filePath = c.req.query("path");
 
     const job = exportJobs.get(exportId);

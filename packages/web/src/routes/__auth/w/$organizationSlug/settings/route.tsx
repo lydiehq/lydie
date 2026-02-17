@@ -1,6 +1,5 @@
 import {
   ArrowDownloadFilled,
-  ArrowUploadFilled,
   ChevronLeft16Filled,
   CubeFilled,
   DocumentCopyFilled,
@@ -16,7 +15,6 @@ import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/e
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { Surface } from "@/components/layout/Surface";
 import { useAuth } from "@/context/auth.context";
 import { isAdmin } from "@/utils/admin";
 
@@ -95,15 +93,9 @@ const settingsRoutes: SettingsSection[] = [
         icon: TabDesktopMultiple16Filled,
       },
       {
-        path: "/w/$organizationSlug/settings/export",
-        label: "Export",
+        path: "/w/$organizationSlug/settings/export-import",
+        label: "Export & Import",
         icon: ArrowDownloadFilled,
-        adminOnly: true,
-      },
-      {
-        path: "/w/$organizationSlug/settings/import",
-        label: "Import",
-        icon: ArrowUploadFilled,
         adminOnly: true,
       },
     ],
@@ -115,75 +107,68 @@ function RouteComponent() {
   const userIsAdmin = isAdmin(user);
 
   return (
-    <div className="p-1 size-full">
-      <Surface className="overflow-y-auto">
-        <div className="mx-auto max-w-5xl gap-x-8 flex size-full grow p-12 overflow-visible">
-          <nav
-            aria-label="Settings navigation"
-            className="w-[200px] shrink-0 sticky top-12 self-start"
-          >
-            <Link
-              to="/w/$organizationSlug"
-              from="/w/$organizationSlug/settings"
-              aria-label="Back to home"
-            >
-              <ChevronLeft16Filled className="size-4 text-gray-400" />
-            </Link>
-            <ul className="flex flex-col gap-y-2">
-              {settingsRoutes.map((section) => (
-                <li key={section.title} className="flex flex-col gap-y-2">
-                  <Eyebrow>{section.title}</Eyebrow>
-                  <ul className="flex flex-col">
-                    {section.routes
-                      .filter((route) => !route.adminOnly || userIsAdmin)
-                      .map((route) => {
-                        return (
-                          <li key={route.path}>
-                            <Link
-                              to={route.path}
-                              from="/w/$organizationSlug/settings"
-                              {...(route.external ? { target: "_blank" } : {})}
-                              className={sidebarItemStyles({
-                                className: "px-1.5",
+    <div className="mx-auto max-w-5xl gap-x-8 flex size-full grow p-12 overflow-visible">
+      <nav aria-label="Settings navigation" className="w-[200px] shrink-0 sticky top-12 self-start">
+        <Link
+          to="/w/$organizationSlug"
+          from="/w/$organizationSlug/settings"
+          aria-label="Back to home"
+        >
+          <ChevronLeft16Filled className="size-4 text-gray-400" />
+        </Link>
+        <ul className="flex flex-col gap-y-2">
+          {settingsRoutes.map((section) => (
+            <li key={section.title} className="flex flex-col gap-y-2">
+              <Eyebrow>{section.title}</Eyebrow>
+              <ul className="flex flex-col">
+                {section.routes
+                  .filter((route) => !route.adminOnly || userIsAdmin)
+                  .map((route) => {
+                    return (
+                      <li key={route.path}>
+                        <Link
+                          to={route.path}
+                          from="/w/$organizationSlug/settings"
+                          {...(route.external ? { target: "_blank" } : {})}
+                          className={sidebarItemStyles({
+                            className: "px-1.5",
+                          })}
+                          activeOptions={{
+                            exact: true,
+                          }}
+                        >
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <route.icon
+                              className={sidebarItemIconStyles({
+                                className: "size-4 shrink-0",
                               })}
-                              activeOptions={{
-                                exact: true,
-                              }}
-                            >
-                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                <route.icon
-                                  className={sidebarItemIconStyles({
-                                    className: "size-4 shrink-0",
-                                  })}
-                                />
-                                <span className="truncate flex-1">{route.label}</span>
-                                {route.adminOnly && (
-                                  <span className="text-[10px] font-medium text-muted-foreground/80 bg-muted/50 dark:bg-muted/30 px-1.5 py-0.5 rounded shrink-0">
-                                    Admin
-                                  </span>
-                                )}
-                                {route.external && (
-                                  <OpenFilled
-                                    className={sidebarItemIconStyles({
-                                      className: "size-3 shrink-0",
-                                    })}
-                                  />
-                                )}
-                              </div>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="grow">
-            <Outlet />
-          </div>
-        </div>
-      </Surface>
+                            />
+                            <span className="truncate flex-1">{route.label}</span>
+                            {route.adminOnly && (
+                              <span className="text-[10px] font-medium text-muted-foreground/80 bg-muted/50 dark:bg-muted/30 px-1.5 py-0.5 rounded shrink-0">
+                                Admin
+                              </span>
+                            )}
+                            {route.external && (
+                              <OpenFilled
+                                className={sidebarItemIconStyles({
+                                  className: "size-3 shrink-0",
+                                })}
+                              />
+                            )}
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="grow">
+        <Outlet />
+      </div>
     </div>
   );
 }

@@ -19,3 +19,5 @@ dist/
 
 # Logs
 *.log
+
+.tanstack
