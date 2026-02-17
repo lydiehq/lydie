@@ -1,4 +1,4 @@
-import type { FieldDefinition } from "@lydie/core/database";
+import type { CollectionField } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 
@@ -7,7 +7,7 @@ import { useZero } from "@/services/zero";
 type Props = {
   documentId: string;
   organizationId: string;
-  fieldDef: FieldDefinition;
+  fieldDef: CollectionField;
   value: string | number | boolean | null;
 };
 
@@ -85,7 +85,7 @@ function FieldInput({
   onSave,
   onCancel,
 }: {
-  fieldDef: FieldDefinition;
+  fieldDef: CollectionField;
   value: string;
   onChange: (value: string) => void;
   onSave: () => void;

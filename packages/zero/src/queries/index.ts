@@ -5,8 +5,8 @@ import { agentQueries } from "./agent";
 import { apiKeyQueries } from "./api-key";
 import { assistantQueries } from "./assistant";
 import { billingQueries } from "./billing";
+import { collectionQueries } from "./collection";
 import { componentQueries } from "./component";
-import { databaseQueries } from "./database";
 import { documentQueries } from "./document";
 import { documentVersionQueries } from "./document-version";
 import { integrationQueries } from "./integration";
@@ -40,5 +40,5 @@ export const queries = defineQueries({
   templates: templateQueries,
   templateCategories: templateCategoryQueries,
   billing: billingQueries,
-  database: databaseQueries,
+  collections: collectionQueries,
 });

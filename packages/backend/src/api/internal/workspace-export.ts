@@ -1,9 +1,10 @@
-import { createId } from "@lydie/core/id";
 import { S3Client } from "@aws-sdk/client-s3";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createId } from "@lydie/core/id";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { Resource } from "sst";
 
 const s3Client = new S3Client({ region: "us-east-1" });
 
@@ -128,9 +129,7 @@ export const WorkspaceExportRoute = new Hono<{
     }
 
     const bucketName = process.env.SST_RESOURCE_WorkspaceExports_NAME;
-    const key = filePath
-      ? `exports/${organizationId}/${exportId}/${filePath}`
-      : job.manifestKey;
+    const key = filePath ? `exports/${organizationId}/${exportId}/${filePath}` : job.manifestKey;
 
     if (!key) {
       throw new HTTPException(400, { message: "No file path specified" });

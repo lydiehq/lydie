@@ -41,7 +41,7 @@ const iconMap: Record<string, any> = {
   taskList: TaskListIcon,
   table: TableIcon,
   image: ImageIcon,
-  database: TableIcon, // Using TableIcon as database icon
+  collection: TableIcon, // Using TableIcon as collection icon
 };
 
 // Filter out text formatting actions (bold, italic, strike) from slash menu

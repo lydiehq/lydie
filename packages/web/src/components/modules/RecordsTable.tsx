@@ -1,4 +1,4 @@
-import type { FieldDefinition } from "@lydie/core/database";
+import type { CollectionField } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -16,16 +16,16 @@ type DocumentItem = {
 };
 
 type Props = {
-  parentId: string;
+  collectionId: string;
   organizationId: string;
   organizationSlug: string;
-  schema: FieldDefinition[];
+  schema: CollectionField[];
 };
 
-export function RecordsTable({ parentId, organizationId, organizationSlug, schema }: Props) {
+export function RecordsTable({ collectionId, organizationId, organizationSlug, schema }: Props) {
   const z = useZero();
   const [documentsResult] = useQuery(
-    queries.database.childrenByParent({ organizationId, parentId }),
+    queries.collections.documentsByCollection({ organizationId, collectionId }),
   );
 
   const documents: DocumentItem[] =
@@ -97,7 +97,7 @@ export function RecordsTable({ parentId, organizationId, organizationSlug, schem
         <div className="flex flex-col items-center justify-center py-8 text-gray-500">
           <p>No documents yet</p>
           <p className="text-sm text-gray-400">
-            Create documents under this module to see them here
+            Create documents in this collection to see them here
           </p>
         </div>
       )}
@@ -111,7 +111,7 @@ function EditableField({
   onSave,
 }: {
   value: string | number | boolean | null | undefined;
-  fieldDef: FieldDefinition;
+  fieldDef: CollectionField;
   onSave: (value: string | number | boolean | null) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);

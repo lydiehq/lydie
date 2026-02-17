@@ -1,4 +1,3 @@
-import { slugify } from "@lydie/core/utils";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Modal } from "@lydie/ui/components/generic/Modal";
@@ -6,10 +5,9 @@ import { Separator } from "@lydie/ui/components/layout/Separator";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
-import { Form, Heading } from "react-aria-components";
+import { Heading } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
-import { useAppForm } from "@/hooks/use-app-form";
 import { useZero } from "@/services/zero";
 
 type Props = {
@@ -21,23 +19,6 @@ type Props = {
 export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
   const z = useZero();
   const { organization } = useOrganization();
-
-  const form = useAppForm({
-    defaultValues: {
-      slug: doc.slug,
-    },
-    onSubmit: async ({ value }) => {
-      z.mutate(
-        mutators.document.update({
-          documentId: doc.id,
-          organizationId: organization.id,
-          slug: value.slug,
-        }),
-      );
-
-      onOpenChange(false);
-    },
-  });
 
   const handlePublish = async () => {
     z.mutate(
@@ -60,66 +41,35 @@ export function DocumentSettingsDialog({ isOpen, onOpenChange, doc }: Props) {
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
       <Dialog>
-        <Form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-        >
-          <div className="p-3">
-            <Heading slot="title" className="text-sm font-medium text-gray-700">
-              Document Settings
-            </Heading>
-          </div>
-          <Separator />
-          <div className="p-3 space-y-4">
-            <form.AppField
-              name="slug"
-              listeners={{
-                onBlur: (e) => {
-                  console.log("onBlur", e.value);
-                  const slugified = slugify(e.value);
-                  form.setFieldValue("slug", slugified);
-                },
-              }}
-              children={(field) => (
-                <field.TextField
-                  label="Document Slug"
-                  description="This will be used in the URL of your document"
-                />
-              )}
-            />
+        <div className="p-3">
+          <Heading slot="title" className="text-sm font-medium text-gray-700">
+            Document Settings
+          </Heading>
+        </div>
+        <Separator />
+        <div className="p-3 space-y-4">
+          <div className="space-y-3">
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-1">Publishing Status</h4>
+              <p className="text-sm text-gray-500">
+                {doc.published
+                  ? "This document is published and available through the API"
+                  : "This document is a draft and not available through the API"}
+              </p>
+            </div>
 
-            <Separator />
-
-            <div className="space-y-3">
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-1">Publishing Status</h4>
-                <p className="text-sm text-gray-500">
-                  {doc.published
-                    ? "This document is published and available through the API"
-                    : "This document is a draft and not available through the API"}
-                </p>
-              </div>
-
-              <div className="flex justify-between items-center gap-2">
-                <Button type="submit" size="sm">
-                  Save Settings
+            <div className="flex justify-end items-center gap-2">
+              {doc.published && (
+                <Button size="sm" intent="secondary" onPress={handleUnpublish}>
+                  Unpublish
                 </Button>
-                <div className="flex gap-2">
-                  {doc.published && (
-                    <Button size="sm" intent="secondary" onPress={handleUnpublish}>
-                      Unpublish
-                    </Button>
-                  )}
-                  <Button size="sm" intent="primary" onPress={handlePublish}>
-                    {doc.published ? "Republish" : "Publish"}
-                  </Button>
-                </div>
-              </div>
+              )}
+              <Button size="sm" intent="primary" onPress={handlePublish}>
+                {doc.published ? "Republish" : "Publish"}
+              </Button>
             </div>
           </div>
-        </Form>
+        </div>
       </Dialog>
     </Modal>
   );
