@@ -51,7 +51,7 @@
     "fmt:check": "oxfmt --check"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.46",
+    "@ai-sdk/gateway": "^3.0.47",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/react-query-persist-client": "^5.90.22",
