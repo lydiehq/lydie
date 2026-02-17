@@ -1,12 +1,12 @@
 import type { NodeViewRenderer } from "@tiptap/core";
 import { Node } from "@tiptap/core";
 
-export interface DatabaseBlockOptions {
+export interface CollectionBlockOptions {
   addNodeView?: () => NodeViewRenderer;
 }
 
-export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
-  name: "databaseBlock",
+export const CollectionBlock = Node.create<CollectionBlockOptions>({
+  name: "collectionBlock",
   group: "block",
   atom: true,
 
@@ -18,7 +18,7 @@ export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
 
   addAttributes() {
     return {
-      sourcePageId: {
+      collectionId: {
         default: null,
       },
       filters: {
@@ -39,13 +39,13 @@ export const DatabaseBlock = Node.create<DatabaseBlockOptions>({
   parseHTML() {
     return [
       {
-        tag: 'div[data-type="database-block"]',
+        tag: 'div[data-type="collection-block"]',
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["div", { "data-type": "database-block", ...HTMLAttributes }];
+    return ["div", { "data-type": "collection-block", ...HTMLAttributes }];
   },
 
   addNodeView() {

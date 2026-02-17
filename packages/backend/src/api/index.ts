@@ -4,9 +4,9 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { hocuspocus } from "../hocuspocus-server";
-import { ExternalApi } from "./external";
 import { InternalApi } from "./internal";
 import { PublicApi } from "./public";
+import { V1Api } from "./v1";
 
 export const app = new Hono()
   .use(
@@ -25,7 +25,7 @@ export const app = new Hono()
     return c.text("ok");
   })
   .route("/internal", InternalApi)
-  .route("/v1/:idOrSlug", ExternalApi)
+  .route("/v1/:idOrSlug", V1Api)
   .route("/public", PublicApi);
 
 export const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({

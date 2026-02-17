@@ -149,7 +149,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return (
       <>
         <HeadContent />
-        <RouterProvider navigate={(to, options) => router.navigate({ ...(to ?? {}), ...options })}>
+        <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
           <ZeroProvider zero={zeroInstance}>
             <ConfirmDialog />
             <Outlet />

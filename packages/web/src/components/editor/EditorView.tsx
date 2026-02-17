@@ -1,4 +1,5 @@
 import type { HocuspocusProvider } from "@hocuspocus/provider";
+import type { CollectionField } from "@lydie/core/collection";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
@@ -7,7 +8,7 @@ import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useRef, useState } from "react";
 
-import { PropertyManager } from "@/components/database";
+import { PropertyManager } from "@/components/collection";
 import { ModuleViewToggle, PageConfigPanel, RecordsTable } from "@/components/modules";
 import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
 
@@ -20,13 +21,7 @@ import { LinkPopover } from "./link-popover/LinkPopover";
 import { TableOfContentsMinimap } from "./TableOfContentsMinimap";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
-type SchemaField = {
-  field: string;
-  type: "text" | "number" | "select" | "boolean" | "datetime" | "file";
-  required: boolean;
-  options?: string[];
-};
-type PageConfig = {
+type CollectionConfig = {
   showChildrenInSidebar?: boolean;
   defaultView?: "documents" | "table";
 };
@@ -56,35 +51,29 @@ export function EditorView({
 }: Props) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Check if this page has a child schema (acts as a database/collection parent)
-  const childSchema = (doc.child_schema as SchemaField[] | null) ?? [];
-  const hasSchema = childSchema.length > 0;
+  // Fetch the document's collection if it has one
+  // Check if this page IS a Collection (has collection_schema)
+  const isCollection = doc.collection_schema !== null && Array.isArray(doc.collection_schema);
+  const collectionSchema = (doc.collection_schema as CollectionField[] | null) ?? [];
 
-  // Show database UI for all pages (allows adding first property)
-  const showDatabaseSection = true;
+  // Get collection config (only relevant if this is a collection)
+  const collectionConfig = (doc.config as CollectionConfig | null) ?? {};
 
-  // Get page config for settings
-  const pageConfig = (doc.page_config as PageConfig | null) ?? {};
-
-  // Check if this is a child document (has a parent)
-  const parentId = doc.parent_id;
-  const isChild = !!parentId;
-
-  // Fetch parent's schema if this is a child document
-  const [parentDoc] = useQuery(
-    isChild && parentId
-      ? queries.documents.byId({
+  // If this document belongs to a parent collection, get that collection's schema
+  const [docWithCollection] = useQuery(
+    doc.collection_id
+      ? queries.collections.documentsWithCollection({
           organizationId,
-          documentId: parentId,
+          documentId: doc.id,
         })
       : null,
   );
+  const parentCollection = docWithCollection?.collection;
+  const parentCollectionSchema = (parentCollection?.collection_schema as CollectionField[] | null) ?? [];
 
-  const parentSchema = (parentDoc?.child_schema as SchemaField[] | null) ?? [];
-
-  // View mode state for database pages
+  // View mode state for collection pages
   const [viewMode, setViewMode] = useState<"documents" | "table">(
-    hasSchema ? (pageConfig.defaultView ?? "table") : "documents",
+    isCollection ? (collectionConfig.defaultView ?? "table") : "documents",
   );
 
   // Preload documents for the @ mention feature
@@ -122,43 +111,46 @@ export function EditorView({
           />
           <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
-          {/* Database section: always show property manager, conditionally show toggle/config */}
-          {showDatabaseSection && (
-            <div className="my-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Properties</span>
-                {hasSchema && <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />}
-              </div>
-
-              <PropertyManager
-                documentId={doc.id}
-                organizationId={organizationId}
-                schema={childSchema}
-              />
-
-              {hasSchema && (
-                <PageConfigPanel
-                  documentId={doc.id}
-                  organizationId={organizationId}
-                  config={pageConfig}
-                />
+          {/* Properties section: show on ALL pages - adding first field makes it a Collection */}
+          <div className="my-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                {isCollection ? "Collection Properties" : "Properties"}
+              </span>
+              {isCollection && (
+                <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />
               )}
             </div>
-          )}
 
-          {/* Database parent in table view: show records table */}
-          {hasSchema && viewMode === "table" ? (
+            <PropertyManager
+              documentId={doc.id}
+              organizationId={organizationId}
+              schema={collectionSchema}
+              isCollection={isCollection}
+            />
+
+            {isCollection && (
+              <PageConfigPanel
+                documentId={doc.id}
+                organizationId={organizationId}
+                config={collectionConfig}
+              />
+            )}
+          </div>
+
+          {/* Collection view in table mode: show records table if this is a Collection */}
+          {isCollection && viewMode === "table" ? (
             <RecordsTable
-              parentId={doc.id}
+              collectionId={doc.id}
               organizationId={organizationId}
               organizationSlug={organizationSlug}
-              schema={childSchema}
+              schema={collectionSchema}
             />
           ) : (
             <>
               <DocumentMetadataTabs
                 doc={doc}
-                parentSchema={parentSchema.length > 0 ? parentSchema : undefined}
+                collectionSchema={parentCollectionSchema.length > 0 ? parentCollectionSchema : undefined}
               />
 
               <LinkPopover

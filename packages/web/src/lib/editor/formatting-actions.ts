@@ -138,15 +138,15 @@ export const insertActions: FormattingAction[] = [
     group: "insert",
   },
   {
-    id: "database",
-    label: "Database view",
-    description: "Embed a filtered view of another page",
+    id: "collection",
+    label: "Collection view",
+    description: "Embed a filtered view of a collection",
     execute: (editor) => {
       editor
         .chain()
         .focus()
         .insertContent({
-          type: "databaseBlock",
+          type: "collectionBlock",
           attrs: {},
         })
         .run();

@@ -64,22 +64,25 @@ const documents = table("documents")
   .columns({
     id: string(),
     title: string(),
-    slug: string(),
+    slug: string().optional(),
     user_id: string(),
-    organization_id: string(),
     parent_id: string().optional(),
-    yjs_state: string().optional(),
+    // Collection (parent Page with schema) this document belongs to
+    collection_id: string().optional(),
+    organization_id: string(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
-    properties: json(), // Document properties (like Notion database properties)
+    properties: json(), // Document field values
+    // Collection schema - when present, this Page IS a Collection
+    collection_schema: json().optional(),
+    // Collection configuration (when collection_schema is present)
+    config: json(),
     cover_image: string().optional(),
     published: boolean(),
     deleted_at: number().optional(),
     is_locked: boolean(),
     is_favorited: boolean(),
     sort_order: number(),
-    child_schema: json().optional(), // Schema for child documents (null = no schema = regular page)
-    page_config: json(), // { showChildrenInSidebar: boolean, defaultView: "documents" | "table" }
     ...timestamps,
   })
   .primaryKey("id");
@@ -269,6 +272,18 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
   children: many({
     sourceField: ["id"],
     destField: ["parent_id"],
+    destSchema: documents,
+  }),
+  // Collection is a self-reference - a Collection is just a Page with a schema
+  collection: one({
+    sourceField: ["collection_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  // Entries are documents that have this document as their collection
+  entries: many({
+    sourceField: ["id"],
+    destField: ["collection_id"],
     destSchema: documents,
   }),
   organization: one({

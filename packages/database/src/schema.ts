@@ -163,12 +163,17 @@ export const documentsTable = pgTable(
       .notNull()
       .$default(() => createId()),
     title: text("title").notNull(),
-    slug: text("slug").notNull(),
+    slug: text("slug"),
     yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing
     userId: text("user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
     parentId: text("parent_id").references((): PgColumn<any> => documentsTable.id, {
+      onDelete: "set null",
+    }),
+    // Collection (parent Page with schema) this document belongs to
+    // Every Page belongs to exactly one Collection (either a parent Collection or the workspace's "General" Collection)
+    collectionId: text("collection_id").references((): PgColumn<any> => documentsTable.id, {
       onDelete: "set null",
     }),
     organizationId: text("organization_id")
@@ -178,10 +183,21 @@ export const documentsTable = pgTable(
       onDelete: "set null",
     }),
     externalId: text("external_id"),
-    // Document properties - like Notion's database properties, stored directly on each document
+    // Document properties - values for Collection schema fields
     properties: jsonb("properties")
       .$type<Record<string, string | number | boolean | null>>()
       .default({}),
+    // Collection schema - when present, this Page IS a Collection
+    // Its direct children become entries that must conform to this schema
+    collectionSchema: jsonb("collection_schema")
+      .$type<Array<{ field: string; type: string; required: boolean; options?: string[] }>>(),
+    // Collection configuration (only relevant when collection_schema is present)
+    config: jsonb("config")
+      .$type<{
+        showChildrenInSidebar: boolean;
+        defaultView: "documents" | "table";
+      }>()
+      .default({ showChildrenInSidebar: true, defaultView: "documents" }),
     coverImage: text("cover_image"),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
@@ -191,29 +207,18 @@ export const documentsTable = pgTable(
     isLocked: boolean("is_locked").notNull().default(false),
     isFavorited: boolean("is_favorited").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
-    // Schema for child documents (when this page acts as a database/collection)
-    // Null means no schema = regular page with free-form child pages
-    childSchema: jsonb("child_schema").$type<
-      Array<{ field: string; type: string; required: boolean; options?: string[] }>
-    >(),
-    // Page display configuration
-    pageConfig: jsonb("page_config")
-      .$type<{
-        showChildrenInSidebar: boolean;
-        defaultView: "documents" | "table";
-      }>()
-      .default({ showChildrenInSidebar: true, defaultView: "documents" }),
     ...timestamps,
   },
   (table) => [
-    uniqueIndex("documents_user_organization_id_slug_key")
-      .on(table.organizationId, table.slug)
-      .where(sql`${table.integrationLinkId} IS NULL AND ${table.deletedAt} IS NULL`),
-    uniqueIndex("documents_integration_organization_link_slug_key")
-      .on(table.organizationId, table.integrationLinkId, table.slug)
-      .where(sql`deleted_at IS NULL`),
     index("documents_parent_id_idx").on(table.parentId),
+    index("documents_collection_id_idx").on(table.collectionId),
+    // GIN index on properties for efficient JSONB filtering
+    index("documents_properties_gin_idx").using("gin", table.properties),
     index("documents_integration_link_id_idx").on(table.integrationLinkId),
+    // Index for finding all Collections (Pages with collection_schema) in an organization
+    index("documents_collection_schema_idx")
+      .on(table.organizationId, table.id)
+      .where(sql`${table.collectionSchema} IS NOT NULL AND ${table.deletedAt} IS NULL`),
     // Below indexes are important for performance, don't delete!
     index("documents_org_sort_created_id_not_deleted_idx")
       .on(table.organizationId, table.sortOrder, sql`${table.createdAt} DESC`, table.id)

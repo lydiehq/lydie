@@ -1,4 +1,4 @@
-import type { FieldDefinition } from "@lydie/core/database";
+import type { CollectionField } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { useState } from "react";
 
@@ -16,15 +16,16 @@ const PROPERTY_TYPES = [
 type Props = {
   documentId: string;
   organizationId: string;
-  schema: FieldDefinition[];
+  schema: CollectionField[];
+  isCollection: boolean;
 };
 
-export function PropertyManager({ documentId, organizationId, schema }: Props) {
+export function PropertyManager({ documentId, organizationId, schema, isCollection }: Props) {
   const z = useZero();
   const [isAdding, setIsAdding] = useState(false);
   const [newProperty, setNewProperty] = useState<{
     field: string;
-    type: FieldDefinition["type"];
+    type: CollectionField["type"];
     required: boolean;
     options: string;
   }>({
@@ -37,7 +38,7 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
   const handleAddProperty = async () => {
     if (!newProperty.field.trim()) return;
 
-    const fieldDef: FieldDefinition = {
+    const fieldDef: CollectionField = {
       field: newProperty.field.trim(),
       type: newProperty.type,
       required: newProperty.required,
@@ -53,13 +54,25 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
 
     const updatedSchema = [...schema, fieldDef];
 
-    await z.mutate(
-      mutators.document.updateChildSchema({
-        documentId,
-        organizationId,
-        childSchema: updatedSchema,
-      }),
-    );
+    if (isCollection) {
+      // Page is already a collection, just update the schema
+      await z.mutate(
+        mutators.collection.updateSchema({
+          collectionId: documentId,
+          organizationId,
+          schema: updatedSchema,
+        }),
+      );
+    } else {
+      // Page is not a collection yet - adding first field makes it a collection
+      await z.mutate(
+        mutators.document.makeCollection({
+          documentId,
+          organizationId,
+          collectionSchema: updatedSchema,
+        }),
+      );
+    }
 
     setIsAdding(false);
     setNewProperty({
@@ -74,16 +87,23 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
     const updatedSchema = schema.filter((f) => f.field !== fieldName);
 
     await z.mutate(
-      mutators.document.updateChildSchema({
-        documentId,
+      mutators.collection.updateSchema({
+        collectionId: documentId,
         organizationId,
-        childSchema: updatedSchema,
+        schema: updatedSchema,
       }),
     );
   };
 
   return (
     <div className="space-y-3">
+      {/* Show message when page is not yet a collection */}
+      {!isCollection && schema.length === 0 && (
+        <p className="text-sm text-gray-500">
+          Add a property to make this page a collection. Its children will become entries.
+        </p>
+      )}
+
       {/* Existing properties list */}
       {schema.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -94,13 +114,15 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
             >
               <span className="font-medium">{field.field}</span>
               <span className="text-blue-500 text-xs">({field.type})</span>
-              <button
-                onClick={() => handleRemoveProperty(field.field)}
-                className="ml-1 text-blue-400 hover:text-blue-600"
-                title="Remove property"
-              >
-                ×
-              </button>
+              {isCollection && (
+                <button
+                  onClick={() => handleRemoveProperty(field.field)}
+                  className="ml-1 text-blue-400 hover:text-blue-600"
+                  title="Remove property"
+                >
+                  ×
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -115,7 +137,7 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
               type="text"
               value={newProperty.field}
               onChange={(e) => setNewProperty((p) => ({ ...p, field: e.target.value }))}
-              placeholder="e.g., status, slug, publishedAt"
+              placeholder="e.g., status, priority, dueDate"
               className="w-full px-2 py-1.5 text-sm border rounded"
               autoFocus
             />
@@ -128,7 +150,7 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
               onChange={(e) =>
                 setNewProperty((p) => ({
                   ...p,
-                  type: e.target.value as FieldDefinition["type"],
+                  type: e.target.value as CollectionField["type"],
                 }))
               }
               className="w-full px-2 py-1.5 text-sm border rounded"
@@ -175,7 +197,7 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
               disabled={!newProperty.field.trim()}
               className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add Property
+              {isCollection ? "Add Property" : "Make Collection"}
             </button>
             <button
               onClick={() => setIsAdding(false)}
@@ -191,7 +213,7 @@ export function PropertyManager({ documentId, organizationId, schema }: Props) {
           className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
         >
           <span className="text-lg">+</span>
-          <span>Add property</span>
+          <span>{isCollection ? "Add property" : "Add property to make collection"}</span>
         </button>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { ArrowBidirectionalLeftRightFilled, ArrowRightFilled } from "@fluentui/react-icons";
+import type { CollectionField } from "@lydie/core/collection";
 import { MetadataTabsShell } from "@lydie/ui/components/editor/MetadataTabsShell";
 import { focusRing } from "@lydie/ui/components/generic/utils";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
@@ -13,17 +14,11 @@ import { Link } from "@/components/generic/Link";
 import { InlinePropertyEditor } from "./InlinePropertyEditor";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
-type SchemaField = {
-  field: string;
-  type: "text" | "number" | "select" | "boolean" | "datetime" | "file";
-  required: boolean;
-  options?: string[];
-};
 
 type Props = {
   doc: DocumentType;
-  // Schema from parent page (if this is a child document)
-  parentSchema?: SchemaField[];
+  // Schema from collection (if this document belongs to a collection)
+  collectionSchema?: CollectionField[];
 };
 
 function LinksPanel({ doc }: { doc: DocumentType }) {
@@ -122,20 +117,20 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
 
 function PropertiesPanel({
   doc,
-  parentSchema,
+  collectionSchema,
 }: {
   doc: DocumentType;
-  parentSchema?: SchemaField[];
+  collectionSchema?: CollectionField[];
 }) {
   const organizationId = doc.organization_id;
   const properties = (doc.properties as Record<string, string | number | boolean | null>) || {};
 
-  // If no parent schema, show message
-  if (!parentSchema || parentSchema.length === 0) {
+  // If no collection schema, show message
+  if (!collectionSchema || collectionSchema.length === 0) {
     return (
       <div className="ring ring-black/4 rounded-xl p-4 flex items-center justify-center">
         <span className="text-sm text-gray-500">
-          No properties defined. Add properties on the parent page.
+          No properties defined. This document is not in a collection.
         </span>
       </div>
     );
@@ -143,7 +138,7 @@ function PropertiesPanel({
 
   return (
     <div className="space-y-0.5">
-      {parentSchema.map((fieldDef) => (
+      {collectionSchema.map((fieldDef) => (
         <InlinePropertyEditor
           key={fieldDef.field}
           documentId={doc.id}
@@ -156,7 +151,7 @@ function PropertiesPanel({
   );
 }
 
-export function DocumentMetadataTabs({ doc, parentSchema }: Props) {
+export function DocumentMetadataTabs({ doc, collectionSchema }: Props) {
   const organizationId = doc.organization_id;
 
   // Fetch link counts for the badge
@@ -179,7 +174,7 @@ export function DocumentMetadataTabs({ doc, parentSchema }: Props) {
 
   const handleAdd = () => {
     // No-op since we don't have an "add field" button in this view
-    // Fields are managed on the parent page
+    // Fields are managed in the collection settings
   };
 
   return (
@@ -194,7 +189,7 @@ export function DocumentMetadataTabs({ doc, parentSchema }: Props) {
       focusRing={focusRing}
     >
       <TabPanel id="fields">
-        <PropertiesPanel doc={doc} parentSchema={parentSchema} />
+        <PropertiesPanel doc={doc} collectionSchema={collectionSchema} />
       </TabPanel>
       <TabPanel id="documents">
         <LinksPanel doc={doc} />

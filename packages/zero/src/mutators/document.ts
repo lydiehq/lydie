@@ -125,7 +125,6 @@ export const documentMutators = {
       await tx.mutate.documents.insert(
         withTimestamps({
           id,
-          slug: id,
           title,
           yjs_state: yjsState,
           user_id: ctx.userId,
@@ -137,7 +136,7 @@ export const documentMutators = {
           parent_id: parentId || null,
           sort_order: minSortOrder - 1,
           properties: {},
-          page_config: { showChildrenInSidebar: true, defaultView: "documents" },
+          config: { showChildrenInSidebar: true, defaultView: "documents" },
         }),
       );
     },
@@ -147,7 +146,6 @@ export const documentMutators = {
       documentId: z.string(),
       title: z.string().optional(),
       published: z.boolean().optional(),
-      slug: z.string().optional(),
       customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
       coverImage: z.string().nullable().optional(),
       organizationId: z.string(),
@@ -155,7 +153,7 @@ export const documentMutators = {
     async ({
       tx,
       ctx,
-      args: { documentId, title, published, slug, customFields, coverImage, organizationId },
+      args: { documentId, title, published, customFields, coverImage, organizationId },
     }) => {
       hasOrganizationAccess(ctx, organizationId);
 
@@ -173,7 +171,6 @@ export const documentMutators = {
 
       if (title !== undefined) updates.title = title;
       if (published !== undefined) updates.published = published;
-      if (slug !== undefined) updates.slug = slug;
       if (customFields !== undefined) updates.custom_fields = customFields;
       if (coverImage !== undefined) updates.cover_image = coverImage;
 
@@ -476,12 +473,13 @@ export const documentMutators = {
     },
   ),
 
-  // Update child schema (defines what properties child documents have)
-  updateChildSchema: defineMutator(
+  // Update collection schema (defines what properties child entries have)
+  // This makes the page a Collection if it wasn't one already
+  updateCollectionSchema: defineMutator(
     z.object({
       documentId: z.string(),
       organizationId: z.string(),
-      childSchema: z.array(
+      collectionSchema: z.array(
         z.object({
           field: z.string(),
           type: z.enum(["text", "datetime", "select", "file", "boolean", "number"]),
@@ -490,37 +488,94 @@ export const documentMutators = {
         }),
       ),
     }),
-    async ({ tx, ctx, args: { documentId, organizationId, childSchema } }) => {
+    async ({ tx, ctx, args: { documentId, organizationId, collectionSchema } }) => {
       hasOrganizationAccess(ctx, organizationId);
       await verifyDocumentAccess(tx, documentId, organizationId);
 
       await tx.mutate.documents.update(
         withUpdatedTimestamp({
           id: documentId,
-          child_schema: childSchema,
+          collection_schema: collectionSchema,
         }),
       );
     },
   ),
 
-  // Update page configuration
-  updatePageConfig: defineMutator(
+  // Make a page into a Collection by adding its first schema field
+  makeCollection: defineMutator(
     z.object({
       documentId: z.string(),
       organizationId: z.string(),
-      pageConfig: z.object({
+      collectionSchema: z.array(
+        z.object({
+          field: z.string(),
+          type: z.enum(["text", "datetime", "select", "file", "boolean", "number"]),
+          required: z.boolean(),
+          options: z.array(z.string()).optional(),
+        }),
+      ),
+    }),
+    async ({ tx, ctx, args: { documentId, organizationId, collectionSchema } }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      await verifyDocumentAccess(tx, documentId, organizationId);
+
+      // Get the document to update its children
+      const document = await getDocumentById(tx, documentId, organizationId);
+      if (!document) {
+        throw notFoundError("Document", documentId);
+      }
+
+      // Update the page to add collection_schema (making it a Collection)
+      await tx.mutate.documents.update(
+        withUpdatedTimestamp({
+          id: documentId,
+          collection_schema: collectionSchema,
+          // Ensure config exists with defaults
+          config: document.config || {
+            showChildrenInSidebar: true,
+            defaultView: "table",
+          },
+        }),
+      );
+
+      // Set collection_id on all existing children
+      // This makes existing children into entries of this new Collection
+      const children = await tx.run(
+        zql.documents
+          .where("parent_id", documentId)
+          .where("organization_id", organizationId)
+          .where("deleted_at", "IS", null),
+      );
+
+      for (const child of children) {
+        await tx.mutate.documents.update(
+          withUpdatedTimestamp({
+            id: child.id,
+            collection_id: documentId,
+          }),
+        );
+      }
+    },
+  ),
+
+  // Update page/collection configuration
+  updateConfig: defineMutator(
+    z.object({
+      documentId: z.string(),
+      organizationId: z.string(),
+      config: z.object({
         showChildrenInSidebar: z.boolean(),
         defaultView: z.enum(["documents", "table"]),
       }),
     }),
-    async ({ tx, ctx, args: { documentId, organizationId, pageConfig } }) => {
+    async ({ tx, ctx, args: { documentId, organizationId, config } }) => {
       hasOrganizationAccess(ctx, organizationId);
       await verifyDocumentAccess(tx, documentId, organizationId);
 
       await tx.mutate.documents.update(
         withUpdatedTimestamp({
           id: documentId,
-          page_config: pageConfig,
+          config,
         }),
       );
     },

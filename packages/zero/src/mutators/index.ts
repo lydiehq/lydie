@@ -3,6 +3,7 @@ import { defineMutators } from "@rocicorp/zero";
 import { agentMutators } from "./agent";
 import { apiKeyMutators } from "./api-key";
 import { assistantMutators } from "./assistant";
+import { collectionMutators } from "./collection";
 import { documentMutators } from "./document";
 import { documentComponentMutators } from "./document-component";
 import { documentVersionMutators } from "./document-version";
@@ -32,6 +33,7 @@ export const mutators = defineMutators({
   template: templateMutators,
   templateCategory: templateCategoryMutators,
   templateFaq: templateFaqMutators,
+  collection: collectionMutators,
 });
 
 export type Mutators = typeof mutators;

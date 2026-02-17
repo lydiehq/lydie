@@ -1,7 +1,6 @@
 import { SearchFilled } from "@fluentui/react-icons";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
-import type { Document } from "@lydie/zero/schema";
 import { useQuery } from "@rocicorp/zero/react";
 import React, { useState } from "react";
 import { Input } from "react-aria-components";
@@ -9,7 +8,7 @@ import { Input } from "react-aria-components";
 import { useOrganization } from "@/context/organization.context";
 
 interface DocumentSearchProps {
-  onSelectDocument: (document: Document) => void;
+  onSelectDocument: (document: { id: string; title: string; slug: string }) => void;
   onBack: () => void;
   exclude?: string; // Exclude current document
 }
