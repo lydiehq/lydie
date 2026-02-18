@@ -183,7 +183,7 @@ if (rootElement && !rootElement.innerHTML) {
       <StrictMode>
         <CatchBoundary errorComponent={ErrorPage} getResetKey={() => "error"}>
           <RouterProvider router={router} />
-          <Toaster />
+          <Toaster position="bottom-center" invert />
         </CatchBoundary>
       </StrictMode>,
     );

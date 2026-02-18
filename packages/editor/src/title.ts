@@ -34,7 +34,7 @@ export function getTitleExtensions(options?: GetTitleExtensionsOptions) {
     Text,
     Heading.configure({ levels: [1] }),
     Placeholder.configure({
-      placeholder: options?.placeholder ?? "What's the title?",
+      placeholder: options?.placeholder ?? "Untitled",
       emptyEditorClass: "is-editor-empty",
     }),
     createPreventBreakExtension(options?.onEnter),

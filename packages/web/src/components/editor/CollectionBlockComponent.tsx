@@ -98,7 +98,7 @@ export function CollectionBlockComponent(props: Props) {
   if (!collectionId) {
     return (
       <NodeViewWrapper>
-        <div className="">
+        <div className="editor-content-reset">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <FolderFilled className="size-5 text-gray-400" />
@@ -197,7 +197,7 @@ export function CollectionBlockComponent(props: Props) {
 
   return (
     <NodeViewWrapper>
-      <div className="">
+      <div className="editor-content-reset">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-medium text-lg">{collectionName}</span>

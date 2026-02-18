@@ -58,6 +58,7 @@ export function useDocumentActions() {
     documentId: string,
     redirectAfterDelete = false,
     integrationLinkId?: string | null,
+    showToast = true,
   ) => {
     const performDelete = () => {
       try {
@@ -75,7 +76,9 @@ export function useDocumentActions() {
         // Remove the tab from the tab bar
         closeDocumentTab(documentId);
 
-        toast.success("Document deleted");
+        if (showToast) {
+          toast.success("Document deleted");
+        }
 
         if (redirectAfterDelete) {
           routerNavigate({

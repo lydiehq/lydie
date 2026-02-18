@@ -224,7 +224,7 @@ class EditorCache {
       editorProps: {
         attributes: {
           class:
-            "focus:outline-none text-[1.75rem] leading-[calc(2/1.75)] font-medium text-gray-950 py-4",
+            "focus:outline-none text-[1.75rem] leading-[calc(2/1.75)] font-medium text-gray-950 py-4 tracking-[-0.05rem]",
         },
       },
     });

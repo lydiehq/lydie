@@ -49,7 +49,7 @@ export function DocumentMenu({
   };
 
   const deleteDocumentWithUndo = (docId: string, shouldRedirect: boolean) => {
-    deleteDocument(docId, shouldRedirect);
+    deleteDocument(docId, shouldRedirect, undefined, false);
 
     toast("Document deleted", {
       duration: 5000,

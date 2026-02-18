@@ -10,6 +10,7 @@ import {
 } from "@lydie/ui/components/icons/wysiwyg-icons";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import type { Editor } from "@tiptap/core";
+import { NodeSelection } from "@tiptap/pm/state";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 import { useEffect, useState } from "react";
 import { TooltipTrigger } from "react-aria-components";
@@ -71,6 +72,42 @@ export function BubbleMenu({ editor }: Props) {
   return (
     <TiptapBubbleMenu
       editor={editor}
+      shouldShow={({ editor: currentEditor, state, from, to }) => {
+        if (!currentEditor.isEditable || state.selection.empty) {
+          return false;
+        }
+
+        if (state.selection instanceof NodeSelection) {
+          return state.selection.node.type.name !== "collectionBlock";
+        }
+
+        if (currentEditor.isActive("collectionBlock")) {
+          return false;
+        }
+
+        if (state.doc.textBetween(from, to).trim().length === 0) {
+          return false;
+        }
+
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLElement) {
+          if (activeElement.closest('[data-type="collection-block"]')) {
+            return false;
+          }
+        }
+
+        const domSelection = window.getSelection();
+        const anchorElement =
+          domSelection?.anchorNode instanceof Element
+            ? domSelection.anchorNode
+            : domSelection?.anchorNode?.parentElement;
+
+        if (anchorElement?.closest('[data-type="collection-block"]')) {
+          return false;
+        }
+
+        return true;
+      }}
       options={{
         placement: "bottom",
       }}

@@ -338,7 +338,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b border-gray-200">
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-3 py-2.5 text-left align-middle">
+                  <th key={header.id} className="px-3 py-1 text-left align-middle">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -354,14 +354,14 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
                 className="border-b border-gray-100 align-top last:border-b-0 hover:bg-gray-50/50"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-2.5 align-middle">
+                  <td key={cell.id} className="px-3 py-1 align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
               </tr>
             ))}
             <tr>
-              <td className="px-3 py-2.5" colSpan={schema.length + 2}>
+              <td className="px-3 py-1" colSpan={schema.length + 2}>
                 <button
                   type="button"
                   onClick={() => void handleCreateRow()}
@@ -451,7 +451,7 @@ function EditableTitle({
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") setIsEditing(false);
       }}
-      className="w-full min-w-[220px] rounded border border-gray-300 px-2 py-1.5 text-sm font-medium"
+      className="w-full min-w-[220px] rounded px-2 py-1.5 text-sm font-medium"
       autoFocus
     />
   );

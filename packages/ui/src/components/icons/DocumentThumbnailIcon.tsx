@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { type VariantProps, cva } from "cva";
 
 const wrapperStyles = cva({
-  base: "shadow-document-icon bg-white flex flex-col z-1 relative justify-center",
+  base: "shadow-surface bg-white flex flex-col z-1 relative justify-center",
   variants: {
     size: {
       sm: "aspect-[12/14] w-3.5 rounded-[2.5px] p-[2px] gap-px",

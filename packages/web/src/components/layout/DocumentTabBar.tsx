@@ -41,7 +41,10 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
   const closeTab = useSetAtom(closeDocumentTabAtom);
   const makePersistent = useSetAtom(makeTabPersistentAtom);
 
-  const navigate = useNavigate();
+  const navigate = useNavigate() as (options: {
+    to: string;
+    params?: Record<string, string>;
+  }) => void;
 
   const handleClose = useCallback(
     (e: React.MouseEvent, documentId: string) => {
@@ -62,6 +65,13 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
       }
     },
     [navigate, organizationSlug, closeTab],
+  );
+
+  const preventTabActivationFromClose = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement> | React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+    },
+    [],
   );
 
   const handleDoubleClick = useCallback(
@@ -148,6 +158,8 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                 {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
                 <button
                   type="button"
+                  onPointerDown={preventTabActivationFromClose}
+                  onMouseDown={preventTabActivationFromClose}
                   onClick={(e) => handleClose(e, tab.documentId)}
                   aria-label={`Close ${tab.title || "Untitled"}`}
                   className="absolute right-1 opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-1 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
