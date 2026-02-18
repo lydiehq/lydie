@@ -17,6 +17,7 @@ type Props = {
 export function PageConfigPanel({ documentId, organizationId, config }: Props) {
   const z = useZero();
   const [isOpen, setIsOpen] = useState(false);
+  const hideChildrenInSidebar = !(config.showChildrenInSidebar ?? true);
 
   const handleUpdate = async (updates: Partial<PageConfig>) => {
     const newConfig = {
@@ -26,10 +27,10 @@ export function PageConfigPanel({ documentId, organizationId, config }: Props) {
       ...updates,
     };
     await z.mutate(
-      mutators.document.updatePageConfig({
+      mutators.collection.updateSidebarVisibility({
         documentId,
         organizationId,
-        pageConfig: newConfig,
+        showChildrenInSidebar: newConfig.showChildrenInSidebar,
       }),
     );
   };
@@ -42,18 +43,18 @@ export function PageConfigPanel({ documentId, organizationId, config }: Props) {
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-700">Show children in sidebar</div>
-              <div className="text-xs text-gray-500">Display child pages in the document tree</div>
+              <div className="text-sm font-medium text-gray-700">Hide children in sidebar</div>
+              <div className="text-xs text-gray-500">Keep child pages out of the document tree</div>
             </div>
             <button
-              onClick={() => handleUpdate({ showChildrenInSidebar: !config.showChildrenInSidebar })}
+              onClick={() => handleUpdate({ showChildrenInSidebar: hideChildrenInSidebar })}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                config.showChildrenInSidebar !== false ? "bg-blue-600" : "bg-gray-200"
+                hideChildrenInSidebar ? "bg-blue-600" : "bg-gray-200"
               }`}
             >
               <span
                 className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                  config.showChildrenInSidebar !== false ? "translate-x-5" : "translate-x-1"
+                  hideChildrenInSidebar ? "translate-x-5" : "translate-x-1"
                 }`}
               />
             </button>

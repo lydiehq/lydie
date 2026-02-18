@@ -1,3 +1,5 @@
+import { getCollectionDocumentPath } from "./lydie-client";
+
 /**
  * Route registry for resolving document links to canonical URLs.
  *
@@ -9,6 +11,16 @@
 export type RoutePattern =
   | { type: "blog"; path: `/blog/${string}` }
   | { type: "resource"; pillar: string; path: `/resources/${string}/${string}` };
+
+type LinkRef = {
+  href: string;
+  id?: string;
+  slug?: string;
+  title?: string;
+  parentSlug?: string;
+  collectionId?: string;
+  type?: "internal" | "external";
+};
 
 interface RouteConfig {
   /** The parent document slug that identifies this route */
@@ -86,22 +98,26 @@ export function resolveLink(slug: string, parentSlug?: string): string | null {
  *   linkResolver={createLinkResolver()}
  * />
  */
-export function createLinkResolver(): (ref: {
-  href: string;
-  id?: string;
-  slug?: string;
-  title?: string;
-  parentSlug?: string;
-  type?: "internal" | "external";
-}) => string {
+export function createLinkResolver(options?: {
+  currentCollectionId?: string;
+}): (ref: LinkRef) => string {
   return (ref) => {
     // External links pass through
     if (ref.type === "external") {
       return ref.href;
     }
 
-    // Internal links - resolve based on parent slug
+    // Internal links - prefer explicit collection metadata from API
     if (ref.type === "internal" && ref.slug) {
+      if (ref.collectionId) {
+        return getCollectionDocumentPath(ref.collectionId, ref.slug);
+      }
+
+      if (options?.currentCollectionId) {
+        return getCollectionDocumentPath(options.currentCollectionId, ref.slug);
+      }
+
+      // Legacy fallback based on parent slug metadata
       const resolved = resolveLink(ref.slug, ref.parentSlug);
       if (resolved) {
         return resolved;

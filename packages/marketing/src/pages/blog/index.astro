@@ -14,7 +14,7 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import * as lydieApi from "../../utils/lydie-client";
 
-const BLOG_COLLECTION_ID = "YchJ11QUiAPpY8FC";
+const BLOG_COLLECTION_ID = lydieApi.collections.blog;
 
 type BlogListDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>

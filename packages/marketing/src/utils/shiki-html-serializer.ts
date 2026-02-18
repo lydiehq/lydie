@@ -9,6 +9,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
     slug?: string;
     title?: string;
     parentSlug?: string;
+    collectionId?: string;
     type?: "internal" | "external";
   }) => string;
 
@@ -20,6 +21,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
       slug?: string;
       title?: string;
       parentSlug?: string;
+      collectionId?: string;
       type?: "internal" | "external";
     }) => string;
   }) {
@@ -33,6 +35,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
     documentSlug?: string,
     documentTitle?: string,
     documentParentSlug?: string,
+    documentCollectionId?: string,
   ): string {
     if (this.linkResolver) {
       const href = this.linkResolver({
@@ -41,6 +44,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
         slug: documentSlug,
         title: documentTitle,
         parentSlug: documentParentSlug,
+        collectionId: documentCollectionId,
         type: "internal",
       });
       const titleAttr = documentTitle ? ` title="${this.escape(documentTitle)}"` : "";

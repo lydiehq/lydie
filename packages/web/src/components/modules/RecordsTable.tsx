@@ -26,6 +26,7 @@ const documentsByCollectionQuery = queries.collections.documentsByCollection as 
 const updateFieldValuesMutator = mutators.collection.updateFieldValues as any;
 const createDocumentMutator = mutators.document.create as any;
 const updateSchemaMutator = mutators.collection.updateSchema as any;
+const renameDocumentMutator = mutators.document.rename as any;
 
 const QUICK_PROPERTY_TYPES: Array<{ label: string; value: PropertyDefinition["type"] }> = [
   { label: "Text", value: "text" },
@@ -134,6 +135,19 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
     }
   };
 
+  const handleRenameDocument = useCallback(
+    async (documentId: string, title: string) => {
+      await z.mutate(
+        renameDocumentMutator({
+          documentId,
+          organizationId,
+          title,
+        }),
+      );
+    },
+    [organizationId, z],
+  );
+
   const handleAddProperty = async () => {
     const trimmedName = newPropertyName.trim();
     if (!trimmedName) {
@@ -184,29 +198,13 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
           <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Title</span>
         ),
         cell: ({ row, getValue }) => (
-          <Link
-            to="/w/$organizationSlug/$id"
-            params={{ organizationSlug, id: row.original.id }}
-            className="group flex min-w-[220px] items-center gap-2 rounded-md px-2 py-1.5 font-medium text-gray-900 hover:bg-white hover:text-blue-600"
-          >
-            <span>{getValue() || "Untitled"}</span>
-            <span className="opacity-0 transition-opacity group-hover:opacity-100">→</span>
-          </Link>
+          <EditableTitle
+            title={getValue()}
+            documentId={row.original.id}
+            organizationSlug={organizationSlug}
+            onSave={handleRenameDocument}
+          />
         ),
-      }),
-      columnHelper.display({
-        id: "add-property",
-        header: () => (
-          <button
-            type="button"
-            onClick={() => setIsAddingProperty((value) => !value)}
-            className="rounded-md border border-dashed border-gray-300 px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
-            title="Add property"
-          >
-            + Add property
-          </button>
-        ),
-        cell: () => <span className="block h-6 w-[120px]" aria-hidden="true" />,
       }),
       ...schema.map((fieldDef) =>
         columnHelper.display({
@@ -235,8 +233,22 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
           ),
         }),
       ),
+      columnHelper.display({
+        id: "add-property",
+        header: () => (
+          <button
+            type="button"
+            onClick={() => setIsAddingProperty((value) => !value)}
+            className="rounded-md border border-dashed border-gray-300 px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+            title="Add property"
+          >
+            + Add property
+          </button>
+        ),
+        cell: () => <span className="block h-6 w-[120px]" aria-hidden="true" />,
+      }),
     ];
-  }, [handleFieldUpdate, organizationSlug, schema]);
+  }, [handleFieldUpdate, handleRenameDocument, organizationSlug, schema]);
 
   const table = useReactTable({
     data: documents,
@@ -249,7 +261,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
   );
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div className="w-full">
       {isAddingProperty && (
         <div className="border-b border-gray-200 bg-gray-50/70 px-4 py-3">
           <div className="flex flex-wrap items-end gap-2">
@@ -324,7 +336,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
         <table className="w-full border-collapse text-sm">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50/80">
+              <tr key={headerGroup.id} className="border-b border-gray-200">
                 {headerGroup.headers.map((header) => (
                   <th key={header.id} className="px-3 py-2.5 text-left align-middle">
                     {header.isPlaceholder
@@ -348,15 +360,15 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
                 ))}
               </tr>
             ))}
-            <tr className="bg-white">
+            <tr>
               <td className="px-3 py-2.5" colSpan={schema.length + 2}>
                 <button
                   type="button"
                   onClick={() => void handleCreateRow()}
                   disabled={isCreatingRow}
-                  className="w-full rounded-md border border-dashed border-gray-300 px-3 py-2 text-left text-sm text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isCreatingRow ? "Creating row..." : "+ New row"}
+                  {isCreatingRow ? "Creating row..." : "+ New"}
                 </button>
               </td>
             </tr>
@@ -365,14 +377,83 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       </div>
 
       {documents.length === 0 && (
-        <div className="flex flex-col items-center justify-center border-t border-gray-100 py-6 text-gray-500">
+        <div className="flex flex-col items-center justify-center py-6 text-gray-500">
           <p>No rows yet</p>
-          <p className="text-sm text-gray-400">
-            Use "New row" to add a document to this collection.
-          </p>
+          <p className="text-sm text-gray-400">Use "+ New" to add a document to this collection.</p>
         </div>
       )}
     </div>
+  );
+}
+
+function EditableTitle({
+  title,
+  documentId,
+  organizationSlug,
+  onSave,
+}: {
+  title: string;
+  documentId: string;
+  organizationSlug: string;
+  onSave: (documentId: string, title: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(title);
+
+  const startEditing = () => {
+    setEditValue(title);
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    if (editValue !== title) {
+      onSave(documentId, editValue);
+    }
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <div className="group flex min-w-[220px] items-center gap-2">
+        <button
+          type="button"
+          onClick={startEditing}
+          className="flex flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left font-medium text-gray-900 hover:bg-white hover:text-blue-600"
+        >
+          <span>{title || "Untitled"}</span>
+        </button>
+        <Link
+          to="/w/$organizationSlug/$id"
+          params={{ organizationSlug, id: documentId }}
+          className="opacity-0 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100"
+          title="Open document"
+        >
+          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
+          </svg>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <input
+      type="text"
+      value={editValue}
+      onChange={(e) => setEditValue(e.target.value)}
+      onBlur={handleSave}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") handleSave();
+        if (e.key === "Escape") setIsEditing(false);
+      }}
+      className="w-full min-w-[220px] rounded border border-gray-300 px-2 py-1.5 text-sm font-medium"
+      autoFocus
+    />
   );
 }
 

@@ -66,6 +66,7 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
         isLocked,
         doc.title || "",
         organizationId,
+        organizationSlug,
       )
     : null;
 

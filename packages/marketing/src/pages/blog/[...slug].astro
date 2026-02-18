@@ -18,7 +18,7 @@ import { Container } from "../../components/Container";
 
 const { slug } = Astro.params;
 
-const BLOG_COLLECTION_ID = "YchJ11QUiAPpY8FC";
+const BLOG_COLLECTION_ID = lydieApi.collections.blog;
 
 type BlogDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
@@ -64,6 +64,7 @@ const articleUrl = new URL(
   `/blog/${document.fields?.slug || document.id}`,
   Astro.site,
 );
+const linkResolver = createLinkResolver({ currentCollectionId: BLOG_COLLECTION_ID });
 const imageUrl =
   typeof document.coverImage === "string"
     ? new URL(document.coverImage, Astro.site)
@@ -141,7 +142,7 @@ const structuredData = {
           <div class="prose mt-12">
             <LydieContent
               content={document.jsonContent}
-              linkResolver={createLinkResolver()}
+              linkResolver={linkResolver}
             />
           </div>
           <hr class="my-8 border-gray-200" />

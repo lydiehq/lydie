@@ -149,6 +149,7 @@ function buildDocumentWhereConditions(
     sql`${documentsTable.organizationId} = ${organizationId}`,
     sql`${documentsTable.nearestCollectionId} = ${collectionId}`,
     sql`${documentsTable.deletedAt} IS NULL`,
+    sql`${documentsTable.published} = true`,
   ];
 
   // Apply property filters on field values
@@ -300,7 +301,7 @@ export const CollectionsApi = new Hono()
       .select()
       .from(documentsTable)
       .where(
-        sql`${documentsTable.id} = ${identifier} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+        sql`${documentsTable.id} = ${identifier} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL AND ${documentsTable.published} = true`,
       )
       .limit(1);
 
@@ -326,7 +327,7 @@ export const CollectionsApi = new Hono()
           .from(documentFieldValuesTable)
           .innerJoin(documentsTable, eq(documentFieldValuesTable.documentId, documentsTable.id))
           .where(
-            sql`${uniquePropertyMatchWhere} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
+            sql`${uniquePropertyMatchWhere} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL AND ${documentsTable.published} = true`,
           )
           .limit(1);
 

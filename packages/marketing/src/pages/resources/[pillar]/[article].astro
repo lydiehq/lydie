@@ -24,19 +24,17 @@ if (!pillar || !article) {
   return new Response(null, { status: 404 });
 }
 
-// Map pillar slugs to document slugs in Lydie
-const pillarSlugMap: Record<string, string> = {
-  "knowledge-bases": "knowledge-bases",
-  "note-taking": "note-taking",
+// Map pillar slugs to collection IDs
+const pillarCollectionMap: Record<string, string> = {
+  "knowledge-bases": lydieApi.collections.knowledgeBases,
+  "note-taking": lydieApi.collections.noteTaking,
 };
 
-const pillarSlug = pillarSlugMap[pillar] || pillar;
+const collectionId = pillarCollectionMap[pillar] || pillar;
 
-type ArticleDocument = {
-  id: string;
-  title: string;
-  jsonContent: unknown;
-  fields?: Record<string, string | number | boolean | null>;
+type ArticleDocument = Awaited<
+  ReturnType<typeof lydieApi.getCollectionDocuments>
+>["documents"][number] & {
   toc?: Array<{ id: string; level: number; text: string }>;
   related?: Array<{ id: string; title: string; fields?: { slug?: string } }>;
 };
@@ -44,11 +42,12 @@ type ArticleDocument = {
 let articleDocument: ArticleDocument | null = null;
 let contentHtml = "";
 let toc: Array<{ id: string; level: number; text: string }> = [];
+const linkResolver = createLinkResolver({ currentCollectionId: collectionId });
 
-console.log(`[Resource Hub] Fetching article: ${pillarSlug}/${article}`);
+console.log(`[Resource Hub] Fetching article: ${collectionId}/${article}`);
 
 try {
-  const { documents } = await lydieApi.getCollectionDocuments(pillarSlug, {
+  const { documents } = await lydieApi.getCollectionDocuments(collectionId, {
     includeToc: true,
     includeRelated: true,
     filters: { slug: article },
@@ -63,13 +62,13 @@ try {
   toc = articleDocument.toc || [];
 
   // Render the content with custom components
-  const { html } = await renderContent(articleDocument.jsonContent, {
+  const { html } = await renderContent(articleDocument.jsonContent as import("@lydie-app/sdk").ContentNode, {
     components: {
       image: blogImageComponent,
       linkGrid: linkGridComponent,
       comparisonGrid: comparisonGridComponent,
     },
-    linkResolver: createLinkResolver(),
+    linkResolver,
   });
   contentHtml = html;
 } catch (error) {
@@ -80,8 +79,8 @@ try {
 
 <Layout
   title={articleDocument?.title || "Article"}
-  description={articleDocument?.fields?.description ||
-    articleDocument?.title || "Article"}
+  description={String(articleDocument?.fields?.description ||
+    articleDocument?.title || "Article")}
 >
   <div class="py-8">
     <Container>

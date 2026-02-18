@@ -192,7 +192,7 @@ export const documentsTable = pgTable(
     externalId: text("external_id"),
     // Controls sidebar visibility for children of this Document
     // Only relevant when this Document is a Collection (has collection_schemas row)
-    showChildrenInSidebar: boolean("show_children_in_sidebar").notNull().default(false),
+    showChildrenInSidebar: boolean("show_children_in_sidebar").notNull().default(true),
     coverImage: text("cover_image"),
     fullWidth: boolean("full_width").notNull().default(false),
     published: boolean("published").notNull().default(false),

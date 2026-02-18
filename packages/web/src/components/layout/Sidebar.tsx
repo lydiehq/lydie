@@ -1,7 +1,10 @@
 import {
   Add16Filled,
   Delete12Filled,
+  DocumentAdd16Regular,
   Home16Filled,
+  LayerDiagonal16Filled,
+  LayerDiagonalAdd20Filled,
   PersonChat16Filled,
   Search16Filled,
 } from "@fluentui/react-icons";
@@ -11,6 +14,7 @@ import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
+import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
@@ -67,10 +71,11 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
       initialPage: undefined,
     });
   };
+  const { createDocument } = useDocumentActions();
 
   return (
     <div className="flex flex-col grow max-h-screen">
-      <div className="flex justify-between items-center px-3 pt-1.5 pb-1">
+      <div className="flex justify-between items-center px-3 pt-2.5 pb-1">
         <OrganizationMenu isCollapsed={isCollapsed} />
         <TooltipTrigger delay={500}>
           <RACButton
@@ -86,7 +91,6 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
           <Tooltip>Collapse sidebar</Tooltip>
         </TooltipTrigger>
       </div>
-      <div className={`h-full flex flex-col p-3 ${!isCollapsed ? "hidden" : ""}`} />
       <div className={`flex flex-col ${isCollapsed ? "hidden" : ""} grow min-h-0`}>
         <div className="flex gap-x-1 px-3 mb-2">
           <Button
@@ -105,7 +109,7 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
               </kbd>
             </div>
           </Button>
-          <Button
+          {/* <Button
             intent="secondary"
             size="icon-sm"
             onPress={handleSearchClick}
@@ -113,7 +117,23 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
             className="group"
           >
             <Search16Filled className="size-3.5 icon-muted" />
-          </Button>
+          </Button> */}
+          <TooltipTrigger delay={500}>
+            <Button
+              intent="secondary"
+              size="icon-sm"
+              onPress={() => createDocument()}
+              aria-label="Create new document"
+            >
+              <DocumentAdd16Regular
+                className={sidebarItemIconStyles({ className: "size-[14px] icon-muted" })}
+              />
+              {/* <Add16Filled
+              className={sidebarItemIconStyles({ className: "size-3 m-0.5 icon-muted" })}
+            /> */}
+            </Button>
+            <Tooltip>Add document</Tooltip>
+          </TooltipTrigger>
         </div>
         <div className="flex flex-col px-2 mb-2">
           <Link
@@ -233,19 +253,15 @@ const DocumentsSection = memo(function DocumentsSection() {
           </RACButton>
         </Heading>
         <div className="flex items-center gap-x-1 ml-auto">
-          <TooltipTrigger delay={500}>
-            <Button
-              intent="secondary"
-              size="icon-sm"
-              onPress={() => createDocument()}
-              aria-label="Create new document"
-            >
-              <Add16Filled
-                className={sidebarItemIconStyles({ className: "size-3 m-0.5 icon-muted" })}
-              />
-            </Button>
-            <Tooltip>Add document</Tooltip>
-          </TooltipTrigger>
+          <RACButton
+            onPress={() => createDocument()}
+            className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/button relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100"
+          >
+            <Add16Filled
+              aria-hidden
+              className={`size-3 shrink-0 absolute text-black/45 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : "rotate-0"}`}
+            />
+          </RACButton>
         </div>
       </div>
       <DisclosurePanel className="overflow-y-auto grow scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2">

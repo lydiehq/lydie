@@ -43,7 +43,27 @@ export function DocumentMenu({
       title: `Delete "${itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName}"`,
       message: `This action cannot be undone. This document will be permanently deleted.`,
       onConfirm: () => {
-        deleteDocument(documentId, currentDocId === documentId);
+        deleteDocumentWithUndo(documentId, currentDocId === documentId);
+      },
+    });
+  };
+
+  const deleteDocumentWithUndo = (docId: string, shouldRedirect: boolean) => {
+    deleteDocument(docId, shouldRedirect);
+
+    toast("Document deleted", {
+      duration: 5000,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          z.mutate(
+            mutators.document.restore({
+              documentId: docId,
+              organizationId: organization.id,
+            }),
+          );
+          toast.success("Document restored");
+        },
       },
     });
   };

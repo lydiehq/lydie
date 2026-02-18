@@ -60,6 +60,7 @@ class EditorCache {
     isLocked: boolean,
     initialTitle: string,
     organizationId: string,
+    organizationSlug: string,
   ): CachedEditor {
     const existing = this.editors.get(documentId);
 
@@ -77,6 +78,7 @@ class EditorCache {
       isLocked,
       initialTitle,
       organizationId,
+      organizationSlug,
     );
     this.editors.set(documentId, cached);
 
@@ -184,6 +186,7 @@ class EditorCache {
     isLocked: boolean,
     initialTitle: string,
     organizationId: string,
+    organizationSlug: string,
   ): CachedEditor {
     // Get connection from manager
     const connection = documentConnectionManager.getConnection(documentId, yjsState);
@@ -240,10 +243,12 @@ class EditorCache {
         collectionBlock: {
           addNodeView: () => {
             const orgId = organizationId;
+            const orgSlug = organizationSlug;
             return ReactNodeViewRenderer((nodeViewProps) =>
               createElement(CollectionBlockComponent, {
                 ...nodeViewProps,
                 organizationId: orgId,
+                organizationSlug: orgSlug,
               }),
             );
           },

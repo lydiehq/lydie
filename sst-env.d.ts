@@ -6,159 +6,159 @@
 
 declare module "sst" {
   export interface Resource {
-    "ApiGatewayKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "AssetsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "Backend": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
-    "BetterAuthSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "Email": {
-      "configSet": string
-      "sender": string
-      "type": "sst.aws.Email"
-    }
-    "EventsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "GitHubAppSlug": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GitHubClientId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GitHubClientSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GitHubPrivateKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GoogleAiStudioApiKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GoogleClientId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GoogleClientSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "LydieApiKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "Marketing": {
-      "type": "sst.aws.Astro"
-      "url": string
-    }
-    "OnboardingEmailProcessorFunction": {
-      "name": string
-      "type": "sst.aws.Function"
-    }
-    "OnboardingEmailProcessorFunctionLinkable": {
-      "arn": string
-      "type": "sst.sst.Linkable"
-    }
-    "OnboardingSchedulerRoleLinkable": {
-      "arn": string
-      "type": "sst.sst.Linkable"
-    }
-    "OpenAiApiKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "OrganizationAssets": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "PostHogKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresConnectionStringDirect": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresConnectionStringPooled": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "SentryDsn": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "ShopifyClientId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "ShopifyClientSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "StripeMonthlyPriceId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "StripeSecretKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "StripeWebhookSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "StripeYearlyPriceId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "Web": {
-      "type": "sst.aws.StaticSite"
-      "url": string
-    }
-    "WorkspaceExportProcessorFunction": {
-      "name": string
-      "type": "sst.aws.Function"
-    }
-    "WorkspaceExportProcessorFunctionLinkable": {
-      "arn": string
-      "type": "sst.sst.Linkable"
-    }
-    "WorkspaceExports": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "Zero": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
-    "ZeroAdminPassword": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "vpc": {
-      "type": "sst.aws.Vpc"
-    }
+    ApiGatewayKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    AssetsRouter: {
+      type: "sst.aws.Router";
+      url: string;
+    };
+    Backend: {
+      service: string;
+      type: "sst.aws.Service";
+      url: string;
+    };
+    BetterAuthSecret: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    Email: {
+      configSet: string;
+      sender: string;
+      type: "sst.aws.Email";
+    };
+    EventsRouter: {
+      type: "sst.aws.Router";
+      url: string;
+    };
+    GitHubAppSlug: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GitHubClientId: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GitHubClientSecret: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GitHubPrivateKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GoogleAiStudioApiKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GoogleClientId: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    GoogleClientSecret: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    LydieApiKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    Marketing: {
+      type: "sst.aws.Astro";
+      url: string;
+    };
+    OnboardingEmailProcessorFunction: {
+      name: string;
+      type: "sst.aws.Function";
+    };
+    OnboardingEmailProcessorFunctionLinkable: {
+      arn: string;
+      type: "sst.sst.Linkable";
+    };
+    OnboardingSchedulerRoleLinkable: {
+      arn: string;
+      type: "sst.sst.Linkable";
+    };
+    OpenAiApiKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    OrganizationAssets: {
+      name: string;
+      type: "sst.aws.Bucket";
+    };
+    PostHogKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    PostgresConnectionStringDirect: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    PostgresConnectionStringPooled: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    SentryDsn: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    ShopifyClientId: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    ShopifyClientSecret: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    StripeMonthlyPriceId: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    StripeSecretKey: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    StripeWebhookSecret: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    StripeYearlyPriceId: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    Web: {
+      type: "sst.aws.StaticSite";
+      url: string;
+    };
+    WorkspaceExportProcessorFunction: {
+      name: string;
+      type: "sst.aws.Function";
+    };
+    WorkspaceExportProcessorFunctionLinkable: {
+      arn: string;
+      type: "sst.sst.Linkable";
+    };
+    WorkspaceExports: {
+      name: string;
+      type: "sst.aws.Bucket";
+    };
+    Zero: {
+      service: string;
+      type: "sst.aws.Service";
+      url: string;
+    };
+    ZeroAdminPassword: {
+      type: "sst.sst.Secret";
+      value: string;
+    };
+    vpc: {
+      type: "sst.aws.Vpc";
+    };
   }
 }
 /// <reference path="sst-env.d.ts" />
 
-import "sst"
-export {}
+import "sst";
+export {};

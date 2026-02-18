@@ -17,11 +17,12 @@ import {
   type ToOptions,
   createRouter as createTanStackRouter,
 } from "@tanstack/react-router";
+import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 
 import "./styles/tailwind.css";
-import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
+import { Toaster } from "sonner";
 
 import { ErrorPage } from "./components/layout/ErrorPage.tsx";
 import { initPostHog } from "./lib/posthog.ts";
@@ -182,6 +183,7 @@ if (rootElement && !rootElement.innerHTML) {
       <StrictMode>
         <CatchBoundary errorComponent={ErrorPage} getResetKey={() => "error"}>
           <RouterProvider router={router} />
+          <Toaster />
         </CatchBoundary>
       </StrictMode>,
     );

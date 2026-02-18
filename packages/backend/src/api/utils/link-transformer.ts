@@ -13,6 +13,7 @@ interface LinkMetadata {
   slug?: string;
   title?: string;
   parentSlug?: string;
+  collectionId?: string;
   exists?: boolean;
 }
 
@@ -56,6 +57,7 @@ export async function fetchDocumentMetadata(
         slug: documentsTable.slug,
         title: documentsTable.title,
         parentId: documentsTable.parentId,
+        nearestCollectionId: documentsTable.nearestCollectionId,
       })
       .from(documentsTable)
       .where(inArray(documentsTable.id, documentIds));
@@ -77,7 +79,9 @@ export async function fetchDocumentMetadata(
         .where(inArray(documentsTable.id, parentIds));
 
       for (const parent of parents) {
-        parentSlugMap.set(parent.id, parent.slug);
+        if (parent.slug) {
+          parentSlugMap.set(parent.id, parent.slug);
+        }
       }
     }
 
@@ -86,9 +90,10 @@ export async function fetchDocumentMetadata(
     for (const doc of documents) {
       metadataMap.set(doc.id, {
         id: doc.id,
-        slug: doc.slug,
+        slug: doc.slug || undefined,
         title: doc.title,
         parentSlug: doc.parentId ? parentSlugMap.get(doc.parentId) : undefined,
+        collectionId: doc.nearestCollectionId || undefined,
         exists: true,
       });
     }
@@ -130,6 +135,9 @@ function transformContentLinks(
               ...(metadata?.slug && { "document-slug": metadata.slug }),
               ...(metadata?.title && { "document-title": metadata.title }),
               ...(metadata?.parentSlug && { "document-parent-slug": metadata.parentSlug }),
+              ...(metadata?.collectionId && {
+                "document-collection-id": metadata.collectionId,
+              }),
             },
           };
         }

@@ -12,6 +12,8 @@ export class HTMLSerializer implements NodeBuilder<string> {
     documentId?: string,
     documentSlug?: string,
     documentTitle?: string,
+    _documentParentSlug?: string,
+    _documentCollectionId?: string,
   ): string {
     let href = documentSlug || documentId || "#";
     if (!href.startsWith("/") && !href.startsWith("http")) {

@@ -69,7 +69,7 @@ export const collectionMutators = {
       // Update show_children_in_sidebar on the document
       await tx.mutate.documents.update({
         id: documentId,
-        show_children_in_sidebar: false, // Default per spec
+        show_children_in_sidebar: true, // Default to visible (opt-out)
       });
 
       // Get all direct children and create field value rows for them

@@ -46,6 +46,7 @@ export interface LinkReference {
   slug?: string;
   title?: string;
   parentSlug?: string;
+  collectionId?: string;
   type?: "internal" | "external";
 }
 
@@ -108,6 +109,7 @@ export interface Mark {
     "document-slug"?: string;
     "document-title"?: string;
     "document-parent-slug"?: string;
+    "document-collection-id"?: string;
     [key: string]: any;
   };
 }
@@ -117,7 +119,14 @@ export interface NodeBuilder<T> {
   bold(content: T): T;
   italic(content: T): T;
   link(content: T, href?: string, rel?: string, target?: string): T;
-  internalLink?(content: T, documentId?: string, documentSlug?: string, documentTitle?: string): T;
+  internalLink?(
+    content: T,
+    documentId?: string,
+    documentSlug?: string,
+    documentTitle?: string,
+    documentParentSlug?: string,
+    documentCollectionId?: string,
+  ): T;
 
   doc(children: T[]): T;
   paragraph(children: T[]): T;
@@ -172,6 +181,8 @@ export function renderWithBuilder<T>(content: ContentNode, builder: NodeBuilder<
                 mark.attrs?.["document-id"],
                 mark.attrs?.["document-slug"],
                 mark.attrs?.["document-title"],
+                mark.attrs?.["document-parent-slug"],
+                mark.attrs?.["document-collection-id"],
               );
             }
             return wrapped;

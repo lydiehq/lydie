@@ -74,17 +74,18 @@ export const documentMutators = {
       hasOrganizationAccess(ctx, organizationId);
 
       let finalIntegrationLinkId = integrationLinkId;
+      let parentDocument: Awaited<ReturnType<typeof getDocumentById>> | null = null;
 
       // If creating as a child page, verify parent document belongs to same organization
       if (parentId) {
-        const parent = await getDocumentById(tx, parentId, organizationId);
-        if (!parent) {
+        parentDocument = await getDocumentById(tx, parentId, organizationId);
+        if (!parentDocument) {
           throw notFoundError("Parent document", parentId);
         }
 
         // Inherit integration link from parent
-        if (parent.integration_link_id) {
-          finalIntegrationLinkId = parent.integration_link_id;
+        if (parentDocument.integration_link_id) {
+          finalIntegrationLinkId = parentDocument.integration_link_id;
         }
       }
 
@@ -129,13 +130,10 @@ export const documentMutators = {
       let path = id;
       let nearestCollectionId: string | null = null;
 
-      if (parentId) {
-        const parent = await getDocumentById(tx, parentId, organizationId);
-        if (parent) {
-          path = `${parent.path}/${id}`;
-          // Inherit nearest_collection_id from parent
-          nearestCollectionId = parent.nearest_collection_id || null;
-        }
+      if (parentDocument) {
+        const parentPath = parentDocument.path || parentDocument.id;
+        path = `${parentPath}/${id}`;
+        nearestCollectionId = await getNearestCollectionForChild(tx, parentDocument);
       }
 
       await tx.mutate.documents.insert(
@@ -154,38 +152,13 @@ export const documentMutators = {
           sort_order: minSortOrder - 1,
           path,
           nearest_collection_id: nearestCollectionId,
-          show_children_in_sidebar: false,
+          show_children_in_sidebar: true,
         }),
       );
 
       // If this document belongs to a collection, create field values row
       if (nearestCollectionId) {
-        let collectionSchema = null;
-        try {
-          collectionSchema = await tx.run(
-            zql.collection_schemas.where("document_id", nearestCollectionId).one(),
-          );
-        } catch {
-          // No collection schema found
-        }
-
-        if (collectionSchema) {
-          const properties = collectionSchema.properties as Array<{ name: string }>;
-          const nullValues: Record<string, null> = {};
-          for (const prop of properties) {
-            nullValues[prop.name] = null;
-          }
-
-          await tx.mutate.document_field_values.insert(
-            withTimestamps({
-              id: createId(),
-              document_id: id,
-              collection_schema_id: collectionSchema.id,
-              values: nullValues,
-              orphaned_values: {},
-            }),
-          );
-        }
+        await ensureFieldValuesForNearestCollection(tx, id, nearestCollectionId);
       }
     },
   ),
@@ -298,8 +271,9 @@ export const documentMutators = {
       if (parentId) {
         const parent = await getDocumentById(tx, parentId, organizationId);
         if (parent) {
-          newPath = `${parent.path}/${documentId}`;
-          newNearestCollectionId = parent.nearest_collection_id || null;
+          const parentPath = parent.path || parent.id;
+          newPath = `${parentPath}/${documentId}`;
+          newNearestCollectionId = await getNearestCollectionForChild(tx, parent);
         }
       }
 
@@ -312,6 +286,10 @@ export const documentMutators = {
           nearest_collection_id: newNearestCollectionId,
         }),
       );
+
+      if (newNearestCollectionId) {
+        await ensureFieldValuesForNearestCollection(tx, documentId, newNearestCollectionId);
+      }
 
       // Update all descendants' paths and nearest_collection_id
       await updateDescendantPaths(tx, documentId, newPath, newNearestCollectionId, organizationId);
@@ -395,8 +373,9 @@ export const documentMutators = {
       if (targetParentId) {
         const parent = await getDocumentById(tx, targetParentId, organizationId);
         if (parent) {
-          newPath = `${parent.path}/${documentId}`;
-          newNearestCollectionId = parent.nearest_collection_id || null;
+          const parentPath = parent.path || parent.id;
+          newPath = `${parentPath}/${documentId}`;
+          newNearestCollectionId = await getNearestCollectionForChild(tx, parent);
         }
       }
 
@@ -408,6 +387,10 @@ export const documentMutators = {
         updates.integration_link_id = targetIntegrationLinkId;
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
+
+      if (newNearestCollectionId) {
+        await ensureFieldValuesForNearestCollection(tx, documentId, newNearestCollectionId);
+      }
 
       // Update all descendants' paths and nearest_collection_id
       await updateDescendantPaths(tx, documentId, newPath, newNearestCollectionId, organizationId);
@@ -539,6 +522,9 @@ async function updateDescendantPaths(
   parentNearestCollectionId: string | null,
   organizationId: string,
 ): Promise<void> {
+  const parentIsCollection = await isCollectionDocument(tx, parentId);
+  const nearestForChildren = parentIsCollection ? parentId : parentNearestCollectionId;
+
   const children = await tx.run(
     zql.documents
       .where("parent_id", parentId)
@@ -548,16 +534,95 @@ async function updateDescendantPaths(
 
   for (const child of children) {
     const newPath = `${parentPath}/${child.id}`;
+    const isChildCollection = await isCollectionDocument(tx, child.id);
+    const childNearestCollectionId = nearestForChildren;
+    const nearestForDescendants = isChildCollection ? child.id : childNearestCollectionId;
 
     await tx.mutate.documents.update(
       withUpdatedTimestamp({
         id: child.id,
         path: newPath,
-        nearest_collection_id: parentNearestCollectionId,
+        nearest_collection_id: childNearestCollectionId,
       }),
     );
 
+    if (childNearestCollectionId) {
+      await ensureFieldValuesForNearestCollection(tx, child.id, childNearestCollectionId);
+    }
+
     // Recursively update this child's descendants
-    await updateDescendantPaths(tx, child.id, newPath, parentNearestCollectionId, organizationId);
+    await updateDescendantPaths(tx, child.id, newPath, nearestForDescendants, organizationId);
   }
+}
+
+async function isCollectionDocument(tx: any, documentId: string): Promise<boolean> {
+  try {
+    const schema = await tx.run(zql.collection_schemas.where("document_id", documentId).one());
+    return Boolean(schema);
+  } catch {
+    return false;
+  }
+}
+
+async function getNearestCollectionForChild(
+  tx: any,
+  parent: { id: string; nearest_collection_id: string | null },
+): Promise<string | null> {
+  const parentIsCollection = await isCollectionDocument(tx, parent.id);
+  if (parentIsCollection) {
+    return parent.id;
+  }
+
+  return parent.nearest_collection_id || null;
+}
+
+async function ensureFieldValuesForNearestCollection(
+  tx: any,
+  documentId: string,
+  nearestCollectionId: string,
+): Promise<void> {
+  let collectionSchema = null;
+  try {
+    collectionSchema = await tx.run(
+      zql.collection_schemas.where("document_id", nearestCollectionId).one(),
+    );
+  } catch {
+    return;
+  }
+
+  if (!collectionSchema) {
+    return;
+  }
+
+  let existingValues = null;
+  try {
+    existingValues = await tx.run(
+      zql.document_field_values
+        .where("document_id", documentId)
+        .where("collection_schema_id", collectionSchema.id)
+        .one(),
+    );
+  } catch {
+    // Row does not exist yet
+  }
+
+  if (existingValues) {
+    return;
+  }
+
+  const properties = collectionSchema.properties as Array<{ name: string }>;
+  const nullValues: Record<string, null> = {};
+  for (const prop of properties) {
+    nullValues[prop.name] = null;
+  }
+
+  await tx.mutate.document_field_values.insert(
+    withTimestamps({
+      id: createId(),
+      document_id: documentId,
+      collection_schema_id: collectionSchema.id,
+      values: nullValues,
+      orphaned_values: {},
+    }),
+  );
 }

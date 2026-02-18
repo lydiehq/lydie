@@ -1,17 +1,24 @@
-import { lydieClient } from "../utils/lydie-client";
+import { collections, getCollectionDocuments } from "../utils/lydie-client";
 import { generateUrlEntry, generateSitemap, sitemapHeaders } from "./sitemap-utils.js";
 
 export async function GET() {
   try {
-    const { documents: blogPosts } = await lydieClient.getDocuments();
+    const { documents: blogPosts } = await getCollectionDocuments(collections.blog);
 
     const urls = [];
 
     for (const post of blogPosts) {
-      const lastmod = post.updatedAt || post.createdAt;
+      const slug =
+        typeof post.fields?.slug === "string" && post.fields.slug.length > 0
+          ? post.fields.slug
+          : post.id;
+      const updatedAt = typeof post.updatedAt === "string" ? post.updatedAt : null;
+      const createdAt = typeof post.createdAt === "string" ? post.createdAt : null;
+      const lastmod = updatedAt || createdAt;
+
       urls.push(
         generateUrlEntry({
-          path: `/blog/${post.slug}`,
+          path: `/blog/${slug}`,
           priority: "0.7",
           changefreq: "monthly",
           lastmod: lastmod ? new Date(lastmod).toISOString().split("T")[0] : undefined,

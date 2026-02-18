@@ -192,11 +192,11 @@ export function DocumentTreeItem({ item, renderItem, isOpenInTabs }: Props) {
                     isMenuOpen={isMenuOpen}
                     inTabRegistry={isOpenInTabs}
                   />
-                  {item.isCollection && (
+                  {/* {item.isCollection && (
                     <div className="absolute z-1 bg-white rounded-md p-0">
                       <DatabaseRegular className="" />
                     </div>
-                  )}
+                  )} */}
                 </>
               )}
 

@@ -98,6 +98,7 @@ export interface RenderContentOptions {
     slug?: string;
     title?: string;
     parentSlug?: string;
+    collectionId?: string;
     type?: "internal" | "external";
   }) => string;
 }
@@ -237,6 +238,7 @@ function renderMarks(
           mark.attrs?.["document-slug"],
           mark.attrs?.["document-title"],
           mark.attrs?.["document-parent-slug"],
+          mark.attrs?.["document-collection-id"],
         );
       default:
         return wrapped;

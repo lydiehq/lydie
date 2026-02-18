@@ -45,6 +45,7 @@ type UseDocumentEditorProps = {
   onCreate?: (editor: Editor) => void;
   onDestroy?: () => void;
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
+  organizationSlug: string;
 };
 
 export function useDocumentEditor({
@@ -52,6 +53,7 @@ export function useDocumentEditor({
   onUpdate,
   onCreate,
   onDestroy,
+  organizationSlug,
 }: UseDocumentEditorProps): DocumentEditorHookResult {
   const { user } = useAuth();
   const { uploadImage } = useImageUpload();
@@ -113,10 +115,12 @@ export function useDocumentEditor({
         collectionBlock: {
           addNodeView: () => {
             const orgId = doc.organization_id;
+            const orgSlug = organizationSlug;
             return ReactNodeViewRenderer((nodeViewProps) =>
               createElement(CollectionBlockComponent, {
                 ...nodeViewProps,
                 organizationId: orgId,
+                organizationSlug: orgSlug,
               }),
             );
           },

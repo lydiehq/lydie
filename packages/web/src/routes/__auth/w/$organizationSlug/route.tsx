@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-router";
 import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "react-aria-components";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
 
@@ -20,7 +19,6 @@ import { CommandMenu } from "@/components/layout/CommandMenu";
 import { DocumentTabBar } from "@/components/layout/DocumentTabBar";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { SidebarIcon } from "@/components/layout/SidebarIcon";
 import { Surface } from "@/components/layout/Surface";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
@@ -208,10 +206,6 @@ function RouteLayout() {
                 </Surface>
               </div>
             </div>
-            <FloatingSidebarToggleButton
-              isCollapsed={isCollapsed}
-              isEditorPage={!!currentDocumentId}
-            />
           </Panel>
           {shouldShowDockedPanel && (
             <>
@@ -242,33 +236,6 @@ function RouteLayout() {
           templateSlug={search.installTemplate}
         />
       )}
-    </div>
-  );
-}
-
-type FloatingSidebarToggleButtonProps = {
-  isCollapsed: boolean;
-  isEditorPage: boolean;
-};
-
-function FloatingSidebarToggleButton({
-  isCollapsed,
-  isEditorPage,
-}: FloatingSidebarToggleButtonProps) {
-  if (!isCollapsed || isEditorPage) {
-    return null;
-  }
-
-  return (
-    <div className="absolute top-3 left-3 z-50">
-      <Button
-        onPress={() => {
-          window.dispatchEvent(new CustomEvent("toggle-sidebar"));
-        }}
-        aria-label="Expand sidebar"
-      >
-        <SidebarIcon direction="left" collapsed={true} />
-      </Button>
     </div>
   );
 }

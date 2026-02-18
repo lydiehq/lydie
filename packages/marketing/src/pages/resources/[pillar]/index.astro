@@ -11,6 +11,7 @@ import Layout from "@/layouts/Layout.astro";
 import { Container } from "@/components/Container";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
 import * as lydieApi from "@/utils/lydie-client";
+import { createLinkResolver } from "@/utils/route-registry";
 import { renderContent, blogImageComponent } from "@/utils/content-renderer";
 import {
   linkGridComponent,
@@ -23,29 +24,28 @@ if (!pillar) {
   throw new Error("Pillar is required");
 }
 
-// Map pillar slugs to document slugs in Lydie
-const pillarSlugMap: Record<string, string> = {
-  "knowledge-bases": "knowledge-bases",
-  "note-taking": "note-taking",
+// Map pillar slugs to collection IDs
+const pillarCollectionMap: Record<string, string> = {
+  "knowledge-bases": lydieApi.collections.knowledgeBases,
+  "note-taking": lydieApi.collections.noteTaking,
 };
 
-const documentSlug = pillarSlugMap[pillar] || pillar;
+const collectionId = pillarCollectionMap[pillar] || pillar;
 
-type CollectionDocument = {
-  id: string;
-  title: string;
-  fields?: Record<string, string | number | boolean | null>;
-};
+type CollectionDocument = Awaited<
+  ReturnType<typeof lydieApi.getCollectionDocuments>
+>["documents"][number];
 
 let pillarDocument: CollectionDocument | null = null;
 let childDocuments: CollectionDocument[] = [];
 let contentHtml = "";
+const linkResolver = createLinkResolver({ currentCollectionId: collectionId });
 
-console.log(`[Resource Hub] Fetching pillar: ${documentSlug}`);
+console.log(`[Resource Hub] Fetching pillar: ${collectionId}`);
 
 try {
   // Fetch the pillar document
-  const { documents: pillarDocuments } = await lydieApi.getCollectionDocuments(documentSlug, {
+  const { documents: pillarDocuments } = await lydieApi.getCollectionDocuments(collectionId, {
     includeToc: true,
   });
 
@@ -56,27 +56,22 @@ try {
   }
 
   // Fetch children of this document (same pattern as blog)
-  const { documents: children } = await lydieApi.getCollectionDocuments(documentSlug);
+  const { documents: children } = await lydieApi.getCollectionDocuments(collectionId);
   childDocuments = children;
 
   // Render the content with custom components
-  const { html } = await renderContent(pillarDocument.jsonContent, {
+  const { html } = await renderContent(pillarDocument.jsonContent as import("@lydie-app/sdk").ContentNode, {
     components: {
       image: blogImageComponent,
       linkGrid: linkGridComponent,
       comparisonGrid: comparisonGridComponent,
     },
-    linkResolver: (ref) => {
-      if (ref.type === "internal" && ref.slug) {
-        return `/resources/${pillar}/${ref.slug}`;
-      }
-      return ref.href;
-    },
+    linkResolver,
   });
   contentHtml = html;
 } catch (error) {
   console.error(
-    `[Resource Hub] Failed to fetch pillar ${documentSlug}:`,
+    `[Resource Hub] Failed to fetch pillar ${collectionId}`,
     error,
   );
   return new Response(null, { status: 404 });
@@ -85,8 +80,8 @@ try {
 
 <Layout
   title={pillarDocument?.title || "Resources"}
-  description={pillarDocument?.fields?.description ||
-    `Learn about ${pillarDocument?.title || "Resources"}`}
+  description={String(pillarDocument?.fields?.description ||
+    `Learn about ${pillarDocument?.title || "Resources"}`)}
 >
   <div class="py-8">
     <Container>

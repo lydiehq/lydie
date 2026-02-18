@@ -1,3 +1,4 @@
+import { AppFolder16Filled } from "@fluentui/react-icons";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { queries } from "@lydie/zero/queries";
@@ -58,7 +59,7 @@ export function EditorView({
   // Check if this document IS a Collection (has a collection_schemas row)
   const isCollection = collectionSchemaData !== null && collectionSchemaData !== undefined;
   const collectionSchema = (collectionSchemaData?.properties as PropertyDefinition[] | null) ?? [];
-  const showChildrenInSidebar = doc.show_children_in_sidebar ?? false;
+  const showChildrenInSidebar = doc.show_children_in_sidebar ?? true;
 
   // If this document belongs to a parent collection, get that collection's schema
   const [parentCollectionData] = useQuery(
@@ -106,8 +107,8 @@ export function EditorView({
         {/* Main content area */}
         <div
           className={clsx(
-            "flex mx-auto grow px-4 flex-col pt-12 shrink-0 transition-[max-width] duration-300 ease-in-out",
-            doc.full_width ? "max-w-none" : "max-w-[65ch]",
+            "flex mx-auto grow flex-col pt-12 shrink-0 transition-[max-width] duration-300 ease-in-out",
+            doc.full_width ? "max-w-none px-20" : "max-w-[65ch] px-4",
           )}
         >
           <BubbleMenu editor={contentEditor} />
@@ -122,9 +123,12 @@ export function EditorView({
           {(isAdmin || parentCollectionSchema.length > 0) && (
             <div className="my-4 space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
-                  {isCollection ? "Collection Properties" : "Properties"}
-                </span>
+                <div className="flex items-center gap-x-1">
+                  <AppFolder16Filled className="size-4 icon-muted" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {isCollection ? "Collection Properties" : "Properties"}
+                  </span>
+                </div>
                 {isCollection && isAdmin && (
                   <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />
                 )}

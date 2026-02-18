@@ -1,11 +1,9 @@
 import { LydieClient } from "@lydie-app/sdk/client";
 import { Resource } from "sst";
 
-const isProduction = Resource.App.stage === "production" || false;
-
-const apiKey = isProduction ? Resource.LydieApiKey.value : "lydie_test_rWCzeEgVy2KhZe33";
-const organizationId = isProduction ? "WQnJeE7uYmhinDSE" : "larss-workspace-psvnnuyg";
-const apiUrl = isProduction ? "https://api.lydie.co/v1" : "http://localhost:3001/v1";
+const apiKey = Resource.LydieApiKey.value;
+const organizationId = "lydie";
+const apiUrl = "https://api.lydie.co/v1";
 
 export const lydieClient = new LydieClient({
   apiKey,
@@ -13,6 +11,13 @@ export const lydieClient = new LydieClient({
   organizationId,
   apiUrl,
 });
+
+// Centralized collection IDs - different values for dev/prod
+export const collections = {
+  blog: "Ybs6wJhTQtJywmQX",
+  knowledgeBases: "knowledge-bases",
+  noteTaking: "note-taking",
+} as const;
 
 type CollectionFieldValue = string | number | boolean | null;
 
@@ -22,6 +27,22 @@ export type CollectionApiDocument = Record<string, unknown> & {
   fields?: Record<string, CollectionFieldValue>;
   related?: Array<Record<string, unknown>>;
 };
+
+export function getCollectionDocumentPath(collectionId: string, slugOrId: string): string {
+  if (collectionId === collections.blog) {
+    return `/blog/${slugOrId}`;
+  }
+
+  if (collectionId === collections.knowledgeBases) {
+    return `/resources/knowledge-bases/${slugOrId}`;
+  }
+
+  if (collectionId === collections.noteTaking) {
+    return `/resources/note-taking/${slugOrId}`;
+  }
+
+  return `/${slugOrId}`;
+}
 
 export async function getCollectionDocuments(
   collectionId: string,

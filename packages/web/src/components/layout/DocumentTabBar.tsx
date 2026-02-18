@@ -45,6 +45,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
 
   const handleClose = useCallback(
     (e: React.MouseEvent, documentId: string) => {
+      e.preventDefault();
       e.stopPropagation();
       const nextActiveId = closeTab(documentId);
 
@@ -136,7 +137,6 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                 isSelected ? "bg-black/5" : "bg-gray-50 text-gray-600 hover:bg-black/3"
               } ${tab.mode === "preview" ? "italic" : ""}`
             }
-            onAction={() => handleSelectionChange(tab.documentId)}
             onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}
           >
             {({ isSelected }) => (

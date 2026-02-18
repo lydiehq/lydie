@@ -86,6 +86,7 @@ export function DocumentTree() {
   );
 
   const documents = useMemo(() => orgData?.documents || [], [orgData?.documents]);
+  const documentsById = useMemo(() => new Map(documents.map((doc) => [doc.id, doc])), [documents]);
   const connections = useMemo(
     () => orgData?.integrationConnections || [],
     [orgData?.integrationConnections],
@@ -131,6 +132,15 @@ export function DocumentTree() {
 
   const buildTreeItems = useCallback(
     (parentId: string | null): TreeItem[] => {
+      if (parentId) {
+        const parentDoc = documentsById.get(parentId);
+        const parentIsCollection = Boolean(parentDoc?.collectionSchema);
+
+        if (parentIsCollection && parentDoc?.show_children_in_sidebar === false) {
+          return [];
+        }
+      }
+
       const childDocs = documents.filter(
         (doc) => doc.parent_id === parentId && !doc.integration_link_id,
       );
@@ -152,7 +162,7 @@ export function DocumentTree() {
         };
       });
     },
-    [documents],
+    [documents, documentsById],
   );
 
   const buildLinkItems = useCallback(
@@ -160,6 +170,15 @@ export function DocumentTree() {
       const linkDocs = documents.filter((doc) => doc.integration_link_id === linkId);
 
       const buildNestedDocs = (parentId: string | null): TreeItem[] => {
+        if (parentId) {
+          const parentDoc = documentsById.get(parentId);
+          const parentIsCollection = Boolean(parentDoc?.collectionSchema);
+
+          if (parentIsCollection && parentDoc?.show_children_in_sidebar === false) {
+            return [];
+          }
+        }
+
         const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
 
         const sortedDocs = [...childDocs].sort((a, b) => {
@@ -183,7 +202,7 @@ export function DocumentTree() {
 
       return buildNestedDocs(null);
     },
-    [documents],
+    [documents, documentsById],
   );
 
   const linkGroups = useMemo(() => {
@@ -270,7 +289,7 @@ export function DocumentTree() {
         isOpenInTabs={item.type === "document" ? openTabIds.has(item.id) : false}
       />
     ),
-    [documents, currentDocId, openTabIds],
+    [documents, openTabIds],
   );
 
   const { dragAndDropHooks } = useDocumentDragDrop({
