@@ -26,6 +26,7 @@ import {
   TableIcon,
   TaskListIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons";
+import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
@@ -38,6 +39,7 @@ import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { textFormattingActions, listFormattingActions } from "@/lib/editor/formatting-actions";
+import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
 
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
@@ -83,6 +85,7 @@ export function EditorToolbar({ editor, doc }: Props) {
   const { deleteDocument, publishDocument, unpublishDocument } = useDocumentActions();
   const { uploadImage } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const z = useZero();
 
   // Query document components for this organization
   const [documentComponents] = useQuery(
@@ -538,6 +541,19 @@ export function EditorToolbar({ editor, doc }: Props) {
             <MoreVerticalRegular className="size-3.5 text-gray-600" />
           </Button>
           <Menu>
+            <MenuItem
+              onAction={() => {
+                z.mutate(
+                  mutators.document.update({
+                    documentId: doc.id,
+                    fullWidth: !doc.full_width,
+                    organizationId: doc.organization_id,
+                  }),
+                );
+              }}
+            >
+              {doc.full_width ? "Disable Full Width" : "Enable Full Width"}
+            </MenuItem>
             <MenuItem onAction={() => setIsSettingsOpen(true)}>Settings</MenuItem>
             <MenuItem onAction={() => deleteDocument(doc.id, true)}>Delete</MenuItem>
           </Menu>

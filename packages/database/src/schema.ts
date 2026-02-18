@@ -194,6 +194,7 @@ export const documentsTable = pgTable(
     // Only relevant when this Document is a Collection (has collection_schemas row)
     showChildrenInSidebar: boolean("show_children_in_sidebar").notNull().default(false),
     coverImage: text("cover_image"),
+    fullWidth: boolean("full_width").notNull().default(false),
     published: boolean("published").notNull().default(false),
     lastIndexedTitle: text("last_indexed_title"),
     lastIndexedContentHash: text("last_indexed_content_hash"),

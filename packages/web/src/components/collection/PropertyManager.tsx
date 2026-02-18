@@ -138,19 +138,19 @@ export function PropertyManager({
       {/* Existing properties list */}
       {schema.length > 0 && (
         <div className="flex flex-wrap gap-2">
-        {schema.map((field) => (
-          <div
-            key={field.name}
-            className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm"
-          >
-            <span className="font-medium">{field.name}</span>
-            <span className="text-blue-500 text-xs">({field.type})</span>
-            {isCollection && isAdmin && (
-              <button
-                onClick={() => handleRemoveProperty(field.name)}
-                className="ml-1 text-blue-400 hover:text-blue-600"
-                title="Remove property"
-              >
+          {schema.map((field) => (
+            <div
+              key={field.name}
+              className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm"
+            >
+              <span className="font-medium">{field.name}</span>
+              <span className="text-blue-500 text-xs">({field.type})</span>
+              {isCollection && isAdmin && (
+                <button
+                  onClick={() => handleRemoveProperty(field.name)}
+                  className="ml-1 text-blue-400 hover:text-blue-600"
+                  title="Remove property"
+                >
                   ×
                 </button>
               )}

@@ -8,8 +8,8 @@ import { createElement } from "react";
 import type * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
-import { CollectionBlockComponent } from "@/components/editor/CollectionBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
+import { CollectionBlockComponent } from "@/components/editor/CollectionBlockComponent";
 import {
   createMentionMenuSuggestion,
   getMentionCommandAction,

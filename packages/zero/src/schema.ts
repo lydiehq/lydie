@@ -70,7 +70,7 @@ const documents = table("documents")
     title: string(),
     slug: string().optional(),
     sort_order: number(),
-    yjs_state: string(),
+    yjs_state: string().optional(),
     // Note: body field removed - using yjsState exclusively for content storage
     user_id: string(),
     parent_id: string().optional(),
@@ -83,6 +83,7 @@ const documents = table("documents")
     external_id: string().optional(),
     show_children_in_sidebar: boolean(),
     cover_image: string().optional(),
+    full_width: boolean(),
     published: boolean(),
     deleted_at: number().optional(),
     is_locked: boolean(),

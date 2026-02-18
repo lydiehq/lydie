@@ -66,9 +66,7 @@ export function resolveLink(slug: string, parentSlug?: string): string | null {
   const route = ROUTE_REGISTRY.find((r) => r.parentSlug === parentSlug);
 
   if (!route) {
-    console.warn(
-      `[RouteRegistry] Unknown parent slug "${parentSlug}" for document "${slug}"`,
-    );
+    console.warn(`[RouteRegistry] Unknown parent slug "${parentSlug}" for document "${slug}"`);
     return null;
   }
 

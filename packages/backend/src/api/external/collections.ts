@@ -92,10 +92,7 @@ async function resolveCollectionId(
   const byId = await db
     .select({ id: documentsTable.id })
     .from(documentsTable)
-    .innerJoin(
-      collectionSchemasTable,
-      eq(documentsTable.id, collectionSchemasTable.documentId),
-    )
+    .innerJoin(collectionSchemasTable, eq(documentsTable.id, collectionSchemasTable.documentId))
     .where(
       sql`${documentsTable.id} = ${identifier} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
     )
@@ -113,10 +110,7 @@ async function resolveCollectionId(
       properties: collectionSchemasTable.properties,
     })
     .from(collectionSchemasTable)
-    .innerJoin(
-      documentsTable,
-      eq(collectionSchemasTable.documentId, documentsTable.id),
-    )
+    .innerJoin(documentsTable, eq(collectionSchemasTable.documentId, documentsTable.id))
     .where(
       sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
     );
@@ -159,9 +153,7 @@ function buildDocumentWhereConditions(
 
   // Apply property filters on field values
   for (const [fieldName, value] of Object.entries(filters)) {
-    conditions.push(
-      sql`${documentFieldValuesTable.values}->>${fieldName} = ${value}`,
-    );
+    conditions.push(sql`${documentFieldValuesTable.values}->>${fieldName} = ${value}`);
   }
 
   // Combine all conditions with AND
@@ -206,9 +198,7 @@ async function transformToDocumentResponse(
 
   const { yjsState: _, ...docWithoutYjs } = doc;
   const resolvedSlug =
-    typeof fieldValues.slug === "string" && fieldValues.slug.length > 0
-      ? fieldValues.slug
-      : doc.id;
+    typeof fieldValues.slug === "string" && fieldValues.slug.length > 0 ? fieldValues.slug : doc.id;
 
   return {
     ...docWithoutYjs,
@@ -246,10 +236,7 @@ export const CollectionsApi = new Hono()
     const includeToc = c.req.query("include_toc") === "true";
 
     // Resolve collection identifier (ID or slug) to actual collection ID
-    const collectionId = await resolveCollectionId(
-      organizationId,
-      collectionIdentifier,
-    );
+    const collectionId = await resolveCollectionId(organizationId, collectionIdentifier);
 
     if (!collectionId) {
       throw new HTTPException(404, {
@@ -262,11 +249,7 @@ export const CollectionsApi = new Hono()
     const filters = parseFilters(query);
 
     // Build where conditions
-    const whereConditions = buildDocumentWhereConditions(
-      organizationId,
-      collectionId,
-      filters,
-    );
+    const whereConditions = buildDocumentWhereConditions(organizationId, collectionId, filters);
 
     // Fetch all documents with their field values and full content
     const documents = await db
@@ -281,14 +264,9 @@ export const CollectionsApi = new Hono()
       )
       .innerJoin(
         collectionSchemasTable,
-        eq(
-          documentFieldValuesTable.collectionSchemaId,
-          collectionSchemasTable.id,
-        ),
+        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
       )
-      .where(
-        sql`${whereConditions} AND ${collectionSchemasTable.documentId} = ${collectionId}`,
-      )
+      .where(sql`${whereConditions} AND ${collectionSchemasTable.documentId} = ${collectionId}`)
       .orderBy(desc(documentsTable.createdAt), desc(documentsTable.id));
 
     // Transform to response format with full content
@@ -335,10 +313,7 @@ export const CollectionsApi = new Hono()
           properties: collectionSchemasTable.properties,
         })
         .from(collectionSchemasTable)
-        .innerJoin(
-          documentsTable,
-          eq(collectionSchemasTable.documentId, documentsTable.id),
-        )
+        .innerJoin(documentsTable, eq(collectionSchemasTable.documentId, documentsTable.id))
         .where(
           sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
         );
@@ -349,10 +324,7 @@ export const CollectionsApi = new Hono()
         const documentsByUniqueProperty = await db
           .select({ document: documentsTable })
           .from(documentFieldValuesTable)
-          .innerJoin(
-            documentsTable,
-            eq(documentFieldValuesTable.documentId, documentsTable.id),
-          )
+          .innerJoin(documentsTable, eq(documentFieldValuesTable.documentId, documentsTable.id))
           .where(
             sql`${uniquePropertyMatchWhere} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
           )
@@ -378,10 +350,7 @@ export const CollectionsApi = new Hono()
       .from(documentFieldValuesTable)
       .innerJoin(
         collectionSchemasTable,
-        eq(
-          documentFieldValuesTable.collectionSchemaId,
-          collectionSchemasTable.id,
-        ),
+        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
       )
       .where(
         sql`${documentFieldValuesTable.documentId} = ${document.id} AND ${collectionSchemasTable.documentId} = ${document.nearestCollectionId}`,

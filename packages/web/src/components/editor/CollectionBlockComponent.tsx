@@ -2,6 +2,12 @@ import { DismissFilled, FolderFilled, SearchFilled } from "@fluentui/react-icons
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { NodeViewWrapper, type NodeViewRendererProps } from "@tiptap/react";
 import { useCallback, useMemo, useState } from "react";
 
@@ -12,6 +18,14 @@ const collectionsByOrganizationQuery = queries.collections.byOrganization as any
 type Props = NodeViewRendererProps & {
   organizationId: string;
 };
+
+type DocumentItem = {
+  id: string;
+  title: string;
+  properties: Record<string, unknown>;
+};
+
+const columnHelper = createColumnHelper<DocumentItem>();
 
 function formatCellValue(value: unknown) {
   if (value === null || value === undefined) {
@@ -34,12 +48,11 @@ export function CollectionBlockComponent(props: Props) {
 
   // Query the collection for its schema
   const [collection] = useQuery(
-    collectionId && organizationId
-      ? collectionByIdQuery({
-          organizationId,
-          collectionId,
-        })
-      : null,
+    collectionByIdQuery({
+      organizationId,
+      collectionId,
+    }),
+    { enabled: collectionId && organizationId },
   );
 
   // Query documents in the collection
@@ -72,6 +85,10 @@ export function CollectionBlockComponent(props: Props) {
     [collections],
   );
 
+  const collectionName =
+    ((collectionData?.document as { title?: string } | undefined)?.title as string | undefined) ||
+    "Untitled";
+
   const schema = (collectionData?.properties || []) as PropertyDefinition[];
   const availableCollections: Array<{ id: string; name: string }> = collectionsData.map(
     (entry) => ({
@@ -79,9 +96,6 @@ export function CollectionBlockComponent(props: Props) {
       name: entry.document?.title || "Untitled",
     }),
   );
-  const collectionName =
-    ((collectionData?.document as { title?: string } | undefined)?.title as string | undefined) ||
-    "Untitled";
 
   const extractFieldValues = useCallback(
     (doc: { fieldValues?: unknown }) => {
@@ -146,6 +160,48 @@ export function CollectionBlockComponent(props: Props) {
 
     return result;
   }, [documentPropertiesById, documentsData, filters, sortField, sortDirection]);
+
+  // Transform filtered documents to table format
+  const tableDocuments = useMemo<DocumentItem[]>(() => {
+    return filteredDocuments.map((doc) => ({
+      id: doc.id,
+      title: doc.title || "Untitled",
+      properties: extractFieldValues(doc),
+    }));
+  }, [filteredDocuments, extractFieldValues]);
+
+  // Define table columns
+  const columns = useMemo(() => {
+    return [
+      columnHelper.accessor("title", {
+        id: "title",
+        header: () => (
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Title</span>
+        ),
+        cell: ({ getValue }) => <span className="font-medium text-gray-900">{getValue()}</span>,
+      }),
+      ...schema.map((fieldDef) =>
+        columnHelper.display({
+          id: fieldDef.name,
+          header: () => (
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {fieldDef.name}
+            </span>
+          ),
+          cell: ({ row }) => {
+            const value = row.original.properties[fieldDef.name];
+            return <span className="text-gray-600">{formatCellValue(value)}</span>;
+          },
+        }),
+      ),
+    ];
+  }, [schema]);
+
+  const table = useReactTable({
+    data: tableDocuments,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   const handleUpdate = (attrs: Partial<typeof node.attrs>) => {
     const pos = getPos();
@@ -344,30 +400,31 @@ export function CollectionBlockComponent(props: Props) {
         {/* Collection view */}
         <div className="overflow-x-auto">
           {viewMode === "table" ? (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-2 text-left font-medium text-gray-600">Title</th>
-                  {schema.map((field) => (
-                    <th key={field.name} className="px-4 py-2 text-left font-medium text-gray-600">
-                      {field.name}
-                    </th>
-                  ))}
-                </tr>
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50/80">
+                    {headerGroup.headers.map((header) => (
+                      <th key={header.id} className="px-4 py-2.5 text-left align-middle">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {filteredDocuments.map((doc) => (
-                  <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-2 font-medium">{doc.title || "Untitled"}</td>
-                    {schema.map((field) => {
-                      const properties = documentPropertiesById.get(doc.id) || {};
-                      const value = properties[field.name];
-                      return (
-                        <td key={field.name} className="px-4 py-2 text-gray-600">
-                          {formatCellValue(value)}
-                        </td>
-                      );
-                    })}
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-gray-100 align-top last:border-b-0 hover:bg-gray-50/50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-4 py-2.5 align-middle">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

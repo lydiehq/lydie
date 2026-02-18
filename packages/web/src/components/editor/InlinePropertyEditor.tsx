@@ -144,11 +144,7 @@ function FieldInput({
   return (
     <input
       type={
-        fieldDef.type === "number"
-          ? "number"
-          : fieldDef.type === "date"
-            ? "datetime-local"
-            : "text"
+        fieldDef.type === "number" ? "number" : fieldDef.type === "date" ? "datetime-local" : "text"
       }
       value={value}
       onChange={(e) => onChange(e.target.value)}

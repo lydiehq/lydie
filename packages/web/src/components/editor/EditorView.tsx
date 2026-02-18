@@ -104,7 +104,12 @@ export function EditorView({
         className="flex flex-row grow overflow-y-auto relative scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white"
       >
         {/* Main content area */}
-        <div className="flex mx-auto grow max-w-[65ch] px-4 flex-col pt-12 shrink-0">
+        <div
+          className={clsx(
+            "flex mx-auto grow px-4 flex-col pt-12 shrink-0 transition-[max-width] duration-300 ease-in-out",
+            doc.full_width ? "max-w-none" : "max-w-[65ch]",
+          )}
+        >
           <BubbleMenu editor={contentEditor} />
           <CoverImageEditor
             documentId={doc.id}

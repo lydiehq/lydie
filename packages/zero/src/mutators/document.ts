@@ -147,6 +147,7 @@ export const documentMutators = {
           organization_id: organizationId,
           integration_link_id: finalIntegrationLinkId || null,
           is_locked: false,
+          full_width: false,
           published: false,
           is_favorited: false,
           parent_id: parentId || null,
@@ -196,12 +197,13 @@ export const documentMutators = {
       published: z.boolean().optional(),
       customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
       coverImage: z.string().nullable().optional(),
+      fullWidth: z.boolean().optional(),
       organizationId: z.string(),
     }),
     async ({
       tx,
       ctx,
-      args: { documentId, title, published, customFields, coverImage, organizationId },
+      args: { documentId, title, published, customFields, coverImage, fullWidth, organizationId },
     }) => {
       hasOrganizationAccess(ctx, organizationId);
 
@@ -221,6 +223,7 @@ export const documentMutators = {
       if (published !== undefined) updates.published = published;
       if (customFields !== undefined) updates.custom_fields = customFields;
       if (coverImage !== undefined) updates.cover_image = coverImage;
+      if (fullWidth !== undefined) updates.full_width = fullWidth;
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
     },
@@ -524,7 +527,6 @@ export const documentMutators = {
       );
     },
   ),
-
 };
 
 /**
