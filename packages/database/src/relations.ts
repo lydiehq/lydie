@@ -20,7 +20,6 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.documentsTable.collectionId,
       to: r.collectionsTable.id,
     }),
-    // Field values for this document
     fieldValues: r.many.collectionFieldsTable({
       from: r.documentsTable.id,
       to: r.collectionFieldsTable.documentId,

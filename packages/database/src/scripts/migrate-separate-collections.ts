@@ -52,13 +52,12 @@ async function main() {
     }
 
     await db.execute(sql`
-      INSERT INTO collections (id, name, handle, properties, show_entries_in_sidebar, organization_id, created_at, updated_at)
+      INSERT INTO collections (id, name, handle, properties, organization_id, created_at, updated_at)
       VALUES (
         ${schema.id},
         ${schema.title || "Untitled Collection"},
         ${handle},
         ${schema.properties}::jsonb,
-        false,
         ${schema.organization_id},
         ${schema.created_at},
         ${schema.updated_at}

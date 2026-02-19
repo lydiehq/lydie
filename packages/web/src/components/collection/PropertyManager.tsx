@@ -38,6 +38,16 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
     options: "",
   });
 
+  const saveSchema = async (nextSchema: PropertyDefinition[]) => {
+    await z.mutate(
+      mutators.collection.update({
+        collectionId,
+        organizationId,
+        properties: nextSchema,
+      }),
+    );
+  };
+
   const handleAddProperty = async () => {
     if (!newProperty.name.trim()) return;
 
@@ -56,15 +66,7 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
         : {}),
     };
 
-    const updatedSchema = [...schema, propDef];
-
-    await z.mutate(
-      mutators.collection.update({
-        collectionId,
-        organizationId,
-        properties: updatedSchema,
-      }),
-    );
+    await saveSchema([...schema, propDef]);
 
     setIsAdding(false);
     setNewProperty({
@@ -77,18 +79,9 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
   };
 
   const handleRemoveProperty = async (fieldName: string) => {
-    const updatedSchema = schema.filter((f) => f.name !== fieldName);
-
-    await z.mutate(
-      mutators.collection.update({
-        collectionId,
-        organizationId,
-        properties: updatedSchema,
-      }),
-    );
+    await saveSchema(schema.filter((field) => field.name !== fieldName));
   };
 
-  // If not admin, just show readonly list of properties (for parent collection context)
   if (!isAdmin) {
     if (schema.length === 0) return null;
 
@@ -109,7 +102,6 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
 
   return (
     <div className="space-y-3">
-      {/* Existing properties list */}
       {schema.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {schema.map((field) => (
@@ -133,12 +125,17 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
         </div>
       )}
 
-      {/* Add property form */}
       {isAdding ? (
         <div className="p-3 bg-gray-50 rounded border border-gray-200 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Property name</label>
+            <label
+              htmlFor="collection-property-name"
+              className="block text-xs font-medium text-gray-600 mb-1"
+            >
+              Property name
+            </label>
             <input
+              id="collection-property-name"
               type="text"
               value={newProperty.name}
               onChange={(e) => setNewProperty((p) => ({ ...p, name: e.target.value }))}
@@ -149,8 +146,11 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+            <label htmlFor="collection-property-type" className="block text-xs font-medium text-gray-600 mb-1">
+              Type
+            </label>
             <select
+              id="collection-property-type"
               value={newProperty.type}
               onChange={(e) =>
                 setNewProperty((p) => ({
@@ -170,10 +170,11 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
 
           {(newProperty.type === "select" || newProperty.type === "multi-select") && (
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label htmlFor="collection-property-options" className="block text-xs font-medium text-gray-600 mb-1">
                 Options (comma-separated)
               </label>
               <input
+                id="collection-property-options"
                 type="text"
                 value={newProperty.options}
                 onChange={(e) => setNewProperty((p) => ({ ...p, options: e.target.value }))}

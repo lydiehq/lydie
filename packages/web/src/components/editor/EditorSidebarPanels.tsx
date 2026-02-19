@@ -123,7 +123,7 @@ function FieldsPanel({ doc, collectionSchema }: Props) {
       : null,
   );
 
-  const fieldRows = fieldValuesData ?? [];
+  const fieldRows = fieldValuesData?.fieldValues ?? [];
   const activeFieldRow =
     fieldRows.find((row) => row.collection_id === doc.collection_id) ?? fieldRows[0];
 

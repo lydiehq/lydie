@@ -18,7 +18,7 @@ import { Container } from "../../components/Container";
 
 const { slug } = Astro.params;
 
-const BLOG_COLLECTION_ID = lydieApi.collections.blog;
+const BLOG_COLLECTION_HANDLE = lydieApi.collections.blog;
 
 type BlogDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
@@ -34,7 +34,7 @@ type RelatedDocument = {
 let document: BlogDocument;
 try {
   const { documents } = await lydieApi.getCollectionDocuments(
-    BLOG_COLLECTION_ID,
+    BLOG_COLLECTION_HANDLE,
     {
       includeRelated: true,
       filters: { slug: slug! },
@@ -64,7 +64,7 @@ const articleUrl = new URL(
   `/blog/${document.fields?.slug || document.id}`,
   Astro.site,
 );
-const linkResolver = createLinkResolver({ currentCollectionId: BLOG_COLLECTION_ID });
+const linkResolver = createLinkResolver({ currentCollectionHandle: BLOG_COLLECTION_HANDLE });
 const imageUrl =
   typeof document.coverImage === "string"
     ? new URL(document.coverImage, Astro.site)

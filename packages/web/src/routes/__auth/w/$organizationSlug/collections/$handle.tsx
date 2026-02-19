@@ -1,11 +1,14 @@
+import type { PropertyDefinition } from "@lydie/core/collection";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PropertyManager } from "@/components/collection";
-import { PageConfigPanel, RecordsTable } from "@/components/modules";
+import { RecordsTable } from "@/components/modules";
+import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
+import { isAdmin } from "@/utils/admin";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/collections/$handle")({
   component: RouteComponent,
@@ -15,6 +18,8 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/collections/$h
 function RouteComponent() {
   const { handle } = Route.useParams();
   const { organization } = useOrganization();
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
 
   const [collection, status] = useQuery(
     queries.collections.byHandle({
@@ -40,7 +45,7 @@ function RouteComponent() {
     return null;
   }
 
-  const schema = (collection.properties as any[]) || [];
+  const schema = (collection.properties as PropertyDefinition[] | null) ?? [];
 
   return (
     <div className="h-full overflow-y-auto">
@@ -57,12 +62,7 @@ function RouteComponent() {
             collectionId={collection.id}
             organizationId={organization.id}
             schema={schema}
-            isAdmin
-          />
-          <PageConfigPanel
-            collectionId={collection.id}
-            organizationId={organization.id}
-            config={{ showChildrenInSidebar: !collection.show_entries_in_sidebar }}
+            isAdmin={userIsAdmin}
           />
         </div>
 

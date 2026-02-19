@@ -12,9 +12,8 @@ export const lydieClient = new LydieClient({
   apiUrl,
 });
 
-// Centralized collection IDs - different values for dev/prod
 export const collections = {
-  blog: "Ybs6wJhTQtJywmQX",
+  blog: "blog",
   knowledgeBases: "knowledge-bases",
   noteTaking: "note-taking",
 } as const;
@@ -28,16 +27,16 @@ export type CollectionApiDocument = Record<string, unknown> & {
   related?: Array<Record<string, unknown>>;
 };
 
-export function getCollectionDocumentPath(collectionId: string, slugOrId: string): string {
-  if (collectionId === collections.blog) {
+export function getCollectionDocumentPath(collectionHandle: string, slugOrId: string): string {
+  if (collectionHandle === collections.blog) {
     return `/blog/${slugOrId}`;
   }
 
-  if (collectionId === collections.knowledgeBases) {
+  if (collectionHandle === collections.knowledgeBases) {
     return `/resources/knowledge-bases/${slugOrId}`;
   }
 
-  if (collectionId === collections.noteTaking) {
+  if (collectionHandle === collections.noteTaking) {
     return `/resources/note-taking/${slugOrId}`;
   }
 
@@ -45,7 +44,7 @@ export function getCollectionDocumentPath(collectionId: string, slugOrId: string
 }
 
 export async function getCollectionDocuments(
-  collectionId: string,
+  collectionHandle: string,
   options?: {
     includeRelated?: boolean;
     includeToc?: boolean;
@@ -69,7 +68,7 @@ export async function getCollectionDocuments(
   }
 
   const response = await fetch(
-    `${apiUrl}/${organizationId}/collections/${collectionId}/documents${
+    `${apiUrl}/${organizationId}/${collectionHandle}/documents${
       params.toString() ? `?${params.toString()}` : ""
     }`,
     {

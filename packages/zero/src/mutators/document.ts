@@ -15,6 +15,39 @@ import {
 import { notFoundError } from "../utils/errors";
 import { withTimestamps, withUpdatedTimestamp } from "../utils/timestamps";
 
+async function maybeOne<T>(query: Promise<T>): Promise<T | null> {
+  try {
+    return await query;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureCollectionFieldRow(tx: any, documentId: string, collectionId: string) {
+  const existing = await maybeOne(
+    tx.run(
+      zql.collection_fields
+        .where("document_id", documentId)
+        .where("collection_id", collectionId)
+        .one(),
+    ),
+  );
+
+  if (existing) {
+    return;
+  }
+
+  await tx.mutate.collection_fields.insert(
+    withTimestamps({
+      id: createId(),
+      document_id: documentId,
+      collection_id: collectionId,
+      values: {},
+      orphaned_values: {},
+    }),
+  );
+}
+
 export const documentMutators = {
   publish: defineMutator(
     z.object({
@@ -122,15 +155,7 @@ export const documentMutators = {
       );
 
       if (args.collectionId) {
-        await tx.mutate.collection_fields.insert(
-          withTimestamps({
-            id: createId(),
-            document_id: args.id,
-            collection_id: args.collectionId,
-            values: {},
-            orphaned_values: {},
-          }),
-        );
+        await ensureCollectionFieldRow(tx, args.id, args.collectionId);
       }
     },
   ),
@@ -163,6 +188,10 @@ export const documentMutators = {
       if (args.collectionId !== undefined) updates.collection_id = args.collectionId;
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
+
+      if (args.collectionId) {
+        await ensureCollectionFieldRow(tx, args.documentId, args.collectionId);
+      }
     },
   ),
 
@@ -221,6 +250,10 @@ export const documentMutators = {
       }
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
+
+      if (args.collectionId) {
+        await ensureCollectionFieldRow(tx, args.documentId, args.collectionId);
+      }
     },
   ),
 
@@ -282,6 +315,10 @@ export const documentMutators = {
       }
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
+
+      if (args.collectionId) {
+        await ensureCollectionFieldRow(tx, args.documentId, args.collectionId);
+      }
     },
   ),
 

@@ -86,6 +86,10 @@ export function DocumentTree() {
   );
 
   const documents = useMemo(() => orgData?.documents || [], [orgData?.documents]);
+  const treeDocuments = useMemo(
+    () => documents.filter((doc) => !doc.collection_id),
+    [documents],
+  );
   const connections = useMemo(
     () => orgData?.integrationConnections || [],
     [orgData?.integrationConnections],
@@ -100,8 +104,8 @@ export function DocumentTree() {
 
   // Auto-expand ancestors when navigating to a new document
   useEffect(() => {
-    if (currentDocId && currentDocId !== prevDocIdRef.current && documents.length > 0) {
-      const ancestorIds = getAncestorIds(currentDocId, documents);
+    if (currentDocId && currentDocId !== prevDocIdRef.current && treeDocuments.length > 0) {
+      const ancestorIds = getAncestorIds(currentDocId, treeDocuments);
 
       // Add ancestors to expanded state (persisted)
       setExpandedKeysArray((prev) => {
@@ -111,7 +115,7 @@ export function DocumentTree() {
 
       prevDocIdRef.current = currentDocId;
     }
-  }, [currentDocId, documents, setExpandedKeysArray]);
+  }, [currentDocId, treeDocuments, setExpandedKeysArray]);
 
   const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
 
@@ -131,7 +135,7 @@ export function DocumentTree() {
 
   const buildTreeItems = useCallback(
     (parentId: string | null): TreeItem[] => {
-      const childDocs = documents.filter(
+      const childDocs = treeDocuments.filter(
         (doc) => doc.parent_id === parentId && !doc.integration_link_id,
       );
 
@@ -152,12 +156,12 @@ export function DocumentTree() {
         };
       });
     },
-    [documents],
+    [treeDocuments],
   );
 
   const buildLinkItems = useCallback(
     (linkId: string): TreeItem[] => {
-      const linkDocs = documents.filter((doc) => doc.integration_link_id === linkId);
+      const linkDocs = treeDocuments.filter((doc) => doc.integration_link_id === linkId);
 
       const buildNestedDocs = (parentId: string | null): TreeItem[] => {
         const childDocs = linkDocs.filter((d) => d.parent_id === parentId);
@@ -183,7 +187,7 @@ export function DocumentTree() {
 
       return buildNestedDocs(null);
     },
-    [documents],
+    [treeDocuments],
   );
 
   const linkGroups = useMemo(() => {
@@ -266,15 +270,15 @@ export function DocumentTree() {
       <DocumentTreeItem
         item={item}
         renderItem={renderItem}
-        documents={documents}
+        documents={treeDocuments}
         isOpenInTabs={item.type === "document" ? openTabIds.has(item.id) : false}
       />
     ),
-    [documents, openTabIds],
+    [treeDocuments, openTabIds],
   );
 
   const { dragAndDropHooks } = useDocumentDragDrop({
-    allDocuments: documents,
+    allDocuments: treeDocuments,
   });
 
   return (

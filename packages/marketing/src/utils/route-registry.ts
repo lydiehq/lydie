@@ -18,7 +18,7 @@ type LinkRef = {
   slug?: string;
   title?: string;
   parentSlug?: string;
-  collectionId?: string;
+  collectionHandle?: string;
   type?: "internal" | "external";
 };
 
@@ -99,7 +99,7 @@ export function resolveLink(slug: string, parentSlug?: string): string | null {
  * />
  */
 export function createLinkResolver(options?: {
-  currentCollectionId?: string;
+  currentCollectionHandle?: string;
 }): (ref: LinkRef) => string {
   return (ref) => {
     // External links pass through
@@ -109,12 +109,12 @@ export function createLinkResolver(options?: {
 
     // Internal links - prefer explicit collection metadata from API
     if (ref.type === "internal" && ref.slug) {
-      if (ref.collectionId) {
-        return getCollectionDocumentPath(ref.collectionId, ref.slug);
+      if (ref.collectionHandle) {
+        return getCollectionDocumentPath(ref.collectionHandle, ref.slug);
       }
 
-      if (options?.currentCollectionId) {
-        return getCollectionDocumentPath(options.currentCollectionId, ref.slug);
+      if (options?.currentCollectionHandle) {
+        return getCollectionDocumentPath(options.currentCollectionHandle, ref.slug);
       }
 
       // Legacy fallback based on parent slug metadata

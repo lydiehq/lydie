@@ -25,19 +25,31 @@ const RESERVED_HANDLES = new Set([
   "integrations",
 ]);
 
-type PropertyDefinition = {
-  name: string;
-  type: "text" | "number" | "date" | "select" | "multi-select" | "boolean" | "relation";
-  required: boolean;
-  unique: boolean;
-  options?: string[];
-  derived?: {
-    sourceField: string;
-    transform: "slugify";
-    editable: boolean;
-    warnOnChangeAfterPublish?: boolean;
-  };
-};
+const propertyDefinitionSchema = z.object({
+  name: z.string(),
+  type: z.enum(["text", "number", "date", "select", "multi-select", "boolean", "relation"]),
+  required: z.boolean(),
+  unique: z.boolean(),
+  options: z.array(z.string()).optional(),
+  derived: z
+    .object({
+      sourceField: z.string(),
+      transform: z.enum(["slugify"]),
+      editable: z.boolean(),
+      warnOnChangeAfterPublish: z.boolean().optional(),
+    })
+    .optional(),
+});
+
+const propertiesSchema = z.array(propertyDefinitionSchema);
+
+async function maybeOne<T>(query: Promise<T>): Promise<T | null> {
+  try {
+    return await query;
+  } catch {
+    return null;
+  }
+}
 
 async function createUniqueHandle(
   tx: any,
@@ -71,34 +83,7 @@ export const collectionMutators = {
       organizationId: z.string(),
       name: z.string().min(1),
       handle: z.string().optional(),
-      properties: z
-        .array(
-          z.object({
-            name: z.string(),
-            type: z.enum([
-              "text",
-              "number",
-              "date",
-              "select",
-              "multi-select",
-              "boolean",
-              "relation",
-            ]),
-            required: z.boolean(),
-            unique: z.boolean(),
-            options: z.array(z.string()).optional(),
-            derived: z
-              .object({
-                sourceField: z.string(),
-                transform: z.enum(["slugify"]),
-                editable: z.boolean(),
-                warnOnChangeAfterPublish: z.boolean().optional(),
-              })
-              .optional(),
-          }),
-        )
-        .default([]),
-      showEntriesInSidebar: z.boolean().optional(),
+      properties: propertiesSchema.default([]),
     }),
     async ({ tx, ctx, args }) => {
       hasOrganizationAccess(ctx, args.organizationId);
@@ -116,7 +101,6 @@ export const collectionMutators = {
           name: args.name.trim(),
           handle,
           properties: args.properties as ReadonlyJSONValue,
-          show_entries_in_sidebar: args.showEntriesInSidebar ?? false,
         }),
       );
     },
@@ -127,8 +111,7 @@ export const collectionMutators = {
       collectionId: z.string(),
       organizationId: z.string(),
       name: z.string().optional(),
-      properties: z.array(z.custom<PropertyDefinition>()).optional(),
-      showEntriesInSidebar: z.boolean().optional(),
+      properties: propertiesSchema.optional(),
     }),
     async ({ tx, ctx, args }) => {
       hasOrganizationAccess(ctx, args.organizationId);
@@ -152,9 +135,6 @@ export const collectionMutators = {
       if (args.properties !== undefined) {
         updates.properties = args.properties as ReadonlyJSONValue;
       }
-      if (args.showEntriesInSidebar !== undefined) {
-        updates.show_entries_in_sidebar = args.showEntriesInSidebar;
-      }
 
       await tx.mutate.collections.update(updates);
     },
@@ -170,17 +150,38 @@ export const collectionMutators = {
     async ({ tx, ctx, args: { documentId, collectionId, organizationId, values } }) => {
       hasOrganizationAccess(ctx, organizationId);
 
-      let existing = null;
-      try {
-        existing = await tx.run(
+      const [document, collection] = await Promise.all([
+        maybeOne(
+          tx.run(
+            zql.documents
+              .where("id", documentId)
+              .where("organization_id", organizationId)
+              .where("deleted_at", "IS", null)
+              .one(),
+          ),
+        ),
+        maybeOne(
+          tx.run(
+            zql.collections
+              .where("id", collectionId)
+              .where("organization_id", organizationId)
+              .one(),
+          ),
+        ),
+      ]);
+
+      if (!document || !collection) {
+        throw new Error("Invalid document or collection");
+      }
+
+      const existing = await maybeOne(
+        tx.run(
           zql.collection_fields
             .where("document_id", documentId)
             .where("collection_id", collectionId)
             .one(),
-        );
-      } catch {
-        existing = null;
-      }
+        ),
+      );
 
       if (existing) {
         await tx.mutate.collection_fields.update({

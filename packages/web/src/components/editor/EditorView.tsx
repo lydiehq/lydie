@@ -1,5 +1,6 @@
 import { AppFolder16Filled, DismissRegular } from "@fluentui/react-icons";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
+import type { PropertyDefinition } from "@lydie/core/collection";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Drawer } from "@lydie/ui/components/generic/Drawer";
@@ -58,10 +59,9 @@ export function EditorView({
       : null,
   );
 
-  const collectionSchema = (collectionData?.properties as any[]) || [];
+  const collectionSchema = (collectionData?.properties as PropertyDefinition[] | null) ?? [];
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Preload documents for the @ mention feature
   usePreloadMentionDocuments(organizationId);
 
   return (
@@ -86,7 +86,6 @@ export function EditorView({
         ref={scrollContainerRef}
         className="flex flex-row grow overflow-y-auto relative scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white"
       >
-        {/* Main content area */}
         <div
           className={clsx(
             "flex mx-auto w-full grow flex-col pt-12 shrink-0 transition-[max-width] duration-300 ease-in-out",
@@ -101,9 +100,7 @@ export function EditorView({
           />
           <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
-          <div
-            className="my-3 flex items-center gap-x-2 justify-end"
-          >
+          <div className="my-3 flex items-center gap-x-2 justify-end">
             <Button
               intent="ghost"
               size="sm"
@@ -115,22 +112,19 @@ export function EditorView({
             </Button>
           </div>
 
-          <>
-            <LinkPopover
-              editor={contentEditor}
-              organizationId={organizationId}
-              organizationSlug={organizationSlug}
-            />
+          <LinkPopover
+            editor={contentEditor}
+            organizationId={organizationId}
+            organizationSlug={organizationSlug}
+          />
 
-            <EditorContent
-              aria-label="Document content"
-              editor={contentEditor}
-              className="block grow"
-            />
-          </>
+          <EditorContent
+            aria-label="Document content"
+            editor={contentEditor}
+            className="block grow"
+          />
         </div>
 
-        {/* Handles shifting content left when assistant is undocked and open */}
         <div
           className={clsx(
             "shrink-0 transition-[width] duration-500 ease-in-out",

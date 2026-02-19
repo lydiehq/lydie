@@ -22,8 +22,7 @@ export const collectionQueries = {
       return zql.collections
         .where("id", collectionId)
         .where("organization_id", organizationId)
-        .one()
-        .related("fieldValues", (q) => q.related("document").orderBy("created_at", "desc"));
+        .one();
     },
   ),
 
@@ -69,7 +68,12 @@ export const collectionQueries = {
     z.object({ organizationId: z.string(), documentId: z.string() }),
     ({ args: { organizationId, documentId }, ctx }) => {
       hasOrganizationAccess(ctx, organizationId);
-      return zql.collection_fields.where("document_id", documentId).related("collection");
+      return zql.documents
+        .where("id", documentId)
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
+        .one()
+        .related("fieldValues", (q) => q.related("collection"));
     },
   ),
 };

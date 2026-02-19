@@ -209,13 +209,6 @@ export const documentsTable = pgTable(
   ],
 );
 
-/**
- * Collection Schemas Table
- *
- * A Collection is a Document with a corresponding row in this table.
- * This table stores the schema definition (properties array) for Collections.
- * When a row is deleted, the Document reverts to being a plain Document.
- */
 export const collectionsTable = pgTable(
   "collections",
   {
@@ -225,12 +218,9 @@ export const collectionsTable = pgTable(
       .$default(() => createId()),
     name: text("name").notNull(),
     handle: text("handle").notNull(),
-    showEntriesInSidebar: boolean("show_entries_in_sidebar").notNull().default(false),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    // Array of property definitions for this Collection
-    // Properties are inherited by all child Documents
     properties: jsonb("properties")
       .$type<
         Array<{
@@ -257,13 +247,6 @@ export const collectionsTable = pgTable(
   ],
 );
 
-/**
- * Document Field Values Table
- *
- * Stores field values for Documents that belong to Collections.
- * Each row represents a Document's values for a specific Collection schema.
- * Documents can have multiple rows if they belong to multiple Collections via inheritance.
- */
 export const collectionFieldsTable = pgTable(
   "collection_fields",
   {
@@ -277,14 +260,10 @@ export const collectionFieldsTable = pgTable(
     collectionId: text("collection_id")
       .notNull()
       .references(() => collectionsTable.id, { onDelete: "cascade" }),
-    // Field values as a key-value map
-    // Example: { "slug": "how-we-scaled", "status": "published", "published_at": "2026-01-15" }
     values: jsonb("values")
       .$type<Record<string, string | number | boolean | null>>()
       .notNull()
       .default({}),
-    // Preserved values from a previous Collection after a move
-    // Flagged for review, never deleted automatically
     orphanedValues: jsonb("orphaned_values")
       .$type<Record<string, string | number | boolean | null>>()
       .default({}),
@@ -293,9 +272,7 @@ export const collectionFieldsTable = pgTable(
   (table) => [
     index("collection_fields_document_id_idx").on(table.documentId),
     index("collection_fields_collection_id_idx").on(table.collectionId),
-    // GIN index for efficient JSONB field lookups
     index("collection_fields_values_gin_idx").using("gin", table.values),
-    // Unique constraint: one row per document per collection
     uniqueIndex("collection_fields_unique_idx").on(table.documentId, table.collectionId),
   ],
 );

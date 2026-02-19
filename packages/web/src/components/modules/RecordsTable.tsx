@@ -6,7 +6,7 @@ import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { TableBody, type Selection, type SortDescriptor } from "react-aria-components";
 import { toast } from "sonner";
 
@@ -63,6 +63,22 @@ type Props = {
   schema: PropertyDefinition[];
 };
 
+function toFieldValue(fieldDef: PropertyDefinition, value: string): string | number | boolean | null {
+  if (fieldDef.type === "boolean") {
+    return value === "true";
+  }
+
+  if (fieldDef.type === "number") {
+    return value === "" ? null : Number(value);
+  }
+
+  if (fieldDef.type === "date") {
+    return value === "" ? null : value;
+  }
+
+  return value === "" ? null : value;
+}
+
 function extractFieldValues(
   fieldValues: unknown,
   collectionId: string,
@@ -70,7 +86,6 @@ function extractFieldValues(
   const parsedFieldValues = (fieldValues || []) as Array<{
     collection_id: string;
     values: unknown;
-    collection?: { id?: string };
   }>;
 
   if (parsedFieldValues.length === 0) {
@@ -216,13 +231,15 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
   };
 
   const selectedDocumentIds = useMemo(() => {
+    const documentIds = new Set(documents.map((document) => document.id));
+
     if (rowSelection === "all") {
       return documents.map((document) => document.id);
     }
 
     return Array.from(rowSelection)
       .map(String)
-      .filter((id) => documents.some((document) => document.id === id));
+      .filter((id) => documentIds.has(id));
   }, [documents, rowSelection]);
 
   const handleDeleteSelectedRows = useCallback(() => {
@@ -289,13 +306,15 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
     ];
   }, [schema]);
 
+  const activeSortColumn = useMemo(
+    () => columns.find((tableColumn) => String(tableColumn.id) === String(sortDescriptor.column)),
+    [columns, sortDescriptor.column],
+  );
+
   const sortedDocuments = useMemo(() => {
     const sorted = [...documents];
-    const column = columns.find(
-      (tableColumn) => String(tableColumn.id) === String(sortDescriptor.column),
-    );
 
-    if (!column || column.kind === "add-property") {
+    if (!activeSortColumn || activeSortColumn.kind === "add-property") {
       return sorted;
     }
 
@@ -305,12 +324,12 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       let first: string | number | boolean | null | undefined;
       let second: string | number | boolean | null | undefined;
 
-      if (column.kind === "title") {
+      if (activeSortColumn.kind === "title") {
         first = a.title;
         second = b.title;
       } else {
-        first = a.properties[column.property.name];
-        second = b.properties[column.property.name];
+        first = a.properties[activeSortColumn.property.name];
+        second = b.properties[activeSortColumn.property.name];
       }
 
       if (first == null && second == null) return 0;
@@ -334,7 +353,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
     });
 
     return sorted;
-  }, [columns, documents, sortDescriptor]);
+  }, [activeSortColumn, documents, sortDescriptor.direction]);
 
   const selectedRowCount = selectedDocumentIds.length;
 
@@ -531,7 +550,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
   );
 }
 
-function EditableTitle({
+const EditableTitle = memo(function EditableTitle({
   title,
   documentId,
   organizationSlug,
@@ -609,9 +628,9 @@ function EditableTitle({
       autoFocus
     />
   );
-}
+});
 
-function EditableField({
+const EditableField = memo(function EditableField({
   value,
   fieldDef,
   onSave,
@@ -629,19 +648,7 @@ function EditableField({
   };
 
   const handleSave = () => {
-    let newValue: string | number | boolean | null = editValue;
-
-    if (fieldDef.type === "boolean") {
-      newValue = editValue === "true";
-    } else if (fieldDef.type === "number") {
-      newValue = editValue === "" ? null : Number(editValue);
-    } else if (fieldDef.type === "date") {
-      newValue = editValue === "" ? null : editValue;
-    } else if (editValue === "") {
-      newValue = null;
-    }
-
-    onSave(newValue);
+    onSave(toFieldValue(fieldDef, editValue));
     setIsEditing(false);
   };
 
@@ -710,4 +717,4 @@ function EditableField({
       autoFocus
     />
   );
-}
+});

@@ -6,6 +6,7 @@ import {
   Home16Filled,
   PersonChat16Filled,
 } from "@fluentui/react-icons";
+import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
@@ -103,15 +104,6 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
               </kbd>
             </div>
           </Button>
-          {/* <Button
-            intent="secondary"
-            size="icon-sm"
-            onPress={handleSearchClick}
-            aria-label="Search"
-            className="group"
-          >
-            <Search16Filled className="size-3.5 icon-muted" />
-          </Button> */}
           <TooltipTrigger delay={500}>
             <Button
               intent="secondary"
@@ -122,9 +114,6 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
               <DocumentAdd16Regular
                 className={sidebarItemIconStyles({ className: "size-[14px] icon-muted" })}
               />
-              {/* <Add16Filled
-              className={sidebarItemIconStyles({ className: "size-3 m-0.5 icon-muted" })}
-            /> */}
             </Button>
             <Tooltip>Add document</Tooltip>
           </TooltipTrigger>
@@ -172,7 +161,6 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
         <div className="px-2">{isFreePlan && !userIsAdmin && <UsageStats />}</div>
         <div className="flex flex-col gap-y-4 px-2.5 pb-1">
           <FeedbackWidget />
-          {/* {userIsAdmin && <ZeroConnectionStatus />} */}
         </div>
       </div>
     </div>
@@ -274,7 +262,8 @@ const CollectionsSection = memo(function CollectionsSection() {
 
   const handleCreateCollection = async () => {
     const name = "Untitled Collection";
-    const handle = slugify(name) || "collection";
+    const randomSuffix = createId().slice(0, 6).toLowerCase();
+    const handle = `${slugify(name) || "collection"}-${randomSuffix}`;
 
     try {
       await z.mutate(
@@ -283,11 +272,10 @@ const CollectionsSection = memo(function CollectionsSection() {
           name,
           handle,
           properties: [],
-          showEntriesInSidebar: false,
         }),
       );
 
-      window.location.href = `/w/${organization.slug}/collections/${handle}`;
+      window.location.assign(`/w/${organization.slug}/collections/${handle}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to create collection");

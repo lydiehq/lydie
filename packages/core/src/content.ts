@@ -446,7 +446,7 @@ export class LydieClient {
   }
 
   async getCollectionDocuments(
-    collectionId: string,
+    collectionHandle: string,
     options?: {
       filters?: Record<string, string | number | boolean>;
       related?: boolean;
@@ -466,7 +466,7 @@ export class LydieClient {
       }
     }
 
-    const url = `${this.getBaseUrl()}/collections/${collectionId}/documents`;
+    const url = `${this.getBaseUrl()}/${collectionHandle}/documents`;
     const fullUrl = `${url}${params.toString() ? `?${params.toString()}` : ""}`;
 
     const response = await fetch(fullUrl, {

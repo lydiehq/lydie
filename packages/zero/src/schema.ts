@@ -89,26 +89,17 @@ const documents = table("documents")
   })
   .primaryKey("id");
 
-/**
- * Collection Schemas Table
- * A Collection is a Document with a row in this table
- */
 const collections = table("collections")
   .columns({
     id: string(),
     name: string(),
     handle: string(),
-    show_entries_in_sidebar: boolean(),
     organization_id: string(),
     properties: json(), // Array of property definitions
     ...timestamps,
   })
   .primaryKey("id");
 
-/**
- * Document Field Values Table
- * Stores field values for Documents that belong to Collections
- */
 const collectionFields = table("collection_fields")
   .columns({
     id: string(),
