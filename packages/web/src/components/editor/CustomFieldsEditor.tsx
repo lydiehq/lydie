@@ -26,12 +26,12 @@ type Props = {
   initialFields?: Record<string, string | number>;
 };
 
-export type CustomFieldsEditorRef = {
+export type DocumentFieldsEditorRef = {
   addField: () => void;
 };
 
-export const CustomFieldsEditor = forwardRef<CustomFieldsEditorRef, Props>(
-  function CustomFieldsEditor({ documentId, organizationId, initialFields = {} }, ref) {
+export const DocumentFieldsEditor = forwardRef<DocumentFieldsEditorRef, Props>(
+  function DocumentFieldsEditor({ documentId, organizationId, initialFields = {} }, ref) {
     const z = useZero();
 
     // Convert initial fields to array format
@@ -134,6 +134,9 @@ export const CustomFieldsEditor = forwardRef<CustomFieldsEditorRef, Props>(
     );
   },
 );
+
+export type CustomFieldsEditorRef = DocumentFieldsEditorRef;
+export const CustomFieldsEditor = DocumentFieldsEditor;
 
 type CustomFieldRowProps = {
   form: any;

@@ -71,16 +71,33 @@ export function DocumentMenu({
   const handleToggleFavorite = () => {
     if (!document) return;
 
+    const nextIsFavorited = !document.is_favorited;
+
     try {
       z.mutate(
         mutators.document.toggleFavorite({
           documentId,
           organizationId: organization.id,
-          isFavorited: !document.is_favorited,
+          isFavorited: nextIsFavorited,
         }),
       );
 
-      toast.success(document.is_favorited ? "Removed from favorites" : "Added to favorites");
+      toast(nextIsFavorited ? "Added to favorites" : "Removed from favorites", {
+        duration: 5000,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            z.mutate(
+              mutators.document.toggleFavorite({
+                documentId,
+                organizationId: organization.id,
+                isFavorited: document.is_favorited,
+              }),
+            );
+            toast.success("Favorite change undone");
+          },
+        },
+      });
     } catch {
       toast.error("Failed to update favorite status");
     }

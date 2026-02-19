@@ -1,6 +1,9 @@
-import { AppFolder16Filled } from "@fluentui/react-icons";
+import { AppFolder16Filled, DismissRegular } from "@fluentui/react-icons";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { PropertyDefinition } from "@lydie/core/collection";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
+import { Drawer } from "@lydie/ui/components/generic/Drawer";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
@@ -8,6 +11,7 @@ import type { Editor } from "@tiptap/core";
 import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useRef, useState } from "react";
+import { Heading } from "react-aria-components";
 
 import { PropertyManager } from "@/components/collection";
 import { ModuleViewToggle, PageConfigPanel, RecordsTable } from "@/components/modules";
@@ -16,7 +20,7 @@ import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
 import { BottomBar } from "./BottomBar";
 import { BubbleMenu } from "./BubbleMenu";
 import { CoverImageEditor } from "./CoverImageEditor";
-import { DocumentMetadataTabs } from "./DocumentMetadataTabs";
+import { EditorSidebarPanels } from "./EditorSidebarPanels";
 import { EditorToolbar } from "./EditorToolbar";
 import { LinkPopover } from "./link-popover/LinkPopover";
 import { TableOfContentsMinimap } from "./TableOfContentsMinimap";
@@ -73,11 +77,13 @@ export function EditorView({
 
   const parentCollectionSchema =
     (parentCollectionData?.properties as PropertyDefinition[] | null) ?? [];
+  const canManageCollectionSettings = isAdmin || parentCollectionSchema.length > 0;
 
   // View mode state for collection pages (only admins can use table view)
   const [viewMode, setViewMode] = useState<"documents" | "table">(
     isCollection && isAdmin ? "table" : "documents",
   );
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Preload documents for the @ mention feature
   usePreloadMentionDocuments(organizationId);
@@ -107,7 +113,7 @@ export function EditorView({
         {/* Main content area */}
         <div
           className={clsx(
-            "flex mx-auto grow flex-col pt-12 shrink-0 transition-[max-width] duration-300 ease-in-out",
+            "flex mx-auto w-full grow flex-col pt-12 shrink-0 transition-[max-width] duration-300 ease-in-out",
             doc.full_width ? "max-w-none px-20" : "max-w-[65ch] px-4",
           )}
         >
@@ -119,42 +125,30 @@ export function EditorView({
           />
           <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
-          {/* Properties section: Only show if admin OR if document belongs to a parent collection */}
-          {(isAdmin || parentCollectionSchema.length > 0) && (
-            <div className="my-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-x-1">
-                  <AppFolder16Filled className="size-4 icon-muted" />
-                  <span className="text-sm font-medium text-gray-700">
-                    {isCollection ? "Collection Properties" : "Properties"}
-                  </span>
-                </div>
-                {isCollection && isAdmin && (
-                  <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />
-                )}
-              </div>
+          <div
+            className={clsx(
+              "my-3 flex items-center gap-x-2",
+              isCollection && isAdmin ? "justify-between" : "justify-end",
+            )}
+          >
+            {isCollection && isAdmin && (
+              <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />
+            )}
 
-              <PropertyManager
-                documentId={doc.id}
-                organizationId={organizationId}
-                schema={collectionSchema}
-                isCollection={isCollection}
-                isAdmin={isAdmin}
-              />
-
-              {isCollection && isAdmin && (
-                <PageConfigPanel
-                  documentId={doc.id}
-                  organizationId={organizationId}
-                  config={{ showChildrenInSidebar }}
-                />
-              )}
-            </div>
-          )}
+            <Button
+              intent="ghost"
+              size="sm"
+              className="gap-x-1"
+              onPress={() => setIsSidebarOpen(true)}
+            >
+              <AppFolder16Filled className="size-4 icon-muted" />
+              <span>Page details</span>
+            </Button>
+          </div>
 
           {/* Collection view in table mode: Only show for admins */}
           {isCollection && isAdmin && viewMode === "table" ? (
-            <div className="shrink-0 pb-5">
+            <div className="shrink-0 pb-5 editor-content-reset">
               <RecordsTable
                 collectionId={doc.id}
                 organizationId={organizationId}
@@ -164,13 +158,6 @@ export function EditorView({
             </div>
           ) : (
             <>
-              <DocumentMetadataTabs
-                doc={doc}
-                collectionSchema={
-                  parentCollectionSchema.length > 0 ? parentCollectionSchema : undefined
-                }
-              />
-
               <LinkPopover
                 editor={contentEditor}
                 organizationId={organizationId}
@@ -196,6 +183,65 @@ export function EditorView({
       </div>
 
       <BottomBar editor={contentEditor} provider={provider} isAdmin={isAdmin} />
+
+      <Drawer isOpen={isSidebarOpen} onOpenChange={setIsSidebarOpen} isDismissable size="md">
+        <Dialog className="h-full flex flex-col">
+          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <Heading slot="title" className="text-sm font-medium text-gray-700">
+              Page details
+            </Heading>
+            <Button
+              intent="ghost"
+              size="icon-sm"
+              aria-label="Close sidebar"
+              onPress={() => setIsSidebarOpen(false)}
+            >
+              <DismissRegular className="size-4" />
+            </Button>
+          </div>
+
+          <div className="p-4 space-y-4 overflow-y-auto grow">
+            {canManageCollectionSettings && (
+              <div className="space-y-4 pb-4 border-b border-black/6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-x-1">
+                    <AppFolder16Filled className="size-4 icon-muted" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {isCollection ? "Collection setup" : "Collection properties"}
+                    </span>
+                  </div>
+                  {isCollection && isAdmin && (
+                    <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />
+                  )}
+                </div>
+
+                <PropertyManager
+                  documentId={doc.id}
+                  organizationId={organizationId}
+                  schema={collectionSchema}
+                  isCollection={isCollection}
+                  isAdmin={isAdmin}
+                />
+
+                {isCollection && isAdmin && (
+                  <PageConfigPanel
+                    documentId={doc.id}
+                    organizationId={organizationId}
+                    config={{ showChildrenInSidebar }}
+                  />
+                )}
+              </div>
+            )}
+
+            <EditorSidebarPanels
+              doc={doc}
+              collectionSchema={
+                parentCollectionSchema.length > 0 ? parentCollectionSchema : undefined
+              }
+            />
+          </div>
+        </Dialog>
+      </Drawer>
     </div>
   );
 }

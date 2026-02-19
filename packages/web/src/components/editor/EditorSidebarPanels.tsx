@@ -1,31 +1,27 @@
 import { ArrowBidirectionalLeftRightFilled, ArrowRightFilled } from "@fluentui/react-icons";
 import type { PropertyDefinition } from "@lydie/core/collection";
-import { MetadataTabsShell } from "@lydie/ui/components/editor/MetadataTabsShell";
-import { focusRing } from "@lydie/ui/components/generic/utils";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { useState } from "react";
-import { TabPanel } from "react-aria-components";
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from "react-aria-components";
 
 import { Link } from "@/components/generic/Link";
 
 import { InlinePropertyEditor } from "./InlinePropertyEditor";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
-
-export type FieldValues = Record<string, string | number | boolean | null>;
+type FieldValues = Record<string, string | number | boolean | null>;
 
 type Props = {
   doc: DocumentType;
   collectionSchema?: PropertyDefinition[];
 };
 
-function LinksPanel({ doc }: { doc: DocumentType }) {
+function InternalLinksPanel({ doc }: { doc: DocumentType }) {
   const organizationId = doc.organization_id;
 
-  // Fetch backlinks (docs that link TO this doc)
   const [backlinks] = useQuery(
     queries.documents.backlinks({
       organizationId,
@@ -33,7 +29,6 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
     }),
   );
 
-  // Fetch outgoing links (docs this doc links TO)
   const [outgoingLinks] = useQuery(
     queries.documents.outgoingLinks({
       organizationId,
@@ -48,14 +43,13 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
   if (totalLinks === 0) {
     return (
       <div className="ring ring-black/4 rounded-xl p-2 flex items-center justify-center">
-        <span className="text-sm font-medium text-gray-600">No links yet</span>
+        <span className="text-sm font-medium text-gray-600">No internal links yet</span>
       </div>
     );
   }
 
   return (
-    <div className="max-h-[180px] overflow-y-auto space-y-3">
-      {/* Backlinks - docs linking TO this doc */}
+    <div className="space-y-3 max-h-[50vh] overflow-y-auto">
       {backlinkCount > 0 && (
         <div className="space-y-1">
           <div className="flex items-center gap-x-1.5 text-xs font-medium text-gray-500 px-1">
@@ -63,6 +57,7 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
             <span>Links to this page</span>
             <span className="text-gray-400">({backlinkCount})</span>
           </div>
+
           <div className="space-y-0.5">
             {backlinks?.map((link) => (
               <Link
@@ -84,7 +79,6 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
         </div>
       )}
 
-      {/* Outgoing links - docs this doc links TO */}
       {outgoingCount > 0 && (
         <div className="space-y-1">
           <div className="flex items-center gap-x-1.5 text-xs font-medium text-gray-500 px-1">
@@ -92,6 +86,7 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
             <span>Links from this page</span>
             <span className="text-gray-400">({outgoingCount})</span>
           </div>
+
           <div className="space-y-0.5">
             {outgoingLinks?.map((link) => (
               <Link
@@ -116,16 +111,9 @@ function LinksPanel({ doc }: { doc: DocumentType }) {
   );
 }
 
-function PropertiesPanel({
-  doc,
-  collectionSchema,
-}: {
-  doc: DocumentType;
-  collectionSchema?: PropertyDefinition[];
-}) {
+function FieldsPanel({ doc, collectionSchema }: Props) {
   const organizationId = doc.organization_id;
 
-  // Fetch field values for this document from the document_field_values table
   const [fieldValuesData] = useQuery(
     doc.nearest_collection_id
       ? queries.collections.documentFieldValues({
@@ -142,15 +130,15 @@ function PropertiesPanel({
         (row.collectionSchema as { document_id?: string } | undefined)?.document_id ===
         doc.nearest_collection_id,
     ) ?? fieldRows[0];
+
   const fieldValues: FieldValues = (activeFieldRow?.values as FieldValues) || {};
   const collectionSchemaId = activeFieldRow?.collection_schema_id;
 
-  // If no collection schema, show message
   if (!collectionSchema || collectionSchema.length === 0) {
     return (
       <div className="ring ring-black/4 rounded-xl p-4 flex items-center justify-center">
         <span className="text-sm text-gray-500">
-          No properties defined. This document is not in a collection.
+          No fields available. This page is not part of a collection.
         </span>
       </div>
     );
@@ -172,16 +160,17 @@ function PropertiesPanel({
   );
 }
 
-export function DocumentMetadataTabs({ doc, collectionSchema }: Props) {
+export function EditorSidebarPanels({ doc, collectionSchema }: Props) {
   const organizationId = doc.organization_id;
+  const [selectedKey, setSelectedKey] = useState<string>("fields");
 
-  // Fetch link counts for the badge
   const [backlinks] = useQuery(
     queries.documents.backlinks({
       organizationId,
       documentId: doc.id,
     }),
   );
+
   const [outgoingLinks] = useQuery(
     queries.documents.outgoingLinks({
       organizationId,
@@ -190,31 +179,61 @@ export function DocumentMetadataTabs({ doc, collectionSchema }: Props) {
   );
 
   const linkCount = (backlinks?.length || 0) + (outgoingLinks?.length || 0);
-  const [selectedKey, setSelectedKey] = useState<string>("fields");
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  const handleAdd = () => {
-    // No-op since we don't have an "add field" button in this view
-    // Fields are managed in the collection settings
-  };
 
   return (
-    <MetadataTabsShell
+    <Tabs
       selectedKey={selectedKey}
-      onSelectionChange={setSelectedKey}
-      isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
-      documentCount={linkCount}
-      onAdd={handleAdd}
-      addButtonLabel=""
-      focusRing={focusRing}
+      onSelectionChange={(key) => setSelectedKey(key as string)}
+      className="gap-3"
     >
-      <TabPanel id="fields">
-        <PropertiesPanel doc={doc} collectionSchema={collectionSchema} />
-      </TabPanel>
-      <TabPanel id="documents">
-        <LinksPanel doc={doc} />
-      </TabPanel>
-    </MetadataTabsShell>
+      <TabList
+        aria-label="Page details"
+        className="rounded-full p-[3px] bg-black/3 flex gap-x-0.5 items-center w-fit"
+      >
+        <Tab
+          id="fields"
+          className="rounded-full px-3 py-0.5 text-sm font-medium relative z-10 selected:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5 transition-colors"
+        >
+          {({ isSelected }) => (
+            <>
+              {isSelected && (
+                <span
+                  className="absolute inset-0 bg-white shadow-surface rounded-full"
+                  style={{ zIndex: -1 }}
+                />
+              )}
+              Fields
+            </>
+          )}
+        </Tab>
+
+        <Tab
+          id="internal-links"
+          className="rounded-full px-3 py-0.5 text-sm font-medium flex items-center gap-x-1.5 relative z-10 selected:text-gray-600 text-gray-500 cursor-default not-selected:hover:bg-black/5 transition-colors"
+        >
+          {({ isSelected }) => (
+            <>
+              {isSelected && (
+                <span
+                  className="absolute inset-0 bg-white shadow-surface rounded-full"
+                  style={{ zIndex: -1 }}
+                />
+              )}
+              <span>Internal links</span>
+              <span className="text-[10px]/none -mb-px text-gray-400">{linkCount}</span>
+            </>
+          )}
+        </Tab>
+      </TabList>
+
+      <TabPanels>
+        <TabPanel id="fields" className="p-0">
+          <FieldsPanel doc={doc} collectionSchema={collectionSchema} />
+        </TabPanel>
+        <TabPanel id="internal-links" className="p-0">
+          <InternalLinksPanel doc={doc} />
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
   );
 }

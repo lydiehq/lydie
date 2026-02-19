@@ -22,7 +22,7 @@ import {
 import { twMerge } from "tailwind-merge";
 
 import { Checkbox } from "./Checkbox";
-import { composeTailwindRenderProps } from "./utils";
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
 export function Table({
   className: containerClassName,
@@ -136,5 +136,10 @@ const cellStyles = cva({
 });
 
 export function Cell(props: CellProps) {
-  return <AriaCell {...props} className={cellStyles()} />;
+  return (
+    <AriaCell
+      {...props}
+      className={composeTailwindRenderProps(focusRing, cellStyles({ className: props.className }))}
+    />
+  );
 }

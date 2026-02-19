@@ -15,12 +15,10 @@ export function ConfirmDialog() {
   }, [setState]);
 
   const handleClose = () => {
-    setState({
+    setState((prev) => ({
+      ...prev,
       isOpen: false,
-      title: "Confirm",
-      message: "",
-      onConfirm: undefined,
-    });
+    }));
   };
 
   const handleConfirm = () => {
@@ -33,7 +31,7 @@ export function ConfirmDialog() {
       <Dialog role="alertdialog">
         <div className="p-4 flex flex-col gap-y-3">
           <Heading slot="title" className="text-lg font-medium text-gray-900">
-            Confirm
+            {state.title}
           </Heading>
           <p className="text-sm text-slate-600">{state.message}</p>
           <div className="flex gap-x-1.5 justify-end">

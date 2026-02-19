@@ -3,10 +3,7 @@ import {
   Delete12Filled,
   DocumentAdd16Regular,
   Home16Filled,
-  LayerDiagonal16Filled,
-  LayerDiagonalAdd20Filled,
   PersonChat16Filled,
-  Search16Filled,
 } from "@fluentui/react-icons";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
@@ -14,7 +11,6 @@ import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
-import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
@@ -57,13 +53,6 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
 
     return !hasProAccess;
   }, [organization]);
-
-  const handleSearchClick = () => {
-    setCommandMenuState({
-      isOpen: true,
-      initialPage: "search",
-    });
-  };
 
   const handleQuickActionClick = () => {
     setCommandMenuState({
@@ -170,7 +159,7 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
             </div>
           </Link>
         </div>
-        <div className="flex flex-col grow min-h-0 overflow-hidden">
+        <div className="flex flex-col grow min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white">
           <FavoritesSection />
           <DocumentsSection />
         </div>
@@ -220,8 +209,8 @@ const FavoritesSection = memo(function FavoritesSection() {
           </RACButton>
         </Heading>
       </div>
-      <DisclosurePanel className="grow overflow-clip">
-        <div className="min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2 pb-2">
+      <DisclosurePanel className="overflow-hidden">
+        <div className="px-2 pb-2">
           <FavoritesTree />
         </div>
       </DisclosurePanel>
@@ -235,7 +224,7 @@ const DocumentsSection = memo(function DocumentsSection() {
 
   return (
     <Disclosure
-      className="group overflow-y-hidden flex flex-col"
+      className="group flex flex-col"
       isExpanded={isExpanded}
       onExpandedChange={setIsExpanded}
     >
@@ -264,7 +253,7 @@ const DocumentsSection = memo(function DocumentsSection() {
           </RACButton>
         </div>
       </div>
-      <DisclosurePanel className="overflow-y-auto grow scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white px-2">
+      <DisclosurePanel className="px-2 pb-2">
         <DocumentTree />
       </DisclosurePanel>
     </Disclosure>

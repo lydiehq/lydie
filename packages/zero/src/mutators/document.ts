@@ -410,42 +410,39 @@ export const documentMutators = {
         throw notFoundError("Document", documentId);
       }
 
-      // Recursively find all child documents (including nested children)
-      const childIds = await findAllChildDocuments(tx, documentId, organizationId);
+      await deleteDocumentTree(tx, document, organizationId);
+    },
+  ),
 
-      // Soft-delete by setting deleted_at
-      const isIntegrationDocument = Boolean(document.integration_link_id && document.external_id);
+  bulkDelete: defineMutator(
+    z.object({
+      documentIds: z.array(z.string()).min(1),
+      organizationId: z.string(),
+    }),
+    async ({ tx, ctx, args: { documentIds, organizationId } }) => {
+      isAuthenticated(ctx);
 
-      const now = Date.now();
+      const selectedIdSet = new Set(documentIds);
+      const selectedDocuments = await Promise.all(
+        documentIds.map((documentId) => getDocumentById(tx, documentId, organizationId, true)),
+      );
 
-      // If document is part of an integration, delete it completely from Lydie on delete
-      if (isIntegrationDocument) {
-        // For integration documents, hard delete all children first
-        for (const childId of childIds) {
-          await tx.mutate.documents.delete({
-            id: childId,
-          });
-        }
-        await tx.mutate.documents.delete({
-          id: documentId,
-        });
-      } else {
-        // For regular documents, soft-delete all children first
-        for (const childId of childIds) {
-          await tx.mutate.documents.update(
-            withUpdatedTimestamp({
-              id: childId,
-              deleted_at: now,
-            }),
-          );
-        }
-        // Then soft-delete the parent
-        await tx.mutate.documents.update(
-          withUpdatedTimestamp({
-            id: documentId,
-            deleted_at: now,
-          }),
-        );
+      const validDocuments = selectedDocuments.filter(
+        (document): document is NonNullable<(typeof selectedDocuments)[number]> =>
+          Boolean(document),
+      );
+      if (validDocuments.length !== documentIds.length) {
+        throw notFoundError("Document", "one or more selected IDs");
+      }
+
+      const rootDocuments = validDocuments.filter((document) => {
+        const path = (document.path || document.id).split("/");
+        path.pop();
+        return !path.some((segmentId) => selectedIdSet.has(segmentId));
+      });
+
+      for (const document of rootDocuments) {
+        await deleteDocumentTree(tx, document, organizationId);
       }
     },
   ),
@@ -623,6 +620,49 @@ async function ensureFieldValuesForNearestCollection(
       collection_schema_id: collectionSchema.id,
       values: nullValues,
       orphaned_values: {},
+    }),
+  );
+}
+
+async function deleteDocumentTree(
+  tx: any,
+  document: {
+    id: string;
+    integration_link_id: string | null;
+    external_id: string | null;
+  },
+  organizationId: string,
+): Promise<void> {
+  const childIds = await findAllChildDocuments(tx, document.id, organizationId);
+  const isIntegrationDocument = Boolean(document.integration_link_id && document.external_id);
+  const now = Date.now();
+
+  if (isIntegrationDocument) {
+    for (const childId of childIds) {
+      await tx.mutate.documents.delete({
+        id: childId,
+      });
+    }
+
+    await tx.mutate.documents.delete({
+      id: document.id,
+    });
+    return;
+  }
+
+  for (const childId of childIds) {
+    await tx.mutate.documents.update(
+      withUpdatedTimestamp({
+        id: childId,
+        deleted_at: now,
+      }),
+    );
+  }
+
+  await tx.mutate.documents.update(
+    withUpdatedTimestamp({
+      id: document.id,
+      deleted_at: now,
     }),
   );
 }

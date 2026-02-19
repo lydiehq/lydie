@@ -17,8 +17,7 @@ type Props = NodeViewRendererProps & {
 
 export function CollectionBlockComponent(props: Props) {
   const { node, editor, getPos, organizationId, organizationSlug } = props;
-  const { collectionId, filters, sortField, sortDirection } = node.attrs;
-  const [isEditing, setIsEditing] = useState(false);
+  const { collectionId, filters } = node.attrs;
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -207,41 +206,8 @@ export function CollectionBlockComponent(props: Props) {
               </span>
             )}
           </div>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="text-xs text-gray-500 hover:text-gray-700"
-          >
-            {isEditing ? "Done" : "Configure"}
-          </button>
         </div>
 
-        {/* Configuration panel */}
-        {isEditing && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600">Sort by:</span>
-            <select
-              value={sortField || ""}
-              onChange={(e) => handleUpdate({ sortField: e.target.value || null })}
-              className="text-xs border rounded px-2 py-1"
-            >
-              <option value="">—</option>
-              <option value="title">Title</option>
-              {schema.map((field) => (
-                <option key={field.name} value={field.name}>
-                  {field.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={sortDirection}
-              onChange={(e) => handleUpdate({ sortDirection: e.target.value as "asc" | "desc" })}
-              className="text-xs border rounded px-2 py-1"
-            >
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
-            </select>
-          </div>
-        )}
         <RecordsTable
           collectionId={collectionId}
           organizationId={organizationId}

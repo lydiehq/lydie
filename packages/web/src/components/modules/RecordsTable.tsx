@@ -1,18 +1,17 @@
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Cell, Column, Row, Table, TableHeader } from "@lydie/ui/components/generic/Table";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
+import { TableBody, type Selection, type SortDescriptor } from "react-aria-components";
+import { toast } from "sonner";
 
 import { useZero } from "@/services/zero";
+import { confirmDialog } from "@/stores/confirm-dialog";
 
 type DocumentItem = {
   id: string;
@@ -21,12 +20,34 @@ type DocumentItem = {
   properties: Record<string, string | number | boolean | null>;
 };
 
-const columnHelper = createColumnHelper<DocumentItem>();
 const documentsByCollectionQuery = queries.collections.documentsByCollection as any;
 const updateFieldValuesMutator = mutators.collection.updateFieldValues as any;
 const createDocumentMutator = mutators.document.create as any;
+const bulkDeleteDocumentsMutator = mutators.document.bulkDelete as any;
+const restoreDocumentMutator = mutators.document.restore as any;
 const updateSchemaMutator = mutators.collection.updateSchema as any;
 const renameDocumentMutator = mutators.document.rename as any;
+
+type TableColumn =
+  | {
+      id: "title";
+      kind: "title";
+      label: "Title";
+      isRowHeader: true;
+    }
+  | {
+      id: string;
+      kind: "property";
+      label: string;
+      property: PropertyDefinition;
+      isRowHeader: false;
+    }
+  | {
+      id: "add-property";
+      kind: "add-property";
+      label: "Add property";
+      isRowHeader: false;
+    };
 
 const QUICK_PROPERTY_TYPES: Array<{ label: string; value: PropertyDefinition["type"] }> = [
   { label: "Text", value: "text" },
@@ -72,12 +93,16 @@ function extractFieldValues(
 
 export function RecordsTable({ collectionId, organizationId, organizationSlug, schema }: Props) {
   const z = useZero();
-  console.log("hi");
   const [isAddingProperty, setIsAddingProperty] = useState(false);
   const [newPropertyName, setNewPropertyName] = useState("");
   const [newPropertyType, setNewPropertyType] = useState<PropertyDefinition["type"]>("text");
   const [isCreatingRow, setIsCreatingRow] = useState(false);
   const [isAddingRowProperty, setIsAddingRowProperty] = useState(false);
+  const [rowSelection, setRowSelection] = useState<Selection>(new Set());
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
+    column: "title",
+    direction: "ascending",
+  });
   const [documentsResult] = useQuery(
     collectionId
       ? documentsByCollectionQuery({
@@ -190,78 +215,135 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
     }
   };
 
-  const columns = useMemo(() => {
-    return [
-      columnHelper.accessor("title", {
-        id: "title",
-        header: () => (
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Title</span>
-        ),
-        cell: ({ row, getValue }) => (
-          <EditableTitle
-            title={getValue()}
-            documentId={row.original.id}
-            organizationSlug={organizationSlug}
-            onSave={handleRenameDocument}
-          />
-        ),
-      }),
-      ...schema.map((fieldDef) =>
-        columnHelper.display({
-          id: fieldDef.name,
-          header: () => (
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              {fieldDef.name}
-            </span>
-          ),
-          cell: ({ row }) => (
-            <EditableField
-              value={row.original.properties[fieldDef.name]}
-              fieldDef={fieldDef}
-              onSave={(newValue) => {
-                if (!row.original.collectionSchemaId) {
-                  return;
-                }
-                void handleFieldUpdate(
-                  row.original.id,
-                  row.original.collectionSchemaId,
-                  fieldDef.name,
-                  newValue,
-                );
-              }}
-            />
-          ),
-        }),
-      ),
-      columnHelper.display({
-        id: "add-property",
-        header: () => (
-          <button
-            type="button"
-            onClick={() => setIsAddingProperty((value) => !value)}
-            className="rounded-md border border-dashed border-gray-300 px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
-            title="Add property"
-          >
-            + Add property
-          </button>
-        ),
-        cell: () => <span className="block h-6 w-[120px]" aria-hidden="true" />,
-      }),
-    ];
-  }, [handleFieldUpdate, handleRenameDocument, organizationSlug, schema]);
+  const selectedDocumentIds = useMemo(() => {
+    if (rowSelection === "all") {
+      return documents.map((document) => document.id);
+    }
 
-  const table = useReactTable({
-    data: documents,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+    return Array.from(rowSelection)
+      .map(String)
+      .filter((id) => documents.some((document) => document.id === id));
+  }, [documents, rowSelection]);
+
+  const handleDeleteSelectedRows = useCallback(() => {
+    if (selectedDocumentIds.length === 0) {
+      return;
+    }
+
+    const deletedDocumentIds = [...selectedDocumentIds];
+    const itemLabel = selectedDocumentIds.length === 1 ? "row" : "rows";
+
+    confirmDialog({
+      title: `Delete ${selectedDocumentIds.length} selected ${itemLabel}?`,
+      message: "This action cannot be undone.",
+      onConfirm: () => {
+        z.mutate(
+          bulkDeleteDocumentsMutator({
+            documentIds: selectedDocumentIds,
+            organizationId,
+          }),
+        );
+
+        setRowSelection(new Set());
+        toast(selectedDocumentIds.length === 1 ? "Deleted 1 row" : `Deleted ${selectedDocumentIds.length} rows`, {
+          duration: 5000,
+          action: {
+            label: "Undo",
+            onClick: async () => {
+              const restoreResults = await Promise.allSettled(
+                deletedDocumentIds.map((documentId) =>
+                  z.mutate(
+                    restoreDocumentMutator({
+                      documentId,
+                      organizationId,
+                    }),
+                  ),
+                ),
+              );
+
+              const didRestoreAnyRow = restoreResults.some((result) => result.status === "fulfilled");
+              if (!didRestoreAnyRow) {
+                toast.error("Failed to restore deleted rows");
+                return;
+              }
+
+              toast.success("Delete undone");
+            },
+          },
+        });
+      },
+    });
+  }, [organizationId, selectedDocumentIds, z]);
+
+  const columns = useMemo<TableColumn[]>(() => {
+    return [
+      { id: "title", kind: "title", label: "Title", isRowHeader: true },
+      ...schema.map((property) => ({
+        id: property.name,
+        kind: "property" as const,
+        label: property.name,
+        property,
+        isRowHeader: false as const,
+      })),
+      { id: "add-property", kind: "add-property", label: "Add property", isRowHeader: false },
+    ];
+  }, [schema]);
+
+  const sortedDocuments = useMemo(() => {
+    const sorted = [...documents];
+    const column = columns.find(
+      (tableColumn) => String(tableColumn.id) === String(sortDescriptor.column),
+    );
+
+    if (!column || column.kind === "add-property") {
+      return sorted;
+    }
+
+    const direction = sortDescriptor.direction === "descending" ? -1 : 1;
+
+    sorted.sort((a, b) => {
+      let first: string | number | boolean | null | undefined;
+      let second: string | number | boolean | null | undefined;
+
+      if (column.kind === "title") {
+        first = a.title;
+        second = b.title;
+      } else {
+        first = a.properties[column.property.name];
+        second = b.properties[column.property.name];
+      }
+
+      if (first == null && second == null) return 0;
+      if (first == null) return 1;
+      if (second == null) return -1;
+
+      if (typeof first === "number" && typeof second === "number") {
+        return (first - second) * direction;
+      }
+
+      if (typeof first === "boolean" && typeof second === "boolean") {
+        return (Number(first) - Number(second)) * direction;
+      }
+
+      return (
+        String(first).localeCompare(String(second), undefined, {
+          numeric: true,
+          sensitivity: "base",
+        }) * direction
+      );
+    });
+
+    return sorted;
+  }, [columns, documents, sortDescriptor]);
+
+  const selectedRowCount = selectedDocumentIds.length;
 
   const hasDuplicatePropertyName = schema.some(
     (property) => property.name.toLowerCase() === newPropertyName.trim().toLowerCase(),
   );
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${selectedRowCount > 0 ? "pb-24" : ""}`}>
       {isAddingProperty && (
         <div className="border-b border-gray-200 bg-gray-50/70 px-4 py-3">
           <div className="flex flex-wrap items-end gap-2">
@@ -333,55 +415,118 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-gray-200">
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-3 py-1 text-left align-middle">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="border-b border-gray-100 align-top last:border-b-0 hover:bg-gray-50/50"
+        <Table
+          aria-label="Collection records"
+          className="w-full max-h-none"
+          selectionMode="multiple"
+          selectedKeys={rowSelection}
+          onSelectionChange={setRowSelection}
+          sortDescriptor={sortDescriptor}
+          onSortChange={setSortDescriptor}
+        >
+          <TableHeader columns={columns}>
+            {(column) => (
+              <Column
+                id={column.id}
+                isRowHeader={column.isRowHeader}
+                width={column.kind === "add-property" ? 140 : "1fr"}
+                allowsSorting={column.kind !== "add-property"}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-1 align-middle">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-            <tr>
-              <td className="px-3 py-1" colSpan={schema.length + 2}>
-                <button
-                  type="button"
-                  onClick={() => void handleCreateRow()}
-                  disabled={isCreatingRow}
-                  className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isCreatingRow ? "Creating row..." : "+ New"}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                {column.kind === "add-property" ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingProperty((value) => !value)}
+                    className="rounded-md border border-dashed border-gray-300 px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+                    title="Add property"
+                  >
+                    + Add property
+                  </button>
+                ) : (
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {column.label}
+                  </span>
+                )}
+              </Column>
+            )}
+          </TableHeader>
+          <TableBody
+            items={sortedDocuments}
+            renderEmptyState={() => (
+              <div className="flex flex-col items-center justify-center py-6 text-gray-500">
+                <p>No rows yet</p>
+                <p className="text-sm text-gray-400">
+                  Use "+ New" to add a document to this collection.
+                </p>
+              </div>
+            )}
+          >
+            {(document) => (
+              <Row id={document.id} columns={columns}>
+                {(column) => (
+                  <Cell className="px-3 py-1 align-middle">
+                    {column.kind === "title" && (
+                      <EditableTitle
+                        title={document.title}
+                        documentId={document.id}
+                        organizationSlug={organizationSlug}
+                        onSave={handleRenameDocument}
+                      />
+                    )}
+                    {column.kind === "property" && (
+                      <EditableField
+                        value={document.properties[column.property.name]}
+                        fieldDef={column.property}
+                        onSave={(newValue) => {
+                          if (!document.collectionSchemaId) {
+                            return;
+                          }
+                          void handleFieldUpdate(
+                            document.id,
+                            document.collectionSchemaId,
+                            column.property.name,
+                            newValue,
+                          );
+                        }}
+                      />
+                    )}
+                    {column.kind === "add-property" && (
+                      <span className="block h-6 w-[120px]" aria-hidden="true" />
+                    )}
+                  </Cell>
+                )}
+              </Row>
+            )}
+          </TableBody>
+        </Table>
+
+        <div className="px-3 py-1">
+          <button
+            type="button"
+            onClick={() => void handleCreateRow()}
+            disabled={isCreatingRow}
+            className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isCreatingRow ? "Creating row..." : "+ New"}
+          </button>
+        </div>
       </div>
 
-      {documents.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-6 text-gray-500">
-          <p>No rows yet</p>
-          <p className="text-sm text-gray-400">Use "+ New" to add a document to this collection.</p>
+      <div
+        className={`fixed dark left-1/2 -translate-x-1/2 bottom-4 z-50 bg-black/95 border border-white/20 rounded-[10px] shadow-popover p-1 flex items-center gap-1 transition-all duration-200 ${
+          selectedRowCount > 0
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-full opacity-0"
+        }`}
+      >
+        <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-3">
+          <p className="text-xs font-medium text-white ml-2">
+            {selectedRowCount} {selectedRowCount === 1 ? "row" : "rows"} selected
+          </p>
+          <Button intent="ghost" size="sm" onPress={handleDeleteSelectedRows}>
+            Delete selected
+          </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -417,7 +562,11 @@ function EditableTitle({
       <div className="group flex min-w-[220px] items-center gap-2">
         <button
           type="button"
-          onClick={startEditing}
+          onClick={(e) => {
+            e.stopPropagation();
+            startEditing();
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
           className="flex flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left font-medium text-gray-900 hover:bg-white hover:text-blue-600"
         >
           <span>{title || "Untitled"}</span>
@@ -425,6 +574,8 @@ function EditableTitle({
         <Link
           to="/w/$organizationSlug/$id"
           params={{ organizationSlug, id: documentId }}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
           className="opacity-0 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100"
           title="Open document"
         >
@@ -445,9 +596,12 @@ function EditableTitle({
     <input
       type="text"
       value={editValue}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
       onChange={(e) => setEditValue(e.target.value)}
       onBlur={handleSave}
       onKeyDown={(e) => {
+        e.stopPropagation();
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") setIsEditing(false);
       }}
@@ -495,7 +649,11 @@ function EditableField({
     return (
       <button
         type="button"
-        onClick={startEditing}
+        onClick={(e) => {
+          e.stopPropagation();
+          startEditing();
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
         className="w-full cursor-pointer rounded px-2 py-1 text-left hover:bg-gray-100"
       >
         {value !== null && value !== undefined ? (
@@ -511,6 +669,9 @@ function EditableField({
     return (
       <select
         value={editValue}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
         onChange={(e) => {
           const newValue = e.target.value === "" ? null : e.target.value;
           onSave(newValue);
@@ -536,9 +697,12 @@ function EditableField({
         fieldDef.type === "date" ? "datetime-local" : fieldDef.type === "number" ? "number" : "text"
       }
       value={editValue}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
       onChange={(e) => setEditValue(e.target.value)}
       onBlur={handleSave}
       onKeyDown={(e) => {
+        e.stopPropagation();
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") setIsEditing(false);
       }}

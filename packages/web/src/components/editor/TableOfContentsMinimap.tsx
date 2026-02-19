@@ -118,12 +118,12 @@ export function TableOfContentsMinimap({ editor, containerRef }: Props) {
 
   return (
     <div
-      className="fixed top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1"
+      className="fixed right-6 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Minimap lines - always visible, compact representation */}
-      <div className="flex flex-col gap-1.5 pl-4">
+      <div className="flex flex-col items-end gap-1.5 pr-4">
         {headings.map((heading, index) => {
           const isActive = index === activeIndex;
           const width = LEVEL_WIDTHS[heading.level] || 10;
@@ -145,17 +145,17 @@ export function TableOfContentsMinimap({ editor, containerRef }: Props) {
       </div>
 
       {/* Invisible bridge to prevent dead zone between minimap and panel */}
-      <div className="absolute left-full top-0 bottom-0 w-4 z-10" />
+      <div className="absolute right-full top-0 bottom-0 w-4 z-10" />
 
       {/* Expanded panel on hover - shows text labels */}
       <div
         className={clsx(
-          "absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 w-56 max-h-[80vh] overflow-y-auto",
+          "absolute right-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 w-56 max-h-[80vh] overflow-y-auto",
           "bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/80",
-          "transition-all duration-200 ease-out origin-left",
+          "transition-all duration-200 ease-out origin-right",
           isHovered
             ? "opacity-100 scale-100 translate-x-0"
-            : "opacity-0 scale-95 -translate-x-4 pointer-events-none",
+            : "opacity-0 scale-95 translate-x-4 pointer-events-none",
         )}
       >
         <div className="py-2 px-2">
