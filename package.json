@@ -17,15 +17,15 @@
       "drizzle-orm": "^1.0.0-beta.15-859cf75",
       "better-auth": "1.4.7-beta.2",
       "@ai-sdk/google": "^3.0.29",
-      "@ai-sdk/openai": "^3.0.29",
-      "ai": "^6.0.86",
-      "@tiptap/core": "^3.19.0",
-      "@tiptap/pm": "^3.19.0",
-      "@tiptap/react": "^3.19.0",
-      "@tiptap/starter-kit": "^3.19.0",
+      "@ai-sdk/openai": "^3.0.30",
+      "ai": "^6.0.91",
+      "@tiptap/core": "^3.20.0",
+      "@tiptap/pm": "^3.20.0",
+      "@tiptap/react": "^3.20.0",
+      "@tiptap/starter-kit": "^3.20.0",
       "@tiptap/y-tiptap": "^3.0.2",
-      "@tiptap/extension-mention": "^3.19.0",
-      "@tiptap/extension-placeholder": "^3.19.0",
+      "@tiptap/extension-mention": "^3.20.0",
+      "@tiptap/extension-placeholder": "^3.20.0",
       "stripe": "^20.3.1"
     }
   },
@@ -50,13 +50,13 @@
     "fmt:check": "oxfmt --check"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.47",
+    "@ai-sdk/gateway": "^3.0.50",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/react-query-persist-client": "^5.90.22",
-    "@tiptap/extension-code": "^3.19.0",
-    "@tiptap/extension-table-of-contents": "^3.19.0",
-    "framer-motion": "^12.34.1"
+    "@tiptap/extension-code": "^3.20.0",
+    "@tiptap/extension-table-of-contents": "^3.20.0",
+    "framer-motion": "^12.34.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -67,7 +67,7 @@
     "jsdom": "^28.1.0",
     "oxfmt": "^0.33.0",
     "oxlint": "^1.48.0",
-    "oxlint-tsgolint": "^0.14.0",
+    "oxlint-tsgolint": "^0.14.1",
     "sst": "v3.18.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
