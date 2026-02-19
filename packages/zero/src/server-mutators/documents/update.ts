@@ -1,5 +1,4 @@
 import { processDocumentTitleEmbedding } from "@lydie/core/embedding/title-processing";
-import { propagateSlugChange } from "@lydie/core/links";
 import { db } from "@lydie/database";
 import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
@@ -20,7 +19,7 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
     async ({ tx, ctx, args }) => {
       await sharedMutators.document.update.fn({ tx, ctx, args });
 
-      const { documentId, title, slug } = args;
+      const { documentId, title } = args;
 
       // If title was updated, trigger async title embedding generation
       // Skip if title is empty or too short (minimum 3 chars for meaningful embeddings)
@@ -36,24 +35,6 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
         });
       }
 
-      // If slug was updated, propagate the change to all documents that link to this one
-      // This updates the href attributes in link marks to reflect the new slug
-      if (slug !== undefined) {
-        asyncTasks.push(async () => {
-          try {
-            const result = await propagateSlugChange(documentId, slug, db);
-            if (result.updatedCount > 0) {
-              console.info(
-                `Updated ${result.updatedCount} documents with links to ${documentId} (slug changed to ${slug})`,
-              );
-            }
-            if (result.errors.length > 0) {
-              console.error(`Errors during slug propagation for ${documentId}:`, result.errors);
-            }
-          } catch (error) {
-            console.error(`Failed to propagate slug change for document ${documentId}:`, error);
-          }
-        });
-      }
+      // Slug updates are handled by dedicated mutations.
     },
   );

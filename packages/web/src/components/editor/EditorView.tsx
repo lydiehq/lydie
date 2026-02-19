@@ -1,6 +1,5 @@
 import { AppFolder16Filled, DismissRegular } from "@fluentui/react-icons";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
-import type { PropertyDefinition } from "@lydie/core/collection";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Drawer } from "@lydie/ui/components/generic/Drawer";
@@ -13,8 +12,6 @@ import clsx from "clsx";
 import { useRef, useState } from "react";
 import { Heading } from "react-aria-components";
 
-import { PropertyManager } from "@/components/collection";
-import { ModuleViewToggle, PageConfigPanel, RecordsTable } from "@/components/modules";
 import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
 
 import { BottomBar } from "./BottomBar";
@@ -52,37 +49,16 @@ export function EditorView({
 }: Props) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch the document's collection schema if this document IS a Collection
-  const [collectionSchemaData] = useQuery(
-    queries.collections.byId({
-      organizationId,
-      collectionId: doc.id,
-    }),
-  );
-
-  // Check if this document IS a Collection (has a collection_schemas row)
-  const isCollection = collectionSchemaData !== null && collectionSchemaData !== undefined;
-  const collectionSchema = (collectionSchemaData?.properties as PropertyDefinition[] | null) ?? [];
-  const showChildrenInSidebar = doc.show_children_in_sidebar ?? true;
-
-  // If this document belongs to a parent collection, get that collection's schema
-  const [parentCollectionData] = useQuery(
-    doc.nearest_collection_id
+  const [collectionData] = useQuery(
+    doc.collection_id
       ? queries.collections.byId({
           organizationId,
-          collectionId: doc.nearest_collection_id,
+          collectionId: doc.collection_id,
         })
       : null,
   );
 
-  const parentCollectionSchema =
-    (parentCollectionData?.properties as PropertyDefinition[] | null) ?? [];
-  const canManageCollectionSettings = isAdmin || parentCollectionSchema.length > 0;
-
-  // View mode state for collection pages (only admins can use table view)
-  const [viewMode, setViewMode] = useState<"documents" | "table">(
-    isCollection && isAdmin ? "table" : "documents",
-  );
+  const collectionSchema = (collectionData?.properties as any[]) || [];
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Preload documents for the @ mention feature
@@ -126,15 +102,8 @@ export function EditorView({
           <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
           <div
-            className={clsx(
-              "my-3 flex items-center gap-x-2",
-              isCollection && isAdmin ? "justify-between" : "justify-end",
-            )}
+            className="my-3 flex items-center gap-x-2 justify-end"
           >
-            {isCollection && isAdmin && (
-              <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />
-            )}
-
             <Button
               intent="ghost"
               size="sm"
@@ -146,31 +115,19 @@ export function EditorView({
             </Button>
           </div>
 
-          {/* Collection view in table mode: Only show for admins */}
-          {isCollection && isAdmin && viewMode === "table" ? (
-            <div className="shrink-0 pb-5 editor-content-reset">
-              <RecordsTable
-                collectionId={doc.id}
-                organizationId={organizationId}
-                organizationSlug={organizationSlug}
-                schema={collectionSchema}
-              />
-            </div>
-          ) : (
-            <>
-              <LinkPopover
-                editor={contentEditor}
-                organizationId={organizationId}
-                organizationSlug={organizationSlug}
-              />
+          <>
+            <LinkPopover
+              editor={contentEditor}
+              organizationId={organizationId}
+              organizationSlug={organizationSlug}
+            />
 
-              <EditorContent
-                aria-label="Document content"
-                editor={contentEditor}
-                className="block grow"
-              />
-            </>
-          )}
+            <EditorContent
+              aria-label="Document content"
+              editor={contentEditor}
+              className="block grow"
+            />
+          </>
         </div>
 
         {/* Handles shifting content left when assistant is undocked and open */}
@@ -201,44 +158,7 @@ export function EditorView({
           </div>
 
           <div className="p-4 space-y-4 overflow-y-auto grow">
-            {canManageCollectionSettings && (
-              <div className="space-y-4 pb-4 border-b border-black/6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-x-1">
-                    <AppFolder16Filled className="size-4 icon-muted" />
-                    <span className="text-sm font-medium text-gray-700">
-                      {isCollection ? "Collection setup" : "Collection properties"}
-                    </span>
-                  </div>
-                  {isCollection && isAdmin && (
-                    <ModuleViewToggle initialMode={viewMode} onChange={setViewMode} />
-                  )}
-                </div>
-
-                <PropertyManager
-                  documentId={doc.id}
-                  organizationId={organizationId}
-                  schema={collectionSchema}
-                  isCollection={isCollection}
-                  isAdmin={isAdmin}
-                />
-
-                {isCollection && isAdmin && (
-                  <PageConfigPanel
-                    documentId={doc.id}
-                    organizationId={organizationId}
-                    config={{ showChildrenInSidebar }}
-                  />
-                )}
-              </div>
-            )}
-
-            <EditorSidebarPanels
-              doc={doc}
-              collectionSchema={
-                parentCollectionSchema.length > 0 ? parentCollectionSchema : undefined
-              }
-            />
+            <EditorSidebarPanels doc={doc} collectionSchema={collectionSchema} />
           </div>
         </Dialog>
       </Drawer>

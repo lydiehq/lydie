@@ -44,21 +44,19 @@ export function CollectionBlockComponent(props: Props) {
   const collectionsData = useMemo(
     () =>
       (collections ?? []) as unknown as Array<{
-        document_id: string;
-        document?: { title?: string };
+        id: string;
+        name?: string;
       }>,
     [collections],
   );
 
-  const collectionName =
-    ((collectionData?.document as { title?: string } | undefined)?.title as string | undefined) ||
-    "Untitled";
+  const collectionName = (collectionData?.name as string | undefined) || "Untitled";
 
   const schema = (collectionData?.properties || []) as PropertyDefinition[];
   const availableCollections: Array<{ id: string; name: string }> = collectionsData.map(
     (entry) => ({
-      id: entry.document_id,
-      name: entry.document?.title || "Untitled",
+      id: entry.id,
+      name: entry.name || "Untitled",
     }),
   );
 

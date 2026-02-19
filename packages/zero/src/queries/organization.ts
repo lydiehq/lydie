@@ -33,12 +33,7 @@ export const organizationQueries = {
     z.object({ organizationSlug: z.string() }),
     ({ args: { organizationSlug }, ctx }) => {
       hasOrganizationAccessBySlug(ctx, organizationSlug);
-
-      return zql.organizations
-        .where("slug", organizationSlug)
-        .one()
-        .related("billing")
-        .related("memberCredits", (q) => q.related("user"));
+      return zql.organizations.where("slug", organizationSlug).one();
     },
   ),
 
@@ -54,7 +49,7 @@ export const organizationQueries = {
             .where("deleted_at", "IS", null)
             .orderBy("sort_order", "asc")
             .orderBy("created_at", "desc")
-            .related("collectionSchema"),
+            .related("collection"),
         );
     },
   ),
@@ -106,7 +101,7 @@ export const organizationQueries = {
             .where("deleted_at", "IS", null)
             .orderBy("sort_order", "asc")
             .orderBy("created_at", "desc")
-            .related("collectionSchema"),
+            .related("collection"),
         )
         .related("integrationConnections", (q) =>
           q.orderBy("created_at", "desc").related("links", (links) => links),

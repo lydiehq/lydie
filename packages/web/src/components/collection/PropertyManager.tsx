@@ -15,20 +15,13 @@ const PROPERTY_TYPES = [
 ] as const;
 
 type Props = {
-  documentId: string;
+  collectionId: string;
   organizationId: string;
   schema: PropertyDefinition[];
-  isCollection: boolean;
   isAdmin: boolean;
 };
 
-export function PropertyManager({
-  documentId,
-  organizationId,
-  schema,
-  isCollection,
-  isAdmin,
-}: Props) {
+export function PropertyManager({ collectionId, organizationId, schema, isAdmin }: Props) {
   const z = useZero();
   const [isAdding, setIsAdding] = useState(false);
   const [newProperty, setNewProperty] = useState<{
@@ -65,25 +58,13 @@ export function PropertyManager({
 
     const updatedSchema = [...schema, propDef];
 
-    if (isCollection) {
-      // Page is already a collection, just update the schema
-      await z.mutate(
-        mutators.collection.updateSchema({
-          collectionId: documentId,
-          organizationId,
-          properties: updatedSchema,
-        }),
-      );
-    } else {
-      // Page is not a collection yet - adding first property makes it a collection
-      await z.mutate(
-        mutators.collection.createSchema({
-          documentId,
-          organizationId,
-          properties: updatedSchema,
-        }),
-      );
-    }
+    await z.mutate(
+      mutators.collection.update({
+        collectionId,
+        organizationId,
+        properties: updatedSchema,
+      }),
+    );
 
     setIsAdding(false);
     setNewProperty({
@@ -99,8 +80,8 @@ export function PropertyManager({
     const updatedSchema = schema.filter((f) => f.name !== fieldName);
 
     await z.mutate(
-      mutators.collection.updateSchema({
-        collectionId: documentId,
+      mutators.collection.update({
+        collectionId,
         organizationId,
         properties: updatedSchema,
       }),
@@ -128,13 +109,6 @@ export function PropertyManager({
 
   return (
     <div className="space-y-3">
-      {/* Show message when page is not yet a collection */}
-      {!isCollection && schema.length === 0 && (
-        <p className="text-sm text-gray-500">
-          Add a property to make this page a collection. Its children will become entries.
-        </p>
-      )}
-
       {/* Existing properties list */}
       {schema.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -145,7 +119,7 @@ export function PropertyManager({
             >
               <span className="font-medium">{field.name}</span>
               <span className="text-blue-500 text-xs">({field.type})</span>
-              {isCollection && isAdmin && (
+              {isAdmin && (
                 <button
                   onClick={() => handleRemoveProperty(field.name)}
                   className="ml-1 text-blue-400 hover:text-blue-600"
@@ -243,7 +217,7 @@ export function PropertyManager({
               disabled={!newProperty.name.trim()}
               className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isCollection ? "Add Property" : "Make Collection"}
+              Add Property
             </button>
             <button
               onClick={() => setIsAdding(false)}
@@ -259,7 +233,7 @@ export function PropertyManager({
           className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
         >
           <span className="text-lg">+</span>
-          <span>{isCollection ? "Add property" : "Add property to make collection"}</span>
+          <span>Add property</span>
         </button>
       )}
     </div>

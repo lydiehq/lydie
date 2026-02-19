@@ -1,12 +1,12 @@
 import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import {
+  collectionFieldsTable,
+  collectionsTable,
   db,
-  collectionSchemasTable,
-  documentFieldValuesTable,
   documentsTable,
 } from "@lydie/database";
-import { desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -14,10 +14,6 @@ import { extractTableOfContents } from "../../utils/toc";
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
 import { apiKeyAuth, externalRateLimit } from "./middleware";
 
-/**
- * Parse filter parameters from query string
- * Filters are in the format: filter[fieldName]=value
- */
 function parseFilters(query: Record<string, string>): Record<string, string> {
   const filters: Record<string, string> = {};
 
@@ -31,16 +27,8 @@ function parseFilters(query: Record<string, string>): Record<string, string> {
   return filters;
 }
 
-type SchemaWithProperties = {
-  id: string;
-  documentId?: string;
-  properties: unknown;
-};
-
 function getUniquePropertyNames(properties: unknown): string[] {
-  if (!Array.isArray(properties)) {
-    return [];
-  }
+  if (!Array.isArray(properties)) return [];
 
   return properties
     .map((property) => {
@@ -59,125 +47,36 @@ function getUniquePropertyNames(properties: unknown): string[] {
 }
 
 function buildUniquePropertyMatchWhere(
-  schemas: SchemaWithProperties[],
+  collections: Array<{ id: string; properties: unknown }>,
   identifier: string,
 ): SQL | null {
   const conditions: SQL[] = [];
 
-  for (const schema of schemas) {
-    const uniqueNames = getUniquePropertyNames(schema.properties);
+  for (const collection of collections) {
+    const uniqueNames = getUniquePropertyNames(collection.properties);
     for (const propertyName of uniqueNames) {
       conditions.push(
-        sql`(${documentFieldValuesTable.collectionSchemaId} = ${schema.id} AND ${documentFieldValuesTable.values}->>${propertyName} = ${identifier})`,
+        sql`(${collectionFieldsTable.collectionId} = ${collection.id} AND ${collectionFieldsTable.values}->>${propertyName} = ${identifier})`,
       );
     }
   }
 
-  if (conditions.length === 0) {
-    return null;
-  }
-
+  if (conditions.length === 0) return null;
   return conditions.reduce((acc, condition) => sql`${acc} OR ${condition}`);
 }
 
-/**
- * Resolve collection identifier (ID or unique property value) to collection ID
- * First tries to find by ID, then queries by unique properties defined in collection schemas
- */
-async function resolveCollectionId(
-  organizationId: string,
-  identifier: string,
-): Promise<string | null> {
-  // First try to find by ID (fast path for UUIDs)
-  const byId = await db
-    .select({ id: documentsTable.id })
-    .from(documentsTable)
-    .innerJoin(collectionSchemasTable, eq(documentsTable.id, collectionSchemasTable.documentId))
-    .where(
-      sql`${documentsTable.id} = ${identifier} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
-    )
-    .limit(1);
-
-  if (byId.length > 0) {
-    return byId[0].id;
-  }
-
-  // Get all collection schemas for this organization to find unique properties
-  const schemas = await db
-    .select({
-      id: collectionSchemasTable.id,
-      documentId: collectionSchemasTable.documentId,
-      properties: collectionSchemasTable.properties,
-    })
-    .from(collectionSchemasTable)
-    .innerJoin(documentsTable, eq(collectionSchemasTable.documentId, documentsTable.id))
-    .where(
-      sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
-    );
-
-  const uniquePropertyMatchWhere = buildUniquePropertyMatchWhere(schemas, identifier);
-  if (!uniquePropertyMatchWhere) {
-    return null;
-  }
-
-  const uniqueMatch = await db
-    .select({ collectionId: collectionSchemasTable.documentId })
-    .from(documentFieldValuesTable)
-    .innerJoin(
-      collectionSchemasTable,
-      eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
-    )
-    .where(uniquePropertyMatchWhere)
-    .limit(1);
-
-  if (uniqueMatch.length > 0) {
-    return uniqueMatch[0].collectionId;
-  }
-
-  return null;
-}
-
-/**
- * Build where conditions for document queries
- */
-function buildDocumentWhereConditions(
-  organizationId: string,
-  collectionId: string,
-  filters: Record<string, string>,
-): SQL {
-  const conditions: SQL[] = [
-    sql`${documentsTable.organizationId} = ${organizationId}`,
-    sql`${documentsTable.nearestCollectionId} = ${collectionId}`,
-    sql`${documentsTable.deletedAt} IS NULL`,
-    sql`${documentsTable.published} = true`,
-  ];
-
-  // Apply property filters on field values
-  for (const [fieldName, value] of Object.entries(filters)) {
-    conditions.push(sql`${documentFieldValuesTable.values}->>${fieldName} = ${value}`);
-  }
-
-  // Combine all conditions with AND
-  return conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`);
-}
-
-/**
- * Transform document to response format with full content
- */
 async function transformToDocumentResponse(
   doc: typeof documentsTable.$inferSelect,
   fieldValues: Record<string, unknown>,
   includeRelated: boolean,
   includeToc: boolean,
 ): Promise<Record<string, unknown>> {
-  // Convert YJS state to JSON content
   let jsonContent: ReturnType<typeof convertYjsToJson> = null;
   if (doc.yjsState) {
     const rawContent = convertYjsToJson(doc.yjsState);
     jsonContent = await transformDocumentLinksToInternalLinkMarks(rawContent);
   }
 
-  // Extract table of contents if requested
   let toc: Array<{ id: string; level: number; text: string }> = [];
   if (includeToc && jsonContent) {
     try {
@@ -187,7 +86,6 @@ async function transformToDocumentResponse(
     }
   }
 
-  // Find related documents if requested
   let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
   if (includeRelated && doc.id) {
     try {
@@ -212,70 +110,66 @@ async function transformToDocumentResponse(
   };
 }
 
-/**
- * Collections API - External API for querying collection documents
- * Uses API key authentication
- */
 export const CollectionsApi = new Hono()
   .use(apiKeyAuth)
   .use(externalRateLimit)
-  /**
-   * List documents in a collection with full content
-   * GET /v1/:idOrSlug/collections/:collectionId/documents
-   *
-   * Query params:
-   * - filter[fieldName]: string (filter by field value)
-   * - include_related: boolean (include related documents)
-   * - include_toc: boolean (include table of contents)
-   *
-   * Response includes content body (yjsState converted to JSON)
-   */
-  .get("/collections/:collectionId/documents", async (c) => {
+  .get("/:handle/documents", async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
+    const handle = c.req.param("handle");
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
 
-    // Resolve collection identifier (ID or slug) to actual collection ID
-    const collectionId = await resolveCollectionId(organizationId, collectionIdentifier);
+    const collectionResult = await db
+      .select()
+      .from(collectionsTable)
+      .where(
+        and(
+          eq(collectionsTable.organizationId, organizationId),
+          eq(collectionsTable.handle, handle),
+        ),
+      )
+      .limit(1);
 
-    if (!collectionId) {
-      throw new HTTPException(404, {
-        message: "Collection not found",
-      });
+    const collection = collectionResult[0];
+
+    if (!collection) {
+      throw new HTTPException(404, { message: "Collection not found" });
     }
 
-    // Parse query parameters
-    const query = c.req.query();
-    const filters = parseFilters(query);
+    const filters = parseFilters(c.req.query());
 
-    // Build where conditions
-    const whereConditions = buildDocumentWhereConditions(organizationId, collectionId, filters);
+    const whereConditions: SQL[] = [
+      eq(documentsTable.organizationId, organizationId),
+      eq(documentsTable.collectionId, collection.id),
+      sql`${documentsTable.deletedAt} IS NULL`,
+      eq(documentsTable.published, true),
+    ];
 
-    // Fetch all documents with their field values and full content
+    for (const [fieldName, value] of Object.entries(filters)) {
+      whereConditions.push(sql`${collectionFieldsTable.values}->>${fieldName} = ${value}`);
+    }
+
     const documents = await db
       .select({
         document: documentsTable,
-        fieldValues: documentFieldValuesTable.values,
+        fieldValues: collectionFieldsTable.values,
       })
       .from(documentsTable)
-      .innerJoin(
-        documentFieldValuesTable,
-        eq(documentsTable.id, documentFieldValuesTable.documentId),
+      .leftJoin(
+        collectionFieldsTable,
+        and(
+          eq(documentsTable.id, collectionFieldsTable.documentId),
+          eq(collectionFieldsTable.collectionId, collection.id),
+        ),
       )
-      .innerJoin(
-        collectionSchemasTable,
-        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
-      )
-      .where(sql`${whereConditions} AND ${collectionSchemasTable.documentId} = ${collectionId}`)
+      .where(and(...whereConditions))
       .orderBy(desc(documentsTable.createdAt), desc(documentsTable.id));
 
-    // Transform to response format with full content
     const response = await Promise.all(
       documents.map((doc) =>
         transformToDocumentResponse(
           doc.document,
-          doc.fieldValues || {},
+          (doc.fieldValues as Record<string, unknown>) || {},
           includeRelated,
           includeToc,
         ),
@@ -284,50 +178,45 @@ export const CollectionsApi = new Hono()
 
     return c.json({ documents: response });
   })
-  /**
-   * Fetch single document by ID or unique property value
-   * GET /v1/:idOrSlug/documents/:documentIdOrPropertyValue
-   *
-   * Response includes content body (yjsState converted to JSON)
-   */
   .get("/documents/:documentIdOrPropertyValue", async (c) => {
     const organizationId = c.get("organizationId");
     const identifier = c.req.param("documentIdOrPropertyValue");
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
 
-    // Try to fetch by ID first (fast path)
     let documentResult = await db
       .select()
       .from(documentsTable)
       .where(
-        sql`${documentsTable.id} = ${identifier} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL AND ${documentsTable.published} = true`,
+        and(
+          eq(documentsTable.id, identifier),
+          eq(documentsTable.organizationId, organizationId),
+          sql`${documentsTable.deletedAt} IS NULL`,
+          eq(documentsTable.published, true),
+        ),
       )
       .limit(1);
 
-    // If not found by ID, try by unique collection property values
     if (documentResult.length === 0) {
-      // Get all collection schemas to find unique properties
-      const schemas = await db
-        .select({
-          id: collectionSchemasTable.id,
-          properties: collectionSchemasTable.properties,
-        })
-        .from(collectionSchemasTable)
-        .innerJoin(documentsTable, eq(collectionSchemasTable.documentId, documentsTable.id))
-        .where(
-          sql`${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL`,
-        );
+      const collections = await db
+        .select({ id: collectionsTable.id, properties: collectionsTable.properties })
+        .from(collectionsTable)
+        .where(eq(collectionsTable.organizationId, organizationId));
 
-      const uniquePropertyMatchWhere = buildUniquePropertyMatchWhere(schemas, identifier);
+      const uniquePropertyMatchWhere = buildUniquePropertyMatchWhere(collections, identifier);
 
       if (uniquePropertyMatchWhere) {
         const documentsByUniqueProperty = await db
           .select({ document: documentsTable })
-          .from(documentFieldValuesTable)
-          .innerJoin(documentsTable, eq(documentFieldValuesTable.documentId, documentsTable.id))
+          .from(collectionFieldsTable)
+          .innerJoin(documentsTable, eq(collectionFieldsTable.documentId, documentsTable.id))
           .where(
-            sql`${uniquePropertyMatchWhere} AND ${documentsTable.organizationId} = ${organizationId} AND ${documentsTable.deletedAt} IS NULL AND ${documentsTable.published} = true`,
+            and(
+              uniquePropertyMatchWhere,
+              eq(documentsTable.organizationId, organizationId),
+              sql`${documentsTable.deletedAt} IS NULL`,
+              eq(documentsTable.published, true),
+            ),
           )
           .limit(1);
 
@@ -336,34 +225,26 @@ export const CollectionsApi = new Hono()
     }
 
     const document = documentResult[0];
-
     if (!document) {
-      throw new HTTPException(404, {
-        message: "Document not found",
-      });
+      throw new HTTPException(404, { message: "Document not found" });
     }
 
-    // Fetch field values for this document
-    const fieldValuesResult = await db
-      .select({
-        values: documentFieldValuesTable.values,
-      })
-      .from(documentFieldValuesTable)
-      .innerJoin(
-        collectionSchemasTable,
-        eq(documentFieldValuesTable.collectionSchemaId, collectionSchemasTable.id),
-      )
-      .where(
-        sql`${documentFieldValuesTable.documentId} = ${document.id} AND ${collectionSchemasTable.documentId} = ${document.nearestCollectionId}`,
-      )
-      .limit(1);
+    const fieldValuesResult = document.collectionId
+      ? await db
+          .select({ values: collectionFieldsTable.values })
+          .from(collectionFieldsTable)
+          .where(
+            and(
+              eq(collectionFieldsTable.documentId, document.id),
+              eq(collectionFieldsTable.collectionId, document.collectionId),
+            ),
+          )
+          .limit(1)
+      : [];
 
-    const fieldValues = fieldValuesResult[0]?.values || {};
-
-    // Transform to response format with full content
     const response = await transformToDocumentResponse(
       document,
-      fieldValues,
+      (fieldValuesResult[0]?.values as Record<string, unknown>) || {},
       includeRelated,
       includeToc,
     );

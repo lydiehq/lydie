@@ -25,11 +25,7 @@ export const documentMutators = {
       hasOrganizationAccess(ctx, organizationId);
       await verifyDocumentAccess(tx, documentId, organizationId);
 
-      await tx.mutate.documents.update({
-        id: documentId,
-        published: true,
-      });
-
+      await tx.mutate.documents.update({ id: documentId, published: true });
       await tx.mutate.document_publications.insert(
         withTimestamps({
           id: createId(),
@@ -49,11 +45,7 @@ export const documentMutators = {
       hasOrganizationAccess(ctx, organizationId);
       await verifyDocumentAccess(tx, documentId, organizationId);
 
-      // Set published to false (publication history is preserved)
-      await tx.mutate.documents.update({
-        id: documentId,
-        published: false,
-      });
+      await tx.mutate.documents.update({ id: documentId, published: false });
     },
   ),
 
@@ -63,37 +55,29 @@ export const documentMutators = {
       organizationId: z.string(),
       title: z.string().optional(),
       parentId: z.string().optional(),
+      collectionId: z.string().optional(),
       integrationLinkId: z.string().optional(),
       content: z.string().optional(),
     }),
-    async ({
-      tx,
-      ctx,
-      args: { id, organizationId, title = "", parentId, integrationLinkId, content },
-    }) => {
-      hasOrganizationAccess(ctx, organizationId);
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
 
-      let finalIntegrationLinkId = integrationLinkId;
-      let parentDocument: Awaited<ReturnType<typeof getDocumentById>> | null = null;
+      let finalIntegrationLinkId = args.integrationLinkId;
 
-      // If creating as a child page, verify parent document belongs to same organization
-      if (parentId) {
-        parentDocument = await getDocumentById(tx, parentId, organizationId);
+      if (args.parentId) {
+        const parentDocument = await getDocumentById(tx, args.parentId, args.organizationId);
         if (!parentDocument) {
-          throw notFoundError("Parent document", parentId);
+          throw notFoundError("Parent document", args.parentId);
         }
-
-        // Inherit integration link from parent
         if (parentDocument.integration_link_id) {
           finalIntegrationLinkId = parentDocument.integration_link_id;
         }
       }
 
-      // Get the lowest sort_order at this level to prepend new document at the top
       const siblings = await tx.run(
         zql.documents
-          .where("organization_id", organizationId)
-          .where("parent_id", parentId ? "=" : "IS", parentId || null)
+          .where("organization_id", args.organizationId)
+          .where("parent_id", args.parentId ? "=" : "IS", args.parentId || null)
           .where("deleted_at", "IS", null),
       );
 
@@ -108,57 +92,45 @@ export const documentMutators = {
             )
           : 0;
 
-      // Prepare content
       let yjsState;
-      if (content) {
+      if (args.content) {
         try {
-          const jsonContent = deserializeFromHTML(content);
-          yjsState = convertJsonToYjs(jsonContent);
-        } catch (contentError: any) {
-          console.error("Failed to parse content:", contentError);
-          // Create document with empty content if parsing fails
-          const emptyContent = { type: "doc", content: [] };
-          yjsState = convertJsonToYjs(emptyContent);
+          yjsState = convertJsonToYjs(deserializeFromHTML(args.content));
+        } catch {
+          yjsState = convertJsonToYjs({ type: "doc", content: [] });
         }
       } else {
-        // Create empty Yjs state for new document
-        const emptyContent = { type: "doc", content: [] };
-        yjsState = convertJsonToYjs(emptyContent);
-      }
-
-      // Calculate path based on parent
-      let path = id;
-      let nearestCollectionId: string | null = null;
-
-      if (parentDocument) {
-        const parentPath = parentDocument.path || parentDocument.id;
-        path = `${parentPath}/${id}`;
-        nearestCollectionId = await getNearestCollectionForChild(tx, parentDocument);
+        yjsState = convertJsonToYjs({ type: "doc", content: [] });
       }
 
       await tx.mutate.documents.insert(
         withTimestamps({
-          id,
-          title,
+          id: args.id,
+          title: args.title || "",
           yjs_state: yjsState,
           user_id: ctx.userId,
-          organization_id: organizationId,
+          organization_id: args.organizationId,
           integration_link_id: finalIntegrationLinkId || null,
           is_locked: false,
           full_width: false,
           published: false,
           is_favorited: false,
-          parent_id: parentId || null,
+          parent_id: args.parentId || null,
           sort_order: minSortOrder - 1,
-          path,
-          nearest_collection_id: nearestCollectionId,
-          show_children_in_sidebar: true,
+          collection_id: args.collectionId || null,
         }),
       );
 
-      // If this document belongs to a collection, create field values row
-      if (nearestCollectionId) {
-        await ensureFieldValuesForNearestCollection(tx, id, nearestCollectionId);
+      if (args.collectionId) {
+        await tx.mutate.collection_fields.insert(
+          withTimestamps({
+            id: createId(),
+            document_id: args.id,
+            collection_id: args.collectionId,
+            values: {},
+            orphaned_values: {},
+          }),
+        );
       }
     },
   ),
@@ -172,59 +144,39 @@ export const documentMutators = {
       coverImage: z.string().nullable().optional(),
       fullWidth: z.boolean().optional(),
       organizationId: z.string(),
+      collectionId: z.string().nullable().optional(),
     }),
-    async ({
-      tx,
-      ctx,
-      args: { documentId, title, published, customFields, coverImage, fullWidth, organizationId },
-    }) => {
-      hasOrganizationAccess(ctx, organizationId);
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+      const document = await verifyDocumentAccess(tx, args.documentId, args.organizationId);
 
-      // Verify document belongs to the organization
-      const document = await verifyDocumentAccess(tx, documentId, organizationId);
-
-      // Block title updates for locked pages
-      if (document.is_locked && title !== undefined) {
+      if (document.is_locked && args.title !== undefined) {
         throw new Error("Cannot edit locked document. This page is managed by an integration.");
       }
 
-      const updates: any = {
-        id: documentId,
-      };
-
-      if (title !== undefined) updates.title = title;
-      if (published !== undefined) updates.published = published;
-      if (customFields !== undefined) updates.custom_fields = customFields;
-      if (coverImage !== undefined) updates.cover_image = coverImage;
-      if (fullWidth !== undefined) updates.full_width = fullWidth;
+      const updates: any = { id: args.documentId };
+      if (args.title !== undefined) updates.title = args.title;
+      if (args.published !== undefined) updates.published = args.published;
+      if (args.customFields !== undefined) updates.custom_fields = args.customFields;
+      if (args.coverImage !== undefined) updates.cover_image = args.coverImage;
+      if (args.fullWidth !== undefined) updates.full_width = args.fullWidth;
+      if (args.collectionId !== undefined) updates.collection_id = args.collectionId;
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
     },
   ),
 
   rename: defineMutator(
-    z.object({
-      documentId: z.string(),
-      title: z.string(),
-      organizationId: z.string(),
-    }),
+    z.object({ documentId: z.string(), title: z.string(), organizationId: z.string() }),
     async ({ tx, ctx, args: { documentId, title, organizationId } }) => {
       hasOrganizationAccess(ctx, organizationId);
-
-      // Verify document belongs to the organization
       const document = await verifyDocumentAccess(tx, documentId, organizationId);
 
-      // Block rename for locked pages
       if (document.is_locked) {
         throw new Error("Cannot rename locked document. This page is managed by an integration.");
       }
 
-      await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          title,
-        }),
-      );
+      await tx.mutate.documents.update(withUpdatedTimestamp({ id: documentId, title }));
     },
   ),
 
@@ -233,66 +185,42 @@ export const documentMutators = {
       documentId: z.string(),
       parentId: z.string().optional(),
       organizationId: z.string(),
+      collectionId: z.string().nullable().optional(),
     }),
-    async ({ tx, ctx, args: { documentId, parentId, organizationId } }) => {
-      hasOrganizationAccess(ctx, organizationId);
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+      await verifyDocumentAccess(tx, args.documentId, args.organizationId);
 
-      // Verify document belongs to the organization
-      await verifyDocumentAccess(tx, documentId, organizationId);
-
-      // If moving to a parent document, verify parent belongs to same organization
-      // and check for circular references
-      if (parentId) {
-        if (parentId === documentId) {
+      if (args.parentId) {
+        if (args.parentId === args.documentId) {
           throw new Error("Cannot move document into itself");
         }
 
-        const parent = await getDocumentById(tx, parentId, organizationId);
+        const parent = await getDocumentById(tx, args.parentId, args.organizationId);
         if (!parent) {
-          throw notFoundError("Parent document", parentId);
+          throw notFoundError("Parent document", args.parentId);
         }
 
-        // Check for circular reference - ensure parent is not a descendant of this document
         let currentParentId: string | null = parent.parent_id;
         while (currentParentId) {
-          if (currentParentId === documentId) {
+          if (currentParentId === args.documentId) {
             throw new Error("Cannot move document into its own descendant");
           }
-          const currentParent = await getDocumentById(tx, currentParentId, organizationId);
+          const currentParent = await getDocumentById(tx, currentParentId, args.organizationId);
           if (!currentParent) break;
           currentParentId = currentParent.parent_id;
         }
       }
 
-      // Get new parent info for path and collection calculation
-      let newPath = documentId;
-      let newNearestCollectionId: string | null = null;
-
-      if (parentId) {
-        const parent = await getDocumentById(tx, parentId, organizationId);
-        if (parent) {
-          const parentPath = parent.path || parent.id;
-          newPath = `${parentPath}/${documentId}`;
-          newNearestCollectionId = await getNearestCollectionForChild(tx, parent);
-        }
+      const updates: any = {
+        id: args.documentId,
+        parent_id: args.parentId || null,
+      };
+      if (args.collectionId !== undefined) {
+        updates.collection_id = args.collectionId;
       }
 
-      // Update document with new parent, path, and nearest_collection_id
-      await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          parent_id: parentId || null,
-          path: newPath,
-          nearest_collection_id: newNearestCollectionId,
-        }),
-      );
-
-      if (newNearestCollectionId) {
-        await ensureFieldValuesForNearestCollection(tx, documentId, newNearestCollectionId);
-      }
-
-      // Update all descendants' paths and nearest_collection_id
-      await updateDescendantPaths(tx, documentId, newPath, newNearestCollectionId, organizationId);
+      await tx.mutate.documents.update(withUpdatedTimestamp(updates));
     },
   ),
 
@@ -304,28 +232,9 @@ export const documentMutators = {
     async ({ tx, ctx, args: { documentIds, organizationId } }) => {
       hasOrganizationAccess(ctx, organizationId);
 
-      // Verify all documents belong to the organization
-      const documents = await Promise.all(
-        documentIds.map((id) => getDocumentById(tx, id, organizationId)),
-      );
-
-      // Check if any documents are missing
-      for (let i = 0; i < documentIds.length; i++) {
-        if (!documents[i]) {
-          console.error(`Document not found: ${documentIds[i]}`);
-          continue;
-        }
-      }
-
-      // Update sort_order for each document based on array position
       await Promise.all(
         documentIds.map((id, index) =>
-          tx.mutate.documents.update(
-            withUpdatedTimestamp({
-              id,
-              sort_order: index,
-            }),
-          ),
+          tx.mutate.documents.update(withUpdatedTimestamp({ id, sort_order: index })),
         ),
       );
     },
@@ -337,26 +246,20 @@ export const documentMutators = {
       targetParentId: z.string().optional().nullable(),
       targetIntegrationLinkId: z.string().optional().nullable(),
       organizationId: z.string(),
+      collectionId: z.string().nullable().optional(),
     }),
-    async ({
-      tx,
-      ctx,
-      args: { documentId, targetParentId, targetIntegrationLinkId, organizationId },
-    }) => {
-      hasOrganizationAccess(ctx, organizationId);
-
-      const updates: any = {
-        id: documentId,
-      };
-
-      let parentIdQuery = targetParentId || null;
-      let integrationLinkIdQuery = targetIntegrationLinkId || null;
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
 
       const siblings = await tx.run(
         zql.documents
-          .where("organization_id", organizationId)
-          .where("parent_id", parentIdQuery ? "=" : "IS", parentIdQuery)
-          .where("integration_link_id", integrationLinkIdQuery ? "=" : "IS", integrationLinkIdQuery)
+          .where("organization_id", args.organizationId)
+          .where("parent_id", args.targetParentId ? "=" : "IS", args.targetParentId || null)
+          .where(
+            "integration_link_id",
+            args.targetIntegrationLinkId ? "=" : "IS",
+            args.targetIntegrationLinkId || null,
+          )
           .where("deleted_at", "IS", null),
       );
 
@@ -364,61 +267,38 @@ export const documentMutators = {
         const sortOrder = (doc as { sort_order?: number }).sort_order ?? 0;
         return Math.max(max, sortOrder);
       }, 0);
-      updates.sort_order = maxSortOrder + 1;
 
-      // Calculate new path and nearest_collection_id
-      let newPath = documentId;
-      let newNearestCollectionId: string | null = null;
+      const updates: any = {
+        id: args.documentId,
+        sort_order: maxSortOrder + 1,
+      };
 
-      if (targetParentId) {
-        const parent = await getDocumentById(tx, targetParentId, organizationId);
-        if (parent) {
-          const parentPath = parent.path || parent.id;
-          newPath = `${parentPath}/${documentId}`;
-          newNearestCollectionId = await getNearestCollectionForChild(tx, parent);
-        }
+      if (args.targetParentId !== undefined) updates.parent_id = args.targetParentId;
+      if (args.targetIntegrationLinkId !== undefined) {
+        updates.integration_link_id = args.targetIntegrationLinkId;
       }
-
-      updates.path = newPath;
-      updates.nearest_collection_id = newNearestCollectionId;
-
-      if (targetParentId !== undefined) updates.parent_id = targetParentId;
-      if (targetIntegrationLinkId !== undefined)
-        updates.integration_link_id = targetIntegrationLinkId;
+      if (args.collectionId !== undefined) {
+        updates.collection_id = args.collectionId;
+      }
 
       await tx.mutate.documents.update(withUpdatedTimestamp(updates));
-
-      if (newNearestCollectionId) {
-        await ensureFieldValuesForNearestCollection(tx, documentId, newNearestCollectionId);
-      }
-
-      // Update all descendants' paths and nearest_collection_id
-      await updateDescendantPaths(tx, documentId, newPath, newNearestCollectionId, organizationId);
     },
   ),
 
   delete: defineMutator(
-    z.object({
-      documentId: z.string(),
-      organizationId: z.string(),
-    }),
+    z.object({ documentId: z.string(), organizationId: z.string() }),
     async ({ tx, ctx, args: { documentId, organizationId } }) => {
       isAuthenticated(ctx);
-
       const document = await getDocumentById(tx, documentId, organizationId, true);
       if (!document) {
         throw notFoundError("Document", documentId);
       }
-
       await deleteDocumentTree(tx, document, organizationId);
     },
   ),
 
   bulkDelete: defineMutator(
-    z.object({
-      documentIds: z.array(z.string()).min(1),
-      organizationId: z.string(),
-    }),
+    z.object({ documentIds: z.array(z.string()).min(1), organizationId: z.string() }),
     async ({ tx, ctx, args: { documentIds, organizationId } }) => {
       isAuthenticated(ctx);
 
@@ -435,11 +315,9 @@ export const documentMutators = {
         throw notFoundError("Document", "one or more selected IDs");
       }
 
-      const rootDocuments = validDocuments.filter((document) => {
-        const path = (document.path || document.id).split("/");
-        path.pop();
-        return !path.some((segmentId) => selectedIdSet.has(segmentId));
-      });
+      const rootDocuments = validDocuments.filter(
+        (document) => !document.parent_id || !selectedIdSet.has(document.parent_id),
+      );
 
       for (const document of rootDocuments) {
         await deleteDocumentTree(tx, document, organizationId);
@@ -458,171 +336,36 @@ export const documentMutators = {
       await verifyDocumentAccess(tx, documentId, organizationId);
 
       await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          is_favorited: isFavorited,
-        }),
+        withUpdatedTimestamp({ id: documentId, is_favorited: isFavorited }),
       );
     },
   ),
 
   restore: defineMutator(
-    z.object({
-      documentId: z.string(),
-      organizationId: z.string(),
-    }),
+    z.object({ documentId: z.string(), organizationId: z.string() }),
     async ({ tx, ctx, args: { documentId, organizationId } }) => {
       hasOrganizationAccess(ctx, organizationId);
 
-      // Get the document (including deleted ones)
       const document = await getDocumentById(tx, documentId, organizationId, true);
       if (!document) {
         throw notFoundError("Document", documentId);
       }
-
-      // Check if document is actually deleted
       if (!document.deleted_at) {
         throw new Error("Document is not in trash");
       }
 
-      // Find all deleted child documents recursively
       const childIds = await findAllDeletedChildDocuments(tx, documentId, organizationId);
 
-      // Restore all children first (clear deleted_at)
       for (const childId of childIds) {
-        await tx.mutate.documents.update(
-          withUpdatedTimestamp({
-            id: childId,
-            deleted_at: null,
-          }),
-        );
+        await tx.mutate.documents.update(withUpdatedTimestamp({ id: childId, deleted_at: null }));
       }
 
-      // Then restore the parent
       await tx.mutate.documents.update(
-        withUpdatedTimestamp({
-          id: documentId,
-          deleted_at: null,
-        }),
+        withUpdatedTimestamp({ id: documentId, deleted_at: null }),
       );
     },
   ),
 };
-
-/**
- * Helper function to update all descendant paths and nearest_collection_id
- */
-async function updateDescendantPaths(
-  tx: any,
-  parentId: string,
-  parentPath: string,
-  parentNearestCollectionId: string | null,
-  organizationId: string,
-): Promise<void> {
-  const parentIsCollection = await isCollectionDocument(tx, parentId);
-  const nearestForChildren = parentIsCollection ? parentId : parentNearestCollectionId;
-
-  const children = await tx.run(
-    zql.documents
-      .where("parent_id", parentId)
-      .where("organization_id", organizationId)
-      .where("deleted_at", "IS", null),
-  );
-
-  for (const child of children) {
-    const newPath = `${parentPath}/${child.id}`;
-    const isChildCollection = await isCollectionDocument(tx, child.id);
-    const childNearestCollectionId = nearestForChildren;
-    const nearestForDescendants = isChildCollection ? child.id : childNearestCollectionId;
-
-    await tx.mutate.documents.update(
-      withUpdatedTimestamp({
-        id: child.id,
-        path: newPath,
-        nearest_collection_id: childNearestCollectionId,
-      }),
-    );
-
-    if (childNearestCollectionId) {
-      await ensureFieldValuesForNearestCollection(tx, child.id, childNearestCollectionId);
-    }
-
-    // Recursively update this child's descendants
-    await updateDescendantPaths(tx, child.id, newPath, nearestForDescendants, organizationId);
-  }
-}
-
-async function isCollectionDocument(tx: any, documentId: string): Promise<boolean> {
-  try {
-    const schema = await tx.run(zql.collection_schemas.where("document_id", documentId).one());
-    return Boolean(schema);
-  } catch {
-    return false;
-  }
-}
-
-async function getNearestCollectionForChild(
-  tx: any,
-  parent: { id: string; nearest_collection_id: string | null },
-): Promise<string | null> {
-  const parentIsCollection = await isCollectionDocument(tx, parent.id);
-  if (parentIsCollection) {
-    return parent.id;
-  }
-
-  return parent.nearest_collection_id || null;
-}
-
-async function ensureFieldValuesForNearestCollection(
-  tx: any,
-  documentId: string,
-  nearestCollectionId: string,
-): Promise<void> {
-  let collectionSchema = null;
-  try {
-    collectionSchema = await tx.run(
-      zql.collection_schemas.where("document_id", nearestCollectionId).one(),
-    );
-  } catch {
-    return;
-  }
-
-  if (!collectionSchema) {
-    return;
-  }
-
-  let existingValues = null;
-  try {
-    existingValues = await tx.run(
-      zql.document_field_values
-        .where("document_id", documentId)
-        .where("collection_schema_id", collectionSchema.id)
-        .one(),
-    );
-  } catch {
-    // Row does not exist yet
-  }
-
-  if (existingValues) {
-    return;
-  }
-
-  const properties = collectionSchema.properties as Array<{ name: string }>;
-  const nullValues: Record<string, null> = {};
-  for (const prop of properties) {
-    nullValues[prop.name] = null;
-  }
-
-  await tx.mutate.document_field_values.insert(
-    withTimestamps({
-      id: createId(),
-      document_id: documentId,
-      collection_schema_id: collectionSchema.id,
-      values: nullValues,
-      orphaned_values: {},
-    }),
-  );
-}
 
 async function deleteDocumentTree(
   tx: any,
@@ -639,30 +382,16 @@ async function deleteDocumentTree(
 
   if (isIntegrationDocument) {
     for (const childId of childIds) {
-      await tx.mutate.documents.delete({
-        id: childId,
-      });
+      await tx.mutate.documents.delete({ id: childId });
     }
 
-    await tx.mutate.documents.delete({
-      id: document.id,
-    });
+    await tx.mutate.documents.delete({ id: document.id });
     return;
   }
 
   for (const childId of childIds) {
-    await tx.mutate.documents.update(
-      withUpdatedTimestamp({
-        id: childId,
-        deleted_at: now,
-      }),
-    );
+    await tx.mutate.documents.update(withUpdatedTimestamp({ id: childId, deleted_at: now }));
   }
 
-  await tx.mutate.documents.update(
-    withUpdatedTimestamp({
-      id: document.id,
-      deleted_at: now,
-    }),
-  );
+  await tx.mutate.documents.update(withUpdatedTimestamp({ id: document.id, deleted_at: now }));
 }

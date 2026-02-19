@@ -74,14 +74,11 @@ const documents = table("documents")
     // Note: body field removed - using yjsState exclusively for content storage
     user_id: string(),
     parent_id: string().optional(),
-    // Materialized path: slash-separated ancestor ids including own id
-    path: string(),
-    // Denormalized: id of the nearest ancestor Collection
-    nearest_collection_id: string().optional(),
+    custom_fields: json().optional(),
+    collection_id: string().optional(),
     organization_id: string(),
     integration_link_id: string().optional(),
     external_id: string().optional(),
-    show_children_in_sidebar: boolean(),
     cover_image: string().optional(),
     full_width: boolean(),
     published: boolean(),
@@ -96,10 +93,12 @@ const documents = table("documents")
  * Collection Schemas Table
  * A Collection is a Document with a row in this table
  */
-const collectionSchemas = table("collection_schemas")
+const collections = table("collections")
   .columns({
     id: string(),
-    document_id: string(),
+    name: string(),
+    handle: string(),
+    show_entries_in_sidebar: boolean(),
     organization_id: string(),
     properties: json(), // Array of property definitions
     ...timestamps,
@@ -110,11 +109,11 @@ const collectionSchemas = table("collection_schemas")
  * Document Field Values Table
  * Stores field values for Documents that belong to Collections
  */
-const documentFieldValues = table("document_field_values")
+const collectionFields = table("collection_fields")
   .columns({
     id: string(),
     document_id: string(),
-    collection_schema_id: string(),
+    collection_id: string(),
     values: json(), // Field values as key-value map
     orphaned_values: json().optional(), // Preserved values from previous Collection
     ...timestamps,
@@ -357,29 +356,16 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["parent_id"],
     destSchema: documents,
   }),
-  // Nearest collection this document belongs to
-  nearestCollection: one({
-    sourceField: ["nearest_collection_id"],
+  collection: one({
+    sourceField: ["collection_id"],
     destField: ["id"],
-    destSchema: documents,
-  }),
-  // Documents that have this document as their nearest collection
-  collectionDocuments: many({
-    sourceField: ["id"],
-    destField: ["nearest_collection_id"],
-    destSchema: documents,
-  }),
-  // Collection schema if this document is a Collection
-  collectionSchema: one({
-    sourceField: ["id"],
-    destField: ["document_id"],
-    destSchema: collectionSchemas,
+    destSchema: collections,
   }),
   // Field values for this document
   fieldValues: many({
     sourceField: ["id"],
     destField: ["document_id"],
-    destSchema: documentFieldValues,
+    destSchema: collectionFields,
   }),
   organization: one({
     sourceField: ["organization_id"],
@@ -415,35 +401,34 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
   }),
 }));
 
-const collectionSchemasRelations = relationships(collectionSchemas, ({ one, many }) => ({
-  document: one({
-    sourceField: ["document_id"],
-    destField: ["id"],
-    destSchema: documents,
-  }),
+const collectionsRelations = relationships(collections, ({ one, many }) => ({
   organization: one({
     sourceField: ["organization_id"],
     destField: ["id"],
     destSchema: organizations,
   }),
-  // All field values for documents in this collection
+  documents: many({
+    sourceField: ["id"],
+    destField: ["collection_id"],
+    destSchema: documents,
+  }),
   fieldValues: many({
     sourceField: ["id"],
-    destField: ["collection_schema_id"],
-    destSchema: documentFieldValues,
+    destField: ["collection_id"],
+    destSchema: collectionFields,
   }),
 }));
 
-const documentFieldValuesRelations = relationships(documentFieldValues, ({ one }) => ({
+const collectionFieldsRelations = relationships(collectionFields, ({ one }) => ({
   document: one({
     sourceField: ["document_id"],
     destField: ["id"],
     destSchema: documents,
   }),
-  collectionSchema: one({
-    sourceField: ["collection_schema_id"],
+  collection: one({
+    sourceField: ["collection_id"],
     destField: ["id"],
-    destSchema: collectionSchemas,
+    destSchema: collections,
   }),
 }));
 
@@ -479,10 +464,10 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     destField: ["organization_id"],
     destSchema: documents,
   }),
-  collectionSchemas: many({
+  collections: many({
     sourceField: ["id"],
     destField: ["organization_id"],
-    destSchema: collectionSchemas,
+    destSchema: collections,
   }),
   members: many({
     sourceField: ["id"],
@@ -1031,8 +1016,8 @@ export const schema = createSchema({
   tables: [
     users,
     documents,
-    collectionSchemas,
-    documentFieldValues,
+    collections,
+    collectionFields,
     documentVersions,
     documentLinks,
     organizations,
@@ -1067,8 +1052,8 @@ export const schema = createSchema({
   ],
   relationships: [
     documentsRelations,
-    collectionSchemasRelations,
-    documentFieldValuesRelations,
+    collectionsRelations,
+    collectionFieldsRelations,
     documentVersionsRelations,
     documentLinksRelations,
     organizationsRelations,

@@ -115,7 +115,7 @@ function FieldsPanel({ doc, collectionSchema }: Props) {
   const organizationId = doc.organization_id;
 
   const [fieldValuesData] = useQuery(
-    doc.nearest_collection_id
+    doc.collection_id
       ? queries.collections.documentFieldValues({
           organizationId,
           documentId: doc.id,
@@ -125,14 +125,10 @@ function FieldsPanel({ doc, collectionSchema }: Props) {
 
   const fieldRows = fieldValuesData ?? [];
   const activeFieldRow =
-    fieldRows.find(
-      (row) =>
-        (row.collectionSchema as { document_id?: string } | undefined)?.document_id ===
-        doc.nearest_collection_id,
-    ) ?? fieldRows[0];
+    fieldRows.find((row) => row.collection_id === doc.collection_id) ?? fieldRows[0];
 
   const fieldValues: FieldValues = (activeFieldRow?.values as FieldValues) || {};
-  const collectionSchemaId = activeFieldRow?.collection_schema_id;
+  const collectionId = activeFieldRow?.collection_id;
 
   if (!collectionSchema || collectionSchema.length === 0) {
     return (
@@ -151,7 +147,7 @@ function FieldsPanel({ doc, collectionSchema }: Props) {
           key={fieldDef.name}
           documentId={doc.id}
           organizationId={organizationId}
-          collectionSchemaId={collectionSchemaId}
+          collectionId={collectionId}
           fieldDef={fieldDef}
           value={fieldValues[fieldDef.name] ?? null}
         />

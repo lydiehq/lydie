@@ -52,6 +52,7 @@ export function createMockDocument(overrides: Partial<MockDocument> = {}): MockD
     deleted_at: null,
     sort_order: 0,
     custom_fields: {},
+    collection_id: null,
     ...overrides,
   };
 }
@@ -70,6 +71,7 @@ export interface MockDocument {
   deleted_at: string | null;
   sort_order: number;
   custom_fields: Record<string, string | number>;
+  collection_id: string | null;
 }
 
 /**

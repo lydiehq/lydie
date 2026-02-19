@@ -1,27 +1,32 @@
 import {
   Add16Filled,
+  AppFolder16Filled,
   Delete12Filled,
   DocumentAdd16Regular,
   Home16Filled,
   PersonChat16Filled,
 } from "@fluentui/react-icons";
+import { slugify } from "@lydie/core/utils";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
+import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import { useAtom, useSetAtom } from "jotai";
 import { memo, useMemo } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
+import { toast } from "sonner";
 
 import { isFavoritesExpandedAtom, isDocumentsExpandedAtom } from "@/atoms/workspace-settings";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
+import { useZero } from "@/services/zero";
 import { commandMenuStateAtom } from "@/stores/command-menu";
 import { isAdmin } from "@/utils/admin";
 
@@ -162,6 +167,7 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
         <div className="flex flex-col grow min-h-0 overflow-y-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white">
           <FavoritesSection />
           <DocumentsSection />
+          <CollectionsSection />
         </div>
         <div className="px-2">{isFreePlan && !userIsAdmin && <UsageStats />}</div>
         <div className="flex flex-col gap-y-4 px-2.5 pb-1">
@@ -246,15 +252,91 @@ const DocumentsSection = memo(function DocumentsSection() {
             onPress={() => createDocument()}
             className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/button relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100"
           >
-            <Add16Filled
-              aria-hidden
-              className={`size-3 shrink-0 absolute text-black/45 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : "rotate-0"}`}
-            />
+            <Add16Filled aria-hidden className="size-3 shrink-0 absolute text-black/45" />
           </RACButton>
         </div>
       </div>
       <DisclosurePanel className="px-2 pb-2">
         <DocumentTree />
+      </DisclosurePanel>
+    </Disclosure>
+  );
+});
+
+const CollectionsSection = memo(function CollectionsSection() {
+  const { organization } = useOrganization();
+  const z = useZero();
+  const [collections] = useQuery(
+    queries.collections.byOrganization({
+      organizationId: organization.id,
+    }),
+  );
+
+  const handleCreateCollection = async () => {
+    const name = "Untitled Collection";
+    const handle = slugify(name) || "collection";
+
+    try {
+      await z.mutate(
+        mutators.collection.create({
+          organizationId: organization.id,
+          name,
+          handle,
+          properties: [],
+          showEntriesInSidebar: false,
+        }),
+      );
+
+      window.location.href = `/w/${organization.slug}/collections/${handle}`;
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create collection");
+    }
+  };
+
+  if (!collections || collections.length === 0) {
+    return (
+      <div className="px-3 py-2">
+        <div className="mb-1 ml-1 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+          Collections
+        </div>
+        <button
+          type="button"
+          onClick={() => void handleCreateCollection()}
+          className="w-full rounded-md px-1.5 py-1 text-left text-sm text-gray-500 hover:bg-black/5 hover:text-gray-700"
+        >
+          + New Collection
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <Disclosure className="group flex flex-col" defaultExpanded>
+      <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
+        <Eyebrow className="ml-1">Collections</Eyebrow>
+      </div>
+      <DisclosurePanel className="px-2 pb-2 space-y-0.5">
+        {collections.map((collection) => (
+          <Link
+            key={collection.id}
+            to="/w/$organizationSlug/collections/$handle"
+            params={{ organizationSlug: organization.slug, handle: collection.handle }}
+            className={sidebarItemStyles({ className: "px-1.5" })}
+          >
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <AppFolder16Filled className={sidebarItemIconStyles({ className: "size-4" })} />
+              <span className="truncate flex-1">{collection.name}</span>
+            </div>
+          </Link>
+        ))}
+        <button
+          type="button"
+          onClick={() => void handleCreateCollection()}
+          className="w-full rounded-md px-1.5 py-1 text-left text-sm text-gray-500 hover:bg-black/5 hover:text-gray-700"
+        >
+          + New Collection
+        </button>
       </DisclosurePanel>
     </Disclosure>
   );

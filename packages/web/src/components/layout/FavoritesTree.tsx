@@ -1,6 +1,5 @@
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useParams } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import type { ReactElement } from "react";
 import { useCallback, useMemo } from "react";
@@ -23,7 +22,6 @@ type TreeItem = {
 
 export function FavoritesTree() {
   const { organization } = useOrganization();
-  const { id: currentDocId } = useParams({ strict: false });
 
   const [orgData] = useQuery(
     queries.organizations.documents({
@@ -47,7 +45,7 @@ export function FavoritesTree() {
       type: "document" as const,
       isLocked: doc.is_locked ?? false,
       isFavorited: true,
-      isCollection: !!doc.collectionSchema,
+      isCollection: !!doc.collection_id,
     }));
   }, [orgData?.documents]);
 
@@ -61,11 +59,10 @@ export function FavoritesTree() {
         item={item}
         renderItem={renderItem}
         documents={documents}
-        isCurrent={item.id === currentDocId}
         isOpenInTabs={openTabIds.has(item.id)}
       />
     ),
-    [documents, currentDocId, openTabIds],
+    [documents, openTabIds],
   );
 
   // Don't render the tree if there are no favorites

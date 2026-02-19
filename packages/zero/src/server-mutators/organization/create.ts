@@ -103,20 +103,15 @@ async function createOnboardingDocumentsWithEmbeddings(
       yjs_state: guideYjsState,
       user_id: userId,
       organization_id: organizationId,
-      integration_link_id: null,
-      is_locked: false,
-      is_favorited: false,
-      published: false,
-      parent_id: null,
-      sort_order: 0,
-      custom_fields: {
-        Description:
-          "These are custom fields that can be added to documents. They can be queried and filtered on via the REST API.",
-        Priority: "High",
-        Type: "Guide",
-      },
-    }),
-  );
+        integration_link_id: null,
+        is_locked: false,
+        full_width: false,
+        is_favorited: false,
+        published: false,
+        parent_id: null,
+        sort_order: 0,
+      }),
+    );
 
   // Use Drizzle for embeddings (not in Zero's schema but in same transaction)
   const guideEmbeddings = onboardingEmbeddings[ONBOARDING_GUIDE_ID];
@@ -166,6 +161,7 @@ async function createOnboardingDocumentsWithEmbeddings(
         integration_link_id: null,
         is_favorited: false,
         is_locked: false,
+        full_width: false,
         published: false,
         parent_id: onboardingDocId,
         sort_order: i,

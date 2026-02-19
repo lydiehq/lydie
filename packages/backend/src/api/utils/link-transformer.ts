@@ -57,7 +57,7 @@ export async function fetchDocumentMetadata(
         slug: documentsTable.slug,
         title: documentsTable.title,
         parentId: documentsTable.parentId,
-        nearestCollectionId: documentsTable.nearestCollectionId,
+        collectionId: documentsTable.collectionId,
       })
       .from(documentsTable)
       .where(inArray(documentsTable.id, documentIds));
@@ -93,7 +93,7 @@ export async function fetchDocumentMetadata(
         slug: doc.slug || undefined,
         title: doc.title,
         parentSlug: doc.parentId ? parentSlugMap.get(doc.parentId) : undefined,
-        collectionId: doc.nearestCollectionId || undefined,
+        collectionId: doc.collectionId || undefined,
         exists: true,
       });
     }

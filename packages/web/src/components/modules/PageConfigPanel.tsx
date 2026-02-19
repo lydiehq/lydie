@@ -9,12 +9,12 @@ type PageConfig = {
 };
 
 type Props = {
-  documentId: string;
+  collectionId: string;
   organizationId: string;
   config: PageConfig;
 };
 
-export function PageConfigPanel({ documentId, organizationId, config }: Props) {
+export function PageConfigPanel({ collectionId, organizationId, config }: Props) {
   const z = useZero();
   const [isOpen, setIsOpen] = useState(false);
   const hideChildrenInSidebar = !(config.showChildrenInSidebar ?? true);
@@ -27,10 +27,10 @@ export function PageConfigPanel({ documentId, organizationId, config }: Props) {
       ...updates,
     };
     await z.mutate(
-      mutators.collection.updateSidebarVisibility({
-        documentId,
+      mutators.collection.update({
+        collectionId,
         organizationId,
-        showChildrenInSidebar: newConfig.showChildrenInSidebar,
+        showEntriesInSidebar: !newConfig.showChildrenInSidebar,
       }),
     );
   };

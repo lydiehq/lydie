@@ -16,7 +16,7 @@ import { confirmDialog } from "@/stores/confirm-dialog";
 type DocumentItem = {
   id: string;
   title: string;
-  collectionSchemaId: string | null;
+  collectionId: string | null;
   properties: Record<string, string | number | boolean | null>;
 };
 
@@ -25,7 +25,7 @@ const updateFieldValuesMutator = mutators.collection.updateFieldValues as any;
 const createDocumentMutator = mutators.document.create as any;
 const bulkDeleteDocumentsMutator = mutators.document.bulkDelete as any;
 const restoreDocumentMutator = mutators.document.restore as any;
-const updateSchemaMutator = mutators.collection.updateSchema as any;
+const updateCollectionMutator = mutators.collection.update as any;
 const renameDocumentMutator = mutators.document.rename as any;
 
 type TableColumn =
@@ -66,24 +66,24 @@ type Props = {
 function extractFieldValues(
   fieldValues: unknown,
   collectionId: string,
-): { collectionSchemaId: string | null; values: Record<string, string | number | boolean | null> } {
+): { collectionId: string | null; values: Record<string, string | number | boolean | null> } {
   const parsedFieldValues = (fieldValues || []) as Array<{
-    collection_schema_id: string;
+    collection_id: string;
     values: unknown;
-    collectionSchema?: { document_id?: string };
+    collection?: { id?: string };
   }>;
 
   if (parsedFieldValues.length === 0) {
-    return { collectionSchemaId: null, values: {} };
+    return { collectionId: null, values: {} };
   }
 
   const activeRow =
-    parsedFieldValues.find((row) => row.collectionSchema?.document_id === collectionId) ??
+    parsedFieldValues.find((row) => row.collection_id === collectionId) ??
     parsedFieldValues[0];
   const values = activeRow?.values;
 
   return {
-    collectionSchemaId: activeRow?.collection_schema_id ?? null,
+    collectionId: activeRow?.collection_id ?? null,
     values:
       typeof values === "object" && values !== null
         ? (values as Record<string, string | number | boolean | null>)
@@ -119,7 +119,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       return {
         id: doc.id,
         title: doc.title,
-        collectionSchemaId: extracted.collectionSchemaId,
+        collectionId: extracted.collectionId,
         properties: extracted.values,
       } satisfies DocumentItem;
     });
@@ -128,14 +128,14 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
   const handleFieldUpdate = useCallback(
     async (
       documentId: string,
-      collectionSchemaId: string,
+      fieldCollectionId: string,
       field: string,
       value: string | number | boolean | null,
     ) => {
       await z.mutate(
         updateFieldValuesMutator({
           documentId,
-          collectionSchemaId,
+          collectionId: fieldCollectionId,
           organizationId,
           values: { [field]: value },
         }),
@@ -151,7 +151,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
         createDocumentMutator({
           id: createId(),
           organizationId,
-          parentId: collectionId,
+          collectionId,
           title: "",
         }),
       );
@@ -200,7 +200,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       ];
 
       await z.mutate(
-        updateSchemaMutator({
+        updateCollectionMutator({
           collectionId,
           organizationId,
           properties: nextSchema,
@@ -477,12 +477,12 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
                         value={document.properties[column.property.name]}
                         fieldDef={column.property}
                         onSave={(newValue) => {
-                          if (!document.collectionSchemaId) {
+                          if (!document.collectionId) {
                             return;
                           }
                           void handleFieldUpdate(
                             document.id,
-                            document.collectionSchemaId,
+                            document.collectionId,
                             column.property.name,
                             newValue,
                           );

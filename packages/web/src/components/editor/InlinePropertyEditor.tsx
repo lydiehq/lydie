@@ -7,7 +7,7 @@ import { useZero } from "@/services/zero";
 type Props = {
   documentId: string;
   organizationId: string;
-  collectionSchemaId?: string;
+  collectionId?: string;
   fieldDef: PropertyDefinition;
   value: string | number | boolean | null;
 };
@@ -15,7 +15,7 @@ type Props = {
 export function InlinePropertyEditor({
   documentId,
   organizationId,
-  collectionSchemaId,
+  collectionId,
   fieldDef,
   value,
 }: Props) {
@@ -36,7 +36,7 @@ export function InlinePropertyEditor({
       finalValue = null;
     }
 
-    if (!collectionSchemaId) {
+    if (!collectionId) {
       setIsEditing(false);
       return;
     }
@@ -44,7 +44,7 @@ export function InlinePropertyEditor({
     await z.mutate(
       mutators.collection.updateFieldValues({
         documentId,
-        collectionSchemaId,
+        collectionId,
         organizationId,
         values: { [fieldDef.name]: finalValue },
       }),
