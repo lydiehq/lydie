@@ -1,8 +1,6 @@
 import {
   Add16Filled,
-  AppFolder16Filled,
   Delete12Filled,
-  DocumentAdd16Regular,
   Home16Filled,
   PersonChat16Filled,
 } from "@fluentui/react-icons";
@@ -16,7 +14,7 @@ import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { Link } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { useAtom, useSetAtom } from "jotai";
 import { memo, useMemo } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
@@ -31,6 +29,7 @@ import { commandMenuStateAtom } from "@/stores/command-menu";
 import { isAdmin } from "@/utils/admin";
 
 import { FeedbackWidget } from "../feedback/FeedbackWidget";
+import { CollectionTreeItem } from "./CollectionTreeItem";
 import { DocumentTree } from "./DocumentTree";
 import { FavoritesTree } from "./FavoritesTree";
 import { OrganizationMenu } from "./OrganizationMenu";
@@ -110,9 +109,24 @@ export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: Props) {
               onPress={() => createDocument()}
               aria-label="Create new document"
             >
-              <DocumentAdd16Regular
-                className={sidebarItemIconStyles({ className: "size-[14px] icon-muted" })}
-              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="1em"
+                height="1em"
+                viewBox="0 0 24 24"
+                className={sidebarItemIconStyles({ className: "size-3.5 icon-muted" })}
+              >
+                <g
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                >
+                  <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                </g>
+              </svg>
             </Button>
             <Tooltip>Add document</Tooltip>
           </TooltipTrigger>
@@ -253,6 +267,7 @@ const DocumentsSection = memo(function DocumentsSection() {
 const CollectionsSection = memo(function CollectionsSection() {
   const { organization } = useOrganization();
   const z = useZero();
+  const { collectionId: activeCollectionId } = useParams({ strict: false });
   const [collections] = useQuery(
     queries.collections.byOrganization({
       organizationId: organization.id,
@@ -302,19 +317,14 @@ const CollectionsSection = memo(function CollectionsSection() {
       <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
         <Eyebrow className="ml-1">Collections</Eyebrow>
       </div>
-      <DisclosurePanel className="px-2 pb-2 space-y-0.5">
+      <DisclosurePanel className="px-2 pb-2">
         {collections.map((collection) => (
-          <Link
+          <CollectionTreeItem
             key={collection.id}
-            to="/w/$organizationSlug/collections/$collectionId"
-            params={{ organizationSlug: organization.slug, collectionId: collection.id }}
-            className={sidebarItemStyles({ className: "px-1.5" })}
-          >
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <AppFolder16Filled className={sidebarItemIconStyles({ className: "size-4" })} />
-              <span className="truncate flex-1">{collection.name}</span>
-            </div>
-          </Link>
+            collection={collection}
+            isActive={activeCollectionId === collection.id}
+            organizationSlug={organization.slug}
+          />
         ))}
         <button
           type="button"

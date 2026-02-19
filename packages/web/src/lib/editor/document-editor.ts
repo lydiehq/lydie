@@ -57,7 +57,6 @@ export function useDocumentEditor({
 }: UseDocumentEditorProps): DocumentEditorHookResult {
   const { user } = useAuth();
   const { uploadImage } = useImageUpload();
-  const isLocked = doc.is_locked ?? false;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track if component is mounted
@@ -103,8 +102,8 @@ export function useDocumentEditor({
 
   const editor = useEditor(
     {
-      autofocus: !isLocked,
-      editable: !isLocked,
+      autofocus: true,
+      editable: true,
       extensions: getDocumentEditorExtensions({
         documentComponent: {
           addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),
@@ -154,9 +153,9 @@ export function useDocumentEditor({
         attributes: {
           class: "size-full outline-none editor-content pb-8",
         },
-        handleDrop: isLocked ? undefined : createImageDropHandler(uploadImage),
+        handleDrop: createImageDropHandler(uploadImage),
       },
-      onUpdate: isLocked ? undefined : onUpdate,
+      onUpdate,
       onCreate: ({ editor }) => {
         onCreate?.(editor);
       },

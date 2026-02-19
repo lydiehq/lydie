@@ -23,18 +23,20 @@ export function useDocumentActions() {
     integrationLinkId?: string,
     initialContent?: string,
     title?: string,
+    collectionId?: string,
   ) => {
     const id = createId();
     const documentTitle = title || "Untitled";
 
     z.mutate(
-      mutators.document.create({
-        id,
-        organizationId: organization.id,
-        parentId,
-        integrationLinkId,
-        content: initialContent,
-        title,
+        mutators.document.create({
+          id,
+          organizationId: organization.id,
+          parentId,
+          collectionId,
+          integrationLinkId,
+          content: initialContent,
+          title,
       }),
     );
 
@@ -44,6 +46,7 @@ export function useDocumentActions() {
     trackEvent("document_created", {
       has_parent: !!parentId,
       has_integration: !!integrationLinkId,
+      has_collection: !!collectionId,
       has_initial_content: !!initialContent,
     });
 

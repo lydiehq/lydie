@@ -46,7 +46,6 @@ export function createMockDocument(overrides: Partial<MockDocument> = {}): MockD
     content: null,
     yjs_state: null,
     cover_image: null,
-    is_locked: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     deleted_at: null,
@@ -65,7 +64,6 @@ export interface MockDocument {
   content: string | null;
   yjs_state: string | null;
   cover_image: string | null;
-  is_locked: boolean;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -162,4 +160,63 @@ export function createMockFilter() {
     contains: (a: string, b: string) => a.toLowerCase().includes(b.toLowerCase()),
     startsWith: (a: string, b: string) => a.toLowerCase().startsWith(b.toLowerCase()),
   };
+}
+
+/**
+ * Creates a mock collection for testing.
+ */
+export function createMockCollection(overrides: Partial<MockCollection> = {}): MockCollection {
+  const id = overrides.id ?? `col-${Math.random().toString(36).slice(2, 11)}`;
+  return {
+    id,
+    name: "Test Collection",
+    handle: `test-collection-${id.slice(0, 8)}`,
+    organization_id: "org-test-123",
+    properties: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export interface MockCollection {
+  id: string;
+  name: string;
+  handle: string;
+  organization_id: string;
+  properties: Array<{
+    name: string;
+    type: "text" | "number" | "date" | "select" | "multi-select" | "boolean" | "relation";
+    required: boolean;
+    unique: boolean;
+    options?: string[];
+  }>;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Creates a mock collection fields object for testing.
+ */
+export function createMockCollectionFields(
+  overrides: Partial<MockCollectionFields> = {},
+): MockCollectionFields {
+  return {
+    id: `cf-${Math.random().toString(36).slice(2, 11)}`,
+    document_id: `doc-${Math.random().toString(36).slice(2, 11)}`,
+    collection_id: `col-${Math.random().toString(36).slice(2, 11)}`,
+    values: {},
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export interface MockCollectionFields {
+  id: string;
+  document_id: string;
+  collection_id: string;
+  values: Record<string, string | number | boolean | null>;
+  created_at: string;
+  updated_at: string;
 }

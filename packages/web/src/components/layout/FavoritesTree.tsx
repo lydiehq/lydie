@@ -15,7 +15,6 @@ type TreeItem = {
   name: string;
   type: "document";
   children?: TreeItem[];
-  isLocked?: boolean;
   isFavorited?: boolean;
   isCollection?: boolean;
 };
@@ -43,13 +42,11 @@ export function FavoritesTree() {
       id: doc.id,
       name: doc.title || "Untitled document",
       type: "document" as const,
-      isLocked: doc.is_locked ?? false,
       isFavorited: true,
       isCollection: !!doc.collection_id,
     }));
   }, [orgData?.documents]);
 
-  const documents = orgData?.documents || [];
   const openTabs = useAtomValue(documentTabsAtom);
   const openTabIds = useMemo(() => new Set(openTabs.map((t) => t.documentId)), [openTabs]);
 
@@ -58,11 +55,10 @@ export function FavoritesTree() {
       <DocumentTreeItem
         item={item}
         renderItem={renderItem}
-        documents={documents}
         isOpenInTabs={openTabIds.has(item.id)}
       />
     ),
-    [documents, openTabIds],
+    [openTabIds],
   );
 
   // Don't render the tree if there are no favorites

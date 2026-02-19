@@ -1,4 +1,9 @@
 import { findRelatedDocuments } from "@lydie/core/embedding/search";
+import {
+  buildCollectionRoutes,
+  normalizeCollectionRoute,
+  toCollectionRouteSegment,
+} from "@lydie/core/collection-routes";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import {
   collectionFieldsTable,
@@ -13,6 +18,25 @@ import { HTTPException } from "hono/http-exception";
 import { extractTableOfContents } from "../../utils/toc";
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
 import { apiKeyAuth, externalRateLimit } from "./middleware";
+
+type CollectionDocumentRow = {
+  document: typeof documentsTable.$inferSelect;
+  fieldValues: Record<string, unknown>;
+};
+
+function buildRouteMap(rows: CollectionDocumentRow[]): Map<string, string> {
+  return buildCollectionRoutes(
+    rows.map((row) => ({
+      id: row.document.id,
+      parentId: row.document.parentId,
+      title: row.document.title || "",
+      slug:
+        typeof row.fieldValues.slug === "string" && row.fieldValues.slug.trim().length > 0
+          ? row.fieldValues.slug
+          : row.document.slug,
+    })),
+  );
+}
 
 function parseFilters(query: Record<string, string>): Record<string, string> {
   const filters: Record<string, string> = {};
@@ -65,11 +89,44 @@ function buildUniquePropertyMatchWhere(
   return conditions.reduce((acc, condition) => sql`${acc} OR ${condition}`);
 }
 
+async function listCollectionDocumentRows(
+  organizationId: string,
+  collectionId: string,
+): Promise<CollectionDocumentRow[]> {
+  const rows = await db
+    .select({
+      document: documentsTable,
+      fieldValues: collectionFieldsTable.values,
+    })
+    .from(documentsTable)
+    .leftJoin(
+      collectionFieldsTable,
+      and(
+        eq(collectionFieldsTable.documentId, documentsTable.id),
+        eq(collectionFieldsTable.collectionId, collectionId),
+      ),
+    )
+    .where(
+      and(
+        eq(documentsTable.organizationId, organizationId),
+        eq(documentsTable.collectionId, collectionId),
+        sql`${documentsTable.deletedAt} IS NULL`,
+        eq(documentsTable.published, true),
+      ),
+    );
+
+  return rows.map((row) => ({
+    document: row.document,
+    fieldValues: (row.fieldValues as Record<string, unknown>) || {},
+  }));
+}
+
 async function transformToDocumentResponse(
   doc: typeof documentsTable.$inferSelect,
   fieldValues: Record<string, unknown>,
   includeRelated: boolean,
   includeToc: boolean,
+  fullPath?: string,
 ): Promise<Record<string, unknown>> {
   let jsonContent: ReturnType<typeof convertYjsToJson> = null;
   if (doc.yjsState) {
@@ -96,15 +153,16 @@ async function transformToDocumentResponse(
   }
 
   const { yjsState: _, ...docWithoutYjs } = doc;
-  const resolvedSlug =
-    typeof fieldValues.slug === "string" && fieldValues.slug.length > 0 ? fieldValues.slug : doc.id;
+  const computedPath = fullPath
+    ? normalizeCollectionRoute(fullPath)
+    : `/${toCollectionRouteSegment(doc.slug || doc.title || doc.id)}`;
 
   return {
     ...docWithoutYjs,
     fields: fieldValues,
     jsonContent,
-    path: "/",
-    fullPath: `/${resolvedSlug}`,
+    path: computedPath,
+    fullPath: computedPath,
     ...(includeRelated && { related }),
     ...(includeToc && { toc }),
   };
@@ -137,6 +195,8 @@ export const CollectionsApi = new Hono()
     }
 
     const filters = parseFilters(c.req.query());
+    const allRows = await listCollectionDocumentRows(organizationId, collection.id);
+    const routeMap = buildRouteMap(allRows);
 
     const whereConditions: SQL[] = [
       eq(documentsTable.organizationId, organizationId),
@@ -172,11 +232,97 @@ export const CollectionsApi = new Hono()
           (doc.fieldValues as Record<string, unknown>) || {},
           includeRelated,
           includeToc,
+          routeMap.get(doc.document.id),
         ),
       ),
     );
 
     return c.json({ documents: response });
+  })
+  .get("/:handle/routes", async (c) => {
+    const organizationId = c.get("organizationId");
+    const handle = c.req.param("handle");
+    const includeRelated = c.req.query("include_related") === "true";
+    const includeToc = c.req.query("include_toc") === "true";
+    const targetRoute = "/";
+
+    const collectionResult = await db
+      .select()
+      .from(collectionsTable)
+      .where(
+        and(
+          eq(collectionsTable.organizationId, organizationId),
+          eq(collectionsTable.handle, handle),
+        ),
+      )
+      .limit(1);
+
+    const collection = collectionResult[0];
+
+    if (!collection) {
+      throw new HTTPException(404, { message: "Collection not found" });
+    }
+
+    const rows = await listCollectionDocumentRows(organizationId, collection.id);
+    const routeMap = buildRouteMap(rows);
+
+    const row = rows.find((entry) => routeMap.get(entry.document.id) === targetRoute);
+    if (!row) {
+      throw new HTTPException(404, { message: "Route not found" });
+    }
+
+    const response = await transformToDocumentResponse(
+      row.document,
+      row.fieldValues,
+      includeRelated,
+      includeToc,
+      routeMap.get(row.document.id),
+    );
+
+    return c.json(response);
+  })
+  .get("/:handle/routes/*", async (c) => {
+    const organizationId = c.get("organizationId");
+    const handle = c.req.param("handle");
+    const includeRelated = c.req.query("include_related") === "true";
+    const includeToc = c.req.query("include_toc") === "true";
+    const wildcard = c.req.param("*");
+    const targetRoute = normalizeCollectionRoute(wildcard);
+
+    const collectionResult = await db
+      .select()
+      .from(collectionsTable)
+      .where(
+        and(
+          eq(collectionsTable.organizationId, organizationId),
+          eq(collectionsTable.handle, handle),
+        ),
+      )
+      .limit(1);
+
+    const collection = collectionResult[0];
+
+    if (!collection) {
+      throw new HTTPException(404, { message: "Collection not found" });
+    }
+
+    const rows = await listCollectionDocumentRows(organizationId, collection.id);
+    const routeMap = buildRouteMap(rows);
+
+    const row = rows.find((entry) => routeMap.get(entry.document.id) === targetRoute);
+    if (!row) {
+      throw new HTTPException(404, { message: "Route not found" });
+    }
+
+    const response = await transformToDocumentResponse(
+      row.document,
+      row.fieldValues,
+      includeRelated,
+      includeToc,
+      routeMap.get(row.document.id),
+    );
+
+    return c.json(response);
   })
   .get("/documents/:documentIdOrPropertyValue", async (c) => {
     const organizationId = c.get("organizationId");
@@ -242,11 +388,16 @@ export const CollectionsApi = new Hono()
           .limit(1)
       : [];
 
+    const routeMap = document.collectionId
+      ? buildRouteMap(await listCollectionDocumentRows(organizationId, document.collectionId))
+      : new Map<string, string>();
+
     const response = await transformToDocumentResponse(
       document,
       (fieldValuesResult[0]?.values as Record<string, unknown>) || {},
       includeRelated,
       includeToc,
+      routeMap.get(document.id),
     );
 
     return c.json(response);

@@ -113,8 +113,7 @@ export async function pushDocumentToIntegration(
 
         if (!parent) break;
 
-        // For folder pages (locked documents with folder externalId), extract folder name
-        if (parent.isLocked && parent.externalId?.startsWith("__folder__")) {
+        if (parent.externalId?.startsWith("__folder__")) {
           const folderPath = parent.externalId.substring("__folder__".length);
           const folderName = folderPath.split("/").pop() || folderPath;
           parentPathSegments.unshift(folderName); // Add to beginning (we're going up the tree)
@@ -137,7 +136,6 @@ export async function pushDocumentToIntegration(
       updatedAt: document.updatedAt,
       organizationId: document.organizationId,
       externalId: document.externalId,
-      isLocked: document.isLocked ?? false,
       parentId: document.parentId,
       parentPathSegments: parentPathSegments.length > 0 ? parentPathSegments : undefined,
       customFields: document.customFields as Record<string, string | number> | undefined,

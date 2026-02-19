@@ -31,7 +31,6 @@ export interface EditorViewProps {
   doc: EditorDocument;
   contentEditor: Editor | null;
   titleEditor: Editor | null;
-  isLocked: boolean;
   shouldShiftContent: boolean;
 }
 

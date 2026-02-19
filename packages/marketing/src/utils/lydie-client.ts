@@ -1,4 +1,5 @@
 import { LydieClient } from "@lydie-app/sdk/client";
+import { normalizeCollectionRoute } from "@lydie/core/collection-routes";
 import { Resource } from "sst";
 
 const apiKey = Resource.LydieApiKey.value;
@@ -16,6 +17,7 @@ export const collections = {
   blog: "blog",
   knowledgeBases: "knowledge-bases",
   noteTaking: "note-taking",
+  documentation: "documentation",
 } as const;
 
 type CollectionFieldValue = string | number | boolean | null;
@@ -40,7 +42,48 @@ export function getCollectionDocumentPath(collectionHandle: string, slugOrId: st
     return `/resources/note-taking/${slugOrId}`;
   }
 
+  if (collectionHandle === collections.documentation) {
+    const normalized = normalizeCollectionRoute(slugOrId);
+    return normalized === "/" ? "/docs" : `/docs${normalized}`;
+  }
+
   return `/${slugOrId}`;
+}
+
+export async function getCollectionDocumentByRoute(
+  collectionHandle: string,
+  route: string,
+  options?: {
+    includeRelated?: boolean;
+    includeToc?: boolean;
+  },
+): Promise<CollectionApiDocument> {
+  const params = new URLSearchParams();
+
+  if (options?.includeRelated) {
+    params.set("include_related", "true");
+  }
+  if (options?.includeToc) {
+    params.set("include_toc", "true");
+  }
+
+  const normalizedRoute = normalizeCollectionRoute(route);
+  const isRoot = normalizedRoute === "/";
+  const routePath = isRoot
+    ? `${apiUrl}/${organizationId}/${collectionHandle}/routes`
+    : `${apiUrl}/${organizationId}/${collectionHandle}/routes/${normalizedRoute.replace(/^\/+/, "")}`;
+
+  const response = await fetch(`${routePath}${params.toString() ? `?${params.toString()}` : ""}`, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch collection route: ${response.statusText}`);
+  }
+
+  return (await response.json()) as CollectionApiDocument;
 }
 
 export async function getCollectionDocuments(

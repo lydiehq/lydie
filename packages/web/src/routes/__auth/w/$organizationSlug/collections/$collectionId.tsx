@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PropertyManager } from "@/components/collection";
-import { useDocumentTabSync } from "@/components/layout/DocumentTabBar";
+import { useCollectionTabSync } from "@/components/layout/DocumentTabBar";
 import { RecordsTable } from "@/components/modules";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
@@ -34,10 +34,7 @@ function RouteComponent() {
     }),
   );
 
-  useDocumentTabSync(
-    collection ? `collection:${collection.id}` : undefined,
-    collection?.name,
-  );
+  useCollectionTabSync(collection?.id, collection?.name);
 
   if (!collection && status.type === "complete") {
     return (
@@ -57,6 +54,7 @@ function RouteComponent() {
   }
 
   const schema = (collection.properties as PropertyDefinition[] | null) ?? [];
+  const routeProperty = schema.find((property) => property.name === "route");
   const [nextHandle, setNextHandle] = useState(collection.handle);
   const [isSavingHandle, setIsSavingHandle] = useState(false);
 
@@ -108,6 +106,34 @@ function RouteComponent() {
     }
   };
 
+  const handleEnableRouting = async () => {
+    if (routeProperty) {
+      return;
+    }
+
+    try {
+      await z.mutate(
+        mutators.collection.update({
+          collectionId: collection.id,
+          organizationId: organization.id,
+          properties: [
+            ...schema,
+            {
+              name: "route",
+              type: "text",
+              required: true,
+              unique: true,
+            },
+          ],
+        }),
+      );
+      toast.success("Routing enabled. Add route values like /, /getting-started, /guides/intro");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to enable routing");
+    }
+  };
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="px-6 py-5 border-b border-black/6 flex items-center justify-between gap-4">
@@ -142,6 +168,32 @@ function RouteComponent() {
       </div>
 
       <div className="px-6 py-4 space-y-4">
+        <div className="rounded-xl border border-black/8 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Routing</h2>
+              {routeProperty ? (
+                <p className="mt-1 text-sm text-gray-600">
+                  Routing is enabled through the <code>route</code> field. Manage paths directly in
+                  the table (e.g. <code>/</code>, <code>/getting-started</code>,
+                  <code>/guides/intro</code>).
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-gray-600">
+                  Enable routing to use this collection as a nested route source for external
+                  pages.
+                </p>
+              )}
+            </div>
+
+            {userIsAdmin && !routeProperty && (
+              <Button intent="ghost" size="sm" onPress={() => void handleEnableRouting()}>
+                Enable routing
+              </Button>
+            )}
+          </div>
+        </div>
+
         <div className="rounded-xl border border-black/8 p-4 space-y-4">
           <PropertyManager
             collectionId={collection.id}

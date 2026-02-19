@@ -83,7 +83,6 @@ const documents = table("documents")
     full_width: boolean(),
     published: boolean(),
     deleted_at: number().optional(),
-    is_locked: boolean(),
     is_favorited: boolean(),
     ...timestamps,
   })

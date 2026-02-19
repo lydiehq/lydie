@@ -12,21 +12,16 @@ import { toast } from "sonner";
 
 import { useZero } from "@/services/zero";
 import { confirmDialog } from "@/stores/confirm-dialog";
+import { buildCollectionRoutes } from "@/utils/collection-routes";
 
 type DocumentItem = {
   id: string;
   title: string;
+  parentId: string | null;
   collectionId: string | null;
+  route: string;
   properties: Record<string, string | number | boolean | null>;
 };
-
-const documentsByCollectionQuery = queries.collections.documentsByCollection as any;
-const updateFieldValuesMutator = mutators.collection.updateFieldValues as any;
-const createDocumentMutator = mutators.document.create as any;
-const bulkDeleteDocumentsMutator = mutators.document.bulkDelete as any;
-const restoreDocumentMutator = mutators.document.restore as any;
-const updateCollectionMutator = mutators.collection.update as any;
-const renameDocumentMutator = mutators.document.rename as any;
 
 type TableColumn =
   | {
@@ -40,6 +35,12 @@ type TableColumn =
       kind: "property";
       label: string;
       property: PropertyDefinition;
+      isRowHeader: false;
+    }
+  | {
+      id: "route";
+      kind: "route";
+      label: "Route";
       isRowHeader: false;
     }
   | {
@@ -63,7 +64,10 @@ type Props = {
   schema: PropertyDefinition[];
 };
 
-function toFieldValue(fieldDef: PropertyDefinition, value: string): string | number | boolean | null {
+function toFieldValue(
+  fieldDef: PropertyDefinition,
+  value: string,
+): string | number | boolean | null {
   if (fieldDef.type === "boolean") {
     return value === "true";
   }
@@ -93,8 +97,7 @@ function extractFieldValues(
   }
 
   const activeRow =
-    parsedFieldValues.find((row) => row.collection_id === collectionId) ??
-    parsedFieldValues[0];
+    parsedFieldValues.find((row) => row.collection_id === collectionId) ?? parsedFieldValues[0];
   const values = activeRow?.values;
 
   return {
@@ -120,7 +123,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
   });
   const [documentsResult] = useQuery(
     collectionId
-      ? documentsByCollectionQuery({
+      ? queries.collections.documentsByCollection({
           organizationId,
           collectionId,
         })
@@ -129,16 +132,37 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
 
   const documents = useMemo(() => {
     const documentsData = (documentsResult ?? []) as any[];
-    return documentsData.map((doc) => {
+    const mapped = documentsData.map((doc) => {
       const extracted = extractFieldValues(doc.fieldValues, collectionId);
       return {
         id: doc.id,
         title: doc.title,
+        parentId: doc.parent_id ?? null,
         collectionId: extracted.collectionId,
+        route: "/",
         properties: extracted.values,
       } satisfies DocumentItem;
     });
+
+    const routeMap = buildCollectionRoutes(
+      mapped.map((document) => ({
+        id: document.id,
+        parentId: document.parentId,
+        title: document.title,
+        slug: typeof document.properties.slug === "string" ? document.properties.slug : null,
+      })),
+    );
+
+    return mapped.map((document) => ({
+      ...document,
+      route: routeMap.get(document.id) ?? "/",
+    }));
   }, [collectionId, documentsResult]);
+
+  const isRoutingEnabled = useMemo(
+    () => schema.some((property) => property.name.toLowerCase() === "route"),
+    [schema],
+  );
 
   const handleFieldUpdate = useCallback(
     async (
@@ -148,7 +172,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       value: string | number | boolean | null,
     ) => {
       await z.mutate(
-        updateFieldValuesMutator({
+        mutators.collection.updateFieldValues({
           documentId,
           collectionId: fieldCollectionId,
           organizationId,
@@ -163,7 +187,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
     setIsCreatingRow(true);
     try {
       await z.mutate(
-        createDocumentMutator({
+        mutators.document.create({
           id: createId(),
           organizationId,
           collectionId,
@@ -178,7 +202,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
   const handleRenameDocument = useCallback(
     async (documentId: string, title: string) => {
       await z.mutate(
-        renameDocumentMutator({
+        mutators.document.rename({
           documentId,
           organizationId,
           title,
@@ -215,7 +239,7 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       ];
 
       await z.mutate(
-        updateCollectionMutator({
+        mutators.collection.update({
           collectionId,
           organizationId,
           properties: nextSchema,
@@ -254,57 +278,78 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       title: `Delete ${selectedDocumentIds.length} selected ${itemLabel}?`,
       message: "This action cannot be undone.",
       onConfirm: () => {
-        z.mutate(
-          bulkDeleteDocumentsMutator({
-            documentIds: selectedDocumentIds,
-            organizationId,
-          }),
-        );
+        void (async () => {
+          try {
+            await z.mutate(
+              mutators.document.bulkDelete({
+                documentIds: selectedDocumentIds,
+                organizationId,
+              }),
+            );
 
-        setRowSelection(new Set());
-        toast(selectedDocumentIds.length === 1 ? "Deleted 1 row" : `Deleted ${selectedDocumentIds.length} rows`, {
-          duration: 5000,
-          action: {
-            label: "Undo",
-            onClick: async () => {
-              const restoreResults = await Promise.allSettled(
-                deletedDocumentIds.map((documentId) =>
-                  z.mutate(
-                    restoreDocumentMutator({
-                      documentId,
-                      organizationId,
-                    }),
-                  ),
-                ),
-              );
+            setRowSelection(new Set());
+            toast(
+              selectedDocumentIds.length === 1
+                ? "Deleted 1 row"
+                : `Deleted ${selectedDocumentIds.length} rows`,
+              {
+                duration: 5000,
+                action: {
+                  label: "Undo",
+                  onClick: async () => {
+                    const restoreResults = await Promise.allSettled(
+                      deletedDocumentIds.map((documentId) =>
+                        z.mutate(
+                          mutators.document.restore({
+                            documentId,
+                            organizationId,
+                          }),
+                        ),
+                      ),
+                    );
 
-              const didRestoreAnyRow = restoreResults.some((result) => result.status === "fulfilled");
-              if (!didRestoreAnyRow) {
-                toast.error("Failed to restore deleted rows");
-                return;
-              }
+                    const didRestoreAnyRow = restoreResults.some(
+                      (result) => result.status === "fulfilled",
+                    );
+                    if (!didRestoreAnyRow) {
+                      toast.error("Failed to restore deleted rows");
+                      return;
+                    }
 
-              toast.success("Delete undone");
-            },
-          },
-        });
+                    toast.success("Delete undone");
+                  },
+                },
+              },
+            );
+          } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete selected rows");
+          }
+        })();
       },
     });
   }, [organizationId, selectedDocumentIds, z]);
 
   const columns = useMemo<TableColumn[]>(() => {
-    return [
-      { id: "title", kind: "title", label: "Title", isRowHeader: true },
-      ...schema.map((property) => ({
+    const schemaColumns = schema
+      .filter((property) => property.name.toLowerCase() !== "route")
+      .map((property) => ({
         id: property.name,
         kind: "property" as const,
         label: property.name,
         property,
         isRowHeader: false as const,
-      })),
+      }));
+
+    return [
+      { id: "title", kind: "title", label: "Title", isRowHeader: true },
+      ...(isRoutingEnabled
+        ? [{ id: "route", kind: "route", label: "Route", isRowHeader: false } as const]
+        : []),
+      ...schemaColumns,
       { id: "add-property", kind: "add-property", label: "Add property", isRowHeader: false },
     ];
-  }, [schema]);
+  }, [isRoutingEnabled, schema]);
 
   const activeSortColumn = useMemo(
     () => columns.find((tableColumn) => String(tableColumn.id) === String(sortDescriptor.column)),
@@ -327,6 +372,9 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
       if (activeSortColumn.kind === "title") {
         first = a.title;
         second = b.title;
+      } else if (activeSortColumn.kind === "route") {
+        first = a.route;
+        second = b.route;
       } else {
         first = a.properties[activeSortColumn.property.name];
         second = b.properties[activeSortColumn.property.name];
@@ -380,7 +428,6 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
                 onChange={(event) => setNewPropertyName(event.target.value)}
                 placeholder="e.g. Status"
                 className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
-                autoFocus
               />
             </div>
             <div>
@@ -508,6 +555,11 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
                         }}
                       />
                     )}
+                    {column.kind === "route" && (
+                      <span className="block rounded px-2 py-1 text-xs font-mono text-gray-600">
+                        {document.route}
+                      </span>
+                    )}
                     {column.kind === "add-property" && (
                       <span className="block h-6 w-[120px]" aria-hidden="true" />
                     )}
@@ -625,7 +677,6 @@ const EditableTitle = memo(function EditableTitle({
         if (e.key === "Escape") setIsEditing(false);
       }}
       className="w-full min-w-[220px] rounded px-2 py-1.5 text-sm font-medium"
-      autoFocus
     />
   );
 });
@@ -686,7 +737,6 @@ const EditableField = memo(function EditableField({
         }}
         onBlur={() => setIsEditing(false)}
         className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-        autoFocus
       >
         <option value="">-</option>
         {fieldDef.options.map((opt) => (
@@ -714,7 +764,6 @@ const EditableField = memo(function EditableField({
         if (e.key === "Escape") setIsEditing(false);
       }}
       className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-      autoFocus
     />
   );
 });

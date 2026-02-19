@@ -122,7 +122,6 @@ export function CollectionBlockComponent(props: Props) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 text-sm outline-none bg-transparent"
-                  autoFocus
                 />
               </div>
               <div className="max-h-48 overflow-y-auto space-y-1">

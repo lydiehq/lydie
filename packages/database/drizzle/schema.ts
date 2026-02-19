@@ -222,7 +222,6 @@ export const documents = pgTable("documents", {
 	updatedAt: timestamp("updated_at").default(sql`now()`).notNull(),
 	yjsState: text("yjs_state"),
 	parentId: text("parent_id"),
-	isLocked: boolean("is_locked").default(false).notNull(),
 	sectionHashes: jsonb("section_hashes"),
 	coverImage: text("cover_image"),
 	isFavorited: boolean("is_favorited").default(false).notNull(),

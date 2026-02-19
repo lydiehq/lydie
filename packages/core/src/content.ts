@@ -1,3 +1,5 @@
+import { normalizeCollectionRoute } from "./collection-routes";
+
 export interface CustomBlockProps {
   properties: Record<string, any>;
   [key: string]: any;
@@ -478,6 +480,40 @@ export class LydieClient {
     }
 
     return (await response.json()) as { documents: Document[] };
+  }
+
+  async getCollectionDocumentByRoute(
+    collectionHandle: string,
+    route: string,
+    options?: {
+      related?: boolean;
+      toc?: boolean;
+    },
+  ): Promise<Document> {
+    const params = new URLSearchParams();
+    if (options?.related) {
+      params.set("include_related", "true");
+    }
+    if (options?.toc) {
+      params.set("include_toc", "true");
+    }
+
+    const normalizedRoute = normalizeCollectionRoute(route);
+    const isRoot = normalizedRoute === "/";
+    const routePath = isRoot
+      ? `${this.getBaseUrl()}/${collectionHandle}/routes`
+      : `${this.getBaseUrl()}/${collectionHandle}/routes/${normalizedRoute.replace(/^\/+/, "")}`;
+    const fullUrl = `${routePath}${params.toString() ? `?${params.toString()}` : ""}`;
+
+    const response = await fetch(fullUrl, {
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`[Lydie] Failed to fetch collection route: ${response.statusText}`);
+    }
+
+    return (await response.json()) as Document;
   }
 
   async getDocumentByPath(

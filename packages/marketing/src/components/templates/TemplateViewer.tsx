@@ -24,7 +24,6 @@ type DocumentTreeItem = {
   name: string;
   type: "document";
   children?: DocumentTreeItem[];
-  isLocked: boolean;
 };
 
 type TemplateViewerProps = {
@@ -41,7 +40,6 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
       name: doc.title,
       type: "document" as const,
       children: doc.children?.map(convertToTreeItem),
-      isLocked: false,
     });
 
     return documents.map(convertToTreeItem);
@@ -128,7 +126,6 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
   const renderItem = (item: DocumentTreeItem): ReactElement => {
     const hasChildren = item.children !== undefined && item.children.length > 0;
     const isCurrentDocument = selectedDocId === item.id;
-    const isLocked = item.isLocked ?? false;
 
     return (
       <TreeItem
@@ -176,7 +173,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
                 </div>
               )}
 
-              <span className={`truncate ${isLocked ? "text-gray-500 italic" : ""}`}>
+              <span className="truncate">
                 {item.name.trim() || "Untitled document"}
               </span>
             </div>

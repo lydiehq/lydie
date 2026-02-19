@@ -144,7 +144,6 @@ export const documentMutators = {
           user_id: ctx.userId,
           organization_id: args.organizationId,
           integration_link_id: finalIntegrationLinkId || null,
-          is_locked: false,
           full_width: false,
           published: false,
           is_favorited: false,
@@ -173,11 +172,7 @@ export const documentMutators = {
     }),
     async ({ tx, ctx, args }) => {
       hasOrganizationAccess(ctx, args.organizationId);
-      const document = await verifyDocumentAccess(tx, args.documentId, args.organizationId);
-
-      if (document.is_locked && args.title !== undefined) {
-        throw new Error("Cannot edit locked document. This page is managed by an integration.");
-      }
+      await verifyDocumentAccess(tx, args.documentId, args.organizationId);
 
       const updates: any = { id: args.documentId };
       if (args.title !== undefined) updates.title = args.title;
@@ -199,11 +194,7 @@ export const documentMutators = {
     z.object({ documentId: z.string(), title: z.string(), organizationId: z.string() }),
     async ({ tx, ctx, args: { documentId, title, organizationId } }) => {
       hasOrganizationAccess(ctx, organizationId);
-      const document = await verifyDocumentAccess(tx, documentId, organizationId);
-
-      if (document.is_locked) {
-        throw new Error("Cannot rename locked document. This page is managed by an integration.");
-      }
+      await verifyDocumentAccess(tx, documentId, organizationId);
 
       await tx.mutate.documents.update(withUpdatedTimestamp({ id: documentId, title }));
     },

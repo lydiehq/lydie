@@ -1,4 +1,4 @@
-import { Add12Filled, DatabaseRegular, Dismiss12Filled } from "@fluentui/react-icons";
+import { Add12Filled, AppFolder16Filled, Dismiss12Filled } from "@fluentui/react-icons";
 import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
@@ -34,6 +34,21 @@ interface DocumentTabBarProps {
   organizationSlug: string;
 }
 
+const COLLECTION_TAB_PREFIX = "collection:";
+
+function isCollectionTabId(tabId: string): boolean {
+  return tabId.startsWith(COLLECTION_TAB_PREFIX);
+}
+
+function getCollectionIdFromTabId(tabId: string): string | null {
+  if (!isCollectionTabId(tabId)) {
+    return null;
+  }
+
+  const collectionId = tabId.slice(COLLECTION_TAB_PREFIX.length);
+  return collectionId.length > 0 ? collectionId : null;
+}
+
 export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
   const tabs = useAtomValue(documentTabsAtom);
   const activeTabId = useAtomValue(activeTabIdAtom);
@@ -48,10 +63,11 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
 
   const navigateToTab = useCallback(
     (tabId: string) => {
-      if (tabId.startsWith("collection:")) {
+      const collectionId = getCollectionIdFromTabId(tabId);
+      if (collectionId) {
         navigate({
           to: "/w/$organizationSlug/collections/$collectionId",
-          params: { organizationSlug, collectionId: tabId.replace("collection:", "") },
+          params: { organizationSlug, collectionId },
         });
         return;
       }
@@ -163,8 +179,8 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
           >
             {({ isSelected }) => (
               <>
-                {tab.documentId.startsWith("collection:") ? (
-                  <DatabaseRegular className="size-3.5 shrink-0 text-gray-500" />
+                {isCollectionTabId(tab.documentId) ? (
+                  <AppFolder16Filled className="size-4 shrink-0 text-gray-500" />
                 ) : (
                   <DocumentThumbnailIcon className="size-4 shrink-0" active={isSelected} size="sm" />
                 )}
@@ -239,6 +255,6 @@ export function useCollectionTabSync(
   title: string | undefined,
   mode: TabMode = "persistent",
 ) {
-  const tabId = collectionId ? `collection:${collectionId}` : undefined;
+  const tabId = collectionId ? `${COLLECTION_TAB_PREFIX}${collectionId}` : undefined;
   return useDocumentTabSync(tabId, title, mode);
 }

@@ -109,7 +109,6 @@ async function pushToIntegration(documentId: string, integrationLinkId: string |
         updatedAt: document.updatedAt,
         organizationId: document.organizationId,
         externalId: document.externalId,
-        isLocked: document.isLocked ?? false,
         parentId: document.parentId,
       },
       connection: {

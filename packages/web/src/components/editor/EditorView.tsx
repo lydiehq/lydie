@@ -31,7 +31,6 @@ export interface Props {
   titleEditor: Editor;
   provider: HocuspocusProvider | null;
   isAdmin: boolean;
-  isLocked: boolean;
   shouldShiftContent: boolean;
   organizationId: string;
   organizationSlug: string;
@@ -43,7 +42,6 @@ export function EditorView({
   titleEditor,
   provider,
   isAdmin,
-  isLocked,
   shouldShiftContent,
   organizationId,
   organizationSlug,
@@ -70,15 +68,6 @@ export function EditorView({
       data-testid="editor-view"
     >
       <EditorToolbar editor={contentEditor} doc={doc} />
-
-      {isLocked && (
-        <div
-          className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500"
-          data-testid="locked-notice"
-        >
-          This page is managed by an integration and cannot be edited.
-        </div>
-      )}
 
       <TableOfContentsMinimap editor={contentEditor} containerRef={scrollContainerRef} />
 

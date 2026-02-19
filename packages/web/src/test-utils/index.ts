@@ -50,10 +50,14 @@ export {
   createMockAuthContext,
   createMockNavigate,
   createMockFilter,
+  createMockCollection,
+  createMockCollectionFields,
   type MockOrganization,
   type MockDocument,
   type MockUser,
   type MockAuthContext,
+  type MockCollection,
+  type MockCollectionFields,
 } from "./factories";
 
 // Custom render and testing utilities

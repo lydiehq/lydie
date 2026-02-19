@@ -128,11 +128,10 @@ export async function pullFromIntegrationLink(
     // Build a map of external IDs to document IDs for parent resolution
     const externalIdToDocId = new Map<string, string>();
 
-    // First pass: create/update all documents (including locked folder pages)
+    // First pass: create/update all documents.
     for (const result of results) {
       if (result.success && result.metadata) {
         try {
-          const isLocked = result.metadata.isLocked ?? false;
           const customFields = result.metadata.customFields as
             | Record<string, string | number>
             | undefined;
@@ -170,7 +169,6 @@ export async function pullFromIntegrationLink(
                 slug: result.metadata.slug,
                 yjsState: yjsState,
                 customFields: customFields || null,
-                isLocked,
                 updatedAt: new Date(),
                 deletedAt: null, // Ensure document is not marked as deleted
               })
@@ -199,7 +197,6 @@ export async function pullFromIntegrationLink(
               integrationLinkId: link.id,
               externalId: result.externalId ?? null,
               customFields: customFields || null,
-              isLocked,
               published: true, // Documents from integrations are published by default
               createdAt: new Date(),
               updatedAt: new Date(),

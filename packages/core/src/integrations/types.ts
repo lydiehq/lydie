@@ -32,9 +32,6 @@ export interface SyncDocument {
   // For push operations, the path should be computed from parent hierarchy
   // This field may be stale if the document was moved - always compute path from hierarchy when pushing
   externalId?: string | null;
-  // Whether the document is locked (read-only in UI)
-  // Used for integration-managed documents like folder pages
-  isLocked?: boolean;
   // Parent document ID for pages-in-pages structure
   // Used to compute the file path in external systems
   parentId?: string | null;
@@ -74,7 +71,6 @@ export interface SyncResult {
   // - title: Document title
   // - slug: URL-friendly slug
   // - content: TipTap JSON content
-  // - isLocked: Whether document is locked (e.g., folder pages)
   // - customFields: Integration-specific metadata
   metadata?: any;
 }

@@ -318,8 +318,8 @@ export const githubIntegration: GitHubIntegrationExtended = {
     const config = connection.config as GitHubConfig;
 
     try {
-      // Don't push locked folder pages back to GitHub
-      if (document.isLocked && document.externalId?.startsWith("__folder__")) {
+      // Don't push folder placeholder pages back to GitHub.
+      if (document.externalId?.startsWith("__folder__")) {
         return {
           success: true,
           documentId: document.id,
@@ -577,7 +577,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
             title: folderName,
             slug: folderPath.replace(/\//g, "-").toLowerCase(),
             content: { type: "doc", content: [] },
-            isLocked: true,
           },
         });
       }

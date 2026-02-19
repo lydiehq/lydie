@@ -57,7 +57,6 @@ class EditorCache {
     userId: string,
     userName: string,
     yjsState: string | null,
-    isLocked: boolean,
     initialTitle: string,
     organizationId: string,
     organizationSlug: string,
@@ -75,7 +74,6 @@ class EditorCache {
       userId,
       userName,
       yjsState,
-      isLocked,
       initialTitle,
       organizationId,
       organizationSlug,
@@ -183,7 +181,6 @@ class EditorCache {
     userId: string,
     userName: string,
     yjsState: string | null,
-    isLocked: boolean,
     initialTitle: string,
     organizationId: string,
     organizationSlug: string,
@@ -197,8 +194,8 @@ class EditorCache {
 
     // Create title editor
     const titleEditor = new TipTapEditor({
-      autofocus: !isLocked,
-      editable: !isLocked,
+      autofocus: true,
+      editable: true,
       extensions: getTitleExtensions({ placeholder: "Untitled" }),
       content: initialTitle
         ? {
@@ -231,8 +228,8 @@ class EditorCache {
 
     // Create content editor
     const contentEditor = new TipTapEditor({
-      autofocus: !isLocked,
-      editable: !isLocked,
+      autofocus: false,
+      editable: true,
       extensions: getDocumentEditorExtensions({
         documentComponent: {
           addNodeView: () => ReactNodeViewRenderer(DocumentComponentComponent),

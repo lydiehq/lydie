@@ -1,6 +1,6 @@
 import { db } from "@lydie/database";
-import { collectionsTable, documentsTable } from "@lydie/database/schema";
-import { eq, inArray } from "drizzle-orm";
+import { collectionFieldsTable, collectionsTable, documentsTable } from "@lydie/database/schema";
+import { and, eq, inArray } from "drizzle-orm";
 
 import type { ContentNode, TextNode } from "./types";
 
@@ -11,6 +11,7 @@ import type { ContentNode, TextNode } from "./types";
 interface LinkMetadata {
   id: string;
   slug?: string;
+  route?: string;
   title?: string;
   parentSlug?: string;
   collectionHandle?: string;
@@ -58,9 +59,17 @@ export async function fetchDocumentMetadata(
         title: documentsTable.title,
         parentId: documentsTable.parentId,
         collectionHandle: collectionsTable.handle,
+        route: collectionFieldsTable.values,
       })
       .from(documentsTable)
       .leftJoin(collectionsTable, eq(documentsTable.collectionId, collectionsTable.id))
+      .leftJoin(
+        collectionFieldsTable,
+        and(
+          eq(collectionFieldsTable.documentId, documentsTable.id),
+          eq(collectionFieldsTable.collectionId, documentsTable.collectionId),
+        ),
+      )
       .where(inArray(documentsTable.id, documentIds));
 
     // Collect parent IDs to fetch their slugs
@@ -92,6 +101,10 @@ export async function fetchDocumentMetadata(
       metadataMap.set(doc.id, {
         id: doc.id,
         slug: doc.slug || undefined,
+        route:
+          doc.route && typeof (doc.route as Record<string, unknown>).route === "string"
+            ? ((doc.route as Record<string, unknown>).route as string)
+            : undefined,
         title: doc.title,
         parentSlug: doc.parentId ? parentSlugMap.get(doc.parentId) : undefined,
         collectionHandle: doc.collectionHandle || undefined,
@@ -133,7 +146,11 @@ function transformContentLinks(
             type: "internal-link",
             attrs: {
               "document-id": documentId,
-              ...(metadata?.slug && { "document-slug": metadata.slug }),
+              ...(metadata?.route
+                ? { "document-slug": metadata.route }
+                : metadata?.slug
+                  ? { "document-slug": metadata.slug }
+                  : {}),
               ...(metadata?.title && { "document-title": metadata.title }),
               ...(metadata?.parentSlug && { "document-parent-slug": metadata.parentSlug }),
               ...(metadata?.collectionHandle && {

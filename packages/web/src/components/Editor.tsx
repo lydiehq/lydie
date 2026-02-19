@@ -38,7 +38,6 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
 function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
   const z = useZero();
   const { user } = useAuth();
-  const isLocked = doc.is_locked ?? false;
 
   const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom);
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
@@ -63,7 +62,6 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
         user.id,
         user.name,
         doc.yjs_state,
-        isLocked,
         doc.title || "",
         organizationId,
         organizationSlug,
@@ -110,7 +108,6 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
   // Convert preview tab to persistent when user starts editing
   useEffect(() => {
     if (!cached) return;
-    if (isLocked) return;
     if (hasMadePersistentRef.current) return;
 
     const currentTab = tabs.find((t) => t.documentId === doc.id);
@@ -137,7 +134,7 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
       cached.contentEditor.off("update", handleContentUpdate);
       cached.titleEditor.off("update", handleTitleUpdate);
     };
-  }, [cached, doc.id, isLocked, makeTabPersistent, tabs]);
+  }, [cached, doc.id, makeTabPersistent, tabs]);
 
   // Handle title blur - save to database
   useEffect(() => {
@@ -256,7 +253,6 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
       titleEditor={cached.titleEditor}
       provider={cached.provider}
       isAdmin={isAdmin(user)}
-      isLocked={isLocked}
       shouldShiftContent={shouldShiftContent}
       organizationId={organizationId}
       organizationSlug={organizationSlug}

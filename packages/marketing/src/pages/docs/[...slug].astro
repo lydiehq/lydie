@@ -1,0 +1,152 @@
+---
+export const prerender = false;
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+);
+
+import Layout from "@/layouts/Layout.astro";
+import Breadcrumbs from "@/components/Breadcrumbs.astro";
+import { Container } from "@/components/Container";
+import LydieContent from "@/components/LydieContent.astro";
+import { normalizeCollectionRoute } from "@lydie/core/collection-routes";
+import * as lydieApi from "@/utils/lydie-client";
+import { createLinkResolver } from "@/utils/route-registry";
+
+const slugParam = Astro.params.slug;
+const routeParam = Array.isArray(slugParam) ? slugParam.join("/") : slugParam;
+const currentRoute = normalizeCollectionRoute(routeParam);
+const docsHandle = lydieApi.collections.documentation;
+
+let pageDoc: Awaited<ReturnType<typeof lydieApi.getCollectionDocumentByRoute>>;
+let allDocs: Awaited<ReturnType<typeof lydieApi.getCollectionDocuments>>["documents"] = [];
+
+try {
+  pageDoc = await lydieApi.getCollectionDocumentByRoute(docsHandle, currentRoute, {
+    includeToc: true,
+  });
+
+  const all = await lydieApi.getCollectionDocuments(docsHandle);
+  allDocs = all.documents;
+} catch (error) {
+  console.error(`[Docs] Failed to fetch route \"${currentRoute}\":`, error);
+  return new Response(null, { status: 404, statusText: "Documentation page not found" });
+}
+
+const linkResolver = createLinkResolver({ currentCollectionHandle: docsHandle });
+
+const routeEntries = allDocs
+  .map((doc) => {
+    const route = normalizeCollectionRoute(typeof doc.fullPath === "string" ? doc.fullPath : "/");
+    return {
+      title: doc.title,
+      route,
+    };
+  })
+  .filter((entry) => entry.route !== "/")
+  .sort((a, b) => a.route.localeCompare(b.route));
+
+const navEntries = routeEntries.map((entry) => ({
+  ...entry,
+  depth: entry.route.replace(/^\//, "").split("/").filter(Boolean).length,
+}));
+
+const currentChildren = routeEntries.filter((entry) => {
+  if (currentRoute === "/") {
+    return entry.route.replace(/^\//, "").split("/").length === 1;
+  }
+
+  if (!entry.route.startsWith(`${currentRoute}/`)) {
+    return false;
+  }
+
+  const currentDepth = currentRoute.replace(/^\//, "").split("/").filter(Boolean).length;
+  const childDepth = entry.route.replace(/^\//, "").split("/").filter(Boolean).length;
+  return childDepth === currentDepth + 1;
+});
+
+const breadcrumbParts = currentRoute === "/" ? [] : currentRoute.replace(/^\//, "").split("/");
+const breadcrumbs = [
+  { label: "Docs", href: "/docs" },
+  ...breadcrumbParts.map((part, index) => {
+    const route = `/${breadcrumbParts.slice(0, index + 1).join("/")}`;
+    return {
+      label: part.replace(/-/g, " "),
+      href: route === currentRoute ? undefined : `/docs${route}`,
+    };
+  }),
+];
+---
+
+<Layout
+  title={`${pageDoc.title} - Documentation`}
+  description={String(pageDoc.fields?.description || pageDoc.title)}
+>
+  <div class="py-8">
+    <Container>
+      <Breadcrumbs items={breadcrumbs} />
+
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-10">
+        <aside class="hidden lg:block">
+          <div class="sticky top-24 rounded-xl border border-gray-200 bg-white p-4">
+            <h2 class="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-3">Documentation</h2>
+            <nav>
+              <ul class="space-y-1 text-sm">
+                {navEntries.map((entry) => (
+                  <li>
+                    <a
+                      href={`/docs${entry.route}`}
+                      class={`block rounded-md px-2 py-1.5 transition-colors ${
+                        entry.route === currentRoute
+                          ? "bg-blue-50 text-blue-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                      style={`margin-left: ${(entry.depth - 1) * 10}px`}
+                    >
+                      {entry.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+        </aside>
+
+        <article class="max-w-3xl">
+          <header class="mb-8">
+            <h1 class="text-3xl font-semibold text-gray-900">{pageDoc.title}</h1>
+            {
+              pageDoc.fields?.description && (
+                <p class="mt-3 text-lg text-gray-600">{String(pageDoc.fields.description)}</p>
+              )
+            }
+          </header>
+
+          <div class="prose prose-lg max-w-none">
+            <LydieContent content={pageDoc.jsonContent} linkResolver={linkResolver} />
+          </div>
+
+          {
+            currentChildren.length > 0 && (
+              <section class="mt-14 pt-8 border-t border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Subpages</h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                  {currentChildren.map((child) => (
+                    <a
+                      href={`/docs${child.route}`}
+                      class="block rounded-lg border border-gray-200 bg-white p-4 hover:border-blue-400/60 hover:shadow-sm transition"
+                    >
+                      <div class="font-medium text-gray-900">{child.title}</div>
+                      <div class="text-xs text-gray-500 mt-1">{child.route}</div>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )
+          }
+        </article>
+      </div>
+    </Container>
+  </div>
+</Layout>
