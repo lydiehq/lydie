@@ -6,7 +6,7 @@ import {
 import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { collectionFieldsTable, collectionsTable, db, documentsTable } from "@lydie/database";
-import { and, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -19,16 +19,45 @@ type CollectionDocumentRow = {
   fieldValues: Record<string, unknown>;
 };
 
+type SortBy = "created_at" | "updated_at" | "title";
+type SortOrder = "asc" | "desc";
+
+function parseSortBy(value: string | undefined): SortBy {
+  if (value === "updated_at" || value === "title") {
+    return value;
+  }
+
+  return "created_at";
+}
+
+function parseSortOrder(value: string | undefined): SortOrder {
+  return value === "asc" ? "asc" : "desc";
+}
+
+function buildDocumentOrder(sortBy: SortBy, sortOrder: SortOrder): SQL[] {
+  const order = sortOrder === "asc" ? asc : desc;
+
+  if (sortBy === "updated_at") {
+    return [order(documentsTable.updatedAt), order(documentsTable.id)];
+  }
+
+  if (sortBy === "title") {
+    return [order(documentsTable.title), order(documentsTable.id)];
+  }
+
+  return [order(documentsTable.createdAt), order(documentsTable.id)];
+}
+
 function buildRouteMap(rows: CollectionDocumentRow[]): Map<string, string> {
   return buildCollectionRoutes(
     rows.map((row) => ({
       id: row.document.id,
       parentId: row.document.parentId,
       title: row.document.title || "",
-      slug:
-        typeof row.fieldValues.slug === "string" && row.fieldValues.slug.trim().length > 0
-          ? row.fieldValues.slug
-          : row.document.slug,
+      route:
+        typeof row.fieldValues.route === "string" && row.fieldValues.route.trim().length > 0
+          ? row.fieldValues.route
+          : null,
     })),
   );
 }
@@ -121,7 +150,7 @@ async function transformToDocumentResponse(
   fieldValues: Record<string, unknown>,
   includeRelated: boolean,
   includeToc: boolean,
-  fullPath?: string,
+  fullPath?: string | null,
 ): Promise<Record<string, unknown>> {
   let jsonContent: ReturnType<typeof convertYjsToJson> = null;
   if (doc.yjsState) {
@@ -148,9 +177,12 @@ async function transformToDocumentResponse(
   }
 
   const { yjsState: _, ...docWithoutYjs } = doc;
-  const computedPath = fullPath
-    ? normalizeCollectionRoute(fullPath)
-    : `/${toCollectionRouteSegment(doc.slug || doc.title || doc.id)}`;
+  const computedPath =
+    fullPath === null
+      ? "/"
+      : typeof fullPath === "string"
+        ? normalizeCollectionRoute(fullPath)
+        : `/${toCollectionRouteSegment(doc.slug || doc.title || doc.id)}`;
 
   return {
     ...docWithoutYjs,
@@ -171,6 +203,8 @@ export const CollectionsApi = new Hono()
     const handle = c.req.param("handle");
     const includeRelated = c.req.query("include_related") === "true";
     const includeToc = c.req.query("include_toc") === "true";
+    const sortBy = parseSortBy(c.req.query("sort_by"));
+    const sortOrder = parseSortOrder(c.req.query("sort_order"));
 
     const collectionResult = await db
       .select()
@@ -218,7 +252,7 @@ export const CollectionsApi = new Hono()
         ),
       )
       .where(and(...whereConditions))
-      .orderBy(desc(documentsTable.createdAt), desc(documentsTable.id));
+      .orderBy(...buildDocumentOrder(sortBy, sortOrder));
 
     const response = await Promise.all(
       documents.map((doc) =>
@@ -227,7 +261,7 @@ export const CollectionsApi = new Hono()
           (doc.fieldValues as Record<string, unknown>) || {},
           includeRelated,
           includeToc,
-          routeMap.get(doc.document.id),
+          routeMap.get(doc.document.id) ?? null,
         ),
       ),
     );
@@ -271,7 +305,7 @@ export const CollectionsApi = new Hono()
       row.fieldValues,
       includeRelated,
       includeToc,
-      routeMap.get(row.document.id),
+      routeMap.get(row.document.id) ?? null,
     );
 
     return c.json(response);
@@ -314,7 +348,7 @@ export const CollectionsApi = new Hono()
       row.fieldValues,
       includeRelated,
       includeToc,
-      routeMap.get(row.document.id),
+      routeMap.get(row.document.id) ?? null,
     );
 
     return c.json(response);
@@ -392,7 +426,7 @@ export const CollectionsApi = new Hono()
       (fieldValuesResult[0]?.values as Record<string, unknown>) || {},
       includeRelated,
       includeToc,
-      routeMap.get(document.id),
+      routeMap.get(document.id) ?? null,
     );
 
     return c.json(response);

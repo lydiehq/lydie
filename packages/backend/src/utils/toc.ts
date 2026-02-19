@@ -1,8 +1,10 @@
+import { createHeadingIdGenerator } from "@lydie/core/heading-ids";
+
 export function extractTableOfContents(
   jsonContent: any,
 ): Array<{ id: string; level: number; text: string }> {
   const headings: Array<{ id: string; level: number; text: string }> = [];
-  let headingCounter = 0;
+  const nextHeadingId = createHeadingIdGenerator();
 
   const extractTextFromNode = (node: any): string => {
     if (node.type === "text") {
@@ -22,7 +24,7 @@ export function extractTableOfContents(
       const text = extractTextFromNode(node);
       if (text.trim()) {
         headings.push({
-          id: `heading-${headingCounter++}`,
+          id: nextHeadingId(text),
           level,
           text: text.trim(),
         });

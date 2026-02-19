@@ -1,186 +1,176 @@
-/**
- * Custom component renderers for the marketing site
- * These handle the documentComponent nodes from Lydie and render them as HTML
- */
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
-export interface LinkGridProps {
-  links?: Array<{
-    title?: string;
-    href?: string;
-    icon?: string;
-    description?: string;
-  }>;
-}
+import { Flowchart } from "@/components/content/Flowchart";
 
-export interface ComparisonGridProps {
-  items?: Array<{
-    label?: string;
-    description?: string;
-    icon?: string;
-  }>;
-  columns?: number;
-}
+export type PillarCalloutType = "definition" | "tip" | "note" | "warning";
 
-/**
- * Render a link grid component
- * Usage in Lydie: Create a component named "link-grid" with a "links" property of type array
- */
-export function linkGridComponent(properties: Record<string, any>): string {
-  const links: LinkGridProps["links"] = properties.links || [];
+export type PillarCalloutProps = {
+  type?: PillarCalloutType | string;
+  heading?: string;
+  body?: string;
+};
 
-  if (!links || links.length === 0) {
-    return '<div class="my-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">[Link Grid: No links configured]</div>';
+export type FlowchartNode = {
+  id: string;
+  type: "question" | "result";
+  text: string;
+  url?: string;
+};
+
+export type FlowchartEdge = {
+  from: string;
+  to: string;
+  label: string;
+};
+
+export type FlowchartProps = {
+  title?: string;
+  nodes?: FlowchartNode[];
+  edges?: FlowchartEdge[];
+};
+
+export function pillarCalloutComponent(properties: Record<string, unknown>): string {
+  const type = getString(properties.type) || "note";
+  const heading = getString(properties.heading);
+  const body = getString(properties.body);
+
+  if (!heading && !body) {
+    return "";
   }
 
-  const linksHtml = links
-    .map((link) => {
-      const href = link.href || "#";
-      const title = link.title || "Untitled";
-      const description = link.description || "";
-      const icon = link.icon || "";
+  const style = getCalloutStyle(type);
 
-      return `
-      <a href="${escapeHtml(href)}" class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all">
-        <div class="flex items-start gap-3">
-          ${icon ? `<span class="text-2xl">${escapeHtml(icon)}</span>` : ""}
-          <div class="flex-1">
-            <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-              ${escapeHtml(title)}
-            </h3>
-            ${description ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(description)}</p>` : ""}
-          </div>
-        </div>
-      </a>
-    `;
-    })
-    .join("");
-
-  return `
-    <div class="my-8 grid md:grid-cols-2 gap-4">
-      ${linksHtml}
-    </div>
-  `;
+  return `<aside class="my-8 rounded-xl border ${style.border} ${style.background} p-5">
+    <p class="m-0 text-xs font-semibold uppercase tracking-wide ${style.label}">${escapeHtml(type)}</p>
+    ${heading ? `<h3 class="mt-2 mb-0 text-lg font-semibold ${style.heading}">${escapeHtml(heading)}</h3>` : ""}
+    ${body ? `<p class="mt-2 mb-0 text-sm leading-6 ${style.body}">${escapeHtml(body)}</p>` : ""}
+  </aside>`;
 }
 
-/**
- * Render a comparison grid component
- * Usage in Lydie: Create a component named "comparison-grid" with items and columns properties
- */
-export function comparisonGridComponent(properties: Record<string, any>): string {
-  const items: ComparisonGridProps["items"] = properties.items || [];
-  const columns = properties.columns || 2;
+export function flowchartComponent(properties: Record<string, unknown>): string {
+  const title = getString(properties.title);
+  const nodes = getFlowchartNodes(properties.nodes);
+  const edges = getFlowchartEdges(properties.edges);
 
-  if (!items || items.length === 0) {
-    return '<div class="my-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">[Comparison Grid: No items configured]</div>';
+  if (nodes.length === 0) {
+    return "";
   }
 
-  const gridClass =
-    columns === 2 ? "md:grid-cols-2" : columns === 3 ? "md:grid-cols-3" : "md:grid-cols-1";
-
-  const itemsHtml = items
-    .map((item) => {
-      const label = item.label || "";
-      const description = item.description || "";
-      const icon = item.icon || "";
-
-      return `
-      <div class="p-4 bg-white border border-gray-200 rounded-lg">
-        <div class="flex items-start gap-3">
-          ${icon ? `<span class="text-xl">${escapeHtml(icon)}</span>` : ""}
-          <div class="flex-1">
-            <h3 class="font-medium text-gray-900">${escapeHtml(label)}</h3>
-            ${description ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(description)}</p>` : ""}
-          </div>
-        </div>
-      </div>
-    `;
-    })
-    .join("");
-
-  return `
-    <div class="my-8 grid ${gridClass} gap-4">
-      ${itemsHtml}
-    </div>
-  `;
+  return renderToStaticMarkup(createElement(Flowchart, { title, nodes, edges }));
 }
 
-/**
- * Render a visual framework component
- * Usage in Lydie: Create a component named "visual-framework" with title and description
- */
-export function visualFrameworkComponent(properties: Record<string, any>): string {
-  const title = properties.title || "";
-  const description = properties.description || "";
-
-  return `
-    <div class="my-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
-      ${title ? `<h3 class="text-lg font-semibold text-gray-900 mb-2">${escapeHtml(title)}</h3>` : ""}
-      ${description ? `<p class="text-gray-600">${escapeHtml(description)}</p>` : ""}
-      <div class="mt-4">
-        ${properties.content || "[Visual Framework Content]"}
-      </div>
-    </div>
-  `;
+function getCalloutStyle(type: string): {
+  border: string;
+  background: string;
+  label: string;
+  heading: string;
+  body: string;
+} {
+  switch (type) {
+    case "definition":
+      return {
+        border: "border-sky-200",
+        background: "bg-sky-50/70",
+        label: "text-sky-700",
+        heading: "text-sky-950",
+        body: "text-sky-900/90",
+      };
+    case "tip":
+      return {
+        border: "border-emerald-200",
+        background: "bg-emerald-50/70",
+        label: "text-emerald-700",
+        heading: "text-emerald-950",
+        body: "text-emerald-900/90",
+      };
+    case "warning":
+      return {
+        border: "border-amber-200",
+        background: "bg-amber-50/70",
+        label: "text-amber-700",
+        heading: "text-amber-950",
+        body: "text-amber-900/90",
+      };
+    default:
+      return {
+        border: "border-slate-200",
+        background: "bg-slate-50/70",
+        label: "text-slate-700",
+        heading: "text-slate-900",
+        body: "text-slate-700",
+      };
+  }
 }
 
-/**
- * Render a flow steps component
- * Usage in Lydie: Create a component named "flow-steps" with steps array
- */
-export function flowStepsComponent(properties: Record<string, any>): string {
-  const steps = properties.steps || [];
-  const direction = properties.direction || "horizontal";
+function getString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
 
-  if (steps.length === 0) {
-    return '<div class="my-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">[Flow Steps: No steps configured]</div>';
+function sanitizeUrl(url: string | undefined): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("/") || trimmed.startsWith("#")) {
+    return trimmed;
   }
 
-  const isHorizontal = direction === "horizontal";
-  const containerClass = isHorizontal ? "flex flex-col md:flex-row gap-4" : "flex flex-col gap-4";
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return trimmed;
+    }
+  } catch {
+    return "";
+  }
 
-  const stepsHtml = steps
-    .map((step: any, index: number) => {
-      const title = step.title || "";
-      const description = step.description || "";
-      const stepNumber = index + 1;
-
-      return `
-      <div class="flex-1 relative">
-        <div class="p-4 bg-white border border-gray-200 rounded-lg h-full">
-          <div class="flex items-center gap-3 mb-2">
-            <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-              ${stepNumber}
-            </span>
-            <h4 class="font-medium text-gray-900">${escapeHtml(title)}</h4>
-          </div>
-          ${description ? `<p class="text-sm text-gray-600">${escapeHtml(description)}</p>` : ""}
-        </div>
-        ${
-          isHorizontal && index < steps.length - 1
-            ? `
-          <div class="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2 text-gray-300">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        `
-            : ""
-        }
-      </div>
-    `;
-    })
-    .join("");
-
-  return `
-    <div class="my-8 ${containerClass}">
-      ${stepsHtml}
-    </div>
-  `;
+  return "";
 }
 
-/**
- * Escape HTML special characters
- */
+function getFlowchartNodes(value: unknown): FlowchartNode[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item): FlowchartNode | null => {
+      if (!item || typeof item !== "object") return null;
+
+      const nodeId = getString((item as Record<string, unknown>).id).trim();
+      const nodeType = getString((item as Record<string, unknown>).type).trim();
+      const nodeText = getString((item as Record<string, unknown>).text).trim();
+      const nodeUrl = getString((item as Record<string, unknown>).url).trim();
+
+      if (!nodeId || !nodeText) return null;
+      if (nodeType !== "question" && nodeType !== "result") return null;
+
+      return {
+        id: nodeId,
+        type: nodeType,
+        text: nodeText,
+        url: sanitizeUrl(nodeUrl || undefined) || undefined,
+      };
+    })
+    .filter((node): node is FlowchartNode => Boolean(node));
+}
+
+function getFlowchartEdges(value: unknown): FlowchartEdge[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item): FlowchartEdge | null => {
+      if (!item || typeof item !== "object") return null;
+
+      const from = getString((item as Record<string, unknown>).from).trim();
+      const to = getString((item as Record<string, unknown>).to).trim();
+      const label = getString((item as Record<string, unknown>).label).trim();
+
+      if (!from || !to || !label) return null;
+
+      return { from, to, label };
+    })
+    .filter((edge): edge is FlowchartEdge => Boolean(edge));
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")

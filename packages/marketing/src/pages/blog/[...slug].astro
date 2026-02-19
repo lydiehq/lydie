@@ -12,9 +12,11 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import * as lydieApi from "../../utils/lydie-client";
 import { createLinkResolver } from "../../utils/route-registry";
 import FormattedDate from "../../components/FormattedDate.astro";
+import ArticleHeadingEnhancements from "../../components/ArticleHeadingEnhancements.astro";
 import LydieContent from "../../components/LydieContent.astro";
 import { Heading } from "../../components/generic/Heading";
 import { Container } from "../../components/Container";
+import { articleTypographyClassName } from "../../utils/article-typography";
 
 const { slug } = Astro.params;
 
@@ -139,12 +141,13 @@ const structuredData = {
               class="w-full h-80"
             />
           </div>
-          <div class="prose mt-12">
+          <div class={`mt-12 ${articleTypographyClassName}`}>
             <LydieContent
               content={document.jsonContent}
               linkResolver={linkResolver}
             />
           </div>
+          <ArticleHeadingEnhancements />
           <hr class="my-8 border-gray-200" />
           <div class="flex flex-col gap-y-4">
             <span class="text-gray-500 text-sm"> Related posts </span>

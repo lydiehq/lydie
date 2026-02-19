@@ -10,7 +10,7 @@ import { getCollectionDocumentPath } from "./lydie-client";
 
 export type RoutePattern =
   | { type: "blog"; path: `/blog/${string}` }
-  | { type: "resource"; pillar: string; path: `/resources/${string}/${string}` };
+  | { type: "resource"; pillar: string; path: `/${string}/${string}` };
 
 type LinkRef = {
   href: string;
@@ -46,13 +46,13 @@ const ROUTE_REGISTRY: RouteConfig[] = [
   // Resource hub articles
   {
     parentSlug: "knowledge-bases",
-    pattern: "/resources/knowledge-bases/:slug",
+    pattern: "/knowledge-bases/:slug",
     type: "resource",
     pillar: "knowledge-bases",
   },
   {
     parentSlug: "note-taking",
-    pattern: "/resources/note-taking/:slug",
+    pattern: "/note-taking/:slug",
     type: "resource",
     pillar: "note-taking",
   },
@@ -68,7 +68,7 @@ const ROUTE_REGISTRY: RouteConfig[] = [
  *
  * @example
  * resolveLink("my-article", "blog") // returns "/blog/my-article"
- * resolveLink("getting-started", "knowledge-bases") // returns "/resources/knowledge-bases/getting-started"
+ * resolveLink("getting-started", "knowledge-bases") // returns "/knowledge-bases/getting-started"
  */
 export function resolveLink(slug: string, parentSlug?: string): string | null {
   if (!parentSlug) {

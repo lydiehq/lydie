@@ -8,10 +8,8 @@ import {
   blogImageComponent,
 } from "../utils/content-renderer";
 import {
-  linkGridComponent,
-  comparisonGridComponent,
-  visualFrameworkComponent,
-  flowStepsComponent,
+  flowchartComponent,
+  pillarCalloutComponent,
 } from "../utils/custom-components";
 
 interface Props {
@@ -83,10 +81,8 @@ const { html, images } = await renderContent(content, {
     // Use default image component for first pass
     image: blogImageComponent,
     // Custom document components
-    linkGrid: linkGridComponent,
-    comparisonGrid: comparisonGridComponent,
-    visualFramework: visualFrameworkComponent,
-    flowSteps: flowStepsComponent,
+    pillarCallout: pillarCalloutComponent,
+    flowchart: flowchartComponent,
   },
 });
 

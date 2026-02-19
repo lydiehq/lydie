@@ -3,6 +3,7 @@ export type CollectionRouteNode = {
   parentId: string | null;
   title: string;
   slug?: string | null;
+  route?: string | null;
 };
 
 export function normalizeCollectionRoute(value: string | null | undefined): string {
@@ -13,6 +14,10 @@ export function normalizeCollectionRoute(value: string | null | undefined): stri
 
   const withLeadingSlash = raw.startsWith("/") ? raw : `/${raw}`;
   const collapsed = withLeadingSlash.replace(/\/{2,}/g, "/");
+  if (collapsed === "/") {
+    return "/";
+  }
+
   return collapsed.endsWith("/") ? collapsed.slice(0, -1) : collapsed;
 }
 
@@ -28,62 +33,16 @@ export function toCollectionRouteSegment(value: string): string {
   return cleaned || "untitled";
 }
 
-function getCollectionRouteSegment(document: CollectionRouteNode): string {
-  if (typeof document.slug === "string" && document.slug.trim().length > 0) {
-    return toCollectionRouteSegment(document.slug);
-  }
-
-  if (document.title.trim().length > 0) {
-    return toCollectionRouteSegment(document.title);
-  }
-
-  return document.id;
-}
-
 export function buildCollectionRoutes(nodes: CollectionRouteNode[]): Map<string, string> {
-  const byId = new Map(nodes.map((node) => [node.id, node]));
-  const memo = new Map<string, string>();
-
-  const resolve = (nodeId: string, visited: Set<string> = new Set()): string => {
-    const cached = memo.get(nodeId);
-    if (cached) {
-      return cached;
-    }
-
-    const node = byId.get(nodeId);
-    if (!node) {
-      return "/";
-    }
-
-    if (visited.has(nodeId)) {
-      return "/";
-    }
-    visited.add(nodeId);
-
-    const segment = getCollectionRouteSegment(node);
-    const parent = node.parentId ? byId.get(node.parentId) : null;
-
-    let route: string;
-    if (!parent) {
-      route = segment === "index" ? "/" : `/${segment}`;
-    } else {
-      const parentRoute = resolve(parent.id, visited);
-      route =
-        segment === "index"
-          ? parentRoute
-          : parentRoute === "/"
-            ? `/${segment}`
-            : `${parentRoute}/${segment}`;
-    }
-
-    const normalized = normalizeCollectionRoute(route);
-    memo.set(nodeId, normalized);
-    return normalized;
-  };
+  const routes = new Map<string, string>();
 
   for (const node of nodes) {
-    resolve(node.id);
+    if (typeof node.route !== "string" || node.route.trim().length === 0) {
+      continue;
+    }
+
+    routes.set(node.id, normalizeCollectionRoute(node.route));
   }
 
-  return memo;
+  return routes;
 }

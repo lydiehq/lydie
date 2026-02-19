@@ -1,0 +1,215 @@
+---
+interface TOCHeading {
+  id: string;
+  level: number;
+  text: string;
+}
+
+interface Document {
+  id: string;
+  title: string;
+  path?: string;
+  fields?: {
+    slug?: string;
+  };
+  toc?: TOCHeading[];
+}
+
+interface Props {
+  documents: Document[];
+  currentDocumentId: string;
+  pillar: string;
+}
+
+const { documents, currentDocumentId, pillar } = Astro.props;
+---
+
+<nav class="sticky top-24" aria-label="Table of contents" data-pillar-toc>
+  <h2 class="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">
+    In this section
+  </h2>
+  <ol class="space-y-3">
+    {documents.map((doc, index) => {
+      const isCurrent = doc.id === currentDocumentId;
+      const href =
+        doc.path === "/"
+          ? `/${pillar}`
+          : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`;
+
+      return (
+        <li>
+          <div class="flex items-start gap-3">
+            <span
+              class={`mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                isCurrent ? "bg-orange-500 text-white" : "bg-gray-200 text-blue-700"
+              }`}
+            >
+              {index + 1}
+            </span>
+            <div class="min-w-0">
+              {isCurrent ? (
+                <p class="text-sm font-semibold text-gray-900">{doc.title}</p>
+              ) : (
+                <a
+                  href={href}
+                  class="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                >
+                  {doc.title}
+                </a>
+              )}
+
+              {isCurrent && doc.toc && doc.toc.length > 0 && (
+                <ol class="mt-2 space-y-1 border-l border-gray-200 pl-3">
+                  {doc.toc.map((heading, headingIndex) => (
+                    <li>
+                      <a
+                        href={`#${heading.id}`}
+                        data-heading-link
+                        data-heading-id={heading.id}
+                        class={`block py-0.5 text-sm text-gray-600 hover:text-blue-600 transition-colors ${
+                          heading.level > 2 ? "pl-3" : ""
+                        }`}
+                      >
+                        {headingIndex + 1}. {heading.text}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </div>
+        </li>
+      );
+    })}
+  </ol>
+</nav>
+
+<style is:inline>
+  [data-pillar-toc] a[data-heading-link][aria-current="true"] {
+    color: rgb(37 99 235);
+    font-weight: 600;
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const tocElement = document.querySelector("[data-pillar-toc]");
+    if (!tocElement) {
+      return;
+    }
+
+    const headingLinks = Array.from(
+      tocElement.querySelectorAll("a[data-heading-link]"),
+    );
+
+    if (headingLinks.length === 0) {
+      return;
+    }
+
+    const linksByHeadingId = new Map();
+    for (const link of headingLinks) {
+      const headingId = link.getAttribute("data-heading-id");
+      if (!headingId) {
+        continue;
+      }
+
+      linksByHeadingId.set(headingId, link);
+    }
+
+    const headingElements = Array.from(linksByHeadingId.keys())
+      .map((headingId) => document.getElementById(headingId))
+      .filter((heading): heading is HTMLElement => Boolean(heading));
+
+    if (headingElements.length === 0) {
+      return;
+    }
+
+    let activeHeadingId = null;
+    const intersectingHeadings = new Map();
+
+    const setActiveHeading = (headingId) => {
+      if (!headingId || headingId === activeHeadingId) {
+        return;
+      }
+
+      for (const [id, link] of linksByHeadingId.entries()) {
+        if (id === headingId) {
+          link.setAttribute("aria-current", "true");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      }
+
+      activeHeadingId = headingId;
+    };
+
+    const activateFromHash = () => {
+      const hashHeadingId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+      if (hashHeadingId && linksByHeadingId.has(hashHeadingId)) {
+        setActiveHeading(hashHeadingId);
+      }
+    };
+
+    const chooseActiveHeading = () => {
+      if (intersectingHeadings.size > 0) {
+        let candidateId = null;
+        let candidateDistance = Number.POSITIVE_INFINITY;
+
+        for (const [id, top] of intersectingHeadings.entries()) {
+          const distance = Math.abs(top - 120);
+          if (distance < candidateDistance) {
+            candidateId = id;
+            candidateDistance = distance;
+          }
+        }
+
+        if (candidateId) {
+          setActiveHeading(candidateId);
+          return;
+        }
+      }
+
+      for (let index = headingElements.length - 1; index >= 0; index -= 1) {
+        const headingElement = headingElements[index];
+        if (headingElement.getBoundingClientRect().top <= 140) {
+          const id = headingElement.id;
+          if (id) {
+            setActiveHeading(id);
+            return;
+          }
+        }
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const headingId = entry.target.id;
+          if (!headingId) {
+            continue;
+          }
+
+          if (entry.isIntersecting) {
+            intersectingHeadings.set(headingId, entry.boundingClientRect.top);
+          } else {
+            intersectingHeadings.delete(headingId);
+          }
+        }
+
+        chooseActiveHeading();
+      },
+      {
+        rootMargin: "-20% 0px -65% 0px",
+        threshold: [0, 1],
+      },
+    );
+
+    for (const headingElement of headingElements) {
+      observer.observe(headingElement);
+    }
+
+    activateFromHash();
+    chooseActiveHeading();
+    window.addEventListener("hashchange", activateFromHash, { passive: true });
+  })();
+</script>

@@ -38,9 +38,9 @@ type TableColumn =
       isRowHeader: false;
     }
   | {
-      id: "route";
+      id: "path";
       kind: "route";
-      label: "Route";
+      label: "Path";
       isRowHeader: false;
     }
   | {
@@ -139,7 +139,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         title: doc.title,
         parentId: doc.parent_id ?? null,
         collectionId: extracted.collectionId,
-        route: "/",
+        route: "",
         properties: extracted.values,
       } satisfies DocumentItem;
     });
@@ -149,13 +149,13 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         id: document.id,
         parentId: document.parentId,
         title: document.title,
-        slug: typeof document.properties.slug === "string" ? document.properties.slug : null,
+        route: typeof document.properties.route === "string" ? document.properties.route : null,
       })),
     );
 
     return mapped.map((document) => ({
       ...document,
-      route: routeMap.get(document.id) ?? "/",
+      route: routeMap.get(document.id) ?? "",
     }));
   }, [collectionId, documentsResult]);
 
@@ -332,7 +332,6 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
 
   const columns = useMemo<TableColumn[]>(() => {
     const schemaColumns = schema
-      .filter((property) => property.name.toLowerCase() !== "route")
       .map((property) => ({
         id: property.name,
         kind: "property" as const,
@@ -344,7 +343,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     return [
       { id: "title", kind: "title", label: "Title", isRowHeader: true },
       ...(isRoutingEnabled
-        ? [{ id: "route", kind: "route", label: "Route", isRowHeader: false } as const]
+        ? [{ id: "path", kind: "route", label: "Path", isRowHeader: false } as const]
         : []),
       ...schemaColumns,
       { id: "add-property", kind: "add-property", label: "Add property", isRowHeader: false },
@@ -559,7 +558,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                     )}
                     {column.kind === "route" && (
                       <span className="block rounded px-2 py-1 text-xs font-mono text-gray-600">
-                        {document.route}
+                        {document.route || "-"}
                       </span>
                     )}
                     {column.kind === "add-property" && (
@@ -671,9 +670,17 @@ const EditableTitle = memo(function EditableTitle({
       value={editValue}
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
       onChange={(e) => setEditValue(e.target.value)}
       onBlur={handleSave}
       onKeyDown={(e) => {
+        if (e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          insertSpaceAtCursor(e.currentTarget, setEditValue);
+          return;
+        }
+
         e.stopPropagation();
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") setIsEditing(false);
@@ -731,6 +738,7 @@ const EditableField = memo(function EditableField({
         value={editValue}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         onChange={(e) => {
           const newValue = e.target.value === "" ? null : e.target.value;
@@ -758,9 +766,17 @@ const EditableField = memo(function EditableField({
       value={editValue}
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
       onChange={(e) => setEditValue(e.target.value)}
       onBlur={handleSave}
       onKeyDown={(e) => {
+        if (e.key === " " && fieldDef.type !== "number" && fieldDef.type !== "date") {
+          e.preventDefault();
+          e.stopPropagation();
+          insertSpaceAtCursor(e.currentTarget, setEditValue);
+          return;
+        }
+
         e.stopPropagation();
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") setIsEditing(false);
@@ -769,3 +785,18 @@ const EditableField = memo(function EditableField({
     />
   );
 });
+
+function insertSpaceAtCursor(
+  input: HTMLInputElement,
+  setValue: (value: string | ((previousValue: string) => string)) => void,
+) {
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? start;
+  const nextValue = `${input.value.slice(0, start)} ${input.value.slice(end)}`;
+
+  setValue(nextValue);
+
+  requestAnimationFrame(() => {
+    input.setSelectionRange(start + 1, start + 1);
+  });
+}

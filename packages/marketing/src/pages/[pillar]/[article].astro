@@ -8,15 +8,19 @@ Astro.response.headers.set(
 );
 
 import Layout from "@/layouts/Layout.astro";
+import ArticleHeadingEnhancements from "@/components/ArticleHeadingEnhancements.astro";
 import { Container } from "@/components/Container";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
+import PillarTOC from "@/components/PillarTOC.astro";
 import * as lydieApi from "@/utils/lydie-client";
 import { createLinkResolver } from "@/utils/route-registry";
+import { articleTypographyClassName } from "@/utils/article-typography";
 import { renderContent, blogImageComponent } from "@/utils/content-renderer";
 import {
-  linkGridComponent,
-  comparisonGridComponent,
+  flowchartComponent,
+  pillarCalloutComponent,
 } from "@/utils/custom-components";
+import type { ContentNode } from "@lydie-app/sdk";
 
 const { pillar, article } = Astro.params;
 
@@ -34,41 +38,84 @@ const collectionHandle = pillarCollectionMap[pillar] || pillar;
 type ArticleDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
 >["documents"][number] & {
+  path?: string;
   toc?: Array<{ id: string; level: number; text: string }>;
-  related?: Array<{ id: string; title: string; fields?: { slug?: string } }>;
+  related?: Array<{
+    id: string;
+    title: string;
+    path?: string;
+    fields?: { slug?: string };
+  }>;
+};
+
+type PillarDocument = Awaited<
+  ReturnType<typeof lydieApi.getCollectionDocuments>
+>["documents"][number] & {
+  path?: string;
+  toc?: Array<{ id: string; level: number; text: string }>;
 };
 
 let articleDocument: ArticleDocument | null = null;
+let pillarDocuments: PillarDocument[] = [];
 let contentHtml = "";
 let toc: Array<{ id: string; level: number; text: string }> = [];
-const linkResolver = createLinkResolver({ currentCollectionHandle: collectionHandle });
+const linkResolver = createLinkResolver({
+  currentCollectionHandle: collectionHandle,
+});
 
 console.log(`[Resource Hub] Fetching article: ${collectionHandle}/${article}`);
 
 try {
-  const { documents } = await lydieApi.getCollectionDocuments(collectionHandle, {
-    includeToc: true,
-    includeRelated: true,
-    filters: { slug: article },
-  });
+  const [{ documents: allDocuments }, { documents: filteredDocuments }] =
+    await Promise.all([
+      lydieApi.getCollectionDocuments(collectionHandle, {
+        sortBy: "created_at",
+        sortOrder: "asc",
+      } as any),
+      lydieApi.getCollectionDocuments(collectionHandle, {
+        includeToc: true,
+        includeRelated: true,
+        filters: { slug: article },
+      }),
+    ]);
 
-  articleDocument = (documents[0] as ArticleDocument | undefined) || null;
+  articleDocument =
+    (filteredDocuments[0] as ArticleDocument | undefined) || null;
+
+  if (!articleDocument) {
+    const routeDocument = await lydieApi.getCollectionDocumentByRoute(
+      collectionHandle,
+      `/${article}`,
+      {
+        includeToc: true,
+        includeRelated: true,
+      },
+    );
+
+    const routeArticle = routeDocument as ArticleDocument;
+    articleDocument = routeArticle.path === "/" ? null : routeArticle;
+  }
 
   if (!articleDocument) {
     throw new Error("Article not found");
   }
 
   toc = articleDocument.toc || [];
+  pillarDocuments = allDocuments.map((doc) =>
+    doc.id === articleDocument?.id ? { ...doc, toc } : doc,
+  );
 
-  // Render the content with custom components
-  const { html } = await renderContent(articleDocument.jsonContent as import("@lydie-app/sdk").ContentNode, {
-    components: {
-      image: blogImageComponent,
-      linkGrid: linkGridComponent,
-      comparisonGrid: comparisonGridComponent,
+  const { html } = await renderContent(
+    articleDocument.jsonContent as ContentNode,
+    {
+      components: {
+        image: blogImageComponent,
+        pillarCallout: pillarCalloutComponent,
+        flowchart: flowchartComponent,
+      },
+      linkResolver,
     },
-    linkResolver,
-  });
+  );
   contentHtml = html;
 } catch (error) {
   console.error(`[Resource Hub] Failed to fetch article ${article}:`, error);
@@ -78,8 +125,9 @@ try {
 
 <Layout
   title={articleDocument?.title || "Article"}
-  description={String(articleDocument?.fields?.description ||
-    articleDocument?.title || "Article")}
+  description={String(
+    articleDocument?.fields?.description || articleDocument?.title || "Article",
+  )}
 >
   <div class="py-8">
     <Container>
@@ -92,27 +140,14 @@ try {
       />
 
       <div class="flex gap-8 mt-8">
-        {/* Table of Contents Sidebar */}
         {
-          toc.length > 0 && (
-            <aside class="hidden lg:block w-64 shrink-0">
-              <nav class="sticky top-24">
-                <h2 class="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">
-                  On this page
-                </h2>
-                <ul class="space-y-2 text-sm">
-                  {toc.map((heading) => (
-                    <li class={`${heading.level === 2 ? "" : "ml-4"}`}>
-                      <a
-                        href={`#${heading.id}`}
-                        class="text-gray-600 hover:text-blue-600 transition-colors line-clamp-2"
-                      >
-                        {heading.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+          pillarDocuments.length > 0 && articleDocument && (
+            <aside class="hidden lg:block w-72 shrink-0">
+              <PillarTOC
+                documents={pillarDocuments}
+                currentDocumentId={articleDocument.id}
+                pillar={pillar}
+              />
             </aside>
           )
         }
@@ -121,7 +156,7 @@ try {
         <article class="flex-1 max-w-3xl">
           <header class="mb-8">
             <h1 class="text-3xl font-semibold text-gray-900">
-            {articleDocument?.title}
+              {articleDocument?.title}
             </h1>
             {
               articleDocument?.fields?.description && (
@@ -132,9 +167,10 @@ try {
             }
           </header>
 
-          <div class="prose prose-lg max-w-none">
+          <div class={articleTypographyClassName}>
             <Fragment set:html={contentHtml} />
           </div>
+          <ArticleHeadingEnhancements />
 
           {/* Related Articles */}
           {
@@ -146,7 +182,11 @@ try {
                 <div class="grid gap-4">
                   {articleDocument.related.map((doc) => (
                     <a
-                      href={`/${pillar}/${doc.fields?.slug || doc.id}`}
+                      href={
+                        doc.path === "/"
+                          ? `/${pillar}`
+                          : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`
+                      }
                       class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all"
                     >
                       <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">

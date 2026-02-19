@@ -1,4 +1,5 @@
 import { normalizeCollectionRoute } from "./collection-routes";
+import { createHeadingIdGenerator } from "./heading-ids";
 
 export interface CustomBlockProps {
   properties: Record<string, any>;
@@ -732,7 +733,7 @@ export class LydieClient {
 
 export function extractTableOfContents(content: ContentNode): TocItem[] {
   const headings: TocItem[] = [];
-  let headingCounter = 0;
+  const nextHeadingId = createHeadingIdGenerator();
 
   const traverseNode = (node: ContentNode | TextNode) => {
     if (node.type === "heading") {
@@ -740,7 +741,7 @@ export function extractTableOfContents(content: ContentNode): TocItem[] {
       const text = extractTextFromNode(node);
       if (text.trim()) {
         headings.push({
-          id: `heading-${headingCounter++}`,
+          id: nextHeadingId(text),
           level,
           text: text.trim(),
         });

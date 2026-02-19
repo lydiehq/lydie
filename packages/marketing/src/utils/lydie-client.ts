@@ -35,11 +35,11 @@ export function getCollectionDocumentPath(collectionHandle: string, slugOrId: st
   }
 
   if (collectionHandle === collections.knowledgeBases) {
-    return `/resources/knowledge-bases/${slugOrId}`;
+    return `/knowledge-bases/${slugOrId}`;
   }
 
   if (collectionHandle === collections.noteTaking) {
-    return `/resources/note-taking/${slugOrId}`;
+    return `/note-taking/${slugOrId}`;
   }
 
   if (collectionHandle === collections.documentation) {
@@ -92,6 +92,8 @@ export async function getCollectionDocuments(
     includeRelated?: boolean;
     includeToc?: boolean;
     filters?: Record<string, string | number | boolean>;
+    sortBy?: "created_at" | "updated_at" | "title";
+    sortOrder?: "asc" | "desc";
   },
 ): Promise<{ documents: CollectionApiDocument[] }> {
   const params = new URLSearchParams();
@@ -108,6 +110,14 @@ export async function getCollectionDocuments(
     for (const [key, value] of Object.entries(options.filters)) {
       params.set(`filter[${key}]`, String(value));
     }
+  }
+
+  if (options?.sortBy) {
+    params.set("sort_by", options.sortBy);
+  }
+
+  if (options?.sortOrder) {
+    params.set("sort_order", options.sortOrder);
   }
 
   const response = await fetch(

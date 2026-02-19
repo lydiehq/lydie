@@ -192,11 +192,18 @@ class EditorCache {
     const container = document.createElement("div");
     container.className = "size-full";
 
+    let contentEditor: Editor | null = null;
+
     // Create title editor
     const titleEditor = new TipTapEditor({
       autofocus: true,
       editable: true,
-      extensions: getTitleExtensions({ placeholder: "Untitled" }),
+      extensions: getTitleExtensions({
+        placeholder: "Untitled",
+        onEnter: () => {
+          contentEditor?.commands.focus("start");
+        },
+      }),
       content: initialTitle
         ? {
             type: "doc",
@@ -227,7 +234,7 @@ class EditorCache {
     });
 
     // Create content editor
-    const contentEditor = new TipTapEditor({
+    contentEditor = new TipTapEditor({
       autofocus: false,
       editable: true,
       extensions: getDocumentEditorExtensions({
@@ -288,6 +295,10 @@ class EditorCache {
         },
       },
     });
+
+    if (!contentEditor) {
+      throw new Error("Failed to initialize content editor");
+    }
 
     // Append editor DOM to container
     const contentDom = contentEditor.view.dom as HTMLElement;

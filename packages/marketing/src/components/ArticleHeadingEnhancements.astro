@@ -1,0 +1,63 @@
+<script is:inline>
+  (() => {
+    const headingLinks = Array.from(document.querySelectorAll("a[data-copy-heading-link]"));
+    if (headingLinks.length === 0) {
+      return;
+    }
+
+    const copiedLabel = "Link copied";
+    const defaultAriaLabel = "Copy link to this heading";
+
+    const copyHeadingUrl = async (headingId) => {
+      const targetUrl = `${window.location.origin}${window.location.pathname}#${headingId}`;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(targetUrl);
+          return true;
+        }
+      } catch {
+        // fall through to legacy copy
+      }
+
+      const textArea = document.createElement("textarea");
+      textArea.value = targetUrl;
+      textArea.setAttribute("readonly", "");
+      textArea.style.position = "absolute";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.select();
+      const didCopy = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return didCopy;
+    };
+
+    for (const headingLink of headingLinks) {
+      headingLink.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        const href = headingLink.getAttribute("href") || "";
+        const headingId = decodeURIComponent(href.replace(/^#/, ""));
+        if (!headingId) {
+          return;
+        }
+
+        void copyHeadingUrl(headingId).then((didCopy) => {
+          history.replaceState(null, "", `#${headingId}`);
+
+          if (!didCopy) {
+            return;
+          }
+
+          headingLink.setAttribute("aria-label", copiedLabel);
+          headingLink.classList.add("text-blue-600", "opacity-100");
+
+          window.setTimeout(() => {
+            headingLink.setAttribute("aria-label", defaultAriaLabel);
+            headingLink.classList.remove("text-blue-600");
+          }, 1200);
+        });
+      });
+    }
+  })();
+</script>
