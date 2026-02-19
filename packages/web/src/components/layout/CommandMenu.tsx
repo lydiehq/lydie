@@ -2,6 +2,7 @@ import {
   AddRegular,
   ArrowUploadRegular,
   BotRegular,
+  DatabaseRegular,
   HomeFilled,
   PaymentRegular,
   PlugConnectedRegular,
@@ -59,6 +60,14 @@ interface DocumentItem {
   action: () => void;
 }
 
+interface CollectionItem {
+  id: string;
+  collectionId: string;
+  label: string;
+  handle: string;
+  action: () => void;
+}
+
 export function CommandMenu() {
   const { createDocument, deleteDocument, publishDocument } = useDocumentActions();
   const params = useParams({ strict: false });
@@ -91,6 +100,11 @@ export function CommandMenu() {
   );
 
   const searchDocuments = useMemo(() => searchData?.documents || [], [searchData?.documents]);
+  const [collectionsData] = useQuery(
+    queries.collections.byOrganization({
+      organizationId: organization.id,
+    }),
+  );
 
   const { contains } = useFilter({ sensitivity: "base" });
   const filter = (textValue: string, inputValue: string) => contains(textValue, inputValue);
@@ -315,6 +329,23 @@ export function CommandMenu() {
     [handleCommand, openBackgroundTab],
   );
 
+  const handleCollectionClick = useCallback(
+    (e: React.MouseEvent, item: CollectionItem) => {
+      if (e.metaKey || e.ctrlKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        openBackgroundTab({
+          documentId: `collection:${item.collectionId}`,
+          title: item.label,
+        });
+        return;
+      }
+
+      handleCommand(item.action);
+    },
+    [handleCommand, openBackgroundTab],
+  );
+
   // Create document items from search results
   const documentItems = useMemo<DocumentItem[]>(() => {
     if (search.length < 2) {
@@ -335,6 +366,38 @@ export function CommandMenu() {
       },
     }));
   }, [searchDocuments, navigate, organization.slug, search.length]);
+
+  const collectionItems = useMemo<CollectionItem[]>(() => {
+    if (search.length < 2) {
+      return [];
+    }
+
+    const normalized = search.toLowerCase();
+    const list = collectionsData ?? [];
+
+    return list
+      .filter((collection) => {
+        const name = collection.name.toLowerCase();
+        const handle = collection.handle.toLowerCase();
+        return name.includes(normalized) || handle.includes(normalized);
+      })
+      .slice(0, 8)
+      .map((collection) => ({
+        id: `collection-${collection.id}`,
+        collectionId: collection.id,
+        label: collection.name || "Untitled Collection",
+        handle: collection.handle,
+        action: () => {
+          navigate({
+            to: "/w/$organizationSlug/collections/$collectionId",
+            params: {
+              organizationSlug: organization.slug,
+              collectionId: collection.id,
+            },
+          });
+        },
+      }));
+  }, [collectionsData, navigate, organization.slug, search]);
 
   return (
     <ModalOverlay
@@ -430,6 +493,37 @@ export function CommandMenu() {
                       <Text slot="label" className="flex-1 min-w-0 truncate text-start">
                         {item.label}
                       </Text>
+                    </MenuItem>
+                  ))}
+                </MenuSection>
+              )}
+
+              {collectionItems.length > 0 && (
+                <MenuSection
+                  id="quick-collection-results"
+                  className="col-span-full grid grid-cols-1 content-start"
+                >
+                  <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">
+                    Collections
+                  </Header>
+                  {collectionItems.map((item) => (
+                    <MenuItem
+                      key={item.id}
+                      id={item.id}
+                      textValue={item.label}
+                      onAction={() => handleCommand(item.action)}
+                      onPointerUp={(e) =>
+                        handleCollectionClick(e as unknown as React.MouseEvent, item)
+                      }
+                      className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
+                    >
+                      <DatabaseRegular className="size-4 text-gray-400 shrink-0 mr-2" />
+                      <div className="flex min-w-0 flex-col text-start">
+                        <Text slot="label" className="truncate">
+                          {item.label}
+                        </Text>
+                        <span className="text-xs text-gray-500 truncate">/{item.handle}</span>
+                      </div>
                     </MenuItem>
                   ))}
                 </MenuSection>
