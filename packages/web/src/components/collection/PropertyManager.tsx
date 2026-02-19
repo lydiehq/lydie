@@ -146,7 +146,10 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
           </div>
 
           <div>
-            <label htmlFor="collection-property-type" className="block text-xs font-medium text-gray-600 mb-1">
+            <label
+              htmlFor="collection-property-type"
+              className="block text-xs font-medium text-gray-600 mb-1"
+            >
               Type
             </label>
             <select
@@ -170,7 +173,10 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
 
           {(newProperty.type === "select" || newProperty.type === "multi-select") && (
             <div>
-              <label htmlFor="collection-property-options" className="block text-xs font-medium text-gray-600 mb-1">
+              <label
+                htmlFor="collection-property-options"
+                className="block text-xs font-medium text-gray-600 mb-1"
+              >
                 Options (comma-separated)
               </label>
               <input

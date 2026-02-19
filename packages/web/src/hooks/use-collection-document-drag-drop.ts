@@ -29,7 +29,9 @@ function getSiblingOrder(
   targetId: string,
   position: "before" | "after",
 ): string[] {
-  const siblings = sortByOrder(documents.filter((document) => (document.parent_id ?? null) === parentId));
+  const siblings = sortByOrder(
+    documents.filter((document) => (document.parent_id ?? null) === parentId),
+  );
   const stable = siblings.filter((document) => !movedIds.includes(document.id));
   const targetIndex = stable.findIndex((document) => document.id === targetId);
 

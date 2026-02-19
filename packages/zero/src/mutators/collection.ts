@@ -51,11 +51,7 @@ async function maybeOne<T>(query: Promise<T>): Promise<T | null> {
   }
 }
 
-async function createUniqueHandle(
-  tx: any,
-  organizationId: string,
-  input: string,
-): Promise<string> {
+async function createUniqueHandle(tx: any, organizationId: string, input: string): Promise<string> {
   const base = slugify(input).trim() || `collection-${createId().slice(0, 4)}`;
   if (RESERVED_HANDLES.has(base)) {
     throw new Error("This handle is reserved.");
@@ -264,7 +260,38 @@ export const collectionMutators = {
         throw new Error("Collection not found");
       }
 
-      await tx.mutate.collections.delete({ id: args.collectionId });
+      await tx.mutate.collections.update({
+        id: args.collectionId,
+        deleted_at: Date.now(),
+      });
+    },
+  ),
+
+  restore: defineMutator(
+    z.object({
+      collectionId: z.string(),
+      organizationId: z.string(),
+    }),
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+
+      const existing = await maybeOne(
+        tx.run(
+          zql.collections
+            .where("id", args.collectionId)
+            .where("organization_id", args.organizationId)
+            .one(),
+        ),
+      );
+
+      if (!existing) {
+        throw new Error("Collection not found");
+      }
+
+      await tx.mutate.collections.update({
+        id: args.collectionId,
+        deleted_at: null,
+      });
     },
   ),
 };

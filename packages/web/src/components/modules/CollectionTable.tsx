@@ -109,7 +109,7 @@ function extractFieldValues(
   };
 }
 
-export function RecordsTable({ collectionId, organizationId, organizationSlug, schema }: Props) {
+export function CollectionTable({ collectionId, organizationId, organizationSlug, schema }: Props) {
   const z = useZero();
   const [isAddingProperty, setIsAddingProperty] = useState(false);
   const [newPropertyName, setNewPropertyName] = useState("");
@@ -416,13 +416,13 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
           <div className="flex flex-wrap items-end gap-2">
             <div className="min-w-[200px] flex-1">
               <label
-                htmlFor="records-table-property-name"
+                htmlFor="collection-table-property-name"
                 className="mb-1 block text-xs font-medium text-gray-600"
               >
                 Property name
               </label>
               <input
-                id="records-table-property-name"
+                id="collection-table-property-name"
                 type="text"
                 value={newPropertyName}
                 onChange={(event) => setNewPropertyName(event.target.value)}
@@ -432,13 +432,13 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
             </div>
             <div>
               <label
-                htmlFor="records-table-property-type"
+                htmlFor="collection-table-property-type"
                 className="mb-1 block text-xs font-medium text-gray-600"
               >
                 Type
               </label>
               <select
-                id="records-table-property-type"
+                id="collection-table-property-type"
                 value={newPropertyType}
                 onChange={(event) =>
                   setNewPropertyType(event.target.value as PropertyDefinition["type"])
@@ -495,7 +495,9 @@ export function RecordsTable({ collectionId, organizationId, organizationSlug, s
               <Column
                 id={column.id}
                 isRowHeader={column.isRowHeader}
-                width={column.kind === "add-property" ? 140 : "1fr"}
+                width={column.kind === "add-property" ? 140 : undefined}
+                defaultWidth={column.kind !== "add-property" ? "1fr" : undefined}
+                allowsResizing={column.kind !== "add-property"}
                 allowsSorting={column.kind !== "add-property"}
               >
                 {column.kind === "add-property" ? (

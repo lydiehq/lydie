@@ -1,7 +1,7 @@
 import { AppFolder16Filled } from "@fluentui/react-icons";
 import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
-import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { Button } from "react-aria-components";
 
 export type TreeItemIconProps = {

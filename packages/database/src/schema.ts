@@ -238,6 +238,7 @@ export const collectionsTable = pgTable(
       >()
       .notNull()
       .default([]),
+    deletedAt: timestamp("deleted_at"),
     ...timestamps,
   },
   (table) => [

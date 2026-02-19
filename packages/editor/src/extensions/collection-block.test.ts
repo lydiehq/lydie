@@ -1,6 +1,5 @@
-import { describe, expect, it } from "vitest";
-
 import { CollectionBlock } from "@lydie/editor/extensions";
+import { describe, expect, it } from "vitest";
 
 import { createTestEditor, destroyEditor } from "../test-utils";
 

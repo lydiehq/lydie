@@ -19,7 +19,7 @@ test.describe("collections", () => {
       await page.getByRole("button", { name: "New Collection" }).click();
 
       await expect(page).toHaveURL(/\/collections\//);
-      await expect(page.getByText("Untitled Collection")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Untitled Collection" })).toBeVisible();
     });
 
     test("should display existing collections in sidebar", async ({ page, organization }) => {
@@ -50,7 +50,9 @@ test.describe("collections", () => {
         await page.getByText("Navigation Test Collection").click();
 
         await expect(page).toHaveURL(`/w/${organization.slug}/collections/${collection.id}`);
-        await expect(page.getByRole("heading", { name: "Navigation Test Collection" })).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: "Navigation Test Collection" }),
+        ).toBeVisible();
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -63,7 +65,13 @@ test.describe("collections", () => {
         name: "Details Test Collection",
         handle: "details-test",
         properties: [
-          { name: "status", type: "select", required: false, unique: false, options: ["draft", "published"] },
+          {
+            name: "status",
+            type: "select",
+            required: false,
+            unique: false,
+            options: ["draft", "published"],
+          },
         ],
       });
 
@@ -72,6 +80,30 @@ test.describe("collections", () => {
 
         await expect(page.getByRole("heading", { name: "Details Test Collection" })).toBeVisible();
         await expect(page.getByText("/details-test")).toBeVisible();
+      } finally {
+        await deleteTestCollection(collection.id);
+      }
+    });
+
+    test("should update collection name", async ({ page, organization }) => {
+      const collection = await createTestCollection(organization.id, {
+        name: "Old Collection Name",
+        handle: "name-update-test",
+      });
+
+      try {
+        await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
+
+        const nameInput = page.getByRole("textbox", { name: "Collection name" });
+        await nameInput.fill("New Collection Name");
+
+        await page
+          .locator('form:has(input[aria-label="Collection name"])')
+          .getByRole("button", { name: "Save", exact: true })
+          .click();
+
+        await expect(page.getByText("Collection name updated")).toBeVisible();
+        await expect(page.getByRole("heading", { name: "New Collection Name" })).toBeVisible();
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -90,7 +122,10 @@ test.describe("collections", () => {
         await handleInput.fill("new-handle");
         await handleInput.fill("new-handle");
 
-        await page.getByRole("button", { name: "Save", exact: true }).click();
+        await page
+          .locator('form:has(input[aria-label="Collection handle"])')
+          .getByRole("button", { name: "Save", exact: true })
+          .click();
 
         await expect(page.getByText("Collection handle updated")).toBeVisible();
         await expect(page.getByText("/new-handle")).toBeVisible();
@@ -155,7 +190,10 @@ test.describe("collections", () => {
 
         await expect(page.getByText("tempField")).toBeVisible();
 
-        await page.locator('[data-testid="property-tempField"]').getByRole("button", { name: "Remove" }).click();
+        await page
+          .locator('[data-testid="property-tempField"]')
+          .getByRole("button", { name: "Remove" })
+          .click();
 
         await expect(page.getByText("tempField")).not.toBeVisible();
       } finally {
@@ -173,7 +211,9 @@ test.describe("collections", () => {
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
-        await expect(page.getByText("Routing is enabled through the route field")).not.toBeVisible();
+        await expect(
+          page.getByText("Routing is enabled through the route field"),
+        ).not.toBeVisible();
 
         await page.getByRole("button", { name: "Enable routing" }).click();
 
@@ -265,17 +305,25 @@ test.describe("collections", () => {
         properties: [{ name: "category", type: "text", required: false, unique: false }],
       });
 
-      const { document: doc1 } = await createTestCollectionDocument(organization.id, collection.id, {
-        title: "Category A Document",
-        published: true,
-        fieldValues: { category: "A" },
-      });
+      const { document: doc1 } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Category A Document",
+          published: true,
+          fieldValues: { category: "A" },
+        },
+      );
 
-      const { document: doc2 } = await createTestCollectionDocument(organization.id, collection.id, {
-        title: "Category B Document",
-        published: true,
-        fieldValues: { category: "B" },
-      });
+      const { document: doc2 } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Category B Document",
+          published: true,
+          fieldValues: { category: "B" },
+        },
+      );
 
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
@@ -301,18 +349,26 @@ test.describe("collections", () => {
         properties: [{ name: "route", type: "text", required: true, unique: true }],
       });
 
-      const { document: parentDoc } = await createTestCollectionDocument(organization.id, collection.id, {
-        title: "Parent Page",
-        published: true,
-        fieldValues: { route: "/" },
-      });
+      const { document: parentDoc } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Parent Page",
+          published: true,
+          fieldValues: { route: "/" },
+        },
+      );
 
-      const { document: childDoc } = await createTestCollectionDocument(organization.id, collection.id, {
-        title: "Child Page",
-        published: true,
-        parentId: parentDoc.id,
-        fieldValues: { route: "/child" },
-      });
+      const { document: childDoc } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Child Page",
+          published: true,
+          parentId: parentDoc.id,
+          fieldValues: { route: "/child" },
+        },
+      );
 
       try {
         await page.goto(`/w/${organization.slug}`);
@@ -348,7 +404,9 @@ test.describe("collections", () => {
 
         await page.getByText("Block Test Collection").click();
 
-        await expect(page.getByText("Block Test Collection", { exact: true }).first()).toBeVisible();
+        await expect(
+          page.getByText("Block Test Collection", { exact: true }).first(),
+        ).toBeVisible();
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -444,17 +502,25 @@ test.describe("collections", () => {
         properties: [{ name: "status", type: "text", required: false, unique: false }],
       });
 
-      const { document: doc1 } = await createTestCollectionDocument(organization.id, collection.id, {
-        title: "Active Document",
-        published: true,
-        fieldValues: { status: "active" },
-      });
+      const { document: doc1 } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Active Document",
+          published: true,
+          fieldValues: { status: "active" },
+        },
+      );
 
-      const { document: doc2 } = await createTestCollectionDocument(organization.id, collection.id, {
-        title: "Draft Document",
-        published: true,
-        fieldValues: { status: "draft" },
-      });
+      const { document: doc2 } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Draft Document",
+          published: true,
+          fieldValues: { status: "draft" },
+        },
+      );
 
       try {
         const response = await page.request.get(
@@ -493,7 +559,9 @@ test.describe("collections", () => {
       });
 
       try {
-        const response = await page.request.get(`/api/external/collections/documents/my-unique-slug`);
+        const response = await page.request.get(
+          `/api/external/collections/documents/my-unique-slug`,
+        );
 
         expect(response.status()).toBe(200);
 
@@ -523,7 +591,9 @@ test.describe("collections", () => {
       });
 
       try {
-        const response = await page.request.get(`/api/external/collections/route-api/routes/getting-started`);
+        const response = await page.request.get(
+          `/api/external/collections/route-api/routes/getting-started`,
+        );
 
         expect(response.status()).toBe(200);
 
@@ -544,7 +614,9 @@ test.describe("collections", () => {
       });
 
       try {
-        const response = await page.request.get(`/api/external/collections/missing-route/routes/non-existent`);
+        const response = await page.request.get(
+          `/api/external/collections/missing-route/routes/non-existent`,
+        );
 
         expect(response.status()).toBe(404);
       } finally {

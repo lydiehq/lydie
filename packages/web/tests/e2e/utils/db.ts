@@ -17,6 +17,52 @@ type Collection = InferSelectModel<typeof collectionsTable>;
 type Document = InferSelectModel<typeof documentsTable>;
 type CollectionFields = InferSelectModel<typeof collectionFieldsTable>;
 
+function isDeadlockError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeCode = (error as { code?: unknown }).code;
+  if (maybeCode === "40P01") {
+    return true;
+  }
+
+  const cause = (error as { cause?: unknown }).cause;
+  return cause ? isDeadlockError(cause) : false;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function withDeadlockRetry<T>(
+  operation: () => Promise<T>,
+  label: string,
+  maxAttempts = 4,
+): Promise<T> {
+  let attempt = 1;
+
+  while (true) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isDeadlockError(error) || attempt >= maxAttempts) {
+        throw error;
+      }
+
+      const backoffMs = 50 * 2 ** (attempt - 1);
+      const jitterMs = Math.floor(Math.random() * 30);
+
+      console.warn(
+        `Deadlock during ${label}; retrying (${attempt}/${maxAttempts}) after ${backoffMs + jitterMs}ms`,
+      );
+
+      await delay(backoffMs + jitterMs);
+      attempt += 1;
+    }
+  }
+}
+
 export async function createTestUser(options?: {
   prefix?: string;
   userId?: string;
@@ -32,14 +78,15 @@ export async function createTestUser(options?: {
   const userEmail = `${prefix}-${userId}@playwright.test`;
   const userName = `Test ${prefix.charAt(0).toUpperCase() + prefix.slice(1)} ${userId}`;
 
-  await db.insert(usersTable).values({
-    id: userId,
-    email: userEmail,
-    name: userName,
-    emailVerified: true,
-  });
-
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  const [user] = await db
+    .insert(usersTable)
+    .values({
+      id: userId,
+      email: userEmail,
+      name: userName,
+      emailVerified: true,
+    })
+    .returning();
 
   if (!user) {
     throw new Error(`Failed to create test user ${userId}`);
@@ -51,11 +98,30 @@ export async function createTestUser(options?: {
   });
 
   const cleanup = async () => {
+    let failed = false;
+
     try {
-      await db.delete(organizationsTable).where(eq(organizationsTable.id, organization.id));
-      await db.delete(usersTable).where(eq(usersTable.id, user.id));
+      await withDeadlockRetry(
+        () => db.delete(organizationsTable).where(eq(organizationsTable.id, organization.id)),
+        `organization cleanup for ${userId}`,
+      );
     } catch (error) {
-      console.error(`Failed to cleanup test user ${userId}:`, error);
+      failed = true;
+      console.error(`Failed to cleanup organization ${organization.id} for ${userId}:`, error);
+    }
+
+    try {
+      await withDeadlockRetry(
+        () => db.delete(usersTable).where(eq(usersTable.id, user.id)),
+        `user cleanup for ${userId}`,
+      );
+    } catch (error) {
+      failed = true;
+      console.error(`Failed to cleanup user ${user.id}:`, error);
+    }
+
+    if (failed) {
+      console.error(`Failed to cleanup test user ${userId}`);
     }
   };
 
@@ -117,19 +183,16 @@ export async function createTestCollection(
       unique: p.unique ?? false,
     })) ?? [];
 
-  await db.insert(collectionsTable).values({
-    id: collectionId,
-    name,
-    handle,
-    organizationId,
-    properties,
-  });
-
   const [collection] = await db
-    .select()
-    .from(collectionsTable)
-    .where(eq(collectionsTable.id, collectionId))
-    .limit(1);
+    .insert(collectionsTable)
+    .values({
+      id: collectionId,
+      name,
+      handle,
+      organizationId,
+      properties,
+    })
+    .returning();
 
   if (!collection) {
     throw new Error(`Failed to create collection ${collectionId}`);
@@ -151,20 +214,17 @@ export async function createTestCollectionDocument(
   const documentId = createId();
   const title = options?.title ?? `Test Document ${documentId.slice(0, 8)}`;
 
-  await db.insert(documentsTable).values({
-    id: documentId,
-    title,
-    organizationId,
-    collectionId,
-    parentId: options?.parentId ?? null,
-    published: options?.published ?? false,
-  });
-
   const [document] = await db
-    .select()
-    .from(documentsTable)
-    .where(eq(documentsTable.id, documentId))
-    .limit(1);
+    .insert(documentsTable)
+    .values({
+      id: documentId,
+      title,
+      organizationId,
+      collectionId,
+      parentId: options?.parentId ?? null,
+      published: options?.published ?? false,
+    })
+    .returning();
 
   if (!document) {
     throw new Error(`Failed to create document ${documentId}`);
@@ -174,18 +234,15 @@ export async function createTestCollectionDocument(
 
   if (options?.fieldValues && Object.keys(options.fieldValues).length > 0) {
     const fieldsId = createId();
-    await db.insert(collectionFieldsTable).values({
-      id: fieldsId,
-      documentId,
-      collectionId,
-      values: options.fieldValues,
-    });
-
     const [fieldsResult] = await db
-      .select()
-      .from(collectionFieldsTable)
-      .where(eq(collectionFieldsTable.id, fieldsId))
-      .limit(1);
+      .insert(collectionFieldsTable)
+      .values({
+        id: fieldsId,
+        documentId,
+        collectionId,
+        values: options.fieldValues,
+      })
+      .returning();
 
     fields = fieldsResult ?? null;
   }

@@ -34,6 +34,8 @@
     "db:push": "bun --filter=@lydie/database db:push",
     "db:sync": "bun --filter=@lydie/database db:sync-zero-publication",
     "db:studio": "bun --filter=@lydie/database db:studio",
+    "db:migrate": "bun --filter=@lydie/database db:migrate",
+    "db:generate": "bun --filter=@lydie/database db:generate",
     "deploy:prod": "sst deploy --stage production",
     "deploy:web": "sst deploy --target Web --stage production",
     "deploy:marketing": "sst deploy --target Marketing --stage production",

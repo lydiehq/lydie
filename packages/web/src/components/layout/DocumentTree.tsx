@@ -4,7 +4,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
 import { atom, useAtom, useAtomValue } from "jotai";
 import type { ReactElement } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Key } from "react-aria-components";
 import { Tree } from "react-aria-components";
 
@@ -44,7 +44,9 @@ function saveToStorage(userId: string | null | undefined, keys: string[]): void 
 
 export const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
-type QueryDocuments = NonNullable<QueryResultType<typeof queries.organizations.documents>>["documents"];
+type QueryDocuments = NonNullable<
+  QueryResultType<typeof queries.organizations.documents>
+>["documents"];
 
 export function DocumentTree() {
   const { organization } = useOrganization();
@@ -82,19 +84,10 @@ export function DocumentTree() {
     [orgData?.documents],
   );
 
-  const prevDocIdRef = useRef<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!currentDocId || currentDocId === prevDocIdRef.current || treeDocuments.length === 0) {
-      return;
-    }
-
+  const expandedKeys = useMemo(() => {
     const ancestorIds = getAncestorIds(currentDocId, treeDocuments);
-    setExpandedKeysArray((previous) => Array.from(new Set([...previous, ...ancestorIds])));
-    prevDocIdRef.current = currentDocId;
-  }, [currentDocId, treeDocuments, setExpandedKeysArray]);
-
-  const expandedKeys = useMemo(() => new Set(expandedKeysArray), [expandedKeysArray]);
+    return new Set([...expandedKeysArray, ...ancestorIds]);
+  }, [currentDocId, expandedKeysArray, treeDocuments]);
 
   const treeItems = useMemo(() => {
     const byParent = new Map<string | null, QueryDocuments>();

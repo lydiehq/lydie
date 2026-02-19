@@ -173,9 +173,7 @@ export function TemplateViewer({ documents }: TemplateViewerProps) {
                 </div>
               )}
 
-              <span className="truncate">
-                {item.name.trim() || "Untitled document"}
-              </span>
+              <span className="truncate">{item.name.trim() || "Untitled document"}</span>
             </div>
           )}
         </TreeItemContent>

@@ -95,7 +95,8 @@ export function DocumentTreeItem({
         focusRing,
         sidebarItemStyles({
           isCurrent,
-          className: "group cursor-default dragging:opacity-50 dragging:bg-gray-50 drop-target:bg-gray-200",
+          className:
+            "group cursor-default dragging:opacity-50 dragging:bg-gray-50 drop-target:bg-gray-200",
         }),
       )}
       style={{
@@ -125,10 +126,7 @@ export function DocumentTreeItem({
                 isMenuOpen={isMenuOpen}
                 inTabRegistry={isOpenInTabs}
               />
-              <span
-                onClick={handleTitleClick}
-                className="truncate"
-              >
+              <span onClick={handleTitleClick} className="truncate">
                 {item.name.trim() || "Untitled document"}
               </span>
             </div>
@@ -218,7 +216,11 @@ function ItemContextMenu({
         />
       )}
       <MenuTrigger isOpen={isMenuOpen} onOpenChange={onMenuOpenChange}>
-        <ActionButton ariaLabel="Document options" icon={MoreHorizontalRegular} tooltip="Document options" />
+        <ActionButton
+          ariaLabel="Document options"
+          icon={MoreHorizontalRegular}
+          tooltip="Document options"
+        />
         <DocumentMenu documentId={itemId} documentName={itemName} />
       </MenuTrigger>
     </div>

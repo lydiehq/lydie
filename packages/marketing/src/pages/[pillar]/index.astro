@@ -38,35 +38,45 @@ type CollectionDocument = Awaited<
 let pillarDocument: CollectionDocument | null = null;
 let childDocuments: CollectionDocument[] = [];
 let contentHtml = "";
-const linkResolver = createLinkResolver({ currentCollectionHandle: collectionHandle });
+const linkResolver = createLinkResolver({
+  currentCollectionHandle: collectionHandle,
+});
 
 console.log(`[Resource Hub] Fetching pillar: ${collectionHandle}`);
 
 try {
   // Fetch the pillar document
-  const { documents: pillarDocuments } = await lydieApi.getCollectionDocuments(collectionHandle, {
-    includeToc: true,
-  });
+  const { documents: pillarDocuments } = await lydieApi.getCollectionDocuments(
+    collectionHandle,
+    {
+      includeToc: true,
+    },
+  );
 
-  pillarDocument = (pillarDocuments[0] as CollectionDocument | undefined) || null;
+  pillarDocument =
+    (pillarDocuments[0] as CollectionDocument | undefined) || null;
 
   if (!pillarDocument) {
     throw new Error("Pillar not found");
   }
 
   // Fetch children of this document (same pattern as blog)
-  const { documents: children } = await lydieApi.getCollectionDocuments(collectionHandle);
+  const { documents: children } =
+    await lydieApi.getCollectionDocuments(collectionHandle);
   childDocuments = children;
 
   // Render the content with custom components
-  const { html } = await renderContent(pillarDocument.jsonContent as import("@lydie-app/sdk").ContentNode, {
-    components: {
-      image: blogImageComponent,
-      linkGrid: linkGridComponent,
-      comparisonGrid: comparisonGridComponent,
+  const { html } = await renderContent(
+    pillarDocument.jsonContent as import("@lydie-app/sdk").ContentNode,
+    {
+      components: {
+        image: blogImageComponent,
+        linkGrid: linkGridComponent,
+        comparisonGrid: comparisonGridComponent,
+      },
+      linkResolver,
     },
-    linkResolver,
-  });
+  );
   contentHtml = html;
 } catch (error) {
   console.error(
@@ -79,19 +89,21 @@ try {
 
 <Layout
   title={pillarDocument?.title || "Resources"}
-  description={String(pillarDocument?.fields?.description ||
-    `Learn about ${pillarDocument?.title || "Resources"}`)}
+  description={String(
+    pillarDocument?.fields?.description ||
+      `Learn about ${pillarDocument?.title || "Resources"}`,
+  )}
 >
   <div class="py-8">
     <Container>
       <Breadcrumbs
         items={[
-          { label: "Resources", href: "/resources" },
+          { label: "Home", href: "/" },
           { label: pillarDocument?.title || "Resources" },
         ]}
       />
 
-      <article class="max-w-3xl mx-auto">
+      <article class="mx-auto">
         <header class="mb-12 mt-8">
           <h1 class="text-3xl font-semibold text-gray-900 mb-4">
             {pillarDocument?.title}
@@ -120,7 +132,7 @@ try {
               <div class="grid md:grid-cols-2 gap-5">
                 {childDocuments.map((doc) => (
                   <a
-                    href={`/resources/${pillar}/${doc.fields?.slug || doc.id}`}
+                    href={`/${pillar}/${doc.fields?.slug || doc.id}`}
                     class="group block p-6 bg-white border border-gray-200 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all"
                   >
                     <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">

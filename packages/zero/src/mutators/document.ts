@@ -388,9 +388,7 @@ export const documentMutators = {
         await tx.mutate.documents.update(withUpdatedTimestamp({ id: childId, deleted_at: null }));
       }
 
-      await tx.mutate.documents.update(
-        withUpdatedTimestamp({ id: documentId, deleted_at: null }),
-      );
+      await tx.mutate.documents.update(withUpdatedTimestamp({ id: documentId, deleted_at: null }));
     },
   ),
 };

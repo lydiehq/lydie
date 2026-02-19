@@ -182,7 +182,11 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                 {isCollectionTabId(tab.documentId) ? (
                   <AppFolder16Filled className="size-4 shrink-0 text-gray-500" />
                 ) : (
-                  <DocumentThumbnailIcon className="size-4 shrink-0" active={isSelected} size="sm" />
+                  <DocumentThumbnailIcon
+                    className="size-4 shrink-0"
+                    active={isSelected}
+                    size="sm"
+                  />
                 )}
                 <span className="flex-1 truncate text-sm font-medium text-gray-700 pr-5">
                   {tab.title || "Untitled"}

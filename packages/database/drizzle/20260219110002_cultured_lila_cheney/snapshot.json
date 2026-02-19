@@ -1,8 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "4f8f080c-bdb3-4b55-8992-9c51e639d66f",
-  "prevIds": ["f49ebaa1-fb5e-4996-b3f2-8eaffca427a4"],
+  "id": "c2a2f506-1416-408a-85fe-6ffbd2811c48",
+  "prevIds": ["4f8f080c-bdb3-4b55-8992-9c51e639d66f"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -1086,6 +1086,19 @@
     {
       "type": "timestamp",
       "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "collections"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": "now()",
@@ -2002,19 +2015,6 @@
       "generated": null,
       "identity": null,
       "name": "deleted_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "boolean",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "false",
-      "generated": null,
-      "identity": null,
-      "name": "is_locked",
       "entityType": "columns",
       "schema": "public",
       "table": "documents"

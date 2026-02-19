@@ -85,8 +85,8 @@ try {
     <Container>
       <Breadcrumbs
         items={[
-          { label: "Resources", href: "/resources" },
-          { label: pillar.replace(/-/g, " "), href: `/resources/${pillar}` },
+          { label: "Home", href: "/" },
+          { label: pillar.replace(/-/g, " "), href: `/${pillar}` },
           { label: articleDocument.title },
         ]}
       />
@@ -146,7 +146,7 @@ try {
                 <div class="grid gap-4">
                   {articleDocument.related.map((doc) => (
                     <a
-                      href={`/resources/${pillar}/${doc.fields?.slug || doc.id}`}
+                      href={`/${pillar}/${doc.fields?.slug || doc.id}`}
                       class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all"
                     >
                       <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">

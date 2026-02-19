@@ -123,9 +123,7 @@ describe("buildCollectionRoutes", () => {
   });
 
   it("should handle missing titles using IDs", () => {
-    const nodes: CollectionRouteNode[] = [
-      { id: "doc-123", parentId: null, title: "", slug: null },
-    ];
+    const nodes: CollectionRouteNode[] = [{ id: "doc-123", parentId: null, title: "", slug: null }];
 
     const routes = buildCollectionRoutes(nodes);
 

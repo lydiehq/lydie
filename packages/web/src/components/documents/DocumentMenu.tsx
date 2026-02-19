@@ -40,8 +40,8 @@ export function DocumentMenu({
     const itemName = documentName;
 
     confirmDialog({
-      title: `Delete "${itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName}"`,
-      message: `This action cannot be undone. This document will be permanently deleted.`,
+      title: `Move "${itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName}" to trash?`,
+      message: `This document will be moved to trash. You can restore it later from the trash.`,
       onConfirm: () => {
         deleteDocumentWithUndo(documentId, currentDocId === documentId);
       },

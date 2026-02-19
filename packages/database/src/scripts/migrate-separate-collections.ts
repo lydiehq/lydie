@@ -73,15 +73,19 @@ async function main() {
       AND collection_id IS NULL
   `);
 
-  await db.execute(sql`
+  await db
+    .execute(sql`
     ALTER TABLE document_field_values
     RENAME TO collection_fields
-  `).catch(() => undefined);
+  `)
+    .catch(() => undefined);
 
-  await db.execute(sql`
+  await db
+    .execute(sql`
     ALTER TABLE collection_fields
     RENAME COLUMN collection_schema_id TO collection_id
-  `).catch(() => undefined);
+  `)
+    .catch(() => undefined);
 
   await db.execute(sql`
     ALTER TABLE documents

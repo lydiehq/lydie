@@ -11,6 +11,7 @@ export const collectionQueries = {
       hasOrganizationAccess(ctx, organizationId);
       return zql.collections
         .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
         .orderBy("name", "asc");
     },
   ),
@@ -22,6 +23,7 @@ export const collectionQueries = {
       return zql.collections
         .where("id", collectionId)
         .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
         .one();
     },
   ),
@@ -33,7 +35,23 @@ export const collectionQueries = {
       return zql.collections
         .where("handle", handle)
         .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
         .one();
+    },
+  ),
+
+  trash: defineQuery(
+    z.object({
+      organizationId: z.string(),
+      limit: z.number().optional(),
+    }),
+    ({ args: { organizationId, limit = 100 }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.collections
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS NOT", null)
+        .orderBy("deleted_at", "desc")
+        .limit(limit);
     },
   ),
 

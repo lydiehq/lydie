@@ -95,6 +95,7 @@ const collections = table("collections")
     handle: string(),
     organization_id: string(),
     properties: json(), // Array of property definitions
+    deleted_at: number().optional(),
     ...timestamps,
   })
   .primaryKey("id");

@@ -5,7 +5,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { NodeViewWrapper, type NodeViewRendererProps } from "@tiptap/react";
 import { useMemo, useState } from "react";
 
-import { RecordsTable } from "@/components/modules/RecordsTable";
+import { CollectionTable } from "@/components/modules/CollectionTable";
 
 const collectionByIdQuery = queries.collections.byId as any;
 const collectionsByOrganizationQuery = queries.collections.byOrganization as any;
@@ -205,7 +205,7 @@ export function CollectionBlockComponent(props: Props) {
           </div>
         </div>
 
-        <RecordsTable
+        <CollectionTable
           collectionId={collectionId}
           organizationId={organizationId}
           organizationSlug={organizationSlug}

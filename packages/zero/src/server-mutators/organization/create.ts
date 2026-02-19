@@ -100,17 +100,17 @@ async function createOnboardingDocumentsWithEmbeddings(
       id: onboardingDocId,
       slug: `${slugify("Welcome to Your Workspace")}-${createId().slice(0, 6)}`,
       title: guideTitle,
-        yjs_state: guideYjsState,
-        user_id: userId,
-        organization_id: organizationId,
-        integration_link_id: null,
-        full_width: false,
-        is_favorited: false,
-        published: false,
-        parent_id: null,
-        sort_order: 0,
-      }),
-    );
+      yjs_state: guideYjsState,
+      user_id: userId,
+      organization_id: organizationId,
+      integration_link_id: null,
+      full_width: false,
+      is_favorited: false,
+      published: false,
+      parent_id: null,
+      sort_order: 0,
+    }),
+  );
 
   // Use Drizzle for embeddings (not in Zero's schema but in same transaction)
   const guideEmbeddings = onboardingEmbeddings[ONBOARDING_GUIDE_ID];

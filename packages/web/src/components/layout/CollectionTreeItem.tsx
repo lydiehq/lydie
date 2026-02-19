@@ -1,14 +1,14 @@
-import { Add16Filled } from "@fluentui/react-icons";
+import { Add16Filled, MoreHorizontalRegular } from "@fluentui/react-icons";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
 import { cx } from "cva";
 import { memo, useMemo, useState, type ReactElement } from "react";
-import { Button as RACButton, Tree } from "react-aria-components";
+import { Button as RACButton, MenuTrigger, Tree } from "react-aria-components";
 
-import { queries } from "@lydie/zero/queries";
-import { useQuery } from "@rocicorp/zero/react";
-
+import { CollectionMenu } from "@/components/collections/CollectionMenu";
 import { useOrganization } from "@/context/organization.context";
 import { useCollectionDocumentDragDrop } from "@/hooks/use-collection-document-drag-drop";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -47,6 +47,7 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
     params?: Record<string, string>;
   }) => void;
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [docs] = useQuery(
     queries.collections.documentsByCollection({
@@ -100,11 +101,7 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
   const { dragAndDropHooks } = useCollectionDocumentDragDrop(collectionDocuments);
 
   const renderTreeItem = (item: TreeDocumentItem): ReactElement => (
-    <DocumentTreeItem
-      item={item}
-      renderItem={renderTreeItem}
-      defaultCollectionId={collection.id}
-    />
+    <DocumentTreeItem item={item} renderItem={renderTreeItem} defaultCollectionId={collection.id} />
   );
 
   const handleNavigate = () => {
@@ -137,7 +134,7 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
             type="collection"
             isExpanded={isExpanded}
             hasChildren={hasRouteProperty}
-            isMenuOpen={false}
+            isMenuOpen={isMenuOpen}
             onToggle={hasRouteProperty ? () => setIsExpanded((v) => !v) : undefined}
           />
           <button
@@ -149,11 +146,13 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
           </button>
         </div>
 
-        <div className="opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto">
+        <div
+          className={`pointer-events-none flex items-center gap-x-px bg-inherit pl-1 ${isMenuOpen ? "relative" : "absolute right-0 opacity-0 group-hover:opacity-100 group-hover:relative"}`}
+        >
           <TooltipTrigger delay={500}>
             <RACButton
               onPress={handleAddDocument}
-              className="p-0.5 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center"
+              className="pointer-events-auto rounded-md p-0.5 text-black hover:bg-black/5 hover:text-black/60 flex items-center justify-center"
               aria-label="Add collection entry"
             >
               <Add16Filled className={sidebarItemIconStyles({ className: "size-3.5" })} />
@@ -162,6 +161,19 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
               Add collection entry
             </Tooltip>
           </TooltipTrigger>
+          <MenuTrigger isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <RACButton
+              className="pointer-events-auto rounded-md p-0.5 text-black hover:bg-black/5 hover:text-black/60 flex items-center justify-center"
+              aria-label="Collection options"
+            >
+              <MoreHorizontalRegular className={sidebarItemIconStyles({ className: "size-4" })} />
+            </RACButton>
+            <CollectionMenu
+              collectionId={collection.id}
+              collectionName={collection.name}
+              organizationSlug={organizationSlug}
+            />
+          </MenuTrigger>
         </div>
       </div>
 

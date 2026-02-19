@@ -1,13 +1,11 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
-
 import { createId } from "@lydie/core/id";
 import { db, membersTable, organizationsTable, sessionsTable, usersTable } from "@lydie/database";
 import { test as baseTest } from "@playwright/test";
+import type { Browser, BrowserContext, Page, StorageState } from "@playwright/test";
 import type { InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 
-import { createTestUser } from "../utils/db";
+import { createTestUser, withDeadlockRetry } from "../utils/db";
 import { createSession, createStorageState } from "./auth.fixture";
 
 interface UserData {
@@ -25,12 +23,14 @@ interface MultiUserAuthenticatedFixtures {
   user1: UserData;
   user2: UserData;
   organization: InferSelectModel<typeof organizationsTable>;
+  user2Context: BrowserContext;
+  user2Page: Page;
 }
 
 // Multi-user authenticated test with two users in the same organization
 export const test = baseTest.extend<
   MultiUserAuthenticatedFixtures,
-  { workerStorageState: string; workerData: WorkerData }
+  { workerStorageState: StorageState; workerData: WorkerData }
 >({
   workerData: [
     // eslint-disable-next-line no-empty-pattern
@@ -55,14 +55,15 @@ export const test = baseTest.extend<
       });
 
       // Create second user
-      await db.insert(usersTable).values({
-        id: user2Id,
-        email: `collab-user2-${user2Id}@playwright.test`,
-        name: `Test Collab User 2 ${user2Id}`,
-        emailVerified: true,
-      });
-
-      const [user2] = await db.select().from(usersTable).where(eq(usersTable.id, user2Id)).limit(1);
+      const [user2] = await db
+        .insert(usersTable)
+        .values({
+          id: user2Id,
+          email: `collab-user2-${user2Id}@playwright.test`,
+          name: `Test Collab User 2 ${user2Id}`,
+          emailVerified: true,
+        })
+        .returning();
 
       if (!user2) {
         throw new Error(`Failed to create second user ${user2Id}`);
@@ -89,15 +90,42 @@ export const test = baseTest.extend<
 
       await use(workerData);
 
-      // Cleanup
-      try {
-        await db.delete(sessionsTable).where(eq(sessionsTable.id, session1.id));
-        await db.delete(sessionsTable).where(eq(sessionsTable.id, session2.id));
-        await db.delete(membersTable).where(eq(membersTable.userId, user2Id));
-        await db.delete(usersTable).where(eq(usersTable.id, user2Id));
-        await cleanup1();
-      } catch (error) {
-        console.error(`Failed to cleanup test data for worker ${id}:`, error);
+      let failed = false;
+
+      const cleanupSteps: Array<{ label: string; run: () => Promise<unknown> }> = [
+        {
+          label: `session cleanup 1 for worker ${id}`,
+          run: () => db.delete(sessionsTable).where(eq(sessionsTable.id, session1.id)),
+        },
+        {
+          label: `session cleanup 2 for worker ${id}`,
+          run: () => db.delete(sessionsTable).where(eq(sessionsTable.id, session2.id)),
+        },
+        {
+          label: `member cleanup for worker ${id}`,
+          run: () => db.delete(membersTable).where(eq(membersTable.userId, user2Id)),
+        },
+        {
+          label: `secondary user cleanup for worker ${id}`,
+          run: () => db.delete(usersTable).where(eq(usersTable.id, user2Id)),
+        },
+        {
+          label: `primary user cleanup for worker ${id}`,
+          run: cleanup1,
+        },
+      ];
+
+      for (const step of cleanupSteps) {
+        try {
+          await withDeadlockRetry(step.run, step.label);
+        } catch (error) {
+          failed = true;
+          console.error(`Failed ${step.label}:`, error);
+        }
+      }
+
+      if (failed) {
+        console.error(`Failed to cleanup test data for worker ${id}`);
       }
     },
     { scope: "worker" },
@@ -105,9 +133,6 @@ export const test = baseTest.extend<
 
   workerStorageState: [
     async ({ workerData }, use, workerInfo) => {
-      const id = workerInfo.workerIndex;
-      const fileName = path.resolve(workerInfo.project.outputDir, `.auth/worker-multi-${id}.json`);
-
       const baseURL = workerInfo.project.use?.baseURL || "http://localhost:3000";
 
       // Store state for user1 (default context) using shared helper
@@ -117,22 +142,7 @@ export const test = baseTest.extend<
         baseURL,
       );
 
-      const dir = path.dirname(fileName);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-
-      fs.writeFileSync(fileName, JSON.stringify(storageState), "utf-8");
-
-      await use(fileName);
-
-      try {
-        if (fs.existsSync(fileName)) {
-          fs.unlinkSync(fileName);
-        }
-      } catch (error) {
-        console.error(`Failed to cleanup storage state file for worker ${id}:`, error);
-      }
+      await use(storageState);
     },
     { scope: "worker" },
   ],
@@ -150,10 +160,33 @@ export const test = baseTest.extend<
   organization: async ({ workerData }, use) => {
     await use(workerData.organization);
   },
+
+  user2Context: async ({ browser, workerData, baseURL }, use) => {
+    const context = await createUser2Context(
+      browser,
+      workerData,
+      baseURL ?? "http://localhost:3000",
+    );
+
+    try {
+      await use(context);
+    } finally {
+      await context.close();
+    }
+  },
+
+  user2Page: async ({ user2Context }, use) => {
+    const page = await user2Context.newPage();
+    await use(page);
+  },
 });
 
 // Helper to create a second browser context for user2
-export async function createUser2Context(browser: any, workerData: WorkerData, baseURL: string) {
+export async function createUser2Context(
+  browser: Browser,
+  workerData: WorkerData,
+  baseURL: string,
+) {
   const storageState = createStorageState(
     workerData.user2.session.token,
     new Date(workerData.user2.session.expiresAt),

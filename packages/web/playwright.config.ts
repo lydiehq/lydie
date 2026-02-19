@@ -3,6 +3,7 @@ import { Resource } from "sst";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  workers: Resource.App.stage === "production" ? 2 : 1,
   // Run tests in files in parallel
   fullyParallel: true,
   // Fail the build on CI if you accidentally left test.only in the source code

@@ -1,16 +1,11 @@
-import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import {
   buildCollectionRoutes,
   normalizeCollectionRoute,
   toCollectionRouteSegment,
 } from "@lydie/core/collection-routes";
+import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
-import {
-  collectionFieldsTable,
-  collectionsTable,
-  db,
-  documentsTable,
-} from "@lydie/database";
+import { collectionFieldsTable, collectionsTable, db, documentsTable } from "@lydie/database";
 import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";

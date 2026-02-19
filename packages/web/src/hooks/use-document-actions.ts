@@ -29,14 +29,14 @@ export function useDocumentActions() {
     const documentTitle = title || "Untitled";
 
     z.mutate(
-        mutators.document.create({
-          id,
-          organizationId: organization.id,
-          parentId,
-          collectionId,
-          integrationLinkId,
-          content: initialContent,
-          title,
+      mutators.document.create({
+        id,
+        organizationId: organization.id,
+        parentId,
+        collectionId,
+        integrationLinkId,
+        content: initialContent,
+        title,
       }),
     );
 
