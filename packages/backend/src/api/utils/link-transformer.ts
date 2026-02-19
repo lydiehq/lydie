@@ -1,6 +1,6 @@
 import { db } from "@lydie/database";
-import { documentsTable } from "@lydie/database/schema";
-import { inArray } from "drizzle-orm";
+import { collectionsTable, documentsTable } from "@lydie/database/schema";
+import { eq, inArray } from "drizzle-orm";
 
 import type { ContentNode, TextNode } from "./types";
 
@@ -13,7 +13,7 @@ interface LinkMetadata {
   slug?: string;
   title?: string;
   parentSlug?: string;
-  collectionId?: string;
+  collectionHandle?: string;
   exists?: boolean;
 }
 
@@ -57,9 +57,10 @@ export async function fetchDocumentMetadata(
         slug: documentsTable.slug,
         title: documentsTable.title,
         parentId: documentsTable.parentId,
-        collectionId: documentsTable.collectionId,
+        collectionHandle: collectionsTable.handle,
       })
       .from(documentsTable)
+      .leftJoin(collectionsTable, eq(documentsTable.collectionId, collectionsTable.id))
       .where(inArray(documentsTable.id, documentIds));
 
     // Collect parent IDs to fetch their slugs
@@ -93,7 +94,7 @@ export async function fetchDocumentMetadata(
         slug: doc.slug || undefined,
         title: doc.title,
         parentSlug: doc.parentId ? parentSlugMap.get(doc.parentId) : undefined,
-        collectionId: doc.collectionId || undefined,
+        collectionHandle: doc.collectionHandle || undefined,
         exists: true,
       });
     }
@@ -135,8 +136,8 @@ function transformContentLinks(
               ...(metadata?.slug && { "document-slug": metadata.slug }),
               ...(metadata?.title && { "document-title": metadata.title }),
               ...(metadata?.parentSlug && { "document-parent-slug": metadata.parentSlug }),
-              ...(metadata?.collectionId && {
-                "document-collection-id": metadata.collectionId,
+              ...(metadata?.collectionHandle && {
+                "document-collection-handle": metadata.collectionHandle,
               }),
             },
           };

@@ -24,13 +24,12 @@ if (!pillar || !article) {
   return new Response(null, { status: 404 });
 }
 
-// Map pillar slugs to collection IDs
 const pillarCollectionMap: Record<string, string> = {
   "knowledge-bases": lydieApi.collections.knowledgeBases,
   "note-taking": lydieApi.collections.noteTaking,
 };
 
-const collectionId = pillarCollectionMap[pillar] || pillar;
+const collectionHandle = pillarCollectionMap[pillar] || pillar;
 
 type ArticleDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
@@ -42,12 +41,12 @@ type ArticleDocument = Awaited<
 let articleDocument: ArticleDocument | null = null;
 let contentHtml = "";
 let toc: Array<{ id: string; level: number; text: string }> = [];
-const linkResolver = createLinkResolver({ currentCollectionId: collectionId });
+const linkResolver = createLinkResolver({ currentCollectionHandle: collectionHandle });
 
-console.log(`[Resource Hub] Fetching article: ${collectionId}/${article}`);
+console.log(`[Resource Hub] Fetching article: ${collectionHandle}/${article}`);
 
 try {
-  const { documents } = await lydieApi.getCollectionDocuments(collectionId, {
+  const { documents } = await lydieApi.getCollectionDocuments(collectionHandle, {
     includeToc: true,
     includeRelated: true,
     filters: { slug: article },

@@ -1,4 +1,4 @@
-import { Add12Filled, Dismiss12Filled } from "@fluentui/react-icons";
+import { Add12Filled, DatabaseRegular, Dismiss12Filled } from "@fluentui/react-icons";
 import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
@@ -46,17 +46,32 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
     params?: Record<string, string>;
   }) => void;
 
+  const navigateToTab = useCallback(
+    (tabId: string) => {
+      if (tabId.startsWith("collection:")) {
+        navigate({
+          to: "/w/$organizationSlug/collections/$collectionId",
+          params: { organizationSlug, collectionId: tabId.replace("collection:", "") },
+        });
+        return;
+      }
+
+      navigate({
+        to: "/w/$organizationSlug/$id",
+        params: { organizationSlug, id: tabId },
+      });
+    },
+    [navigate, organizationSlug],
+  );
+
   const handleClose = useCallback(
-    (e: React.MouseEvent, documentId: string) => {
+    (e: React.MouseEvent, tabId: string) => {
       e.preventDefault();
       e.stopPropagation();
-      const nextActiveId = closeTab(documentId);
+      const nextActiveId = closeTab(tabId);
 
       if (nextActiveId) {
-        navigate({
-          to: "/w/$organizationSlug/$id",
-          params: { organizationSlug, id: nextActiveId },
-        });
+        navigateToTab(nextActiveId);
       } else {
         navigate({
           to: "/w/$organizationSlug",
@@ -64,7 +79,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
         });
       }
     },
-    [navigate, organizationSlug, closeTab],
+    [navigate, navigateToTab, organizationSlug, closeTab],
   );
 
   const preventTabActivationFromClose = useCallback(
@@ -87,12 +102,9 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
     (key: Key) => {
       const documentId = key as string;
       setActiveTab(documentId);
-      navigate({
-        to: "/w/$organizationSlug/$id",
-        params: { organizationSlug, id: documentId },
-      });
+      navigateToTab(documentId);
     },
-    [navigate, organizationSlug, setActiveTab],
+    [navigateToTab, setActiveTab],
   );
 
   const { createDocument } = useDocumentActions();
@@ -151,7 +163,11 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
           >
             {({ isSelected }) => (
               <>
-                <DocumentThumbnailIcon className="size-4 shrink-0" active={isSelected} size="sm" />
+                {tab.documentId.startsWith("collection:") ? (
+                  <DatabaseRegular className="size-3.5 shrink-0 text-gray-500" />
+                ) : (
+                  <DocumentThumbnailIcon className="size-4 shrink-0" active={isSelected} size="sm" />
+                )}
                 <span className="flex-1 truncate text-sm font-medium text-gray-700 pr-5">
                   {tab.title || "Untitled"}
                 </span>
@@ -216,4 +232,13 @@ export function useDocumentTabSync(
       makePersistent(documentId);
     }
   }, [documentId, makePersistent]);
+}
+
+export function useCollectionTabSync(
+  collectionId: string | undefined,
+  title: string | undefined,
+  mode: TabMode = "persistent",
+) {
+  const tabId = collectionId ? `collection:${collectionId}` : undefined;
+  return useDocumentTabSync(tabId, title, mode);
 }

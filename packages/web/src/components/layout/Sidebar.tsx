@@ -7,7 +7,6 @@ import {
   PersonChat16Filled,
 } from "@fluentui/react-icons";
 import { createId } from "@lydie/core/id";
-import { slugify } from "@lydie/core/utils";
 import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
@@ -261,21 +260,20 @@ const CollectionsSection = memo(function CollectionsSection() {
   );
 
   const handleCreateCollection = async () => {
+    const collectionId = createId();
     const name = "Untitled Collection";
-    const randomSuffix = createId().slice(0, 6).toLowerCase();
-    const handle = `${slugify(name) || "collection"}-${randomSuffix}`;
 
     try {
       await z.mutate(
         mutators.collection.create({
+          collectionId,
           organizationId: organization.id,
           name,
-          handle,
           properties: [],
         }),
       );
 
-      window.location.assign(`/w/${organization.slug}/collections/${handle}`);
+      window.location.assign(`/w/${organization.slug}/collections/${collectionId}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to create collection");
@@ -308,8 +306,8 @@ const CollectionsSection = memo(function CollectionsSection() {
         {collections.map((collection) => (
           <Link
             key={collection.id}
-            to="/w/$organizationSlug/collections/$handle"
-            params={{ organizationSlug: organization.slug, handle: collection.handle }}
+            to="/w/$organizationSlug/collections/$collectionId"
+            params={{ organizationSlug: organization.slug, collectionId: collection.id }}
             className={sidebarItemStyles({ className: "px-1.5" })}
           >
             <div className="flex items-center gap-1.5 flex-1 min-w-0">

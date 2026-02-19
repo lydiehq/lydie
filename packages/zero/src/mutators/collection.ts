@@ -77,9 +77,37 @@ async function createUniqueHandle(
   }
 }
 
+async function validateHandleForUpdate(
+  tx: any,
+  organizationId: string,
+  collectionId: string,
+  input: string,
+): Promise<string> {
+  const handle = slugify(input).trim();
+
+  if (!handle) {
+    throw new Error("Handle is required.");
+  }
+
+  if (RESERVED_HANDLES.has(handle)) {
+    throw new Error("This handle is reserved.");
+  }
+
+  const existing = (await maybeOne(
+    tx.run(zql.collections.where("organization_id", organizationId).where("handle", handle).one()),
+  )) as { id: string } | null;
+
+  if (existing && existing.id !== collectionId) {
+    throw new Error("Handle is already in use.");
+  }
+
+  return handle;
+}
+
 export const collectionMutators = {
   create: defineMutator(
     z.object({
+      collectionId: z.string().optional(),
       organizationId: z.string(),
       name: z.string().min(1),
       handle: z.string().optional(),
@@ -96,7 +124,7 @@ export const collectionMutators = {
 
       await tx.mutate.collections.insert(
         withTimestamps({
-          id: createId(),
+          id: args.collectionId ?? createId(),
           organization_id: args.organizationId,
           name: args.name.trim(),
           handle,
@@ -111,6 +139,7 @@ export const collectionMutators = {
       collectionId: z.string(),
       organizationId: z.string(),
       name: z.string().optional(),
+      handle: z.string().optional(),
       properties: propertiesSchema.optional(),
     }),
     async ({ tx, ctx, args }) => {
@@ -131,6 +160,14 @@ export const collectionMutators = {
 
       if (args.name !== undefined) {
         updates.name = args.name.trim();
+      }
+      if (args.handle !== undefined) {
+        updates.handle = await validateHandleForUpdate(
+          tx,
+          args.organizationId,
+          args.collectionId,
+          args.handle,
+        );
       }
       if (args.properties !== undefined) {
         updates.properties = args.properties as ReadonlyJSONValue;
@@ -203,6 +240,31 @@ export const collectionMutators = {
           orphaned_values: {},
         }),
       );
+    },
+  ),
+
+  delete: defineMutator(
+    z.object({
+      collectionId: z.string(),
+      organizationId: z.string(),
+    }),
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+
+      const existing = await maybeOne(
+        tx.run(
+          zql.collections
+            .where("id", args.collectionId)
+            .where("organization_id", args.organizationId)
+            .one(),
+        ),
+      );
+
+      if (!existing) {
+        throw new Error("Collection not found");
+      }
+
+      await tx.mutate.collections.delete({ id: args.collectionId });
     },
   ),
 };

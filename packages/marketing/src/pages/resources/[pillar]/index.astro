@@ -24,13 +24,12 @@ if (!pillar) {
   throw new Error("Pillar is required");
 }
 
-// Map pillar slugs to collection IDs
 const pillarCollectionMap: Record<string, string> = {
   "knowledge-bases": lydieApi.collections.knowledgeBases,
   "note-taking": lydieApi.collections.noteTaking,
 };
 
-const collectionId = pillarCollectionMap[pillar] || pillar;
+const collectionHandle = pillarCollectionMap[pillar] || pillar;
 
 type CollectionDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
@@ -39,13 +38,13 @@ type CollectionDocument = Awaited<
 let pillarDocument: CollectionDocument | null = null;
 let childDocuments: CollectionDocument[] = [];
 let contentHtml = "";
-const linkResolver = createLinkResolver({ currentCollectionId: collectionId });
+const linkResolver = createLinkResolver({ currentCollectionHandle: collectionHandle });
 
-console.log(`[Resource Hub] Fetching pillar: ${collectionId}`);
+console.log(`[Resource Hub] Fetching pillar: ${collectionHandle}`);
 
 try {
   // Fetch the pillar document
-  const { documents: pillarDocuments } = await lydieApi.getCollectionDocuments(collectionId, {
+  const { documents: pillarDocuments } = await lydieApi.getCollectionDocuments(collectionHandle, {
     includeToc: true,
   });
 
@@ -56,7 +55,7 @@ try {
   }
 
   // Fetch children of this document (same pattern as blog)
-  const { documents: children } = await lydieApi.getCollectionDocuments(collectionId);
+  const { documents: children } = await lydieApi.getCollectionDocuments(collectionHandle);
   childDocuments = children;
 
   // Render the content with custom components
@@ -71,7 +70,7 @@ try {
   contentHtml = html;
 } catch (error) {
   console.error(
-    `[Resource Hub] Failed to fetch pillar ${collectionId}`,
+    `[Resource Hub] Failed to fetch pillar ${collectionHandle}`,
     error,
   );
   return new Response(null, { status: 404 });

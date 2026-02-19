@@ -14,7 +14,7 @@ import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import * as lydieApi from "../../utils/lydie-client";
 
-const BLOG_COLLECTION_ID = lydieApi.collections.blog;
+const BLOG_COLLECTION_HANDLE = lydieApi.collections.blog;
 
 type BlogListDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
@@ -23,9 +23,9 @@ type BlogListDocument = Awaited<
 let posts: BlogListDocument[] = [];
 
 try {
-  console.log("[Blog] Fetching posts from collection:", BLOG_COLLECTION_ID);
+  console.log("[Blog] Fetching posts from collection:", BLOG_COLLECTION_HANDLE);
   const { documents } =
-    await lydieApi.getCollectionDocuments(BLOG_COLLECTION_ID);
+    await lydieApi.getCollectionDocuments(BLOG_COLLECTION_HANDLE);
   posts = documents;
   console.log(`[Blog] Successfully fetched ${posts.length} blog posts`);
 } catch (error) {

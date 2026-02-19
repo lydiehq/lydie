@@ -30,7 +30,7 @@ import { Route as _authWOrganizationSlugSettingsComponentsRouteImport } from './
 import { Route as _authWOrganizationSlugSettingsBillingRouteImport } from './routes/__auth/w/$organizationSlug/settings/billing'
 import { Route as _authWOrganizationSlugSettingsAiRouteImport } from './routes/__auth/w/$organizationSlug/settings/ai'
 import { Route as _authWOrganizationSlugSettingsAdminRouteImport } from './routes/__auth/w/$organizationSlug/settings/admin'
-import { Route as _authWOrganizationSlugCollectionsHandleRouteImport } from './routes/__auth/w/$organizationSlug/collections/$handle'
+import { Route as _authWOrganizationSlugCollectionsCollectionIdRouteImport } from './routes/__auth/w/$organizationSlug/collections/$collectionId'
 import { Route as _authWOrganizationSlugIdHistoryRouteImport } from './routes/__auth/w/$organizationSlug/$id/history'
 import { Route as _authWOrganizationSlugSettingsTemplatesIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/templates/index'
 import { Route as _authWOrganizationSlugSettingsIntegrationsIndexRouteImport } from './routes/__auth/w/$organizationSlug/settings/integrations/index'
@@ -158,10 +158,10 @@ const _authWOrganizationSlugSettingsAdminRoute =
     path: '/admin',
     getParentRoute: () => _authWOrganizationSlugSettingsRouteRoute,
   } as any)
-const _authWOrganizationSlugCollectionsHandleRoute =
-  _authWOrganizationSlugCollectionsHandleRouteImport.update({
-    id: '/collections/$handle',
-    path: '/collections/$handle',
+const _authWOrganizationSlugCollectionsCollectionIdRoute =
+  _authWOrganizationSlugCollectionsCollectionIdRouteImport.update({
+    id: '/collections/$collectionId',
+    path: '/collections/$collectionId',
     getParentRoute: () => _authWOrganizationSlugRouteRoute,
   } as any)
 const _authWOrganizationSlugIdHistoryRoute =
@@ -232,7 +232,7 @@ export interface FileRoutesByFullPath {
   '/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
   '/w/$organizationSlug/$id/history': typeof _authWOrganizationSlugIdHistoryRoute
-  '/w/$organizationSlug/collections/$handle': typeof _authWOrganizationSlugCollectionsHandleRoute
+  '/w/$organizationSlug/collections/$collectionId': typeof _authWOrganizationSlugCollectionsCollectionIdRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -259,7 +259,7 @@ export interface FileRoutesByTo {
   '/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/w/$organizationSlug': typeof _authWOrganizationSlugIndexRoute
   '/w/$organizationSlug/$id/history': typeof _authWOrganizationSlugIdHistoryRoute
-  '/w/$organizationSlug/collections/$handle': typeof _authWOrganizationSlugCollectionsHandleRoute
+  '/w/$organizationSlug/collections/$collectionId': typeof _authWOrganizationSlugCollectionsCollectionIdRoute
   '/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -291,7 +291,7 @@ export interface FileRoutesById {
   '/__auth/w/$organizationSlug/trash': typeof _authWOrganizationSlugTrashRoute
   '/__auth/w/$organizationSlug/': typeof _authWOrganizationSlugIndexRoute
   '/__auth/w/$organizationSlug/$id/history': typeof _authWOrganizationSlugIdHistoryRoute
-  '/__auth/w/$organizationSlug/collections/$handle': typeof _authWOrganizationSlugCollectionsHandleRoute
+  '/__auth/w/$organizationSlug/collections/$collectionId': typeof _authWOrganizationSlugCollectionsCollectionIdRoute
   '/__auth/w/$organizationSlug/settings/admin': typeof _authWOrganizationSlugSettingsAdminRoute
   '/__auth/w/$organizationSlug/settings/ai': typeof _authWOrganizationSlugSettingsAiRoute
   '/__auth/w/$organizationSlug/settings/billing': typeof _authWOrganizationSlugSettingsBillingRoute
@@ -323,7 +323,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/trash'
     | '/w/$organizationSlug/'
     | '/w/$organizationSlug/$id/history'
-    | '/w/$organizationSlug/collections/$handle'
+    | '/w/$organizationSlug/collections/$collectionId'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
     | '/w/$organizationSlug/settings/billing'
@@ -350,7 +350,7 @@ export interface FileRouteTypes {
     | '/w/$organizationSlug/trash'
     | '/w/$organizationSlug'
     | '/w/$organizationSlug/$id/history'
-    | '/w/$organizationSlug/collections/$handle'
+    | '/w/$organizationSlug/collections/$collectionId'
     | '/w/$organizationSlug/settings/admin'
     | '/w/$organizationSlug/settings/ai'
     | '/w/$organizationSlug/settings/billing'
@@ -381,7 +381,7 @@ export interface FileRouteTypes {
     | '/__auth/w/$organizationSlug/trash'
     | '/__auth/w/$organizationSlug/'
     | '/__auth/w/$organizationSlug/$id/history'
-    | '/__auth/w/$organizationSlug/collections/$handle'
+    | '/__auth/w/$organizationSlug/collections/$collectionId'
     | '/__auth/w/$organizationSlug/settings/admin'
     | '/__auth/w/$organizationSlug/settings/ai'
     | '/__auth/w/$organizationSlug/settings/billing'
@@ -555,11 +555,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authWOrganizationSlugSettingsAdminRouteImport
       parentRoute: typeof _authWOrganizationSlugSettingsRouteRoute
     }
-    '/__auth/w/$organizationSlug/collections/$handle': {
-      id: '/__auth/w/$organizationSlug/collections/$handle'
-      path: '/collections/$handle'
-      fullPath: '/w/$organizationSlug/collections/$handle'
-      preLoaderRoute: typeof _authWOrganizationSlugCollectionsHandleRouteImport
+    '/__auth/w/$organizationSlug/collections/$collectionId': {
+      id: '/__auth/w/$organizationSlug/collections/$collectionId'
+      path: '/collections/$collectionId'
+      fullPath: '/w/$organizationSlug/collections/$collectionId'
+      preLoaderRoute: typeof _authWOrganizationSlugCollectionsCollectionIdRouteImport
       parentRoute: typeof _authWOrganizationSlugRouteRoute
     }
     '/__auth/w/$organizationSlug/$id/history': {
@@ -711,7 +711,7 @@ interface _authWOrganizationSlugRouteRouteChildren {
   _authWOrganizationSlugTrashRoute: typeof _authWOrganizationSlugTrashRoute
   _authWOrganizationSlugIndexRoute: typeof _authWOrganizationSlugIndexRoute
   _authWOrganizationSlugIdHistoryRoute: typeof _authWOrganizationSlugIdHistoryRoute
-  _authWOrganizationSlugCollectionsHandleRoute: typeof _authWOrganizationSlugCollectionsHandleRoute
+  _authWOrganizationSlugCollectionsCollectionIdRoute: typeof _authWOrganizationSlugCollectionsCollectionIdRoute
   _authWOrganizationSlugIdIndexRoute: typeof _authWOrganizationSlugIdIndexRoute
 }
 
@@ -724,8 +724,8 @@ const _authWOrganizationSlugRouteRouteChildren: _authWOrganizationSlugRouteRoute
     _authWOrganizationSlugTrashRoute: _authWOrganizationSlugTrashRoute,
     _authWOrganizationSlugIndexRoute: _authWOrganizationSlugIndexRoute,
     _authWOrganizationSlugIdHistoryRoute: _authWOrganizationSlugIdHistoryRoute,
-    _authWOrganizationSlugCollectionsHandleRoute:
-      _authWOrganizationSlugCollectionsHandleRoute,
+    _authWOrganizationSlugCollectionsCollectionIdRoute:
+      _authWOrganizationSlugCollectionsCollectionIdRoute,
     _authWOrganizationSlugIdIndexRoute: _authWOrganizationSlugIdIndexRoute,
   }
 
