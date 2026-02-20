@@ -85,6 +85,7 @@ export async function createTestUser(options?: {
       email: userEmail,
       name: userName,
       emailVerified: true,
+      role: "admin",
     })
     .returning();
 

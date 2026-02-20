@@ -71,15 +71,3 @@ export {
   userEvent,
   type TestRenderOptions,
 } from "./render";
-
-// Zero mocking utilities
-export {
-  createMockUseQuery,
-  createMockZero,
-  MockZeroProvider,
-  mockZeroModule,
-  createZeroMock,
-  mockQueryResult,
-  mockQueryLoading,
-  mockQueryEmpty,
-} from "./zero-mock";

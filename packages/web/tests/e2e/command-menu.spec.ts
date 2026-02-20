@@ -33,13 +33,13 @@ test.describe("command menu", () => {
     // Navigate to home
     await triggerCommandMenuShortcut(page);
     await expect(page.getByRole("dialog")).toBeVisible();
-    await page.getByRole("option", { name: "Go home" }).click();
+    await page.getByRole("menuitem", { name: "Go home" }).click();
     await page.waitForURL(`/w/${organization.slug}`);
 
     // Navigate to assistant
     await triggerCommandMenuShortcut(page);
     await expect(page.getByRole("dialog")).toBeVisible();
-    await page.getByRole("option", { name: "Go to assistant" }).click();
+    await page.getByRole("menuitem", { name: "Go to assistant" }).click();
     await page.waitForURL(`/w/${organization.slug}/assistant`);
   });
 
@@ -64,18 +64,18 @@ test.describe("command menu", () => {
       await page.goto(`/w/${organization.slug}`);
       await page.waitForLoadState("domcontentloaded");
 
-      // Open search mode
-      await page.getByRole("button", { name: "Search" }).click();
+      // Open command menu
+      await triggerCommandMenuShortcut(page);
 
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible();
 
-      const searchInput = dialog.getByPlaceholder("Search documents...");
+      const searchInput = dialog.getByPlaceholder("Quick search");
       await expect(searchInput).toBeEnabled();
 
       // Search for the document
       await searchInput.fill("Search Test");
-      await expect(page.getByRole("option", { name: documentTitle })).toBeVisible({
+      await expect(page.getByRole("menuitem", { name: documentTitle })).toBeVisible({
         timeout: 5000,
       });
     } finally {

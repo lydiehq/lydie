@@ -2,7 +2,7 @@ import { expect, test } from "./fixtures/auth.fixture";
 import { createDocument, gotoWorkspace } from "./utils/document";
 
 test.describe("editor", () => {
-  test("displays word and character count and updates correctly", async ({
+  test("displays word count and updates correctly", async ({
     page,
     organization,
   }) => {
@@ -15,20 +15,17 @@ test.describe("editor", () => {
       .first();
 
     await expect(page.getByText("Words: 0")).toBeVisible();
-    await expect(page.getByText("Characters: 0")).toBeVisible();
 
     await contentEditor.fill("Hello world");
     await page.waitForTimeout(200);
 
     await expect(page.getByText("Words: 2")).toBeVisible();
-    await expect(page.getByText("Characters: 11")).toBeVisible();
 
     await contentEditor.press("End");
     await contentEditor.pressSequentially(" this is a test", { delay: 30 });
     await page.waitForTimeout(200);
 
     await expect(page.getByText(/Words: \d+/)).toBeVisible();
-    await expect(page.getByText(/Characters: \d+/)).toBeVisible();
   });
 
   test("can apply text formatting via toolbar", async ({ page, organization }) => {
