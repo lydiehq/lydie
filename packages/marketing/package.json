@@ -39,7 +39,7 @@
     "jotai": "^2.18.0",
     "jspdf": "^4.2.0",
     "motion": "^12.34.2",
-    "posthog-js": "^1.351.3",
+    "posthog-js": "^1.351.4",
     "react": "catalog:",
     "react-aria-components": "^1.15.1",
     "react-dom": "catalog:",
