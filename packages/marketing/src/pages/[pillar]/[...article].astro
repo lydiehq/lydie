@@ -1,0 +1,239 @@
+---
+export const prerender = false;
+
+// ISR-like caching: CDN caches for 1 hour, serves stale for 24 hours while revalidating
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+);
+
+import type { ContentNode } from "@lydie-app/sdk";
+
+import ArticleHeadingEnhancements from "@/components/ArticleHeadingEnhancements.astro";
+import Breadcrumbs from "@/components/Breadcrumbs.astro";
+import { Container } from "@/components/Container";
+import PillarTOC from "@/components/PillarTOC.astro";
+import Layout from "@/layouts/Layout.astro";
+import { articleTypographyClassName } from "@/utils/article-typography";
+import { renderContent, blogImageComponent } from "@/utils/content-renderer";
+import {
+  flowchartComponent,
+  pillarCalloutComponent,
+} from "@/utils/custom-components";
+import * as lydieApi from "@/utils/lydie-client";
+import { createLinkResolver } from "@/utils/route-registry";
+
+const { pillar, article } = Astro.params;
+
+if (!pillar) {
+  return new Response(null, { status: 404 });
+}
+
+const pillarCollectionMap: Record<string, string> = {
+  "knowledge-bases": lydieApi.collections.knowledgeBases,
+  "note-taking": lydieApi.collections.noteTaking,
+};
+
+const collectionHandle = pillarCollectionMap[pillar] || pillar;
+const requestedPath = article ? `/${article}` : "/";
+
+type CollectionDocument = Awaited<
+  ReturnType<typeof lydieApi.getCollectionDocuments>
+>["documents"][number] & {
+  path?: string;
+  toc?: Array<{ id: string; level: number; text: string }>;
+  related?: Array<{
+    id: string;
+    title: string;
+    path?: string;
+    fields?: { slug?: string };
+  }>;
+};
+
+let currentDocument: CollectionDocument | null = null;
+let rootDocument: CollectionDocument | null = null;
+let allDocuments: CollectionDocument[] = [];
+let documentsForToc: CollectionDocument[] = [];
+let contentHtml = "";
+
+const linkResolver = createLinkResolver({
+  currentCollectionHandle: collectionHandle,
+});
+
+console.log(`[Resource Hub] Fetching document: ${collectionHandle}${requestedPath}`);
+
+try {
+  const allDocumentsResponse = await lydieApi.getCollectionDocuments(collectionHandle, {
+    sortBy: "created_at",
+    sortOrder: "asc",
+  } as any);
+  allDocuments = allDocumentsResponse.documents as CollectionDocument[];
+
+  const routeDocument = (await lydieApi.getCollectionDocumentByRoute(
+    collectionHandle,
+    requestedPath,
+    {
+      includeToc: true,
+      includeRelated: true,
+    },
+  )) as CollectionDocument | null;
+
+  if (!routeDocument || (article && routeDocument.path === "/")) {
+    throw new Error("Document not found");
+  }
+
+  currentDocument = routeDocument;
+  if (!currentDocument) {
+    throw new Error("Document not found");
+  }
+  const resolvedDocument = currentDocument;
+
+  rootDocument =
+    allDocuments.find((doc) => doc.path === "/") ||
+    (resolvedDocument.path === "/" ? resolvedDocument : null);
+
+  documentsForToc = allDocuments.map((doc) =>
+    doc.id === resolvedDocument.id
+      ? {
+          ...doc,
+          toc: resolvedDocument.toc,
+        }
+      : doc,
+  );
+
+  if (!documentsForToc.some((doc) => doc.id === resolvedDocument.id)) {
+    documentsForToc = [resolvedDocument, ...documentsForToc];
+  }
+
+  const { html } = await renderContent(resolvedDocument.jsonContent as ContentNode, {
+    components: {
+      image: blogImageComponent,
+      pillarCallout: pillarCalloutComponent,
+      flowchart: flowchartComponent,
+    },
+    linkResolver,
+  });
+  contentHtml = html;
+} catch (error) {
+  console.error(
+    `[Resource Hub] Failed to fetch document ${collectionHandle}${requestedPath}`,
+    error,
+  );
+  return new Response(null, { status: 404 });
+}
+
+if (!currentDocument) {
+  return new Response(null, { status: 404 });
+}
+
+const pageDocument = currentDocument;
+const isRootDocument = pageDocument.path === "/";
+const description =
+  pageDocument.fields?.description ||
+  (isRootDocument
+    ? `Learn about ${pageDocument.title || "Resources"}`
+    : pageDocument.title || "Article");
+const breadcrumbItems = isRootDocument
+  ? [{ label: "Home", href: "/" }, { label: pageDocument.title || "Resources" }]
+  : [
+      { label: "Home", href: "/" },
+      {
+        label: rootDocument?.title || pillar.replace(/-/g, " "),
+        href: `/${pillar}`,
+      },
+      { label: pageDocument.title },
+    ];
+---
+
+<Layout title={pageDocument.title || "Resources"} description={String(description)}>
+  <div class="py-8">
+    <Container>
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <div class="flex gap-8 mt-8">
+        {documentsForToc.length > 0 && (
+          <aside class="hidden lg:block w-72 shrink-0 lg:order-2">
+            <PillarTOC
+              documents={documentsForToc}
+              currentDocumentId={pageDocument.id}
+              pillar={pillar}
+            />
+          </aside>
+        )}
+
+        <article class={isRootDocument ? "flex-1 max-w-[65ch] lg:order-1" : "flex-1 max-w-3xl lg:order-1"}>
+          <header class={isRootDocument ? "mb-12" : "mb-8"}>
+            <h1 class={isRootDocument ? "text-5xl font-semibold text-gray-900" : "text-3xl font-semibold text-gray-900"}>
+              {pageDocument.title}
+            </h1>
+            {
+              pageDocument.fields?.description && (
+                <p class={isRootDocument ? "text-lg text-gray-600" : "text-lg text-gray-600 mt-4"}>
+                  {pageDocument.fields?.description}
+                </p>
+              )
+            }
+          </header>
+
+          <div class={articleTypographyClassName}>
+            <Fragment set:html={contentHtml} />
+          </div>
+          <ArticleHeadingEnhancements />
+
+          {
+            isRootDocument && allDocuments.length > 0 && (
+              <section class="mt-16 pt-8 border-t border-gray-200">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-6">Related Articles</h2>
+                <div class="grid md:grid-cols-2 gap-5">
+                  {allDocuments
+                    .filter((doc) => doc.id !== pageDocument.id)
+                    .map((doc) => (
+                      <a
+                        href={
+                          doc.path === "/"
+                            ? `/${pillar}`
+                            : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`
+                        }
+                        class="group block p-6 bg-white border border-gray-200 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all"
+                      >
+                        <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
+                          {doc.title}
+                        </h3>
+                        {doc.fields?.excerpt && (
+                          <p class="text-sm text-gray-600 line-clamp-2">{doc.fields.excerpt}</p>
+                        )}
+                      </a>
+                    ))}
+                </div>
+              </section>
+            )
+          }
+
+          {
+            !isRootDocument && pageDocument.related && pageDocument.related.length > 0 && (
+              <section class="mt-16 pt-8 border-t border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Related Articles</h2>
+                <div class="grid gap-4">
+                  {pageDocument.related.map((doc) => (
+                    <a
+                      href={
+                        doc.path === "/"
+                          ? `/${pillar}`
+                          : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`
+                      }
+                      class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all"
+                    >
+                      <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {doc.title}
+                      </h3>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )
+          }
+        </article>
+      </div>
+    </Container>
+  </div>
+</Layout>

@@ -36,12 +36,55 @@ export function toCollectionRouteSegment(value: string): string {
 export function buildCollectionRoutes(nodes: CollectionRouteNode[]): Map<string, string> {
   const routes = new Map<string, string>();
 
-  for (const node of nodes) {
-    if (typeof node.route !== "string" || node.route.trim().length === 0) {
-      continue;
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const visiting = new Set<string>();
+
+  function getNodeSegment(node: CollectionRouteNode): string {
+    if (typeof node.slug === "string" && node.slug.trim().length > 0) {
+      return toCollectionRouteSegment(node.slug);
     }
 
-    routes.set(node.id, normalizeCollectionRoute(node.route));
+    return toCollectionRouteSegment(node.title || node.id);
+  }
+
+  function buildRoute(node: CollectionRouteNode): string {
+    const existing = routes.get(node.id);
+    if (existing) {
+      return existing;
+    }
+
+    if (visiting.has(node.id)) {
+      return `/${getNodeSegment(node)}`;
+    }
+
+    visiting.add(node.id);
+
+    let computed = "/";
+
+    if (typeof node.route === "string" && node.route.trim().length > 0) {
+      computed = normalizeCollectionRoute(node.route);
+    } else if (!node.parentId) {
+      computed =
+        typeof node.slug === "string" && node.slug.trim().length > 0
+          ? `/${toCollectionRouteSegment(node.slug)}`
+          : "/";
+    } else {
+      const parent = byId.get(node.parentId);
+      const parentRoute = parent ? buildRoute(parent) : "/";
+      const segment = getNodeSegment(node);
+      computed = normalizeCollectionRoute(
+        parentRoute === "/" ? `/${segment}` : `${parentRoute}/${segment}`,
+      );
+    }
+
+    visiting.delete(node.id);
+    routes.set(node.id, computed);
+
+    return computed;
+  }
+
+  for (const node of nodes) {
+    buildRoute(node);
   }
 
   return routes;

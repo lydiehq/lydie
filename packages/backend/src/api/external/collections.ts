@@ -54,6 +54,7 @@ function buildRouteMap(rows: CollectionDocumentRow[]): Map<string, string> {
       id: row.document.id,
       parentId: row.document.parentId,
       title: row.document.title || "",
+      slug: row.document.slug,
       route:
         typeof row.fieldValues.route === "string" && row.fieldValues.route.trim().length > 0
           ? row.fieldValues.route

@@ -29,62 +29,65 @@ const { documents, currentDocumentId, pillar } = Astro.props;
     In this section
   </h2>
   <ol class="space-y-3">
-    {documents.map((doc, index) => {
-      const isCurrent = doc.id === currentDocumentId;
-      const href =
-        doc.path === "/"
-          ? `/${pillar}`
-          : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`;
+    {
+      documents.map((doc, index) => {
+        const isCurrent = doc.id === currentDocumentId;
+        const href =
+          doc.path === "/"
+            ? `/${pillar}`
+            : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`;
 
-      return (
-        <li>
-          <div class="flex items-start gap-3">
-            <span
-              class={`mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                isCurrent ? "bg-orange-500 text-white" : "bg-gray-200 text-blue-700"
-              }`}
-            >
-              {index + 1}
-            </span>
-            <div class="min-w-0">
-              {isCurrent ? (
-                <p class="text-sm font-semibold text-gray-900">{doc.title}</p>
-              ) : (
-                <a
-                  href={href}
-                  class="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-                >
-                  {doc.title}
-                </a>
-              )}
+        return (
+          <li>
+            <div class="flex items-start gap-3">
+              <div class="min-w-0">
+                {isCurrent ? (
+                  <p class="text-sm font-semibold text-gray-900">{doc.title}</p>
+                ) : (
+                  <a
+                    href={href}
+                    class="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    {doc.title}
+                  </a>
+                )}
 
-              {isCurrent && doc.toc && doc.toc.length > 0 && (
-                <ol class="mt-2 space-y-1 border-l border-gray-200 pl-3">
-                  {doc.toc.map((heading, headingIndex) => (
-                    <li>
-                      <a
-                        href={`#${heading.id}`}
-                        data-heading-link
-                        data-heading-id={heading.id}
-                        class={`block py-0.5 text-sm text-gray-600 hover:text-blue-600 transition-colors ${
-                          heading.level > 2 ? "pl-3" : ""
-                        }`}
-                      >
-                        {headingIndex + 1}. {heading.text}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              )}
+                {isCurrent && doc.toc && doc.toc.length > 0 && (
+                  <ol
+                    data-heading-list
+                    class="mt-2 space-y-1 border-l border-gray-200 pl-3 overflow-y-auto pr-1"
+                  >
+                    {doc.toc.map((heading, headingIndex) => (
+                      <li>
+                        <a
+                          href={`#${heading.id}`}
+                          data-heading-link
+                          data-heading-id={heading.id}
+                          class={`block py-0.5 text-sm text-gray-600 hover:text-blue-600 transition-colors ${
+                            heading.level > 2 ? "pl-3" : ""
+                          }`}
+                        >
+                          {headingIndex + 1}. {heading.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
             </div>
-          </div>
-        </li>
-      );
-    })}
+          </li>
+        );
+      })
+    }
   </ol>
 </nav>
 
 <style is:inline>
+  [data-pillar-toc] [data-heading-list] {
+    max-height: 400px;
+    overscroll-behavior: contain;
+  }
+
   [data-pillar-toc] a[data-heading-link][aria-current="true"] {
     color: rgb(37 99 235);
     font-weight: 600;
@@ -101,6 +104,7 @@ const { documents, currentDocumentId, pillar } = Astro.props;
     const headingLinks = Array.from(
       tocElement.querySelectorAll("a[data-heading-link]"),
     );
+    const headingList = tocElement.querySelector("[data-heading-list]");
 
     if (headingLinks.length === 0) {
       return;
@@ -118,7 +122,7 @@ const { documents, currentDocumentId, pillar } = Astro.props;
 
     const headingElements = Array.from(linksByHeadingId.keys())
       .map((headingId) => document.getElementById(headingId))
-      .filter((heading): heading is HTMLElement => Boolean(heading));
+      .filter((heading) => Boolean(heading));
 
     if (headingElements.length === 0) {
       return;
@@ -132,19 +136,30 @@ const { documents, currentDocumentId, pillar } = Astro.props;
         return;
       }
 
+      let activeLink = null;
       for (const [id, link] of linksByHeadingId.entries()) {
         if (id === headingId) {
           link.setAttribute("aria-current", "true");
+          activeLink = link;
         } else {
           link.removeAttribute("aria-current");
         }
+      }
+
+      if (headingList && activeLink) {
+        activeLink.scrollIntoView({
+          block: "nearest",
+          inline: "nearest",
+        });
       }
 
       activeHeadingId = headingId;
     };
 
     const activateFromHash = () => {
-      const hashHeadingId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+      const hashHeadingId = decodeURIComponent(
+        window.location.hash.replace(/^#/, ""),
+      );
       if (hashHeadingId && linksByHeadingId.has(hashHeadingId)) {
         setActiveHeading(hashHeadingId);
       }

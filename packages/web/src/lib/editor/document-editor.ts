@@ -67,25 +67,13 @@ export function useDocumentEditor({
     return documentConnectionManager.getConnection(doc.id, doc.yjs_state);
   }, [doc.id, doc.yjs_state]);
 
-  // Keep connection alive while this component is mounted
   useEffect(() => {
     isMountedRef.current = true;
 
-    // Mark as active
-    documentConnectionManager.keepAlive(doc.id);
-
-    // Set up keep-alive interval (every 30 seconds)
-    const keepAliveInterval = setInterval(() => {
-      if (isMountedRef.current) {
-        documentConnectionManager.keepAlive(doc.id);
-      }
-    }, 30000);
-
     return () => {
       isMountedRef.current = false;
-      clearInterval(keepAliveInterval);
     };
-  }, [doc.id]);
+  }, []);
 
   const ydoc = connection.ydoc;
   const provider = connection.provider;

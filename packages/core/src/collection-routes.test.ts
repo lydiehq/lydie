@@ -96,7 +96,7 @@ describe("buildCollectionRoutes", () => {
     expect(routes.get("3")).toBe("/contact");
   });
 
-  it("should skip nodes without explicit routes", () => {
+  it("should infer routes from hierarchy when explicit route is missing", () => {
     const nodes: CollectionRouteNode[] = [
       { id: "1", parentId: null, title: "Docs", slug: "docs", route: null },
       { id: "2", parentId: "1", title: "Getting Started", slug: "getting-started" },
@@ -105,10 +105,9 @@ describe("buildCollectionRoutes", () => {
 
     const routes = buildCollectionRoutes(nodes);
 
-    expect(routes.size).toBe(0);
-    expect(routes.get("1")).toBeUndefined();
-    expect(routes.get("2")).toBeUndefined();
-    expect(routes.get("3")).toBeUndefined();
+    expect(routes.get("1")).toBe("/docs");
+    expect(routes.get("2")).toBe("/docs/getting-started");
+    expect(routes.get("3")).toBe("/docs/getting-started/installation");
   });
 
   it("should normalize explicit route values", () => {
@@ -120,7 +119,15 @@ describe("buildCollectionRoutes", () => {
     const routes = buildCollectionRoutes(nodes);
 
     expect(routes.get("1")).toBe("/docs/intro");
-    expect(routes.get("2")).toBeUndefined();
+    expect(routes.get("2")).toBe("/");
+  });
+
+  it("should map a top-level node without slug to root", () => {
+    const nodes: CollectionRouteNode[] = [{ id: "1", parentId: null, title: "Home" }];
+
+    const routes = buildCollectionRoutes(nodes);
+
+    expect(routes.get("1")).toBe("/");
   });
 
   it("should handle empty node list", () => {

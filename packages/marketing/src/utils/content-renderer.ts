@@ -22,7 +22,7 @@ export interface ContentRendererComponents {
   /** Custom image renderer - receives image attributes and returns HTML string */
   image?: (props: ImageComponentProps) => string;
   /** Custom component renderers for document components - key is component name */
-  pillarCallout?: (props: Record<string, unknown>) => string;
+  PillarCallout?: (props: Record<string, unknown>) => string;
   flowchart?: (props: Record<string, unknown>) => string;
 }
 
@@ -192,8 +192,7 @@ export async function renderContent(
       }
       case "customBlock":
       case "documentComponent": {
-        const componentName =
-          typeof n.attrs?.name === "string" ? n.attrs.name.trim() : "";
+        const componentName = typeof n.attrs?.name === "string" ? n.attrs.name.trim() : "";
         const properties = n.attrs?.properties || {};
 
         // Check if we have a custom renderer for this component
@@ -271,5 +270,8 @@ function renderMarks(
 }
 
 function normalizeComponentKey(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }

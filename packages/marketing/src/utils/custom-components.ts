@@ -41,10 +41,16 @@ export function pillarCalloutComponent(properties: Record<string, unknown>): str
 
   const style = getCalloutStyle(type);
 
-  return `<aside class="my-8 rounded-xl border ${style.border} ${style.background} p-5">
-    <p class="m-0 text-xs font-semibold uppercase tracking-wide ${style.label}">${escapeHtml(type)}</p>
-    ${heading ? `<h3 class="mt-2 mb-0 text-lg font-semibold ${style.heading}">${escapeHtml(heading)}</h3>` : ""}
-    ${body ? `<p class="mt-2 mb-0 text-sm leading-6 ${style.body}">${escapeHtml(body)}</p>` : ""}
+  return `<aside class="my-8 relative">
+    <div class="absolute -top-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10"></div>
+    <div class="absolute -bottom-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10"></div>
+    <div class="absolute -right-1.5 bg-linear-to-t w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10"></div>
+    <div class="absolute -left-1.5 bg-linear-to-b w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10"></div>
+    <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
+      <p class="m-0 text-xs font-semibold uppercase tracking-wide ${style.label}">${escapeHtml(type)}</p>
+      ${heading ? `<h3 class="mt-2 mb-0 text-lg font-semibold ${style.heading}">${escapeHtml(heading)}</h3>` : ""}
+      ${body ? `<p class="mt-2 mb-0 text-sm leading-6 ${style.body}">${escapeHtml(body)}</p>` : ""}
+    </div>
   </aside>`;
 }
 
@@ -61,8 +67,6 @@ export function flowchartComponent(properties: Record<string, unknown>): string 
 }
 
 function getCalloutStyle(type: string): {
-  border: string;
-  background: string;
   label: string;
   heading: string;
   body: string;
@@ -70,32 +74,24 @@ function getCalloutStyle(type: string): {
   switch (type) {
     case "definition":
       return {
-        border: "border-sky-200",
-        background: "bg-sky-50/70",
         label: "text-sky-700",
         heading: "text-sky-950",
         body: "text-sky-900/90",
       };
     case "tip":
       return {
-        border: "border-emerald-200",
-        background: "bg-emerald-50/70",
         label: "text-emerald-700",
         heading: "text-emerald-950",
         body: "text-emerald-900/90",
       };
     case "warning":
       return {
-        border: "border-amber-200",
-        background: "bg-amber-50/70",
         label: "text-amber-700",
         heading: "text-amber-950",
         body: "text-amber-900/90",
       };
     default:
       return {
-        border: "border-slate-200",
-        background: "bg-slate-50/70",
         label: "text-slate-700",
         heading: "text-slate-900",
         body: "text-slate-700",

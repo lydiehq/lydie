@@ -33,7 +33,7 @@ export function DocumentMenu({
 
   const handleDelete = () => {
     if (document?.integration_link_id) {
-      deleteDocument(documentId, currentDocId === documentId, document.integration_link_id);
+      void deleteDocument(documentId, currentDocId === documentId, document.integration_link_id);
       return;
     }
 
@@ -43,26 +43,33 @@ export function DocumentMenu({
       title: `Move "${itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName}" to trash?`,
       message: `This document will be moved to trash. You can restore it later from the trash.`,
       onConfirm: () => {
-        deleteDocumentWithUndo(documentId, currentDocId === documentId);
+        void deleteDocumentWithUndo(documentId, currentDocId === documentId);
       },
     });
   };
 
-  const deleteDocumentWithUndo = (docId: string, shouldRedirect: boolean) => {
-    deleteDocument(docId, shouldRedirect, undefined, false);
+  const deleteDocumentWithUndo = async (docId: string, shouldRedirect: boolean) => {
+    const isDeleted = await deleteDocument(docId, shouldRedirect, undefined, false);
+    if (!isDeleted) {
+      return;
+    }
 
     toast("Document deleted", {
       duration: 5000,
       action: {
         label: "Undo",
-        onClick: () => {
-          z.mutate(
-            mutators.document.restore({
-              documentId: docId,
-              organizationId: organization.id,
-            }),
-          );
-          toast.success("Document restored");
+        onClick: async () => {
+          try {
+            await z.mutate(
+              mutators.document.restore({
+                documentId: docId,
+                organizationId: organization.id,
+              }),
+            );
+            toast.success("Document restored");
+          } catch {
+            toast.error("Failed to restore document");
+          }
         },
       },
     });

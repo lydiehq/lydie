@@ -1,6 +1,5 @@
 import { createId } from "@lydie/core/id";
 import { mutators } from "@lydie/zero/mutators";
-import { useNavigate } from "@tanstack/react-router";
 import { useRouter } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
 import { toast } from "sonner";
@@ -12,7 +11,6 @@ import { useZero } from "@/services/zero";
 
 export function useDocumentActions() {
   const z = useZero();
-  const navigate = useNavigate();
   const { navigate: routerNavigate } = useRouter();
   const { organization } = useOrganization();
   const openPersistentTab = useSetAtom(openPersistentTabAtom);
@@ -50,22 +48,20 @@ export function useDocumentActions() {
       has_initial_content: !!initialContent,
     });
 
-    navigate({
-      from: "/w/$organizationSlug",
-      to: "/w/$organizationSlug/$id",
-      params: { id, organizationSlug: organization.slug || "" },
+    void routerNavigate({
+      href: `/w/${organization.slug || ""}/${id}`,
     });
   };
 
-  const deleteDocument = (
+  const deleteDocument = async (
     documentId: string,
     redirectAfterDelete = false,
     integrationLinkId?: string | null,
     showToast = true,
   ) => {
-    const performDelete = () => {
+    const performDelete = async () => {
       try {
-        z.mutate(
+        await z.mutate(
           mutators.document.delete({
             documentId,
             organizationId: organization.id,
@@ -84,12 +80,16 @@ export function useDocumentActions() {
         }
 
         if (redirectAfterDelete) {
-          routerNavigate({
+          void routerNavigate({
             to: "..",
           });
         }
+
+        return true;
       } catch {
         toast.error("Failed to delete document");
+
+        return false;
       }
     };
 
@@ -101,10 +101,14 @@ export function useDocumentActions() {
           "This document is part of an integration. Deleting it will also delete the corresponding file in the external provider (e.g. GitHub). This action cannot be undone.",
         confirmLabel: "Delete & Remove",
         destuctive: true,
-        onConfirm: performDelete,
+        onConfirm: () => {
+          void performDelete();
+        },
       });
+
+      return false;
     } else {
-      performDelete();
+      return await performDelete();
     }
   };
 

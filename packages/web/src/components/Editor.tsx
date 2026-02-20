@@ -105,6 +105,24 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
     };
   }, [cached, doc.id]);
 
+  // Keep cache access time current while the user edits.
+  useEffect(() => {
+    if (!cached) return;
+
+    const touchEditor = () => {
+      editorCache.touch(doc.id);
+    };
+
+    touchEditor();
+    cached.contentEditor.on("update", touchEditor);
+    cached.titleEditor.on("update", touchEditor);
+
+    return () => {
+      cached.contentEditor.off("update", touchEditor);
+      cached.titleEditor.off("update", touchEditor);
+    };
+  }, [cached, doc.id]);
+
   // Convert preview tab to persistent when user starts editing
   useEffect(() => {
     if (!cached) return;

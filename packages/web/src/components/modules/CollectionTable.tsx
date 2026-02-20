@@ -17,6 +17,7 @@ import { buildCollectionRoutes } from "@/utils/collection-routes";
 type DocumentItem = {
   id: string;
   title: string;
+  slug: string | null;
   parentId: string | null;
   collectionId: string | null;
   route: string;
@@ -137,6 +138,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
       return {
         id: doc.id,
         title: doc.title,
+        slug: doc.slug ?? null,
         parentId: doc.parent_id ?? null,
         collectionId: extracted.collectionId,
         route: "",
@@ -149,6 +151,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         id: document.id,
         parentId: document.parentId,
         title: document.title,
+        slug: document.slug,
         route: typeof document.properties.route === "string" ? document.properties.route : null,
       })),
     );
