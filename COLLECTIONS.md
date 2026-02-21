@@ -70,3 +70,15 @@ We need a module-level routing model that supports both flat and deeply nested U
 ### Guiding Principle
 
 Use explicit, durable data relationships for module routing/publishing. Keep collection/table/editor views as projections of that model, not the source of truth.
+
+## External API Related-Document Scoping
+
+The external collections API supports explicit related-document scoping for module consumers.
+
+- `include_related=true` enables related documents.
+- `related_scope=same_collection` limits related results to the current document collection.
+- `related_scope=collection_handle` limits related results to `related_collection_handle=<handle>`.
+- `related_scope=any` keeps global related matching behavior.
+- `related_limit=<n>` controls related result count (default is 5).
+
+Related payloads do not assume first-party slugs. Any route-specific property (for example `slug`) is consumer-defined collection data under `fields`.

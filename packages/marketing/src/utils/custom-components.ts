@@ -2,7 +2,6 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { Flowchart } from "@/components/content/Flowchart";
-import { FAQ } from "@/components/generic/FAQ";
 
 export type PillarCalloutType = "definition" | "tip" | "note" | "warning";
 
@@ -29,16 +28,6 @@ export type FlowchartProps = {
   title?: string;
   nodes?: FlowchartNode[];
   edges?: FlowchartEdge[];
-};
-
-export type FAQItem = {
-  question: string;
-  answer: string;
-};
-
-export type FAQProps = {
-  title?: string;
-  items?: FAQItem[];
 };
 
 export function pillarCalloutComponent(properties: Record<string, unknown>): string {
@@ -75,17 +64,6 @@ export function flowchartComponent(properties: Record<string, unknown>): string 
   }
 
   return renderToStaticMarkup(createElement(Flowchart, { title, nodes, edges }));
-}
-
-export function faqComponent(properties: Record<string, unknown>): string {
-  const title = getString(properties.title).trim() || undefined;
-  const items = getFaqItems(properties.items);
-
-  if (items.length === 0) {
-    return "";
-  }
-
-  return renderToStaticMarkup(createElement(FAQ, { title, items }));
 }
 
 function getCalloutStyle(type: string): {
@@ -187,23 +165,6 @@ function getFlowchartEdges(value: unknown): FlowchartEdge[] {
       return { from, to, label };
     })
     .filter((edge): edge is FlowchartEdge => Boolean(edge));
-}
-
-function getFaqItems(value: unknown): FAQItem[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .map((item): FAQItem | null => {
-      if (!item || typeof item !== "object") return null;
-
-      const question = getString((item as Record<string, unknown>).question).trim();
-      const answer = getString((item as Record<string, unknown>).answer).trim();
-
-      if (!question || !answer) return null;
-
-      return { question, answer };
-    })
-    .filter((item): item is FAQItem => Boolean(item));
 }
 
 function escapeHtml(text: string): string {

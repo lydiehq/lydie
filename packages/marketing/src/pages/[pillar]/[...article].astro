@@ -11,15 +11,11 @@ import type { ContentNode } from "@lydie/core/content";
 import ArticleHeadingEnhancements from "@/components/ArticleHeadingEnhancements.astro";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
 import { Container } from "@/components/Container";
+import LydieContent from "@/components/LydieContent.astro";
 import PillarTOC from "@/components/PillarTOC.astro";
+import RelatedDocumentCard from "@/components/RelatedDocumentCard.astro";
 import Layout from "@/layouts/Layout.astro";
 import { articleTypographyClassName } from "@/utils/article-typography";
-import { renderContent, blogImageComponent } from "@/utils/content-renderer";
-import {
-  faqComponent,
-  flowchartComponent,
-  pillarCalloutComponent,
-} from "@/utils/custom-components";
 import * as lydieApi from "@/utils/lydie-client";
 import { createLinkResolver } from "@/utils/route-registry";
 
@@ -41,11 +37,26 @@ type CollectionDocument = lydieApi.CollectionApiDocument & {
   path?: string;
 };
 
+type RelatedCollectionDocument = {
+  id: string;
+  title: string;
+  createdAt?: string;
+  coverImage?: string | null;
+  slug?: string;
+  fields?: Record<string, unknown>;
+};
+
+function getMarketingSlug(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().replace(/^\/+|\/+$/g, "");
+  return normalized.length > 0 ? normalized : null;
+}
+
 let currentDocument: CollectionDocument | null = null;
 let rootDocument: CollectionDocument | null = null;
 let allDocuments: CollectionDocument[] = [];
 let documentsForToc: CollectionDocument[] = [];
-let contentHtml = "";
+let relatedDocuments: Array<RelatedCollectionDocument & { path?: string }> = [];
 
 const linkResolver = createLinkResolver({
   currentCollectionHandle: collectionHandle,
@@ -57,12 +68,18 @@ console.log(
 
 try {
   // Fetch all documents with their computed paths
-  const { documents } = await lydieApi.getCollectionDocumentsWithPaths(collectionHandle, {
-    sortBy: "created_at",
-    sortOrder: "asc",
-    includeToc: true,
-    includeRelated: true,
-  });
+  const { documents } = await lydieApi.getCollectionDocumentsWithPaths(
+    collectionHandle,
+    {
+      sortBy: "created_at",
+      sortOrder: "asc",
+      includeToc: true,
+      includeRelated: true,
+      relatedScope: "collection_handle",
+      relatedCollectionHandle: lydieApi.collections.knowledgeBases,
+      relatedLimit: 2,
+    } as unknown as Parameters<typeof lydieApi.getCollectionDocumentsWithPaths>[1],
+  );
   allDocuments = documents as CollectionDocument[];
 
   // Find the document matching the requested path
@@ -102,20 +119,28 @@ try {
     documentsForToc = [resolvedDocument, ...documentsForToc];
   }
 
-  const { html } = await renderContent(
-    resolvedDocument.jsonContent as ContentNode,
-    {
-      components: {
-        image: blogImageComponent,
-        pillarCallout: pillarCalloutComponent,
-        flowchart: flowchartComponent,
-        faq: faqComponent,
-        FAQ: faqComponent,
-      },
-      linkResolver,
-    },
-  );
-  contentHtml = html;
+  const relatedFromApi = (resolvedDocument.related || []) as RelatedCollectionDocument[];
+
+  const knowledgeBaseDocuments =
+    collectionHandle === lydieApi.collections.knowledgeBases
+      ? allDocuments
+      : ((
+          await lydieApi.getCollectionDocumentsWithPaths(lydieApi.collections.knowledgeBases, {
+            sortBy: "created_at",
+            sortOrder: "asc",
+          })
+        ).documents as CollectionDocument[]);
+
+  relatedDocuments = relatedFromApi
+    .map((doc) => {
+      const matchingDoc = knowledgeBaseDocuments.find((entry) => entry.id === doc.id);
+      return {
+        ...doc,
+        path: matchingDoc?.path,
+      };
+    })
+    .filter((doc) => doc.id !== resolvedDocument.id)
+    .slice(0, 2);
 } catch (error) {
   console.error(
     `[Resource Hub] Failed to fetch document ${collectionHandle}${requestedPath}`,
@@ -129,7 +154,8 @@ if (!currentDocument) {
 }
 
 const pageDocument = currentDocument;
-const description = pageDocument.fields?.description || pageDocument.title || "Article";
+const description =
+  pageDocument.fields?.description || pageDocument.title || "Article";
 const breadcrumbItems = [
   { label: "Home", href: "/" },
   {
@@ -137,11 +163,9 @@ const breadcrumbItems = [
     href: `/${pillar}`,
   },
   { label: pageDocument.title || "Article" },
-].filter((item, index, items) => index === 0 || item.label !== items[index - 1]?.label);
-const relatedDocuments =
-  pageDocument.related && pageDocument.related.length > 0
-    ? pageDocument.related
-    : allDocuments.filter((doc) => doc.id !== pageDocument.id);
+].filter(
+  (item, index, items) => index === 0 || item.label !== items[index - 1]?.label,
+);
 ---
 
 <Layout
@@ -153,56 +177,68 @@ const relatedDocuments =
       <Breadcrumbs items={breadcrumbItems} />
 
       <div class="flex gap-8 mt-8 relative">
-        <aside class="hidden lg:block lg:order-1 lg:w-80 xl:w-96 shrink-0">
+        <div class="flex-1">
+          <article class="max-w-[65ch]">
+            <header class="mb-8">
+              <h1 class="text-3xl font-semibold text-gray-900">
+                {pageDocument.title}
+              </h1>
+              {
+                pageDocument.fields?.description && (
+                  <p class="text-lg text-gray-600 mt-4">
+                    {pageDocument.fields?.description}
+                  </p>
+                )
+              }
+            </header>
+
+            <div class={articleTypographyClassName}>
+              <LydieContent
+                content={pageDocument.jsonContent as ContentNode}
+                linkResolver={linkResolver}
+              />
+            </div>
+            <ArticleHeadingEnhancements />
+
+            {
+              relatedDocuments.length > 0 && (
+                <section class="mt-16 pt-8 border-t border-gray-200">
+                  <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                    Related Articles
+                  </h2>
+                  <div class="grid gap-4">
+                    {relatedDocuments.map((doc) => (
+                      <RelatedDocumentCard
+                        href={
+                          typeof doc.path === "string"
+                            ? doc.path === "/"
+                              ? "/knowledge-bases"
+                              : `/knowledge-bases${doc.path}`
+                            : (() => {
+                                const relatedSlug = getMarketingSlug(doc.fields?.slug ?? doc.slug);
+                                return relatedSlug
+                                  ? `/knowledge-bases/${relatedSlug}`
+                                  : `/knowledge-bases/${doc.id}`;
+                              })()
+                        }
+                        title={doc.title}
+                        createdAt={doc.createdAt}
+                        coverImage={doc.coverImage}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )
+            }
+          </article>
+        </div>
+        <aside class="hidden lg:block lg:order-2 lg:w-80 xl:w-96 shrink-0">
           <PillarTOC
             documents={documentsForToc}
             currentDocumentId={pageDocument.id}
             pillar={pillar}
           />
         </aside>
-        <article
-          class="flex-1 max-w-3xl lg:order-2 lg:ml-auto"
-        >
-          <header class="mb-8">
-            <h1 class="text-3xl font-semibold text-gray-900">
-              {pageDocument.title}
-            </h1>
-            {
-              pageDocument.fields?.description && (
-                <p class="text-lg text-gray-600 mt-4">
-                  {pageDocument.fields?.description}
-                </p>
-              )
-            }
-          </header>
-
-          <div class={articleTypographyClassName}>
-            <Fragment set:html={contentHtml} />
-          </div>
-          <ArticleHeadingEnhancements />
-
-          {relatedDocuments.length > 0 && (
-            <section class="mt-16 pt-8 border-t border-gray-200">
-              <h2 class="text-xl font-semibold text-gray-900 mb-6">Related Articles</h2>
-              <div class="grid gap-4">
-                {relatedDocuments.map((doc) => (
-                  <a
-                    href={
-                      doc.path === "/"
-                        ? `/${pillar}`
-                        : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`
-                    }
-                    class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all"
-                  >
-                    <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {doc.title}
-                    </h3>
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
-        </article>
       </div>
     </Container>
   </div>

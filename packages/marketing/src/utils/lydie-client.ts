@@ -13,6 +13,14 @@ export const collections = {
 } as const;
 
 type CollectionFieldValue = string | number | boolean | null;
+type RelatedScope = "any" | "same_collection" | "collection_handle";
+
+type CollectionRelatedOptions = {
+  includeRelated?: boolean;
+  relatedScope?: RelatedScope;
+  relatedCollectionHandle?: string;
+  relatedLimit?: number;
+};
 
 export type CollectionApiDocument = Record<string, unknown> & {
   id: string;
@@ -88,8 +96,7 @@ export function getCollectionDocumentPath(collectionHandle: string, path: string
 
 export async function getCollectionDocuments(
   collectionHandle: string,
-  options?: {
-    includeRelated?: boolean;
+  options?: CollectionRelatedOptions & {
     includeToc?: boolean;
     filters?: Record<string, string | number | boolean>;
     sortBy?: "created_at" | "updated_at" | "title";
@@ -100,6 +107,18 @@ export async function getCollectionDocuments(
 
   if (options?.includeRelated) {
     params.set("include_related", "true");
+  }
+
+  if (options?.relatedScope) {
+    params.set("related_scope", options.relatedScope);
+  }
+
+  if (options?.relatedCollectionHandle) {
+    params.set("related_collection_handle", options.relatedCollectionHandle);
+  }
+
+  if (typeof options?.relatedLimit === "number") {
+    params.set("related_limit", String(options.relatedLimit));
   }
 
   if (options?.includeToc) {
@@ -143,8 +162,7 @@ export async function getCollectionDocuments(
 export async function getCollectionDocument(
   collectionHandle: string,
   documentIdOrPropertyValue: string,
-  options?: {
-    includeRelated?: boolean;
+  options?: CollectionRelatedOptions & {
     includeToc?: boolean;
   },
 ): Promise<CollectionApiDocument> {
@@ -152,6 +170,18 @@ export async function getCollectionDocument(
 
   if (options?.includeRelated) {
     params.set("include_related", "true");
+  }
+
+  if (options?.relatedScope) {
+    params.set("related_scope", options.relatedScope);
+  }
+
+  if (options?.relatedCollectionHandle) {
+    params.set("related_collection_handle", options.relatedCollectionHandle);
+  }
+
+  if (typeof options?.relatedLimit === "number") {
+    params.set("related_limit", String(options.relatedLimit));
   }
 
   if (options?.includeToc) {
@@ -175,6 +205,8 @@ export async function getCollectionDocument(
 
   return (await response.json()) as CollectionApiDocument;
 }
+
+export const getCollectionDocumentByIdentifier = getCollectionDocument;
 
 export async function getDocumentsBySlugs(
   slugs: string[],
@@ -209,14 +241,16 @@ export const lydieClient = {
 export async function getCollectionDocumentByPath(
   collectionHandle: string,
   targetPath: string,
-  options?: {
-    includeRelated?: boolean;
+  options?: CollectionRelatedOptions & {
     includeToc?: boolean;
   },
 ): Promise<CollectionApiDocument | null> {
   // Fetch all documents to build the path map
   const { documents } = await getCollectionDocuments(collectionHandle, {
     includeRelated: options?.includeRelated,
+    relatedScope: options?.relatedScope,
+    relatedCollectionHandle: options?.relatedCollectionHandle,
+    relatedLimit: options?.relatedLimit,
     includeToc: options?.includeToc,
   });
 
@@ -241,8 +275,7 @@ export async function getCollectionDocumentByPath(
 // Get all documents with their computed paths
 export async function getCollectionDocumentsWithPaths(
   collectionHandle: string,
-  options?: {
-    includeRelated?: boolean;
+  options?: CollectionRelatedOptions & {
     includeToc?: boolean;
     sortBy?: "created_at" | "updated_at" | "title";
     sortOrder?: "asc" | "desc";

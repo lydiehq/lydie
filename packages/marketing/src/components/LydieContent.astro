@@ -3,15 +3,14 @@ import { getImage } from "astro:assets";
 import type { ContentNode } from "@lydie/core/content";
 import {
   renderContent,
-  type RenderContentResult,
   type ImageComponentProps,
   blogImageComponent,
 } from "../utils/content-renderer";
 import {
-  faqComponent,
   flowchartComponent,
   pillarCalloutComponent,
 } from "../utils/custom-components";
+import { FAQ, type FAQItem } from "./generic/FAQ";
 
 interface Props {
   content: ContentNode;
@@ -30,7 +29,103 @@ interface Props {
 
 const { content, linkPrefix, linkResolver } = Astro.props;
 
-  // Custom image component that uses Astro's Image optimization
+type FAQBlock = {
+  title?: string;
+  items: FAQItem[];
+};
+
+type ContentSegment =
+  | {
+      type: "html";
+      html: string;
+    }
+  | {
+      type: "faq";
+      block: FAQBlock;
+    };
+
+const FAQ_PLACEHOLDER_PREFIX = "lydie-faq-block";
+
+function getString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function getFaqItems(value: unknown): FAQItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item): FAQItem | null => {
+      if (!item || typeof item !== "object") return null;
+
+      const question = getString((item as Record<string, unknown>).question).trim();
+      const answer = getString((item as Record<string, unknown>).answer).trim();
+
+      if (!question || !answer) return null;
+
+      return { question, answer };
+    })
+    .filter((item): item is FAQItem => Boolean(item));
+}
+
+function createFaqPlaceholder(index: number): string {
+  return `<div data-${FAQ_PLACEHOLDER_PREFIX}="${index}"></div>`;
+}
+
+function getFaqIndexFromPlaceholder(match: string): number | null {
+  const indexMatch = match.match(/"(\d+)"/);
+  if (!indexMatch) return null;
+
+  const index = Number(indexMatch[1]);
+  return Number.isNaN(index) ? null : index;
+}
+
+function splitIntoSegments(html: string, faqBlocks: FAQBlock[]): ContentSegment[] {
+  const segments: ContentSegment[] = [];
+  const placeholderRegex = new RegExp(
+    `<div data-${FAQ_PLACEHOLDER_PREFIX}="\\d+"></div>`,
+    "g",
+  );
+
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = placeholderRegex.exec(html)) !== null) {
+    const matchStart = match.index;
+    const matchEnd = match.index + match[0].length;
+
+    if (matchStart > lastIndex) {
+      const segmentHtml = html.slice(lastIndex, matchStart);
+      if (segmentHtml) {
+        segments.push({ type: "html", html: segmentHtml });
+      }
+    }
+
+    const faqIndex = getFaqIndexFromPlaceholder(match[0]);
+    if (faqIndex !== null) {
+      const block = faqBlocks[faqIndex];
+      if (block) {
+        segments.push({ type: "faq", block });
+      }
+    }
+
+    lastIndex = matchEnd;
+  }
+
+  if (lastIndex < html.length) {
+    const segmentHtml = html.slice(lastIndex);
+    if (segmentHtml) {
+      segments.push({ type: "html", html: segmentHtml });
+    }
+  }
+
+  if (segments.length === 0 && html) {
+    segments.push({ type: "html", html });
+  }
+
+  return segments;
+}
+
+// Custom image component that uses Astro's Image optimization
 async function astroImageComponent(props: ImageComponentProps): Promise<string> {
   const { src, alt, title, width, height } = props;
 
@@ -75,18 +170,30 @@ async function astroImageComponent(props: ImageComponentProps): Promise<string> 
   }
 }
 
+const faqBlocks: FAQBlock[] = [];
+
+function faqPlaceholderComponent(properties: Record<string, unknown>): string {
+  const title = getString(properties.title).trim() || undefined;
+  const items = getFaqItems(properties.items);
+
+  if (items.length === 0) {
+    return "";
+  }
+
+  const index = faqBlocks.push({ title, items }) - 1;
+  return createFaqPlaceholder(index);
+}
+
 // First pass: render content to get HTML and image list
 const { html, images } = await renderContent(content, {
   linkPrefix,
   linkResolver,
   components: {
-    // Use default image component for first pass
     image: blogImageComponent,
-    // Custom document components
     pillarCallout: pillarCalloutComponent,
     flowchart: flowchartComponent,
-    faq: faqComponent,
-    FAQ: faqComponent,
+    faq: faqPlaceholderComponent,
+    FAQ: faqPlaceholderComponent,
   },
 });
 
@@ -99,7 +206,6 @@ for (const image of images) {
 // Replace image placeholders in HTML with optimized versions
 let finalHtml = html;
 for (const [originalSrc, optimizedHtml] of optimizedImages) {
-  // Find and replace the blog image component output with optimized version
   const escapedSrc = originalSrc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const blogPattern = new RegExp(
     `<div class="my-6 flex justify-center">\\s*<img[^>]*src="${escapedSrc}"[^>]*/?>\\s*</div>`,
@@ -107,6 +213,16 @@ for (const [originalSrc, optimizedHtml] of optimizedImages) {
   );
   finalHtml = finalHtml.replace(blogPattern, optimizedHtml);
 }
+
+const segments = splitIntoSegments(finalHtml, faqBlocks);
 ---
 
-<div set:html={finalHtml} />
+{
+  segments.map((segment) =>
+    segment.type === "faq" ? (
+      <FAQ title={segment.block.title} items={segment.block.items} client:visible />
+    ) : (
+      <Fragment set:html={segment.html} />
+    ),
+  )
+}

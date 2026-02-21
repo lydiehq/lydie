@@ -1,7 +1,7 @@
 import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { collectionFieldsTable, collectionsTable, db, documentsTable } from "@lydie/database";
-import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -11,6 +11,12 @@ import { apiKeyAuth, externalRateLimit } from "./middleware";
 
 type SortBy = "created_at" | "updated_at" | "title";
 type SortOrder = "asc" | "desc";
+type RelatedScope = "any" | "same_collection" | "collection_handle";
+
+type RelatedQueryOptions = {
+  limit: number;
+  collectionId?: string;
+};
 
 function parseSortBy(value: string | undefined): SortBy {
   if (value === "updated_at" || value === "title") {
@@ -22,6 +28,27 @@ function parseSortBy(value: string | undefined): SortBy {
 
 function parseSortOrder(value: string | undefined): SortOrder {
   return value === "asc" ? "asc" : "desc";
+}
+
+function parseRelatedScope(value: string | undefined): RelatedScope {
+  if (value === "same_collection" || value === "collection_handle") {
+    return value;
+  }
+
+  return "any";
+}
+
+function parseRelatedLimit(value: string | undefined): number {
+  if (!value) {
+    return 5;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 5;
+  }
+
+  return Math.max(1, Math.min(10, Math.trunc(parsed)));
 }
 
 function buildDocumentOrder(sortBy: SortBy, sortOrder: SortOrder): SQL[] {
@@ -139,7 +166,7 @@ async function findCollectionDocumentByIdentifier(
 async function transformToDocumentResponse(
   doc: typeof documentsTable.$inferSelect,
   fieldValues: Record<string, unknown>,
-  includeRelated: boolean,
+  relatedQueryOptions: RelatedQueryOptions | null,
   includeToc: boolean,
 ): Promise<Record<string, unknown>> {
   let jsonContent: ReturnType<typeof convertYjsToJson> = null;
@@ -158,9 +185,37 @@ async function transformToDocumentResponse(
   }
 
   let related: Awaited<ReturnType<typeof findRelatedDocuments>> = [];
-  if (includeRelated && doc.id) {
+  if (relatedQueryOptions && doc.id) {
     try {
-      related = await findRelatedDocuments(doc.id, doc.organizationId, 5);
+      related = await findRelatedDocuments(doc.id, doc.organizationId, relatedQueryOptions.limit, {
+        collectionId: relatedQueryOptions.collectionId,
+      });
+
+      const relatedDocumentIds = related
+        .map((relatedDocument) => relatedDocument.id)
+        .filter((id): id is string => typeof id === "string");
+
+      if (relatedDocumentIds.length > 0) {
+        const relatedFieldValues = await db
+          .select({
+            documentId: collectionFieldsTable.documentId,
+            values: collectionFieldsTable.values,
+          })
+          .from(collectionFieldsTable)
+          .where(inArray(collectionFieldsTable.documentId, relatedDocumentIds));
+
+        const fieldsByDocumentId = new Map<string, Record<string, unknown>>(
+          relatedFieldValues.map((entry) => [
+            entry.documentId,
+            (entry.values as Record<string, unknown>) || {},
+          ]),
+        );
+
+        related = related.map((relatedDocument) => ({
+          ...relatedDocument,
+          fields: fieldsByDocumentId.get(relatedDocument.id) || {},
+        }));
+      }
     } catch (error) {
       console.error("Error fetching related documents:", error);
     }
@@ -172,9 +227,75 @@ async function transformToDocumentResponse(
     ...docWithoutYjs,
     fields: fieldValues,
     jsonContent,
-    ...(includeRelated && { related }),
+    ...(relatedQueryOptions && { related }),
     ...(includeToc && { toc }),
   };
+}
+
+async function resolveCollectionIdByHandle(
+  organizationId: string,
+  handle: string,
+): Promise<string | null> {
+  const collectionResult = await db
+    .select({ id: collectionsTable.id })
+    .from(collectionsTable)
+    .where(and(eq(collectionsTable.organizationId, organizationId), eq(collectionsTable.handle, handle)))
+    .limit(1);
+
+  return collectionResult[0]?.id ?? null;
+}
+
+async function resolveRelatedQueryOptions(params: {
+  includeRelated: boolean;
+  organizationId: string;
+  relatedScope: RelatedScope;
+  relatedCollectionHandle?: string;
+  relatedLimit: number;
+  currentCollectionId?: string | null;
+}): Promise<RelatedQueryOptions | null> {
+  const {
+    includeRelated,
+    organizationId,
+    relatedScope,
+    relatedCollectionHandle,
+    relatedLimit,
+    currentCollectionId,
+  } = params;
+
+  if (!includeRelated) {
+    return null;
+  }
+
+  if (relatedScope === "same_collection") {
+    return {
+      limit: relatedLimit,
+      collectionId: currentCollectionId || undefined,
+    };
+  }
+
+  if (relatedScope === "collection_handle") {
+    if (!relatedCollectionHandle) {
+      throw new HTTPException(400, { message: "related_collection_handle is required" });
+    }
+
+    const relatedCollectionId = await resolveCollectionIdByHandle(
+      organizationId,
+      relatedCollectionHandle,
+    );
+
+    if (!relatedCollectionId) {
+      throw new HTTPException(404, {
+        message: "Related collection not found",
+      });
+    }
+
+    return {
+      limit: relatedLimit,
+      collectionId: relatedCollectionId,
+    };
+  }
+
+  return { limit: relatedLimit };
 }
 
 export const CollectionsApi = new Hono()
@@ -184,6 +305,9 @@ export const CollectionsApi = new Hono()
     const organizationId = c.get("organizationId");
     const handle = c.req.param("handle");
     const includeRelated = c.req.query("include_related") === "true";
+    const relatedScope = parseRelatedScope(c.req.query("related_scope"));
+    const relatedCollectionHandle = c.req.query("related_collection_handle");
+    const relatedLimit = parseRelatedLimit(c.req.query("related_limit"));
     const includeToc = c.req.query("include_toc") === "true";
     const sortBy = parseSortBy(c.req.query("sort_by"));
     const sortOrder = parseSortOrder(c.req.query("sort_order"));
@@ -234,12 +358,21 @@ export const CollectionsApi = new Hono()
       .where(and(...whereConditions))
       .orderBy(...buildDocumentOrder(sortBy, sortOrder));
 
+    const relatedQueryOptions = await resolveRelatedQueryOptions({
+      includeRelated,
+      organizationId,
+      relatedScope,
+      relatedCollectionHandle,
+      relatedLimit,
+      currentCollectionId: collection.id,
+    });
+
     const response = await Promise.all(
       documents.map((doc) =>
         transformToDocumentResponse(
           doc.document,
           (doc.fieldValues as Record<string, unknown>) || {},
-          includeRelated,
+          relatedQueryOptions,
           includeToc,
         ),
       ),
@@ -252,6 +385,9 @@ export const CollectionsApi = new Hono()
     const handle = c.req.param("handle");
     const identifier = c.req.param("documentIdOrPropertyValue");
     const includeRelated = c.req.query("include_related") === "true";
+    const relatedScope = parseRelatedScope(c.req.query("related_scope"));
+    const relatedCollectionHandle = c.req.query("related_collection_handle");
+    const relatedLimit = parseRelatedLimit(c.req.query("related_limit"));
     const includeToc = c.req.query("include_toc") === "true";
 
     const collectionResult = await db
@@ -288,10 +424,19 @@ export const CollectionsApi = new Hono()
       )
       .limit(1);
 
+    const relatedQueryOptions = await resolveRelatedQueryOptions({
+      includeRelated,
+      organizationId,
+      relatedScope,
+      relatedCollectionHandle,
+      relatedLimit,
+      currentCollectionId: collection.id,
+    });
+
     const response = await transformToDocumentResponse(
       document,
       (fieldValuesResult[0]?.values as Record<string, unknown>) || {},
-      includeRelated,
+      relatedQueryOptions,
       includeToc,
     );
 
@@ -301,6 +446,9 @@ export const CollectionsApi = new Hono()
     const organizationId = c.get("organizationId");
     const identifier = c.req.param("documentIdOrPropertyValue");
     const includeRelated = c.req.query("include_related") === "true";
+    const relatedScope = parseRelatedScope(c.req.query("related_scope"));
+    const relatedCollectionHandle = c.req.query("related_collection_handle");
+    const relatedLimit = parseRelatedLimit(c.req.query("related_limit"));
     const includeToc = c.req.query("include_toc") === "true";
 
     let documentResult = await db
@@ -364,7 +512,14 @@ export const CollectionsApi = new Hono()
     const response = await transformToDocumentResponse(
       document,
       (fieldValuesResult[0]?.values as Record<string, unknown>) || {},
-      includeRelated,
+      await resolveRelatedQueryOptions({
+        includeRelated,
+        organizationId,
+        relatedScope,
+        relatedCollectionHandle,
+        relatedLimit,
+        currentCollectionId: document.collectionId,
+      }),
       includeToc,
     );
 

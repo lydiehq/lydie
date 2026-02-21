@@ -50,13 +50,13 @@
     "fmt:check": "oxfmt --check"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.52",
+    "@ai-sdk/gateway": "^3.0.53",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/react-query-persist-client": "^5.90.22",
     "@tiptap/extension-code": "^3.20.0",
     "@tiptap/extension-table-of-contents": "^3.20.0",
-    "framer-motion": "^12.34.2"
+    "framer-motion": "^12.34.3"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -67,7 +67,7 @@
     "jsdom": "^28.1.0",
     "oxfmt": "^0.34.0",
     "oxlint": "^1.49.0",
-    "oxlint-tsgolint": "^0.14.1",
+    "oxlint-tsgolint": "^0.14.2",
     "sst": "v3.18.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

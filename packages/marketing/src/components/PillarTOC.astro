@@ -51,7 +51,7 @@ function getNavigationTitle(doc: Document): string {
 ---
 
 <nav
-  class="sticky top-24 max-w-64"
+  class="sticky top-24 max-w-72"
   aria-label="Table of contents"
   data-pillar-toc
 >
@@ -73,7 +73,9 @@ function getNavigationTitle(doc: Document): string {
             <div class="flex items-start gap-3">
               <div class="min-w-0">
                 {isCurrent ? (
-                  <p class="text-sm font-semibold text-gray-900">{navigationTitle}</p>
+                  <p class="text-sm font-semibold text-gray-900">
+                    {navigationTitle}
+                  </p>
                 ) : (
                   <a
                     href={href}
@@ -86,7 +88,7 @@ function getNavigationTitle(doc: Document): string {
                 {isCurrent && doc.toc && doc.toc.length > 0 && (
                   <ol
                     data-heading-list
-                    class="mt-2 space-y-1 border-l border-gray-200 pl-3 overflow-y-auto pr-1"
+                    class="mt-2 space-y-1 pl-3 overflow-y-auto pr-1"
                   >
                     {doc.toc.map((heading, headingIndex) => (
                       <li>

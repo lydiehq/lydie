@@ -31,6 +31,7 @@
     "@lydie/ui": "workspace:*",
     "@lydie/zero": "workspace:*",
     "@rocicorp/zero": "catalog:",
+    "@table-nav/core": "^0.0.9",
     "@tailwindcss/vite": "^4.2.0",
     "@tanstack/query-async-storage-persister": "^5.90.22",
     "@tanstack/react-form": "^1.28.3",

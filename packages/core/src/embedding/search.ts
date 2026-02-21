@@ -181,6 +181,9 @@ export async function findRelatedDocuments(
   documentId: string,
   organizationId: string,
   limit: number = 5,
+  options?: {
+    collectionId?: string;
+  },
 ) {
   try {
     const [titleEmbedding] = await db
@@ -192,7 +195,7 @@ export async function findRelatedDocuments(
       .limit(1);
 
     if (!titleEmbedding) {
-      return await findRelatedDocumentsByContent(documentId, organizationId, limit);
+      return await findRelatedDocumentsByContent(documentId, organizationId, limit, options);
     }
 
     const queryEmbedding = titleEmbedding.embedding;
@@ -205,7 +208,8 @@ export async function findRelatedDocuments(
       .select({
         id: documentsTable.id,
         title: documentsTable.title,
-        slug: documentsTable.slug,
+        collectionId: documentsTable.collectionId,
+        coverImage: documentsTable.coverImage,
         similarity,
         createdAt: documentsTable.createdAt,
         updatedAt: documentsTable.updatedAt,
@@ -218,6 +222,9 @@ export async function findRelatedDocuments(
           eq(documentsTable.published, true),
           sql`${documentsTable.deletedAt} IS NULL`,
           sql`${documentsTable.id} != ${documentId}`,
+          ...(options?.collectionId
+            ? [eq(documentsTable.collectionId, options.collectionId)]
+            : []),
           sql`(${documentTitleEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding,
           )}::vector) < 0.8`,
@@ -239,6 +246,9 @@ export async function findRelatedDocumentsByContent(
   documentId: string,
   organizationId: string,
   limit: number = 5,
+  options?: {
+    collectionId?: string;
+  },
 ) {
   try {
     const [contentEmbedding] = await db
@@ -263,7 +273,8 @@ export async function findRelatedDocumentsByContent(
       .select({
         id: documentsTable.id,
         title: documentsTable.title,
-        slug: documentsTable.slug,
+        collectionId: documentsTable.collectionId,
+        coverImage: documentsTable.coverImage,
         similarity: sql<number>`MAX(${similarity})`.as("max_similarity"),
         createdAt: documentsTable.createdAt,
         updatedAt: documentsTable.updatedAt,
@@ -276,13 +287,17 @@ export async function findRelatedDocumentsByContent(
           eq(documentsTable.published, true),
           sql`${documentsTable.deletedAt} IS NULL`,
           sql`${documentsTable.id} != ${documentId}`,
+          ...(options?.collectionId
+            ? [eq(documentsTable.collectionId, options.collectionId)]
+            : []),
           sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.6`,
         ),
       )
       .groupBy(
         documentsTable.id,
         documentsTable.title,
-        documentsTable.slug,
+        documentsTable.collectionId,
+        documentsTable.coverImage,
         documentsTable.createdAt,
         documentsTable.updatedAt,
       )

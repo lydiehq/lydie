@@ -1,5 +1,5 @@
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import React, { useContext } from "react";
 import {
   Button,
@@ -79,7 +79,7 @@ interface FAQProps {
 
 export function FAQ({ title = "Frequently Asked Questions", items }: FAQProps) {
   return (
-    <div className="gap-y-6 flex flex-col w-full">
+    <div className="gap-y-6 flex flex-col w-full not-prose">
       <h2 className="text-lg font-medium text-black/85">{title}</h2>
       <div>
         {items.map((item, index) => (
@@ -119,27 +119,21 @@ function FAQItemComponent({ question, answer }: FAQItemComponentProps) {
               <ChevronIcon />
             </Button>
           </Heading>
-          <AnimatePresence initial={false}>
-            {isExpanded && (
-              <MotionDisclosurePanel
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                className="text-[0.9375rem]/relaxed text-black/70"
-              >
-                <motion.div
-                  initial={{ y: -10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -10, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1], delay: 0.05 }}
-                  className="pb-4 max-w-[65ch]"
-                >
-                  {renderedAnswer}
-                </motion.div>
-              </MotionDisclosurePanel>
-            )}
-          </AnimatePresence>
+          <MotionDisclosurePanel
+            initial={false}
+            animate={{ opacity: isExpanded ? 1 : 0, height: isExpanded ? "auto" : 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="text-[0.9375rem]/relaxed text-black/70"
+          >
+            <motion.div
+              initial={false}
+              animate={{ y: isExpanded ? 0 : -10, opacity: isExpanded ? 1 : 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1], delay: isExpanded ? 0.05 : 0 }}
+              className="pb-4 max-w-[65ch]"
+            >
+              {renderedAnswer}
+            </motion.div>
+          </MotionDisclosurePanel>
         </>
       )}
     </Disclosure>

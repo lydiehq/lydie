@@ -1,0 +1,32 @@
+---
+import FormattedDate from "./FormattedDate.astro";
+
+type Props = {
+  href: string;
+  title: string;
+  createdAt?: string;
+  coverImage?: string | null;
+};
+
+const { href, title, createdAt, coverImage } = Astro.props;
+---
+
+<a
+  href={href}
+  class="group gap-4 rounded-xl border border-gray-200 bg-white/80 p-3 no-underline transition-all duration-150 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
+>
+  <div class="min-w-0 flex flex-col justify-between py-1">
+    <h3
+      class="line-clamp-2 text-base font-semibold text-gray-900 transition-colors group-hover:text-slate-700"
+    >
+      {title}
+    </h3>
+    {
+      createdAt && (
+        <p class="text-sm text-gray-500">
+          <FormattedDate date={new Date(createdAt)} />
+        </p>
+      )
+    }
+  </div>
+</a>
