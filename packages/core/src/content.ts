@@ -1,5 +1,76 @@
-import { normalizeCollectionRoute } from "./collection-routes";
 import { createHeadingIdGenerator } from "./heading-ids";
+
+// Build a URL-friendly slug from a title
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// Normalize a route path
+function normalizeRoute(value: string | null | undefined): string {
+  const raw = (value || "").trim();
+  if (!raw || raw === "/") {
+    return "/";
+  }
+
+  const withLeadingSlash = raw.startsWith("/") ? raw : `/${raw}`;
+  const collapsed = withLeadingSlash.replace(/\/{2,}/g, "/");
+  if (collapsed === "/") {
+    return "/";
+  }
+
+  return collapsed.endsWith("/") ? collapsed.slice(0, -1) : collapsed;
+}
+
+// Build path map from documents with parent relations
+function buildPathMap(documents: Document[]): Map<string, string> {
+  const pathMap = new Map<string, string>();
+  const byId = new Map(documents.map((doc) => [doc.id, doc]));
+  const visiting = new Set<string>();
+
+  function getPath(documentId: string): string {
+    const cached = pathMap.get(documentId);
+    if (cached) return cached;
+
+    if (visiting.has(documentId)) {
+      return "/";
+    }
+
+    const doc = byId.get(documentId);
+    if (!doc) return "/";
+
+    visiting.add(documentId);
+
+    const parentId = doc.fields?.parent as string | undefined;
+    const rawSlug = typeof doc.fields?.slug === "string" ? doc.fields.slug.trim() : "";
+    const slugSegment = rawSlug.replace(/^\/+|\/+$/g, "");
+    const fallbackSegment = slugify(doc.title || "untitled");
+    const segment = slugSegment || fallbackSegment;
+
+    let path: string;
+    if (!parentId) {
+      path = slugSegment ? `/${slugSegment}` : "/";
+    } else {
+      const parentPath = getPath(parentId);
+      path = parentPath === "/" ? `/${segment}` : `${parentPath}/${segment}`;
+    }
+
+    visiting.delete(documentId);
+    pathMap.set(documentId, path);
+    return path;
+  }
+
+  for (const doc of documents) {
+    getPath(doc.id);
+  }
+
+  return pathMap;
+}
 
 export interface CustomBlockProps {
   properties: Record<string, any>;
@@ -499,22 +570,25 @@ export class LydieClient {
       params.set("include_toc", "true");
     }
 
-    const normalizedRoute = normalizeCollectionRoute(route);
-    const isRoot = normalizedRoute === "/";
-    const routePath = isRoot
-      ? `${this.getBaseUrl()}/${collectionHandle}/routes`
-      : `${this.getBaseUrl()}/${collectionHandle}/routes/${normalizedRoute.replace(/^\/+/, "")}`;
-    const fullUrl = `${routePath}${params.toString() ? `?${params.toString()}` : ""}`;
-
-    const response = await fetch(fullUrl, {
-      headers: this.getHeaders(),
+    // Fetch all documents and find by path locally
+    const { documents } = await this.getCollectionDocuments(collectionHandle, {
+      related: options?.related,
+      toc: options?.toc,
     });
 
-    if (!response.ok) {
-      throw new Error(`[Lydie] Failed to fetch collection route: ${response.statusText}`);
+    const pathMap = buildPathMap(documents);
+    const normalizedRoute = normalizeRoute(route);
+
+    const matchingDoc = documents.find((doc) => {
+      const docPath = pathMap.get(doc.id) || "/";
+      return normalizeRoute(docPath) === normalizedRoute;
+    });
+
+    if (!matchingDoc) {
+      throw new Error(`[Lydie] Document not found at route: ${route}`);
     }
 
-    return (await response.json()) as Document;
+    return matchingDoc;
   }
 
   async getDocumentByPath(

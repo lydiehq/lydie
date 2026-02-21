@@ -17,10 +17,21 @@ type LinkRef = {
   id?: string;
   slug?: string;
   title?: string;
+  parentId?: string;
   parentSlug?: string;
   collectionHandle?: string;
   type?: "internal" | "external";
 };
+
+function toPathFromSlug(slug: string): string {
+  const trimmed = slug.trim().replace(/^\/+|\/+$/g, "");
+  return trimmed ? `/${trimmed}` : "/";
+}
+
+function toPathFromId(id: string): string {
+  const trimmed = id.trim().replace(/^\/+|\/+$/g, "");
+  return trimmed ? `/${trimmed}` : "/";
+}
 
 interface RouteConfig {
   /** The parent document slug that identifies this route */
@@ -108,19 +119,31 @@ export function createLinkResolver(options?: {
     }
 
     // Internal links - prefer explicit collection metadata from API
-    if (ref.type === "internal" && ref.slug) {
-      if (ref.collectionHandle) {
-        return getCollectionDocumentPath(ref.collectionHandle, ref.slug);
+    if (ref.type === "internal") {
+      const collectionHandle = ref.collectionHandle || options?.currentCollectionHandle;
+
+      if (collectionHandle && typeof ref.slug === "string" && ref.slug.trim().length > 0) {
+        return getCollectionDocumentPath(collectionHandle, toPathFromSlug(ref.slug));
       }
 
-      if (options?.currentCollectionHandle) {
-        return getCollectionDocumentPath(options.currentCollectionHandle, ref.slug);
+      if (collectionHandle && (!ref.slug || ref.slug.trim().length === 0)) {
+        if (ref.parentId && ref.id) {
+          return getCollectionDocumentPath(collectionHandle, toPathFromId(ref.id));
+        }
+
+        return getCollectionDocumentPath(collectionHandle, "/");
+      }
+
+      if (ref.collectionHandle) {
+        return getCollectionDocumentPath(ref.collectionHandle, "/");
       }
 
       // Legacy fallback based on parent slug metadata
-      const resolved = resolveLink(ref.slug, ref.parentSlug);
-      if (resolved) {
-        return resolved;
+      if (ref.slug) {
+        const resolved = resolveLink(ref.slug, ref.parentSlug);
+        if (resolved) {
+          return resolved;
+        }
       }
     }
 

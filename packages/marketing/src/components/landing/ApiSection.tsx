@@ -2,7 +2,6 @@ import { BookRegular, ChevronRightRegular, CodeRegular, FlashRegular } from "@fl
 
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
-import { AsciiBackground } from "./AsciiBackground";
 import { Eyebrow } from "./Eyebrow";
 
 const points = [
@@ -19,9 +18,9 @@ const points = [
     icon: CodeRegular,
   },
   {
-    title: "TypeScript SDK",
+    title: "Collection-first API",
     description:
-      "Official SDK with React hooks, HTML rendering, and full TypeScript support for advanced integrations.",
+      "Query collections and documents directly with simple REST endpoints and predictable URL patterns.",
     icon: FlashRegular,
   },
 ];
@@ -46,7 +45,6 @@ export function ApiSection() {
   return (
     <section className="pt-px z-0 relative -mb-40">
       <Container className="relative flex flex-col items-start py-4 md:flex-row md:py-0">
-        <AsciiBackground className="right-[200px] inset-y-6" startPercentage={75} />
         <div className="relative flex flex-col gap-y-4 md:flex-row">
           <div className="-mr-[500px] relative">
             <div className="w-[700px] md:h-[600px] z-10 relative md:w-[980px] p-2 bg-white ring ring-black/4 rounded-2xl">
@@ -64,17 +62,13 @@ curl https://api.lydie.co/v1/your-org/documents/getting-started \\
                   </pre>
                   <div className="flex items-center gap-x-2 mt-4 pt-4 border-t border-gray-800">
                     <CodeRegular className="size-4 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-400">TypeScript SDK</span>
+                    <span className="text-xs font-medium text-gray-400">Collection API</span>
                   </div>
                   <pre className="text-xs text-gray-300 font-mono overflow-x-auto flex-1">
-                    <code>{`import { LydieClient } from "@lydie/sdk/client";
+                    <code>{`GET /v1/:orgId/:collection/documents/:slug
 
-const client = new LydieClient({
-  apiKey: process.env.LYDIE_API_KEY,
-  organizationId: "your-org",
-});
-
-const doc = await client.getDocument("getting-started");`}</code>
+curl https://api.lydie.co/v1/your-org/knowledge-bases/documents/getting-started \
+  -H "Authorization: Bearer YOUR_API_KEY"`}</code>
                   </pre>
                 </div>
               </div>
@@ -87,7 +81,7 @@ const doc = await client.getDocument("getting-started");`}</code>
             </h2>
             <span className="text-[15px]/relaxed text-gray-600 text-balance">
               Deploy a blog in minutes with our ready-to-use examples, or use our low-level REST API
-              and TypeScript SDK for complete control over your integration.
+              for complete control over your integration.
             </span>
             <div className="flex items-center gap-x-3">
               <Button href="https://app.lydie.co/auth" size="lg" className="self-start">

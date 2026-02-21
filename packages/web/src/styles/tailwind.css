@@ -100,11 +100,11 @@ body {
 
 /* Animated checkbox checkmark */
 .checkbox-checkmark {
-  width: calc(100% - 0.5rem);
-  height: calc(100% - 0.5rem);
+  width: calc(100% - 0.35rem);
+  height: calc(100% - 0.35rem);
   fill: none;
   stroke: white;
-  stroke-width: 3px;
+  stroke-width: 3.5px;
   stroke-dasharray: 22px;
   stroke-dashoffset: 66px;
   stroke-linecap: round;
@@ -144,14 +144,4 @@ body {
 
 .icon-muted {
   @apply text-black/50 group-hover:text-black/58;
-}
-
-@media (forced-colors: active) {
-  .checkbox-checkmark {
-    stroke: HighlightText;
-  }
-
-  .checkbox-checkmark-indeterminate {
-    fill: HighlightText;
-  }
 }

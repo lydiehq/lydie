@@ -1,5 +1,5 @@
-import type { ContentNode } from "@lydie-app/sdk";
 import { createHeadingIdGenerator } from "@lydie/core/heading-ids";
+import type { ContentNode } from "@lydie/core/content";
 
 import { extractCodeText, ShikiHTMLSerializer } from "./shiki-html-serializer";
 
@@ -23,7 +23,10 @@ export interface ContentRendererComponents {
   image?: (props: ImageComponentProps) => string;
   /** Custom component renderers for document components - key is component name */
   PillarCallout?: (props: Record<string, unknown>) => string;
+  pillarCallout?: (props: Record<string, unknown>) => string;
   flowchart?: (props: Record<string, unknown>) => string;
+  faq?: (props: Record<string, unknown>) => string;
+  FAQ?: (props: Record<string, unknown>) => string;
 }
 
 /**
@@ -96,6 +99,7 @@ export interface RenderContentOptions {
     id?: string;
     slug?: string;
     title?: string;
+    parentId?: string;
     parentSlug?: string;
     collectionHandle?: string;
     type?: "internal" | "external";
@@ -260,7 +264,7 @@ function renderMarks(
           mark.attrs?.["document-id"],
           mark.attrs?.["document-slug"],
           mark.attrs?.["document-title"],
-          mark.attrs?.["document-parent-slug"],
+          mark.attrs?.["document-parent-id"] ?? mark.attrs?.["document-parent-slug"],
           mark.attrs?.["document-collection-handle"] ?? mark.attrs?.["document-collection-id"],
         );
       default:

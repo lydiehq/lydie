@@ -1,5 +1,7 @@
-import type { PropertyDefinition } from "@lydie/core/collection";
+import { resolveRelationTargetCollectionId, type PropertyDefinition } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { useState } from "react";
 
 import { useZero } from "@/services/zero";
@@ -55,9 +57,33 @@ export function InlinePropertyEditor({
 
   const displayValue = value !== null && value !== undefined ? String(value) : null;
 
+  const targetCollectionId =
+    fieldDef.type === "relation"
+      ? collectionId
+        ? resolveRelationTargetCollectionId(fieldDef.relation, collectionId)
+        : null
+      : null;
+
+  const [relationDocuments] = useQuery(
+    fieldDef.type === "relation" && targetCollectionId
+      ? queries.collections.documentsByCollection({
+          organizationId,
+          collectionId: targetCollectionId,
+        })
+      : null,
+  );
+
+  const relationValueLabel =
+    fieldDef.type === "relation" && typeof value === "string"
+      ? ((relationDocuments ?? []) as Array<{ id: string; title: string }>).find(
+          (document) => document.id === value,
+        )?.title ?? "Missing record"
+      : null;
+
   if (!isEditing) {
     return (
-      <div
+      <button
+        type="button"
         onClick={() => setIsEditing(true)}
         className="group flex items-start min-h-[28px] rounded-md text-sm transition-colors duration-75 cursor-pointer hover:bg-black/5"
       >
@@ -66,10 +92,14 @@ export function InlinePropertyEditor({
             {fieldDef.name}
           </span>
           <span className="flex-1 text-sm text-gray-600 min-w-0">
-            {displayValue ?? <span className="text-gray-400 italic">Empty</span>}
+            {displayValue !== null
+              ? fieldDef.type === "relation"
+                ? relationValueLabel
+                : displayValue
+              : <span className="text-gray-400 italic">Empty</span>}
           </span>
         </div>
-      </div>
+      </button>
     );
   }
 
@@ -81,6 +111,13 @@ export function InlinePropertyEditor({
           <FieldInput
             fieldDef={fieldDef}
             value={editValue}
+            relationDocuments={
+              fieldDef.type === "relation"
+                ? ((relationDocuments ?? []) as Array<{ id: string; title: string }>).filter(
+                    (document) => document.id !== documentId,
+                  )
+                : []
+            }
             onChange={setEditValue}
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
@@ -94,16 +131,40 @@ export function InlinePropertyEditor({
 function FieldInput({
   fieldDef,
   value,
+  relationDocuments,
   onChange,
   onSave,
   onCancel,
 }: {
   fieldDef: PropertyDefinition;
   value: string;
+  relationDocuments: Array<{ id: string; title: string }>;
   onChange: (value: string) => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
+  if (fieldDef.type === "relation") {
+    return (
+      <select
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          onSave();
+        }}
+        onBlur={onSave}
+        className="w-full text-sm bg-transparent border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-500"
+        autoFocus
+      >
+        <option value="">—</option>
+        {relationDocuments.map((document) => (
+          <option key={document.id} value={document.id}>
+            {document.title || "Untitled"}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
   if ((fieldDef.type === "select" || fieldDef.type === "multi-select") && fieldDef.options) {
     return (
       <select

@@ -43,10 +43,11 @@ function SoundWaveBars() {
 
 export function SpeedSection() {
   const illustration = (
-    <div className="relative w-full">
+    <div className="relative w-full flex">
       <div className="size-full absolute bottom-full mb-4 ring ring-black/3 bg-linear-to-t from-black/2 rounded-xl"></div>
       <div className="size-full absolute left-full ml-4 ring ring-black/3 bg-black/2 rounded-xl"></div>
       <div className="w-[200%] h-full absolute right-full mr-4 ring ring-black/3 bg-black/2 rounded-xl"></div>
+      <div className="size-full absolute top-full mt-4 ring ring-black/3 bg-linear-to-b from-black/2 rounded-xl"></div>
       <CastShadow className="w-full">
         <GradientOutline />
         <div className="h-[380px] rounded-xl shadow-legit overflow-hidden bg-white">

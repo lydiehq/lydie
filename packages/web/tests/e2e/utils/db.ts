@@ -171,6 +171,9 @@ export async function createTestCollection(
       required: boolean;
       unique: boolean;
       options?: string[];
+      relation?: {
+        targetCollectionId: string;
+      };
     }>;
   },
 ): Promise<Collection> {

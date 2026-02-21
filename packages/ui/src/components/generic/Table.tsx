@@ -35,7 +35,7 @@ export function Table({
         containerClassName,
       )}
     >
-      <AriaTable {...props} className="border-separate border-spacing-0" />
+      <AriaTable {...props} className="border-collapse" />
     </ResizableTableContainer>
   );
 }
@@ -54,7 +54,7 @@ export function Column(props: ColumnProps) {
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "[&:hover]:z-20 focus-within:z-20 text-start text-[0.8124rem] font-normal text-gray-700 cursor-default",
+        "border border-gray-200 bg-gray-50 [&]:z-20 focus-within:z-20 text-start text-[0.8124rem] font-normal text-gray-700 cursor-default",
       )}
     >
       {composeRenderProps(props.children, (children, { allowsSorting, sortDirection }) => (
@@ -132,7 +132,7 @@ export function Row<T extends object>({ id, columns, children, ...otherProps }: 
 }
 
 const cellStyles = cva({
-  base: "border-b border-b-gray-200 group-last/row:border-b-0 [--selected-border:var(--color-blue-200)] dark:[--selected-border:var(--color-blue-900)] group-selected/row:border-(--selected-border) in-[:has(+[data-selected])]:border-(--selected-border) p-2 truncate -outline-offset-2 text-sm",
+  base: "border border-gray-200 [--selected-border:var(--color-blue-200)] dark:[--selected-border:var(--color-blue-900)] group-selected/row:border-(--selected-border) in-[:has(+[data-selected])]:border-(--selected-border) p-2 truncate -outline-offset-2 text-sm",
 });
 
 export function Cell(props: CellProps) {

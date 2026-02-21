@@ -4,6 +4,9 @@ export type PropertyDefinition = {
   required: boolean;
   unique: boolean;
   options?: string[];
+  relation?: {
+    targetCollectionId: string;
+  };
   derived?: {
     sourceField: string;
     transform: "slugify";
@@ -11,6 +14,19 @@ export type PropertyDefinition = {
     warnOnChangeAfterPublish?: boolean;
   };
 };
+
+export function resolveRelationTargetCollectionId(
+  relation: PropertyDefinition["relation"] | null | undefined,
+  currentCollectionId: string,
+): string {
+  const targetCollectionId = relation?.targetCollectionId;
+
+  if (!targetCollectionId || targetCollectionId === "self") {
+    return currentCollectionId;
+  }
+
+  return targetCollectionId;
+}
 
 export type FieldValues = Record<string, string | number | boolean | null>;
 

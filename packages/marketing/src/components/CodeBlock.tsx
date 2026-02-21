@@ -1,6 +1,9 @@
-import type { CustomBlockProps } from "@lydie-app/sdk/react";
 import React from "react";
 import { codeToHtml } from "shiki";
+
+type CustomBlockProps = {
+  properties: Record<string, unknown>;
+};
 
 interface CodeBlockProps extends CustomBlockProps {
   properties: {

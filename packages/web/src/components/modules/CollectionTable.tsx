@@ -1,18 +1,23 @@
-import type { PropertyDefinition } from "@lydie/core/collection";
+import { resolveRelationTargetCollectionId, type PropertyDefinition } from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
+import { Popover } from "@lydie/ui/components/generic/Popover";
 import { Cell, Column, Row, Table, TableHeader } from "@lydie/ui/components/generic/Table";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import { memo, useCallback, useMemo, useState } from "react";
-import { TableBody, type Selection, type SortDescriptor } from "react-aria-components";
+import {
+  DialogTrigger,
+  TableBody,
+  type Selection,
+  type SortDescriptor,
+} from "react-aria-components";
 import { toast } from "sonner";
 
 import { useZero } from "@/services/zero";
 import { confirmDialog } from "@/stores/confirm-dialog";
-import { buildCollectionRoutes } from "@/utils/collection-routes";
 
 type DocumentItem = {
   id: string;
@@ -20,42 +25,17 @@ type DocumentItem = {
   slug: string | null;
   parentId: string | null;
   collectionId: string | null;
-  route: string;
   properties: Record<string, string | number | boolean | null>;
 };
 
-type TableColumn =
-  | {
-      id: "title";
-      kind: "title";
-      label: "Title";
-      isRowHeader: true;
-    }
-  | {
-      id: string;
-      kind: "property";
-      label: string;
-      property: PropertyDefinition;
-      isRowHeader: false;
-    }
-  | {
-      id: "path";
-      kind: "route";
-      label: "Path";
-      isRowHeader: false;
-    }
-  | {
-      id: "add-property";
-      kind: "add-property";
-      label: "Add property";
-      isRowHeader: false;
-    };
-
-const QUICK_PROPERTY_TYPES: Array<{ label: string; value: PropertyDefinition["type"] }> = [
+const PROPERTY_TYPES: Array<{ label: string; value: PropertyDefinition["type"] }> = [
   { label: "Text", value: "text" },
   { label: "Number", value: "number" },
+  { label: "Select", value: "select" },
+  { label: "Multi Select", value: "multi-select" },
   { label: "Date", value: "date" },
   { label: "Checkbox", value: "boolean" },
+  { label: "Relation", value: "relation" },
 ];
 
 type Props = {
@@ -72,15 +52,12 @@ function toFieldValue(
   if (fieldDef.type === "boolean") {
     return value === "true";
   }
-
   if (fieldDef.type === "number") {
     return value === "" ? null : Number(value);
   }
-
   if (fieldDef.type === "date") {
     return value === "" ? null : value;
   }
-
   return value === "" ? null : value;
 }
 
@@ -112,9 +89,13 @@ function extractFieldValues(
 
 export function CollectionTable({ collectionId, organizationId, organizationSlug, schema }: Props) {
   const z = useZero();
-  const [isAddingProperty, setIsAddingProperty] = useState(false);
   const [newPropertyName, setNewPropertyName] = useState("");
   const [newPropertyType, setNewPropertyType] = useState<PropertyDefinition["type"]>("text");
+  const [newPropertyOptions, setNewPropertyOptions] = useState("");
+  const [newPropertyRequired, setNewPropertyRequired] = useState(false);
+  const [newPropertyUnique, setNewPropertyUnique] = useState(false);
+  const [newPropertyRelationTargetCollectionId, setNewPropertyRelationTargetCollectionId] =
+    useState<string>("self");
   const [isCreatingRow, setIsCreatingRow] = useState(false);
   const [isAddingRowProperty, setIsAddingRowProperty] = useState(false);
   const [rowSelection, setRowSelection] = useState<Selection>(new Set());
@@ -130,10 +111,20 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         })
       : null,
   );
+  const [allDocuments] = useQuery(
+    queries.documents.byUpdated({
+      organizationId,
+    }),
+  );
+  const [collections] = useQuery(
+    queries.collections.byOrganization({
+      organizationId,
+    }),
+  );
 
   const documents = useMemo(() => {
     const documentsData = (documentsResult ?? []) as any[];
-    const mapped = documentsData.map((doc) => {
+    return documentsData.map((doc) => {
       const extracted = extractFieldValues(doc.fieldValues, collectionId);
       return {
         id: doc.id,
@@ -141,31 +132,10 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         slug: doc.slug ?? null,
         parentId: doc.parent_id ?? null,
         collectionId: extracted.collectionId,
-        route: "",
         properties: extracted.values,
       } satisfies DocumentItem;
     });
-
-    const routeMap = buildCollectionRoutes(
-      mapped.map((document) => ({
-        id: document.id,
-        parentId: document.parentId,
-        title: document.title,
-        slug: document.slug,
-        route: typeof document.properties.route === "string" ? document.properties.route : null,
-      })),
-    );
-
-    return mapped.map((document) => ({
-      ...document,
-      route: routeMap.get(document.id) ?? "",
-    }));
   }, [collectionId, documentsResult]);
-
-  const isRoutingEnabled = useMemo(
-    () => schema.some((property) => property.name.toLowerCase() === "route"),
-    [schema],
-  );
 
   const handleFieldUpdate = useCallback(
     async (
@@ -236,8 +206,23 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         {
           name: trimmedName,
           type: newPropertyType,
-          required: false,
-          unique: false,
+          required: newPropertyRequired,
+          unique: newPropertyUnique,
+          ...(newPropertyType === "select" || newPropertyType === "multi-select"
+            ? {
+                options: newPropertyOptions
+                  .split(",")
+                  .map((option) => option.trim())
+                  .filter(Boolean),
+              }
+            : {}),
+          ...(newPropertyType === "relation"
+            ? {
+                relation: {
+                  targetCollectionId: newPropertyRelationTargetCollectionId,
+                },
+              }
+            : {}),
         },
       ];
 
@@ -251,7 +236,10 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
 
       setNewPropertyName("");
       setNewPropertyType("text");
-      setIsAddingProperty(false);
+      setNewPropertyOptions("");
+      setNewPropertyRequired(false);
+      setNewPropertyUnique(false);
+      setNewPropertyRelationTargetCollectionId("self");
     } finally {
       setIsAddingRowProperty(false);
     }
@@ -333,35 +321,45 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     });
   }, [organizationId, selectedDocumentIds, z]);
 
-  const columns = useMemo<TableColumn[]>(() => {
-    const schemaColumns = schema
-      .map((property) => ({
-        id: property.name,
-        kind: "property" as const,
-        label: property.name,
-        property,
-        isRowHeader: false as const,
-      }));
+  const relationOptionsByField = useMemo(() => {
+    const options = new Map<string, Array<{ id: string; title: string }>>();
+    const docs = (allDocuments ?? []) as Array<{
+      id: string;
+      title: string;
+      collection_id: string | null;
+    }>;
 
-    return [
-      { id: "title", kind: "title", label: "Title", isRowHeader: true },
-      ...(isRoutingEnabled
-        ? [{ id: "path", kind: "route", label: "Path", isRowHeader: false } as const]
-        : []),
-      ...schemaColumns,
-      { id: "add-property", kind: "add-property", label: "Add property", isRowHeader: false },
-    ];
-  }, [isRoutingEnabled, schema]);
+    for (const property of schema) {
+      if (property.type !== "relation") {
+        continue;
+      }
 
-  const activeSortColumn = useMemo(
-    () => columns.find((tableColumn) => String(tableColumn.id) === String(sortDescriptor.column)),
-    [columns, sortDescriptor.column],
-  );
+      const targetCollectionId = resolveRelationTargetCollectionId(
+        property.relation,
+        collectionId,
+      );
+      if (!targetCollectionId) {
+        continue;
+      }
+
+      options.set(
+        property.name,
+        docs
+          .filter((document) => document.collection_id === targetCollectionId)
+          .map((document) => ({
+            id: document.id,
+            title: document.title || "Untitled",
+          })),
+      );
+    }
+
+    return options;
+  }, [allDocuments, collectionId, schema]);
 
   const sortedDocuments = useMemo(() => {
     const sorted = [...documents];
 
-    if (!activeSortColumn || activeSortColumn.kind === "add-property") {
+    if (!sortDescriptor.column || sortDescriptor.column === "add-property") {
       return sorted;
     }
 
@@ -371,15 +369,12 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
       let first: string | number | boolean | null | undefined;
       let second: string | number | boolean | null | undefined;
 
-      if (activeSortColumn.kind === "title") {
+      if (sortDescriptor.column === "title") {
         first = a.title;
         second = b.title;
-      } else if (activeSortColumn.kind === "route") {
-        first = a.route;
-        second = b.route;
       } else {
-        first = a.properties[activeSortColumn.property.name];
-        second = b.properties[activeSortColumn.property.name];
+        first = a.properties[String(sortDescriptor.column)];
+        second = b.properties[String(sortDescriptor.column)];
       }
 
       if (first == null && second == null) return 0;
@@ -403,7 +398,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     });
 
     return sorted;
-  }, [activeSortColumn, documents, sortDescriptor.direction]);
+  }, [documents, sortDescriptor]);
 
   const selectedRowCount = selectedDocumentIds.length;
 
@@ -413,75 +408,6 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
 
   return (
     <div className={`w-full ${selectedRowCount > 0 ? "pb-24" : ""}`}>
-      {isAddingProperty && (
-        <div className="border-b border-gray-200 bg-gray-50/70 px-4 py-3">
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="min-w-[200px] flex-1">
-              <label
-                htmlFor="collection-table-property-name"
-                className="mb-1 block text-xs font-medium text-gray-600"
-              >
-                Property name
-              </label>
-              <input
-                id="collection-table-property-name"
-                type="text"
-                value={newPropertyName}
-                onChange={(event) => setNewPropertyName(event.target.value)}
-                placeholder="e.g. Status"
-                className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="collection-table-property-type"
-                className="mb-1 block text-xs font-medium text-gray-600"
-              >
-                Type
-              </label>
-              <select
-                id="collection-table-property-type"
-                value={newPropertyType}
-                onChange={(event) =>
-                  setNewPropertyType(event.target.value as PropertyDefinition["type"])
-                }
-                className="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
-              >
-                {QUICK_PROPERTY_TYPES.map((propertyType) => (
-                  <option key={propertyType.value} value={propertyType.value}>
-                    {propertyType.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2 pb-[1px]">
-              <button
-                type="button"
-                onClick={() => void handleAddProperty()}
-                disabled={
-                  isAddingRowProperty ||
-                  !newPropertyName.trim() ||
-                  Boolean(hasDuplicatePropertyName)
-                }
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isAddingRowProperty ? "Adding..." : "Add"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsAddingProperty(false)}
-                className="rounded-md px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-          {hasDuplicatePropertyName && (
-            <p className="mt-2 text-xs text-red-600">This property name already exists.</p>
-          )}
-        </div>
-      )}
-
       <div className="overflow-x-auto">
         <Table
           aria-label="Collection records"
@@ -492,32 +418,163 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
           sortDescriptor={sortDescriptor}
           onSortChange={setSortDescriptor}
         >
-          <TableHeader columns={columns}>
-            {(column) => (
+          <TableHeader>
+            <Column id="title" isRowHeader allowsSorting>
+              <span className="text-xs font-semibold text-gray-700">Title</span>
+            </Column>
+            {schema.map((property) => (
               <Column
-                id={column.id}
-                isRowHeader={column.isRowHeader}
-                width={column.kind === "add-property" ? 140 : undefined}
-                defaultWidth={column.kind !== "add-property" ? "1fr" : undefined}
-                allowsResizing={column.kind !== "add-property"}
-                allowsSorting={column.kind !== "add-property"}
+                key={property.name}
+                id={property.name}
+                allowsSorting
               >
-                {column.kind === "add-property" ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingProperty((value) => !value)}
-                    className="rounded-md border border-dashed border-gray-300 px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
-                    title="Add property"
-                  >
-                    + Add property
-                  </button>
-                ) : (
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    {column.label}
-                  </span>
-                )}
+                <span className="text-xs font-semibold text-gray-700">{property.name}</span>
               </Column>
-            )}
+            ))}
+            <Column id="add-property" width={140}>
+              <DialogTrigger>
+                <Button
+                  intent="ghost"
+                  size="sm"
+                  className="text-xs"
+                >
+                  + Add property
+                </Button>
+                <Popover placement="bottom end" className="w-[340px] p-0">
+                  <div className="p-3 border-b border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-900">Add property</h3>
+                  </div>
+                  <div className="p-3 space-y-3">
+                    <div>
+                      <label
+                        htmlFor="collection-property-name"
+                        className="mb-1 block text-xs font-medium text-gray-600"
+                      >
+                        Property name
+                      </label>
+                      <input
+                        id="collection-property-name"
+                        type="text"
+                        value={newPropertyName}
+                        onChange={(event) => setNewPropertyName(event.target.value)}
+                        placeholder="e.g., status, priority, dueDate"
+                        className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="collection-property-type"
+                        className="mb-1 block text-xs font-medium text-gray-600"
+                      >
+                        Type
+                      </label>
+                      <select
+                        id="collection-property-type"
+                        value={newPropertyType}
+                        onChange={(event) =>
+                          setNewPropertyType(event.target.value as PropertyDefinition["type"])
+                        }
+                        className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                      >
+                        {PROPERTY_TYPES.map((propertyType) => (
+                          <option key={propertyType.value} value={propertyType.value}>
+                            {propertyType.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {(newPropertyType === "select" || newPropertyType === "multi-select") && (
+                      <div>
+                        <label
+                          htmlFor="collection-property-options"
+                          className="mb-1 block text-xs font-medium text-gray-600"
+                        >
+                          Options (comma-separated)
+                        </label>
+                        <input
+                          id="collection-property-options"
+                          type="text"
+                          value={newPropertyOptions}
+                          onChange={(event) => setNewPropertyOptions(event.target.value)}
+                          placeholder="todo, in-progress, done"
+                          className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                        />
+                      </div>
+                    )}
+
+                    {newPropertyType === "relation" && (
+                      <div>
+                        <label
+                          htmlFor="collection-property-relation-target"
+                          className="mb-1 block text-xs font-medium text-gray-600"
+                        >
+                          Target collection
+                        </label>
+                        <select
+                          id="collection-property-relation-target"
+                          value={newPropertyRelationTargetCollectionId}
+                          onChange={(event) =>
+                            setNewPropertyRelationTargetCollectionId(event.target.value)
+                          }
+                          className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                        >
+                          <option value="self">This collection</option>
+                          {(collections ?? [])
+                            .filter((collection) => collection.id !== collectionId)
+                            .map((collection) => (
+                              <option key={collection.id} value={collection.id}>
+                                {collection.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-xs text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={newPropertyRequired}
+                          onChange={(event) => setNewPropertyRequired(event.target.checked)}
+                          className="rounded border-gray-300"
+                        />
+                        Required
+                      </label>
+                      <label className="flex items-center gap-2 text-xs text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={newPropertyUnique}
+                          onChange={(event) => setNewPropertyUnique(event.target.checked)}
+                          className="rounded border-gray-300"
+                        />
+                        Unique
+                      </label>
+                    </div>
+
+                    {hasDuplicatePropertyName && (
+                      <p className="text-xs text-red-600">This property name already exists.</p>
+                    )}
+
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => void handleAddProperty()}
+                        disabled={
+                          isAddingRowProperty ||
+                          !newPropertyName.trim() ||
+                          Boolean(hasDuplicatePropertyName)
+                        }
+                        className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isAddingRowProperty ? "Adding..." : "Add Property"}
+                      </button>
+                    </div>
+                  </div>
+                </Popover>
+              </DialogTrigger>
+            </Column>
           </TableHeader>
           <TableBody
             items={sortedDocuments}
@@ -531,44 +588,39 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
             )}
           >
             {(document) => (
-              <Row id={document.id} columns={columns}>
-                {(column) => (
-                  <Cell className="px-3 py-1 align-middle">
-                    {column.kind === "title" && (
-                      <EditableTitle
-                        title={document.title}
-                        documentId={document.id}
-                        organizationSlug={organizationSlug}
-                        onSave={handleRenameDocument}
-                      />
-                    )}
-                    {column.kind === "property" && (
-                      <EditableField
-                        value={document.properties[column.property.name]}
-                        fieldDef={column.property}
-                        onSave={(newValue) => {
-                          if (!document.collectionId) {
-                            return;
-                          }
-                          void handleFieldUpdate(
-                            document.id,
-                            document.collectionId,
-                            column.property.name,
-                            newValue,
-                          );
-                        }}
-                      />
-                    )}
-                    {column.kind === "route" && (
-                      <span className="block rounded px-2 py-1 text-xs font-mono text-gray-600">
-                        {document.route || "-"}
-                      </span>
-                    )}
-                    {column.kind === "add-property" && (
-                      <span className="block h-6 w-[120px]" aria-hidden="true" />
-                    )}
+              <Row id={document.id}>
+                <Cell>
+                  <EditableTitle
+                    title={document.title}
+                    documentId={document.id}
+                    organizationSlug={organizationSlug}
+                    onSave={handleRenameDocument}
+                  />
+                </Cell>
+                {schema.map((property) => (
+                  <Cell key={property.name}>
+                    <EditableField
+                      value={document.properties[property.name]}
+                      fieldDef={property}
+                      documentId={document.id}
+                      relationOptions={relationOptionsByField.get(property.name) ?? []}
+                      onSave={(newValue) => {
+                        if (!document.collectionId) {
+                          return;
+                        }
+                        void handleFieldUpdate(
+                          document.id,
+                          document.collectionId,
+                          property.name,
+                          newValue,
+                        );
+                      }}
+                    />
                   </Cell>
-                )}
+                ))}
+                <Cell>
+                  <span className="block h-6 w-[120px]" aria-hidden="true" />
+                </Cell>
               </Row>
             )}
           </TableBody>
@@ -696,14 +748,31 @@ const EditableTitle = memo(function EditableTitle({
 const EditableField = memo(function EditableField({
   value,
   fieldDef,
+  documentId,
+  relationOptions,
   onSave,
 }: {
   value: string | number | boolean | null | undefined;
   fieldDef: PropertyDefinition;
+  documentId: string;
+  relationOptions: Array<{ id: string; title: string }>;
   onSave: (value: string | number | boolean | null) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<string>(String(value ?? ""));
+
+  const relationLabel = useMemo(() => {
+    if (fieldDef.type !== "relation" || typeof value !== "string") {
+      return null;
+    }
+
+    return relationOptions.find((option) => option.id === value)?.title ?? "Missing record";
+  }, [fieldDef.type, relationOptions, value]);
+
+  const availableRelationOptions = useMemo(
+    () => relationOptions.filter((option) => option.id !== documentId),
+    [documentId, relationOptions],
+  );
 
   const startEditing = () => {
     setEditValue(String(value ?? ""));
@@ -727,11 +796,37 @@ const EditableField = memo(function EditableField({
         className="w-full cursor-pointer rounded px-2 py-1 text-left hover:bg-gray-100"
       >
         {value !== null && value !== undefined ? (
-          String(value)
+          fieldDef.type === "relation" ? (relationLabel ?? "Missing record") : String(value)
         ) : (
           <span className="text-gray-400">-</span>
         )}
       </button>
+    );
+  }
+
+  if (fieldDef.type === "relation") {
+    return (
+      <select
+        value={typeof value === "string" ? value : ""}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        onChange={(e) => {
+          const nextValue = e.target.value === "" ? null : e.target.value;
+          onSave(nextValue);
+          setIsEditing(false);
+        }}
+        onBlur={() => setIsEditing(false)}
+        className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+      >
+        <option value="">-</option>
+        {availableRelationOptions.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.title}
+          </option>
+        ))}
+      </select>
     );
   }
 

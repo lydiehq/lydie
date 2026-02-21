@@ -23,8 +23,8 @@ const { slug } = Astro.params;
 const BLOG_COLLECTION_HANDLE = lydieApi.collections.blog;
 
 type BlogDocument = Awaited<
-  ReturnType<typeof lydieApi.getCollectionDocuments>
->["documents"][number];
+  ReturnType<typeof lydieApi.getCollectionDocument>
+>;
 type RelatedDocument = {
   id: string;
   title: string;
@@ -35,19 +35,13 @@ type RelatedDocument = {
 
 let document: BlogDocument;
 try {
-  const { documents } = await lydieApi.getCollectionDocuments(
-    BLOG_COLLECTION_HANDLE,
-    {
-      includeRelated: true,
-      filters: { slug: slug! },
-    },
-  );
-
-  if (!documents[0]) {
+  if (!slug) {
     throw new Error("Document not found");
   }
 
-  document = documents[0];
+  document = await lydieApi.getCollectionDocument(BLOG_COLLECTION_HANDLE, slug, {
+    includeRelated: true,
+  });
 } catch (error) {
   console.error(`Failed to fetch document with slug "${slug}":`, error);
   // Return 404 response for missing or errored documents

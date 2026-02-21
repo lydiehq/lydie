@@ -20,7 +20,11 @@ import { memo, useMemo } from "react";
 import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 import { toast } from "sonner";
 
-import { isFavoritesExpandedAtom, isDocumentsExpandedAtom } from "@/atoms/workspace-settings";
+import {
+  isCollectionsExpandedAtom,
+  isDocumentsExpandedAtom,
+  isFavoritesExpandedAtom,
+} from "@/atoms/workspace-settings";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -265,6 +269,7 @@ const DocumentsSection = memo(function DocumentsSection() {
 });
 
 const CollectionsSection = memo(function CollectionsSection() {
+  const [isExpanded, setIsExpanded] = useAtom(isCollectionsExpandedAtom);
   const { organization } = useOrganization();
   const z = useZero();
   const { collectionId: activeCollectionId } = useParams({ strict: false });
@@ -295,30 +300,36 @@ const CollectionsSection = memo(function CollectionsSection() {
     }
   };
 
-  if (!collections || collections.length === 0) {
-    return (
-      <div className="px-3 py-2">
-        <div className="mb-1 ml-1 text-[11px] font-medium uppercase tracking-wide text-gray-500">
-          Collections
-        </div>
-        <button
-          type="button"
-          onClick={() => void handleCreateCollection()}
-          className="w-full rounded-md px-1.5 py-1 text-left text-sm text-gray-500 hover:bg-black/5 hover:text-gray-700"
-        >
-          + New Collection
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <Disclosure className="group flex flex-col" defaultExpanded>
+    <Disclosure
+      className="group flex flex-col"
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
+    >
       <div className="w-full flex items-center shrink-0 px-3 group gap-x-2 py-1">
         <Eyebrow className="ml-1">Collections</Eyebrow>
+        <Heading>
+          <RACButton
+            slot="trigger"
+            className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/button relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100"
+          >
+            <CollapseArrow
+              aria-hidden
+              className={`size-3 shrink-0 absolute text-black/45 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90" : "rotate-0"}`}
+            />
+          </RACButton>
+        </Heading>
+        <div className="flex items-center gap-x-1 ml-auto">
+          <RACButton
+            onPress={() => void handleCreateCollection()}
+            className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/button relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100"
+          >
+            <Add16Filled aria-hidden className="size-3 shrink-0 absolute text-black/45" />
+          </RACButton>
+        </div>
       </div>
       <DisclosurePanel className="px-2 pb-2">
-        {collections.map((collection) => (
+        {(collections ?? []).map((collection) => (
           <CollectionTreeItem
             key={collection.id}
             collection={collection}
@@ -326,13 +337,6 @@ const CollectionsSection = memo(function CollectionsSection() {
             organizationSlug={organization.slug}
           />
         ))}
-        <button
-          type="button"
-          onClick={() => void handleCreateCollection()}
-          className="w-full rounded-md px-1.5 py-1 text-left text-sm text-gray-500 hover:bg-black/5 hover:text-gray-700"
-        >
-          + New Collection
-        </button>
       </DisclosurePanel>
     </Disclosure>
   );

@@ -1,6 +1,6 @@
 ---
 import { getImage } from "astro:assets";
-import type { ContentNode } from "@lydie-app/sdk";
+import type { ContentNode } from "@lydie/core/content";
 import {
   renderContent,
   type RenderContentResult,
@@ -8,6 +8,7 @@ import {
   blogImageComponent,
 } from "../utils/content-renderer";
 import {
+  faqComponent,
   flowchartComponent,
   pillarCalloutComponent,
 } from "../utils/custom-components";
@@ -20,6 +21,7 @@ interface Props {
     id?: string;
     slug?: string;
     title?: string;
+    parentId?: string;
     parentSlug?: string;
     collectionHandle?: string;
     type?: "internal" | "external";
@@ -83,6 +85,8 @@ const { html, images } = await renderContent(content, {
     // Custom document components
     pillarCallout: pillarCalloutComponent,
     flowchart: flowchartComponent,
+    faq: faqComponent,
+    FAQ: faqComponent,
   },
 });
 

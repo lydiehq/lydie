@@ -1,4 +1,4 @@
-import type { DocumentListItem } from "@lydie-app/sdk";
+import type { DocumentListItem } from "@lydie/core/content";
 
 import { lydieClient } from "../utils/lydie-client";
 

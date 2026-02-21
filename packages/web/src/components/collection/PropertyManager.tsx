@@ -1,5 +1,7 @@
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { useState } from "react";
 
 import { useZero } from "@/services/zero";
@@ -30,13 +32,20 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
     required: boolean;
     unique: boolean;
     options: string;
+    relationTargetCollectionId: string;
   }>({
     name: "",
     type: "text",
     required: false,
     unique: false,
     options: "",
+    relationTargetCollectionId: "self",
   });
+  const [collections] = useQuery(
+    queries.collections.byOrganization({
+      organizationId,
+    }),
+  );
 
   const saveSchema = async (nextSchema: PropertyDefinition[]) => {
     await z.mutate(
@@ -64,6 +73,13 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
               .filter(Boolean),
           }
         : {}),
+      ...(newProperty.type === "relation"
+        ? {
+            relation: {
+              targetCollectionId: newProperty.relationTargetCollectionId,
+            },
+          }
+        : {}),
     };
 
     await saveSchema([...schema, propDef]);
@@ -75,6 +91,7 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
       required: false,
       unique: false,
       options: "",
+      relationTargetCollectionId: "self",
     });
   };
 
@@ -187,6 +204,37 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
                 placeholder="todo, in-progress, done"
                 className="w-full px-2 py-1.5 text-sm border rounded"
               />
+            </div>
+          )}
+
+          {newProperty.type === "relation" && (
+            <div>
+              <label
+                htmlFor="collection-property-relation-target"
+                className="block text-xs font-medium text-gray-600 mb-1"
+              >
+                Target collection
+              </label>
+              <select
+                id="collection-property-relation-target"
+                value={newProperty.relationTargetCollectionId}
+                onChange={(e) =>
+                  setNewProperty((p) => ({
+                    ...p,
+                    relationTargetCollectionId: e.target.value,
+                  }))
+                }
+                className="w-full px-2 py-1.5 text-sm border rounded"
+              >
+                <option value="self">This collection</option>
+                {(collections ?? [])
+                  .filter((collection) => collection.id !== collectionId)
+                  .map((collection) => (
+                    <option key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </option>
+                  ))}
+              </select>
             </div>
           )}
 

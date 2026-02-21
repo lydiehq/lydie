@@ -1,13 +1,12 @@
 ---
 export const prerender = false;
 
-// ISR-like caching: CDN caches for 1 hour, serves stale for 24 hours while revalidating
 Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
 );
 
-import type { ContentNode } from "@lydie-app/sdk";
+import type { ContentNode } from "@lydie/core/content";
 
 import ArticleHeadingEnhancements from "@/components/ArticleHeadingEnhancements.astro";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
@@ -17,6 +16,7 @@ import Layout from "@/layouts/Layout.astro";
 import { articleTypographyClassName } from "@/utils/article-typography";
 import { renderContent, blogImageComponent } from "@/utils/content-renderer";
 import {
+  faqComponent,
   flowchartComponent,
   pillarCalloutComponent,
 } from "@/utils/custom-components";
@@ -37,17 +37,8 @@ const pillarCollectionMap: Record<string, string> = {
 const collectionHandle = pillarCollectionMap[pillar] || pillar;
 const requestedPath = article ? `/${article}` : "/";
 
-type CollectionDocument = Awaited<
-  ReturnType<typeof lydieApi.getCollectionDocuments>
->["documents"][number] & {
+type CollectionDocument = lydieApi.CollectionApiDocument & {
   path?: string;
-  toc?: Array<{ id: string; level: number; text: string }>;
-  related?: Array<{
-    id: string;
-    title: string;
-    path?: string;
-    fields?: { slug?: string };
-  }>;
 };
 
 let currentDocument: CollectionDocument | null = null;
@@ -60,37 +51,43 @@ const linkResolver = createLinkResolver({
   currentCollectionHandle: collectionHandle,
 });
 
-console.log(`[Resource Hub] Fetching document: ${collectionHandle}${requestedPath}`);
+console.log(
+  `[Resource Hub] Fetching document: ${collectionHandle}${requestedPath}`,
+);
 
 try {
-  const allDocumentsResponse = await lydieApi.getCollectionDocuments(collectionHandle, {
+  // Fetch all documents with their computed paths
+  const { documents } = await lydieApi.getCollectionDocumentsWithPaths(collectionHandle, {
     sortBy: "created_at",
     sortOrder: "asc",
-  } as any);
-  allDocuments = allDocumentsResponse.documents as CollectionDocument[];
+    includeToc: true,
+    includeRelated: true,
+  });
+  allDocuments = documents as CollectionDocument[];
 
-  const routeDocument = (await lydieApi.getCollectionDocumentByRoute(
-    collectionHandle,
-    requestedPath,
-    {
-      includeToc: true,
-      includeRelated: true,
-    },
-  )) as CollectionDocument | null;
+  // Find the document matching the requested path
+  const normalizedTarget =
+    requestedPath === "/" ? "/" : requestedPath.replace(/\/$/, "");
+  currentDocument =
+    allDocuments.find((doc) => {
+      const docPath = doc.path || "/";
+      const normalizedDocPath =
+        docPath === "/" ? "/" : docPath.replace(/\/$/, "");
+      return normalizedDocPath === normalizedTarget;
+    }) || null;
 
-  if (!routeDocument || (article && routeDocument.path === "/")) {
-    throw new Error("Document not found");
-  }
-
-  currentDocument = routeDocument;
   if (!currentDocument) {
     throw new Error("Document not found");
   }
+
   const resolvedDocument = currentDocument;
 
+  // Find root document (the one without a parent)
   rootDocument =
-    allDocuments.find((doc) => doc.path === "/") ||
-    (resolvedDocument.path === "/" ? resolvedDocument : null);
+    allDocuments.find((doc) => {
+      const parentId = doc.fields?.parent as string | undefined;
+      return !parentId;
+    }) || null;
 
   documentsForToc = allDocuments.map((doc) =>
     doc.id === resolvedDocument.id
@@ -105,14 +102,19 @@ try {
     documentsForToc = [resolvedDocument, ...documentsForToc];
   }
 
-  const { html } = await renderContent(resolvedDocument.jsonContent as ContentNode, {
-    components: {
-      image: blogImageComponent,
-      pillarCallout: pillarCalloutComponent,
-      flowchart: flowchartComponent,
+  const { html } = await renderContent(
+    resolvedDocument.jsonContent as ContentNode,
+    {
+      components: {
+        image: blogImageComponent,
+        pillarCallout: pillarCalloutComponent,
+        flowchart: flowchartComponent,
+        faq: faqComponent,
+        FAQ: faqComponent,
+      },
+      linkResolver,
     },
-    linkResolver,
-  });
+  );
   contentHtml = html;
 } catch (error) {
   console.error(
@@ -127,48 +129,47 @@ if (!currentDocument) {
 }
 
 const pageDocument = currentDocument;
-const isRootDocument = pageDocument.path === "/";
-const description =
-  pageDocument.fields?.description ||
-  (isRootDocument
-    ? `Learn about ${pageDocument.title || "Resources"}`
-    : pageDocument.title || "Article");
-const breadcrumbItems = isRootDocument
-  ? [{ label: "Home", href: "/" }, { label: pageDocument.title || "Resources" }]
-  : [
-      { label: "Home", href: "/" },
-      {
-        label: rootDocument?.title || pillar.replace(/-/g, " "),
-        href: `/${pillar}`,
-      },
-      { label: pageDocument.title },
-    ];
+const description = pageDocument.fields?.description || pageDocument.title || "Article";
+const breadcrumbItems = [
+  { label: "Home", href: "/" },
+  {
+    label: rootDocument?.title || pillar.replace(/-/g, " "),
+    href: `/${pillar}`,
+  },
+  { label: pageDocument.title || "Article" },
+].filter((item, index, items) => index === 0 || item.label !== items[index - 1]?.label);
+const relatedDocuments =
+  pageDocument.related && pageDocument.related.length > 0
+    ? pageDocument.related
+    : allDocuments.filter((doc) => doc.id !== pageDocument.id);
 ---
 
-<Layout title={pageDocument.title || "Resources"} description={String(description)}>
+<Layout
+  title={pageDocument.title || "Resources"}
+  description={String(description)}
+>
   <div class="py-8">
     <Container>
       <Breadcrumbs items={breadcrumbItems} />
 
-      <div class="flex gap-8 mt-8">
-        {documentsForToc.length > 0 && (
-          <aside class="hidden lg:block w-72 shrink-0 lg:order-2">
-            <PillarTOC
-              documents={documentsForToc}
-              currentDocumentId={pageDocument.id}
-              pillar={pillar}
-            />
-          </aside>
-        )}
-
-        <article class={isRootDocument ? "flex-1 max-w-[65ch] lg:order-1" : "flex-1 max-w-3xl lg:order-1"}>
-          <header class={isRootDocument ? "mb-12" : "mb-8"}>
-            <h1 class={isRootDocument ? "text-5xl font-semibold text-gray-900" : "text-3xl font-semibold text-gray-900"}>
+      <div class="flex gap-8 mt-8 relative">
+        <aside class="hidden lg:block lg:order-1 lg:w-80 xl:w-96 shrink-0">
+          <PillarTOC
+            documents={documentsForToc}
+            currentDocumentId={pageDocument.id}
+            pillar={pillar}
+          />
+        </aside>
+        <article
+          class="flex-1 max-w-3xl lg:order-2 lg:ml-auto"
+        >
+          <header class="mb-8">
+            <h1 class="text-3xl font-semibold text-gray-900">
               {pageDocument.title}
             </h1>
             {
               pageDocument.fields?.description && (
-                <p class={isRootDocument ? "text-lg text-gray-600" : "text-lg text-gray-600 mt-4"}>
+                <p class="text-lg text-gray-600 mt-4">
                   {pageDocument.fields?.description}
                 </p>
               )
@@ -180,58 +181,27 @@ const breadcrumbItems = isRootDocument
           </div>
           <ArticleHeadingEnhancements />
 
-          {
-            isRootDocument && allDocuments.length > 0 && (
-              <section class="mt-16 pt-8 border-t border-gray-200">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-6">Related Articles</h2>
-                <div class="grid md:grid-cols-2 gap-5">
-                  {allDocuments
-                    .filter((doc) => doc.id !== pageDocument.id)
-                    .map((doc) => (
-                      <a
-                        href={
-                          doc.path === "/"
-                            ? `/${pillar}`
-                            : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`
-                        }
-                        class="group block p-6 bg-white border border-gray-200 rounded-xl hover:border-blue-500/50 hover:shadow-lg transition-all"
-                      >
-                        <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                          {doc.title}
-                        </h3>
-                        {doc.fields?.excerpt && (
-                          <p class="text-sm text-gray-600 line-clamp-2">{doc.fields.excerpt}</p>
-                        )}
-                      </a>
-                    ))}
-                </div>
-              </section>
-            )
-          }
-
-          {
-            !isRootDocument && pageDocument.related && pageDocument.related.length > 0 && (
-              <section class="mt-16 pt-8 border-t border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-900 mb-6">Related Articles</h2>
-                <div class="grid gap-4">
-                  {pageDocument.related.map((doc) => (
-                    <a
-                      href={
-                        doc.path === "/"
-                          ? `/${pillar}`
-                          : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`
-                      }
-                      class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all"
-                    >
-                      <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {doc.title}
-                      </h3>
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )
-          }
+          {relatedDocuments.length > 0 && (
+            <section class="mt-16 pt-8 border-t border-gray-200">
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Related Articles</h2>
+              <div class="grid gap-4">
+                {relatedDocuments.map((doc) => (
+                  <a
+                    href={
+                      doc.path === "/"
+                        ? `/${pillar}`
+                        : `/${pillar}${typeof doc.path === "string" ? doc.path : `/${doc.id}`}`
+                    }
+                    class="group block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all"
+                  >
+                    <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {doc.title}
+                    </h3>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
         </article>
       </div>
     </Container>

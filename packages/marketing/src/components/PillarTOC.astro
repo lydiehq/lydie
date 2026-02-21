@@ -9,9 +9,7 @@ interface Document {
   id: string;
   title: string;
   path?: string;
-  fields?: {
-    slug?: string;
-  };
+  fields?: Record<string, unknown>;
   toc?: TOCHeading[];
 }
 
@@ -22,9 +20,41 @@ interface Props {
 }
 
 const { documents, currentDocumentId, pillar } = Astro.props;
+
+function getShortTitle(doc: Document): string | null {
+  const fields = doc.fields;
+  if (!fields || typeof fields !== "object") {
+    return null;
+  }
+
+  const candidates = [
+    (fields as Record<string, unknown>)["Short Title"],
+    (fields as Record<string, unknown>).shortTitle,
+    (fields as Record<string, unknown>).short_title,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string") {
+      const trimmed = candidate.trim();
+      if (trimmed.length > 0) {
+        return trimmed;
+      }
+    }
+  }
+
+  return null;
+}
+
+function getNavigationTitle(doc: Document): string {
+  return getShortTitle(doc) || doc.title;
+}
 ---
 
-<nav class="sticky top-24" aria-label="Table of contents" data-pillar-toc>
+<nav
+  class="sticky top-24 max-w-64"
+  aria-label="Table of contents"
+  data-pillar-toc
+>
   <h2 class="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">
     In this section
   </h2>
@@ -32,6 +62,7 @@ const { documents, currentDocumentId, pillar } = Astro.props;
     {
       documents.map((doc, index) => {
         const isCurrent = doc.id === currentDocumentId;
+        const navigationTitle = getNavigationTitle(doc);
         const href =
           doc.path === "/"
             ? `/${pillar}`
@@ -42,13 +73,13 @@ const { documents, currentDocumentId, pillar } = Astro.props;
             <div class="flex items-start gap-3">
               <div class="min-w-0">
                 {isCurrent ? (
-                  <p class="text-sm font-semibold text-gray-900">{doc.title}</p>
+                  <p class="text-sm font-semibold text-gray-900">{navigationTitle}</p>
                 ) : (
                   <a
                     href={href}
                     class="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                   >
-                    {doc.title}
+                    {navigationTitle}
                   </a>
                 )}
 

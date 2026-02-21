@@ -1,13 +1,17 @@
 import {
   AddRegular,
+  ArrowDownloadRegular,
   ArrowUploadRegular,
   BotRegular,
+  CubeRegular,
   DatabaseRegular,
+  DocumentCopyRegular,
   HomeFilled,
   PaymentRegular,
   PlugConnectedRegular,
   SearchFilled,
   SettingsRegular,
+  SparkleRegular,
 } from "@fluentui/react-icons";
 import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
@@ -32,11 +36,13 @@ import {
 } from "react-aria-components";
 
 import { openBackgroundTabAtom } from "@/atoms/tabs";
+import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { commandMenuOpenAtom } from "@/stores/command-menu";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
+import { isAdmin } from "@/utils/admin";
 
 interface MenuItem {
   id: string;
@@ -73,6 +79,8 @@ export function CommandMenu() {
   const params = useParams({ strict: false });
   const navigate = useNavigate();
   const { organization } = useOrganization();
+  const { user } = useAuth();
+  const userIsAdmin = isAdmin(user);
   const [search, setSearch] = useState("");
   const openBackgroundTab = useSetAtom(openBackgroundTabAtom);
 
@@ -215,12 +223,51 @@ export function CommandMenu() {
         },
       },
       {
-        id: "organization-settings",
+        id: "settings-general",
         label: "Go to organization settings",
         icon: SettingsRegular,
         action: () => {
           navigate({
             to: "/w/$organizationSlug/settings",
+            params: {
+              organizationSlug: organization?.slug as string,
+            },
+          });
+        },
+      },
+      {
+        id: "settings-profile",
+        label: "Go to profile settings",
+        icon: SettingsRegular,
+        action: () => {
+          navigate({
+            to: "/w/$organizationSlug/settings/profile",
+            params: {
+              organizationSlug: organization?.slug as string,
+            },
+          });
+        },
+      },
+      {
+        id: "settings-preferences",
+        label: "Go to preferences settings",
+        icon: SettingsRegular,
+        action: () => {
+          navigate({
+            to: "/w/$organizationSlug/settings/user",
+            params: {
+              organizationSlug: organization?.slug as string,
+            },
+          });
+        },
+      },
+      {
+        id: "settings-ai",
+        label: "Go to AI settings",
+        icon: SparkleRegular,
+        action: () => {
+          navigate({
+            to: "/w/$organizationSlug/settings/ai",
             params: {
               organizationSlug: organization?.slug as string,
             },
@@ -276,6 +323,62 @@ export function CommandMenu() {
           });
         },
       })),
+      ...(userIsAdmin
+        ? [
+            {
+              id: "settings-components",
+              label: "Go to components settings",
+              icon: CubeRegular,
+              action: () => {
+                navigate({
+                  to: "/w/$organizationSlug/settings/components",
+                  params: {
+                    organizationSlug: organization?.slug as string,
+                  },
+                });
+              },
+            },
+            {
+              id: "settings-templates",
+              label: "Go to templates settings",
+              icon: DocumentCopyRegular,
+              action: () => {
+                navigate({
+                  to: "/w/$organizationSlug/settings/templates",
+                  params: {
+                    organizationSlug: organization?.slug as string,
+                  },
+                });
+              },
+            },
+            {
+              id: "settings-export-import",
+              label: "Go to export & import settings",
+              icon: ArrowDownloadRegular,
+              action: () => {
+                navigate({
+                  to: "/w/$organizationSlug/settings/export-import",
+                  params: {
+                    organizationSlug: organization?.slug as string,
+                  },
+                });
+              },
+            },
+            {
+              id: "settings-admin",
+              label: "Go to admin settings",
+              icon: SettingsRegular,
+              action: () => {
+                navigate({
+                  to: "/w/$organizationSlug/settings/admin",
+                  params: {
+                    organizationSlug: organization?.slug as string,
+                  },
+                });
+              },
+            },
+          ]
+        : []),
       {
         id: "create-organization",
         label: "Create new organization",
@@ -308,6 +411,7 @@ export function CommandMenu() {
     navigate,
     organization.slug,
     publishDocument,
+    userIsAdmin,
   ]);
 
   // Handle document click - supports cmd+click to open in background

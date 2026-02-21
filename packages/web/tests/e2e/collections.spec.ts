@@ -57,6 +57,55 @@ test.describe("collections", () => {
         await deleteTestCollection(collection.id);
       }
     });
+
+    test("should not render collection entries as nested sidebar tree", async ({ page, organization }) => {
+      const collection = await createTestCollection(organization.id, {
+        name: "Flat Sidebar Collection",
+        handle: "flat-sidebar-collection",
+        properties: [
+          { name: "slug", type: "text", required: false, unique: true },
+          {
+            name: "parent",
+            type: "relation",
+            required: false,
+            unique: false,
+            relation: { targetCollectionId: "self" },
+          },
+        ],
+      });
+
+      const { document: parentDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Nested Parent Entry",
+          published: true,
+          fieldValues: { slug: "parent", parent: null },
+        },
+      );
+
+      const { document: childDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Nested Child Entry",
+          published: true,
+          fieldValues: { slug: "child", parent: parentDocument.id },
+        },
+      );
+
+      try {
+        await page.goto(`/w/${organization.slug}`);
+
+        await expect(page.getByText("Flat Sidebar Collection")).toBeVisible();
+        await expect(page.getByText("Nested Parent Entry")).not.toBeVisible();
+        await expect(page.getByText("Nested Child Entry")).not.toBeVisible();
+      } finally {
+        await deleteTestDocument(childDocument.id);
+        await deleteTestDocument(parentDocument.id);
+        await deleteTestCollection(collection.id);
+      }
+    });
   });
 
   test.describe("collection page", () => {
@@ -167,7 +216,7 @@ test.describe("collections", () => {
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
-        const propertyManager = page.locator(".rounded-xl").filter({ hasText: "Routing" }).locator("..").locator("..").getByRole("button", { name: "Add property" });
+        const propertyManager = page.getByRole("button", { name: "Add property", exact: true }).first();
         await propertyManager.click();
         await page.getByPlaceholder("e.g., status, priority, dueDate").fill("Category");
         await page.locator("#collection-property-type").selectOption("text");
@@ -200,25 +249,23 @@ test.describe("collections", () => {
       }
     });
 
-    test("should enable routing by adding route property", async ({ page, organization }) => {
+    test("should add a self relation property", async ({ page, organization }) => {
       const collection = await createTestCollection(organization.id, {
-        name: "Routing Test Collection",
-        handle: "routing-test",
+        name: "Relation Property Collection",
+        handle: "relation-property",
         properties: [],
       });
 
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
-        await expect(
-          page.getByText("Routing is enabled through the route field"),
-        ).not.toBeVisible();
+        await page.getByRole("button", { name: "+ Add property" }).click();
+        await page.locator("#collection-property-name").fill("parent");
+        await page.locator("#collection-property-type").selectOption("relation");
+        await page.locator("#collection-property-relation-target").selectOption("self");
+        await page.getByRole("button", { name: "Add Property" }).click();
 
-        await page.getByRole("button", { name: "Enable routing" }).click();
-
-        await expect(page.getByText("Routing enabled")).toBeVisible();
-        await expect(page.getByText("Routing is enabled through the route field")).toBeVisible();
-        await expect(page.getByText("route")).toBeVisible();
+        await expect(page.getByRole("columnheader", { name: "parent" })).toBeVisible();
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -395,51 +442,6 @@ test.describe("collections", () => {
     });
   });
 
-  test.describe("collection routing", () => {
-    test("should display route tree when routing is enabled", async ({ page, organization }) => {
-      const collection = await createTestCollection(organization.id, {
-        name: "Route Tree Test",
-        handle: "route-tree-test",
-        properties: [{ name: "route", type: "text", required: true, unique: true }],
-      });
-
-      const { document: parentDoc } = await createTestCollectionDocument(
-        organization.id,
-        collection.id,
-        {
-          title: "Parent Page",
-          published: true,
-          fieldValues: { route: "/" },
-        },
-      );
-
-      const { document: childDoc } = await createTestCollectionDocument(
-        organization.id,
-        collection.id,
-        {
-          title: "Child Page",
-          published: true,
-          parentId: parentDoc.id,
-          fieldValues: { route: "/child" },
-        },
-      );
-
-      try {
-        await page.goto(`/w/${organization.slug}`);
-
-        const collectionItem = page.locator(`[data-collection-id="${collection.id}"]`);
-        await collectionItem.getByRole("button", { name: "Expand" }).click();
-
-        await expect(collectionItem.getByText("Parent Page")).toBeVisible();
-        await expect(collectionItem.getByText("Child Page")).toBeVisible();
-      } finally {
-        await deleteTestDocument(childDoc.id);
-        await deleteTestDocument(parentDoc.id);
-        await deleteTestCollection(collection.id);
-      }
-    });
-  });
-
   test.describe("collection block", () => {
     test("should insert collection block in editor", async ({ page, organization }) => {
       const collection = await createTestCollection(organization.id, {
@@ -514,6 +516,36 @@ test.describe("collections", () => {
         await page.getByRole("button", { name: "Remove block" }).click();
 
         await expect(page.getByText("Remove Block Test", { exact: true })).not.toBeVisible();
+      } finally {
+        await deleteTestCollection(collection.id);
+      }
+    });
+
+    test("should add relation property from embedded collection block", async ({
+      page,
+      organization,
+    }) => {
+      const collection = await createTestCollection(organization.id, {
+        name: "Block Relation Property",
+        handle: "block-relation-property",
+        properties: [],
+      });
+
+      try {
+        await page.goto(`/w/${organization.slug}/d/new`);
+
+        await page.locator("[data-testid='editor-content']").click();
+        await page.keyboard.type("/collection");
+        await page.getByText("Collection View").click();
+        await page.getByText("Block Relation Property").click();
+
+        await page.getByRole("button", { name: "+ Add property" }).click();
+        await page.locator("#collection-property-name").fill("parent");
+        await page.locator("#collection-property-type").selectOption("relation");
+        await page.locator("#collection-property-relation-target").selectOption("self");
+        await page.getByRole("button", { name: "Add Property" }).click();
+
+        await expect(page.getByRole("columnheader", { name: "PARENT" })).toBeVisible();
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -628,25 +660,41 @@ test.describe("collections", () => {
       }
     });
 
-    test("should fetch document by route", async ({ page, organization }) => {
+    test("should fetch document by route from slug and parent relation", async ({ page, organization }) => {
       const collection = await createTestCollection(organization.id, {
-        name: "Route API Collection",
-        handle: "route-api",
+        name: "Relation Route API Collection",
+        handle: "relation-route-api",
         properties: [
-          { name: "route", type: "text", required: true, unique: true },
-          { name: "slug", type: "text", required: false, unique: false },
+          { name: "slug", type: "text", required: false, unique: true },
+          {
+            name: "parent",
+            type: "relation",
+            required: false,
+            unique: false,
+            relation: { targetCollectionId: "self" },
+          },
         ],
       });
+
+      const { document: rootDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Knowledge Base Root",
+          published: true,
+          fieldValues: { slug: null, parent: null },
+        },
+      );
 
       const { document } = await createTestCollectionDocument(organization.id, collection.id, {
         title: "Getting Started",
         published: true,
-        fieldValues: { route: "/getting-started", slug: "getting-started" },
+        fieldValues: { slug: "getting-started", parent: rootDocument.id },
       });
 
       try {
         const response = await page.request.get(
-          `/api/external/collections/route-api/routes/getting-started`,
+          `/api/external/collections/relation-route-api/routes/getting-started`,
         );
 
         expect(response.status()).toBe(200);
@@ -656,6 +704,71 @@ test.describe("collections", () => {
         expect(data.path).toBe("/getting-started");
       } finally {
         await deleteTestDocument(document.id);
+        await deleteTestDocument(rootDocument.id);
+        await deleteTestCollection(collection.id);
+      }
+    });
+
+    test("should fetch nested route from chained self relation", async ({ page, organization }) => {
+      const collection = await createTestCollection(organization.id, {
+        name: "Nested Relation Route API Collection",
+        handle: "nested-relation-route-api",
+        properties: [
+          { name: "slug", type: "text", required: false, unique: true },
+          {
+            name: "parent",
+            type: "relation",
+            required: false,
+            unique: false,
+            relation: { targetCollectionId: "self" },
+          },
+        ],
+      });
+
+      const { document: rootDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Knowledge Base Root",
+          published: true,
+          fieldValues: { slug: null, parent: null },
+        },
+      );
+
+      const { document: parentDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Guides",
+          published: true,
+          fieldValues: { slug: "guides", parent: rootDocument.id },
+        },
+      );
+
+      const { document: childDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Install",
+          published: true,
+          fieldValues: { slug: "install", parent: parentDocument.id },
+        },
+      );
+
+      try {
+        const response = await page.request.get(
+          `/api/external/collections/nested-relation-route-api/routes/guides/install`,
+        );
+
+        expect(response.status()).toBe(200);
+
+        const data = await response.json();
+        expect(data.title).toBe("Install");
+        expect(data.path).toBe("/guides/install");
+      } finally {
+        await deleteTestDocument(childDocument.id);
+        await deleteTestDocument(parentDocument.id);
+        await deleteTestDocument(rootDocument.id);
         await deleteTestCollection(collection.id);
       }
     });
@@ -664,7 +777,7 @@ test.describe("collections", () => {
       const collection = await createTestCollection(organization.id, {
         name: "Missing Route Collection",
         handle: "missing-route",
-        properties: [{ name: "route", type: "text", required: true, unique: true }],
+        properties: [{ name: "slug", type: "text", required: false, unique: true }],
       });
 
       try {

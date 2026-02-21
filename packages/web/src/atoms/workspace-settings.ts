@@ -5,7 +5,7 @@ import { atomWithStorage } from "jotai/utils";
 
 import type { FontSizeOption } from "@/stores/font-size";
 
-type SidebarSection = "favorites" | "documents";
+type SidebarSection = "favorites" | "documents" | "collections";
 
 type WorkspaceSettings = {
   sidebar: {
@@ -30,6 +30,7 @@ const DEFAULT_SETTINGS: WorkspaceSettings = {
     expandedSections: {
       favorites: true,
       documents: true,
+      collections: true,
     },
   },
   assistant: {
@@ -88,7 +89,7 @@ function createNestedSettingAtom<
 
 function createSidebarSectionAtom(section: SidebarSection): WritableAtom<boolean, [boolean], void> {
   return atom(
-    (get) => get(workspaceSettingsAtom).sidebar.expandedSections[section],
+    (get) => get(workspaceSettingsAtom).sidebar.expandedSections[section] ?? true,
     (get, set, value) => {
       const current = get(workspaceSettingsAtom);
       set(workspaceSettingsAtom, {
@@ -111,6 +112,7 @@ export const isSidebarCollapsedAtom = createNestedSettingAtom("sidebar", "isColl
 export const sidebarExpandedSectionsAtom = createNestedSettingAtom("sidebar", "expandedSections");
 export const isFavoritesExpandedAtom = createSidebarSectionAtom("favorites");
 export const isDocumentsExpandedAtom = createSidebarSectionAtom("documents");
+export const isCollectionsExpandedAtom = createSidebarSectionAtom("collections");
 
 // Assistant settings
 export const assistantSettingsAtom = createSettingAtom("assistant");

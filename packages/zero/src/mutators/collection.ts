@@ -1,4 +1,5 @@
 import { createId } from "@lydie/core/id";
+import { resolveRelationTargetCollectionId } from "@lydie/core/collection";
 import { slugify } from "@lydie/core/utils";
 import { defineMutator } from "@rocicorp/zero";
 import type { ReadonlyJSONValue } from "@rocicorp/zero";
@@ -31,6 +32,11 @@ const propertyDefinitionSchema = z.object({
   required: z.boolean(),
   unique: z.boolean(),
   options: z.array(z.string()).optional(),
+  relation: z
+    .object({
+      targetCollectionId: z.union([z.literal("self"), z.string()]),
+    })
+    .optional(),
   derived: z
     .object({
       sourceField: z.string(),
@@ -98,6 +104,72 @@ async function validateHandleForUpdate(
   }
 
   return handle;
+}
+
+async function validateRelationFieldValues(
+  tx: any,
+  organizationId: string,
+  collectionId: string,
+  documentId: string,
+  collectionProperties: unknown,
+  values: Record<string, string | number | boolean | null>,
+) {
+  const properties = Array.isArray(collectionProperties)
+    ? (collectionProperties as Array<Record<string, unknown>>)
+    : [];
+
+  const relationProperties = properties.filter(
+    (property) => property.type === "relation" && typeof property.name === "string",
+  );
+
+  for (const property of relationProperties) {
+    const propertyName = property.name as string;
+    if (!(propertyName in values)) {
+      continue;
+    }
+
+    const rawValue = values[propertyName];
+    if (rawValue === null) {
+      continue;
+    }
+
+    if (typeof rawValue !== "string") {
+      throw new Error(`Relation field "${propertyName}" must be a document id or null`);
+    }
+
+    if (rawValue === documentId) {
+      throw new Error(`Relation field "${propertyName}" cannot reference the same document`);
+    }
+
+    const relationConfig =
+      typeof property.relation === "object" && property.relation !== null
+        ? (property.relation as { targetCollectionId?: unknown })
+        : null;
+    const targetCollectionId = resolveRelationTargetCollectionId(
+      typeof relationConfig?.targetCollectionId === "string"
+        ? { targetCollectionId: relationConfig.targetCollectionId }
+        : undefined,
+      collectionId,
+    );
+
+    const targetDocument = await maybeOne(
+      tx.run(
+        zql.documents
+          .where("id", rawValue)
+          .where("organization_id", organizationId)
+          .where("deleted_at", "IS", null)
+          .one(),
+      ),
+    ) as { collection_id?: string | null } | null;
+
+    if (!targetDocument) {
+      throw new Error(`Referenced document for "${propertyName}" was not found`);
+    }
+
+    if (targetDocument.collection_id !== targetCollectionId) {
+      throw new Error(`Referenced document for "${propertyName}" is not in the target collection`);
+    }
+  }
 }
 
 export const collectionMutators = {
@@ -206,6 +278,15 @@ export const collectionMutators = {
       if (!document || !collection) {
         throw new Error("Invalid document or collection");
       }
+
+      await validateRelationFieldValues(
+        tx,
+        organizationId,
+        collectionId,
+        documentId,
+        collection.properties,
+        values,
+      );
 
       const existing = await maybeOne(
         tx.run(

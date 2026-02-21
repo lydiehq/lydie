@@ -1,19 +1,18 @@
 import { db } from "@lydie/database";
 import { collectionFieldsTable, collectionsTable, documentsTable } from "@lydie/database/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import type { ContentNode, TextNode } from "./types";
 
 // Transforms internal links (kind="internal", refId) to internal-link marks
-// for external API consumers. This provides document metadata (slug, title)
+// for external API consumers. This provides document metadata (title, collection)
 // so consumers can build proper URLs.
 
 interface LinkMetadata {
   id: string;
-  slug?: string;
-  route?: string;
   title?: string;
-  parentSlug?: string;
+  slug?: string;
+  parentId?: string;
   collectionHandle?: string;
   exists?: boolean;
 }
@@ -51,62 +50,42 @@ export async function fetchDocumentMetadata(
   }
 
   try {
-    // Fetch documents with their parent IDs
+    // Fetch documents with their collection info
     const documents = await db
       .select({
         id: documentsTable.id,
-        slug: documentsTable.slug,
         title: documentsTable.title,
-        parentId: documentsTable.parentId,
+        slug: collectionFieldsTable.values,
         collectionHandle: collectionsTable.handle,
-        route: collectionFieldsTable.values,
       })
       .from(documentsTable)
       .leftJoin(collectionsTable, eq(documentsTable.collectionId, collectionsTable.id))
       .leftJoin(
         collectionFieldsTable,
-        and(
-          eq(collectionFieldsTable.documentId, documentsTable.id),
-          eq(collectionFieldsTable.collectionId, documentsTable.collectionId),
-        ),
+        eq(collectionFieldsTable.documentId, documentsTable.id),
       )
       .where(inArray(documentsTable.id, documentIds));
-
-    // Collect parent IDs to fetch their slugs
-    const parentIds = documents
-      .map((doc) => doc.parentId)
-      .filter((id): id is string => id !== null);
-
-    // Fetch parent document slugs
-    const parentSlugMap = new Map<string, string>();
-    if (parentIds.length > 0) {
-      const parents = await db
-        .select({
-          id: documentsTable.id,
-          slug: documentsTable.slug,
-        })
-        .from(documentsTable)
-        .where(inArray(documentsTable.id, parentIds));
-
-      for (const parent of parents) {
-        if (parent.slug) {
-          parentSlugMap.set(parent.id, parent.slug);
-        }
-      }
-    }
 
     const metadataMap = new Map<string, LinkMetadata>();
 
     for (const doc of documents) {
       metadataMap.set(doc.id, {
         id: doc.id,
-        slug: doc.slug || undefined,
-        route:
-          doc.route && typeof (doc.route as Record<string, unknown>).route === "string"
-            ? ((doc.route as Record<string, unknown>).route as string)
-            : undefined,
         title: doc.title,
-        parentSlug: doc.parentId ? parentSlugMap.get(doc.parentId) : undefined,
+        slug:
+          typeof doc.slug === "object" &&
+          doc.slug !== null &&
+          "slug" in doc.slug &&
+          typeof doc.slug.slug === "string"
+            ? doc.slug.slug
+            : undefined,
+        parentId:
+          typeof doc.slug === "object" &&
+          doc.slug !== null &&
+          "parent" in doc.slug &&
+          typeof doc.slug.parent === "string"
+            ? doc.slug.parent
+            : undefined,
         collectionHandle: doc.collectionHandle || undefined,
         exists: true,
       });
@@ -146,13 +125,9 @@ function transformContentLinks(
             type: "internal-link",
             attrs: {
               "document-id": documentId,
-              ...(metadata?.route
-                ? { "document-slug": metadata.route }
-                : metadata?.slug
-                  ? { "document-slug": metadata.slug }
-                  : {}),
               ...(metadata?.title && { "document-title": metadata.title }),
-              ...(metadata?.parentSlug && { "document-parent-slug": metadata.parentSlug }),
+              ...(metadata?.slug && { "document-slug": metadata.slug }),
+              ...(metadata?.parentId && { "document-parent-id": metadata.parentId }),
               ...(metadata?.collectionHandle && {
                 "document-collection-handle": metadata.collectionHandle,
               }),

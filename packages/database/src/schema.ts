@@ -228,6 +228,9 @@ export const collectionsTable = pgTable(
           required: boolean;
           unique: boolean;
           options?: string[]; // For select/multi-select types
+          relation?: {
+            targetCollectionId: string;
+          } | null;
           derived?: {
             sourceField: string;
             transform: "slugify";

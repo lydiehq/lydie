@@ -16,7 +16,6 @@
     "@astrojs/sitemap": "^3.7.0",
     "@fluentui/react-icons": "catalog:",
     "@fontsource-variable/inter": "^5.2.8",
-    "@lydie-app/sdk": "^0.0.1",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",

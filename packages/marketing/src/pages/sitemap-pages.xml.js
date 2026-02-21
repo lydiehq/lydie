@@ -4,6 +4,7 @@ import { integrations } from "../data/integrations";
 import { getAllRoleUseCaseCombinations } from "../data/role-use-cases";
 import { getAllRoles } from "../data/roles";
 import { getAllUseCaseSlugs } from "../data/use-case-definitions";
+import { collections, getCollectionDocumentsWithPaths } from "../utils/lydie-client";
 import { generateUrlEntry, generateSitemap, sitemapHeaders } from "./sitemap-utils.js";
 
 // Static pages to include in sitemap (pages without dynamic registries)
@@ -102,6 +103,32 @@ export async function GET() {
         changefreq: "monthly",
       }),
     );
+  }
+
+  // Knowledge base pages (root + articles)
+  try {
+    const { documents } = await getCollectionDocumentsWithPaths(collections.knowledgeBases, {
+      sortBy: "created_at",
+      sortOrder: "asc",
+    });
+
+    for (const doc of documents) {
+      const path = doc.path === "/" ? "/knowledge-bases" : `/knowledge-bases${doc.path}`;
+      const updatedAt = typeof doc.updatedAt === "string" ? doc.updatedAt : null;
+      const createdAt = typeof doc.createdAt === "string" ? doc.createdAt : null;
+      const lastmod = updatedAt || createdAt;
+
+      urls.push(
+        generateUrlEntry({
+          path,
+          priority: doc.path === "/" ? "0.8" : "0.7",
+          changefreq: "monthly",
+          lastmod: lastmod ? new Date(lastmod).toISOString().split("T")[0] : undefined,
+        }),
+      );
+    }
+  } catch (error) {
+    console.error("Error adding knowledge base pages to sitemap:", error);
   }
 
   const sitemap = generateSitemap(urls);

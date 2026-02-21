@@ -1,4 +1,4 @@
-import type { ContentNode, TextNode } from "@lydie-app/sdk";
+import type { ContentNode, TextNode } from "@lydie/core/content";
 import { HTMLSerializer } from "@lydie/core/serialization/html";
 import { codeToHtml } from "shiki";
 
@@ -8,6 +8,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
     id?: string;
     slug?: string;
     title?: string;
+    parentId?: string;
     parentSlug?: string;
     collectionHandle?: string;
     type?: "internal" | "external";
@@ -20,6 +21,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
       id?: string;
       slug?: string;
       title?: string;
+      parentId?: string;
       parentSlug?: string;
       collectionHandle?: string;
       type?: "internal" | "external";
@@ -34,7 +36,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
     documentId?: string,
     documentSlug?: string,
     documentTitle?: string,
-    documentParentSlug?: string,
+    documentParentId?: string,
     documentCollectionHandle?: string,
   ): string {
     if (this.linkResolver) {
@@ -43,7 +45,7 @@ export class ShikiHTMLSerializer extends HTMLSerializer {
         id: documentId,
         slug: documentSlug,
         title: documentTitle,
-        parentSlug: documentParentSlug,
+        parentId: documentParentId,
         collectionHandle: documentCollectionHandle,
         type: "internal",
       });
