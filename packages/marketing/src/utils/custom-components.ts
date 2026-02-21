@@ -49,7 +49,7 @@ export function pillarCalloutComponent(properties: Record<string, unknown>): str
     <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
       <p class="m-0 text-xs font-semibold uppercase tracking-wide ${style.label}">${escapeHtml(type)}</p>
       ${heading ? `<h3 class="mt-2 mb-0 text-lg font-semibold ${style.heading}">${escapeHtml(heading)}</h3>` : ""}
-      ${body ? `<p class="mt-2 mb-0 text-sm leading-6 ${style.body}">${escapeHtml(body)}</p>` : ""}
+      ${body ? `<p class="mt-2 mb-0 leading-relaxed ${style.body}">${escapeHtml(body)}</p>` : ""}
     </div>
   </aside>`;
 }

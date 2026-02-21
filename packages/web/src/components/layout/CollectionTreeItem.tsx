@@ -28,16 +28,14 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
   organizationSlug,
 }: Props) {
   const { createDocument } = useDocumentActions();
-  const navigate = useNavigate() as (options: {
-    to: string;
-    params?: Record<string, string>;
-  }) => void;
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleNavigate = () => {
     navigate({
       to: "/w/$organizationSlug/collections/$collectionId",
-      params: { organizationSlug, collectionId: collection.id },
+      params: { collectionId: collection.id },
+      from: "/w/$organizationSlug",
     });
   };
 
@@ -59,7 +57,12 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
       }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-x-1">
-        <TreeItemIcon type="collection" isExpanded={false} hasChildren={false} isMenuOpen={isMenuOpen} />
+        <TreeItemIcon
+          type="collection"
+          isExpanded={false}
+          hasChildren={false}
+          isMenuOpen={isMenuOpen}
+        />
         <button
           type="button"
           onClick={handleNavigate}
@@ -70,7 +73,7 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
       </div>
 
       <div
-        className={`pointer-events-none flex items-center gap-x-px bg-inherit pl-1 ${isMenuOpen ? "relative" : "absolute right-0 opacity-0 group-hover:opacity-100 group-hover:relative"}`}
+        className={`pointer-events-none flex items-center gap-x-px pl-1 ${isMenuOpen ? "relative" : "absolute right-0 opacity-0 group-hover:opacity-100 group-hover:relative"}`}
       >
         <TooltipTrigger delay={500}>
           <RACButton

@@ -329,7 +329,7 @@ const CollectionsSection = memo(function CollectionsSection() {
         </div>
       </div>
       <DisclosurePanel className="px-2 pb-2">
-        {(collections ?? []).map((collection) => (
+        {collections.map((collection) => (
           <CollectionTreeItem
             key={collection.id}
             collection={collection}

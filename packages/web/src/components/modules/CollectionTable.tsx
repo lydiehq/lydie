@@ -1,7 +1,9 @@
+import { MoreHorizontalRegular } from "@fluentui/react-icons";
 import { resolveRelationTargetCollectionId, type PropertyDefinition } from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
@@ -21,7 +23,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DialogTrigger } from "react-aria-components";
+import { DialogTrigger, MenuTrigger, Button as RACButton } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useZero } from "@/services/zero";
@@ -360,12 +362,40 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     (property) => property.name.toLowerCase() === newPropertyName.trim().toLowerCase(),
   );
 
+  const handleDeleteProperty = useCallback(
+    (propertyName: string) => {
+      confirmDialog({
+        title: `Delete property "${propertyName}"?`,
+        message: "This will remove the property from the collection schema.",
+        onConfirm: () => {
+          void (async () => {
+            try {
+              await z.mutate(
+                mutators.collection.update({
+                  collectionId,
+                  organizationId,
+                  properties: schema.filter((property) => property.name !== propertyName),
+                }),
+              );
+              toast.success(`Deleted "${propertyName}"`);
+            } catch (error) {
+              console.error(error);
+              toast.error("Failed to delete property");
+            }
+          })();
+        },
+      });
+    },
+    [collectionId, organizationId, schema, z],
+  );
+
   const columns = useMemo<ColumnDef<DocumentItem>[]>(
     () => [
       {
         id: "select",
         enableSorting: false,
         enableResizing: false,
+        size: 48,
         meta: { kind: "selection" as const },
         header: ({ table }) => (
           <Checkbox
@@ -389,6 +419,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         id: "title",
         accessorKey: "title",
         enableSorting: true,
+        size: 300,
         sortingFn: sortNullableValues,
         meta: { kind: "title" as const },
         header: ({ column }) => <SortableHeader column={column} label="Title" />,
@@ -399,9 +430,17 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
           id: property.name,
           accessorFn: (document: DocumentItem) => document.properties[property.name],
           enableSorting: true,
+          enableResizing: true,
+          size: 240,
           sortingFn: sortNullableValues,
           meta: { kind: "property" as const, fieldDef: property },
-          header: ({ column }) => <SortableHeader column={column} label={property.name} />,
+          header: ({ column }) => (
+            <PropertyHeader
+              column={column}
+              label={property.name}
+              onDeleteProperty={handleDeleteProperty}
+            />
+          ),
           cell: (context: CellContext<DocumentItem, unknown>) => (
             <EditableGridCell context={context} />
           ),
@@ -410,6 +449,8 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
       {
         id: "add-property",
         enableSorting: false,
+        enableResizing: false,
+        size: 140,
         meta: { kind: "add-property" as const },
         header: () => (
           <DialogTrigger>
@@ -566,6 +607,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
       newPropertyRequired,
       newPropertyType,
       newPropertyUnique,
+      handleDeleteProperty,
       schema,
     ],
   );
@@ -581,6 +623,13 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     onRowSelectionChange: setRowSelection,
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
+    defaultColumn: {
+      minSize: 140,
+      size: 240,
+      maxSize: 600,
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     meta: {
@@ -702,7 +751,8 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
           aria-label="Collection records"
           role="grid"
           {...listeners}
-          className="w-full max-h-none border-collapse"
+          className="max-h-none border-collapse"
+          style={{ width: table.getTotalSize() }}
         >
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -711,11 +761,24 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="border border-gray-200 bg-white px-3 py-2 text-left align-middle"
+                    style={{ width: header.getSize() }}
+                    className="relative border border-gray-200 bg-white px-3 py-2 text-left align-middle"
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getCanResize() ? (
+                      <div
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label={`Resize ${String(header.column.columnDef.header ?? header.id)} column`}
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-blue-300/60 ${
+                          header.column.getIsResizing() ? "bg-blue-500/70" : ""
+                        }`}
+                      />
+                    ) : null}
                   </th>
                 ))}
               </tr>
@@ -740,6 +803,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                     <td
                       key={cell.id}
                       ref={(node) => setCellRef(row.id, cell.column.id, node)}
+                      style={{ width: cell.column.getSize() }}
                       tabIndex={0}
                       onDoubleClick={() => {
                         const kind = cell.column.columnDef.meta?.kind;
@@ -781,7 +845,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                           table.options.meta?.startEditing(row.id, cell.column.id);
                         }
                       }}
-                      className={`border border-gray-200 p-0 align-middle ${focusVisibleStyles}`}
+                      className={`overflow-hidden border border-gray-200 p-0 align-middle ${focusVisibleStyles}`}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
@@ -834,20 +898,51 @@ const SortableHeader = memo(function SortableHeader({
   const sortDirection = column.getIsSorted();
 
   if (!column.getCanSort()) {
-    return <span className="text-xs font-semibold text-gray-700">{label}</span>;
+    return <span className="block truncate text-xs font-semibold text-gray-700">{label}</span>;
   }
 
   return (
     <button
       type="button"
       onClick={() => column.toggleSorting(sortDirection === "asc")}
-      className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700"
+      className="inline-flex max-w-full items-center gap-1 truncate text-xs font-semibold text-gray-700"
     >
-      <span>{label}</span>
+      <span className="truncate">{label}</span>
       <span className="text-[10px] text-gray-400">
         {sortDirection === "asc" ? "▲" : sortDirection === "desc" ? "▼" : ""}
       </span>
     </button>
+  );
+});
+
+const PropertyHeader = memo(function PropertyHeader({
+  column,
+  label,
+  onDeleteProperty,
+}: {
+  column: Column<DocumentItem, unknown>;
+  label: string;
+  onDeleteProperty: (propertyName: string) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-1">
+      <div className="min-w-0 flex-1">
+        <SortableHeader column={column} label={label} />
+      </div>
+      <MenuTrigger>
+        <RACButton
+          type="button"
+          aria-label={`Open ${label} column menu`}
+          className="inline-flex shrink-0 items-center rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          onPress={(event) => event.stopPropagation()}
+        >
+          <MoreHorizontalRegular className="size-4" />
+        </RACButton>
+        <Menu placement="bottom end">
+          <MenuItem onAction={() => onDeleteProperty(label)}>Delete property</MenuItem>
+        </Menu>
+      </MenuTrigger>
+    </div>
   );
 });
 
@@ -1017,8 +1112,10 @@ const EditableGridCell = memo(function EditableGridCell({
     );
 
   return (
-    <div className="group flex min-h-10 min-w-[220px] items-center gap-2 px-3 py-1.5">
-      <div className="flex flex-1 items-center text-left text-sm">{content}</div>
+    <div className="group flex min-h-10 items-center gap-2 px-3 py-1.5">
+      <div className="min-w-0 flex flex-1 items-center text-left text-sm">
+        <span className="block w-full truncate whitespace-nowrap">{content}</span>
+      </div>
       {kind === "title" ? (
         <Link
           to="/w/$organizationSlug/$id"

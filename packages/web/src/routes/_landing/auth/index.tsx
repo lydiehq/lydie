@@ -20,11 +20,11 @@ const SESSION_QUERY_KEY = ["auth", "getSession"];
 
 function RouteComponent() {
   return (
-    <div className="min-h-screen relative grainy-gradient-container custom-inner-shadow overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden grainy-gradient-container">
       <div className="relative z-10 flex items-center justify-center min-h-screen p-8 md:p-16">
         <div className="w-full max-w-lg">
-          <div className="p-px ring ring-white/20 rounded-[9px] bg-white/10">
-            <div className="p-16 size-full rounded-[8px]">
+          <div className="rounded-2xl border border-black/10 bg-white/85 p-px shadow-xl shadow-black/10 backdrop-blur-sm">
+            <div className="size-full rounded-[15px] px-8 py-10 md:px-12 md:py-12">
               <AuthBox />
             </div>
           </div>
@@ -75,10 +75,10 @@ function AuthBox() {
   };
 
   return (
-    <div className="max-w-sm w-full gap-y-4 flex flex-col">
+    <div className="flex w-full max-w-sm flex-col gap-y-5">
       <div className="flex flex-col gap-y-2">
-        <Heading className="text-white">Welcome to Lydie</Heading>
-        <p className="text-white/90">Sign in to your account to continue</p>
+        <Heading className="text-zinc-900">Welcome to Lydie</Heading>
+        <p className="text-zinc-600">Sign in to your account to continue</p>
       </div>
 
       <Button
