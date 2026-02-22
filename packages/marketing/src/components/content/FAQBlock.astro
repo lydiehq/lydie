@@ -1,0 +1,13 @@
+---
+import type { FAQItem } from "@/components/generic/FAQ";
+import { FAQ } from "@/components/generic/FAQ";
+
+interface Props {
+  title?: string;
+  items: FAQItem[];
+}
+
+const { title, items } = Astro.props;
+---
+
+<FAQ title={title} items={items} client:visible />

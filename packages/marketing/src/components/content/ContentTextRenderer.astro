@@ -1,0 +1,103 @@
+---
+import type { Mark } from "@lydie/core/content";
+
+interface Props {
+  text: string;
+  marks?: Mark[];
+  linkPrefix?: string;
+  linkResolver?: (ref: {
+    href: string;
+    id?: string;
+    slug?: string;
+    title?: string;
+    parentId?: string;
+    parentSlug?: string;
+    collectionHandle?: string;
+    type?: "internal" | "external";
+  }) => string;
+}
+
+const { text, marks = [], linkPrefix, linkResolver } = Astro.props;
+const [mark, ...restMarks] = marks;
+
+function withLinkPrefix(href: string): string {
+  if (!linkPrefix) {
+    return href;
+  }
+
+  if (
+    href.startsWith("http") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:") ||
+    href.startsWith("#")
+  ) {
+    return href;
+  }
+
+  return `${linkPrefix}${href.startsWith("/") ? href : `/${href}`}`;
+}
+
+function resolveInternalHref(currentMark: Mark): string {
+  const attrs = currentMark.attrs;
+  const documentId = attrs?.["document-id"];
+  const documentSlug = attrs?.["document-slug"];
+  const documentTitle = attrs?.["document-title"];
+  const documentParentId =
+    attrs?.["document-parent-id"] ?? attrs?.["document-parent-slug"];
+  const documentCollectionHandle =
+    attrs?.["document-collection-handle"] ?? attrs?.["document-collection-id"];
+
+  if (linkResolver) {
+    return linkResolver({
+      href: `internal://${documentId || ""}`,
+      id: documentId,
+      slug: documentSlug,
+      title: documentTitle,
+      parentId: documentParentId,
+      collectionHandle: documentCollectionHandle,
+      type: "internal",
+    });
+  }
+
+  let href = documentSlug || documentId || "#";
+  if (!href.startsWith("/") && !href.startsWith("http")) {
+    href = `/${href}`;
+  }
+  return withLinkPrefix(href);
+}
+
+const markType = typeof mark?.type === "string" ? mark.type : "";
+const linkHref = markType === "link" && typeof mark?.attrs?.href === "string" ? mark.attrs.href : undefined;
+const linkRel = markType === "link" && typeof mark?.attrs?.rel === "string" ? mark.attrs.rel : undefined;
+const linkTarget =
+  markType === "link" && typeof mark?.attrs?.target === "string" ? mark.attrs.target : undefined;
+const internalHref = markType === "internal-link" && mark ? resolveInternalHref(mark) : "#";
+const internalTitle =
+  markType === "internal-link" && typeof mark?.attrs?.["document-title"] === "string"
+    ? mark.attrs["document-title"]
+    : undefined;
+---
+
+{
+  !mark ? (
+    text
+  ) : markType === "bold" ? (
+    <strong>
+      <Astro.self text={text} marks={restMarks} linkPrefix={linkPrefix} linkResolver={linkResolver} />
+    </strong>
+  ) : markType === "italic" ? (
+    <em>
+      <Astro.self text={text} marks={restMarks} linkPrefix={linkPrefix} linkResolver={linkResolver} />
+    </em>
+  ) : markType === "link" ? (
+    <a href={linkHref ? withLinkPrefix(linkHref) : undefined} rel={linkRel} target={linkTarget}>
+      <Astro.self text={text} marks={restMarks} linkPrefix={linkPrefix} linkResolver={linkResolver} />
+    </a>
+  ) : markType === "internal-link" ? (
+    <a href={internalHref} title={internalTitle}>
+      <Astro.self text={text} marks={restMarks} linkPrefix={linkPrefix} linkResolver={linkResolver} />
+    </a>
+  ) : (
+    <Astro.self text={text} marks={restMarks} linkPrefix={linkPrefix} linkResolver={linkResolver} />
+  )
+}

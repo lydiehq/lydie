@@ -41,8 +41,8 @@ import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { commandMenuOpenAtom } from "@/stores/command-menu";
 import { confirmDialog } from "@/stores/confirm-dialog";
-import { getIntegrationIconUrl } from "@/utils/integration-icons";
 import { isAdmin } from "@/utils/admin";
+import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 interface MenuItem {
   id: string;
@@ -63,6 +63,7 @@ interface DocumentItem {
   id: string;
   documentId: string;
   label: string;
+  collectionName: string | null;
   action: () => void;
 }
 
@@ -459,6 +460,7 @@ export function CommandMenu() {
       id: `doc-${doc.id}`,
       documentId: doc.id,
       label: doc.title || "Untitled Document",
+      collectionName: doc.collection?.name ?? null,
       action: () => {
         navigate({
           to: "/w/$organizationSlug/$id",
@@ -594,9 +596,17 @@ export function CommandMenu() {
                       className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
                     >
                       <DocumentThumbnailIcon size="lg" className="shrink-0 mr-2" />
-                      <Text slot="label" className="flex-1 min-w-0 truncate text-start">
-                        {item.label}
-                      </Text>
+                      <div className="flex min-w-0 flex-1 flex-col text-start">
+                        <Text slot="label" className="truncate">
+                          {item.label}
+                        </Text>
+                        {item.collectionName && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <DatabaseRegular className="size-3 shrink-0" />
+                            <span className="truncate">{item.collectionName}</span>
+                          </div>
+                        )}
+                      </div>
                     </MenuItem>
                   ))}
                 </MenuSection>

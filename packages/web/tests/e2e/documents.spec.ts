@@ -7,7 +7,9 @@ test.describe("documents", () => {
   test("can create a new document", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
     await createDocument(page, { title: "Test Document", content: "" });
-    await expect(page.getByRole("treegrid", { name: "Documents" }).getByRole("row", { name: "Test Document" })).toBeVisible();
+    await expect(
+      page.getByRole("treegrid", { name: "Documents" }).getByRole("row", { name: "Test Document" }),
+    ).toBeVisible();
   });
 
   test("can create new document in folder", async ({ page, organization }) => {

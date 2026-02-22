@@ -1,4 +1,8 @@
-import { AppFolder16Filled, ArrowCounterclockwise16Regular, Delete16Regular } from "@fluentui/react-icons";
+import {
+  AppFolder16Filled,
+  ArrowCounterclockwise16Regular,
+  Delete16Regular,
+} from "@fluentui/react-icons";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { mutators } from "@lydie/zero/mutators";
@@ -180,7 +184,9 @@ export function TrashPage() {
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Delete16Regular className="size-12 text-gray-300 mb-4" />
             <p className="text-gray-500 mb-2">Trash is empty</p>
-            <p className="text-sm text-gray-400">Deleted documents and collections will appear here.</p>
+            <p className="text-sm text-gray-400">
+              Deleted documents and collections will appear here.
+            </p>
           </div>
         )}
       </div>

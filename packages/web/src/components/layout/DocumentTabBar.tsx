@@ -158,7 +158,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
           const key = [...keys][0];
           if (key) handleSelectionChange(key);
         }}
-        className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide gap-px"
+        className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -171,8 +171,10 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
             id={tab.documentId}
             textValue={tab.title || "Untitled"}
             className={({ isSelected }) =>
-              `group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-1.5 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
-                isSelected ? "bg-black/5" : "bg-gray-50 text-gray-600 hover:bg-black/3"
+              `peer group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-1.5 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
+                isSelected
+                  ? "bg-black/5"
+                  : "text-gray-600 hover:bg-black/3 before:absolute before:inset-y-1 before:left-0 before:w-px before:bg-black/5 hover:before:opacity-0 first:before:opacity-0 peer-[:hover+&]:before:opacity-0"
               } ${tab.mode === "preview" ? "italic" : ""}`
             }
             onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}

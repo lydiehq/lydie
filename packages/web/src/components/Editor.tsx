@@ -13,7 +13,6 @@ import {
 } from "@/atoms/workspace-settings";
 import { useAuth } from "@/context/auth.context";
 import { useZero } from "@/services/zero";
-import { isAdmin } from "@/utils/admin";
 import { applyContentChanges } from "@/utils/document-changes";
 import { applyTitleChange } from "@/utils/title-changes";
 
@@ -270,7 +269,6 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
       contentEditor={cached.contentEditor}
       titleEditor={cached.titleEditor}
       provider={cached.provider}
-      isAdmin={isAdmin(user)}
       shouldShiftContent={shouldShiftContent}
       organizationId={organizationId}
       organizationSlug={organizationSlug}

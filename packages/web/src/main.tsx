@@ -24,6 +24,7 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { Toaster } from "sonner";
 
+import { GlobalBulkActionsBar } from "./components/generic/GlobalBulkActionsBar";
 import { ErrorPage } from "./components/layout/ErrorPage.tsx";
 import { initPostHog } from "./lib/posthog.ts";
 import reportWebVitals from "./reportWebVitals.ts";
@@ -183,6 +184,7 @@ if (rootElement && !rootElement.innerHTML) {
       <StrictMode>
         <CatchBoundary errorComponent={ErrorPage} getResetKey={() => "error"}>
           <RouterProvider router={router} />
+          <GlobalBulkActionsBar />
           <Toaster position="bottom-center" invert />
         </CatchBoundary>
       </StrictMode>,

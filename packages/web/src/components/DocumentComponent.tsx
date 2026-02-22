@@ -1,9 +1,15 @@
 import { AddRegular, DeleteRegular } from "@fluentui/react-icons";
+import { KeyboardShortcutExtension, Link as EditorLink } from "@lydie/editor";
 import { Button } from "@lydie/ui/components/generic/Button";
-import { Input, Label } from "@lydie/ui/components/generic/Field";
-import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { useState } from "react";
+import { Input, Label, TextArea } from "@lydie/ui/components/generic/Field";
+import { EditorContent, type NodeViewProps, NodeViewWrapper, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NumberField as AriaNumberField, TextField as AriaTextField } from "react-aria-components";
+
+import { useOrganization } from "@/context/organization.context";
+
+import { LinkPopover } from "./editor/link-popover/LinkPopover";
 
 type ObjectArrayField = {
   name: string;
@@ -14,10 +20,126 @@ type ObjectArraySchema = {
   fields: ObjectArrayField[];
 };
 
+type RichTextContent = {
+  type: string;
+  content?: RichTextContent[];
+  attrs?: Record<string, unknown>;
+  text?: string;
+  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>;
+};
+
+const EMPTY_RICH_TEXT: RichTextContent = {
+  type: "doc",
+  content: [{ type: "paragraph", content: [] }],
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+function isRichTextContent(value: unknown): value is RichTextContent {
+  return isRecord(value) && typeof value.type === "string";
+}
+
+function toRichTextContent(value: unknown): RichTextContent {
+  if (isRichTextContent(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim().length > 0) {
+    return {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: value }] }],
+    };
+  }
+
+  return EMPTY_RICH_TEXT;
+}
+
+function RichTextPropertyEditor({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: unknown;
+  onChange: (value: RichTextContent) => void;
+}) {
+  const { organization } = useOrganization();
+  const content = useMemo(() => toRichTextContent(value), [value]);
+  const latestJsonRef = useRef<RichTextContent>(content);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        blockquote: false,
+        bulletList: false,
+        codeBlock: false,
+        hardBreak: false,
+        heading: false,
+        horizontalRule: false,
+        listItem: false,
+        orderedList: false,
+      }),
+      EditorLink.configure({
+        openOnClick: false,
+        protocols: [],
+      }),
+      KeyboardShortcutExtension,
+    ],
+    content,
+    editorProps: {
+      attributes: {
+        class:
+          "nodrag min-h-16 rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-900 outline-none focus-within:border-gray-300",
+      },
+    },
+    onUpdate: ({ editor }) => {
+      latestJsonRef.current = editor.getJSON() as RichTextContent;
+    },
+    onBlur: () => {
+      onChange(latestJsonRef.current);
+    },
+  });
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const current = JSON.stringify(editor.getJSON());
+    const next = JSON.stringify(content);
+    if (current !== next) {
+      editor.commands.setContent(content, { emitUpdate: false });
+      latestJsonRef.current = content;
+    }
+  }, [content, editor]);
+
+  return (
+    <div className="space-y-1">
+      <Label className="truncate text-[10px] font-medium uppercase tracking-wide text-gray-500" title={label}>
+        {label}
+      </Label>
+      <div className="relative">
+        <EditorContent editor={editor} />
+        {editor && organization ? (
+          <LinkPopover
+            editor={editor}
+            organizationId={organization.id}
+            organizationSlug={organization.slug}
+          />
+        ) : null}
+      </div>
+      <p className="text-[10px] text-gray-400">Use Cmd/Ctrl+B, I, Shift+S, E and Cmd/Ctrl+K.</p>
+    </div>
+  );
+}
+
 export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const properties = node.attrs?.properties ?? {};
   const schemas = (node.attrs?.schemas ?? {}) as Record<string, ObjectArraySchema>;
+  const types = (node.attrs?.types ?? {}) as Record<string, string>;
   const propertyEntries = Object.entries(properties);
   const itemCount = propertyEntries.reduce((count, [, value]) => {
     return count + (Array.isArray(value) ? value.length : 0);
@@ -59,7 +181,7 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
   };
 
   return (
-    <NodeViewWrapper className="my-2">
+    <NodeViewWrapper className="my-2" contentEditable={false}>
       <div className="overflow-hidden rounded-lg bg-white shadow-surface">
         <div className="flex items-center justify-between border-b border-gray-200 p-2">
           <div className="min-w-0">
@@ -80,7 +202,23 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
           <div className="space-y-3 p-2">
             {propertyEntries.map(([key, value]) => {
               const schema = schemas[key];
+              const propertyType = types[key];
               const isObjectArray = Array.isArray(value) && schema?.fields;
+
+              if (propertyType === "rich_text") {
+                return (
+                  <RichTextPropertyEditor
+                    key={key}
+                    label={key}
+                    value={value}
+                    onChange={(nextValue) =>
+                      updateAttributes({
+                        properties: { ...properties, [key]: nextValue },
+                      })
+                    }
+                  />
+                );
+              }
 
               if (!isObjectArray) {
                 return (
@@ -100,7 +238,7 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
                     >
                       {key}
                     </Label>
-                    <Input placeholder={`Enter ${key}...`} />
+                    <TextArea placeholder={`Enter ${key}...`} rows={3} />
                   </AriaTextField>
                 );
               }
@@ -178,8 +316,8 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
                                   <Label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">
                                     {field.name}
                                   </Label>
-                                  <Input />
-                                </AriaTextField>
+                                   <TextArea rows={2} />
+                                 </AriaTextField>
                               )}
                             </div>
                           ))}

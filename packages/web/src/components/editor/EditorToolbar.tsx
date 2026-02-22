@@ -103,12 +103,19 @@ export function EditorToolbar({ editor, doc }: Props) {
   ) => {
     // Build schemas for array properties
     const schemas: Record<string, { fields: Array<{ name: string; type: string }> }> = {};
+    const types: Record<string, string> = {};
     const initialProperties: Record<string, unknown> = {};
 
     for (const [key, config] of Object.entries(properties)) {
+      types[key] = config.type;
       if (config.type === "array" && config.fields) {
         schemas[key] = { fields: config.fields };
         initialProperties[key] = []; // Initialize with empty array
+      } else if (config.type === "rich_text") {
+        initialProperties[key] = {
+          type: "doc",
+          content: [{ type: "paragraph", content: [] }],
+        };
       } else if (config.type === "boolean") {
         initialProperties[key] = false;
       } else if (config.type === "number") {
@@ -127,6 +134,7 @@ export function EditorToolbar({ editor, doc }: Props) {
           name,
           properties: initialProperties,
           schemas,
+          types,
         },
       })
       .run();

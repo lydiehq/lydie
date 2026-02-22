@@ -39,12 +39,15 @@ function getMarketingSlug(value: unknown): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
+if (!slug) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Blog post not found",
+  });
+}
+
 let document: BlogDocument;
 try {
-  if (!slug) {
-    throw new Error("Document not found");
-  }
-
   const { documents } = await lydieApi.getCollectionDocuments(
     BLOG_COLLECTION_HANDLE,
     {
@@ -58,13 +61,14 @@ try {
   );
 
   document = documents[0] as BlogDocument;
-
-  if (!document) {
-    throw new Error("Document not found");
-  }
 } catch (error) {
-  console.error(`Failed to fetch document with slug "${slug}":`, error);
-  // Return 404 response for missing or errored documents
+  return new Response(null, {
+    status: 404,
+    statusText: "Blog post not found",
+  });
+}
+
+if (!document) {
   return new Response(null, {
     status: 404,
     statusText: "Blog post not found",

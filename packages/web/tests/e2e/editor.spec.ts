@@ -2,10 +2,7 @@ import { expect, test } from "./fixtures/auth.fixture";
 import { createDocument, gotoWorkspace } from "./utils/document";
 
 test.describe("editor", () => {
-  test("displays word count and updates correctly", async ({
-    page,
-    organization,
-  }) => {
+  test("displays word count and updates correctly", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
     await createDocument(page, { title: "Word Count Test", content: "" });
 

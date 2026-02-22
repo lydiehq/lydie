@@ -382,16 +382,53 @@ export const documentMutators = {
         throw new Error("Document is not in trash");
       }
 
-      const childIds = await findAllDeletedChildDocuments(tx, documentId, organizationId);
+      await restoreDocumentTree(tx, document.id, organizationId);
+    },
+  ),
 
-      for (const childId of childIds) {
-        await tx.mutate.documents.update(withUpdatedTimestamp({ id: childId, deleted_at: null }));
+  bulkRestore: defineMutator(
+    z.object({ documentIds: z.array(z.string()).min(1), organizationId: z.string() }),
+    async ({ tx, ctx, args: { documentIds, organizationId } }) => {
+      hasOrganizationAccess(ctx, organizationId);
+
+      const selectedIdSet = new Set(documentIds);
+      const selectedDocuments = await Promise.all(
+        documentIds.map((documentId) => getDocumentById(tx, documentId, organizationId, true)),
+      );
+
+      const validDocuments = selectedDocuments.filter(
+        (document): document is NonNullable<(typeof selectedDocuments)[number]> =>
+          Boolean(document),
+      );
+      if (validDocuments.length !== documentIds.length) {
+        throw notFoundError("Document", "one or more selected IDs");
       }
 
-      await tx.mutate.documents.update(withUpdatedTimestamp({ id: documentId, deleted_at: null }));
+      const deletedDocuments = validDocuments.filter((document) => Boolean(document.deleted_at));
+      const rootDocuments = deletedDocuments.filter(
+        (document) => !document.parent_id || !selectedIdSet.has(document.parent_id),
+      );
+
+      for (const document of rootDocuments) {
+        await restoreDocumentTree(tx, document.id, organizationId);
+      }
     },
   ),
 };
+
+async function restoreDocumentTree(
+  tx: any,
+  documentId: string,
+  organizationId: string,
+): Promise<void> {
+  const childIds = await findAllDeletedChildDocuments(tx, documentId, organizationId);
+
+  for (const childId of childIds) {
+    await tx.mutate.documents.update(withUpdatedTimestamp({ id: childId, deleted_at: null }));
+  }
+
+  await tx.mutate.documents.update(withUpdatedTimestamp({ id: documentId, deleted_at: null }));
+}
 
 async function deleteDocumentTree(
   tx: any,

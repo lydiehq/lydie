@@ -5,6 +5,7 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -23,10 +24,11 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DialogTrigger, MenuTrigger, Button as RACButton } from "react-aria-components";
+import { DialogTrigger, Input, MenuTrigger, Button as RACButton } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useZero } from "@/services/zero";
+import { useGlobalBulkActions } from "@/hooks/use-global-bulk-actions";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { focusVisibleStyles } from "@/utils/focus-ring";
 
@@ -136,8 +138,6 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
   const [newPropertyUnique, setNewPropertyUnique] = useState(false);
   const [newPropertyRelationTargetCollectionId, setNewPropertyRelationTargetCollectionId] =
     useState<string>("self");
-  const [isCreatingRow, setIsCreatingRow] = useState(false);
-  const [isAddingRowProperty, setIsAddingRowProperty] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([{ id: "title", desc: false }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
@@ -226,20 +226,15 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     [organizationId, z],
   );
 
-  const handleCreateRow = async () => {
-    setIsCreatingRow(true);
-    try {
-      await z.mutate(
-        mutators.document.create({
-          id: createId(),
-          organizationId,
-          collectionId,
-          title: "",
-        }),
-      );
-    } finally {
-      setIsCreatingRow(false);
-    }
+  const handleCreateRow = () => {
+    z.mutate(
+      mutators.document.create({
+        id: createId(),
+        organizationId,
+        collectionId,
+        title: "",
+      }),
+    );
   };
 
   const handleRenameDocument = useCallback(
@@ -268,51 +263,45 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
       return;
     }
 
-    setIsAddingRowProperty(true);
+    const nextSchema: PropertyDefinition[] = [
+      ...schema,
+      {
+        name: trimmedName,
+        type: newPropertyType,
+        required: newPropertyRequired,
+        unique: newPropertyUnique,
+        ...(newPropertyType === "select" || newPropertyType === "multi-select"
+          ? {
+              options: newPropertyOptions
+                .split(",")
+                .map((option) => option.trim())
+                .filter(Boolean),
+            }
+          : {}),
+        ...(newPropertyType === "relation"
+          ? {
+              relation: {
+                targetCollectionId: newPropertyRelationTargetCollectionId,
+              },
+            }
+          : {}),
+      },
+    ];
 
-    try {
-      const nextSchema: PropertyDefinition[] = [
-        ...schema,
-        {
-          name: trimmedName,
-          type: newPropertyType,
-          required: newPropertyRequired,
-          unique: newPropertyUnique,
-          ...(newPropertyType === "select" || newPropertyType === "multi-select"
-            ? {
-                options: newPropertyOptions
-                  .split(",")
-                  .map((option) => option.trim())
-                  .filter(Boolean),
-              }
-            : {}),
-          ...(newPropertyType === "relation"
-            ? {
-                relation: {
-                  targetCollectionId: newPropertyRelationTargetCollectionId,
-                },
-              }
-            : {}),
-        },
-      ];
+    await z.mutate(
+      mutators.collection.update({
+        collectionId,
+        organizationId,
+        properties: nextSchema,
+      }),
+    );
 
-      await z.mutate(
-        mutators.collection.update({
-          collectionId,
-          organizationId,
-          properties: nextSchema,
-        }),
-      );
-
-      setNewPropertyName("");
-      setNewPropertyType("text");
-      setNewPropertyOptions("");
-      setNewPropertyRequired(false);
-      setNewPropertyUnique(false);
-      setNewPropertyRelationTargetCollectionId("self");
-    } finally {
-      setIsAddingRowProperty(false);
-    }
+    setNewPropertyName("");
+    setNewPropertyType("text");
+    setNewPropertyOptions("");
+    setNewPropertyRequired(false);
+    setNewPropertyUnique(false);
+    setNewPropertyRelationTargetCollectionId("self");
   }, [
     collectionId,
     newPropertyName,
@@ -395,7 +384,9 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         id: "select",
         enableSorting: false,
         enableResizing: false,
-        size: 48,
+        size: 32,
+        minSize: 32,
+        maxSize: 32,
         meta: { kind: "selection" as const },
         header: ({ table }) => (
           <Checkbox
@@ -469,13 +460,13 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                   >
                     Property name
                   </label>
-                  <input
+                  <Input
                     id="collection-property-name"
                     type="text"
                     value={newPropertyName}
                     onChange={(event) => setNewPropertyName(event.target.value)}
                     placeholder="e.g., status, priority, dueDate"
-                    className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                    className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
                   />
                 </div>
 
@@ -492,7 +483,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                     onChange={(event) =>
                       setNewPropertyType(event.target.value as PropertyDefinition["type"])
                     }
-                    className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                    className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
                   >
                     {PROPERTY_TYPES.map((propertyType) => (
                       <option key={propertyType.value} value={propertyType.value}>
@@ -510,13 +501,13 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                     >
                       Options (comma-separated)
                     </label>
-                    <input
+                    <Input
                       id="collection-property-options"
                       type="text"
                       value={newPropertyOptions}
                       onChange={(event) => setNewPropertyOptions(event.target.value)}
                       placeholder="todo, in-progress, done"
-                      className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                      className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
                     />
                   </div>
                 )}
@@ -535,7 +526,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                       onChange={(event) =>
                         setNewPropertyRelationTargetCollectionId(event.target.value)
                       }
-                      className="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                      className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
                     >
                       <option value="self">This collection</option>
                       {(collections ?? [])
@@ -550,24 +541,20 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                 )}
 
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-xs text-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={newPropertyRequired}
-                      onChange={(event) => setNewPropertyRequired(event.target.checked)}
-                      className="rounded border-gray-300"
-                    />
+                  <Checkbox
+                    isSelected={newPropertyRequired}
+                    onChange={(isSelected) => setNewPropertyRequired(Boolean(isSelected))}
+                    className="text-xs text-gray-600"
+                  >
                     Required
-                  </label>
-                  <label className="flex items-center gap-2 text-xs text-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={newPropertyUnique}
-                      onChange={(event) => setNewPropertyUnique(event.target.checked)}
-                      className="rounded border-gray-300"
-                    />
+                  </Checkbox>
+                  <Checkbox
+                    isSelected={newPropertyUnique}
+                    onChange={(isSelected) => setNewPropertyUnique(Boolean(isSelected))}
+                    className="text-xs text-gray-600"
+                  >
                     Unique
-                  </label>
+                  </Checkbox>
                 </div>
 
                 {hasDuplicatePropertyName && (
@@ -578,14 +565,10 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                   <button
                     type="button"
                     onClick={() => void handleAddProperty()}
-                    disabled={
-                      isAddingRowProperty ||
-                      !newPropertyName.trim() ||
-                      Boolean(hasDuplicatePropertyName)
-                    }
+                    disabled={!newPropertyName.trim() || Boolean(hasDuplicatePropertyName)}
                     className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isAddingRowProperty ? "Adding..." : "Add Property"}
+                    Add Property
                   </button>
                 </div>
               </div>
@@ -600,7 +583,6 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
       collections,
       handleAddProperty,
       hasDuplicatePropertyName,
-      isAddingRowProperty,
       newPropertyName,
       newPropertyOptions,
       newPropertyRelationTargetCollectionId,
@@ -709,26 +691,18 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                 action: {
                   label: "Undo",
                   onClick: async () => {
-                    const restoreResults = await Promise.allSettled(
-                      deletedDocumentIds.map((documentId) =>
-                        z.mutate(
-                          mutators.document.restore({
-                            documentId,
-                            organizationId,
-                          }),
-                        ),
-                      ),
-                    );
-
-                    const didRestoreAnyRow = restoreResults.some(
-                      (result) => result.status === "fulfilled",
-                    );
-                    if (!didRestoreAnyRow) {
+                    try {
+                      await z.mutate(
+                        mutators.document.bulkRestore({
+                          documentIds: deletedDocumentIds,
+                          organizationId,
+                        }),
+                      );
+                      toast.success("Delete undone");
+                    } catch (error) {
+                      console.error(error);
                       toast.error("Failed to restore deleted rows");
-                      return;
                     }
-
-                    toast.success("Delete undone");
                   },
                 },
               },
@@ -742,146 +716,169 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     });
   }, [organizationId, selectedDocumentIds, z]);
 
-  const selectedRowCount = selectedDocumentIds.length;
+  const bulkActions = useMemo(
+    () => [
+      {
+        id: "delete-selected",
+        label: "Delete selected",
+        intent: "danger" as const,
+        onAction: handleDeleteSelectedRows,
+      },
+    ],
+    [handleDeleteSelectedRows],
+  );
+
+  useGlobalBulkActions({
+    selectionCount: selectedDocumentIds.length,
+    selectionLabelSingular: "row",
+    selectionLabelPlural: "rows",
+    actions: bulkActions,
+  });
 
   return (
-    <div className={`w-full ${selectedRowCount > 0 ? "pb-24" : ""}`}>
+    <div className="w-full">
       <div className="overflow-x-auto">
-        <table
-          aria-label="Collection records"
-          role="grid"
-          {...listeners}
-          className="max-h-none border-collapse"
-          style={{ width: table.getTotalSize() }}
-        >
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    style={{ width: header.getSize() }}
-                    className="relative border border-gray-200 bg-white px-3 py-2 text-left align-middle"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getCanResize() ? (
-                      <div
-                        role="separator"
-                        aria-orientation="vertical"
-                        aria-label={`Resize ${String(header.column.columnDef.header ?? header.id)} column`}
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-blue-300/60 ${
-                          header.column.getIsResizing() ? "bg-blue-500/70" : ""
-                        }`}
-                      />
-                    ) : null}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="border border-gray-200">
-                  <div className="flex flex-col items-center justify-center py-6 text-gray-500">
-                    <p>No rows yet</p>
-                    <p className="text-sm text-gray-400">
-                      Use "+ New" to add a document to this collection.
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className={row.getIsSelected() ? "bg-gray-50" : ""}>
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      ref={(node) => setCellRef(row.id, cell.column.id, node)}
-                      style={{ width: cell.column.getSize() }}
-                      tabIndex={0}
-                      onDoubleClick={() => {
-                        const kind = cell.column.columnDef.meta?.kind;
-                        if (kind !== "title" && kind !== "property") {
-                          return;
-                        }
-                        table.options.meta?.startEditing(row.id, cell.column.id);
-                      }}
-                      onKeyDown={(event) => {
-                        const kind = cell.column.columnDef.meta?.kind;
-                        if (kind !== "title" && kind !== "property") {
-                          return;
-                        }
-
-                        const activeEdit = table.options.meta?.editingCell;
-                        if (
-                          activeEdit?.rowId === row.id &&
-                          activeEdit.columnId === cell.column.id
-                        ) {
-                          return;
-                        }
-
-                        const fieldDef = cell.column.columnDef.meta?.fieldDef;
-                        const canTypeEdit = kind === "title" || isFreeformField(fieldDef);
-                        if (isPrintableKey(event) && canTypeEdit) {
-                          event.preventDefault();
-                          table.options.meta?.startEditing(row.id, cell.column.id, event.key);
-                          return;
-                        }
-
-                        if ((event.key === "Backspace" || event.key === "Delete") && canTypeEdit) {
-                          event.preventDefault();
-                          table.options.meta?.startEditing(row.id, cell.column.id, "");
-                          return;
-                        }
-
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          table.options.meta?.startEditing(row.id, cell.column.id);
-                        }
-                      }}
-                      className={`overflow-hidden border border-gray-200 p-0 align-middle ${focusVisibleStyles}`}
+        <div className="overflow-hidden rounded-xl border border-gray-200">
+          <table
+            aria-label="Collection records"
+            role="grid"
+            {...listeners}
+            className="max-h-none border-separate border-spacing-0"
+            style={{
+              width: table.getTotalSize(),
+            }}
+          >
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      style={{ width: header.getSize() }}
+                      className={`relative border-b border-r border-gray-200 bg-white px-3 py-1.5 text-left align-middle last:border-r-0 ${
+                        header.column.id === "select" ? "text-center" : ""
+                      }`}
                     >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanResize() ? (
+                        <div
+                          role="separator"
+                          aria-orientation="vertical"
+                          aria-label={`Resize ${String(header.column.columnDef.header ?? header.id)} column`}
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-blue-300/60 ${
+                            header.column.getIsResizing() ? "bg-blue-500/70" : ""
+                          }`}
+                        />
+                      ) : null}
+                    </th>
                   ))}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} className="border-0">
+                    <div className="flex flex-col items-center justify-center py-6 text-gray-500">
+                      <p>No rows yet</p>
+                      <p className="text-sm text-gray-400">
+                        Use "+ New" to add a document to this collection.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map((row, rowIndex, rows) => (
+                  <tr key={row.id} className={row.getIsSelected() ? "bg-gray-50" : ""}>
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        ref={(node) => setCellRef(row.id, cell.column.id, node)}
+                        style={{ width: cell.column.getSize() }}
+                        tabIndex={0}
+                        onClick={(event) => {
+                          const kind = cell.column.columnDef.meta?.kind;
+                          if (kind !== "title" && kind !== "property") {
+                            return;
+                          }
+
+                          if (isInteractiveTarget(event.target)) {
+                            return;
+                          }
+
+                          const activeEdit = table.options.meta?.editingCell;
+                          if (
+                            activeEdit?.rowId === row.id &&
+                            activeEdit.columnId === cell.column.id
+                          ) {
+                            return;
+                          }
+
+                          table.options.meta?.startEditing(row.id, cell.column.id);
+                        }}
+                        onKeyDown={(event) => {
+                          const kind = cell.column.columnDef.meta?.kind;
+                          if (kind !== "title" && kind !== "property") {
+                            return;
+                          }
+
+                          const activeEdit = table.options.meta?.editingCell;
+                          if (
+                            activeEdit?.rowId === row.id &&
+                            activeEdit.columnId === cell.column.id
+                          ) {
+                            return;
+                          }
+
+                          const fieldDef = cell.column.columnDef.meta?.fieldDef;
+                          const canTypeEdit = kind === "title" || isFreeformField(fieldDef);
+                          if (isPrintableKey(event) && canTypeEdit) {
+                            event.preventDefault();
+                            table.options.meta?.startEditing(row.id, cell.column.id, event.key);
+                            return;
+                          }
+
+                          if (
+                            (event.key === "Backspace" || event.key === "Delete") &&
+                            canTypeEdit
+                          ) {
+                            event.preventDefault();
+                            table.options.meta?.startEditing(row.id, cell.column.id, "");
+                            return;
+                          }
+
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            table.options.meta?.startEditing(row.id, cell.column.id);
+                          }
+                        }}
+                        className={`overflow-hidden border-b border-r border-gray-200 p-0 align-middle last:border-r-0 ${
+                          rowIndex === rows.length - 1 ? "border-b-0" : ""
+                        } ${focusVisibleStyles}`}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
         <div className="px-3 py-1">
           <button
             type="button"
-            onClick={() => void handleCreateRow()}
-            disabled={isCreatingRow}
+            onClick={handleCreateRow}
             className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isCreatingRow ? "Creating row..." : "+ New"}
+            New
           </button>
-        </div>
-      </div>
-
-      <div
-        className={`fixed dark left-1/2 -translate-x-1/2 bottom-4 z-50 bg-black/95 border border-white/20 rounded-[10px] shadow-popover p-1 flex items-center gap-1 transition-all duration-200 ${
-          selectedRowCount > 0
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none translate-y-full opacity-0"
-        }`}
-      >
-        <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-3">
-          <p className="text-xs font-medium text-white ml-2">
-            {selectedRowCount} {selectedRowCount === 1 ? "row" : "rows"} selected
-          </p>
-          <Button intent="ghost" size="sm" onPress={handleDeleteSelectedRows}>
-            Delete selected
-          </Button>
         </div>
       </div>
     </div>
@@ -934,7 +931,6 @@ const PropertyHeader = memo(function PropertyHeader({
           type="button"
           aria-label={`Open ${label} column menu`}
           className="inline-flex shrink-0 items-center rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-          onPress={(event) => event.stopPropagation()}
         >
           <MoreHorizontalRegular className="size-4" />
         </RACButton>
@@ -946,11 +942,7 @@ const PropertyHeader = memo(function PropertyHeader({
   );
 });
 
-const EditableGridCell = memo(function EditableGridCell({
-  context,
-}: {
-  context: CellContext<DocumentItem, unknown>;
-}) {
+function EditableGridCell({ context }: { context: CellContext<DocumentItem, unknown> }) {
   const { row, column, table } = context;
   const meta = table.options.meta;
   const editingCell = meta?.editingCell ?? null;
@@ -1023,7 +1015,7 @@ const EditableGridCell = memo(function EditableGridCell({
               stopEditing();
             }
           }}
-          className="h-10 w-full rounded-none border-0 bg-transparent px-3 py-1.5 text-sm"
+          className={`h-9 w-full rounded-none border-0 bg-transparent px-3 py-1 text-sm ${focusVisibleStyles}`}
         >
           <option value="">-</option>
           {availableRelationOptions.map((option) => (
@@ -1053,7 +1045,7 @@ const EditableGridCell = memo(function EditableGridCell({
               stopEditing();
             }
           }}
-          className="h-10 w-full rounded-none border-0 bg-transparent px-3 py-1.5 text-sm"
+          className={`h-9 w-full rounded-none border-0 bg-transparent px-3 py-1 text-sm ${focusVisibleStyles}`}
         >
           <option value="">-</option>
           {fieldDef.options.map((option) => (
@@ -1066,7 +1058,7 @@ const EditableGridCell = memo(function EditableGridCell({
     }
 
     return (
-      <input
+      <Input
         autoFocus
         type={
           fieldDef?.type === "date"
@@ -1088,7 +1080,7 @@ const EditableGridCell = memo(function EditableGridCell({
             stopEditing();
           }
         }}
-        className="h-10 w-full rounded-none border-0 bg-transparent px-3 py-1.5 text-sm"
+        className={`h-9 w-full rounded-none border-0 bg-transparent px-3 py-1 text-sm ${focusVisibleStyles}`}
       />
     );
   }
@@ -1112,32 +1104,25 @@ const EditableGridCell = memo(function EditableGridCell({
     );
 
   return (
-    <div className="group flex min-h-10 items-center gap-2 px-3 py-1.5">
-      <div className="min-w-0 flex flex-1 items-center text-left text-sm">
-        <span className="block w-full truncate whitespace-nowrap">{content}</span>
-      </div>
+    <div className="group flex min-h-9 items-center gap-2 px-3 py-1">
       {kind === "title" ? (
         <Link
           to="/w/$organizationSlug/$id"
           params={{ organizationSlug: meta?.organizationSlug ?? "", id: row.original.id }}
           onClick={(event) => event.stopPropagation()}
           tabIndex={-1}
-          className="opacity-0 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100"
+          className="shrink-0 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           title="Open document"
         >
-          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-            />
-          </svg>
+          <DocumentThumbnailIcon className="shrink-0" />
         </Link>
       ) : null}
+      <div className="min-w-0 flex flex-1 items-center overflow-hidden text-left text-sm">
+        <span className="block w-full truncate whitespace-nowrap">{content}</span>
+      </div>
     </div>
   );
-});
+}
 
 function getEditableValue(
   fieldDef: PropertyDefinition | undefined,
@@ -1160,6 +1145,14 @@ function isFreeformField(fieldDef: PropertyDefinition | undefined): boolean {
     fieldDef.type === "date" ||
     fieldDef.type === "boolean"
   );
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return Boolean(target.closest("button, a, input, select, textarea, [role='button']"));
 }
 
 function isPrintableKey(event: React.KeyboardEvent): boolean {

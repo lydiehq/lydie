@@ -28,6 +28,9 @@ export const DocumentComponent = Node.create<DocumentComponentOptions>({
       schemas: {
         default: {},
       },
+      types: {
+        default: {},
+      },
     };
   },
 
@@ -39,6 +42,7 @@ export const DocumentComponent = Node.create<DocumentComponentOptions>({
           name: (node as HTMLElement).getAttribute("data-name"),
           properties: JSON.parse((node as HTMLElement).getAttribute("data-properties") || "{}"),
           schemas: JSON.parse((node as HTMLElement).getAttribute("data-schemas") || "{}"),
+          types: JSON.parse((node as HTMLElement).getAttribute("data-types") || "{}"),
         }),
       },
     ];
@@ -51,11 +55,12 @@ export const DocumentComponent = Node.create<DocumentComponentOptions>({
         "data-name": node.attrs.name,
         "data-properties": JSON.stringify(node.attrs.properties),
         "data-schemas": JSON.stringify(node.attrs.schemas),
+        "data-types": JSON.stringify(node.attrs.types),
       },
     ];
   },
 
   addNodeView() {
-    return this.options.addNodeView?.();
+    return this.options.addNodeView?.() ?? null;
   },
 });

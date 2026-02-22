@@ -19,7 +19,9 @@ test.describe("collections", () => {
       await page.getByRole("button", { name: "New Collection" }).click();
 
       await expect(page).toHaveURL(/\/collections\//);
-      await expect(page.getByRole("textbox", { name: "Collection name" })).toHaveValue("Untitled Collection");
+      await expect(page.getByRole("textbox", { name: "Collection name" })).toHaveValue(
+        "Untitled Collection",
+      );
     });
 
     test("should display existing collections in sidebar", async ({ page, organization }) => {
@@ -50,15 +52,18 @@ test.describe("collections", () => {
         await page.getByText("Navigation Test Collection").click();
 
         await expect(page).toHaveURL(`/w/${organization.slug}/collections/${collection.id}`);
-        await expect(
-          page.getByRole("textbox", { name: "Collection name" }),
-        ).toHaveValue("Navigation Test Collection");
+        await expect(page.getByRole("textbox", { name: "Collection name" })).toHaveValue(
+          "Navigation Test Collection",
+        );
       } finally {
         await deleteTestCollection(collection.id);
       }
     });
 
-    test("should not render collection entries as nested sidebar tree", async ({ page, organization }) => {
+    test("should not render collection entries as nested sidebar tree", async ({
+      page,
+      organization,
+    }) => {
       const collection = await createTestCollection(organization.id, {
         name: "Flat Sidebar Collection",
         handle: "flat-sidebar-collection",
@@ -127,8 +132,12 @@ test.describe("collections", () => {
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
-        await expect(page.getByRole("textbox", { name: "Collection name" })).toHaveValue("Details Test Collection");
-        await expect(page.getByRole("textbox", { name: "Collection handle" })).toHaveValue("details-test");
+        await expect(page.getByRole("textbox", { name: "Collection name" })).toHaveValue(
+          "Details Test Collection",
+        );
+        await expect(page.getByRole("textbox", { name: "Collection handle" })).toHaveValue(
+          "details-test",
+        );
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -216,7 +225,9 @@ test.describe("collections", () => {
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
-        const propertyManager = page.getByRole("button", { name: "Add property", exact: true }).first();
+        const propertyManager = page
+          .getByRole("button", { name: "Add property", exact: true })
+          .first();
         await propertyManager.click();
         await page.getByPlaceholder("e.g., status, priority, dueDate").fill("Category");
         await page.locator("#collection-property-type").selectOption("text");
@@ -238,7 +249,10 @@ test.describe("collections", () => {
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
-        const propertyBadge = page.locator("div").filter({ hasText: /^tempField.*\(text\)$/ }).first();
+        const propertyBadge = page
+          .locator("div")
+          .filter({ hasText: /^tempField.*\(text\)$/ })
+          .first();
         await expect(propertyBadge).toBeVisible();
 
         await propertyBadge.getByRole("button", { name: "Remove property" }).click();
@@ -660,7 +674,10 @@ test.describe("collections", () => {
       }
     });
 
-    test("should fetch document by route from slug and parent relation", async ({ page, organization }) => {
+    test("should fetch document by route from slug and parent relation", async ({
+      page,
+      organization,
+    }) => {
       const collection = await createTestCollection(organization.id, {
         name: "Relation Route API Collection",
         handle: "relation-route-api",

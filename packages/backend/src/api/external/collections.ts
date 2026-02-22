@@ -239,7 +239,9 @@ async function resolveCollectionIdByHandle(
   const collectionResult = await db
     .select({ id: collectionsTable.id })
     .from(collectionsTable)
-    .where(and(eq(collectionsTable.organizationId, organizationId), eq(collectionsTable.handle, handle)))
+    .where(
+      and(eq(collectionsTable.organizationId, organizationId), eq(collectionsTable.handle, handle)),
+    )
     .limit(1);
 
   return collectionResult[0]?.id ?? null;
@@ -407,7 +409,11 @@ export const CollectionsApi = new Hono()
       throw new HTTPException(404, { message: "Collection not found" });
     }
 
-    const document = await findCollectionDocumentByIdentifier(organizationId, collection, identifier);
+    const document = await findCollectionDocumentByIdentifier(
+      organizationId,
+      collection,
+      identifier,
+    );
 
     if (!document) {
       throw new HTTPException(404, { message: "Document not found" });

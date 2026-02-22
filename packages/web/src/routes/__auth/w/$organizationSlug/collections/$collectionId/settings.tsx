@@ -16,7 +16,9 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
 
-export const Route = createFileRoute("/__auth/w/$organizationSlug/collections/$collectionId/settings")({
+export const Route = createFileRoute(
+  "/__auth/w/$organizationSlug/collections/$collectionId/settings",
+)({
   component: RouteComponent,
   ssr: false,
 });
@@ -146,7 +148,11 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
           <Heading level={1}>Collection Settings</Heading>
           <p className="text-sm text-gray-500 mt-1">{collection.name}</p>
         </div>
-        <Button intent="ghost" size="sm" href={`/w/${organization.slug}/collections/${collection.id}`}>
+        <Button
+          intent="ghost"
+          size="sm"
+          href={`/w/${organization.slug}/collections/${collection.id}`}
+        >
           Back to collection
         </Button>
       </div>
@@ -167,9 +173,7 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
           <div className="flex-1 max-w-md">
             <handleForm.AppField
               name="handle"
-              children={(field) => (
-                <field.TextField label="Handle" />
-              )}
+              children={(field) => <field.TextField label="Handle" />}
             />
           </div>
           <handleForm.Subscribe
@@ -194,10 +198,7 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
       <Separator />
 
       <div className="flex flex-col gap-y-4">
-        <SectionHeader
-          heading="Danger Zone"
-          description="Irreversible and destructive actions."
-        />
+        <SectionHeader heading="Danger Zone" description="Irreversible and destructive actions." />
         <Button
           intent="ghost"
           size="sm"

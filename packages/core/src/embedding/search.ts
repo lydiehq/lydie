@@ -222,9 +222,7 @@ export async function findRelatedDocuments(
           eq(documentsTable.published, true),
           sql`${documentsTable.deletedAt} IS NULL`,
           sql`${documentsTable.id} != ${documentId}`,
-          ...(options?.collectionId
-            ? [eq(documentsTable.collectionId, options.collectionId)]
-            : []),
+          ...(options?.collectionId ? [eq(documentsTable.collectionId, options.collectionId)] : []),
           sql`(${documentTitleEmbeddingsTable.embedding} <=> ${JSON.stringify(
             queryEmbedding,
           )}::vector) < 0.8`,
@@ -287,9 +285,7 @@ export async function findRelatedDocumentsByContent(
           eq(documentsTable.published, true),
           sql`${documentsTable.deletedAt} IS NULL`,
           sql`${documentsTable.id} != ${documentId}`,
-          ...(options?.collectionId
-            ? [eq(documentsTable.collectionId, options.collectionId)]
-            : []),
+          ...(options?.collectionId ? [eq(documentsTable.collectionId, options.collectionId)] : []),
           sql`(${documentEmbeddingsTable.embedding} <=> ${JSON.stringify(queryEmbedding)}::vector) < 0.6`,
         ),
       )

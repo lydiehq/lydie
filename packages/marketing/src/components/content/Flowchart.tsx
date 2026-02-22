@@ -54,9 +54,7 @@ export function Flowchart({ title, nodes, edges }: FlowchartProps) {
     childrenByParent.set(edge.from, children);
   }
 
-  const roots = nodes
-    .filter((node) => (incoming.get(node.id) || 0) === 0)
-    .map((node) => node.id);
+  const roots = nodes.filter((node) => (incoming.get(node.id) || 0) === 0).map((node) => node.id);
 
   if (roots.length === 0) {
     roots.push(nodes[0].id);

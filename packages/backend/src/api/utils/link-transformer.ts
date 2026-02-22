@@ -17,6 +17,62 @@ interface LinkMetadata {
   exists?: boolean;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+function isRichTextNode(value: unknown): value is ContentNode | TextNode {
+  return isRecord(value) && value.type === "doc";
+}
+
+function walkNestedValue(
+  value: unknown,
+  visit: (node: ContentNode | TextNode) => void,
+): void {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      walkNestedValue(item, visit);
+    }
+    return;
+  }
+
+  if (!isRecord(value)) {
+    return;
+  }
+
+  if (isRichTextNode(value)) {
+    visit(value);
+    return;
+  }
+
+  for (const nestedValue of Object.values(value)) {
+    walkNestedValue(nestedValue, visit);
+  }
+}
+
+function transformNestedValue(
+  value: unknown,
+  transform: (node: ContentNode | TextNode) => ContentNode | TextNode,
+): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => transformNestedValue(item, transform));
+  }
+
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  if (isRichTextNode(value)) {
+    return transform(value);
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, nestedValue] of Object.entries(value)) {
+    result[key] = transformNestedValue(nestedValue, transform);
+  }
+  return result;
+}
+
 // Extract document IDs from new format internal links
 export function extractInternalLinks(content: ContentNode | TextNode): Set<string> {
   const internalLinks = new Set<string>();
@@ -35,6 +91,10 @@ export function extractInternalLinks(content: ContentNode | TextNode): Set<strin
       for (const child of node.content) {
         traverse(child);
       }
+    }
+
+    if ("attrs" in node && isRecord(node.attrs) && isRecord(node.attrs.properties)) {
+      walkNestedValue(node.attrs.properties, traverse);
     }
   }
 
@@ -60,10 +120,7 @@ export async function fetchDocumentMetadata(
       })
       .from(documentsTable)
       .leftJoin(collectionsTable, eq(documentsTable.collectionId, collectionsTable.id))
-      .leftJoin(
-        collectionFieldsTable,
-        eq(collectionFieldsTable.documentId, documentsTable.id),
-      )
+      .leftJoin(collectionFieldsTable, eq(collectionFieldsTable.documentId, documentsTable.id))
       .where(inArray(documentsTable.id, documentIds));
 
     const metadataMap = new Map<string, LinkMetadata>();
@@ -140,6 +197,13 @@ function transformContentLinks(
 
     if ("content" in node && Array.isArray(node.content)) {
       node.content = node.content.map((child) => transform(child));
+    }
+
+    if ("attrs" in node && isRecord(node.attrs) && isRecord(node.attrs.properties)) {
+      node.attrs.properties = transformNestedValue(node.attrs.properties, transform) as Record<
+        string,
+        unknown
+      >;
     }
 
     return node;

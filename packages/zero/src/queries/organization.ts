@@ -71,7 +71,11 @@ export const organizationQueries = {
           .where("id", organizationId)
           .one()
           .related("documents", (q) =>
-            q.where("deleted_at", "IS", null).orderBy("created_at", "desc").limit(20),
+            q
+              .where("deleted_at", "IS", null)
+              .orderBy("created_at", "desc")
+              .limit(20)
+              .related("collection"),
           );
       }
 
@@ -85,7 +89,8 @@ export const organizationQueries = {
             .where("deleted_at", "IS", null)
             .where("title", "ILIKE", searchPattern)
             .orderBy("updated_at", "desc")
-            .limit(10),
+            .limit(10)
+            .related("collection"),
         );
     },
   ),

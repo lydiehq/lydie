@@ -25,6 +25,11 @@ export default defineConfig({
     },
   },
   trailingSlash: "never",
+  redirects: {
+    "/blog/knowledge-bases": "/knowledge-bases",
+    "/blog/what-is-an-internal-knowledge-base": "/knowledge-bases/internal",
+    "/blog/what-is-an-external-knowledge-base": "/knowledge-bases/external",
+  },
   image: {
     service: {
       entrypoint: "astro/assets/services/sharp",

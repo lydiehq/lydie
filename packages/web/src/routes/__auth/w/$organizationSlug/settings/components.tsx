@@ -23,7 +23,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/settings/compo
 
 type PropertyField = {
   key: string;
-  type: "string" | "number" | "boolean" | "array";
+  type: "string" | "number" | "boolean" | "array" | "rich_text";
   fields?: ArrayField[];
 };
 
@@ -377,6 +377,7 @@ function PropertyRow({ form, field, index }: { form: any; field: any; index: num
                 aria-label="Property type"
                 items={[
                   { id: "string", label: "Text" },
+                  { id: "rich_text", label: "Rich text" },
                   { id: "number", label: "Number" },
                   { id: "boolean", label: "Boolean" },
                   { id: "array", label: "List of Objects" },

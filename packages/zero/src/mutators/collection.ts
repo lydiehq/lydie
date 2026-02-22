@@ -1,5 +1,5 @@
-import { createId } from "@lydie/core/id";
 import { resolveRelationTargetCollectionId } from "@lydie/core/collection";
+import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
 import { defineMutator } from "@rocicorp/zero";
 import type { ReadonlyJSONValue } from "@rocicorp/zero";
@@ -152,7 +152,7 @@ async function validateRelationFieldValues(
       collectionId,
     );
 
-    const targetDocument = await maybeOne(
+    const targetDocument = (await maybeOne(
       tx.run(
         zql.documents
           .where("id", rawValue)
@@ -160,7 +160,7 @@ async function validateRelationFieldValues(
           .where("deleted_at", "IS", null)
           .one(),
       ),
-    ) as { collection_id?: string | null } | null;
+    )) as { collection_id?: string | null } | null;
 
     if (!targetDocument) {
       throw new Error(`Referenced document for "${propertyName}" was not found`);

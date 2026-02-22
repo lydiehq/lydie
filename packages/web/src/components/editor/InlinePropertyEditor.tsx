@@ -75,9 +75,9 @@ export function InlinePropertyEditor({
 
   const relationValueLabel =
     fieldDef.type === "relation" && typeof value === "string"
-      ? ((relationDocuments ?? []) as Array<{ id: string; title: string }>).find(
+      ? (((relationDocuments ?? []) as Array<{ id: string; title: string }>).find(
           (document) => document.id === value,
-        )?.title ?? "Missing record"
+        )?.title ?? "Missing record")
       : null;
 
   if (!isEditing) {
@@ -92,11 +92,15 @@ export function InlinePropertyEditor({
             {fieldDef.name}
           </span>
           <span className="flex-1 text-sm text-gray-600 min-w-0">
-            {displayValue !== null
-              ? fieldDef.type === "relation"
-                ? relationValueLabel
-                : displayValue
-              : <span className="text-gray-400 italic">Empty</span>}
+            {displayValue !== null ? (
+              fieldDef.type === "relation" ? (
+                relationValueLabel
+              ) : (
+                displayValue
+              )
+            ) : (
+              <span className="text-gray-400 italic">Empty</span>
+            )}
           </span>
         </div>
       </button>
