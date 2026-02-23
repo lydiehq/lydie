@@ -13,13 +13,14 @@ import * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
-import { CollectionBlockComponent } from "@/components/editor/CollectionBlockComponent";
+import { CollectionViewBlockComponent } from "@/components/editor/CollectionViewBlockComponent";
 import { OnboardingAssistantTaskView } from "@/components/editor/onboarding/OnboardingAssistantTaskView";
 import { OnboardingTextPracticeView } from "@/components/editor/onboarding/OnboardingTextPracticeView";
 import { createSlashMenuSuggestion, getSlashCommandAction } from "@/components/editor/SlashMenu";
 import { PlaceholderComponent } from "@/components/PlaceholderComponent";
 import { useAuth } from "@/context/auth.context";
 import { useImageUpload } from "@/hooks/use-image-upload";
+import { useZero } from "@/services/zero";
 
 import { documentConnectionManager } from "./document-connection-manager";
 
@@ -57,6 +58,7 @@ export function useDocumentEditor({
 }: UseDocumentEditorProps): DocumentEditorHookResult {
   const { user } = useAuth();
   const { uploadImage } = useImageUpload();
+  const z = useZero();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track if component is mounted
@@ -85,6 +87,8 @@ export function useDocumentEditor({
   }, [user]);
 
   const slashMenuSuggestion = createSlashMenuSuggestion(
+    doc.organization_id,
+    z,
     fileInputRef as React.RefObject<HTMLInputElement | null>,
   );
 
@@ -99,12 +103,12 @@ export function useDocumentEditor({
         codeBlock: {
           addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
         },
-        collectionBlock: {
+        collectionViewBlock: {
           addNodeView: () => {
             const orgId = doc.organization_id;
             const orgSlug = organizationSlug;
             return ReactNodeViewRenderer((nodeViewProps) =>
-              createElement(CollectionBlockComponent, {
+              createElement(CollectionViewBlockComponent, {
                 ...nodeViewProps,
                 organizationId: orgId,
                 organizationSlug: orgSlug,

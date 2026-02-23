@@ -151,7 +151,7 @@ export async function getCollectionDocuments(
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch collection documents: ${response.statusText}`);
+    return { documents: [] };
   }
 
   return (await response.json()) as {

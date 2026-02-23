@@ -64,6 +64,7 @@ function EditorContainer({ doc, organizationId, organizationSlug }: Props) {
         doc.title || "",
         organizationId,
         organizationSlug,
+        z,
       )
     : null;
 

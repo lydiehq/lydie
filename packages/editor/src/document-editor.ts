@@ -28,7 +28,7 @@ export interface GetDocumentEditorExtensionsOptions {
   heading?: Partial<HeadingOptions>;
   documentComponent?: Partial<E.DocumentComponentOptions>;
   codeBlock?: Partial<E.CodeBlockOptions>;
-  collectionBlock?: Partial<E.CollectionBlockOptions>;
+  collectionViewBlock?: Partial<E.CollectionViewBlockOptions>;
   onboardingTextPractice?: Partial<E.OnboardingTextPracticeOptions>;
   onboardingAssistantTask?: Partial<E.OnboardingAssistantTaskOptions>;
   slashCommands?: Partial<E.SlashCommandsOptions>;
@@ -68,7 +68,7 @@ export function getDocumentEditorExtensions(options?: GetDocumentEditorExtension
     E.KeyboardShortcutExtension,
     E.DocumentComponent.configure(options?.documentComponent),
     E.CodeBlock.configure(options?.codeBlock),
-    E.CollectionBlock.configure(options?.collectionBlock),
+    E.CollectionViewBlock.configure(options?.collectionViewBlock),
     E.OnboardingTextPractice.configure(options?.onboardingTextPractice),
     E.OnboardingAssistantTask.configure(options?.onboardingAssistantTask),
     E.IndentHandlerExtension,

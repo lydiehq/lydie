@@ -1,4 +1,4 @@
-import { ListFilled, TextNumberListLtrFilled } from "@fluentui/react-icons";
+import { LayoutRowTwoRegular, ListFilled, TextNumberListLtrFilled } from "@fluentui/react-icons";
 import {
   BoldIcon,
   CodeIcon,
@@ -10,9 +10,12 @@ import {
   TableIcon,
   TaskListIcon,
 } from "@lydie/ui/components/icons/wysiwyg-icons";
+import { queries } from "@lydie/zero/queries";
+import type { Schema } from "@lydie/zero/schema";
 import type { Editor, Range } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
+import { Zero } from "@rocicorp/zero";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 
@@ -158,13 +161,88 @@ export const SlashMenuList = forwardRef<
 SlashMenuList.displayName = "SlashMenuList";
 
 export function createSlashMenuSuggestion(
-  fileInputRef?: React.RefObject<HTMLInputElement> | React.RefObject<HTMLInputElement | null>,
+  organizationId: string,
+  zero: Zero<Schema>,
+  _fileInputRef?: React.RefObject<HTMLInputElement> | React.RefObject<HTMLInputElement | null>,
 ) {
   return {
-    items: ({ query }: { query: string }) => {
-      return slashMenuItems.filter((item) =>
+    items: async ({ query }: { query: string }) => {
+      const filteredItems = slashMenuItems.filter((item) =>
         item.label.toLowerCase().startsWith(query.toLowerCase()),
       );
+
+      // Query components from Zero and add them to the menu
+      try {
+        const components = await zero.run(
+          queries.components.byOrganization({ organizationId }),
+        );
+
+        if (components.length > 0) {
+          const queryLower = query.toLowerCase();
+          const componentItems: SlashMenuItem[] = components
+            .filter((component) => component.name.toLowerCase().startsWith(queryLower))
+            .map((component) => ({
+              id: `component-${component.id}`,
+              label: component.name,
+              description: "Custom component",
+              icon: LayoutRowTwoRegular,
+              action: {
+                id: `component-${component.id}`,
+                label: component.name,
+                execute: (editor: Editor) => {
+                  // Build schemas for array properties
+                  const properties = component.properties as Record<
+                    string,
+                    { type: string; fields?: Array<{ name: string; type: string }> }
+                  >;
+                  const schemas: Record<string, { fields: Array<{ name: string; type: string }> }> =
+                    {};
+                  const types: Record<string, string> = {};
+                  const initialProperties: Record<string, unknown> = {};
+
+                  for (const [key, config] of Object.entries(properties)) {
+                    types[key] = config.type;
+                    if (config.type === "array" && config.fields) {
+                      schemas[key] = { fields: config.fields };
+                      initialProperties[key] = [];
+                    } else if (config.type === "rich_text") {
+                      initialProperties[key] = {
+                        type: "doc",
+                        content: [{ type: "paragraph", content: [] }],
+                      };
+                    } else if (config.type === "boolean") {
+                      initialProperties[key] = false;
+                    } else if (config.type === "number") {
+                      initialProperties[key] = 0;
+                    } else {
+                      initialProperties[key] = "";
+                    }
+                  }
+
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContent({
+                      type: "documentComponent",
+                      attrs: {
+                        name: component.name,
+                        properties: initialProperties,
+                        schemas,
+                        types,
+                      },
+                    })
+                    .run();
+                },
+              },
+            }));
+
+          return [...filteredItems, ...componentItems];
+        }
+      } catch (error) {
+        console.error("Failed to query components for slash menu:", error);
+      }
+
+      return filteredItems;
     },
 
     render: () => {

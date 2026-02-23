@@ -1,6 +1,13 @@
-import { Add16Filled, DismissFilled, FolderFilled, SearchFilled } from "@fluentui/react-icons";
+import {
+  Add16Filled,
+  DismissFilled,
+  FolderFilled,
+  SearchFilled,
+  Open12Regular,
+} from "@fluentui/react-icons";
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
+import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -11,6 +18,8 @@ import { toast } from "sonner";
 import { CollectionTable } from "@/components/modules/CollectionTable";
 import { useZero } from "@/services/zero";
 
+import { Link } from "../generic/Link";
+
 const collectionByIdQuery = queries.collections.byId as any;
 const collectionsByOrganizationQuery = queries.collections.byOrganization as any;
 
@@ -19,7 +28,7 @@ type Props = NodeViewRendererProps & {
   organizationSlug: string;
 };
 
-export function CollectionBlockComponent(props: Props) {
+export function CollectionViewBlockComponent(props: Props) {
   const { node, editor, getPos, organizationId, organizationSlug } = props;
   const z = useZero();
   const { collectionId, filters } = node.attrs;
@@ -69,7 +78,7 @@ export function CollectionBlockComponent(props: Props) {
   const handleUpdate = (attrs: Partial<typeof node.attrs>) => {
     const pos = getPos();
     if (typeof pos === "number") {
-      editor.chain().focus().updateAttributes("collectionBlock", attrs).run();
+      editor.chain().focus().updateAttributes("collectionViewBlock", attrs).run();
     }
   };
 
@@ -145,10 +154,7 @@ export function CollectionBlockComponent(props: Props) {
   // Empty state - no collection selected
   if (!collectionId) {
     return (
-      <NodeViewWrapper
-        className="doc-block-wide w-full !max-w-none !mx-0 !px-0"
-        data-doc-block-wide
-      >
+      <NodeViewWrapper>
         <div
           data-doc-widget
           style={{
@@ -256,19 +262,27 @@ export function CollectionBlockComponent(props: Props) {
       data-doc-block-wide
       style={{
         marginLeft: "var(--editor-content-line-start, var(--editor-block-padding-x, 1rem))",
-        width:
-          "calc(100% - var(--editor-content-line-start, var(--editor-block-padding-x, 1rem)))",
+        width: "calc(100% - var(--editor-content-line-start, var(--editor-block-padding-x, 1rem)))",
       }}
     >
       <div data-doc-widget className="flex flex-col gap-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <CollectionItemIcon />
             <span className="font-medium text-lg">{collectionName}</span>
             {filters && Object.keys(filters).length > 0 && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
                 Filtered
               </span>
             )}
+            <Link
+              to="/w/$organizationSlug/collections/$collectionId"
+              params={{ collectionId }}
+              from="/w/$organizationSlug"
+              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+            >
+              <Open12Regular className="size-4" />
+            </Link>
           </div>
         </div>
 

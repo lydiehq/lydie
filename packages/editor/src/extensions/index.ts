@@ -36,5 +36,5 @@ export type { VersionHistoryOptions, VersionHistoryStorage } from "./version-his
 export { ProposedChange } from "./proposed-change";
 export type { ProposedChangeOptions, ProposedChangeStorage } from "./proposed-change";
 
-export { CollectionBlock } from "./collection-block";
-export type { CollectionBlockOptions } from "./collection-block";
+export { CollectionViewBlock } from "./collection-view-block";
+export type { CollectionViewBlockOptions } from "./collection-view-block";

@@ -1,6 +1,8 @@
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import { getDocumentEditorExtensions, getTitleExtensions } from "@lydie/editor";
 import { renderCollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
+import type { Schema } from "@lydie/zero/schema";
+import { Zero } from "@rocicorp/zero";
 import type { Editor } from "@tiptap/react";
 import { Editor as TipTapEditor } from "@tiptap/react";
 import { ReactNodeViewRenderer } from "@tiptap/react";
@@ -9,7 +11,7 @@ import type * as Y from "yjs";
 
 import { CodeBlockComponent } from "@/components/CodeBlockComponent";
 import { DocumentComponent as DocumentComponentComponent } from "@/components/DocumentComponent";
-import { CollectionBlockComponent } from "@/components/editor/CollectionBlockComponent";
+import { CollectionViewBlockComponent } from "@/components/editor/CollectionViewBlockComponent";
 import {
   createMentionMenuSuggestion,
   getMentionCommandAction,
@@ -60,6 +62,7 @@ class EditorCache {
     initialTitle: string,
     organizationId: string,
     organizationSlug: string,
+    zero: Zero<Schema>,
   ): CachedEditor {
     const existing = this.editors.get(documentId);
 
@@ -77,6 +80,7 @@ class EditorCache {
       initialTitle,
       organizationId,
       organizationSlug,
+      zero,
     );
     this.editors.set(documentId, cached);
 
@@ -184,6 +188,7 @@ class EditorCache {
     initialTitle: string,
     organizationId: string,
     organizationSlug: string,
+    zero: Zero<Schema>,
   ): CachedEditor {
     // Get connection from manager
     const connection = documentConnectionManager.getConnection(documentId, yjsState);
@@ -244,12 +249,12 @@ class EditorCache {
         codeBlock: {
           addNodeView: () => ReactNodeViewRenderer(CodeBlockComponent),
         },
-        collectionBlock: {
+        collectionViewBlock: {
           addNodeView: () => {
             const orgId = organizationId;
             const orgSlug = organizationSlug;
             return ReactNodeViewRenderer((nodeViewProps) =>
-              createElement(CollectionBlockComponent, {
+              createElement(CollectionViewBlockComponent, {
                 ...nodeViewProps,
                 organizationId: orgId,
                 organizationSlug: orgSlug,
@@ -274,7 +279,7 @@ class EditorCache {
         },
         slashCommands: {
           suggestion: {
-            ...createSlashMenuSuggestion(),
+            ...createSlashMenuSuggestion(organizationId, zero),
             command: ({ editor, range, props }: any) => {
               getSlashCommandAction(props, editor, range)();
             },

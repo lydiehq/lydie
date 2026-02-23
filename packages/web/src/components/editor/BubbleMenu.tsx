@@ -78,10 +78,10 @@ export function BubbleMenu({ editor }: Props) {
         }
 
         if (state.selection instanceof NodeSelection) {
-          return state.selection.node.type.name !== "collectionBlock";
+          return state.selection.node.type.name !== "collectionViewBlock";
         }
 
-        if (currentEditor.isActive("collectionBlock")) {
+        if (currentEditor.isActive("collectionViewBlock")) {
           return false;
         }
 
@@ -91,7 +91,7 @@ export function BubbleMenu({ editor }: Props) {
 
         const activeElement = document.activeElement;
         if (activeElement instanceof HTMLElement) {
-          if (activeElement.closest('[data-type="collection-block"]')) {
+          if (activeElement.closest('[data-type="collection-view-block"]')) {
             return false;
           }
         }

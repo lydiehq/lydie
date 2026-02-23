@@ -156,7 +156,7 @@ function FieldsPanel({ doc, collectionSchema }: Props) {
   );
 }
 
-export function EditorSidebarPanels({ doc, collectionSchema }: Props) {
+export function DocumentDetails({ doc, collectionSchema }: Props) {
   const organizationId = doc.organization_id;
   const [selectedKey, setSelectedKey] = useState<string>("fields");
 

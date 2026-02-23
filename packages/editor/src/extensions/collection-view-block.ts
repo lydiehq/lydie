@@ -1,12 +1,12 @@
 import type { NodeViewRenderer } from "@tiptap/core";
 import { Node } from "@tiptap/core";
 
-export interface CollectionBlockOptions {
+export interface CollectionViewBlockOptions {
   addNodeView?: () => NodeViewRenderer;
 }
 
-export const CollectionBlock = Node.create<CollectionBlockOptions>({
-  name: "collectionBlock",
+export const CollectionViewBlock = Node.create<CollectionViewBlockOptions>({
+  name: "collectionViewBlock",
   group: "block",
   atom: true,
 
@@ -39,13 +39,13 @@ export const CollectionBlock = Node.create<CollectionBlockOptions>({
   parseHTML() {
     return [
       {
-        tag: 'div[data-type="collection-block"]',
+        tag: 'div[data-type="collection-view-block"]',
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["div", { "data-type": "collection-block", ...HTMLAttributes }];
+    return ["div", { "data-type": "collection-view-block", ...HTMLAttributes }];
   },
 
   addNodeView() {

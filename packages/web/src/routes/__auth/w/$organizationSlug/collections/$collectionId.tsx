@@ -159,7 +159,14 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
         )}
       </div>
 
-      <div className="px-6 py-4 space-y-4">
+      <div className="px-6 py-4 space-y-2">
+        <Button
+          intent="secondary"
+          size="sm"
+          onPress={handleCreateRow}
+        >
+          + New
+        </Button>
         <div className="rounded-xl border border-gray-200 bg-white">
           <div className="overflow-x-auto">
             <CollectionTable
@@ -169,15 +176,6 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
               schema={schema}
               showCreateRowButton={false}
             />
-          </div>
-          <div className="px-3 py-1">
-            <button
-              type="button"
-              onClick={handleCreateRow}
-              className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600"
-            >
-              New
-            </button>
           </div>
         </div>
       </div>

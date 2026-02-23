@@ -28,10 +28,6 @@ declare module "sst" {
       "sender": string
       "type": "sst.aws.Email"
     }
-    "EventsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
     "GitHubAppSlug": {
       "type": "sst.sst.Secret"
       "value": string

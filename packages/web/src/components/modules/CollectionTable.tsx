@@ -751,7 +751,7 @@ export function CollectionTable({
                             table.options.meta?.startEditing(row.id, cell.column.id);
                           }
                         }}
-                        className={`overflow-hidden border-b border-r border-gray-200 p-0 align-middle last:border-r-0 ${
+                        className={`overflow-hidden border-b border-r border-gray-200 p-0 align-middle last:border-r-0 transition-colors hover:bg-gray-50 ${
                           rowIndex === rows.length - 1 ? "border-b-0" : ""
                         } ${focusVisibleStyles}`}
                       >

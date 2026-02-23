@@ -159,7 +159,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
           const key = [...keys][0];
           if (key) handleSelectionChange(key);
         }}
-        className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide"
+        className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide gap-0.5"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -173,9 +173,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
             textValue={tab.title || "Untitled"}
             className={({ isSelected }) =>
               `peer group relative flex w-[190px] min-w-[80px] shrink-0 items-center gap-1.5 px-2 h-[28px] py-1.5 rounded-lg select-none transition-colors duration-150 ${
-                isSelected
-                  ? "bg-black/5"
-                  : "text-gray-600 hover:bg-black/3 before:absolute before:inset-y-1 before:left-0 before:w-px before:bg-black/5 hover:before:opacity-0 first:before:opacity-0 peer-[:hover+&]:before:opacity-0"
+                isSelected ? "bg-black/5" : "text-gray-600 hover:bg-black/3"
               } ${tab.mode === "preview" ? "italic" : ""}`
             }
             onDoubleClick={() => handleDoubleClick(tab.documentId, tab.mode)}
@@ -195,7 +193,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                   {tab.title || "Untitled"}
                 </span>
                 {tab.isDirty && <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
-                <button
+                <RACButton
                   type="button"
                   onPointerDown={preventTabActivationFromClose}
                   onMouseDown={preventTabActivationFromClose}
@@ -204,7 +202,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
                   className="absolute right-1 opacity-0 group-hover:opacity-100 group-selected:opacity-100 p-1 text-black hover:bg-black/5 hover:text-black/60 rounded-md flex items-center justify-center pressed:bg-black/8 transition-opacity"
                 >
                   <Dismiss12Filled className={sidebarItemIconStyles({ className: "size-2.5" })} />
-                </button>
+                </RACButton>
               </>
             )}
           </GridListItem>

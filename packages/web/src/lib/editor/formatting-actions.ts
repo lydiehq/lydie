@@ -148,7 +148,7 @@ export const insertActions: FormattingAction[] = [
         .focus()
         .insertContentAt(insertAt, [
           {
-            type: "collectionBlock",
+            type: "collectionViewBlock",
             attrs: {
               collectionId: null,
               filters: {},
