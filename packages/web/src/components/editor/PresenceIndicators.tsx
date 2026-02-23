@@ -2,6 +2,31 @@ import { PeopleRegular } from "@fluentui/react-icons";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import { useEffect, useState } from "react";
 
+type ConnectionStatus = "connected" | "connecting" | "disconnected";
+
+type ProviderWithWebsocket = HocuspocusProvider & {
+  configuration?: {
+    websocketProvider?: {
+      status?: string;
+    };
+  };
+};
+
+function normalizeConnectionStatus(status: string | undefined): ConnectionStatus {
+  if (status === "connected" || status === "connecting" || status === "disconnected") {
+    return status;
+  }
+
+  return "disconnected";
+}
+
+function getConnectionStatusFromProvider(provider: HocuspocusProvider | null): ConnectionStatus {
+  const websocketStatus = (provider as ProviderWithWebsocket | null)?.configuration?.websocketProvider
+    ?.status;
+
+  return normalizeConnectionStatus(websocketStatus);
+}
+
 type AwarenessUser = {
   clientID: number;
   user: {
@@ -16,12 +41,19 @@ type Props = {
 
 export function PresenceIndicators({ provider }: Props) {
   const [users, setUsers] = useState<AwarenessUser[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
+    getConnectionStatusFromProvider(provider),
+  );
 
   useEffect(() => {
     if (!provider) return;
 
     const awareness = provider.awareness;
+    if (!awareness) {
+      setUsers([]);
+      setConnectionStatus(getConnectionStatusFromProvider(provider));
+      return;
+    }
 
     const updateUsers = () => {
       const states = Array.from(awareness.getStates().entries());
@@ -39,12 +71,12 @@ export function PresenceIndicators({ provider }: Props) {
     };
 
     const handleStatusChange = ({ status }: { status: string }) => {
-      setIsConnected(status === "connected");
+      setConnectionStatus(normalizeConnectionStatus(status));
     };
 
     // Initial update
     updateUsers();
-    setIsConnected(provider.status === "connected");
+    setConnectionStatus(getConnectionStatusFromProvider(provider));
 
     // Listen for awareness changes
     awareness.on("change", updateUsers);
@@ -62,8 +94,22 @@ export function PresenceIndicators({ provider }: Props) {
     <div className="flex items-center gap-2">
       {/* Connection status */}
       <div className="flex items-center gap-1.5">
-        <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-gray-400"}`} />
-        <span className="text-xs text-gray-600">{isConnected ? "Connected" : "Connecting..."}</span>
+        <div
+          className={`w-2 h-2 rounded-full ${
+            connectionStatus === "connected"
+              ? "bg-green-500"
+              : connectionStatus === "connecting"
+                ? "bg-amber-500"
+                : "bg-gray-400"
+          }`}
+        />
+        <span className="text-xs text-gray-600">
+          {connectionStatus === "connected"
+            ? "Connected"
+            : connectionStatus === "connecting"
+              ? "Connecting..."
+              : "Disconnected"}
+        </span>
       </div>
 
       {/* Active collaborators */}

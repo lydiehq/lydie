@@ -32,6 +32,14 @@ import { TableOfContentsMinimap } from "./TableOfContentsMinimap";
 
 type DocumentType = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 type ConnectionStatus = "connected" | "connecting" | "disconnected";
+type ProviderWithWebsocket = HocuspocusProvider & {
+  configuration?: {
+    websocketProvider?: {
+      status?: string;
+      connect?: () => void;
+    };
+  };
+};
 
 function normalizeConnectionStatus(status: string | undefined): ConnectionStatus {
   if (status === "connected" || status === "connecting" || status === "disconnected") {
@@ -39,6 +47,17 @@ function normalizeConnectionStatus(status: string | undefined): ConnectionStatus
   }
 
   return "disconnected";
+}
+
+function getConnectionStatusFromProvider(provider: HocuspocusProvider | null): ConnectionStatus {
+  const websocketStatus = (provider as ProviderWithWebsocket | null)?.configuration?.websocketProvider
+    ?.status;
+
+  return normalizeConnectionStatus(websocketStatus);
+}
+
+function retryConnection(provider: HocuspocusProvider | null): void {
+  void (provider as ProviderWithWebsocket | null)?.configuration?.websocketProvider?.connect?.();
 }
 
 export interface Props {
@@ -104,12 +123,16 @@ export function EditorView({
   }, [doc.parent_id, documents]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
-    normalizeConnectionStatus((provider as { status?: string } | null)?.status),
+    getConnectionStatusFromProvider(provider),
+  );
+  const [hasUnsyncedChanges, setHasUnsyncedChanges] = useState<boolean>(
+    provider?.hasUnsyncedChanges ?? false,
   );
 
   useEffect(() => {
     if (!provider) {
       setConnectionStatus("disconnected");
+      setHasUnsyncedChanges(false);
       return;
     }
 
@@ -117,15 +140,22 @@ export function EditorView({
       setConnectionStatus(normalizeConnectionStatus(status));
     };
 
-    setConnectionStatus(normalizeConnectionStatus((provider as { status?: string }).status));
+    const handleUnsyncedChanges = ({ number }: { number: number }) => {
+      setHasUnsyncedChanges(number > 0);
+    };
+
+    setConnectionStatus(getConnectionStatusFromProvider(provider));
+    setHasUnsyncedChanges(provider.hasUnsyncedChanges);
     provider.on("status", handleStatusChange);
+    provider.on("unsyncedChanges", handleUnsyncedChanges);
 
     return () => {
       provider.off("status", handleStatusChange);
+      provider.off("unsyncedChanges", handleUnsyncedChanges);
     };
   }, [provider]);
 
-  const showConnectionWarning = connectionStatus !== "connected";
+  const showConnectionWarning = connectionStatus !== "connected" && hasUnsyncedChanges;
   const connectionWarningCopy =
     connectionStatus === "connecting"
       ? "Connecting to the collaboration server. Your edits may not sync until the connection is fully restored."
@@ -159,9 +189,7 @@ export function EditorView({
               intent="ghost"
               size="sm"
               className="h-7 whitespace-nowrap"
-              onPress={() => {
-                (provider as { connect?: () => void }).connect?.();
-              }}
+              onPress={() => retryConnection(provider)}
             >
               Retry
             </Button>

@@ -26,9 +26,22 @@ export default defineConfig({
   },
   trailingSlash: "never",
   redirects: {
-    "/blog/knowledge-bases": "/knowledge-bases",
-    "/blog/what-is-an-internal-knowledge-base": "/knowledge-bases/internal",
-    "/blog/what-is-an-external-knowledge-base": "/knowledge-bases/external",
+    "/blog/knowledge-bases": {
+      destination: "/knowledge-bases",
+      status: 301,
+    },
+    "/blog/what-is-an-internal-knowledge-base": {
+      destination: "/knowledge-bases/internal",
+      status: 301,
+    },
+    "/blog/what-is-an-external-knowledge-base": {
+      destination: "/knowledge-bases/external",
+      status: 301,
+    },
+    "blog/how-to-structure-a-knowledge-base": {
+      destination: "/knowledge-bases/structure",
+      status: 301,
+    },
   },
   image: {
     service: {
