@@ -1,15 +1,7 @@
-import {
-  AppFolder16Filled,
-  ArrowClockwiseRegular,
-  ChevronRightRegular,
-  DismissRegular,
-  WifiOffRegular,
-} from "@fluentui/react-icons";
+import { ArrowClockwiseRegular, ChevronRightRegular, WifiOffRegular } from "@fluentui/react-icons";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { Button } from "@lydie/ui/components/generic/Button";
-import { Dialog } from "@lydie/ui/components/generic/Dialog";
-import { Drawer } from "@lydie/ui/components/generic/Drawer";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
@@ -19,7 +11,6 @@ import DragHandle from "@tiptap/extension-drag-handle-react";
 import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { Fragment, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
-import { Heading } from "react-aria-components";
 
 import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
 
@@ -124,7 +115,6 @@ export function EditorView({
 
     return ancestors.reverse();
   }, [doc.parent_id, documents]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
     getConnectionStatusFromProvider(provider),
   );
@@ -206,85 +196,80 @@ export function EditorView({
         ref={scrollContainerRef}
         className="flex flex-row grow overflow-y-auto relative scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thumb-gray-200 scrollbar-track-white"
       >
-        <div
-          className={clsx(
-            "mx-auto flex w-full grow shrink-0 flex-col pt-12",
-          )}
-        >
+        <div className={clsx("mx-auto flex w-full grow shrink-0 flex-col pt-12")}>
           <BubbleMenu editor={contentEditor} />
-          <div className={clsx("mx-auto w-full", doc.full_width ? "max-w-none px-20" : "max-w-[680px] px-4")}>
+          <nav
+            aria-label="Document breadcrumbs"
+            className="mx-4 mb-2 flex min-h-5 items-center gap-1 text-sm text-gray-500"
+          >
+            <Link
+              to="/w/$organizationSlug"
+              params={{ organizationSlug }}
+              className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            >
+              Workspace
+            </Link>
+
+            {collectionData ? (
+              <>
+                <ChevronRightRegular
+                  className="size-3.5 shrink-0 text-gray-400"
+                  aria-hidden="true"
+                />
+                <Link
+                  to="/w/$organizationSlug/collections/$collectionId"
+                  params={{
+                    organizationSlug,
+                    collectionId: collectionData.id,
+                  }}
+                  className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                >
+                  {collectionData.name || "Untitled Collection"}
+                </Link>
+              </>
+            ) : null}
+
+            {ancestorDocuments.map((ancestor) => (
+              <Fragment key={ancestor.id}>
+                <ChevronRightRegular
+                  className="size-3.5 shrink-0 text-gray-400"
+                  aria-hidden="true"
+                />
+                <Link
+                  to="/w/$organizationSlug/$id"
+                  params={{
+                    organizationSlug,
+                    id: ancestor.id,
+                  }}
+                  className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                >
+                  {ancestor.title?.trim() || "Untitled"}
+                </Link>
+              </Fragment>
+            ))}
+
+            <ChevronRightRegular className="size-3.5 shrink-0 text-gray-400" aria-hidden="true" />
+            <span className="truncate px-1 py-0.5 text-gray-800">{documentTitle}</span>
+          </nav>
+          <div
+            className={clsx(
+              "mx-auto w-full",
+              doc.full_width ? "max-w-none px-20" : "max-w-[680px] px-4",
+            )}
+          >
             <CoverImageEditor
               documentId={doc.id}
               organizationId={doc.organization_id}
               coverImage={doc.cover_image}
             />
 
-            <nav
-              aria-label="Document breadcrumbs"
-              className="my-2 flex min-h-5 items-center gap-1 text-sm text-gray-500"
-            >
-              <Link
-                to="/w/$organizationSlug"
-                params={{ organizationSlug }}
-                className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-              >
-                Workspace
-              </Link>
-
-              {collectionData ? (
-                <>
-                  <ChevronRightRegular
-                    className="size-3.5 shrink-0 text-gray-400"
-                    aria-hidden="true"
-                  />
-                  <Link
-                    to="/w/$organizationSlug/collections/$collectionId"
-                    params={{
-                      organizationSlug,
-                      collectionId: collectionData.id,
-                    }}
-                    className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                  >
-                    {collectionData.name || "Untitled Collection"}
-                  </Link>
-                </>
-              ) : null}
-
-              {ancestorDocuments.map((ancestor) => (
-                <Fragment key={ancestor.id}>
-                  <ChevronRightRegular
-                    className="size-3.5 shrink-0 text-gray-400"
-                    aria-hidden="true"
-                  />
-                  <Link
-                    to="/w/$organizationSlug/$id"
-                    params={{
-                      organizationSlug,
-                      id: ancestor.id,
-                    }}
-                    className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                  >
-                    {ancestor.title?.trim() || "Untitled"}
-                  </Link>
-                </Fragment>
-              ))}
-
-              <ChevronRightRegular className="size-3.5 shrink-0 text-gray-400" aria-hidden="true" />
-              <span className="truncate px-1 py-0.5 text-gray-800">{documentTitle}</span>
-            </nav>
-
             <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
-            <div className="my-3 flex items-center gap-x-2 justify-end">
-              <Button
-                intent="ghost"
-                size="sm"
-                className="gap-x-1"
-                onPress={() => setIsSidebarOpen(true)}
-              >
-                <AppFolder16Filled className="size-4 icon-muted" />
-                <span>Page details</span>
-              </Button>
+            <div className="my-4 rounded-lg border border-gray-200 bg-white p-4">
+              <h2 className="text-sm font-medium text-gray-700">Page details</h2>
+              <div className="mt-4 space-y-4">
+                <EditorSidebarPanels doc={doc} collectionSchema={collectionSchema} />
+              </div>
             </div>
           </div>
 
@@ -335,28 +320,6 @@ export function EditorView({
       </div>
 
       <BottomBar editor={contentEditor} />
-
-      <Drawer isOpen={isSidebarOpen} onOpenChange={setIsSidebarOpen} isDismissable size="md">
-        <Dialog className="h-full flex flex-col">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <Heading slot="title" className="text-sm font-medium text-gray-700">
-              Page details
-            </Heading>
-            <Button
-              intent="ghost"
-              size="icon-sm"
-              aria-label="Close sidebar"
-              onPress={() => setIsSidebarOpen(false)}
-            >
-              <DismissRegular className="size-4" />
-            </Button>
-          </div>
-
-          <div className="p-4 space-y-4 overflow-y-auto grow">
-            <EditorSidebarPanels doc={doc} collectionSchema={collectionSchema} />
-          </div>
-        </Dialog>
-      </Drawer>
     </div>
   );
 }

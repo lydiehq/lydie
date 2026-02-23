@@ -1,6 +1,6 @@
-import { AppFolder16Filled } from "@fluentui/react-icons";
 import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { CollapseArrow } from "@lydie/ui/components/icons/CollapseArrow";
+import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { Button } from "react-aria-components";
 
@@ -23,9 +23,9 @@ export function TreeItemIcon({
 }: TreeItemIconProps) {
   if (!hasChildren) {
     return (
-      <div className="text-gray-500 p-1 -ml-1 flex">
+      <div className="text-gray-500 p-1 -ml-1 flex items-center size-5">
         {type === "collection" ? (
-          <AppFolder16Filled className="size-4 text-gray-500" />
+          <CollectionItemIcon />
         ) : (
           <DocumentThumbnailIcon active={inTabRegistry} />
         )}
@@ -40,8 +40,8 @@ export function TreeItemIcon({
       onPress={onToggle}
     >
       {type === "collection" ? (
-        <AppFolder16Filled
-          className={`size-4 absolute transition-opacity ${isMenuOpen ? "opacity-0" : "group-hover:opacity-0"}`}
+        <CollectionItemIcon
+          className={`absolute transition-opacity ${isMenuOpen ? "opacity-0" : "group-hover:opacity-0"}`}
         />
       ) : (
         <DocumentThumbnailIcon

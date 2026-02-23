@@ -44,11 +44,11 @@ const checkboxStyles = cva({
 });
 
 const boxStyles = cva({
-  base: "size-3.5 box-border rounded-sm transition-all duration-200 flex items-center justify-center flex-shrink-0 border",
+  base: "size-3.5 box-border rounded-sm transition-all duration-200 flex items-center justify-center flex-shrink-0 shadow-surface",
   variants: {
     isSelected: {
       false:
-        "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-400 group-pressed:border-gray-500 dark:group-pressed:border-zinc-300",
+        "bg-white dark:bg-zinc-900 group-pressed:border-gray-500 dark:group-pressed:border-zinc-300",
       true: "bg-gray-700 dark:bg-slate-300 border-gray-700 dark:border-slate-300 group-pressed:bg-gray-800 dark:group-pressed:bg-slate-200 forced-colors:bg-[Highlight] forced-colors:border-[Highlight]",
     },
   },

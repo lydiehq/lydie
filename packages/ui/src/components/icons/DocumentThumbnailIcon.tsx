@@ -20,7 +20,7 @@ const barStyles = cva({
   base: "transition-all duration-200 rounded-xs shrink-0 h-0.5",
   variants: {
     active: {
-      true: "bg-black/25",
+      true: "bg-black/15",
       false: "bg-black/15",
     },
   },
@@ -37,7 +37,7 @@ type Props = DocumentThumbnailIconVariants & {
   showFoldDecoration?: boolean;
 };
 
-const bars = [80, 70, 90, 60];
+const bars = [75, 60, 90, 65];
 
 const COLOR = COLORS[0].value;
 
@@ -58,6 +58,19 @@ export function DocumentThumbnailIcon({
   showFoldDecoration = false,
   size = "md",
 }: Props) {
+  if (showFoldDecoration) {
+    return (
+      <div className={clsx("relative", className)}>
+        <div className="absolute -left-[2px] inset-y-1 z-10 flex flex-col justify-between">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-[1.5px] w-[5px] shrink-0 rounded-full bg-gray-300 relative" />
+          ))}
+        </div>
+        <div className={wrapperStyles({ size })} />
+      </div>
+    );
+  }
+
   // if (showFoldDecoration) {
   //   const darker = darkenHex(COLOR, FOLD_SHADOW_AMOUNT);
   //   return (

@@ -70,22 +70,6 @@ export function DocumentTreeItem({
     });
   };
 
-  const handleTitleClick = (event: MouseEvent<HTMLSpanElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (event.metaKey && event.button === 0) {
-      openDocument("background");
-      return;
-    }
-
-    const now = Date.now();
-    const isDoubleClick = now - lastClickTimeRef.current < 300;
-    lastClickTimeRef.current = now;
-
-    openDocument(isDoubleClick ? "persistent" : "preview");
-  };
-
   return (
     <TreeItem
       id={item.id}
@@ -118,7 +102,7 @@ export function DocumentTreeItem({
               </Button>
             )}
 
-            <div className="flex min-w-0 flex-1 items-center gap-x-1">
+            <div className="flex min-w-0 flex-1 items-center gap-x-2">
               <TreeItemIcon
                 type={item.isCollection ? "collection" : "document"}
                 isExpanded={isExpanded}
@@ -126,9 +110,7 @@ export function DocumentTreeItem({
                 isMenuOpen={isMenuOpen}
                 inTabRegistry={isOpenInTabs}
               />
-              <span onClick={handleTitleClick} className="truncate">
-                {item.name.trim() || "Untitled document"}
-              </span>
+              <span className="truncate">{item.name.trim() || "Untitled document"}</span>
             </div>
 
             <div className="flex items-center relative">

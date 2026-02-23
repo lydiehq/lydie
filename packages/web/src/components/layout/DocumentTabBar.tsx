@@ -1,7 +1,8 @@
-import { Add12Filled, AppFolder16Filled, Dismiss12Filled } from "@fluentui/react-icons";
+import { Add12Filled, Dismiss12Filled } from "@fluentui/react-icons";
 import { sidebarItemIconStyles } from "@lydie/ui/components/editor/styles";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
+import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -182,7 +183,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
             {({ isSelected }) => (
               <>
                 {isCollectionTabId(tab.documentId) ? (
-                  <AppFolder16Filled className="size-4 shrink-0 text-gray-500" />
+                  <CollectionItemIcon className="size-4 shrink-0" size="sm" />
                 ) : (
                   <DocumentThumbnailIcon
                     className="size-4 shrink-0"

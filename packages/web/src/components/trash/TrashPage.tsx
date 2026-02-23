@@ -1,10 +1,7 @@
-import {
-  AppFolder16Filled,
-  ArrowCounterclockwise16Regular,
-  Delete16Regular,
-} from "@fluentui/react-icons";
+import { ArrowCounterclockwise16Regular, Delete16Regular } from "@fluentui/react-icons";
 import { Button } from "@lydie/ui/components/generic/Button";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
@@ -213,9 +210,9 @@ function TrashTreeItem({
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {item.type === "document" ? (
-            <DocumentIcon className="size-4 icon-muted shrink-0" />
+            <DocumentThumbnailIcon className="size-4 shrink-0" size="sm" />
           ) : (
-            <AppFolder16Filled className="size-4 text-gray-500 shrink-0" />
+            <CollectionItemIcon className="size-4 shrink-0" />
           )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
