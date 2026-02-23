@@ -11,7 +11,7 @@ type Props = {
   organizationId: string;
   collectionId?: string;
   fieldDef: PropertyDefinition;
-  value: string | number | boolean | null;
+  value: string | number | boolean | string[] | null;
 };
 
 export function InlinePropertyEditor({
@@ -55,7 +55,18 @@ export function InlinePropertyEditor({
     setIsEditing(false);
   };
 
-  const displayValue = value !== null && value !== undefined ? String(value) : null;
+  const displayValue =
+    value !== null && value !== undefined
+      ? Array.isArray(value)
+        ? value.join(", ")
+        : String(value)
+      : null;
+
+  const enumLabel =
+    typeof value === "string" &&
+    (fieldDef.type === "select" || fieldDef.type === "multi-select" || fieldDef.type === "status")
+      ? (fieldDef.options?.find((option) => option.id === value)?.label ?? "Unknown option")
+      : null;
 
   const targetCollectionId =
     fieldDef.type === "relation"
@@ -95,6 +106,8 @@ export function InlinePropertyEditor({
             {displayValue !== null ? (
               fieldDef.type === "relation" ? (
                 relationValueLabel
+              ) : enumLabel ? (
+                enumLabel
               ) : (
                 displayValue
               )
@@ -169,7 +182,12 @@ function FieldInput({
     );
   }
 
-  if ((fieldDef.type === "select" || fieldDef.type === "multi-select") && fieldDef.options) {
+  if (
+    (fieldDef.type === "select" ||
+      fieldDef.type === "multi-select" ||
+      fieldDef.type === "status") &&
+    fieldDef.options
+  ) {
     return (
       <select
         value={value}
@@ -183,8 +201,8 @@ function FieldInput({
       >
         <option value="">—</option>
         {fieldDef.options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
+          <option key={opt.id} value={opt.id}>
+            {opt.label}
           </option>
         ))}
       </select>

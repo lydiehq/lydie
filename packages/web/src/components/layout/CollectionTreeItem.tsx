@@ -4,7 +4,7 @@ import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { useNavigate } from "@tanstack/react-router";
 import { cx } from "cva";
 import { memo, useState } from "react";
-import { Button as RACButton, MenuTrigger } from "react-aria-components";
+import { Button as RACButton, GridListItem, MenuTrigger } from "react-aria-components";
 
 import { CollectionMenu } from "@/components/collections/CollectionMenu";
 import { useDocumentActions } from "@/hooks/use-document-actions";
@@ -28,7 +28,11 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
   organizationSlug,
 }: Props) {
   const { createDocument } = useDocumentActions();
-  const navigate = useNavigate();
+  const navigate = useNavigate() as (options: {
+    to: string;
+    params?: Record<string, string>;
+    from?: string;
+  }) => void;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleNavigate = () => {
@@ -44,7 +48,10 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
   };
 
   return (
-    <div
+    <GridListItem
+      id={collection.id}
+      textValue={collection.name}
+      onAction={handleNavigate}
       className={cx(
         sidebarItemStyles({
           isCurrent: isActive,
@@ -63,13 +70,7 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
           hasChildren={false}
           isMenuOpen={isMenuOpen}
         />
-        <button
-          type="button"
-          onClick={handleNavigate}
-          className="flex min-w-0 flex-1 items-center text-left"
-        >
-          <span className="truncate">{collection.name}</span>
-        </button>
+        <span className="truncate">{collection.name}</span>
       </div>
 
       <div
@@ -101,6 +102,6 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
           />
         </MenuTrigger>
       </div>
-    </div>
+    </GridListItem>
   );
 });

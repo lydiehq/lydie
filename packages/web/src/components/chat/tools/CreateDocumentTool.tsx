@@ -91,6 +91,7 @@ export function CreateDocumentTool({ tool }: Props) {
               <StickToBottom.Content>
                 <div
                   className="editor-content-sm"
+                  data-doc-content
                   dangerouslySetInnerHTML={{ __html: fullContent }}
                 />
               </StickToBottom.Content>

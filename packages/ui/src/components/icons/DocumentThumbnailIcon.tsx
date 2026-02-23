@@ -58,25 +58,25 @@ export function DocumentThumbnailIcon({
   showFoldDecoration = false,
   size = "md",
 }: Props) {
-  if (showFoldDecoration) {
-    const darker = darkenHex(COLOR, FOLD_SHADOW_AMOUNT);
-    return (
-      <div className={clsx("relative", className)}>
-        <div
-          className="absolute -top-0.5 w-2 left-0 h-0.5 rounded-t-lg"
-          style={{ backgroundColor: darker }}
-        />
-        <div
-          className="h-[12px] w-[13px] rounded-b-[3px] rounded-r-[1.5px]"
-          style={{ backgroundColor: darker }}
-        ></div>
-        <div
-          className="absolute ring border border-black/10 ring-[#f8f8f8] left-px -right-[2px] bottom-0 top-[3px] -skew-x-14 rounded-[2px]"
-          style={{ backgroundColor: COLOR }}
-        ></div>
-      </div>
-    );
-  }
+  // if (showFoldDecoration) {
+  //   const darker = darkenHex(COLOR, FOLD_SHADOW_AMOUNT);
+  //   return (
+  //     <div className={clsx("relative", className)}>
+  //       <div
+  //         className="absolute -top-0.5 w-2 left-0 h-0.5 rounded-t-lg"
+  //         style={{ backgroundColor: darker }}
+  //       />
+  //       <div
+  //         className="h-[12px] w-[13px] rounded-b-[3px] rounded-r-[1.5px]"
+  //         style={{ backgroundColor: darker }}
+  //       ></div>
+  //       <div
+  //         className="absolute ring border border-black/10 ring-[#f8f8f8] left-px -right-[2px] bottom-0 top-[3px] -skew-x-14 rounded-[2px]"
+  //         style={{ backgroundColor: COLOR }}
+  //       ></div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className={clsx("relative", className)}>

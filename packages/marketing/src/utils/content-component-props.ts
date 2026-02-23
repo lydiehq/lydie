@@ -1,5 +1,6 @@
-import type { FAQItem } from "@/components/generic/FAQ";
 import type { ContentNode } from "@lydie/core/content";
+
+import type { FAQItem } from "@/components/generic/FAQ";
 
 export type FlowchartNode = {
   id: string;
@@ -12,6 +13,10 @@ export type FlowchartEdge = {
   from: string;
   to: string;
   label: string;
+};
+
+export type ChecklistItem = {
+  body: string;
 };
 
 function getString(value: unknown): string {
@@ -48,6 +53,25 @@ export function normalizeComponentKey(value: string): string {
 
 export function getStringProperty(properties: Record<string, unknown>, key: string): string {
   return getString(properties[key]).trim();
+}
+
+export function getChecklistItems(
+  properties: Record<string, unknown>,
+  key: string,
+): ChecklistItem[] {
+  const value = properties[key];
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item): ChecklistItem | null => {
+      if (!item || typeof item !== "object") return null;
+
+      const body = getString((item as Record<string, unknown>).body).trim();
+      if (!body) return null;
+
+      return { body };
+    })
+    .filter((item): item is ChecklistItem => Boolean(item));
 }
 
 function isRichTextNode(value: unknown): value is ContentNode {

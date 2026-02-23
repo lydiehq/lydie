@@ -24,7 +24,10 @@
       "@tiptap/react": "^3.20.0",
       "@tiptap/starter-kit": "^3.20.0",
       "@tiptap/y-tiptap": "^3.0.2",
+      "@tiptap/extension-drag-handle": "^3.20.0",
+      "@tiptap/extension-drag-handle-react": "^3.20.0",
       "@tiptap/extension-mention": "^3.20.0",
+      "@tiptap/extension-node-range": "^3.20.0",
       "@tiptap/extension-placeholder": "^3.20.0",
       "stripe": "^20.3.1"
     }

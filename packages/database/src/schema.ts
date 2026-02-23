@@ -224,10 +224,25 @@ export const collectionsTable = pgTable(
       .$type<
         Array<{
           name: string;
-          type: "text" | "number" | "date" | "select" | "multi-select" | "boolean" | "relation";
+          type:
+            | "text"
+            | "number"
+            | "date"
+            | "select"
+            | "multi-select"
+            | "status"
+            | "boolean"
+            | "relation";
           required: boolean;
           unique: boolean;
-          options?: string[]; // For select/multi-select types
+          options?: Array<{
+            id: string;
+            label: string;
+            color?: string;
+            order: number;
+            archived?: boolean;
+            stage?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE";
+          }>;
           relation?: {
             targetCollectionId: string;
           } | null;
@@ -264,11 +279,11 @@ export const collectionFieldsTable = pgTable(
       .notNull()
       .references(() => collectionsTable.id, { onDelete: "cascade" }),
     values: jsonb("values")
-      .$type<Record<string, string | number | boolean | null>>()
+      .$type<Record<string, string | number | boolean | string[] | null>>()
       .notNull()
       .default({}),
     orphanedValues: jsonb("orphaned_values")
-      .$type<Record<string, string | number | boolean | null>>()
+      .$type<Record<string, string | number | boolean | string[] | null>>()
       .default({}),
     ...timestamps,
   },

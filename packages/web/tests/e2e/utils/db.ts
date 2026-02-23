@@ -167,10 +167,25 @@ export async function createTestCollection(
     handle?: string;
     properties?: Array<{
       name: string;
-      type: "text" | "number" | "date" | "select" | "multi-select" | "boolean" | "relation";
+      type:
+        | "text"
+        | "number"
+        | "date"
+        | "select"
+        | "multi-select"
+        | "status"
+        | "boolean"
+        | "relation";
       required: boolean;
       unique: boolean;
-      options?: string[];
+      options?: Array<{
+        id: string;
+        label: string;
+        color?: string;
+        order: number;
+        archived?: boolean;
+        stage?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE";
+      }>;
       relation?: {
         targetCollectionId: string;
       };
@@ -212,7 +227,7 @@ export async function createTestCollectionDocument(
     title?: string;
     parentId?: string | null;
     published?: boolean;
-    fieldValues?: Record<string, string | number | boolean | null>;
+    fieldValues?: Record<string, string | number | boolean | string[] | null>;
   },
 ): Promise<{ document: Document; fields: CollectionFields | null }> {
   const documentId = createId();

@@ -1,5 +1,6 @@
 import { SettingsRegular } from "@fluentui/react-icons";
 import type { PropertyDefinition } from "@lydie/core/collection";
+import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Input } from "@lydie/ui/components/generic/Field";
 import { mutators } from "@lydie/zero/mutators";
@@ -104,6 +105,17 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
     }
   }, [name, collection.id, collection.name, organization.id, z]);
 
+  const handleCreateRow = useCallback(() => {
+    z.mutate(
+      mutators.document.create({
+        id: createId(),
+        organizationId: organization.id,
+        collectionId: collection.id,
+        title: "",
+      }),
+    );
+  }, [collection.id, organization.id, z]);
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="px-6 py-5 border-b border-black/6 flex items-center justify-between gap-4">
@@ -148,12 +160,26 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
       </div>
 
       <div className="px-6 py-4 space-y-4">
-        <CollectionTable
-          collectionId={collection.id}
-          organizationId={organization.id}
-          organizationSlug={organization.slug}
-          schema={schema}
-        />
+        <div className="rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
+            <CollectionTable
+              collectionId={collection.id}
+              organizationId={organization.id}
+              organizationSlug={organization.slug}
+              schema={schema}
+              showCreateRowButton={false}
+            />
+          </div>
+          <div className="px-3 py-1">
+            <button
+              type="button"
+              onClick={handleCreateRow}
+              className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600"
+            >
+              New
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

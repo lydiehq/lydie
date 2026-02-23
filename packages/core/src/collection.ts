@@ -1,9 +1,20 @@
+export type PropertyOptionStage = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE";
+
+export type PropertyOption = {
+  id: string;
+  label: string;
+  color?: string;
+  order: number;
+  archived?: boolean;
+  stage?: PropertyOptionStage;
+};
+
 export type PropertyDefinition = {
   name: string;
-  type: "text" | "number" | "date" | "select" | "multi-select" | "boolean" | "relation";
+  type: "text" | "number" | "date" | "select" | "multi-select" | "status" | "boolean" | "relation";
   required: boolean;
   unique: boolean;
-  options?: string[];
+  options?: PropertyOption[];
   relation?: {
     targetCollectionId: string;
   };
@@ -28,23 +39,22 @@ export function resolveRelationTargetCollectionId(
   return targetCollectionId;
 }
 
-export type FieldValues = Record<string, string | number | boolean | null>;
+export type FieldValue = string | number | boolean | string[] | null;
+
+export type FieldValues = Record<string, FieldValue>;
 
 export function isCollection(properties: unknown): properties is PropertyDefinition[] {
   return Array.isArray(properties) && properties.length > 0;
 }
 
-export function getFieldValue(
-  values: FieldValues,
-  fieldName: string,
-): string | number | boolean | null {
+export function getFieldValue(values: FieldValues, fieldName: string): FieldValue {
   return values[fieldName] ?? null;
 }
 
 export function setFieldValue(
   values: FieldValues,
   fieldName: string,
-  value: string | number | boolean | null,
+  value: FieldValue,
 ): FieldValues {
   return {
     ...values,
@@ -76,8 +86,11 @@ export function sortDocumentsByField(
     if (aVal === null || aVal === undefined) return direction === "asc" ? 1 : -1;
     if (bVal === null || bVal === undefined) return direction === "asc" ? -1 : 1;
 
-    if (aVal < bVal) return direction === "asc" ? -1 : 1;
-    if (aVal > bVal) return direction === "asc" ? 1 : -1;
+    const aComparable = Array.isArray(aVal) ? aVal.join(",") : aVal;
+    const bComparable = Array.isArray(bVal) ? bVal.join(",") : bVal;
+
+    if (aComparable < bComparable) return direction === "asc" ? -1 : 1;
+    if (aComparable > bComparable) return direction === "asc" ? 1 : -1;
     return 0;
   });
 }

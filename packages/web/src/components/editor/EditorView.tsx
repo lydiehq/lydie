@@ -15,9 +15,10 @@ import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
 import type { Editor } from "@tiptap/core";
+import DragHandle from "@tiptap/extension-drag-handle-react";
 import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { Heading } from "react-aria-components";
 
 import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
@@ -41,6 +42,8 @@ type ProviderWithWebsocket = HocuspocusProvider & {
   };
 };
 
+const DRAG_HANDLE_NESTED_CONFIG = { edgeDetection: { threshold: -16 } };
+
 function normalizeConnectionStatus(status: string | undefined): ConnectionStatus {
   if (status === "connected" || status === "connecting" || status === "disconnected") {
     return status;
@@ -50,8 +53,8 @@ function normalizeConnectionStatus(status: string | undefined): ConnectionStatus
 }
 
 function getConnectionStatusFromProvider(provider: HocuspocusProvider | null): ConnectionStatus {
-  const websocketStatus = (provider as ProviderWithWebsocket | null)?.configuration?.websocketProvider
-    ?.status;
+  const websocketStatus = (provider as ProviderWithWebsocket | null)?.configuration
+    ?.websocketProvider?.status;
 
   return normalizeConnectionStatus(websocketStatus);
 }
@@ -205,83 +208,84 @@ export function EditorView({
       >
         <div
           className={clsx(
-            "flex mx-auto w-full grow flex-col pt-12 shrink-0 transition-[max-width] duration-300 ease-in-out",
-            doc.full_width ? "max-w-none px-20" : "max-w-[65ch] px-4",
+            "mx-auto flex w-full grow shrink-0 flex-col pt-12",
           )}
         >
           <BubbleMenu editor={contentEditor} />
-          <CoverImageEditor
-            documentId={doc.id}
-            organizationId={doc.organization_id}
-            coverImage={doc.cover_image}
-          />
+          <div className={clsx("mx-auto w-full", doc.full_width ? "max-w-none px-20" : "max-w-[680px] px-4")}>
+            <CoverImageEditor
+              documentId={doc.id}
+              organizationId={doc.organization_id}
+              coverImage={doc.cover_image}
+            />
 
-          <nav
-            aria-label="Document breadcrumbs"
-            className="my-2 flex min-h-5 items-center gap-1 text-sm text-gray-500"
-          >
-            <Link
-              to="/w/$organizationSlug"
-              params={{ organizationSlug }}
-              className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            <nav
+              aria-label="Document breadcrumbs"
+              className="my-2 flex min-h-5 items-center gap-1 text-sm text-gray-500"
             >
-              Workspace
-            </Link>
+              <Link
+                to="/w/$organizationSlug"
+                params={{ organizationSlug }}
+                className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+              >
+                Workspace
+              </Link>
 
-            {collectionData ? (
-              <>
-                <ChevronRightRegular
-                  className="size-3.5 shrink-0 text-gray-400"
-                  aria-hidden="true"
-                />
-                <Link
-                  to="/w/$organizationSlug/collections/$collectionId"
-                  params={{
-                    organizationSlug,
-                    collectionId: collectionData.id,
-                  }}
-                  className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                >
-                  {collectionData.name || "Untitled Collection"}
-                </Link>
-              </>
-            ) : null}
+              {collectionData ? (
+                <>
+                  <ChevronRightRegular
+                    className="size-3.5 shrink-0 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <Link
+                    to="/w/$organizationSlug/collections/$collectionId"
+                    params={{
+                      organizationSlug,
+                      collectionId: collectionData.id,
+                    }}
+                    className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    {collectionData.name || "Untitled Collection"}
+                  </Link>
+                </>
+              ) : null}
 
-            {ancestorDocuments.map((ancestor) => (
-              <Fragment key={ancestor.id}>
-                <ChevronRightRegular
-                  className="size-3.5 shrink-0 text-gray-400"
-                  aria-hidden="true"
-                />
-                <Link
-                  to="/w/$organizationSlug/$id"
-                  params={{
-                    organizationSlug,
-                    id: ancestor.id,
-                  }}
-                  className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                >
-                  {ancestor.title?.trim() || "Untitled"}
-                </Link>
-              </Fragment>
-            ))}
+              {ancestorDocuments.map((ancestor) => (
+                <Fragment key={ancestor.id}>
+                  <ChevronRightRegular
+                    className="size-3.5 shrink-0 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <Link
+                    to="/w/$organizationSlug/$id"
+                    params={{
+                      organizationSlug,
+                      id: ancestor.id,
+                    }}
+                    className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    {ancestor.title?.trim() || "Untitled"}
+                  </Link>
+                </Fragment>
+              ))}
 
-            <ChevronRightRegular className="size-3.5 shrink-0 text-gray-400" aria-hidden="true" />
-            <span className="truncate px-1 py-0.5 text-gray-800">{documentTitle}</span>
-          </nav>
+              <ChevronRightRegular className="size-3.5 shrink-0 text-gray-400" aria-hidden="true" />
+              <span className="truncate px-1 py-0.5 text-gray-800">{documentTitle}</span>
+            </nav>
 
-          <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
+            <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
-          <div className="my-3 flex items-center gap-x-2 justify-end">
-            <Button
-              intent="ghost"
-              size="sm"
-              className="gap-x-1"
-              onPress={() => setIsSidebarOpen(true)}
-            >
-              <AppFolder16Filled className="size-4 icon-muted" />
-              <span>Page details</span>
-            </Button>
+            <div className="my-3 flex items-center gap-x-2 justify-end">
+              <Button
+                intent="ghost"
+                size="sm"
+                className="gap-x-1"
+                onPress={() => setIsSidebarOpen(true)}
+              >
+                <AppFolder16Filled className="size-4 icon-muted" />
+                <span>Page details</span>
+              </Button>
+            </div>
           </div>
 
           <LinkPopover
@@ -290,10 +294,35 @@ export function EditorView({
             organizationSlug={organizationSlug}
           />
 
+          <DragHandle editor={contentEditor} nested={DRAG_HANDLE_NESTED_CONFIG}>
+            <div className="flex size-6 cursor-grab items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing">
+              <div className="grid grid-cols-2 gap-0.5">
+                <span className="size-0.5 rounded-full bg-current" />
+                <span className="size-0.5 rounded-full bg-current" />
+                <span className="size-0.5 rounded-full bg-current" />
+                <span className="size-0.5 rounded-full bg-current" />
+                <span className="size-0.5 rounded-full bg-current" />
+                <span className="size-0.5 rounded-full bg-current" />
+              </div>
+            </div>
+          </DragHandle>
+
           <EditorContent
             aria-label="Document content"
             editor={contentEditor}
-            className="block grow"
+            className={clsx(
+              "block grow",
+              doc.full_width
+                ? "[--editor-block-max-width:none] [--editor-block-padding-x:5rem]"
+                : undefined,
+            )}
+            style={
+              {
+                "--editor-content-line-start": doc.full_width
+                  ? "5rem"
+                  : "max(1rem, calc((100% - 680px) / 2 + 1rem))",
+              } as CSSProperties
+            }
           />
         </div>
 

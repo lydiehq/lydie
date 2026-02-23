@@ -688,6 +688,7 @@ export function ReplaceInDocumentTool({
                   <div
                     ref={contentRef}
                     className="editor-content-sm"
+                    data-doc-content
                     dangerouslySetInnerHTML={{ __html: replaceText }}
                   />
                 </StickToBottom.Content>

@@ -1,5 +1,9 @@
 import { MoreHorizontalRegular } from "@fluentui/react-icons";
-import { resolveRelationTargetCollectionId, type PropertyDefinition } from "@lydie/core/collection";
+import {
+  resolveRelationTargetCollectionId,
+  type PropertyDefinition,
+  type PropertyOption,
+} from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
@@ -27,8 +31,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DialogTrigger, Input, MenuTrigger, Button as RACButton } from "react-aria-components";
 import { toast } from "sonner";
 
-import { useZero } from "@/services/zero";
 import { useGlobalBulkActions } from "@/hooks/use-global-bulk-actions";
+import { useZero } from "@/services/zero";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { focusVisibleStyles } from "@/utils/focus-ring";
 
@@ -38,7 +42,7 @@ type DocumentItem = {
   slug: string | null;
   parentId: string | null;
   collectionId: string | null;
-  properties: Record<string, string | number | boolean | null>;
+  properties: Record<string, string | number | boolean | string[] | null>;
 };
 
 type EditingCell = {
@@ -62,7 +66,7 @@ declare module "@tanstack/react-table" {
     updateData: (
       rowIndex: number,
       columnId: string,
-      value: string | number | boolean | null,
+      value: string | number | boolean | string[] | null,
     ) => void;
     tableNav: DataGridNav;
     organizationSlug: string;
@@ -74,10 +78,17 @@ const PROPERTY_TYPES: Array<{ label: string; value: PropertyDefinition["type"] }
   { label: "Text", value: "text" },
   { label: "Number", value: "number" },
   { label: "Select", value: "select" },
+  { label: "Status", value: "status" },
   { label: "Multi Select", value: "multi-select" },
   { label: "Date", value: "date" },
   { label: "Checkbox", value: "boolean" },
   { label: "Relation", value: "relation" },
+];
+
+const DEFAULT_STATUS_OPTIONS: PropertyOption[] = [
+  { id: createId(), label: "To do", order: 0, stage: "NOT_STARTED" },
+  { id: createId(), label: "In progress", order: 1, stage: "IN_PROGRESS" },
+  { id: createId(), label: "Done", order: 2, stage: "COMPLETE" },
 ];
 
 type Props = {
@@ -85,12 +96,14 @@ type Props = {
   organizationId: string;
   organizationSlug: string;
   schema: PropertyDefinition[];
+  showCreateRowButton?: boolean;
+  onCreateRow?: () => void;
 };
 
 function toFieldValue(
   fieldDef: PropertyDefinition,
   value: string,
-): string | number | boolean | null {
+): string | number | boolean | string[] | null {
   if (fieldDef.type === "boolean") {
     return value === "true";
   }
@@ -106,7 +119,10 @@ function toFieldValue(
 function extractFieldValues(
   fieldValues: unknown,
   collectionId: string,
-): { collectionId: string | null; values: Record<string, string | number | boolean | null> } {
+): {
+  collectionId: string | null;
+  values: Record<string, string | number | boolean | string[] | null>;
+} {
   const parsedFieldValues = (fieldValues || []) as Array<{
     collection_id: string;
     values: unknown;
@@ -124,20 +140,20 @@ function extractFieldValues(
     collectionId: activeRow?.collection_id ?? null,
     values:
       typeof values === "object" && values !== null
-        ? (values as Record<string, string | number | boolean | null>)
+        ? (values as Record<string, string | number | boolean | string[] | null>)
         : {},
   };
 }
 
-export function CollectionTable({ collectionId, organizationId, organizationSlug, schema }: Props) {
+export function CollectionTable({
+  collectionId,
+  organizationId,
+  organizationSlug,
+  schema,
+  showCreateRowButton = true,
+  onCreateRow,
+}: Props) {
   const z = useZero();
-  const [newPropertyName, setNewPropertyName] = useState("");
-  const [newPropertyType, setNewPropertyType] = useState<PropertyDefinition["type"]>("text");
-  const [newPropertyOptions, setNewPropertyOptions] = useState("");
-  const [newPropertyRequired, setNewPropertyRequired] = useState(false);
-  const [newPropertyUnique, setNewPropertyUnique] = useState(false);
-  const [newPropertyRelationTargetCollectionId, setNewPropertyRelationTargetCollectionId] =
-    useState<string>("self");
   const [sorting, setSorting] = useState<SortingState>([{ id: "title", desc: false }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
@@ -212,7 +228,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
       documentId: string,
       fieldCollectionId: string,
       field: string,
-      value: string | number | boolean | null,
+      value: string | number | boolean | string[] | null,
     ) => {
       await z.mutate(
         mutators.collection.updateFieldValues({
@@ -237,6 +253,8 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     );
   };
 
+  const createRow = onCreateRow ?? handleCreateRow;
+
   const handleRenameDocument = useCallback(
     async (documentId: string, title: string) => {
       await z.mutate(
@@ -250,70 +268,86 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
     [organizationId, z],
   );
 
-  const handleAddProperty = useCallback(async () => {
-    const trimmedName = newPropertyName.trim();
-    if (!trimmedName) {
-      return;
-    }
+  const handleAddProperty = useCallback(
+    async ({
+      name,
+      type,
+      options,
+      required,
+      unique,
+      relationTargetCollectionId,
+    }: {
+      name: string;
+      type: PropertyDefinition["type"];
+      options: string;
+      required: boolean;
+      unique: boolean;
+      relationTargetCollectionId: string;
+    }) => {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        return false;
+      }
 
-    const nameExists = schema.some(
-      (property) => property.name.toLowerCase() === trimmedName.toLowerCase(),
-    );
-    if (nameExists) {
-      return;
-    }
+      const nameExists = schema.some(
+        (property) => property.name.toLowerCase() === trimmedName.toLowerCase(),
+      );
+      if (nameExists) {
+        return false;
+      }
 
-    const nextSchema: PropertyDefinition[] = [
-      ...schema,
-      {
-        name: trimmedName,
-        type: newPropertyType,
-        required: newPropertyRequired,
-        unique: newPropertyUnique,
-        ...(newPropertyType === "select" || newPropertyType === "multi-select"
-          ? {
-              options: newPropertyOptions
+      const enumOptions =
+        type === "status"
+          ? DEFAULT_STATUS_OPTIONS.map((option) => ({ ...option }))
+          : type === "select" || type === "multi-select"
+            ? options
                 .split(",")
                 .map((option) => option.trim())
-                .filter(Boolean),
-            }
-          : {}),
-        ...(newPropertyType === "relation"
-          ? {
-              relation: {
-                targetCollectionId: newPropertyRelationTargetCollectionId,
-              },
-            }
-          : {}),
-      },
-    ];
+                .filter(Boolean)
+                .map((label, index) => ({
+                  id: createId(),
+                  label,
+                  order: index,
+                }))
+            : undefined;
 
-    await z.mutate(
-      mutators.collection.update({
-        collectionId,
-        organizationId,
-        properties: nextSchema,
-      }),
-    );
+      if (
+        (type === "select" || type === "multi-select") &&
+        (!enumOptions || enumOptions.length === 0)
+      ) {
+        return false;
+      }
 
-    setNewPropertyName("");
-    setNewPropertyType("text");
-    setNewPropertyOptions("");
-    setNewPropertyRequired(false);
-    setNewPropertyUnique(false);
-    setNewPropertyRelationTargetCollectionId("self");
-  }, [
-    collectionId,
-    newPropertyName,
-    newPropertyOptions,
-    newPropertyRelationTargetCollectionId,
-    newPropertyRequired,
-    newPropertyType,
-    newPropertyUnique,
-    organizationId,
-    schema,
-    z,
-  ]);
+      const nextSchema: PropertyDefinition[] = [
+        ...schema,
+        {
+          name: trimmedName,
+          type,
+          required,
+          unique,
+          ...(enumOptions ? { options: enumOptions } : {}),
+          ...(type === "relation"
+            ? {
+                relation: {
+                  targetCollectionId: relationTargetCollectionId,
+                },
+              }
+            : {}),
+        },
+      ];
+
+      await z.mutate(
+        mutators.collection.update({
+          collectionId,
+          organizationId,
+          properties: nextSchema,
+        }),
+      );
+
+      return true;
+    },
+    [collectionId, organizationId, schema, z],
+  );
 
   const relationOptionsByField = useMemo(() => {
     const options = new Map<string, Array<{ id: string; title: string }>>();
@@ -346,10 +380,6 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
 
     return options;
   }, [allDocuments, collectionId, schema]);
-
-  const hasDuplicatePropertyName = schema.some(
-    (property) => property.name.toLowerCase() === newPropertyName.trim().toLowerCase(),
-  );
 
   const handleDeleteProperty = useCallback(
     (propertyName: string) => {
@@ -444,154 +474,17 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
         size: 140,
         meta: { kind: "add-property" as const },
         header: () => (
-          <DialogTrigger>
-            <Button intent="ghost" size="sm" className="text-xs">
-              + Add property
-            </Button>
-            <Popover placement="bottom end" className="w-[340px] p-0">
-              <div className="p-3 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">Add property</h3>
-              </div>
-              <div className="p-3 space-y-3">
-                <div>
-                  <label
-                    htmlFor="collection-property-name"
-                    className="mb-1 block text-xs font-medium text-gray-600"
-                  >
-                    Property name
-                  </label>
-                  <Input
-                    id="collection-property-name"
-                    type="text"
-                    value={newPropertyName}
-                    onChange={(event) => setNewPropertyName(event.target.value)}
-                    placeholder="e.g., status, priority, dueDate"
-                    className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="collection-property-type"
-                    className="mb-1 block text-xs font-medium text-gray-600"
-                  >
-                    Type
-                  </label>
-                  <select
-                    id="collection-property-type"
-                    value={newPropertyType}
-                    onChange={(event) =>
-                      setNewPropertyType(event.target.value as PropertyDefinition["type"])
-                    }
-                    className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
-                  >
-                    {PROPERTY_TYPES.map((propertyType) => (
-                      <option key={propertyType.value} value={propertyType.value}>
-                        {propertyType.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {(newPropertyType === "select" || newPropertyType === "multi-select") && (
-                  <div>
-                    <label
-                      htmlFor="collection-property-options"
-                      className="mb-1 block text-xs font-medium text-gray-600"
-                    >
-                      Options (comma-separated)
-                    </label>
-                    <Input
-                      id="collection-property-options"
-                      type="text"
-                      value={newPropertyOptions}
-                      onChange={(event) => setNewPropertyOptions(event.target.value)}
-                      placeholder="todo, in-progress, done"
-                      className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
-                    />
-                  </div>
-                )}
-
-                {newPropertyType === "relation" && (
-                  <div>
-                    <label
-                      htmlFor="collection-property-relation-target"
-                      className="mb-1 block text-xs font-medium text-gray-600"
-                    >
-                      Target collection
-                    </label>
-                    <select
-                      id="collection-property-relation-target"
-                      value={newPropertyRelationTargetCollectionId}
-                      onChange={(event) =>
-                        setNewPropertyRelationTargetCollectionId(event.target.value)
-                      }
-                      className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
-                    >
-                      <option value="self">This collection</option>
-                      {(collections ?? [])
-                        .filter((collection) => collection.id !== collectionId)
-                        .map((collection) => (
-                          <option key={collection.id} value={collection.id}>
-                            {collection.name}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4">
-                  <Checkbox
-                    isSelected={newPropertyRequired}
-                    onChange={(isSelected) => setNewPropertyRequired(Boolean(isSelected))}
-                    className="text-xs text-gray-600"
-                  >
-                    Required
-                  </Checkbox>
-                  <Checkbox
-                    isSelected={newPropertyUnique}
-                    onChange={(isSelected) => setNewPropertyUnique(Boolean(isSelected))}
-                    className="text-xs text-gray-600"
-                  >
-                    Unique
-                  </Checkbox>
-                </div>
-
-                {hasDuplicatePropertyName && (
-                  <p className="text-xs text-red-600">This property name already exists.</p>
-                )}
-
-                <div className="pt-1">
-                  <button
-                    type="button"
-                    onClick={() => void handleAddProperty()}
-                    disabled={!newPropertyName.trim() || Boolean(hasDuplicatePropertyName)}
-                    className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Add Property
-                  </button>
-                </div>
-              </div>
-            </Popover>
-          </DialogTrigger>
+          <AddPropertyHeader
+            collectionId={collectionId}
+            collections={collections}
+            schema={schema}
+            onAddProperty={handleAddProperty}
+          />
         ),
         cell: () => <span className="block h-6 w-[120px]" aria-hidden="true" />,
       },
     ],
-    [
-      collectionId,
-      collections,
-      handleAddProperty,
-      hasDuplicatePropertyName,
-      newPropertyName,
-      newPropertyOptions,
-      newPropertyRelationTargetCollectionId,
-      newPropertyRequired,
-      newPropertyType,
-      newPropertyUnique,
-      handleDeleteProperty,
-      schema,
-    ],
+    [collectionId, collections, handleAddProperty, handleDeleteProperty, schema],
   );
 
   const table = useReactTable({
@@ -737,11 +630,12 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto">
-        <div className="overflow-hidden rounded-xl border border-gray-200">
+      <div className="w-max min-w-full">
+        <div>
           <table
             aria-label="Collection records"
             role="grid"
+            data-editor-widget-table=""
             {...listeners}
             className="max-h-none border-separate border-spacing-0"
             style={{
@@ -756,7 +650,7 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
                       key={header.id}
                       colSpan={header.colSpan}
                       style={{ width: header.getSize() }}
-                      className={`relative border-b border-r border-gray-200 bg-white px-3 py-1.5 text-left align-middle last:border-r-0 ${
+                      className={`relative border-b border-r border-gray-200 px-3 py-1.5 text-left align-middle last:border-r-0 ${
                         header.column.id === "select" ? "text-center" : ""
                       }`}
                     >
@@ -871,15 +765,17 @@ export function CollectionTable({ collectionId, organizationId, organizationSlug
           </table>
         </div>
 
-        <div className="px-3 py-1">
-          <button
-            type="button"
-            onClick={handleCreateRow}
-            className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            New
-          </button>
-        </div>
+        {showCreateRowButton ? (
+          <div className="px-3 py-1">
+            <button
+              type="button"
+              onClick={createRow}
+              className="w-full text-left text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              New
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -939,6 +835,190 @@ const PropertyHeader = memo(function PropertyHeader({
         </Menu>
       </MenuTrigger>
     </div>
+  );
+});
+
+const AddPropertyHeader = memo(function AddPropertyHeader({
+  collectionId,
+  collections,
+  schema,
+  onAddProperty,
+}: {
+  collectionId: string;
+  collections: Array<{ id: string; name: string }> | undefined;
+  schema: PropertyDefinition[];
+  onAddProperty: (payload: {
+    name: string;
+    type: PropertyDefinition["type"];
+    options: string;
+    required: boolean;
+    unique: boolean;
+    relationTargetCollectionId: string;
+  }) => Promise<boolean>;
+}) {
+  const [newPropertyName, setNewPropertyName] = useState("");
+  const [newPropertyType, setNewPropertyType] = useState<PropertyDefinition["type"]>("text");
+  const [newPropertyOptions, setNewPropertyOptions] = useState("");
+  const [newPropertyRequired, setNewPropertyRequired] = useState(false);
+  const [newPropertyUnique, setNewPropertyUnique] = useState(false);
+  const [newPropertyRelationTargetCollectionId, setNewPropertyRelationTargetCollectionId] =
+    useState<string>("self");
+
+  const hasDuplicatePropertyName = schema.some(
+    (property) => property.name.toLowerCase() === newPropertyName.trim().toLowerCase(),
+  );
+
+  const handleSubmit = async () => {
+    const didAdd = await onAddProperty({
+      name: newPropertyName,
+      type: newPropertyType,
+      options: newPropertyOptions,
+      required: newPropertyRequired,
+      unique: newPropertyUnique,
+      relationTargetCollectionId: newPropertyRelationTargetCollectionId,
+    });
+
+    if (!didAdd) {
+      return;
+    }
+
+    setNewPropertyName("");
+    setNewPropertyType("text");
+    setNewPropertyOptions("");
+    setNewPropertyRequired(false);
+    setNewPropertyUnique(false);
+    setNewPropertyRelationTargetCollectionId("self");
+  };
+
+  return (
+    <DialogTrigger>
+      <Button intent="ghost" size="sm" className="text-xs">
+        + Add property
+      </Button>
+      <Popover placement="bottom end" className="w-[340px] p-0">
+        <div className="border-b border-gray-200 p-3">
+          <h3 className="text-sm font-semibold text-gray-900">Add property</h3>
+        </div>
+        <div className="space-y-3 p-3">
+          <div>
+            <label
+              htmlFor="collection-property-name"
+              className="mb-1 block text-xs font-medium text-gray-600"
+            >
+              Property name
+            </label>
+            <Input
+              id="collection-property-name"
+              type="text"
+              value={newPropertyName}
+              onChange={(event) => setNewPropertyName(event.target.value)}
+              placeholder="e.g., status, priority, dueDate"
+              className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="collection-property-type"
+              className="mb-1 block text-xs font-medium text-gray-600"
+            >
+              Type
+            </label>
+            <select
+              id="collection-property-type"
+              value={newPropertyType}
+              onChange={(event) =>
+                setNewPropertyType(event.target.value as PropertyDefinition["type"])
+              }
+              className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
+            >
+              {PROPERTY_TYPES.map((propertyType) => (
+                <option key={propertyType.value} value={propertyType.value}>
+                  {propertyType.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(newPropertyType === "select" || newPropertyType === "multi-select") && (
+            <div>
+              <label
+                htmlFor="collection-property-options"
+                className="mb-1 block text-xs font-medium text-gray-600"
+              >
+                Options (comma-separated)
+              </label>
+              <Input
+                id="collection-property-options"
+                type="text"
+                value={newPropertyOptions}
+                onChange={(event) => setNewPropertyOptions(event.target.value)}
+                placeholder="todo, in-progress, done"
+                className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
+              />
+            </div>
+          )}
+
+          {newPropertyType === "relation" && (
+            <div>
+              <label
+                htmlFor="collection-property-relation-target"
+                className="mb-1 block text-xs font-medium text-gray-600"
+              >
+                Target collection
+              </label>
+              <select
+                id="collection-property-relation-target"
+                value={newPropertyRelationTargetCollectionId}
+                onChange={(event) => setNewPropertyRelationTargetCollectionId(event.target.value)}
+                className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
+              >
+                <option value="self">This collection</option>
+                {(collections ?? [])
+                  .filter((collection) => collection.id !== collectionId)
+                  .map((collection) => (
+                    <option key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex items-center gap-4">
+            <Checkbox
+              isSelected={newPropertyRequired}
+              onChange={(isSelected) => setNewPropertyRequired(Boolean(isSelected))}
+              className="text-xs text-gray-600"
+            >
+              Required
+            </Checkbox>
+            <Checkbox
+              isSelected={newPropertyUnique}
+              onChange={(isSelected) => setNewPropertyUnique(Boolean(isSelected))}
+              className="text-xs text-gray-600"
+            >
+              Unique
+            </Checkbox>
+          </div>
+
+          {hasDuplicatePropertyName && (
+            <p className="text-xs text-red-600">This property name already exists.</p>
+          )}
+
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={!newPropertyName.trim() || Boolean(hasDuplicatePropertyName)}
+              className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Add Property
+            </button>
+          </div>
+        </div>
+      </Popover>
+    </DialogTrigger>
   );
 });
 
@@ -1027,7 +1107,12 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
       );
     }
 
-    if ((fieldDef?.type === "select" || fieldDef?.type === "multi-select") && fieldDef.options) {
+    if (
+      (fieldDef?.type === "select" ||
+        fieldDef?.type === "multi-select" ||
+        fieldDef?.type === "status") &&
+      fieldDef.options
+    ) {
       return (
         <select
           autoFocus
@@ -1049,8 +1134,8 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
         >
           <option value="">-</option>
           {fieldDef.options.map((option) => (
-            <option key={option} value={option}>
-              {option}
+            <option key={option.id} value={option.id}>
+              {option.label}
             </option>
           ))}
         </select>
@@ -1090,12 +1175,22 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
       ? (relationOptions.find((option) => option.id === currentValue)?.title ?? "Missing record")
       : null;
 
+  const enumLabel =
+    typeof currentValue === "string" &&
+    (fieldDef?.type === "select" ||
+      fieldDef?.type === "multi-select" ||
+      fieldDef?.type === "status")
+      ? (fieldDef.options?.find((option) => option.id === currentValue)?.label ?? "Unknown option")
+      : null;
+
   const content =
     kind === "title" ? (
       <span className="font-medium text-gray-900">{row.original.title || "Untitled"}</span>
     ) : currentValue !== null && currentValue !== undefined ? (
       fieldDef?.type === "relation" ? (
         (relationLabel ?? "Missing record")
+      ) : enumLabel ? (
+        enumLabel
       ) : (
         String(currentValue)
       )
@@ -1126,10 +1221,13 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
 
 function getEditableValue(
   fieldDef: PropertyDefinition | undefined,
-  value: string | number | boolean | null | undefined,
+  value: string | number | boolean | string[] | null | undefined,
 ): string {
   if (fieldDef?.type === "boolean") {
     return value === true ? "true" : value === false ? "false" : "";
+  }
+  if (Array.isArray(value)) {
+    return value.join(", ");
   }
   return value === null || value === undefined ? "" : String(value);
 }
@@ -1164,8 +1262,8 @@ function sortNullableValues(
   rowB: { getValue: (columnId: string) => unknown },
   columnId: string,
 ): number {
-  const first = rowA.getValue(columnId) as string | number | boolean | null | undefined;
-  const second = rowB.getValue(columnId) as string | number | boolean | null | undefined;
+  const first = rowA.getValue(columnId) as string | number | boolean | string[] | null | undefined;
+  const second = rowB.getValue(columnId) as string | number | boolean | string[] | null | undefined;
 
   if (first == null && second == null) {
     return 0;
@@ -1183,6 +1281,13 @@ function sortNullableValues(
 
   if (typeof first === "boolean" && typeof second === "boolean") {
     return Number(first) - Number(second);
+  }
+
+  if (Array.isArray(first) && Array.isArray(second)) {
+    return first.join(",").localeCompare(second.join(","), undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
   }
 
   return String(first).localeCompare(String(second), undefined, {

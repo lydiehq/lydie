@@ -50,7 +50,27 @@
   font-size: 15px;
   line-height: 1.6;
 
-  * + * {
+  &[data-doc-content] > :not(.doc-block-wide):not([data-doc-block-wide]) {
+    width: 100%;
+    max-width: var(--editor-block-max-width, 680px);
+    margin-inline: auto;
+    padding-inline: var(--editor-block-padding-x, 1rem);
+  }
+
+  &[data-doc-content] > :is(.doc-block-wide, [data-doc-block-wide]) {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  &[data-doc-content] > .react-renderer:has(> [data-doc-block-wide]) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  > * + * {
     margin-top: calc(var(--spacing) * 4);
   }
 
@@ -63,8 +83,8 @@
   blockquote p,
   ul li p,
   ol li p,
-  td p,
-  th p,
+  table:not([data-editor-widget-table]) td p,
+  table:not([data-editor-widget-table]) th p,
   ul[data-type="taskList"] li > div p {
     line-height: 1.6;
   }
@@ -348,7 +368,7 @@
     line-height: 2;
   }
 
-  table {
+  table:not([data-editor-widget-table]) {
     width: 100%;
     table-layout: auto;
     margin-top: 2em;
@@ -358,13 +378,13 @@
     border-collapse: collapse;
   }
 
-  thead {
+  table:not([data-editor-widget-table]) thead {
     border-bottom-width: 1px;
     border-bottom-style: solid;
     border-bottom-color: var(--editor-content-th-borders);
   }
 
-  thead th {
+  table:not([data-editor-widget-table]) thead th {
     color: #0d0d0d;
     font-weight: 600;
     vertical-align: bottom;
@@ -373,53 +393,53 @@
     padding-inline-start: 0.6em;
   }
 
-  thead th:first-child {
+  table:not([data-editor-widget-table]) thead th:first-child {
     padding-inline-start: 0;
   }
 
-  thead th:last-child {
+  table:not([data-editor-widget-table]) thead th:last-child {
     padding-inline-end: 0;
   }
 
-  tbody tr {
+  table:not([data-editor-widget-table]) tbody tr {
     border-bottom-width: 1px;
     border-bottom-style: solid;
     border-bottom-color: var(--editor-content-td-borders);
   }
 
-  tbody tr:last-child {
+  table:not([data-editor-widget-table]) tbody tr:last-child {
     border-bottom-width: 0;
   }
 
-  tbody td,
-  tfoot td {
+  table:not([data-editor-widget-table]) tbody td,
+  table:not([data-editor-widget-table]) tfoot td {
     padding-top: 0.8em;
     padding-inline-end: 0.6em;
     padding-bottom: 0.8em;
     padding-inline-start: 0.6em;
   }
 
-  tbody td:first-child,
-  tfoot td:first-child {
+  table:not([data-editor-widget-table]) tbody td:first-child,
+  table:not([data-editor-widget-table]) tfoot td:first-child {
     padding-inline-start: 0;
   }
 
-  tbody td:last-child,
-  tfoot td:last-child {
+  table:not([data-editor-widget-table]) tbody td:last-child,
+  table:not([data-editor-widget-table]) tfoot td:last-child {
     padding-inline-end: 0;
   }
 
-  th,
-  td {
+  table:not([data-editor-widget-table]) th,
+  table:not([data-editor-widget-table]) td {
     text-align: start;
     border: 1px solid var(--editor-content-td-borders);
   }
 
-  thead th {
+  table:not([data-editor-widget-table]) thead th {
     border-color: var(--editor-content-th-borders);
   }
 
-  td code {
+  table:not([data-editor-widget-table]) td code {
     font-size: 0.8125rem;
   }
 
@@ -511,7 +531,9 @@
 /* Reset class to negate all editor-content styles - similar to Tailwind's no-prose */
 .editor-content-reset,
 .editor-content .editor-content-reset,
-.editor-content-sm .editor-content-reset {
+.editor-content-sm .editor-content-reset,
+.editor-content [data-doc-widget],
+.editor-content-sm [data-doc-widget] {
   /* Reset base styles */
   color: inherit;
   font-size: inherit;
@@ -765,15 +787,15 @@
   --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
-  & table {
+  & table:not([data-editor-widget-table]) {
     border-collapse: collapse;
   }
 
-  & thead {
+  & table:not([data-editor-widget-table]) thead {
     border-bottom-style: solid;
   }
 
-  & tbody tr {
+  & table:not([data-editor-widget-table]) tbody tr {
     border-bottom-style: solid;
   }
 
@@ -809,7 +831,27 @@
   font-size: 0.8125rem;
   line-height: 1.6;
 
-  * + * {
+  &[data-doc-content] > :not(.doc-block-wide):not([data-doc-block-wide]) {
+    width: 100%;
+    max-width: var(--editor-block-max-width, 680px);
+    margin-inline: auto;
+    padding-inline: var(--editor-block-padding-x, 1rem);
+  }
+
+  &[data-doc-content] > :is(.doc-block-wide, [data-doc-block-wide]) {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  &[data-doc-content] > .react-renderer:has(> [data-doc-block-wide]) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  > * + * {
     margin-top: calc(var(--spacing) * 3);
   }
 
@@ -1023,7 +1065,7 @@
     content: none;
   }
 
-  table {
+  table:not([data-editor-widget-table]) {
     width: 100%;
     table-layout: auto;
     margin-top: 1.5em;
@@ -1032,12 +1074,12 @@
     line-height: 1.4;
   }
 
-  thead {
+  table:not([data-editor-widget-table]) thead {
     border-bottom-width: 1px;
     border-bottom-color: var(--editor-content-th-borders);
   }
 
-  thead th {
+  table:not([data-editor-widget-table]) thead th {
     color: #0d0d0d;
     font-weight: 600;
     vertical-align: bottom;
@@ -1046,52 +1088,52 @@
     padding-inline-start: 0.5em;
   }
 
-  thead th:first-child {
+  table:not([data-editor-widget-table]) thead th:first-child {
     padding-inline-start: 0;
   }
 
-  thead th:last-child {
+  table:not([data-editor-widget-table]) thead th:last-child {
     padding-inline-end: 0;
   }
 
-  tbody tr {
+  table:not([data-editor-widget-table]) tbody tr {
     border-bottom-width: 1px;
     border-bottom-color: var(--editor-content-td-borders);
   }
 
-  tbody tr:last-child {
+  table:not([data-editor-widget-table]) tbody tr:last-child {
     border-bottom-width: 0;
   }
 
-  tbody td,
-  tfoot td {
+  table:not([data-editor-widget-table]) tbody td,
+  table:not([data-editor-widget-table]) tfoot td {
     padding-top: 0.6em;
     padding-inline-end: 0.5em;
     padding-bottom: 0.6em;
     padding-inline-start: 0.5em;
   }
 
-  tbody td:first-child,
-  tfoot td:first-child {
+  table:not([data-editor-widget-table]) tbody td:first-child,
+  table:not([data-editor-widget-table]) tfoot td:first-child {
     padding-inline-start: 0;
   }
 
-  tbody td:last-child,
-  tfoot td:last-child {
+  table:not([data-editor-widget-table]) tbody td:last-child,
+  table:not([data-editor-widget-table]) tfoot td:last-child {
     padding-inline-end: 0;
   }
 
-  th,
-  td {
+  table:not([data-editor-widget-table]) th,
+  table:not([data-editor-widget-table]) td {
     text-align: start;
     border: 1px solid var(--editor-content-td-borders);
   }
 
-  thead th {
+  table:not([data-editor-widget-table]) thead th {
     border-color: var(--editor-content-th-borders);
   }
 
-  td code {
+  table:not([data-editor-widget-table]) td code {
     font-size: 0.75rem;
   }
 
@@ -1182,7 +1224,9 @@
 
 .editor-content-reset,
 .editor-content .editor-content-reset,
-.editor-content-sm .editor-content-reset {
+.editor-content-sm .editor-content-reset,
+.editor-content [data-doc-widget],
+.editor-content-sm [data-doc-widget] {
   /* Reset base styles */
   color: inherit;
   font-size: inherit;

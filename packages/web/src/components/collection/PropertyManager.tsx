@@ -1,4 +1,5 @@
 import type { PropertyDefinition } from "@lydie/core/collection";
+import { createId } from "@lydie/core/id";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -10,6 +11,7 @@ const PROPERTY_TYPES = [
   { value: "text", label: "Text" },
   { value: "number", label: "Number" },
   { value: "select", label: "Select" },
+  { value: "status", label: "Status" },
   { value: "boolean", label: "Checkbox" },
   { value: "date", label: "Date" },
   { value: "multi-select", label: "Multi Select" },
@@ -60,19 +62,38 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
   const handleAddProperty = async () => {
     if (!newProperty.name.trim()) return;
 
+    const enumOptions =
+      newProperty.type === "status"
+        ? [
+            { id: createId(), label: "To do", order: 0, stage: "NOT_STARTED" as const },
+            { id: createId(), label: "In progress", order: 1, stage: "IN_PROGRESS" as const },
+            { id: createId(), label: "Done", order: 2, stage: "COMPLETE" as const },
+          ]
+        : newProperty.type === "select" || newProperty.type === "multi-select"
+          ? newProperty.options
+              .split(",")
+              .map((o) => o.trim())
+              .filter(Boolean)
+              .map((label, index) => ({
+                id: createId(),
+                label,
+                order: index,
+              }))
+          : undefined;
+
+    if (
+      (newProperty.type === "select" || newProperty.type === "multi-select") &&
+      (!enumOptions || enumOptions.length === 0)
+    ) {
+      return;
+    }
+
     const propDef: PropertyDefinition = {
       name: newProperty.name.trim(),
       type: newProperty.type,
       required: newProperty.required,
       unique: newProperty.unique,
-      ...(newProperty.type === "select" || newProperty.type === "multi-select"
-        ? {
-            options: newProperty.options
-              .split(",")
-              .map((o) => o.trim())
-              .filter(Boolean),
-          }
-        : {}),
+      ...(enumOptions ? { options: enumOptions } : {}),
       ...(newProperty.type === "relation"
         ? {
             relation: {

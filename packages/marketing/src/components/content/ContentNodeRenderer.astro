@@ -4,6 +4,7 @@ import type { ContentNode, TextNode } from "@lydie/core/content";
 import { codeToHtml } from "shiki";
 
 import {
+  getChecklistItems,
   getFaqItems,
   getFlowchartEdges,
   getFlowchartNodes,
@@ -38,12 +39,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object";
 }
 
-function getChildren(value: ContentNode | TextNode): Array<ContentNode | TextNode> {
+function getChildren(
+  value: ContentNode | TextNode,
+): Array<ContentNode | TextNode> {
   if (!("content" in value) || !Array.isArray(value.content)) {
     return [];
   }
 
-  return value.content.filter((child): child is ContentNode | TextNode => isRecord(child));
+  return value.content.filter((child): child is ContentNode | TextNode =>
+    isRecord(child),
+  );
 }
 
 function extractText(value: ContentNode | TextNode): string {
@@ -61,11 +66,17 @@ function extractText(value: ContentNode | TextNode): string {
 function extractCodeText(value: ContentNode): string {
   return getChildren(value)
     .filter((child) => child.type === "text")
-    .map((child) => (typeof (child as TextNode).text === "string" ? (child as TextNode).text : ""))
+    .map((child) =>
+      typeof (child as TextNode).text === "string"
+        ? (child as TextNode).text
+        : "",
+    )
     .join("");
 }
 
-function getRenderableRichTextNodes(value: ContentNode | null): Array<ContentNode | TextNode> {
+function getRenderableRichTextNodes(
+  value: ContentNode | null,
+): Array<ContentNode | TextNode> {
   if (!value) {
     return [];
   }
@@ -77,9 +88,15 @@ function getRenderableRichTextNodes(value: ContentNode | null): Array<ContentNod
   return [value];
 }
 
-function getRichTextProperty(properties: Record<string, unknown>, key: string): ContentNode | null {
+function getRichTextProperty(
+  properties: Record<string, unknown>,
+  key: string,
+): ContentNode | null {
   const value = properties[key];
-  return value !== null && typeof value === "object" && "type" in value && value.type === "doc"
+  return value !== null &&
+    typeof value === "object" &&
+    "type" in value &&
+    value.type === "doc"
     ? (value as ContentNode)
     : null;
 }
@@ -90,8 +107,13 @@ const attrs = isRecord("attrs" in node ? node.attrs : undefined)
 const children = getChildren(node);
 
 const headingLevel =
-  typeof attrs.level === "number" && attrs.level >= 1 && attrs.level <= 6 ? attrs.level : 1;
-const headingId = node.type === "heading" ? nextHeadingId(extractText(node).replace(/\s+/g, " ")) : "";
+  typeof attrs.level === "number" && attrs.level >= 1 && attrs.level <= 6
+    ? attrs.level
+    : 1;
+const headingId =
+  node.type === "heading"
+    ? nextHeadingId(extractText(node).replace(/\s+/g, " "))
+    : "";
 
 const componentName = typeof attrs.name === "string" ? attrs.name.trim() : "";
 const componentProperties = isRecord(attrs.properties)
@@ -100,6 +122,9 @@ const componentProperties = isRecord(attrs.properties)
 const normalizedComponentName = normalizeComponentKey(componentName);
 const componentBodyRichText = getRichTextProperty(componentProperties, "body");
 const componentBodyNodes = getRenderableRichTextNodes(componentBodyRichText);
+const checklistTitle = getStringProperty(componentProperties, "title");
+const checklistItems = getChecklistItems(componentProperties, "items");
+const checklistNote = getStringProperty(componentProperties, "note");
 const pillarType = getStringProperty(componentProperties, "type") || "note";
 const pillarHeading = getStringProperty(componentProperties, "heading") || "";
 
@@ -143,7 +168,8 @@ if (node.type === "image" && imageSrc) {
   }
 }
 
-const codeLanguage = typeof attrs.language === "string" ? attrs.language : undefined;
+const codeLanguage =
+  typeof attrs.language === "string" ? attrs.language : undefined;
 let highlightedCodeHtml: string | null = null;
 if (node.type === "codeBlock") {
   const code = extractCodeText(node as ContentNode);
@@ -158,113 +184,176 @@ if (node.type === "codeBlock") {
   }
 }
 
-const orderedListStart = typeof attrs.start === "number" ? attrs.start : undefined;
-const taskChecked = typeof attrs.checked === "boolean" ? attrs.checked : undefined;
-const tableColspan = typeof attrs.colspan === "number" && attrs.colspan > 1 ? attrs.colspan : undefined;
-const tableRowspan = typeof attrs.rowspan === "number" && attrs.rowspan > 1 ? attrs.rowspan : undefined;
+const orderedListStart =
+  typeof attrs.start === "number" ? attrs.start : undefined;
+const taskChecked =
+  typeof attrs.checked === "boolean" ? attrs.checked : undefined;
+const tableColspan =
+  typeof attrs.colspan === "number" && attrs.colspan > 1
+    ? attrs.colspan
+    : undefined;
+const tableRowspan =
+  typeof attrs.rowspan === "number" && attrs.rowspan > 1
+    ? attrs.rowspan
+    : undefined;
 const textNode = node.type === "text" ? (node as TextNode) : null;
 ---
 
-{node.type === "text" && (
-  <ContentTextRenderer
-    text={textNode?.text || ""}
-    marks={textNode?.marks}
-    linkPrefix={linkPrefix}
-    linkResolver={linkResolver}
-  />
-)}
+{
+  node.type === "text" && (
+    <ContentTextRenderer
+      text={textNode?.text || ""}
+      marks={textNode?.marks}
+      linkPrefix={linkPrefix}
+      linkResolver={linkResolver}
+    />
+  )
+}
 
-{node.type === "doc" && (
-  children.map((child) => (
-    <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-  ))
-)}
-
-{node.type === "paragraph" && (
-  <p>
-    {children.map((child) => (
+{
+  node.type === "doc" &&
+    children.map((child) => (
       <Astro.self
         node={child}
         linkPrefix={linkPrefix}
         linkResolver={linkResolver}
         nextHeadingId={nextHeadingId}
       />
-    ))}
-  </p>
-)}
+    ))
+}
 
-{node.type === "heading" && (
-  <HeadingWithAnchor level={headingLevel} headingId={headingId}>
-    {children.map((child) => (
-      <Astro.self
-        node={child}
-        linkPrefix={linkPrefix}
-        linkResolver={linkResolver}
-        nextHeadingId={nextHeadingId}
-      />
-    ))}
-  </HeadingWithAnchor>
-)}
+{
+  node.type === "paragraph" && (
+    <p>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </p>
+  )
+}
 
-{node.type === "bulletList" && (
-  <ul>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </ul>
-)}
+{
+  node.type === "heading" && (
+    <HeadingWithAnchor level={headingLevel} headingId={headingId}>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </HeadingWithAnchor>
+  )
+}
 
-{node.type === "orderedList" && (
-  <ol start={orderedListStart}>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </ol>
-)}
+{
+  node.type === "bulletList" && (
+    <ul>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </ul>
+  )
+}
 
-{node.type === "listItem" && (
-  <li>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </li>
-)}
+{
+  node.type === "orderedList" && (
+    <ol start={orderedListStart}>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </ol>
+  )
+}
 
-{node.type === "taskList" && (
-  <ul data-type="taskList">
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </ul>
-)}
+{
+  node.type === "listItem" && (
+    <li>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </li>
+  )
+}
 
-{node.type === "taskItem" && (
-  <li data-type="taskItem" data-checked={taskChecked}>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </li>
-)}
+{
+  node.type === "taskList" && (
+    <ul data-type="taskList">
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </ul>
+  )
+}
 
-{node.type === "horizontalRule" && (
-  <hr />
-)}
+{
+  node.type === "taskItem" && (
+    <li data-type="taskItem" data-checked={taskChecked}>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </li>
+  )
+}
 
-{node.type === "blockquote" && (
-  <blockquote>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </blockquote>
-)}
+{node.type === "horizontalRule" && <hr />}
 
-{node.type === "codeBlock" && highlightedCodeHtml && (
+{
+  node.type === "blockquote" && (
+    <blockquote>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </blockquote>
+  )
+}
+
+{
+  node.type === "codeBlock" && highlightedCodeHtml && (
     <div class="rounded-lg bg-gray-50 border border-gray-200 p-3 my-0 overflow-x-auto [&_pre]:bg-transparent! [&_pre]:p-0! [&_pre]:m-0! [&_pre]:border-0! [&_pre]:overflow-x-auto!">
       <Fragment set:html={highlightedCodeHtml} />
     </div>
-)}
+  )
+}
 
-{node.type === "codeBlock" && !highlightedCodeHtml && (
+{
+  node.type === "codeBlock" && !highlightedCodeHtml && (
     <div class="rounded-lg bg-gray-50 border border-gray-200 p-3 my-0 overflow-x-auto">
       <pre>
         <code class={codeLanguage ? `language-${codeLanguage}` : undefined}>
@@ -272,135 +361,214 @@ const textNode = node.type === "text" ? (node as TextNode) : null;
         </code>
       </pre>
     </div>
-)}
+  )
+}
 
-{node.type === "image" && imageSrc && (
-  <div class="my-6 flex justify-center">
-    <img
-      src={optimizedImage?.src || imageSrc}
-      srcset={optimizedImage?.srcSet?.attribute}
-      sizes="(max-width: 672px) 100vw, 672px"
-      alt={imageAlt}
-      title={imageTitle}
-      width={optimizedImage?.attributes?.width || imageWidth}
-      height={optimizedImage?.attributes?.height || imageHeight}
-      class="rounded-lg border border-black/8 max-w-full h-auto"
-      loading="lazy"
-      decoding="async"
-    />
-  </div>
-)}
+{
+  node.type === "image" && imageSrc && (
+    <div class="my-6 flex justify-center">
+      <img
+        src={optimizedImage?.src || imageSrc}
+        srcset={optimizedImage?.srcSet?.attribute}
+        sizes="(max-width: 672px) 100vw, 672px"
+        alt={imageAlt}
+        title={imageTitle}
+        width={optimizedImage?.attributes?.width || imageWidth}
+        height={optimizedImage?.attributes?.height || imageHeight}
+        class="rounded-lg border border-black/8 max-w-full h-auto"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  )
+}
 
-{node.type === "table" && (
-  <table>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </table>
-)}
+{
+  node.type === "table" && (
+    <table>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </table>
+  )
+}
 
-{node.type === "tableRow" && (
-  <tr>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </tr>
-)}
+{
+  node.type === "tableRow" && (
+    <tr>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </tr>
+  )
+}
 
-{node.type === "tableHeader" && (
-  <th colspan={tableColspan} rowspan={tableRowspan}>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </th>
-)}
+{
+  node.type === "tableHeader" && (
+    <th colspan={tableColspan} rowspan={tableRowspan}>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </th>
+  )
+}
 
-{node.type === "tableCell" && (
-  <td colspan={tableColspan} rowspan={tableRowspan}>
-    {children.map((child) => (
-      <Astro.self node={child} linkPrefix={linkPrefix} linkResolver={linkResolver} nextHeadingId={nextHeadingId} />
-    ))}
-  </td>
-)}
+{
+  node.type === "tableCell" && (
+    <td colspan={tableColspan} rowspan={tableRowspan}>
+      {children.map((child) => (
+        <Astro.self
+          node={child}
+          linkPrefix={linkPrefix}
+          linkResolver={linkResolver}
+          nextHeadingId={nextHeadingId}
+        />
+      ))}
+    </td>
+  )
+}
 
-{(node.type === "customBlock" || node.type === "documentComponent") &&
-  normalizedComponentName === "pillarcallout" && (
-    <aside class="my-8 relative">
-      <div class="absolute -top-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10"></div>
-      <div class="absolute -bottom-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10"></div>
-      <div class="absolute -right-1.5 bg-linear-to-t w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10"></div>
-      <div class="absolute -left-1.5 bg-linear-to-b w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10"></div>
-      <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
-        <p class={`m-0 text-xs font-semibold uppercase tracking-wide ${pillarLabelClass}`}>
-          {pillarType}
-        </p>
-        {pillarHeading ? (
-          <h3 class={`mt-2 mb-0 text-lg font-semibold ${pillarHeadingClass}`}>
-            {pillarHeading}
-          </h3>
-        ) : null}
-        {componentBodyNodes.length > 0 ? (
-          <div class={`mt-2 ${pillarBodyClass} leading-relaxed`}>
-            {componentBodyNodes.map((bodyNode) => (
-              <Astro.self
-                node={bodyNode}
-                linkPrefix={linkPrefix}
-                linkResolver={linkResolver}
-                nextHeadingId={nextHeadingId}
-              />
-            ))}
-          </div>
-        ) : getStringProperty(componentProperties, "body") ? (
-          <p class={`mt-2 mb-0 leading-relaxed ${pillarBodyClass}`}>
-            {getStringProperty(componentProperties, "body")}
+{
+  (node.type === "customBlock" || node.type === "documentComponent") &&
+    normalizedComponentName === "pillarcallout" && (
+      <aside class="my-8 relative">
+        <div class="absolute -top-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+        <div class="absolute -bottom-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+        <div class="absolute -right-1.5 bg-linear-to-t w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+        <div class="absolute -left-1.5 bg-linear-to-b w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+        <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
+          <p
+            class={`m-0 text-xs font-semibold uppercase tracking-wide ${pillarLabelClass}`}
+          >
+            {pillarType}
           </p>
-        ) : null}
-      </div>
-    </aside>
-  )}
+          {pillarHeading ? (
+            <h3 class={`mt-2 mb-0 text-lg font-semibold ${pillarHeadingClass}`}>
+              {pillarHeading}
+            </h3>
+          ) : null}
+          {componentBodyNodes.length > 0 ? (
+            <div class={`mt-2 ${pillarBodyClass} leading-relaxed`}>
+              {componentBodyNodes.map((bodyNode) => (
+                <Astro.self
+                  node={bodyNode}
+                  linkPrefix={linkPrefix}
+                  linkResolver={linkResolver}
+                  nextHeadingId={nextHeadingId}
+                />
+              ))}
+            </div>
+          ) : getStringProperty(componentProperties, "body") ? (
+            <p class={`mt-2 mb-0 leading-relaxed ${pillarBodyClass}`}>
+              {getStringProperty(componentProperties, "body")}
+            </p>
+          ) : null}
+        </div>
+      </aside>
+    )
+}
 
-{(node.type === "customBlock" || node.type === "documentComponent") &&
-  normalizedComponentName === "flowchart" && (
-    <Flowchart
-      title={getStringProperty(componentProperties, "title") || undefined}
-      nodes={getFlowchartNodes(componentProperties.nodes)}
-      edges={getFlowchartEdges(componentProperties.edges)}
-    />
-  )}
+{
+  (node.type === "customBlock" || node.type === "documentComponent") &&
+    normalizedComponentName === "flowchart" && (
+      <Flowchart
+        title={getStringProperty(componentProperties, "title") || undefined}
+        nodes={getFlowchartNodes(componentProperties.nodes)}
+        edges={getFlowchartEdges(componentProperties.edges)}
+      />
+    )
+}
 
-{(node.type === "customBlock" || node.type === "documentComponent") &&
-  normalizedComponentName === "faq" && (
-    <FAQBlock
-      title={getStringProperty(componentProperties, "title") || undefined}
-      items={getFaqItems(componentProperties.items)}
-    />
-  )}
+{
+  (node.type === "customBlock" || node.type === "documentComponent") &&
+    normalizedComponentName === "faq" && (
+      <FAQBlock
+        title={getStringProperty(componentProperties, "title") || undefined}
+        items={getFaqItems(componentProperties.items)}
+      />
+    )
+}
 
-{(node.type === "customBlock" || node.type === "documentComponent") &&
-  normalizedComponentName === "tldr" && (
-    <aside class="my-8 relative">
-      <div class="absolute -top-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10"></div>
-      <div class="absolute -bottom-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10"></div>
-      <div class="absolute -right-1.5 bg-linear-to-t w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10"></div>
-      <div class="absolute -left-1.5 bg-linear-to-b w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10"></div>
-      <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
-        <p class="m-0 text-xs font-semibold uppercase tracking-wide text-rose-700">TLDR</p>
-        {componentBodyNodes.length > 0 ? (
-          <div class="mt-2 text-rose-950 leading-relaxed">
-            {componentBodyNodes.map((bodyNode) => (
-              <Astro.self
-                node={bodyNode}
-                linkPrefix={linkPrefix}
-                linkResolver={linkResolver}
-                nextHeadingId={nextHeadingId}
-              />
-            ))}
-          </div>
-        ) : getStringProperty(componentProperties, "body") ? (
-          <p class="mt-2 mb-0 leading-relaxed text-rose-950">
-            {getStringProperty(componentProperties, "body")}
+{
+  (node.type === "customBlock" || node.type === "documentComponent") &&
+    normalizedComponentName === "tldr" && (
+      <aside class="my-8 relative not-prose">
+        <div class="absolute -top-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+        <div class="absolute -bottom-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+        <div class="absolute -right-1.5 bg-linear-to-t w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+        <div class="absolute -left-1.5 bg-linear-to-b w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+        <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
+          <p class="m-0 text-xs font-semibold uppercase tracking-wide text-rose-700">
+            TLDR
           </p>
-        ) : null}
-      </div>
-    </aside>
-  )}
+          {componentBodyNodes.length > 0 ? (
+            <div class="mt-2 text-rose-950 leading-relaxed">
+              {componentBodyNodes.map((bodyNode) => (
+                <Astro.self
+                  node={bodyNode}
+                  linkPrefix={linkPrefix}
+                  linkResolver={linkResolver}
+                  nextHeadingId={nextHeadingId}
+                />
+              ))}
+            </div>
+          ) : getStringProperty(componentProperties, "body") ? (
+            <p class="mt-2 mb-0 leading-relaxed text-rose-950">
+              {getStringProperty(componentProperties, "body")}
+            </p>
+          ) : null}
+        </div>
+      </aside>
+    )
+}
+
+{
+  (node.type === "customBlock" || node.type === "documentComponent") &&
+    normalizedComponentName === "checklist" && (
+      <aside class="my-8 relative not-prose">
+        <div class="absolute -top-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+        <div class="absolute -bottom-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+        <div class="absolute -right-1.5 bg-linear-to-t w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+        <div class="absolute -left-1.5 bg-linear-to-b w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+        <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
+          {checklistTitle ? (
+            <h3 class="m-0 text-lg font-semibold text-slate-900">
+              {checklistTitle}
+            </h3>
+          ) : null}
+          {checklistItems.length > 0 ? (
+            <ul class="mt-3 mb-0 list-none space-y-2 pl-0 text-slate-800">
+              {checklistItems.map((item) => (
+                <li class="m-0 flex items-start gap-2">
+                  <span class="mt-[3px] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-[11px] font-semibold text-emerald-700">
+                    ✓
+                  </span>
+                  <span>{item.body}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {checklistNote ? (
+            <p class="mt-3 mb-0 text-sm leading-relaxed text-slate-700">
+              {checklistNote}
+            </p>
+          ) : null}
+        </div>
+      </aside>
+    )
+}

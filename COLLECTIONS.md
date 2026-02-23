@@ -17,6 +17,25 @@ This is intentionally closer to Notion-style databases than to the old "collecti
 - **Collections**: schema + handle + organization scoping.
 - **Collection fields**: per-document values for collection properties.
 
+## Enum, Select, and Status Fields
+
+Collections use a shared enum primitive for `select`, `multi-select`, and `status` fields.
+
+- Enum options are stored in collection schema as option objects (`id`, `label`, optional `color`, `order`, `archived`).
+- Entry values store option ids (not labels) in `collection_fields.values`.
+- `status` is a specialized single-select enum with required stage metadata per option:
+  - `NOT_STARTED`
+  - `IN_PROGRESS`
+  - `COMPLETE`
+
+Status defaults are opinionated:
+
+- `To do` (`NOT_STARTED`)
+- `In progress` (`IN_PROGRESS`)
+- `Done` (`COMPLETE`)
+
+Select/status options are scoped to a specific field in a specific collection. They are not globally reusable across collections by default.
+
 Design intent:
 
 - Documents remain the content primitive.

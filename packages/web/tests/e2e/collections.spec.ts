@@ -124,7 +124,10 @@ test.describe("collections", () => {
             type: "select",
             required: false,
             unique: false,
-            options: ["draft", "published"],
+            options: [
+              { id: "opt_draft", label: "draft", order: 0 },
+              { id: "opt_published", label: "published", order: 1 },
+            ],
           },
         ],
       });

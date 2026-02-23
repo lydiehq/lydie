@@ -28,10 +28,30 @@ const RESERVED_HANDLES = new Set([
 
 const propertyDefinitionSchema = z.object({
   name: z.string(),
-  type: z.enum(["text", "number", "date", "select", "multi-select", "boolean", "relation"]),
+  type: z.enum([
+    "text",
+    "number",
+    "date",
+    "select",
+    "multi-select",
+    "status",
+    "boolean",
+    "relation",
+  ]),
   required: z.boolean(),
   unique: z.boolean(),
-  options: z.array(z.string()).optional(),
+  options: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string().min(1),
+        color: z.string().optional(),
+        order: z.number(),
+        archived: z.boolean().optional(),
+        stage: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETE"]).optional(),
+      }),
+    )
+    .optional(),
   relation: z
     .object({
       targetCollectionId: z.union([z.literal("self"), z.string()]),
@@ -48,6 +68,112 @@ const propertyDefinitionSchema = z.object({
 });
 
 const propertiesSchema = z.array(propertyDefinitionSchema);
+
+function validatePropertyDefinitions(properties: Array<z.infer<typeof propertyDefinitionSchema>>) {
+  for (const property of properties) {
+    const isEnumField =
+      property.type === "select" || property.type === "multi-select" || property.type === "status";
+    if (!isEnumField) {
+      continue;
+    }
+
+    if (!property.options || property.options.length === 0) {
+      throw new Error(`Property "${property.name}" must define at least one option`);
+    }
+
+    const seenOptionIds = new Set<string>();
+    for (const option of property.options) {
+      if (seenOptionIds.has(option.id)) {
+        throw new Error(`Property "${property.name}" has duplicate option id "${option.id}"`);
+      }
+      seenOptionIds.add(option.id);
+
+      if (property.type === "status" && !option.stage) {
+        throw new Error(
+          `Status property "${property.name}" option "${option.label}" is missing stage`,
+        );
+      }
+    }
+  }
+}
+
+async function validateEnumFieldValues(
+  collectionProperties: unknown,
+  values: Record<string, string | number | boolean | string[] | null>,
+) {
+  const properties = Array.isArray(collectionProperties)
+    ? (collectionProperties as Array<Record<string, unknown>>)
+    : [];
+
+  for (const property of properties) {
+    if (typeof property.name !== "string" || typeof property.type !== "string") {
+      continue;
+    }
+
+    if (!(property.name in values)) {
+      continue;
+    }
+
+    const isEnumField =
+      property.type === "select" || property.type === "multi-select" || property.type === "status";
+    if (!isEnumField) {
+      continue;
+    }
+
+    const rawOptions = Array.isArray(property.options) ? property.options : [];
+    const optionIds = new Set(
+      rawOptions
+        .filter((option): option is { id: string } => {
+          return (
+            typeof option === "object" &&
+            option !== null &&
+            typeof (option as { id?: unknown }).id === "string"
+          );
+        })
+        .map((option) => option.id),
+    );
+
+    const rawValue = values[property.name];
+    if (property.type === "multi-select") {
+      if (rawValue === null) {
+        continue;
+      }
+
+      if (typeof rawValue === "string") {
+        if (!optionIds.has(rawValue)) {
+          throw new Error(`Invalid option id "${rawValue}" for field "${property.name}"`);
+        }
+        continue;
+      }
+
+      if (!Array.isArray(rawValue) || rawValue.some((entry) => typeof entry !== "string")) {
+        throw new Error(
+          `Multi-select field "${property.name}" must be a list of option ids or null`,
+        );
+      }
+
+      for (const optionId of rawValue) {
+        if (!optionIds.has(optionId)) {
+          throw new Error(`Invalid option id "${optionId}" for field "${property.name}"`);
+        }
+      }
+
+      continue;
+    }
+
+    if (rawValue === null) {
+      continue;
+    }
+
+    if (typeof rawValue !== "string") {
+      throw new Error(`Field "${property.name}" must be an option id or null`);
+    }
+
+    if (!optionIds.has(rawValue)) {
+      throw new Error(`Invalid option id "${rawValue}" for field "${property.name}"`);
+    }
+  }
+}
 
 async function maybeOne<T>(query: Promise<T>): Promise<T | null> {
   try {
@@ -112,7 +238,7 @@ async function validateRelationFieldValues(
   collectionId: string,
   documentId: string,
   collectionProperties: unknown,
-  values: Record<string, string | number | boolean | null>,
+  values: Record<string, string | number | boolean | string[] | null>,
 ) {
   const properties = Array.isArray(collectionProperties)
     ? (collectionProperties as Array<Record<string, unknown>>)
@@ -190,6 +316,8 @@ export const collectionMutators = {
         args.handle?.trim() || args.name,
       );
 
+      validatePropertyDefinitions(args.properties);
+
       await tx.mutate.collections.insert(
         withTimestamps({
           id: args.collectionId ?? createId(),
@@ -238,6 +366,7 @@ export const collectionMutators = {
         );
       }
       if (args.properties !== undefined) {
+        validatePropertyDefinitions(args.properties);
         updates.properties = args.properties as ReadonlyJSONValue;
       }
 
@@ -250,7 +379,10 @@ export const collectionMutators = {
       documentId: z.string(),
       collectionId: z.string(),
       organizationId: z.string(),
-      values: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+      values: z.record(
+        z.string(),
+        z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.null()]),
+      ),
     }),
     async ({ tx, ctx, args: { documentId, collectionId, organizationId, values } }) => {
       hasOrganizationAccess(ctx, organizationId);
@@ -278,6 +410,8 @@ export const collectionMutators = {
       if (!document || !collection) {
         throw new Error("Invalid document or collection");
       }
+
+      await validateEnumFieldValues(collection.properties, values);
 
       await validateRelationFieldValues(
         tx,

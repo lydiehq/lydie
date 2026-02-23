@@ -292,6 +292,7 @@ class EditorCache {
       editorProps: {
         attributes: {
           class: "size-full outline-none editor-content pb-8",
+          "data-doc-content": "",
         },
       },
     });

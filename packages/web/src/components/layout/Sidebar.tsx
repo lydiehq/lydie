@@ -17,7 +17,13 @@ import { useQuery } from "@rocicorp/zero/react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useAtom, useSetAtom } from "jotai";
 import { memo, useMemo } from "react";
-import { Button as RACButton, Disclosure, DisclosurePanel, Heading } from "react-aria-components";
+import {
+  Button as RACButton,
+  Disclosure,
+  DisclosurePanel,
+  GridList,
+  Heading,
+} from "react-aria-components";
 import { toast } from "sonner";
 
 import {
@@ -329,14 +335,16 @@ const CollectionsSection = memo(function CollectionsSection() {
         </div>
       </div>
       <DisclosurePanel className="px-2 pb-2">
-        {collections.map((collection) => (
-          <CollectionTreeItem
-            key={collection.id}
-            collection={collection}
-            isActive={activeCollectionId === collection.id}
-            organizationSlug={organization.slug}
-          />
-        ))}
+        <GridList aria-label="Collections" className="flex flex-col">
+          {collections.map((collection) => (
+            <CollectionTreeItem
+              key={collection.id}
+              collection={collection}
+              isActive={activeCollectionId === collection.id}
+              organizationSlug={organization.slug}
+            />
+          ))}
+        </GridList>
       </DisclosurePanel>
     </Disclosure>
   );

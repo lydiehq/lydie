@@ -186,10 +186,25 @@ export interface MockCollection {
   organization_id: string;
   properties: Array<{
     name: string;
-    type: "text" | "number" | "date" | "select" | "multi-select" | "boolean" | "relation";
+    type:
+      | "text"
+      | "number"
+      | "date"
+      | "select"
+      | "multi-select"
+      | "status"
+      | "boolean"
+      | "relation";
     required: boolean;
     unique: boolean;
-    options?: string[];
+    options?: Array<{
+      id: string;
+      label: string;
+      color?: string;
+      order: number;
+      archived?: boolean;
+      stage?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE";
+    }>;
   }>;
   created_at: string;
   updated_at: string;
@@ -216,7 +231,7 @@ export interface MockCollectionFields {
   id: string;
   document_id: string;
   collection_id: string;
-  values: Record<string, string | number | boolean | null>;
+  values: Record<string, string | number | boolean | string[] | null>;
   created_at: string;
   updated_at: string;
 }
