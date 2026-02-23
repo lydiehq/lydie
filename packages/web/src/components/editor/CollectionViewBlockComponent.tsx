@@ -16,12 +16,14 @@ import { NodeViewWrapper, type NodeViewRendererProps } from "@tiptap/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { CollectionKanban } from "@/components/modules/CollectionKanban";
 import { CollectionTable } from "@/components/modules/CollectionTable";
 import { useZero } from "@/services/zero";
 
 import { Link } from "../generic/Link";
 
-const collectionsByOrganizationQuery = queries.collections.byOrganization as any;
+const viewsByOrganizationQuery = queries.collections.viewsByOrganization as any;
+const viewsByCollectionQuery = queries.collections.viewsByCollection as any;
 const collectionViewByIdQuery = queries.collections.viewById as any;
 
 type Props = NodeViewRendererProps & {
@@ -36,7 +38,6 @@ export function CollectionViewBlockComponent(props: Props) {
   const { viewId } = node.attrs;
   const [newCollectionName, setNewCollectionName] = useState("");
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
-  const [isCreatingView, setIsCreatingView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCollectionLinkHovered, setIsCollectionLinkHovered] = useState(false);
 
@@ -49,10 +50,9 @@ export function CollectionViewBlockComponent(props: Props) {
       : null,
   );
 
-  // Query all collections for the picker
-  const [collections] = useQuery(
+  const [views] = useQuery(
     organizationId
-      ? collectionsByOrganizationQuery({
+      ? viewsByOrganizationQuery({
           organizationId,
         })
       : null,
@@ -60,13 +60,17 @@ export function CollectionViewBlockComponent(props: Props) {
 
   const viewData = view as any;
   const collectionData = viewData?.collection as any;
-  const collectionsData = useMemo(
+  const viewsData = useMemo(
     () =>
-      (collections ?? []) as unknown as Array<{
+      (views ?? []) as unknown as Array<{
         id: string;
         name?: string;
+        collection?: {
+          id: string;
+          name?: string;
+        } | null;
       }>,
-    [collections],
+    [views],
   );
 
   const collectionName = (collectionData?.name as string | undefined) || "Untitled";
@@ -74,14 +78,31 @@ export function CollectionViewBlockComponent(props: Props) {
   const viewName = (viewData?.name as string | undefined) || "Untitled view";
   const viewConfig = (viewData?.config as { filters?: Record<string, unknown> } | undefined) ?? {};
   const filters = viewConfig.filters ?? {};
+  const viewType = (viewData?.type as "table" | "list" | "kanban" | undefined) ?? "table";
+
+  const [collectionViews] = useQuery(
+    collectionId
+      ? viewsByCollectionQuery({
+          organizationId,
+          collectionId,
+        })
+      : null,
+  );
 
   const schema = (collectionData?.properties || []) as PropertyDefinition[];
-  const availableCollections: Array<{ id: string; name: string }> = collectionsData.map(
-    (entry) => ({
+  const availableViews: Array<{
+    id: string;
+    name: string;
+    collectionId: string;
+    collectionName: string;
+  }> = viewsData
+    .filter((entry) => entry.collection?.id)
+    .map((entry) => ({
       id: entry.id,
-      name: entry.name || "Untitled",
-    }),
-  );
+      name: entry.name || "Untitled view",
+      collectionId: entry.collection?.id || "",
+      collectionName: entry.collection?.name || "Untitled",
+    }));
 
   const handleUpdate = useCallback(
     (attrs: Partial<typeof node.attrs>) => {
@@ -134,34 +155,8 @@ export function CollectionViewBlockComponent(props: Props) {
     };
   }, [blockId, documentId, organizationId, z]);
 
-  const handleSelectCollection = async (collection: { id: string; name: string }) => {
-    if (isCreatingView) {
-      return;
-    }
-
-    const id = createId();
-
-    setIsCreatingView(true);
-
-    try {
-      await z.mutate(
-        mutators.collection.createView({
-          viewId: id,
-          organizationId,
-          collectionId: collection.id,
-          name: `${collection.name} view`,
-          type: "table",
-        }),
-      );
-
-      handleUpdate({ viewId: id });
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to create view");
-    } finally {
-      setIsCreatingView(false);
-    }
-
+  const handleSelectView = (view: { id: string }) => {
+    handleUpdate({ viewId: view.id });
     setSearchQuery("");
   };
 
@@ -233,7 +228,7 @@ export function CollectionViewBlockComponent(props: Props) {
       return;
     }
 
-    z.mutate(
+    void z.mutate(
       mutators.document.create({
         id: createId(),
         organizationId,
@@ -244,11 +239,27 @@ export function CollectionViewBlockComponent(props: Props) {
   };
 
   // Filter collections based on search query
-  const filteredCollections = useMemo(() => {
-    if (!searchQuery.trim()) return availableCollections.slice(0, 8);
+  const filteredViews = useMemo(() => {
+    if (!searchQuery.trim()) return availableViews.slice(0, 8);
     const query = searchQuery.toLowerCase();
-    return availableCollections.filter((c) => c.name.toLowerCase().includes(query)).slice(0, 8);
-  }, [availableCollections, searchQuery]);
+    return availableViews
+      .filter((view) => {
+        return (
+          view.name.toLowerCase().includes(query) || view.collectionName.toLowerCase().includes(query)
+        );
+      })
+      .slice(0, 8);
+  }, [availableViews, searchQuery]);
+
+  const collectionViewsData = useMemo(
+    () =>
+      (collectionViews ?? []) as Array<{
+        id: string;
+        name: string;
+        type: "table" | "list" | "kanban";
+      }>,
+    [collectionViews],
+  );
 
   // Empty state - no collection selected
   if (!viewId || !collectionId) {
@@ -308,10 +319,10 @@ export function CollectionViewBlockComponent(props: Props) {
             <div className="rounded-lg border border-gray-200 bg-white p-3 space-y-2">
               <div className="space-y-1">
                 <div className="text-sm font-medium text-gray-900">
-                  Or use an existing collection
+                  Or use an existing view
                 </div>
                 <p className="text-xs text-gray-500">
-                  Pick one to embed it as this collection view.
+                  Pick a saved view and embed it.
                 </p>
               </div>
 
@@ -319,7 +330,7 @@ export function CollectionViewBlockComponent(props: Props) {
                 <SearchFilled className="size-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search collections..."
+                  placeholder="Search views..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 text-sm outline-none bg-transparent"
@@ -327,21 +338,24 @@ export function CollectionViewBlockComponent(props: Props) {
               </div>
 
               <div className="max-h-48 overflow-y-auto space-y-1">
-                {filteredCollections.length === 0 ? (
+                {filteredViews.length === 0 ? (
                   <div className="text-sm text-gray-500 py-4 text-center">
-                    {searchQuery.trim() ? "No collections found" : "No collections available"}
+                    {searchQuery.trim() ? "No views found" : "No views available"}
                   </div>
                 ) : (
-                  filteredCollections.map((c) => (
+                  filteredViews.map((view) => (
                     <button
-                      key={c.id}
-                      onClick={() => void handleSelectCollection(c)}
+                      key={view.id}
+                      onClick={() => handleSelectView(view)}
                       className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3 transition-colors"
                     >
                       <FolderFilled className="size-4 text-gray-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm text-gray-900 truncate">
-                          {c.name || "Untitled"}
+                          {view.name}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {view.collectionName}
                         </div>
                       </div>
                     </button>
@@ -413,6 +427,25 @@ export function CollectionViewBlockComponent(props: Props) {
           </div>
         </div>
 
+        {collectionViewsData.length > 1 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {collectionViewsData.map((viewOption) => (
+              <button
+                key={viewOption.id}
+                type="button"
+                onClick={() => handleUpdate({ viewId: viewOption.id })}
+                className={`rounded-md border px-2 py-1 text-xs transition-colors ${
+                  viewOption.id === viewId
+                    ? "border-blue-300 bg-blue-50 text-blue-700"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {viewOption.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         <div
           className="overflow-x-auto"
           style={{
@@ -421,13 +454,22 @@ export function CollectionViewBlockComponent(props: Props) {
             paddingLeft: "var(--editor-content-line-start, var(--editor-block-padding-x, 1rem))",
           }}
         >
-          <CollectionTable
-            collectionId={collectionId}
-            organizationId={organizationId}
-            organizationSlug={organizationSlug}
-            schema={schema}
-            showCreateRowButton={false}
-          />
+          {viewType === "kanban" ? (
+            <CollectionKanban
+              collectionId={collectionId}
+              organizationId={organizationId}
+              organizationSlug={organizationSlug}
+              schema={schema}
+            />
+          ) : (
+            <CollectionTable
+              collectionId={collectionId}
+              organizationId={organizationId}
+              organizationSlug={organizationSlug}
+              schema={schema}
+              showCreateRowButton={false}
+            />
+          )}
         </div>
 
         <div>

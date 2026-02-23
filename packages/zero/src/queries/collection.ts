@@ -40,6 +40,18 @@ export const collectionQueries = {
     },
   ),
 
+  viewsByOrganization: defineQuery(
+    z.object({ organizationId: z.string() }),
+    ({ args: { organizationId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.collection_views
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
+        .orderBy("created_at", "asc")
+        .related("collection");
+    },
+  ),
+
   viewsByCollection: defineQuery(
     z.object({ organizationId: z.string(), collectionId: z.string() }),
     ({ args: { organizationId, collectionId }, ctx }) => {
