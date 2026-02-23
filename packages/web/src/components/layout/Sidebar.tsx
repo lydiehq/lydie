@@ -328,6 +328,7 @@ const CollectionsSection = memo(function CollectionsSection() {
         <div className="flex items-center gap-x-1 ml-auto">
           <RACButton
             onPress={() => void handleCreateCollection()}
+            aria-label="New Collection"
             className="text-gray-400 hover:text-gray-700 p-1 -ml-0.5 group/button relative size-5 rounded-md hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100"
           >
             <Add16Filled aria-hidden className="size-3 shrink-0 absolute text-black/45" />
