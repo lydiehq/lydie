@@ -40,6 +40,46 @@ export const collectionQueries = {
     },
   ),
 
+  viewsByCollection: defineQuery(
+    z.object({ organizationId: z.string(), collectionId: z.string() }),
+    ({ args: { organizationId, collectionId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.collection_views
+        .where("organization_id", organizationId)
+        .where("collection_id", collectionId)
+        .where("deleted_at", "IS", null)
+        .orderBy("created_at", "asc")
+        .related("collection");
+    },
+  ),
+
+  viewById: defineQuery(
+    z.object({ organizationId: z.string(), viewId: z.string() }),
+    ({ args: { organizationId, viewId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.collection_views
+        .where("organization_id", organizationId)
+        .where("id", viewId)
+        .where("deleted_at", "IS", null)
+        .one()
+        .related("collection");
+    },
+  ),
+
+  viewUsagesByCollection: defineQuery(
+    z.object({ organizationId: z.string(), collectionId: z.string() }),
+    ({ args: { organizationId, collectionId }, ctx }) => {
+      hasOrganizationAccess(ctx, organizationId);
+      return zql.collection_view_usages
+        .where("organization_id", organizationId)
+        .where("collection_id", collectionId)
+        .related("document", (q) =>
+          q.where("organization_id", organizationId).where("deleted_at", "IS", null),
+        )
+        .related("view", (q) => q.where("deleted_at", "IS", null));
+    },
+  ),
+
   trash: defineQuery(
     z.object({
       organizationId: z.string(),

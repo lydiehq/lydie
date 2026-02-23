@@ -1,6 +1,8 @@
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import type { PopoverProps } from "@lydie/ui/components/generic/Popover";
 import { mutators } from "@lydie/zero/mutators";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -28,25 +30,44 @@ export function CollectionMenu({
     params?: Record<string, string>;
   }) => void;
 
+  const [usages] = useQuery(
+    queries.collections.viewUsagesByCollection({
+      organizationId: organization.id,
+      collectionId,
+    }) as any,
+  );
+
+  const usageCount = (usages ?? []).length;
+
   const handleDelete = () => {
     const itemName = collectionName;
+    const warningMessage =
+      usageCount > 0
+        ? `This collection is referenced by ${usageCount} view block${usageCount === 1 ? "" : "s"}. Remove those references first.`
+        : `This collection will be moved to trash. You can restore it later from the trash.`;
 
     confirmDialog({
       title: `Move "${itemName.length > 16 ? itemName.slice(0, 10) + "..." : itemName}" to trash?`,
-      message: `This collection will be moved to trash. You can restore it later from the trash.`,
+      message: warningMessage,
       onConfirm: () => {
-        deleteCollectionWithUndo();
+        void deleteCollectionWithUndo();
       },
     });
   };
 
-  const deleteCollectionWithUndo = () => {
-    z.mutate(
-      mutators.collection.delete({
-        collectionId,
-        organizationId: organization.id,
-      }),
-    );
+  const deleteCollectionWithUndo = async () => {
+    try {
+      await z.mutate(
+        mutators.collection.delete({
+          collectionId,
+          organizationId: organization.id,
+        }),
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("This collection is still referenced by one or more views");
+      return;
+    }
 
     toast("Collection moved to trash", {
       duration: 5000,

@@ -650,13 +650,19 @@ export function CollectionTable({
                       key={header.id}
                       colSpan={header.colSpan}
                       style={{ width: header.getSize() }}
-                      className={`relative border-b border-r border-gray-200 px-3 py-1.5 text-left align-middle last:border-r-0 ${
+                      className={`relative border-b border-r border-gray-200 p-0 text-left align-middle last:border-r-0 ${
                         header.column.id === "select" ? "text-center" : ""
                       }`}
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={`flex min-h-9 items-center px-3 py-1 ${
+                            header.column.id === "select" ? "justify-center" : ""
+                          }`}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </div>
+                      )}
                       {header.column.getCanResize() ? (
                         <div
                           role="separator"

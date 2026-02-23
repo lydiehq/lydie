@@ -69,6 +69,8 @@ const propertyDefinitionSchema = z.object({
 
 const propertiesSchema = z.array(propertyDefinitionSchema);
 
+const collectionViewTypeSchema = z.enum(["table", "list", "kanban"]);
+
 function validatePropertyDefinitions(properties: Array<z.infer<typeof propertyDefinitionSchema>>) {
   for (const property of properties) {
     const isEnumField =
@@ -181,6 +183,24 @@ async function maybeOne<T>(query: Promise<T>): Promise<T | null> {
   } catch {
     return null;
   }
+}
+
+async function getCollectionViewById(tx: any, organizationId: string, viewId: string) {
+  return maybeOne<{
+    id: string;
+    organization_id: string;
+    collection_id: string;
+    config?: Record<string, unknown>;
+    deleted_at: number | null;
+  }>(
+    tx.run(
+      zql.collection_views
+        .where("id", viewId)
+        .where("organization_id", organizationId)
+        .where("deleted_at", "IS", null)
+        .one(),
+    ),
+  );
 }
 
 async function createUniqueHandle(tx: any, organizationId: string, input: string): Promise<string> {
@@ -454,6 +474,208 @@ export const collectionMutators = {
     },
   ),
 
+  createView: defineMutator(
+    z.object({
+      viewId: z.string().optional(),
+      organizationId: z.string(),
+      collectionId: z.string(),
+      name: z.string().min(1),
+      type: collectionViewTypeSchema.default("table"),
+      filters: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
+      sortField: z.string().nullable().default(null),
+      sortDirection: z.enum(["asc", "desc"]).nullable().default("asc"),
+      groupBy: z.string().nullable().default(null),
+    }),
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+
+      const collection = await maybeOne(
+        tx.run(
+          zql.collections
+            .where("id", args.collectionId)
+            .where("organization_id", args.organizationId)
+            .where("deleted_at", "IS", null)
+            .one(),
+        ),
+      );
+
+      if (!collection) {
+        throw new Error("Collection not found");
+      }
+
+      await tx.mutate.collection_views.insert(
+        withTimestamps({
+          id: args.viewId ?? createId(),
+          organization_id: args.organizationId,
+          collection_id: args.collectionId,
+          name: args.name.trim(),
+          type: args.type,
+          config: {
+            filters: args.filters,
+            sortField: args.sortField,
+            sortDirection: args.sortDirection,
+            groupBy: args.groupBy,
+          } as ReadonlyJSONValue,
+          deleted_at: null,
+        }),
+      );
+    },
+  ),
+
+  updateView: defineMutator(
+    z.object({
+      viewId: z.string(),
+      organizationId: z.string(),
+      name: z.string().min(1).optional(),
+      type: collectionViewTypeSchema.optional(),
+      filters: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+      sortField: z.string().nullable().optional(),
+      sortDirection: z.enum(["asc", "desc"]).nullable().optional(),
+      groupBy: z.string().nullable().optional(),
+    }),
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+
+      const view = await getCollectionViewById(tx, args.organizationId, args.viewId);
+      if (!view) {
+        throw new Error("View not found");
+      }
+
+      const updates: any = { id: args.viewId };
+      if (args.name !== undefined) {
+        updates.name = args.name.trim();
+      }
+      if (args.type !== undefined) {
+        updates.type = args.type;
+      }
+      if (
+        args.filters !== undefined ||
+        args.sortField !== undefined ||
+        args.sortDirection !== undefined ||
+        args.groupBy !== undefined
+      ) {
+        updates.config = {
+          ...(view.config ?? {}),
+          ...(args.filters !== undefined ? { filters: args.filters } : {}),
+          ...(args.sortField !== undefined ? { sortField: args.sortField } : {}),
+          ...(args.sortDirection !== undefined ? { sortDirection: args.sortDirection } : {}),
+          ...(args.groupBy !== undefined ? { groupBy: args.groupBy } : {}),
+        } as ReadonlyJSONValue;
+      }
+
+      await tx.mutate.collection_views.update(updates);
+    },
+  ),
+
+  deleteView: defineMutator(
+    z.object({
+      viewId: z.string(),
+      organizationId: z.string(),
+    }),
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+
+      const view = await getCollectionViewById(tx, args.organizationId, args.viewId);
+      if (!view) {
+        throw new Error("View not found");
+      }
+
+      await tx.mutate.collection_views.update({
+        id: args.viewId,
+        deleted_at: Date.now(),
+      });
+    },
+  ),
+
+  upsertViewUsage: defineMutator(
+    z.object({
+      organizationId: z.string(),
+      documentId: z.string(),
+      viewId: z.string(),
+      blockId: z.string(),
+    }),
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+
+      const [document, view] = await Promise.all([
+        maybeOne(
+          tx.run(
+            zql.documents
+              .where("id", args.documentId)
+              .where("organization_id", args.organizationId)
+              .where("deleted_at", "IS", null)
+              .one(),
+          ),
+        ),
+        getCollectionViewById(tx, args.organizationId, args.viewId),
+      ]);
+
+      if (!document) {
+        throw new Error("Document not found");
+      }
+
+      if (!view) {
+        throw new Error("View not found");
+      }
+
+      const existingUsage = await maybeOne(
+        tx.run(
+          zql.collection_view_usages
+            .where("document_id", args.documentId)
+            .where("block_id", args.blockId)
+            .one(),
+        ),
+      );
+
+      if (existingUsage) {
+        await tx.mutate.collection_view_usages.update({
+          id: existingUsage.id,
+          view_id: args.viewId,
+          collection_id: view.collection_id,
+        });
+        return;
+      }
+
+      await tx.mutate.collection_view_usages.insert(
+        withTimestamps({
+          id: createId(),
+          organization_id: args.organizationId,
+          document_id: args.documentId,
+          view_id: args.viewId,
+          collection_id: view.collection_id,
+          block_id: args.blockId,
+        }),
+      );
+    },
+  ),
+
+  deleteViewUsageByBlock: defineMutator(
+    z.object({
+      organizationId: z.string(),
+      documentId: z.string(),
+      blockId: z.string(),
+    }),
+    async ({ tx, ctx, args }) => {
+      hasOrganizationAccess(ctx, args.organizationId);
+
+      const existingUsage = await maybeOne(
+        tx.run(
+          zql.collection_view_usages
+            .where("organization_id", args.organizationId)
+            .where("document_id", args.documentId)
+            .where("block_id", args.blockId)
+            .one(),
+        ),
+      );
+
+      if (!existingUsage) {
+        return;
+      }
+
+      await tx.mutate.collection_view_usages.delete({ id: existingUsage.id });
+    },
+  ),
+
   delete: defineMutator(
     z.object({
       collectionId: z.string(),
@@ -475,10 +697,36 @@ export const collectionMutators = {
         throw new Error("Collection not found");
       }
 
+      const activeUsages = await tx.run(
+        zql.collection_view_usages
+          .where("organization_id", args.organizationId)
+          .where("collection_id", args.collectionId),
+      );
+
+      if (activeUsages.length > 0) {
+        throw new Error(
+          `This collection is referenced by ${activeUsages.length} view block${activeUsages.length === 1 ? "" : "s"}. Remove those references before deleting the collection.`,
+        );
+      }
+
       await tx.mutate.collections.update({
         id: args.collectionId,
         deleted_at: Date.now(),
       });
+
+      const views = await tx.run(
+        zql.collection_views
+          .where("organization_id", args.organizationId)
+          .where("collection_id", args.collectionId)
+          .where("deleted_at", "IS", null),
+      );
+
+      for (const view of views) {
+        await tx.mutate.collection_views.update({
+          id: view.id,
+          deleted_at: Date.now(),
+        });
+      }
     },
   ),
 
@@ -507,6 +755,19 @@ export const collectionMutators = {
         id: args.collectionId,
         deleted_at: null,
       });
+
+      const views = await tx.run(
+        zql.collection_views
+          .where("organization_id", args.organizationId)
+          .where("collection_id", args.collectionId),
+      );
+
+      for (const view of views) {
+        await tx.mutate.collection_views.update({
+          id: view.id,
+          deleted_at: null,
+        });
+      }
     },
   ),
 };

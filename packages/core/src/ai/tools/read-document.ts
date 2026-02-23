@@ -1,17 +1,61 @@
-import { db, documentsTable } from "@lydie/database";
+import { db, collectionViewsTable, collectionsTable, documentsTable } from "@lydie/database";
 import { tool } from "ai";
-import { and, eq, ilike } from "drizzle-orm";
+import { and, eq, ilike, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { getHocuspocusDocumentState, isHocuspocusAvailable } from "../../document-state";
 import { serializeToHTML } from "../../serialization/html";
 import { convertYjsToJson } from "../../yjs-to-json";
 
+type CollectionViewBlock = {
+  viewId: string;
+  blockId: string | null;
+  blockIndex: number;
+};
+
+function extractCollectionViewBlocks(content: unknown): CollectionViewBlock[] {
+  const blocks: CollectionViewBlock[] = [];
+  let blockIndex = 0;
+
+  const visitNode = (node: any) => {
+    if (!node || typeof node !== "object") {
+      return;
+    }
+
+    if (node.type === "collectionViewBlock") {
+      const attrs = (node.attrs as Record<string, unknown> | undefined) ?? {};
+      const rawViewId = attrs.viewId;
+      const blockId = typeof attrs.blockId === "string" ? attrs.blockId : null;
+
+      if (typeof rawViewId === "string" && rawViewId.length > 0) {
+        blocks.push({
+          viewId: rawViewId,
+          blockId,
+          blockIndex,
+        });
+      }
+
+      blockIndex += 1;
+    }
+
+    if (Array.isArray(node.content)) {
+      for (const child of node.content) {
+        visitNode(child);
+      }
+    }
+  };
+
+  visitNode(content);
+
+  return blocks;
+}
+
 export const readDocument = (userId: string, organizationId: string) =>
   tool({
     description: `Read the full content of a document by ID or title.
 
 Returns complete HTML content plus optional metadata (creation date, slug, etc.).
+Also includes embedded collection view metadata when present so you can inspect collections by ID.
 
 CRITICAL: Always read before editing. Use this to understand document structure, answer content questions, or reference other documents.`,
     inputSchema: z.object({
@@ -118,6 +162,7 @@ CRITICAL: Always read before editing. Use this to understand document structure,
       }
 
       const jsonContent = convertYjsToJson(yjsState);
+      const collectionViewBlocks = extractCollectionViewBlocks(jsonContent);
 
       let htmlContent: string;
       try {
@@ -132,7 +177,57 @@ CRITICAL: Always read before editing. Use this to understand document structure,
         title: document.title,
         content: htmlContent,
         source, // Indicates whether content came from "database" or "real-time"
+        collectionViews: collectionViewBlocks,
       };
+
+      if (collectionViewBlocks.length > 0) {
+        const uniqueViewIds = Array.from(
+          new Set(collectionViewBlocks.map((block) => block.viewId)),
+        );
+
+        const referencedViews = await db
+          .select({
+            id: collectionViewsTable.id,
+            collectionId: collectionViewsTable.collectionId,
+            name: collectionViewsTable.name,
+            type: collectionViewsTable.type,
+            config: collectionViewsTable.config,
+          })
+          .from(collectionViewsTable)
+          .where(
+            and(
+              eq(collectionViewsTable.organizationId, organizationId),
+              inArray(collectionViewsTable.id, uniqueViewIds),
+              isNull(collectionViewsTable.deletedAt),
+            ),
+          );
+
+        const uniqueCollectionIds = Array.from(
+          new Set(referencedViews.map((view) => view.collectionId)),
+        );
+
+        const referencedCollections = uniqueCollectionIds.length
+          ? await db
+              .select({
+                id: collectionsTable.id,
+                name: collectionsTable.name,
+                handle: collectionsTable.handle,
+                properties: collectionsTable.properties,
+              })
+              .from(collectionsTable)
+              .where(
+                and(
+                  eq(collectionsTable.organizationId, organizationId),
+                  inArray(collectionsTable.id, uniqueCollectionIds),
+                  isNull(collectionsTable.deletedAt),
+                ),
+              )
+          : [];
+
+        result.referencedViews = referencedViews;
+
+        result.referencedCollections = referencedCollections;
+      }
 
       if (includeMetadata) {
         result.slug = document.slug;

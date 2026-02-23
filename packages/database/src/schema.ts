@@ -265,6 +265,62 @@ export const collectionsTable = pgTable(
   ],
 );
 
+export const collectionViewsTable = pgTable(
+  "collection_views",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collectionsTable.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    type: text("type").notNull().default("table"),
+    config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),
+    deletedAt: timestamp("deleted_at"),
+    ...timestamps,
+  },
+  (table) => [
+    index("collection_views_organization_id_idx").on(table.organizationId),
+    index("collection_views_collection_id_idx").on(table.collectionId),
+    index("collection_views_deleted_at_idx").on(table.deletedAt),
+  ],
+);
+
+export const collectionViewUsagesTable = pgTable(
+  "collection_view_usages",
+  {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$default(() => createId()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizationsTable.id, { onDelete: "cascade" }),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentsTable.id, { onDelete: "cascade" }),
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collectionsTable.id, { onDelete: "cascade" }),
+    viewId: text("view_id")
+      .notNull()
+      .references(() => collectionViewsTable.id, { onDelete: "cascade" }),
+    blockId: text("block_id").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("collection_view_usages_organization_id_idx").on(table.organizationId),
+    index("collection_view_usages_collection_id_idx").on(table.collectionId),
+    index("collection_view_usages_view_id_idx").on(table.viewId),
+    uniqueIndex("collection_view_usages_document_block_unique").on(table.documentId, table.blockId),
+  ],
+);
+
 export const collectionFieldsTable = pgTable(
   "collection_fields",
   {

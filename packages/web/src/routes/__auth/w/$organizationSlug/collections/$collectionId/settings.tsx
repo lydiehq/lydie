@@ -79,6 +79,13 @@ interface CollectionSettingsProps {
 
 function CollectionSettings({ collection, organization, userIsAdmin }: CollectionSettingsProps) {
   const z = useZero();
+  const [usages] = useQuery(
+    queries.collections.viewUsagesByCollection({
+      organizationId: organization.id,
+      collectionId: collection.id,
+    }) as any,
+  );
+  const usageCount = (usages ?? []).length;
 
   const handleForm = useAppForm({
     defaultValues: {
@@ -108,7 +115,12 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
   });
 
   const handleDeleteCollection = async () => {
-    if (!window.confirm(`Delete collection "${collection.name}"?`)) {
+    const warning =
+      usageCount > 0
+        ? `This collection is referenced by ${usageCount} view block${usageCount === 1 ? "" : "s"}. Remove those references first.`
+        : "This action cannot be undone.";
+
+    if (!window.confirm(`Delete collection "${collection.name}"?\n\n${warning}`)) {
       return;
     }
 
@@ -123,7 +135,7 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
       window.location.assign(`/w/${organization.slug}`);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete collection");
+      toast.error("This collection is still referenced by one or more views");
     }
   };
 

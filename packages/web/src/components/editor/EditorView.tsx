@@ -170,9 +170,9 @@ export function EditorView({
 
             <EditorContent editor={titleEditor} aria-label="Document title" className="my-2" />
 
-            <div className="my-4">
+            {/* <div className="my-4">
               <DocumentDetails doc={doc} collectionSchema={collectionSchema} />
-            </div>
+            </div> */}
           </div>
 
           <LinkPopover

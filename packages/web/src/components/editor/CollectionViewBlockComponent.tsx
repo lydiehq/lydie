@@ -10,9 +10,10 @@ import { createId } from "@lydie/core/id";
 import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
+import { motion } from "framer-motion";
 import { useQuery } from "@rocicorp/zero/react";
 import { NodeViewWrapper, type NodeViewRendererProps } from "@tiptap/react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { CollectionTable } from "@/components/modules/CollectionTable";
@@ -20,28 +21,30 @@ import { useZero } from "@/services/zero";
 
 import { Link } from "../generic/Link";
 
-const collectionByIdQuery = queries.collections.byId as any;
 const collectionsByOrganizationQuery = queries.collections.byOrganization as any;
+const collectionViewByIdQuery = queries.collections.viewById as any;
 
 type Props = NodeViewRendererProps & {
+  documentId: string;
   organizationId: string;
   organizationSlug: string;
 };
 
 export function CollectionViewBlockComponent(props: Props) {
-  const { node, editor, getPos, organizationId, organizationSlug } = props;
+  const { node, editor, getPos, organizationId, organizationSlug, documentId } = props;
   const z = useZero();
-  const { collectionId, filters } = node.attrs;
+  const { viewId } = node.attrs;
   const [newCollectionName, setNewCollectionName] = useState("");
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [isCreatingView, setIsCreatingView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCollectionLinkHovered, setIsCollectionLinkHovered] = useState(false);
 
-  // Query the collection for its schema
-  const [collection] = useQuery(
-    collectionId && organizationId
-      ? collectionByIdQuery({
+  const [view] = useQuery(
+    viewId && organizationId
+      ? collectionViewByIdQuery({
           organizationId,
-          collectionId,
+          viewId,
         })
       : null,
   );
@@ -55,7 +58,8 @@ export function CollectionViewBlockComponent(props: Props) {
       : null,
   );
 
-  const collectionData = collection as any;
+  const viewData = view as any;
+  const collectionData = viewData?.collection as any;
   const collectionsData = useMemo(
     () =>
       (collections ?? []) as unknown as Array<{
@@ -66,6 +70,10 @@ export function CollectionViewBlockComponent(props: Props) {
   );
 
   const collectionName = (collectionData?.name as string | undefined) || "Untitled";
+  const collectionId = (collectionData?.id as string | undefined) ?? null;
+  const viewName = (viewData?.name as string | undefined) || "Untitled view";
+  const viewConfig = (viewData?.config as { filters?: Record<string, unknown> } | undefined) ?? {};
+  const filters = viewConfig.filters ?? {};
 
   const schema = (collectionData?.properties || []) as PropertyDefinition[];
   const availableCollections: Array<{ id: string; name: string }> = collectionsData.map(
@@ -75,15 +83,85 @@ export function CollectionViewBlockComponent(props: Props) {
     }),
   );
 
-  const handleUpdate = (attrs: Partial<typeof node.attrs>) => {
-    const pos = getPos();
-    if (typeof pos === "number") {
-      editor.chain().focus().updateAttributes("collectionViewBlock", attrs).run();
-    }
-  };
+  const handleUpdate = useCallback(
+    (attrs: Partial<typeof node.attrs>) => {
+      const pos = getPos();
+      if (typeof pos === "number") {
+        editor.chain().focus().updateAttributes("collectionViewBlock", attrs).run();
+      }
+    },
+    [editor, getPos],
+  );
 
-  const handleSelectCollection = (collection: { id: string; name: string }) => {
-    handleUpdate({ collectionId: collection.id });
+  const blockId = (node.attrs.blockId as string | null | undefined) ?? null;
+
+  useEffect(() => {
+    if (blockId) {
+      return;
+    }
+
+    handleUpdate({ blockId: createId() });
+  }, [blockId, handleUpdate]);
+
+  useEffect(() => {
+    if (!blockId || !viewId) {
+      return;
+    }
+
+    void z.mutate(
+      mutators.collection.upsertViewUsage({
+        organizationId,
+        documentId,
+        viewId,
+        blockId,
+      }),
+    );
+  }, [blockId, documentId, organizationId, viewId, z]);
+
+  useEffect(() => {
+    return () => {
+      if (!blockId) {
+        return;
+      }
+
+      void z.mutate(
+        mutators.collection.deleteViewUsageByBlock({
+          organizationId,
+          documentId,
+          blockId,
+        }),
+      );
+    };
+  }, [blockId, documentId, organizationId, z]);
+
+  const handleSelectCollection = async (collection: { id: string; name: string }) => {
+    if (isCreatingView) {
+      return;
+    }
+
+    const id = createId();
+
+    setIsCreatingView(true);
+
+    try {
+      await z.mutate(
+        mutators.collection.createView({
+          viewId: id,
+          organizationId,
+          collectionId: collection.id,
+          name: `${collection.name} view`,
+          type: "table",
+        }),
+      );
+
+      handleUpdate({ viewId: id });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create view");
+    } finally {
+      setIsCreatingView(false);
+    }
+
     setSearchQuery("");
   };
 
@@ -98,8 +176,6 @@ export function CollectionViewBlockComponent(props: Props) {
     setIsCreatingCollection(true);
     setNewCollectionName("");
 
-    handleSelectCollection({ id, name });
-
     try {
       await z.mutate(
         mutators.collection.create({
@@ -109,16 +185,39 @@ export function CollectionViewBlockComponent(props: Props) {
           properties: [],
         }),
       );
+
+      const viewId = createId();
+      await z.mutate(
+        mutators.collection.createView({
+          viewId,
+          organizationId,
+          collectionId: id,
+          name: `${name} view`,
+          type: "table",
+        }),
+      );
+
+      handleUpdate({ viewId });
     } catch (error) {
-      handleUpdate({ collectionId: null });
+      handleUpdate({ viewId: null });
       console.error(error);
-      toast.error("Failed to create collection");
+      toast.error("Failed to create collection view");
     } finally {
       setIsCreatingCollection(false);
     }
   };
 
   const handleRemoveBlock = () => {
+    if (blockId) {
+      void z.mutate(
+        mutators.collection.deleteViewUsageByBlock({
+          organizationId,
+          documentId,
+          blockId,
+        }),
+      );
+    }
+
     const pos = getPos();
     if (typeof pos === "number") {
       editor
@@ -152,7 +251,7 @@ export function CollectionViewBlockComponent(props: Props) {
   }, [availableCollections, searchQuery]);
 
   // Empty state - no collection selected
-  if (!collectionId) {
+  if (!viewId || !collectionId) {
     return (
       <NodeViewWrapper>
         <div
@@ -236,7 +335,7 @@ export function CollectionViewBlockComponent(props: Props) {
                   filteredCollections.map((c) => (
                     <button
                       key={c.id}
-                      onClick={() => handleSelectCollection(c)}
+                      onClick={() => void handleSelectCollection(c)}
                       className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3 transition-colors"
                     >
                       <FolderFilled className="size-4 text-gray-400 flex-shrink-0" />
@@ -258,31 +357,59 @@ export function CollectionViewBlockComponent(props: Props) {
 
   return (
     <NodeViewWrapper
-      className="doc-block-wide w-full"
+      className=" w-full"
       data-doc-block-wide
       style={{
-        marginLeft: "var(--editor-content-line-start, var(--editor-block-padding-x, 1rem))",
-        width: "calc(100% - var(--editor-content-line-start, var(--editor-block-padding-x, 1rem)))",
+        paddingLeft: "var(--editor-content-line-start, var(--editor-block-padding-x, 1rem))",
       }}
     >
       <div data-doc-widget className="flex flex-col gap-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CollectionItemIcon />
-            <span className="font-medium text-lg">{collectionName}</span>
+            <motion.div
+              className="inline-flex"
+              onHoverStart={() => setIsCollectionLinkHovered(true)}
+              onHoverEnd={() => setIsCollectionLinkHovered(false)}
+              onFocusCapture={() => setIsCollectionLinkHovered(true)}
+              onBlurCapture={() => setIsCollectionLinkHovered(false)}
+            >
+              <Link
+                to="/w/$organizationSlug/collections/$collectionId"
+                params={{ collectionId }}
+                from="/w/$organizationSlug"
+                className="inline-flex items-center gap-2 rounded px-1 py-0.5 text-gray-900 transition-colors hover:bg-gray-100"
+              >
+                <span className="relative flex size-4 items-center justify-center text-gray-500">
+                  <motion.span
+                    className="absolute inset-0 flex items-center justify-center"
+                    animate={{
+                      opacity: isCollectionLinkHovered ? 0 : 1,
+                      scale: isCollectionLinkHovered ? 0.88 : 1,
+                    }}
+                    transition={{ duration: 0.16, ease: "easeOut" }}
+                  >
+                    <CollectionItemIcon />
+                  </motion.span>
+                  <motion.span
+                    className="absolute inset-0 flex items-center justify-center"
+                    animate={{
+                      opacity: isCollectionLinkHovered ? 1 : 0,
+                      scale: isCollectionLinkHovered ? 1 : 0.88,
+                    }}
+                    transition={{ duration: 0.16, ease: "easeOut" }}
+                  >
+                    <Open12Regular className="size-4" />
+                  </motion.span>
+                </span>
+                <span className="font-medium text-lg">{collectionName}</span>
+                <span className="text-sm text-gray-500">/ {viewName}</span>
+              </Link>
+            </motion.div>
             {filters && Object.keys(filters).length > 0 && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
                 Filtered
               </span>
             )}
-            <Link
-              to="/w/$organizationSlug/collections/$collectionId"
-              params={{ collectionId }}
-              from="/w/$organizationSlug"
-              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-            >
-              <Open12Regular className="size-4" />
-            </Link>
           </div>
         </div>
 

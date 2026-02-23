@@ -18,20 +18,11 @@ export const CollectionViewBlock = Node.create<CollectionViewBlockOptions>({
 
   addAttributes() {
     return {
-      collectionId: {
+      viewId: {
         default: null,
       },
-      filters: {
-        default: {},
-      },
-      sortField: {
+      blockId: {
         default: null,
-      },
-      sortDirection: {
-        default: "asc",
-      },
-      viewMode: {
-        default: "table", // 'table' | 'list'
       },
     };
   },

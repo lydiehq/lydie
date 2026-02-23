@@ -256,6 +256,7 @@ class EditorCache {
             return ReactNodeViewRenderer((nodeViewProps) =>
               createElement(CollectionViewBlockComponent, {
                 ...nodeViewProps,
+                documentId,
                 organizationId: orgId,
                 organizationSlug: orgSlug,
               }),

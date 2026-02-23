@@ -33,6 +33,10 @@ export const relations = defineRelations(schema, (r) => ({
     syncMetadata: r.many.syncMetadataTable(),
     publications: r.many.documentPublicationsTable(),
     versions: r.many.documentVersionsTable(),
+    collectionViewUsages: r.many.collectionViewUsagesTable({
+      from: r.documentsTable.id,
+      to: r.collectionViewUsagesTable.documentId,
+    }),
   },
 
   collectionsTable: {
@@ -47,6 +51,48 @@ export const relations = defineRelations(schema, (r) => ({
     fieldValues: r.many.collectionFieldsTable({
       from: r.collectionsTable.id,
       to: r.collectionFieldsTable.collectionId,
+    }),
+    views: r.many.collectionViewsTable({
+      from: r.collectionsTable.id,
+      to: r.collectionViewsTable.collectionId,
+    }),
+    viewUsages: r.many.collectionViewUsagesTable({
+      from: r.collectionsTable.id,
+      to: r.collectionViewUsagesTable.collectionId,
+    }),
+  },
+
+  collectionViewsTable: {
+    organization: r.one.organizationsTable({
+      from: r.collectionViewsTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    collection: r.one.collectionsTable({
+      from: r.collectionViewsTable.collectionId,
+      to: r.collectionsTable.id,
+    }),
+    usages: r.many.collectionViewUsagesTable({
+      from: r.collectionViewsTable.id,
+      to: r.collectionViewUsagesTable.viewId,
+    }),
+  },
+
+  collectionViewUsagesTable: {
+    organization: r.one.organizationsTable({
+      from: r.collectionViewUsagesTable.organizationId,
+      to: r.organizationsTable.id,
+    }),
+    document: r.one.documentsTable({
+      from: r.collectionViewUsagesTable.documentId,
+      to: r.documentsTable.id,
+    }),
+    collection: r.one.collectionsTable({
+      from: r.collectionViewUsagesTable.collectionId,
+      to: r.collectionsTable.id,
+    }),
+    view: r.one.collectionViewsTable({
+      from: r.collectionViewUsagesTable.viewId,
+      to: r.collectionViewsTable.id,
     }),
   },
 
@@ -134,6 +180,8 @@ export const relations = defineRelations(schema, (r) => ({
     invitations: r.many.invitationsTable(),
     documents: r.many.documentsTable(),
     collections: r.many.collectionsTable(),
+    collectionViews: r.many.collectionViewsTable(),
+    collectionViewUsages: r.many.collectionViewUsagesTable(),
     assistantConversations: r.many.assistantConversationsTable(),
     assistantAgents: r.many.assistantAgentsTable(),
     apiKeys: r.many.apiKeysTable(),

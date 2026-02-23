@@ -150,11 +150,8 @@ export const insertActions: FormattingAction[] = [
           {
             type: "collectionViewBlock",
             attrs: {
-              collectionId: null,
-              filters: {},
-              sortField: null,
-              sortDirection: "asc",
-              viewMode: "table",
+              viewId: null,
+              blockId: null,
             },
           },
           {

@@ -100,6 +100,31 @@ const collections = table("collections")
   })
   .primaryKey("id");
 
+const collectionViews = table("collection_views")
+  .columns({
+    id: string(),
+    organization_id: string(),
+    collection_id: string(),
+    name: string(),
+    type: string(),
+    config: json(),
+    deleted_at: number().optional(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
+const collectionViewUsages = table("collection_view_usages")
+  .columns({
+    id: string(),
+    organization_id: string(),
+    document_id: string(),
+    collection_id: string(),
+    view_id: string(),
+    block_id: string(),
+    ...timestamps,
+  })
+  .primaryKey("id");
+
 const collectionFields = table("collection_fields")
   .columns({
     id: string(),
@@ -378,6 +403,11 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     destField: ["document_id"],
     destSchema: documentVersions,
   }),
+  viewUsages: many({
+    sourceField: ["id"],
+    destField: ["document_id"],
+    destSchema: collectionViewUsages,
+  }),
   // Links FROM this document TO other documents
   outgoingLinks: many({
     sourceField: ["id"],
@@ -407,6 +437,57 @@ const collectionsRelations = relationships(collections, ({ one, many }) => ({
     sourceField: ["id"],
     destField: ["collection_id"],
     destSchema: collectionFields,
+  }),
+  views: many({
+    sourceField: ["id"],
+    destField: ["collection_id"],
+    destSchema: collectionViews,
+  }),
+  viewUsages: many({
+    sourceField: ["id"],
+    destField: ["collection_id"],
+    destSchema: collectionViewUsages,
+  }),
+}));
+
+const collectionViewsRelations = relationships(collectionViews, ({ one, many }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  collection: one({
+    sourceField: ["collection_id"],
+    destField: ["id"],
+    destSchema: collections,
+  }),
+  usages: many({
+    sourceField: ["id"],
+    destField: ["view_id"],
+    destSchema: collectionViewUsages,
+  }),
+}));
+
+const collectionViewUsagesRelations = relationships(collectionViewUsages, ({ one }) => ({
+  organization: one({
+    sourceField: ["organization_id"],
+    destField: ["id"],
+    destSchema: organizations,
+  }),
+  document: one({
+    sourceField: ["document_id"],
+    destField: ["id"],
+    destSchema: documents,
+  }),
+  collection: one({
+    sourceField: ["collection_id"],
+    destField: ["id"],
+    destSchema: collections,
+  }),
+  view: one({
+    sourceField: ["view_id"],
+    destField: ["id"],
+    destSchema: collectionViews,
   }),
 }));
 
@@ -459,6 +540,16 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     sourceField: ["id"],
     destField: ["organization_id"],
     destSchema: collections,
+  }),
+  collectionViews: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: collectionViews,
+  }),
+  collectionViewUsages: many({
+    sourceField: ["id"],
+    destField: ["organization_id"],
+    destSchema: collectionViewUsages,
   }),
   members: many({
     sourceField: ["id"],
@@ -1008,6 +1099,8 @@ export const schema = createSchema({
     users,
     documents,
     collections,
+    collectionViews,
+    collectionViewUsages,
     collectionFields,
     documentVersions,
     documentLinks,
@@ -1044,6 +1137,8 @@ export const schema = createSchema({
   relationships: [
     documentsRelations,
     collectionsRelations,
+    collectionViewsRelations,
+    collectionViewUsagesRelations,
     collectionFieldsRelations,
     documentVersionsRelations,
     documentLinksRelations,

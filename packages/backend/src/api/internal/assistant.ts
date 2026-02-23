@@ -6,10 +6,16 @@ import {
   isDefaultAgentId,
 } from "@lydie/core/ai/agents/defaults";
 import { getDefaultModel, getModelById, type LLMModel } from "@lydie/core/ai/models";
+import { createCollection } from "@lydie/core/ai/tools/create-collection";
+import { createCollectionEntry } from "@lydie/core/ai/tools/create-collection-entry";
 import { createDocument } from "@lydie/core/ai/tools/create-document";
+import { deleteCollection } from "@lydie/core/ai/tools/delete-collection";
 import { findDocuments } from "@lydie/core/ai/tools/find-documents";
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
+import { updateCollectionEntry } from "@lydie/core/ai/tools/update-collection-entry";
+import { updateCollection } from "@lydie/core/ai/tools/update-collection";
 import { readDocument } from "@lydie/core/ai/tools/read-document";
+import { readCollection } from "@lydie/core/ai/tools/read-collection";
 import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
 import { scanDocuments } from "@lydie/core/ai/tools/scan-documents";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
@@ -311,6 +317,12 @@ export const AssistantRoute = new Hono<{
       // }),
       find_documents: findDocuments(userId, organizationId, currentDocument?.id),
       read_document: readDocument(userId, organizationId),
+      read_collection: readCollection(userId, organizationId),
+      create_collection: createCollection(userId, organizationId),
+      update_collection: updateCollection(userId, organizationId),
+      delete_collection: deleteCollection(userId, organizationId),
+      create_collection_entry: createCollectionEntry(userId, organizationId),
+      update_collection_entry: updateCollectionEntry(userId, organizationId),
       scan_documents: scanDocuments(userId, organizationId, currentDocument?.id),
       show_documents: showDocuments(userId, organizationId, currentDocument?.id),
       move_documents: moveDocuments(userId, organizationId),
