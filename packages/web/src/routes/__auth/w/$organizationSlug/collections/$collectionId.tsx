@@ -6,7 +6,7 @@ import { Input } from "@lydie/ui/components/generic/Field";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useLocation } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TextField } from "react-aria-components";
 import { toast } from "sonner";
@@ -31,6 +31,7 @@ function RouteComponent() {
   const { organization } = useOrganization();
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
+  const location = useLocation();
 
   const [collection, status] = useQuery(
     queries.collections.byId({
@@ -56,6 +57,10 @@ function RouteComponent() {
 
   if (!collection) {
     return null;
+  }
+
+  if (location.pathname.endsWith(`/collections/${collectionId}/settings`)) {
+    return <Outlet />;
   }
 
   return (
@@ -323,7 +328,7 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
         </div>
 
         <Button intent="secondary" size="sm" onPress={handleCreateRow}>
-          + New
+          + New entry
         </Button>
         <div className="rounded-xl border border-gray-200 bg-white">
           <div className="overflow-x-auto">

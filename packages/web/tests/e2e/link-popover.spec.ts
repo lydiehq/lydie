@@ -5,6 +5,8 @@ test.describe("link popover", () => {
   test("can open popover in edit mode via button and keyboard", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
     await createDocument(page, { title: "Link Test", content: "This is some text to link" });
+    const isMac = process.platform === "darwin";
+    const modifier = isMac ? "Meta" : "Control";
 
     const contentEditor = page
       .getByLabel("Document content")
@@ -13,13 +15,14 @@ test.describe("link popover", () => {
 
     // Test opening via button
     await contentEditor.focus();
-    await page.keyboard.press("Control+a");
+    await page.keyboard.press(`${modifier}+a`);
     await page.keyboard.press("ArrowRight");
-    await page.keyboard.press("Control+Shift+ArrowRight");
+    await page.keyboard.press(`${modifier}+Shift+ArrowRight`);
     for (let i = 0; i < 6; i++) {
       await page.keyboard.press("Shift+ArrowRight");
     }
 
+    await expect(page.getByRole("button", { name: "Add Link" })).toBeVisible();
     await page.getByRole("button", { name: "Add Link" }).click();
     await page.waitForTimeout(200);
 
@@ -51,8 +54,6 @@ test.describe("link popover", () => {
     });
     await page.waitForTimeout(100);
 
-    const isMac = process.platform === "darwin";
-    const modifier = isMac ? "Meta" : "Control";
     await page.keyboard.press(`${modifier}+k`);
     await page.waitForTimeout(200);
 

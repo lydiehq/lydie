@@ -19,11 +19,3 @@ export const workspaceExportProcessorFunction = new sst.aws.Function(
     permissions: [{ actions: ["s3:GetObject", "s3:PutObject"], resources: ["*"] }],
   },
 );
-
-// Linkable resource for Lambda function ARN
-export const workspaceExportProcessorFunctionLinkable = new sst.Linkable(
-  "WorkspaceExportProcessorFunctionLinkable",
-  {
-    properties: { arn: workspaceExportProcessorFunction.arn },
-  },
-);

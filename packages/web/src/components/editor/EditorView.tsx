@@ -195,6 +195,7 @@ export function EditorView({
           </DragHandle>
 
           <EditorContent
+            data-testid="editor-content"
             aria-label="Document content"
             editor={contentEditor}
             className={clsx(

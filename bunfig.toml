@@ -1,0 +1,2 @@
+# Disable loading .env files
+env = false

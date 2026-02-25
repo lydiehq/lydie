@@ -70,8 +70,8 @@ test.describe("command menu", () => {
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible();
 
-      const searchInput = dialog.getByPlaceholder("Quick search");
-      await expect(searchInput).toBeEnabled();
+      const searchInput = dialog.getByPlaceholder("Type a command or search...");
+      await expect(searchInput).toBeVisible();
 
       // Search for the document
       await searchInput.fill("Search Test");

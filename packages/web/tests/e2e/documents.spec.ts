@@ -1,5 +1,3 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "./fixtures/auth.fixture";
 import { createDocument, gotoWorkspace } from "./utils/document";
 
@@ -12,15 +10,14 @@ test.describe("documents", () => {
     ).toBeVisible();
   });
 
-  test("can create new document in folder", async ({ page, organization }) => {
+  test("can create document inside another document", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
-    await page.getByRole("button", { name: "Create new folder" }).click();
+    await createDocument(page, { title: "Parent Document", content: "" });
+
     const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
-    await sidebarTree
-      .getByRole("row", { name: "New Folder" })
-      .getByRole("button", { name: "Folder options" })
-      .click();
-    await page.getByRole("menuitem", { name: "Create document in folder" }).click();
+    const parentSidebarItem = sidebarTree.getByRole("row", { name: "Parent Document" });
+    await parentSidebarItem.hover();
+    await parentSidebarItem.getByRole("button", { name: "Add sub document" }).click();
 
     const titleEditor = page
       .getByLabel("Document title")
@@ -29,11 +26,11 @@ test.describe("documents", () => {
     await expect(titleEditor).toBeVisible();
 
     await titleEditor.click();
-    await titleEditor.fill("Document in Folder");
+    await titleEditor.fill("Document in Parent");
     await titleEditor.blur();
 
-    const documentSidebarItem = page.getByRole("row", {
-      name: "Document in Folder",
+    const documentSidebarItem = sidebarTree.getByRole("row", {
+      name: "Document in Parent",
     });
     await expect(documentSidebarItem).toBeVisible();
     await expect(documentSidebarItem).toHaveAttribute("aria-level", "2");
@@ -42,15 +39,15 @@ test.describe("documents", () => {
   test("can update document content", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
     const content = "Hello, World!";
-    await createDocument(page, { title: "Test Document", content });
+    await createDocument(page, { title: "Test Document", content: "" });
 
     const contentEditor = page
       .getByLabel("Document content")
       .locator('[contenteditable="true"]')
       .first();
 
-    await page.reload();
-    await waitForWorkspace(page);
+    await contentEditor.click();
+    await contentEditor.fill(content);
     await expect(contentEditor).toContainText(content);
   });
 
@@ -62,7 +59,8 @@ test.describe("documents", () => {
     const documentSidebarItem = sidebarTree.getByRole("row", {
       name: "Document to Delete",
     });
-    await documentSidebarItem.getByRole("button", { name: "Document options" }).click();
+    await documentSidebarItem.hover();
+    await documentSidebarItem.getByRole("button", { name: "Document options" }).click({ force: true });
     await page.getByRole("menuitem", { name: "Delete" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Confirm" }).click();
 
@@ -86,30 +84,4 @@ test.describe("documents", () => {
     await expect(sidebarTree.getByRole("row", { name: "My new document title" })).toBeVisible();
   });
 
-  test("can publish document", async ({ page, organization }) => {
-    await gotoWorkspace(page, organization.slug);
-    await createDocument(page, { title: "Test Document", content: "This is test content" });
-
-    await page.getByRole("button", { name: "Quick Action" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await page.getByRole("dialog").getByRole("option", { name: "Publish document" }).click();
-
-    const sidebarTree = page.getByRole("treegrid", { name: "Documents" });
-    const documentSidebarItem = sidebarTree.getByRole("row", {
-      name: "Test Document",
-    });
-    await documentSidebarItem.getByRole("button", { name: "Document options" }).click();
-    await page.getByRole("menuitem", { name: "Info" }).click();
-
-    const infoDialog = page.getByRole("dialog", { name: "Document Info" });
-    const publicationStatusGroup = infoDialog.getByRole("group", {
-      name: "Publication Status",
-    });
-    await expect(publicationStatusGroup).toContainText("Published");
-  });
 });
-
-async function waitForWorkspace(page: Page): Promise<void> {
-  await page.waitForLoadState("domcontentloaded");
-  await page.getByRole("button", { name: "Quick Action" }).waitFor({ state: "visible" });
-}

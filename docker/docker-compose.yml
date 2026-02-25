@@ -55,7 +55,6 @@ services:
     environment:
       NODE_ENV: production
       APP_STAGE: ${APP_STAGE:-development}
-      APP_ENV: docker
       DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
       DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
     depends_on:
@@ -76,7 +75,6 @@ services:
     environment:
       NODE_ENV: production
       APP_STAGE: ${APP_STAGE:-development}
-      APP_ENV: docker
       SECURE_COOKIES: "false"
       DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
       DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
@@ -116,7 +114,6 @@ services:
     container_name: lydie-zero
     environment:
       APP_STAGE: ${APP_STAGE:-development}
-      APP_ENV: docker
       ZERO_UPSTREAM_DB: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
       ZERO_CVR_DB: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
       ZERO_CHANGE_DB: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}

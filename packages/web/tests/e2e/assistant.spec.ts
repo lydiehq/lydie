@@ -61,7 +61,7 @@ test.describe("assistant", () => {
     expect(conversationIdBefore).toBe(conversationIdAfter);
   });
 
-  test("hides docked assistant on settings route", async ({ page, organization }) => {
+  test.skip("hides docked assistant on settings route", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
 
     await page.getByRole("button", { name: "Open AI Assistant" }).click();

@@ -4,9 +4,6 @@
 import { readFileSync } from "fs";
 
 import { cluster } from "./cluster";
-import { secret } from "./secret";
-
-const conn = secret.postgresConnectionStringDirect;
 
 const tag = $dev
   ? `latest`
@@ -16,10 +13,10 @@ const tag = $dev
 const image = `registry.hub.docker.com/rocicorp/zero:${tag}`;
 
 const commonEnv = {
-  ZERO_ADMIN_PASSWORD: secret.zeroAdminPassword.value,
-  ZERO_UPSTREAM_DB: conn.value,
-  ZERO_CVR_DB: conn.value,
-  ZERO_CHANGE_DB: conn.value,
+  ZERO_ADMIN_PASSWORD: process.env.ZERO_ADMIN_PASSWORD ?? "",
+  ZERO_UPSTREAM_DB: process.env.DATABASE_URL_DIRECT ?? "",
+  ZERO_CVR_DB: process.env.DATABASE_URL_DIRECT ?? "",
+  ZERO_CHANGE_DB: process.env.DATABASE_URL_DIRECT ?? "",
   ZERO_IMAGE_URL: image,
   ZERP_APP_ID: $app.stage,
   ZERO_MUTATE_FORWARD_COOKIES: "true",

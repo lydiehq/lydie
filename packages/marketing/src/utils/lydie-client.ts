@@ -216,6 +216,8 @@ export async function getDocumentsBySlugs(
     params.set("slugs", slugs.join(","));
   }
 
+  console.log("Using API Key:", apiKey);
+
   const response = await fetch(
     `${apiUrl}/${organizationId}/documents/by-slugs?${params.toString()}`,
     {

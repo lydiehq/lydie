@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import { expect, test } from "./fixtures/auth.fixture";
 import {
   createTestCollection,
@@ -268,12 +270,10 @@ test.describe("collections", () => {
         const propertyHeader = page.getByRole("columnheader", { name: "tempField" });
         await expect(propertyHeader).toBeVisible();
 
-        // Set up dialog handler before clicking delete
-        page.on("dialog", (dialog) => dialog.accept());
-
         // Open the column menu and delete the property
         await propertyHeader.getByRole("button", { name: "Open tempField column menu" }).click();
         await page.getByRole("menuitem", { name: "Delete property" }).click();
+        await page.getByRole("button", { name: "Confirm" }).click();
 
         // Wait for the property to be removed
         await expect(propertyHeader).not.toBeVisible();
@@ -315,7 +315,7 @@ test.describe("collections", () => {
       try {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
-        await page.getByRole("button", { name: "+ New" }).click();
+        await page.getByRole("button", { name: "+ New entry", exact: true }).click();
 
         await expect(page).toHaveURL(/\/d\//);
         await expect(page.locator('[data-testid="document-collection-badge"]')).toHaveText(
@@ -493,9 +493,20 @@ test.describe("collections", () => {
         handle: "block-test",
       });
 
-      try {
-        await page.goto(`/w/${organization.slug}/d/new`);
+      const { document: collectionDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Block Test Entry",
+          published: true,
+        },
+      );
 
+      const editorDocument = await createEditorDocument(page, organization.slug, {
+        title: "Collection Block Insert Test",
+      });
+
+      try {
         await page.locator("[data-testid='editor-content']").click();
         await page.keyboard.type("/collection");
         await page.getByText("Collection View").click();
@@ -507,7 +518,10 @@ test.describe("collections", () => {
         await expect(
           page.getByText("Block Test Collection", { exact: true }).first(),
         ).toBeVisible();
+        await expect(page.getByText("Block Test Entry")).toBeVisible();
       } finally {
+        await deleteTestDocument(editorDocument.id);
+        await deleteTestDocument(collectionDocument.id);
         await deleteTestCollection(collection.id);
       }
     });
@@ -523,9 +537,11 @@ test.describe("collections", () => {
         handle: "block-filter-2",
       });
 
-      try {
-        await page.goto(`/w/${organization.slug}/d/new`);
+      const editorDocument = await createEditorDocument(page, organization.slug, {
+        title: "Collection Block Filter Test",
+      });
 
+      try {
         await page.locator("[data-testid='editor-content']").click();
         await page.keyboard.type("/collection");
         await page.getByText("Collection View").click();
@@ -536,6 +552,7 @@ test.describe("collections", () => {
         await expect(page.getByText("Block Filter Collection 2")).toBeVisible();
         await expect(page.getByText("Block Filter Collection 1")).not.toBeVisible();
       } finally {
+        await deleteTestDocument(editorDocument.id);
         await deleteTestCollection(collection1.id);
         await deleteTestCollection(collection2.id);
       }
@@ -547,9 +564,11 @@ test.describe("collections", () => {
         handle: "remove-block-test",
       });
 
-      try {
-        await page.goto(`/w/${organization.slug}/d/new`);
+      const editorDocument = await createEditorDocument(page, organization.slug, {
+        title: "Collection Block Remove Test",
+      });
 
+      try {
         await page.locator("[data-testid='editor-content']").click();
         await page.keyboard.type("/collection");
         await page.getByText("Collection View").click();
@@ -561,6 +580,7 @@ test.describe("collections", () => {
 
         await expect(page.getByText("Remove Block Test", { exact: true })).not.toBeVisible();
       } finally {
+        await deleteTestDocument(editorDocument.id);
         await deleteTestCollection(collection.id);
       }
     });
@@ -575,9 +595,11 @@ test.describe("collections", () => {
         properties: [],
       });
 
-      try {
-        await page.goto(`/w/${organization.slug}/d/new`);
+      const editorDocument = await createEditorDocument(page, organization.slug, {
+        title: "Collection Block Relation Property Test",
+      });
 
+      try {
         await page.locator("[data-testid='editor-content']").click();
         await page.keyboard.type("/collection");
         await page.getByText("Collection View").click();
@@ -591,6 +613,7 @@ test.describe("collections", () => {
 
         await expect(page.getByRole("columnheader", { name: "PARENT" })).toBeVisible();
       } finally {
+        await deleteTestDocument(editorDocument.id);
         await deleteTestCollection(collection.id);
       }
     });
@@ -839,3 +862,23 @@ test.describe("collections", () => {
     });
   });
 });
+
+async function createEditorDocument(page: Page, organizationSlug: string, options: { title: string }) {
+  await page.goto(`/w/${organizationSlug}`);
+  await page.getByRole("button", { name: "Create new document" }).click();
+
+  const titleEditor = page.getByLabel("Document title").locator('[contenteditable="true"]').first();
+  await expect(titleEditor).toBeVisible({ timeout: 10000 });
+  await titleEditor.click();
+  await titleEditor.fill(options.title);
+  await titleEditor.blur();
+
+  const match = page.url().match(/\/w\/[^/]+\/([a-zA-Z0-9_-]+)/);
+  if (!match) {
+    throw new Error(`Failed to parse document ID from URL: ${page.url()}`);
+  }
+
+  return {
+    id: match[1],
+  };
+}

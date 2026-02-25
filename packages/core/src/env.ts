@@ -9,7 +9,6 @@ function parseAppStage(value: string | undefined): AppStage {
 
 export const env = {
   APP_STAGE: parseAppStage(process.env.APP_STAGE),
-  APP_ENV: process.env.APP_ENV as "docker" | "aws" | undefined,
   SECURE_COOKIES: process.env.SECURE_COOKIES !== "false",
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
   BETTER_AUTH_BASE_URL:

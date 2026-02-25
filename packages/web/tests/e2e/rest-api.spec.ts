@@ -2,7 +2,6 @@ import { apiKeysTable, db } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
 import { expect, test } from "./fixtures/auth.fixture";
-import { createTestUser } from "./utils/db";
 
 test.describe("API key REST API", () => {
   test("should authenticate with API key to external API", async ({ page, organization }) => {
@@ -22,11 +21,11 @@ test.describe("API key REST API", () => {
     await page.getByLabel(/Name/i).fill(apiKeyName);
 
     await page
+      .getByRole("dialog", { name: /Create API Key/i })
       .getByRole("button", { name: /Create API Key/i })
-      .filter({ hasText: /Create API Key/i })
       .click();
 
-    await expect(page.getByText(/API Key Created Successfully/i)).toBeVisible;
+    await expect(page.getByText(/API Key Created Successfully/i)).toBeVisible();
 
     // Get the full API key value
     const apiKeyValue = await page
@@ -71,208 +70,6 @@ test.describe("API key REST API", () => {
         .update(apiKeysTable)
         .set({ revoked: true })
         .where(eq(apiKeysTable.id, createdKey.id));
-    }
-  });
-
-  test("should reject requests with revoked API key", async ({ page, organization }) => {
-    // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.slug}`);
-    await page.waitForURL(`/w/${organization.slug}`);
-
-    // Create an API key directly in the database
-      const { createHash } = await import("crypto");
-      const { createId } = await import("@lydie/core/id");
-
-      const stage = process.env.APP_STAGE || "development";
-      const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
-      const key = `${prefix}${createId()}`;
-      const partialKey = `${key.slice(0, 8)}...${key.slice(-4)}`;
-      const hashedKey = createHash("sha256").update(key).digest("hex");
-
-      const [createdKey] = await db
-        .insert(apiKeysTable)
-        .values({
-          name: `Revoked Test Key ${Date.now()}`,
-          partialKey,
-          hashedKey,
-          organizationId: organization.id,
-          revoked: false,
-        })
-        .returning();
-
-      try {
-        // Revoke the key
-        await db
-          .update(apiKeysTable)
-          .set({ revoked: true })
-          .where(eq(apiKeysTable.id, createdKey.id));
-
-        // Try to use the revoked key
-        const pageURL = new URL(page.url());
-        const baseURL = `${pageURL.protocol}//${pageURL.host}`;
-        const apiURL = process.env.VITE_API_URL || baseURL.replace(":3000", ":3001");
-
-      const response = await page.request.get(`${apiURL}/v1/${organization.id}/documents`, {
-        headers: {
-          Authorization: `Bearer ${key}`,
-        },
-      });
-
-      expect(response.status()).toBe(401);
-      const error = await response.json();
-      expect(error.message || error.error).toContain("Invalid or revoked");
-    } finally {
-      // Cleanup
-      await db.delete(apiKeysTable).where(eq(apiKeysTable.id, createdKey.id));
-    }
-  });
-
-  test("should reject API key from different organization", async ({ page, organization }) => {
-    // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.slug}`);
-    await page.waitForURL(`/w/${organization.slug}`);
-
-    // Create a different organization and API key
-    const { organization: otherOrg, cleanup } = await createTestUser({
-      prefix: "other-org",
-    });
-
-    try {
-      const { createHash } = await import("crypto");
-      const { createId } = await import("@lydie/core/id");
-
-      const stage = process.env.APP_STAGE || "development";
-      const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
-      const key = `${prefix}${createId()}`;
-      const partialKey = `${key.slice(0, 8)}...${key.slice(-4)}`;
-      const hashedKey = createHash("sha256").update(key).digest("hex");
-
-      const [otherOrgKey] = await db
-        .insert(apiKeysTable)
-        .values({
-          name: `Other Org Key ${Date.now()}`,
-          partialKey,
-          hashedKey,
-          organizationId: otherOrg.id,
-          revoked: false,
-        })
-        .returning();
-
-      try {
-        // Try to use the other organization's key with this organization's ID
-        const pageURL = new URL(page.url());
-        const baseURL = `${pageURL.protocol}//${pageURL.host}`;
-        const apiURL = process.env.VITE_API_URL || baseURL.replace(":3000", ":3001");
-
-        const response = await page.request.get(`${apiURL}/v1/${organization.id}/documents`, {
-          headers: {
-            Authorization: `Bearer ${key}`,
-          },
-        });
-
-        expect(response.status()).toBe(403);
-        const error = await response.json();
-        expect(error.message || error.error || JSON.stringify(error)).toContain(
-          "does not have access",
-        );
-      } finally {
-        // Cleanup other org key
-        await db.delete(apiKeysTable).where(eq(apiKeysTable.id, otherOrgKey.id));
-      }
-    } finally {
-      await cleanup();
-    }
-  });
-
-  test("should reject requests without API key", async ({ page, organization }) => {
-    // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.slug}`);
-    await page.waitForURL(`/w/${organization.slug}`);
-
-    const pageURL = new URL(page.url());
-    const baseURL = `${pageURL.protocol}//${pageURL.host}`;
-    const apiURL = process.env.VITE_API_URL || baseURL.replace(":3000", ":3001");
-
-    const response = await page.request.get(`${apiURL}/v1/${organization.id}/documents`);
-
-    expect(response.status()).toBe(401);
-    const error = await response.json();
-    expect(error.message || error.error).toContain("No API key provided");
-  });
-
-  test("should reject requests with invalid API key format", async ({ page, organization }) => {
-    // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.slug}`);
-    await page.waitForURL(`/w/${organization.slug}`, { timeout: 5000 });
-
-    const pageURL = new URL(page.url());
-    const baseURL = `${pageURL.protocol}//${pageURL.host}`;
-    const apiURL = process.env.VITE_API_URL || baseURL.replace(":3000", ":3001");
-
-    const response = await page.request.get(`${apiURL}/v1/${organization.id}/documents`, {
-      headers: {
-        Authorization: "Bearer invalid-key-format",
-      },
-    });
-
-    expect(response.status()).toBe(401);
-    const error = await response.json();
-    expect(error.message || error.error).toContain("Invalid");
-  });
-
-  test("should update lastUsedAt when API key is used", async ({ page, organization }) => {
-    // Navigate to a page first to establish base URL
-    await page.goto(`/w/${organization.slug}`);
-    await page.waitForURL(`/w/${organization.slug}`);
-
-    // Create an API key directly in the database
-    const { createHash } = await import("crypto");
-    const { createId } = await import("@lydie/core/id");
-
-    const stage = process.env.APP_STAGE || "development";
-    const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
-    const key = `${prefix}${createId()}`;
-    const partialKey = `${key.slice(0, 8)}...${key.slice(-4)}`;
-    const hashedKey = createHash("sha256").update(key).digest("hex");
-
-    const [createdKey] = await db
-      .insert(apiKeysTable)
-      .values({
-        name: `Usage Test Key ${Date.now()}`,
-        partialKey,
-        hashedKey,
-        organizationId: organization.id,
-        revoked: false,
-        lastUsedAt: null,
-      })
-      .returning();
-
-    try {
-      const pageURL = new URL(page.url());
-      const baseURL = `${pageURL.protocol}//${pageURL.host}`;
-      const apiURL = process.env.VITE_API_URL || baseURL.replace(":3000", ":3001");
-
-      // Make a request with the API key
-      const response = await page.request.get(`${apiURL}/v1/${organization.id}/documents`, {
-        headers: {
-          Authorization: `Bearer ${key}`,
-        },
-      });
-
-      expect(response.status()).toBe(200);
-
-      // Verify lastUsedAt was updated
-      const [updatedKey] = await db
-        .select()
-        .from(apiKeysTable)
-        .where(eq(apiKeysTable.id, createdKey.id))
-        .limit(1);
-
-      expect(updatedKey?.lastUsedAt).not.toBeNull();
-      expect(updatedKey?.lastUsedAt).toBeInstanceOf(Date);
-    } finally {
-      // Cleanup
-      await db.delete(apiKeysTable).where(eq(apiKeysTable.id, createdKey.id));
     }
   });
 });

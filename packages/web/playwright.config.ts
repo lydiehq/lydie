@@ -11,7 +11,7 @@ export default defineConfig({
   // Retry on CI only
   retries: 0,
   // Reporter to use
-  timeout: 15_000,
+  timeout: 10_000,
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
