@@ -4,7 +4,7 @@ Lydie supports three deployment modes:
 
 1. **Local development** — Docker Compose (dev) + Bun
 2. **Self-hosting** — Docker Compose (production)
-3. **AWS production** — Pulumi + PlanetScale
+3. **AWS production** — SST + AWS
 
 ---
 
@@ -115,7 +115,7 @@ docker compose exec postgres pg_dump -U lydie lydie > backup.sql
 
 ## 3. AWS Production Deployment
 
-Production runs on AWS with Pulumi IaC. The database is hosted on PlanetScale (external).
+Production runs on AWS with SST (`infra/` + `sst.config.ts`). The database can be PlanetScale or any PostgreSQL-compatible provider.
 
 ### Architecture
 
@@ -134,203 +134,53 @@ SES email (DKIM + SPF + DMARC via mail.lydie.co)
 ### Prerequisites
 
 - AWS CLI configured with credentials
-- [Pulumi CLI](https://www.pulumi.com/docs/install/) installed
-- Docker (for building container images)
-- A Route53 hosted zone for your domain
+- SST account access and CLI auth (`bunx sst auth login`)
+- Docker (SST builds and publishes container images for service resources)
+- Route53 hosted zone for your domain
+- Production environment variables available in CI or shell
 
-### Initial setup
+### Configuration model
 
-```bash
-cd infrastructure
-bun install
+SST is the IaC layer, but application configuration still uses environment variables (`.env` contract), so Docker and AWS deployments use the same runtime keys.
 
-# Login to Pulumi (use Pulumi Cloud or local backend)
-pulumi login
+- Local/self-host: `.env` + Docker Compose
+- AWS/SST: environment variables provided by CI or your shell during `sst deploy`
 
-# Create/select your stack
-pulumi stack init production
-# or
-pulumi stack select production
-```
-
-### Configure domain
-
-All subdomains are derived from the base domain:
+### Deploy
 
 ```bash
-pulumi config set domainName yourdomain.com
+# Staging
+bun run deploy:staging
+
+# Production
+bun run deploy:prod
 ```
 
-This auto-generates: `app.yourdomain.com`, `api.yourdomain.com`, `zero.yourdomain.com`, `assets.yourdomain.com`, `e.yourdomain.com`.
+SST deploys infrastructure and application services together (networking, ALB, ECS services, buckets/CDN, email resources, and DNS records configured in `infra/`).
 
-### Configure secrets
-
-All 22 secrets are stored as Pulumi Config secrets (encrypted in `Pulumi.production.yaml`):
+### Targeted deploys
 
 ```bash
-# Database (PlanetScale connection strings)
-pulumi config set --secret secrets:databaseUrl "postgresql://user:pass@host/db?sslaccept=strict"
-pulumi config set --secret secrets:databaseUrlDirect "postgresql://user:pass@host/db?sslaccept=strict"
+# Only web app
+bun run deploy:web
 
-# Auth
-pulumi config set --secret secrets:betterAuthSecret "$(openssl rand -base64 32)"
-
-# AI providers
-pulumi config set --secret secrets:googleAiStudioApiKey "..."
-pulumi config set --secret secrets:openAiApiKey "sk-..."
-
-# OAuth
-pulumi config set --secret secrets:googleClientId "..."
-pulumi config set --secret secrets:googleClientSecret "..."
-
-# Stripe
-pulumi config set --secret secrets:stripeSecretKey "sk_live_..."
-pulumi config set --secret secrets:stripeMonthlyPriceId "price_..."
-pulumi config set --secret secrets:stripeYearlyPriceId "price_..."
-pulumi config set --secret secrets:stripeWebhookSecret "whsec_..."
-
-# GitHub App
-pulumi config set --secret secrets:githubClientId "..."
-pulumi config set --secret secrets:githubClientSecret "..."
-pulumi config set --secret secrets:githubPrivateKey "$(cat private-key.pem)"
-pulumi config set --secret secrets:githubAppSlug "your-app"
-
-# Shopify
-pulumi config set --secret secrets:shopifyClientId "..."
-pulumi config set --secret secrets:shopifyClientSecret "..."
-
-# Zero
-pulumi config set --secret secrets:zeroAdminPassword "..."
-
-# Analytics / Monitoring
-pulumi config set --secret secrets:posthogKey "phc_..."
-pulumi config set --secret secrets:sentryDsn "https://...@sentry.io/..."
-pulumi config set --secret secrets:apiGatewayKey "..."
-
-# PlanetScale (for Pulumi provider, if used)
-pulumi config set --secret secrets:planetscaleServiceToken "..."
-pulumi config set --secret secrets:planetscaleServiceTokenId "..."
+# Only marketing site
+bun run deploy:marketing
 ```
-
-### Optional: container sizing
-
-Defaults are set in `Pulumi.yaml`. Override per-stack:
-
-```bash
-pulumi config set backendCpu 1024      # default: 512
-pulumi config set backendMemory 2048   # default: 1024
-pulumi config set zeroCpu 2048         # default: 1024
-pulumi config set zeroMemory 4096      # default: 2048
-```
-
-### Deploy infrastructure
-
-```bash
-# Preview what will be created
-pulumi preview
-
-# Deploy
-pulumi up
-```
-
-This creates: VPC (2 AZs, single NAT gateway), ACM certificate (DNS validated), ALB with TLS 1.3, ECS Fargate cluster with backend + zero services, S3 buckets + CloudFront distributions, SES email with DKIM/SPF/DMARC, 2 Lambda functions, Route53 DNS records, auto-scaling (backend scales 1-4 on CPU > 70%).
-
-### Deploy application
-
-#### Build and push backend image
-
-```bash
-# ECR login
-aws ecr get-login-password --region us-east-1 | \
-  docker login --username AWS --password-stdin \
-  $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
-
-# Build and push
-docker build -f packages/backend/Dockerfile -t lydie-backend .
-docker tag lydie-backend $(pulumi stack output backendEcrRepoUrl):latest
-docker push $(pulumi stack output backendEcrRepoUrl):latest
-```
-
-#### Build and push zero image
-
-```bash
-docker build -f packages/zero/Dockerfile -t lydie-zero .
-docker tag lydie-zero $(pulumi stack output zeroEcrRepoUrl):latest
-docker push $(pulumi stack output zeroEcrRepoUrl):latest
-```
-
-#### Deploy web SPA
-
-```bash
-cd packages/web
-
-VITE_API_URL=https://api.yourdomain.com \
-VITE_ZERO_URL=https://zero.yourdomain.com \
-VITE_YJS_SERVER_URL=wss://api.yourdomain.com/yjs \
-bun run build
-
-# Upload to S3
-aws s3 sync dist/ s3://$(pulumi stack output webBucketName)/
-
-# Invalidate CloudFront cache
-aws cloudfront create-invalidation \
-  --distribution-id $(pulumi stack output webDistributionId) \
-  --paths "/*"
-```
-
-#### Force ECS redeployment
-
-After pushing new container images:
-
-```bash
-aws ecs update-service \
-  --cluster lydie-production \
-  --service lydie-backend-production \
-  --force-new-deployment
-
-aws ecs update-service \
-  --cluster lydie-production \
-  --service lydie-zero-production \
-  --force-new-deployment
-```
-
-### Stack outputs
-
-```bash
-pulumi stack output
-```
-
-| Output              | Description                          |
-| ------------------- | ------------------------------------ |
-| `appUrl`            | Web app URL                          |
-| `apiUrl`            | Backend API URL                      |
-| `zeroUrl`           | Zero sync URL                        |
-| `assetsUrl`         | Assets CDN URL                       |
-| `eventsUrl`         | PostHog proxy URL                    |
-| `backendEcrRepoUrl` | ECR repo for backend images          |
-| `zeroEcrRepoUrl`    | ECR repo for zero images             |
-| `webBucketName`     | S3 bucket for web SPA                |
-| `webDistributionId` | CloudFront ID for cache invalidation |
 
 ### Infrastructure modules
 
 ```
-infrastructure/
-  index.ts              Pulumi entrypoint + stack outputs
-  Pulumi.yaml           Stack config defaults
-  src/
-    config.ts           Domain names, container sizing, stack name
-    secrets.ts          22 Pulumi Config secrets
-    vpc.ts              VPC with 2 AZs, single NAT gateway (awsx)
-    certificate.ts      ACM cert (apex + wildcard), DNS validation
-    email.ts            SES domain identity, DKIM, SPF, DMARC
-    database.ts         PlanetScale connection strings
-    storage.ts          S3 buckets (assets + exports) + CloudFront
-    web.ts              S3 bucket + CloudFront for SPA
-    events.ts           CloudFront proxy to PostHog
-    lambdas.ts          Onboarding + export Lambda functions
-    services.ts         ECR, ECS cluster, ALB, Fargate services (awsx)
-    dns.ts              Route53 A-record aliases
+infra/
+  cluster.ts            VPC + ECS cluster
+  backend.ts            Backend ECS service + permissions
+  zero.ts               Zero ECS service + LB routing
+  web.ts                Web StaticSite + Marketing Astro site
+  events.ts             PostHog proxy router
+  onboarding.ts         Onboarding scheduler Lambda + IAM role
+  workspace-export.ts   Workspace export Lambda + bucket
+  email.ts              SES sender configuration
+  secret.ts             SST secret resource definitions
 ```
 
 ---
@@ -338,17 +188,8 @@ infrastructure/
 ## Monitoring
 
 ```bash
-# Tail backend logs
-aws logs tail /ecs/lydie-backend-production --follow
-
-# Tail zero logs
-aws logs tail /ecs/lydie-zero-production --follow
-
-# Check ECS service status
-aws ecs describe-services \
-  --cluster lydie-production \
-  --services lydie-backend-production lydie-zero-production \
-  --query 'services[].{name:serviceName,status:status,running:runningCount,desired:desiredCount}'
+# Open SST console for logs and resources
+bunx sst console --stage production
 ```
 
 ---
@@ -372,8 +213,8 @@ Typical monthly costs (us-east-1, excludes PlanetScale):
 ## Cleanup
 
 ```bash
-# Remove all AWS resources
-cd infrastructure && pulumi destroy
+# Remove AWS resources for a stage
+bunx sst remove --stage production
 
 # Remove Docker Compose resources
 cd docker && docker compose down -v
