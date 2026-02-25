@@ -18,6 +18,7 @@ export interface ComboBoxProps<T extends object> extends Omit<AriaComboBoxProps<
   label?: string;
   description?: string | null;
   errorMessage?: string | ((validation: ValidationResult) => string);
+  placeholder?: string;
   children: React.ReactNode | ((item: T) => React.ReactNode);
 }
 
@@ -25,6 +26,7 @@ export function ComboBox<T extends object>({
   label,
   description,
   errorMessage,
+  placeholder,
   children,
   items,
   ...props
@@ -36,8 +38,8 @@ export function ComboBox<T extends object>({
     >
       <Label>{label}</Label>
       <FieldGroup>
-        <Input />
-        <Button variant="icon" className="w-6 mr-1 rounded-xs outline-offset-0 ">
+        <Input placeholder={placeholder} />
+        <Button intent="ghost" size="sm" className="w-6 mr-1 rounded-xs outline-offset-0">
           <ChevronDownRegular aria-hidden className="w-4 h-4" />
         </Button>
       </FieldGroup>

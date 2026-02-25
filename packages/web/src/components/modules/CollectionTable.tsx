@@ -8,6 +8,7 @@ import {
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
+import { ComboBox, ComboBoxItem } from "@lydie/ui/components/generic/ComboBox";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { Select as PropertySelect, SelectItem } from "@lydie/ui/components/generic/Select";
@@ -192,6 +193,12 @@ type Props = {
   onCreateRow?: () => void;
 };
 
+const SYSTEM_COLUMN_IDS = {
+  selection: "__selection",
+  title: "__title",
+  addProperty: "__add-property",
+} as const;
+
 function toFieldValue(
   fieldDef: PropertyDefinition,
   value: string,
@@ -275,7 +282,9 @@ export function CollectionTable({
   onCreateRow,
 }: Props) {
   const z = useZero();
-  const [sorting, setSorting] = useState<SortingState>([{ id: "title", desc: false }]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: SYSTEM_COLUMN_IDS.title, desc: false },
+  ]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
   const cellRefs = useRef(new Map<string, HTMLTableCellElement>());
@@ -471,13 +480,13 @@ export function CollectionTable({
           unique,
           ...(enumOptions ? { options: enumOptions } : {}),
           ...(type === "relation"
-              ? {
-                  relation: {
-                    targetCollectionId: relationTargetCollectionId,
-                    ...(relationMany ? { many: true } : {}),
-                  },
-                }
-              : {}),
+            ? {
+                relation: {
+                  targetCollectionId: relationTargetCollectionId,
+                  ...(relationMany ? { many: true } : {}),
+                },
+              }
+            : {}),
         },
       ];
 
@@ -620,7 +629,7 @@ export function CollectionTable({
   const columns = useMemo<ColumnDef<DocumentItem>[]>(
     () => [
       {
-        id: "select",
+        id: SYSTEM_COLUMN_IDS.selection,
         enableSorting: false,
         enableResizing: false,
         size: 32,
@@ -646,7 +655,7 @@ export function CollectionTable({
         ),
       },
       {
-        id: "title",
+        id: SYSTEM_COLUMN_IDS.title,
         accessorKey: "title",
         enableSorting: true,
         size: 300,
@@ -679,7 +688,7 @@ export function CollectionTable({
         }),
       ),
       {
-        id: "add-property",
+        id: SYSTEM_COLUMN_IDS.addProperty,
         enableSorting: false,
         enableResizing: false,
         size: 140,
@@ -747,7 +756,7 @@ export function CollectionTable({
           return;
         }
 
-        if (columnId === "title") {
+        if (columnId === SYSTEM_COLUMN_IDS.title) {
           void handleRenameDocument(document.id, String(value ?? ""));
           return;
         }
@@ -869,13 +878,13 @@ export function CollectionTable({
                       colSpan={header.colSpan}
                       style={{ width: header.getSize() }}
                       className={`relative border-b border-r border-gray-200 p-0 text-left align-middle last:border-r-0 ${
-                        header.column.id === "select" ? "text-center" : ""
+                        header.column.id === SYSTEM_COLUMN_IDS.selection ? "text-center" : ""
                       }`}
                     >
                       {header.isPlaceholder ? null : (
                         <div
                           className={`flex min-h-9 items-center px-3 py-1 ${
-                            header.column.id === "select" ? "justify-center" : ""
+                            header.column.id === SYSTEM_COLUMN_IDS.selection ? "justify-center" : ""
                           }`}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
@@ -929,6 +938,8 @@ export function CollectionTable({
                             return;
                           }
 
+                          const fieldDef = cell.column.columnDef.meta?.fieldDef;
+
                           const activeEdit = table.options.meta?.editingCell;
                           if (
                             activeEdit?.rowId === row.id &&
@@ -937,7 +948,14 @@ export function CollectionTable({
                             return;
                           }
 
-                          table.options.meta?.startEditing(row.id, cell.column.id);
+                          const shouldAutoOpenPicker =
+                            kind === "property" && fieldDef && !isFreeformField(fieldDef);
+
+                          table.options.meta?.startEditing(
+                            row.id,
+                            cell.column.id,
+                            shouldAutoOpenPicker ? "__open__" : undefined,
+                          );
                         }}
                         onKeyDown={(event) => {
                           const kind = cell.column.columnDef.meta?.kind;
@@ -972,7 +990,13 @@ export function CollectionTable({
 
                           if (event.key === "Enter") {
                             event.preventDefault();
-                            table.options.meta?.startEditing(row.id, cell.column.id);
+                            table.options.meta?.startEditing(
+                              row.id,
+                              cell.column.id,
+                              kind === "property" && fieldDef && !isFreeformField(fieldDef)
+                                ? "__open__"
+                                : undefined,
+                            );
                           }
                         }}
                         className={`overflow-hidden border-b border-r border-gray-200 p-0 align-middle last:border-r-0 transition-colors hover:bg-gray-50 ${
@@ -1533,6 +1557,7 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
   );
 
   const [value, setValue] = useState(getEditableValue(fieldDef, currentValue));
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!isEditing) {
@@ -1551,6 +1576,18 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
   const stopEditing = () => {
     meta?.stopEditing();
   };
+
+  useEffect(() => {
+    if (!isEditing || editingCell?.seed !== "__open__") {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      if (fieldDef?.type === "relation" && fieldDef.relation?.many) {
+        menuTriggerRef.current?.click();
+      }
+    });
+  }, [editingCell?.seed, fieldDef, isEditing]);
 
   const commit = () => {
     if (kind === "title") {
@@ -1587,6 +1624,7 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
           <MenuTrigger>
             <RACButton
               type="button"
+              ref={menuTriggerRef}
               autoFocus
               aria-label={`${fieldDef.name} values`}
               className="flex min-h-9 w-full items-center rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-sm"
@@ -1627,40 +1665,11 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
       }
 
       return (
-        <select
-          autoFocus
-          value={typeof currentValue === "string" ? currentValue : ""}
-          onChange={(event) => {
-            const nextValue = event.target.value === "" ? null : event.target.value;
-            meta?.updateData(row.index, column.id, nextValue);
-            stopEditing();
-          }}
-          onBlur={stopEditing}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.preventDefault();
-              stopEditing();
-            }
-          }}
-          className={`h-9 w-full rounded-none border-0 bg-transparent px-3 py-1 text-sm ${focusVisibleStyles}`}
-        >
-          <option value="">-</option>
-          {availableRelationOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.title}
-            </option>
-          ))}
-        </select>
-      );
-    }
-
-    if ((fieldDef?.type === "select" || fieldDef?.type === "status") && fieldDef.options) {
-      return (
         <PropertySelect
           autoFocus
           aria-label={`${fieldDef.name} value`}
           selectedKey={typeof currentValue === "string" ? currentValue : null}
-          placeholder="Select an option"
+          placeholder="Select a record"
           className="w-full"
           onSelectionChange={(nextValue) => {
             const valueAsString = typeof nextValue === "string" ? nextValue : null;
@@ -1675,12 +1684,55 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
             }
           }}
         >
-          {fieldDef.options.map((option) => (
-            <SelectItem key={option.id} id={option.id} textValue={option.label}>
-              <OptionPickerLabel option={option} />
+          <SelectItem key="__empty__" id="" textValue="-">
+            -
+          </SelectItem>
+          {availableRelationOptions.map((option) => (
+            <SelectItem key={option.id} id={option.id} textValue={option.title}>
+              {option.title}
             </SelectItem>
           ))}
         </PropertySelect>
+      );
+    }
+
+    if ((fieldDef?.type === "select" || fieldDef?.type === "status") && fieldDef.options) {
+      return (
+        <ComboBox
+          autoFocus
+          menuTrigger="focus"
+          aria-label={`${fieldDef.name} value`}
+          selectedKey={typeof currentValue === "string" ? currentValue : null}
+          placeholder="Select an option"
+          className="w-full [&_.react-aria-Group]:h-9 [&_.react-aria-Input]:text-sm"
+          onSelectionChange={(nextValue) => {
+            const valueAsString = typeof nextValue === "string" ? nextValue : null;
+            if (valueAsString === "__empty__") {
+              meta?.updateData(row.index, column.id, null);
+              stopEditing();
+              return;
+            }
+
+            meta?.updateData(row.index, column.id, valueAsString);
+            stopEditing();
+          }}
+          onBlur={stopEditing}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              stopEditing();
+            }
+          }}
+        >
+          <ComboBoxItem key="__empty__" id="__empty__" textValue="-">
+            -
+          </ComboBoxItem>
+          {fieldDef.options.map((option) => (
+            <ComboBoxItem key={option.id} id={option.id} textValue={option.label}>
+              <OptionPickerLabel option={option} />
+            </ComboBoxItem>
+          ))}
+        </ComboBox>
       );
     }
 
@@ -1692,42 +1744,52 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
           : [];
 
       return (
-        <MenuTrigger>
-          <RACButton
-            type="button"
-            autoFocus
-            aria-label={`${fieldDef.name} values`}
-            className="flex min-h-9 w-full items-center rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-sm"
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                stopEditing();
-              }
-            }}
-          >
-            {selectedValues.length > 0 ? `${selectedValues.length} selected` : "Select options"}
-          </RACButton>
-          <Menu
-            selectionMode="multiple"
-            selectedKeys={new Set(selectedValues)}
-            onSelectionChange={(keys) => {
-              if (keys === "all") {
-                return;
-              }
-              const normalized = Array.from(keys)
-                .map((key) => String(key))
-                .filter(Boolean);
-              meta?.updateData(row.index, column.id, normalized.length > 0 ? normalized : null);
+        <ComboBox
+          autoFocus
+          menuTrigger="focus"
+          aria-label={`${fieldDef.name} values`}
+          selectedKey={null}
+          placeholder={
+            selectedValues.length > 0 ? `${selectedValues.length} selected` : "Select options"
+          }
+          className="w-full [&_.react-aria-Group]:h-9 [&_.react-aria-Input]:text-sm"
+          onSelectionChange={(nextValue) => {
+            const valueAsString = typeof nextValue === "string" ? nextValue : null;
+
+            if (valueAsString === "__clear__") {
+              meta?.updateData(row.index, column.id, null);
               stopEditing();
-            }}
-          >
-            {fieldDef.options.map((option) => (
-              <MenuItem key={option.id} id={option.id} textValue={option.label}>
-                <OptionPickerLabel option={option} />
-              </MenuItem>
-            ))}
-          </Menu>
-        </MenuTrigger>
+              return;
+            }
+
+            if (!valueAsString) {
+              return;
+            }
+
+            const normalized = selectedValues.includes(valueAsString)
+              ? selectedValues.filter((entry) => entry !== valueAsString)
+              : [...selectedValues, valueAsString];
+
+            meta?.updateData(row.index, column.id, normalized.length > 0 ? normalized : null);
+            stopEditing();
+          }}
+          onBlur={stopEditing}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              stopEditing();
+            }
+          }}
+        >
+          <ComboBoxItem id="__clear__" textValue="Clear selections">
+            <span className="text-gray-500">Clear selections</span>
+          </ComboBoxItem>
+          {fieldDef.options.map((option) => (
+            <ComboBoxItem key={option.id} id={option.id} textValue={option.label}>
+              <OptionPickerLabel option={option} />
+            </ComboBoxItem>
+          ))}
+        </ComboBox>
       );
     }
 
@@ -1772,7 +1834,8 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
     fieldDef?.type === "relation"
       ? relationValueIds.map(
           (relationValueId) =>
-            relationOptions.find((option) => option.id === relationValueId)?.title ?? "Missing record",
+            relationOptions.find((option) => option.id === relationValueId)?.title ??
+            "Missing record",
         )
       : null;
 
