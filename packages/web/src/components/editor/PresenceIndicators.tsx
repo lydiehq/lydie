@@ -21,8 +21,8 @@ function normalizeConnectionStatus(status: string | undefined): ConnectionStatus
 }
 
 function getConnectionStatusFromProvider(provider: HocuspocusProvider | null): ConnectionStatus {
-  const websocketStatus = (provider as ProviderWithWebsocket | null)?.configuration?.websocketProvider
-    ?.status;
+  const websocketStatus = (provider as ProviderWithWebsocket | null)?.configuration
+    ?.websocketProvider?.status;
 
   return normalizeConnectionStatus(websocketStatus);
 }

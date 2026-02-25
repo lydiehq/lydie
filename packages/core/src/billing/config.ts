@@ -1,10 +1,15 @@
-import { Resource } from "sst";
 import Stripe from "stripe";
 
-export const stripe = new Stripe(Resource.StripeSecretKey.value, {
-  apiVersion: "2026-01-28.clover",
-  typescript: true,
-});
+import { env, requireEnv } from "../env";
+
+const stripeSecretKey = env.STRIPE_SECRET_KEY;
+
+export const stripe = stripeSecretKey
+  ? new Stripe(stripeSecretKey, {
+      apiVersion: "2026-01-28.clover",
+      typescript: true,
+    })
+  : null;
 
 // Plan configuration
 // Each member of a workspace gets these credits based on the workspace tier
@@ -39,6 +44,6 @@ export type PlanType = keyof typeof PLAN_CONFIG;
 // Yearly Product: prod_TvNh13Jy72rmb1
 // Yearly Price: price_1SxWwI2QnEmaiVg3oeTqG2c6 ($168.00/year per member)
 export const STRIPE_PRICE_IDS = {
-  monthly: Resource.StripeMonthlyPriceId?.value || "price_1SxWwI2QnEmaiVg3KtWhPFeZ",
-  yearly: Resource.StripeYearlyPriceId?.value || "price_1SxWwI2QnEmaiVg3oeTqG2c6",
+  monthly: env.STRIPE_MONTHLY_PRICE_ID || "price_1SxWwI2QnEmaiVg3KtWhPFeZ",
+  yearly: env.STRIPE_YEARLY_PRICE_ID || "price_1SxWwI2QnEmaiVg3oeTqG2c6",
 };

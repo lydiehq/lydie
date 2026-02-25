@@ -1,0 +1,18 @@
+name: lydie
+runtime: nodejs
+description: Lydie infrastructure on AWS
+config:
+  aws:region:
+    value: us-east-1
+  # Domain configuration (subdomains derived from base domain in config.ts)
+  lydie:domainName:
+    default: lydie.co
+  # Container configuration (production values)
+  lydie:backendCpu:
+    default: "512"
+  lydie:backendMemory:
+    default: "1024"
+  lydie:zeroCpu:
+    default: "1024"
+  lydie:zeroMemory:
+    default: "2048"

@@ -8,15 +8,42 @@ import { ExternalApi } from "./external";
 import { InternalApi } from "./internal";
 import { PublicApi } from "./public";
 
+const allowedOrigins = [
+  "https://app.lydie.co",
+  "https://lydie.co",
+  "http://localhost:3000",
+  "http://localhost:4321",
+];
+
+// Allow additional origins from environment variable (for Docker/testing)
+if (process.env.CORS_ALLOWED_ORIGINS) {
+  const additionalOrigins = process.env.CORS_ALLOWED_ORIGINS.split(",").map(o => o.trim());
+  allowedOrigins.push(...additionalOrigins);
+  console.log("[CORS] Additional origins allowed:", additionalOrigins);
+}
+
+console.log("[CORS] Allowed origins:", allowedOrigins);
+
 export const app = new Hono()
   .use(
     cors({
-      origin: [
-        "https://app.lydie.co",
-        "https://lydie.co",
-        "http://localhost:3000",
-        "http://localhost:4321",
-      ],
+      origin: (origin) => {
+        console.log("[CORS] Checking origin:", origin);
+        // Match origins with or without port 80
+        const isAllowed = !origin || allowedOrigins.some(allowed => {
+          if (allowed === origin) return true;
+          // Match http://web:80 with http://web (browser strips :80)
+          if (allowed.replace(":80", "") === origin) return true;
+          return false;
+        });
+        
+        if (isAllowed) {
+          console.log("[CORS] Origin allowed:", origin);
+          return origin;
+        }
+        console.log("[CORS] Origin NOT allowed:", origin);
+        return null;
+      },
       credentials: true,
     }),
   )

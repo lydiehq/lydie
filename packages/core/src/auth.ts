@@ -3,11 +3,11 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, customSession, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { Resource } from "sst";
 
 import { syncSubscriptionQuantity } from "./billing/seat-management";
 import { createMemberCredits, markMemberAsRemoved } from "./billing/workspace-credits";
 import { sendEmail } from "./email";
+import { env, requireEnv } from "./env";
 import { createId } from "./id";
 import { scheduleOnboardingEmails } from "./onboarding";
 
@@ -24,11 +24,8 @@ export const authClient = betterAuth({
       maxAge: 5 * 60,
     },
   },
-  baseURL:
-    Resource.App.stage === "production"
-      ? "https://api.lydie.co/internal/public/auth"
-      : "http://localhost:3001/internal/public/auth",
-  secret: Resource.BetterAuthSecret.value,
+  baseURL: env.BETTER_AUTH_BASE_URL,
+  secret: requireEnv(env.BETTER_AUTH_SECRET, "BETTER_AUTH_SECRET"),
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -42,28 +39,42 @@ export const authClient = betterAuth({
     },
   }),
   socialProviders: {
-    google: {
-      clientId: Resource.GoogleClientId.value,
-      clientSecret: Resource.GoogleClientSecret.value,
-    },
+    google:
+      env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+        ? {
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          }
+        : undefined,
   },
   trustedOrigins:
-    Resource.App.stage === "production"
+    env.APP_STAGE === "production"
       ? ["https://lydie.co", "https://api.lydie.co", "https://app.lydie.co"]
-      : ["http://localhost:3001", "http://localhost:3000"],
+      : [
+          "http://localhost:3001",
+          "http://localhost:3000",
+          ...(env.CORS_ALLOWED_ORIGINS ? env.CORS_ALLOWED_ORIGINS.split(",") : []),
+        ],
   advanced: {
-    defaultCookieAttributes: {
-      ...(Resource.App.stage === "production"
-        ? {}
+    // Production (HTTPS, same-origin via ALB): secure cookies with partitioning
+    // Docker e2e (HTTP, same-origin via nginx): browser defaults (SECURE_COOKIES=false)
+    // Local dev / Docker dev (cross-origin SPA↔API): sameSite=none + secure
+    //   (Chrome treats localhost as a secure context, so Secure cookies work over HTTP)
+    defaultCookieAttributes: !env.SECURE_COOKIES
+      ? {}
+      : env.APP_STAGE === "production"
+        ? {
+            secure: true,
+            partitioned: true,
+          }
         : {
             sameSite: "none",
-          }),
-      partitioned: true,
-      secure: true,
-    },
+            secure: true,
+            partitioned: true,
+          },
     crossSubDomainCookies: {
       enabled: true,
-      domain: Resource.App.stage === "production" ? ".lydie.co" : ".localhost",
+      domain: env.APP_STAGE === "production" ? ".lydie.co" : ".localhost",
     },
   },
   databaseHooks: {

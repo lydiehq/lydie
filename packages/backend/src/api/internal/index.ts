@@ -16,8 +16,30 @@ import { OrganizationRoute } from "./organization";
 import { WorkspaceExportRoute } from "./workspace-export";
 import { ZeroRoute } from "./zero";
 
+// Build allowed origins list including env var
+const allowedOrigins = [
+  "https://app.lydie.co",
+  "https://lydie.co", 
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:4321",
+];
+if (process.env.CORS_ALLOWED_ORIGINS) {
+  const additional = process.env.CORS_ALLOWED_ORIGINS.split(",").map(o => o.trim());
+  allowedOrigins.push(...additional);
+}
+
 const publicRouter = new Hono().on(["GET", "POST"], "/auth/*", async (c) => {
-  return authClient.handler(c.req.raw);
+  const response = await authClient.handler(c.req.raw);
+  
+  // Add CORS headers to auth response
+  const origin = c.req.header("origin");
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin);
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+  }
+  
+  return response;
 });
 
 const organizationScopedRouter = new Hono<{

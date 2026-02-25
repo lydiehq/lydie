@@ -1,5 +1,3 @@
-import { Resource } from "sst";
-
 import { db } from "../index";
 import { templateCategoriesTable, templateCategoryAssignmentsTable } from "../schema";
 
@@ -156,7 +154,7 @@ const categories: Category[] = [
 ];
 
 async function seedTemplateCategories() {
-  console.log(`Environment: ${Resource.App.stage}`);
+  console.log(`Environment: ${process.env.APP_STAGE || "development"}`);
   console.log(`Starting to seed template categories...`);
   console.log(`Connecting to database...`);
 

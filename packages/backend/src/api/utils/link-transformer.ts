@@ -25,10 +25,7 @@ function isRichTextNode(value: unknown): value is ContentNode | TextNode {
   return isRecord(value) && value.type === "doc";
 }
 
-function walkNestedValue(
-  value: unknown,
-  visit: (node: ContentNode | TextNode) => void,
-): void {
+function walkNestedValue(value: unknown, visit: (node: ContentNode | TextNode) => void): void {
   if (Array.isArray(value)) {
     for (const item of value) {
       walkNestedValue(item, visit);

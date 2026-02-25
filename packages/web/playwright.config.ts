@@ -1,20 +1,21 @@
 import { defineConfig, devices } from "@playwright/test";
-import { Resource } from "sst";
+
+const stage = process.env.APP_STAGE || "development";
 
 export default defineConfig({
   testDir: "./tests/e2e",
   // Run tests in files in parallel
   fullyParallel: true,
   // Fail the build on CI if you accidentally left test.only in the source code
-  forbidOnly: Resource.App.stage === "production",
+  forbidOnly: stage === "production",
   // Retry on CI only
-  retries: Resource.App.stage === "production" ? 2 : 0,
+  retries: 0,
   // Reporter to use
   timeout: 15_000,
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: Resource.App.stage === "production" ? "https://lydie.co" : "http://localhost:3000",
+    baseURL: stage === "production" ? "https://lydie.co" : "http://localhost:3000",
     // API URL for backend calls
     extraHTTPHeaders: {
       // Add any default headers here

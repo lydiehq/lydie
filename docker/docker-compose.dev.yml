@@ -1,0 +1,176 @@
+services:
+  # PostgreSQL database for local development
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: lydie-postgres-dev
+    command: postgres -c wal_level=logical -c max_replication_slots=4 -c max_slot_wal_keep_size=1GB
+    environment:
+      POSTGRES_USER: lydie
+      POSTGRES_PASSWORD: lydie
+      POSTGRES_DB: lydie
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lydie"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lydie-dev-network
+
+  # Backend API server with hot reload
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.dev.Dockerfile
+    container_name: lydie-backend-dev
+    env_file:
+      - ../.env
+    environment:
+      APP_STAGE: development
+      APP_ENV: docker
+      NODE_ENV: development
+      DATABASE_URL: postgres://lydie:lydie@postgres:5432/lydie
+      DATABASE_URL_DIRECT: postgres://lydie:lydie@postgres:5432/lydie
+      BETTER_AUTH_BASE_URL: http://localhost:3001/internal/public/auth
+      FRONTEND_URL: http://localhost:3000
+      ZERO_MUTATE_URL: http://backend:3001/internal/zero/mutate
+      ZERO_QUERY_URL: http://backend:3001/internal/zero/queries
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount source code for hot reload
+      - ../packages/backend/src:/app/packages/backend/src
+      - ../packages/core/src:/app/packages/core/src
+      - ../packages/database/src:/app/packages/database/src
+      - ../packages/integrations/src:/app/packages/integrations/src
+      - ../packages/zero/src:/app/packages/zero/src
+      - ../packages/editor/src:/app/packages/editor/src
+      # Don't overwrite node_modules
+      - /app/node_modules
+      - /app/packages/backend/node_modules
+      - /app/packages/core/node_modules
+      - /app/packages/database/node_modules
+      - /app/packages/integrations/node_modules
+      - /app/packages/zero/node_modules
+      - /app/packages/editor/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lydie-dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zero sync server
+  zero:
+    build:
+      context: ..
+      dockerfile: docker/zero.Dockerfile
+    container_name: lydie-zero-dev
+    env_file:
+      - ../.env
+    environment:
+      APP_STAGE: development
+      APP_ENV: docker
+      ZERO_UPSTREAM_DB: postgres://lydie:lydie@postgres:5432/lydie
+      ZERO_CVR_DB: postgres://lydie:lydie@postgres:5432/lydie
+      ZERO_CHANGE_DB: postgres://lydie:lydie@postgres:5432/lydie
+      ZERO_MUTATE_URL: http://backend:3001/internal/zero/mutate
+      ZERO_QUERY_URL: http://backend:3001/internal/zero/queries
+      ZERO_NUM_SYNC_WORKERS: "2"
+      ZERO_MUTATE_FORWARD_COOKIES: "true"
+      ZERO_QUERY_FORWARD_COOKIES: "true"
+    ports:
+      - "4848:4848"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+    networks:
+      - lydie-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4848/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database migrations - runs once before zero starts
+  migrations:
+    build:
+      context: ..
+      dockerfile: docker/migrations.Dockerfile
+    container_name: lydie-migrations-dev
+    env_file:
+      - ../.env
+    environment:
+      APP_STAGE: development
+      APP_ENV: docker
+      NODE_ENV: development
+      DATABASE_URL: postgres://lydie:lydie@postgres:5432/lydie
+      DATABASE_URL_DIRECT: postgres://lydie:lydie@postgres:5432/lydie
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lydie-dev-network
+
+  # Web frontend with Vite dev server and HMR
+  web:
+    build:
+      context: ..
+      dockerfile: docker/web.dev.Dockerfile
+    container_name: lydie-web-dev
+    environment:
+      VITE_API_URL: http://localhost:3001
+      VITE_ZERO_URL: http://localhost:4848
+      VITE_YJS_SERVER_URL: ws://localhost:3001/yjs
+      # Required for HMR websocket to work properly in Docker
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "100"
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3000:3000"
+      # Vite HMR websocket port
+      - "24678:24678"
+    volumes:
+      # Mount source code for hot reload
+      - ../packages/web/src:/app/packages/web/src
+      - ../packages/web/index.html:/app/packages/web/index.html
+      - ../packages/core/src:/app/packages/core/src
+      - ../packages/database/src:/app/packages/database/src
+      - ../packages/ui/src:/app/packages/ui/src
+      - ../packages/editor/src:/app/packages/editor/src
+      - ../packages/zero/src:/app/packages/zero/src
+      - ../packages/integrations/src:/app/packages/integrations/src
+      # Don't overwrite node_modules
+      - /app/node_modules
+      - /app/packages/web/node_modules
+      - /app/packages/core/node_modules
+      - /app/packages/database/node_modules
+      - /app/packages/ui/node_modules
+      - /app/packages/editor/node_modules
+      - /app/packages/zero/node_modules
+      - /app/packages/integrations/node_modules
+    depends_on:
+      - backend
+      - zero
+    networks:
+      - lydie-dev-network
+    # Keep stdin open for Vite's HMR
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  lydie-dev-network:
+    driver: bridge

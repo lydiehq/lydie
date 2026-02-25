@@ -7,7 +7,6 @@ import { test as baseTest } from "@playwright/test";
 import type { StorageState } from "@playwright/test";
 import type { InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
-import { Resource } from "sst";
 
 import { createTestUser, withDeadlockRetry } from "../utils/db";
 
@@ -19,7 +18,10 @@ const generateRandomString = createRandomStringGenerator("a-z", "0-9", "A-Z", "-
 let cachedSecret: string | undefined;
 async function getAuthSecret(): Promise<string> {
   if (!cachedSecret) {
-    cachedSecret = Resource.BetterAuthSecret.value;
+    cachedSecret = process.env.BETTER_AUTH_SECRET;
+  }
+  if (!cachedSecret) {
+    throw new Error("BETTER_AUTH_SECRET is required - set it as an environment variable");
   }
   return cachedSecret;
 }

@@ -5,7 +5,8 @@ import { serializeToMarkdown } from "@lydie/core/serialization/markdown";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { db, documentsTable } from "@lydie/database";
 import { and, eq, isNull } from "drizzle-orm";
-import { Resource } from "sst";
+
+import { env, requireEnv } from "../env";
 
 const s3Client = new S3Client({ region: "us-east-1" });
 
@@ -184,10 +185,7 @@ async function createManifestAndUploadFiles(
   organizationId: string,
   documents: Array<{ doc: DocumentWithChildren; path: string }>,
 ): Promise<{ fileCount: number; manifestKey: string }> {
-  const bucketName = Resource.WorkspaceExports.name;
-  if (!bucketName) {
-    throw new Error("WorkspaceExports bucket not configured");
-  }
+  const bucketName = requireEnv(env.S3_BUCKET_EXPORTS, "S3_BUCKET_EXPORTS");
 
   const manifest = {
     version: "1.0.0",

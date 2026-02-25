@@ -1,5 +1,4 @@
 import { sql } from "drizzle-orm";
-import { Resource } from "sst";
 
 import { db } from ".";
 
@@ -8,7 +7,7 @@ const SCHEMA = "public";
 
 async function main() {
   // Only run in production - PlanetScale is only used in production
-  const stage = Resource.App.stage;
+  const stage = process.env.APP_STAGE || "development";
   if (stage !== "production") {
     console.error("❌ This script should only be run in production.");
     console.error(`   Current stage: ${stage || "unknown"}`);

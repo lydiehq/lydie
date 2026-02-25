@@ -12,8 +12,8 @@ import { TextField } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useCollectionTabSync } from "@/components/layout/DocumentTabBar";
-import { CollectionKanban } from "@/components/modules/CollectionKanban";
 import { CollectionTable } from "@/components/modules";
+import { CollectionKanban } from "@/components/modules/CollectionKanban";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useZero } from "@/services/zero";
@@ -265,7 +265,9 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
             />
             <select
               value={newViewType}
-              onChange={(event) => setNewViewType(event.target.value as "table" | "list" | "kanban")}
+              onChange={(event) =>
+                setNewViewType(event.target.value as "table" | "list" | "kanban")
+              }
               className="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
             >
               <option value="table">Table</option>
@@ -320,11 +322,7 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
           </div>
         </div>
 
-        <Button
-          intent="secondary"
-          size="sm"
-          onPress={handleCreateRow}
-        >
+        <Button intent="secondary" size="sm" onPress={handleCreateRow}>
           + New
         </Button>
         <div className="rounded-xl border border-gray-200 bg-white">

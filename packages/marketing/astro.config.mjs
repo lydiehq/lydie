@@ -42,6 +42,14 @@ export default defineConfig({
       destination: "/knowledge-bases/structure",
       status: 301,
     },
+    "blog/knowledge-base-best-practices": {
+      destination: "/knowledge-bases/maintenance",
+      status: 301,
+    },
+    "blog/what-is-a-personal-knowledge-base": {
+      destination: "/knowledge-bases/personal",
+      status: 301,
+    },
   },
   image: {
     service: {

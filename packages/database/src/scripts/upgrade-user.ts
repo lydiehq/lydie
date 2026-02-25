@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { Resource } from "sst";
 
 import { db, organizationsTable } from "../index";
 
@@ -14,7 +13,7 @@ async function upgradeUser() {
   }
 
   console.log(`🔌 Connecting to database...`);
-  console.log(`📦 Environment: ${Resource.App.stage}`);
+  console.log(`📦 Environment: ${process.env.APP_STAGE || "development"}`);
 
   // Try to find the user by email or ID
   const user = await db.query.usersTable.findFirst({

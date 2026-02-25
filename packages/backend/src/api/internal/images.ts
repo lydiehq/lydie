@@ -5,7 +5,8 @@ import { db } from "@lydie/database";
 import { assetsTable } from "@lydie/database/schema";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { Resource } from "sst";
+
+import { env, requireEnv } from "../../env";
 
 type Variables = {
   organizationId: string;
@@ -38,9 +39,10 @@ export const ImagesRoute = new Hono<{ Variables: Variables }>().post("/upload-ur
 
   const extension = filename.split(".").pop() || "jpg";
   const key = `${organizationId}/${userId}/${createId()}.${extension}`;
+  const bucketName = requireEnv(env.S3_BUCKET_ASSETS, "S3_BUCKET_ASSETS");
 
   const command = new PutObjectCommand({
-    Bucket: Resource.OrganizationAssets.name,
+    Bucket: bucketName,
     Key: key,
     ContentType: contentType,
   });
@@ -56,9 +58,8 @@ export const ImagesRoute = new Hono<{ Variables: Variables }>().post("/upload-ur
     userId,
   });
 
-  const routerUrl = Resource.AssetsRouter.url;
-  const assetDomain = routerUrl.startsWith("http") ? new URL(routerUrl).hostname : routerUrl;
-  const imageUrl = `https://${assetDomain}/${key}`;
+  const assetsBaseUrl = requireEnv(env.ASSETS_PUBLIC_BASE_URL, "ASSETS_PUBLIC_BASE_URL");
+  const imageUrl = `${assetsBaseUrl.replace(/\/$/, "")}/${key}`;
 
   return c.json({
     uploadUrl,

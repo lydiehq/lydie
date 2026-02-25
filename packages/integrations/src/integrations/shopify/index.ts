@@ -17,7 +17,6 @@ import type {
 import { createErrorResult } from "@lydie/core/integrations/types";
 import { deserializeFromHTML, serializeToHTML } from "@lydie/core/serialization/html";
 import { deserializeFromText } from "@lydie/core/serialization/text";
-import { Resource } from "sst";
 
 export interface ShopifyConfig {
   shop: string; // myshop.myshopify.com
@@ -498,8 +497,8 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
 
   async getOAuthCredentials(): Promise<OAuthCredentials> {
     return {
-      clientId: Resource.ShopifyClientId.value,
-      clientSecret: Resource.ShopifyClientSecret.value,
+      clientId: process.env.SHOPIFY_CLIENT_ID!,
+      clientSecret: process.env.SHOPIFY_CLIENT_SECRET!,
     };
   },
 

@@ -1,13 +1,13 @@
 import { serve } from "@hono/node-server";
 import * as Sentry from "@sentry/node";
-import { Resource } from "sst";
 
 import { app, injectWebSocket } from "./api";
+import { env } from "./env";
 
-if (Resource.SentryDsn.value) {
+if (env.SENTRY_DSN) {
   Sentry.init({
-    dsn: Resource.SentryDsn.value,
-    environment: Resource.App.stage,
+    dsn: env.SENTRY_DSN,
+    environment: env.APP_STAGE,
   });
 }
 

@@ -20,7 +20,9 @@ export function GlobalBulkActionsBar() {
       }`}
     >
       <p className="ml-2 text-xs font-medium text-white">
-        {state.selectionCount} {state.selectionCount === 1 ? state.selectionLabelSingular : state.selectionLabelPlural} selected
+        {state.selectionCount}{" "}
+        {state.selectionCount === 1 ? state.selectionLabelSingular : state.selectionLabelPlural}{" "}
+        selected
       </p>
       <div className="flex items-center gap-1">
         {state.actions.map((action) => (

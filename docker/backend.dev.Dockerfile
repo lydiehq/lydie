@@ -1,0 +1,39 @@
+FROM mirror.gcr.io/oven/bun:1.3.8
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    pandoc \
+    texlive-latex-base \
+    texlive-latex-recommended \
+    texlive-fonts-recommended \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy package files first for better layer caching
+COPY package.json .
+COPY bun.lock .
+COPY tsconfig.json .
+COPY infrastructure/package.json ./infrastructure/package.json
+COPY packages/core/package.json ./packages/core/package.json
+COPY packages/backend/package.json ./packages/backend/package.json
+COPY packages/database/package.json ./packages/database/package.json
+COPY packages/integrations/package.json ./packages/integrations/package.json
+COPY packages/zero/package.json ./packages/zero/package.json
+COPY packages/editor/package.json ./packages/editor/package.json
+
+# Install dependencies
+RUN bun install --ignore-scripts
+
+# Copy source code (will be overridden by volume mounts in dev)
+COPY packages/backend ./packages/backend
+COPY packages/core ./packages/core
+COPY packages/database ./packages/database
+COPY packages/integrations ./packages/integrations
+COPY packages/zero ./packages/zero
+COPY packages/editor ./packages/editor
+
+WORKDIR ./packages/backend
+
+# Use bun's watch mode for hot reload
+CMD ["bun", "run", "--watch", "./src/index.ts"]

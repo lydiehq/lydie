@@ -16,7 +16,6 @@ import type {
 } from "@lydie/core/integrations/types";
 import { createErrorResult } from "@lydie/core/integrations/types";
 import { deserializeFromHTML, serializeToHTML } from "@lydie/core/serialization/html";
-import { Resource } from "sst";
 
 export interface BloggerConfig {
   accessToken: string;
@@ -506,8 +505,8 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
   async getOAuthCredentials(): Promise<OAuthCredentials> {
     return {
-      clientId: Resource.GoogleClientId.value,
-      clientSecret: Resource.GoogleClientSecret.value,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     };
   },
 

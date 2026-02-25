@@ -1,5 +1,4 @@
 import {
-  FloatingFocusManager,
   FloatingPortal,
   autoUpdate,
   flip,
@@ -167,12 +166,20 @@ function useLinkState(editor: Editor): PopoverState {
       });
     };
 
-    editor.on("selectionUpdate", updateState);
-    editor.on("transaction", updateState);
+    // Use requestAnimationFrame to defer state reads until after TipTap/ProseMirror
+    // has finished its DOM mutations. Reading editor state synchronously during a
+    // transaction can cause React to re-render while the DOM is in a transient state,
+    // leading to "insertBefore" errors when React tries to reconcile.
+    const deferredUpdateState = () => {
+      requestAnimationFrame(updateState);
+    };
+
+    editor.on("selectionUpdate", deferredUpdateState);
+    editor.on("transaction", deferredUpdateState);
 
     return () => {
-      editor.off("selectionUpdate", updateState);
-      editor.off("transaction", updateState);
+      editor.off("selectionUpdate", deferredUpdateState);
+      editor.off("transaction", deferredUpdateState);
     };
   }, [editor]);
 
@@ -565,36 +572,30 @@ export function LinkPopoverBase({
 
   return (
     <FloatingPortal>
-      <FloatingFocusManager
-        context={context}
-        modal={false}
-        initialFocus={linkState.mode === "edit" ? 0 : -1}
+      <div
+        ref={refs.setFloating}
+        style={floatingStyles}
+        {...getFloatingProps()}
+        className="z-50 bg-white rounded-lg shadow-popover p-1 flex flex-col"
+        data-testid="link-popover"
       >
-        <div
-          ref={refs.setFloating}
-          style={floatingStyles}
-          {...getFloatingProps()}
-          className="z-50 bg-white rounded-lg shadow-popover p-1 flex flex-col"
-          data-testid="link-popover"
-        >
-          {linkState.mode === "edit" ? (
-            <EditModeContent
-              editor={editor}
-              initialHref={linkState.href}
-              initialText={linkState.text}
-              searchResults={searchResults}
-              onSearchChange={onSearchChange}
-            />
-          ) : linkState.mode === "view" ? (
-            <ViewModeContent
-              editor={editor}
-              href={linkState.href}
-              internalDocument={internalDocument}
-              onNavigate={onNavigate}
-            />
-          ) : null}
-        </div>
-      </FloatingFocusManager>
+        {linkState.mode === "edit" ? (
+          <EditModeContent
+            editor={editor}
+            initialHref={linkState.href}
+            initialText={linkState.text}
+            searchResults={searchResults}
+            onSearchChange={onSearchChange}
+          />
+        ) : linkState.mode === "view" ? (
+          <ViewModeContent
+            editor={editor}
+            href={linkState.href}
+            internalDocument={internalDocument}
+            onNavigate={onNavigate}
+          />
+        ) : null}
+      </div>
     </FloatingPortal>
   );
 }
