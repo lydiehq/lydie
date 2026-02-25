@@ -125,7 +125,7 @@ jobs:
   # Deploy to production
   deploy-production:
     runs-on: ubuntu-latest
-    needs: deploy-staging
+    # needs: deploy-staging
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
     steps:
