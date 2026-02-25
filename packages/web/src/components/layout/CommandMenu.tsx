@@ -15,8 +15,9 @@ import {
 } from "@fluentui/react-icons";
 import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
+import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
-import { useQuery } from "@rocicorp/zero/react";
+import { useQuery, useZero } from "@rocicorp/zero/react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useAtom, useSetAtom } from "jotai";
 import { type ComponentType, useCallback, useEffect, useMemo, useState } from "react";
@@ -92,9 +93,10 @@ export function CommandMenu() {
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
   const [memberships] = useQuery(queries.organizations.byUser({}));
-  const organizations = useMemo(() => memberships?.map((membership) => membership.organization) ?? [], [
-    memberships,
-  ]);
+  const organizations = useMemo(
+    () => memberships?.map((membership) => membership.organization) ?? [],
+    [memberships],
+  );
 
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
@@ -187,6 +189,8 @@ export function CommandMenu() {
     [navigate, organization.slug],
   );
 
+  const z = useZero();
+
   // Build menu sections
   const rootMenuSections = useMemo<MenuSectionType[]>(() => {
     const favoritesItems: MenuItem[] = [];
@@ -201,6 +205,24 @@ export function CommandMenu() {
     });
 
     if (currentDocument) {
+      favoritesItems.push({
+        id: "toggle-width",
+        label: currentDocument.full_width
+          ? "Make document full width"
+          : "Make document normal width",
+        icon: currentDocument.full_width ? AddRegular : AddRegular,
+        action: () => {
+          if (currentDocument) {
+            z.mutate(
+              mutators.document.update({
+                organizationId: organization.id,
+                documentId: currentDocument.id,
+                fullWidth: !currentDocument.full_width,
+              }),
+            );
+          }
+        },
+      });
       favoritesItems.push({
         id: "publish",
         label: "Publish document",
@@ -609,15 +631,15 @@ export function CommandMenu() {
             >
               <div className="flex min-w-0 flex-1 flex-col py-2">
                 {menuView !== "root" && (
-                  <div className="px-2 pb-1 text-xs text-gray-500">Command menu / Switch workspace</div>
+                  <div className="px-2 pb-1 text-xs text-gray-500">
+                    Command menu / Switch workspace
+                  </div>
                 )}
                 <div className="flex items-center">
                   <SearchFilled className="size-4 shrink-0 text-gray-400" />
                   <Input
                     placeholder={
-                      menuView === "root"
-                        ? "Type a command or search..."
-                        : "Search workspaces..."
+                      menuView === "root" ? "Type a command or search..." : "Search workspaces..."
                     }
                     onKeyDown={(e) => {
                       if (e.key === "Backspace" && search.length === 0 && menuView !== "root") {

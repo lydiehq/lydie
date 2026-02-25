@@ -10,7 +10,7 @@ export const organizationQueries = {
     return zql.members
       .where("user_id", ctx.userId)
       .related("organization")
-      .orderBy("updated_at", "desc")
+      .orderBy("last_accessed_at", "desc")
       .orderBy("created_at", "desc");
   }),
 

@@ -42,6 +42,7 @@ export const organizationMutators = {
           organization_id: id,
           user_id: ctx.userId,
           role: "owner",
+          last_accessed_at: Date.now(),
         }),
       );
 

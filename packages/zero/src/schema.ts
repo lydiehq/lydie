@@ -43,6 +43,7 @@ const members = table("members")
     organization_id: string(),
     user_id: string(),
     role: string(),
+    last_accessed_at: number(),
     ...timestamps,
   })
   .primaryKey("id");

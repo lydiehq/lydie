@@ -48,6 +48,7 @@ services:
 
   # Database migrations - runs once before zero starts
   migrations:
+    image: lydie-migrations
     build:
       context: ..
       dockerfile: packages/database/Dockerfile.migrations
@@ -65,6 +66,7 @@ services:
 
   # Backend API server
   backend:
+    image: lydie-backend
     build:
       context: ..
       dockerfile: packages/backend/Dockerfile
@@ -110,6 +112,7 @@ services:
 
   # Zero sync server
   zero:
+    image: lydie-zero
     build:
       context: ..
       dockerfile: packages/zero/Dockerfile
@@ -146,6 +149,7 @@ services:
   # mirroring the ALB host-based routing in production. The browser only
   # talks to localhost:3000 - no cross-origin issues.
   web:
+    image: lydie-web
     build:
       context: ..
       dockerfile: packages/web/Dockerfile
@@ -169,6 +173,7 @@ services:
 
   # E2E test runner (only started with --profile test)
   e2e:
+    image: lydie-e2e
     build:
       context: ..
       dockerfile: packages/web/Dockerfile.e2e

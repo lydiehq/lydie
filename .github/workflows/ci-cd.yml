@@ -55,17 +55,18 @@ jobs:
           INSTALL_CONVERSION_DEPS: "false"
         with:
           files: docker/docker-compose.yml
-          targets: backend,zero,web,migrations
+          targets: backend,web,migrations
           load: true
           set: |
-            *.cache-from=type=gha,scope=ci-e2e-compose
-            *.cache-to=type=gha,mode=max,scope=ci-e2e-compose
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
 
       - name: Set up Docker Compose
         run: docker compose -f docker/docker-compose.yml up -d --no-build --wait --wait-timeout 180
         env:
-          APP_STAGE: development
+          APP_STAGE: test
           INSTALL_CONVERSION_DEPS: "false"
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
       - name: Show service status on startup failure
         if: failure()
