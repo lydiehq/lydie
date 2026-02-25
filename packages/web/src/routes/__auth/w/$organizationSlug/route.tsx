@@ -5,7 +5,7 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Group, Panel, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { z } from "zod";
@@ -14,6 +14,7 @@ import {
   isFloatingAssistantDockedAtom as isDockedAtom,
   isSidebarCollapsedAtom,
 } from "@/atoms/workspace-settings";
+import { setDocumentTabsStorageScopeAtom } from "@/atoms/tabs";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
 import { CommandMenu } from "@/components/layout/CommandMenu";
 import { DocumentTabBar } from "@/components/layout/DocumentTabBar";
@@ -22,6 +23,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Surface } from "@/components/layout/Surface";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
+import { useAuth } from "@/context/auth.context";
 import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
 import { authClient } from "@/utils/auth";
@@ -82,8 +84,10 @@ function RouteLayout() {
   const [size, setSize] = useState(280); // pixels
   const isCollapsed = size === COLLAPSED_SIZE;
   const [, setSidebarCollapsed] = useAtom(isSidebarCollapsedAtom);
+  const setTabStorageScope = useSetAtom(setDocumentTabsStorageScopeAtom);
   const routerState = useRouterState();
   const isDocked = useAtomValue(isDockedAtom);
+  const { session } = useAuth();
 
   // Sync collapsed state to atom so child components can read it
   useEffect(() => {
@@ -134,6 +138,17 @@ function RouteLayout() {
     }
   }, [organization]);
 
+  useEffect(() => {
+    if (!session?.userId) {
+      return;
+    }
+
+    setTabStorageScope({
+      userId: session.userId,
+      workspaceId: organization.id,
+    });
+  }, [organization.id, session?.userId, setTabStorageScope]);
+
   const dockedAssistantContainerRef = useCallback((node: HTMLDivElement | null) => {
     setDockedAssistantContainer(node);
   }, []);
@@ -153,10 +168,8 @@ function RouteLayout() {
     setIsTemplateDialogOpen(isOpen);
 
     if (!isOpen && search.installTemplate) {
-      navigate({
-        to: "/w/$organizationSlug",
-        params: { organizationSlug: params.organizationSlug },
-        search: {},
+      void navigate({
+        href: `/w/${params.organizationSlug}`,
         replace: true,
       });
     }

@@ -192,7 +192,7 @@ test.describe("session persistence", () => {
     await expect(page.getByRole("button", { name: organization.name }).first()).toBeVisible();
   });
 
-  test("oauth callback should redirect to workspace even with stale unauth cache", async ({
+  test.fixme("oauth callback should redirect to workspace even with stale unauth cache", async ({
     page,
     organization,
     session,

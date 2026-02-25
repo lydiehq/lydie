@@ -1,9 +1,10 @@
 import { createId } from "@lydie/core/id";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
-import { db, documentsTable } from "@lydie/database";
+import { db, documentsTable, organizationsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
 import { expect, test } from "./fixtures/auth.fixture";
+import { createTestOrganization } from "./utils/db";
 import { triggerCommandMenuShortcut } from "./utils/command-menu";
 
 test.describe("command menu", () => {
@@ -80,6 +81,40 @@ test.describe("command menu", () => {
       });
     } finally {
       await db.delete(documentsTable).where(eq(documentsTable.id, documentId));
+    }
+  });
+
+  test("can open workspace submenu and return with backspace", async ({
+    page,
+    organization,
+    user,
+  }) => {
+    const secondWorkspace = await createTestOrganization(user.id, {
+      prefix: "command-workspace",
+      name: `Command Menu Workspace ${Date.now()}`,
+      slug: `command-menu-workspace-${Date.now()}`,
+    });
+
+    try {
+      await page.goto(`/w/${organization.slug}`);
+      await page.waitForLoadState("domcontentloaded");
+
+      await triggerCommandMenuShortcut(page);
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+
+      await dialog.getByRole("menuitem", { name: "Switch workspace" }).click();
+
+      await expect(dialog.getByText("Command menu / Switch workspace")).toBeVisible();
+      await expect(dialog.getByRole("menuitem", { name: secondWorkspace.name })).toBeVisible();
+
+      const searchInput = dialog.getByPlaceholder("Search workspaces...");
+      await searchInput.press("Backspace");
+
+      await expect(dialog.getByRole("menuitem", { name: "Go home" })).toBeVisible();
+      await expect(dialog.getByRole("menuitem", { name: "Switch workspace" })).toBeVisible();
+    } finally {
+      await db.delete(organizationsTable).where(eq(organizationsTable.id, secondWorkspace.id));
     }
   });
 });

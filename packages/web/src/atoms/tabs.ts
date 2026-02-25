@@ -1,5 +1,4 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
 
 export type TabMode = "preview" | "persistent";
 
@@ -13,8 +12,137 @@ export interface DocumentTab {
 const STORAGE_KEY = "lydie:document:tabs";
 const MAX_TABS = 10;
 
-const storedTabsAtom = atomWithStorage<DocumentTab[]>(STORAGE_KEY, []);
-const storedActiveTabIdAtom = atomWithStorage<string | null>(`${STORAGE_KEY}-active`, null);
+type TabStorageScope = {
+  userId: string | null;
+  workspaceId: string | null;
+};
+
+type TabStorageState = {
+  tabs: DocumentTab[];
+  activeTabId: string | null;
+};
+
+const DEFAULT_TAB_STORAGE_STATE: TabStorageState = {
+  tabs: [],
+  activeTabId: null,
+};
+
+const tabStorageScopeAtom = atom<TabStorageScope>({
+  userId: null,
+  workspaceId: null,
+});
+
+const storedTabStateAtom = atom<TabStorageState>(DEFAULT_TAB_STORAGE_STATE);
+
+function getScopedStorageKey(baseKey: string, scope: TabStorageScope): string {
+  const userScope = scope.userId ? `:user:${scope.userId}` : "";
+  const workspaceScope = scope.workspaceId ? `:workspace:${scope.workspaceId}` : "";
+  return `${baseKey}${userScope}${workspaceScope}`;
+}
+
+function readStorageValue(key: string): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorageValue(key: string, value: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+function loadTabStorageState(scope: TabStorageScope): TabStorageState {
+  if (!scope.userId || !scope.workspaceId) {
+    return DEFAULT_TAB_STORAGE_STATE;
+  }
+
+  try {
+    const tabsKey = getScopedStorageKey(STORAGE_KEY, scope);
+    const activeTabKey = getScopedStorageKey(`${STORAGE_KEY}-active`, scope);
+
+    const tabsValue = readStorageValue(tabsKey);
+    const activeTabValue = readStorageValue(activeTabKey);
+
+    const tabs = tabsValue ? (JSON.parse(tabsValue) as DocumentTab[]) : [];
+    const activeTabId = activeTabValue ? (JSON.parse(activeTabValue) as string | null) : null;
+
+    return {
+      tabs: Array.isArray(tabs) ? tabs : [],
+      activeTabId: typeof activeTabId === "string" || activeTabId === null ? activeTabId : null,
+    };
+  } catch {
+    return DEFAULT_TAB_STORAGE_STATE;
+  }
+}
+
+function persistTabStorageState(scope: TabStorageScope, state: TabStorageState): void {
+  if (!scope.userId || !scope.workspaceId) {
+    return;
+  }
+
+  const tabsKey = getScopedStorageKey(STORAGE_KEY, scope);
+  const activeTabKey = getScopedStorageKey(`${STORAGE_KEY}-active`, scope);
+
+  writeStorageValue(tabsKey, JSON.stringify(state.tabs));
+  writeStorageValue(activeTabKey, JSON.stringify(state.activeTabId));
+}
+
+export const setDocumentTabsStorageScopeAtom = atom(
+  null,
+  (get, set, scope: TabStorageScope) => {
+    const currentScope = get(tabStorageScopeAtom);
+    const isSameScope =
+      currentScope.userId === scope.userId && currentScope.workspaceId === scope.workspaceId;
+
+    if (isSameScope) {
+      return;
+    }
+
+    set(tabStorageScopeAtom, scope);
+    set(storedTabStateAtom, loadTabStorageState(scope));
+  },
+);
+
+const storedTabsAtom = atom(
+  (get) => get(storedTabStateAtom).tabs,
+  (get, set, tabs: DocumentTab[]) => {
+    const currentState = get(storedTabStateAtom);
+    const nextState = {
+      ...currentState,
+      tabs,
+    };
+
+    set(storedTabStateAtom, nextState);
+    persistTabStorageState(get(tabStorageScopeAtom), nextState);
+  },
+);
+
+const storedActiveTabIdAtom = atom(
+  (get) => get(storedTabStateAtom).activeTabId,
+  (get, set, activeTabId: string | null) => {
+    const currentState = get(storedTabStateAtom);
+    const nextState = {
+      ...currentState,
+      activeTabId,
+    };
+
+    set(storedTabStateAtom, nextState);
+    persistTabStorageState(get(tabStorageScopeAtom), nextState);
+  },
+);
 
 // Read-only derived atoms
 export const documentTabsAtom = atom((get) => {

@@ -42,6 +42,7 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { commandMenuOpenAtom } from "@/stores/command-menu";
 import { confirmDialog } from "@/stores/confirm-dialog";
 import { isAdmin } from "@/utils/admin";
+import { authClient } from "@/utils/auth";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 interface MenuItem {
@@ -51,6 +52,7 @@ interface MenuItem {
   iconUrl?: string;
   action: () => void;
   destructive?: boolean;
+  keepMenuOpen?: boolean;
 }
 
 interface MenuSectionType {
@@ -75,6 +77,8 @@ interface CollectionItem {
   action: () => void;
 }
 
+type MenuView = "root" | "switch-workspace";
+
 export function CommandMenu() {
   const { createDocument, deleteDocument, publishDocument } = useDocumentActions();
   const params = useParams({ strict: false });
@@ -83,9 +87,14 @@ export function CommandMenu() {
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
   const [search, setSearch] = useState("");
+  const [menuView, setMenuView] = useState<MenuView>("root");
   const openBackgroundTab = useSetAtom(openBackgroundTabAtom);
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
+  const [memberships] = useQuery(queries.organizations.byUser({}));
+  const organizations = useMemo(() => memberships?.map((membership) => membership.organization) ?? [], [
+    memberships,
+  ]);
 
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
@@ -122,11 +131,17 @@ export function CommandMenu() {
     (newIsOpen: boolean) => {
       if (!newIsOpen && isOpen) {
         setTimeout(() => setSearch(""), 150);
+        setMenuView("root");
       }
       setOpen(newIsOpen);
     },
     [isOpen, setOpen],
   );
+
+  const navigateToRoot = useCallback(() => {
+    setMenuView("root");
+    setSearch("");
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -152,8 +167,28 @@ export function CommandMenu() {
   const getIntegrationRoute = (integrationType: string) =>
     `/w/$organizationSlug/settings/integrations/${integrationType}`;
 
+  const goToOrganization = useCallback(
+    (targetOrg: { id: string; slug: string }) => {
+      if (!targetOrg || organization.slug === targetOrg.slug) {
+        return;
+      }
+
+      authClient.organization.setActive({
+        organizationId: targetOrg.id,
+      });
+
+      navigate({
+        to: "/w/$organizationSlug",
+        params: {
+          organizationSlug: targetOrg.slug,
+        },
+      });
+    },
+    [navigate, organization.slug],
+  );
+
   // Build menu sections
-  const menuSections = useMemo<MenuSectionType[]>(() => {
+  const rootMenuSections = useMemo<MenuSectionType[]>(() => {
     const favoritesItems: MenuItem[] = [];
 
     favoritesItems.push({
@@ -197,6 +232,16 @@ export function CommandMenu() {
     }
 
     const navigationItems: MenuItem[] = [
+      {
+        id: "switch-workspace",
+        label: "Switch workspace",
+        icon: SettingsRegular,
+        keepMenuOpen: true,
+        action: () => {
+          setMenuView("switch-workspace");
+          setSearch("");
+        },
+      },
       {
         id: "go-home",
         label: "Go home",
@@ -415,6 +460,45 @@ export function CommandMenu() {
     userIsAdmin,
   ]);
 
+  const workspaceMenuSections = useMemo<MenuSectionType[]>(() => {
+    const workspaceItems: MenuItem[] = organizations.map((org) => ({
+      id: `workspace-${org.id}`,
+      label: `${org.name}${org.slug === organization.slug ? " (current)" : ""}`,
+      action: () => {
+        if (org.slug === organization.slug) {
+          return;
+        }
+        goToOrganization(org);
+      },
+    }));
+
+    return [
+      {
+        id: "workspaces",
+        heading: "Workspaces",
+        items: workspaceItems,
+      },
+      {
+        id: "workspace-actions",
+        heading: "Actions",
+        items: [
+          {
+            id: "create-workspace",
+            label: "Create new workspace",
+            icon: AddRegular,
+            action: () => {
+              navigate({
+                to: "/new",
+              });
+            },
+          },
+        ],
+      },
+    ];
+  }, [goToOrganization, navigate, organization.slug, organizations]);
+
+  const menuSections = menuView === "root" ? rootMenuSections : workspaceMenuSections;
+
   // Handle document click - supports cmd+click to open in background
   const handleDocumentClick = useCallback(
     (e: React.MouseEvent, item: DocumentItem) => {
@@ -523,11 +607,29 @@ export function CommandMenu() {
               className="flex w-full items-center border-b border-gray-100 px-3"
               autoFocus
             >
-              <SearchFilled className="size-4 shrink-0 text-gray-400" />
-              <Input
-                placeholder="Type a command or search..."
-                className="flex h-11 w-full min-w-0 bg-transparent px-2 py-3 text-sm outline-none placeholder:text-gray-400 [&::-webkit-search-cancel-button]:hidden"
-              />
+              <div className="flex min-w-0 flex-1 flex-col py-2">
+                {menuView !== "root" && (
+                  <div className="px-2 pb-1 text-xs text-gray-500">Command menu / Switch workspace</div>
+                )}
+                <div className="flex items-center">
+                  <SearchFilled className="size-4 shrink-0 text-gray-400" />
+                  <Input
+                    placeholder={
+                      menuView === "root"
+                        ? "Type a command or search..."
+                        : "Search workspaces..."
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Backspace" && search.length === 0 && menuView !== "root") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigateToRoot();
+                      }
+                    }}
+                    className="flex h-11 w-full min-w-0 bg-transparent px-2 py-3 text-sm outline-none placeholder:text-gray-400 [&::-webkit-search-cancel-button]:hidden"
+                  />
+                </div>
+              </div>
             </SearchField>
 
             <Menu
@@ -554,7 +656,13 @@ export function CommandMenu() {
                         key={item.id}
                         id={item.id}
                         textValue={item.label}
-                        onAction={() => handleCommand(item.action)}
+                        onAction={() => {
+                          if (item.keepMenuOpen) {
+                            item.action();
+                            return;
+                          }
+                          handleCommand(item.action);
+                        }}
                         className={`relative flex select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
                       >
                         {item.iconUrl ? (
@@ -576,7 +684,7 @@ export function CommandMenu() {
               ))}
 
               {/* Document search results */}
-              {documentItems.length > 0 && (
+              {menuView === "root" && documentItems.length > 0 && (
                 <MenuSection
                   id="quick-results"
                   className="col-span-full grid grid-cols-1 content-start"
@@ -612,7 +720,7 @@ export function CommandMenu() {
                 </MenuSection>
               )}
 
-              {collectionItems.length > 0 && (
+              {menuView === "root" && collectionItems.length > 0 && (
                 <MenuSection
                   id="quick-collection-results"
                   className="col-span-full grid grid-cols-1 content-start"
@@ -658,6 +766,17 @@ export function CommandMenu() {
                 </kbd>
                 Select
               </div>
+              {menuView !== "root" && (
+                <>
+                  <div className="h-3 w-px bg-gray-200" />
+                  <div className="flex gap-x-1 items-center">
+                    <kbd className="inline-flex h-5 select-none items-center rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-600">
+                      ⌫
+                    </kbd>
+                    Back
+                  </div>
+                </>
+              )}
             </div>
           </Autocomplete>
         </Dialog>
