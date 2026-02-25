@@ -9,6 +9,15 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 const execAsync = promisify(exec);
+let pandocAvailable: Promise<boolean> | undefined;
+
+function isPandocAvailable(): Promise<boolean> {
+  pandocAvailable ??= execAsync("pandoc --version")
+    .then(() => true)
+    .catch(() => false);
+
+  return pandocAvailable;
+}
 
 const convertSchema = z.object({
   content: z.string().max(1_000_000), // 1MB text limit
@@ -23,6 +32,16 @@ const convertSchema = z.object({
 });
 
 export const ConvertRoute = new Hono().post("/", zValidator("json", convertSchema), async (c) => {
+  if (!(await isPandocAvailable())) {
+    return c.json(
+      {
+        error: "Conversion unavailable",
+        message: "File conversion is disabled on this deployment.",
+      },
+      503,
+    );
+  }
+
   const { content, from, to, options } = c.req.valid("json");
 
   const inputId = randomUUID();

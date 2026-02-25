@@ -68,6 +68,8 @@ services:
     build:
       context: ..
       dockerfile: packages/backend/Dockerfile
+      args:
+        INSTALL_CONVERSION_DEPS: ${INSTALL_CONVERSION_DEPS:-true}
     container_name: lydie-backend
     env_file:
       - path: ../.env

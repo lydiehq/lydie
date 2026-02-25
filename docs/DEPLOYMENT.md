@@ -75,7 +75,7 @@ The production compose file (`docker/docker-compose.yml`) mirrors the AWS topolo
 - **nginx** reverse-proxies all traffic through port 3000, routing to backend/zero internally
 - **postgres** runs with WAL logical replication (required by Zero)
 - **migrations** container runs once before zero starts
-- **backend** is built from `packages/backend/Dockerfile` (includes pandoc + texlive for PDF export)
+- **backend** is built from `packages/backend/Dockerfile` (set `INSTALL_CONVERSION_DEPS=false` to skip pandoc + texlive)
 
 ### Deploy
 

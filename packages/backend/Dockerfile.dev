@@ -1,11 +1,16 @@
 FROM mirror.gcr.io/oven/bun:1.3.8
 
+ARG INSTALL_CONVERSION_DEPS=true
+
 RUN apt-get update && apt-get install -y \
     curl \
+    && if [ "$INSTALL_CONVERSION_DEPS" = "true" ]; then \
+    apt-get install -y \
     pandoc \
     texlive-latex-base \
     texlive-latex-recommended \
     texlive-fonts-recommended \
+    ; fi \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
