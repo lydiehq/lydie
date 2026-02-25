@@ -386,7 +386,7 @@
     "@tiptap/y-tiptap": "^3.0.2",
     "ai": "^6.0.99",
     "better-auth": "1.4.7-beta.2",
-    "drizzle-orm": "^1.0.0-beta.15-859cf75",
+    "drizzle-orm": "^1.0.0-beta.15-9485290",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "sst": "v3.18.6",
