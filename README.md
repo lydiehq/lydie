@@ -26,13 +26,10 @@ cd packages/database && bunx drizzle-kit migrate
 
 ### Production (AWS)
 
-See [Deployment Guide](docs/DEPLOYMENT.md) for AWS deployment with Pulumi.
+See [Deployment Guide](docs/DEPLOYMENT.md) for AWS deployment with SST.
 
 ```bash
-cd infrastructure
-pulumi stack select production
-pulumi config set domainName yourdomain.com
-pulumi up
+bun run deploy:prod
 ```
 
 ## 🛠️ Tech Stack
@@ -42,13 +39,13 @@ pulumi up
 - **Database**: PostgreSQL, Drizzle ORM
 - **Real-time**: Zero sync, WebSockets
 - **AI**: Vercel AI SDK
-- **Infrastructure**: Docker (local), Pulumi + AWS (production)
+- **Infrastructure**: Docker (local/self-host), SST + AWS (production)
 
 ## 📁 Project Structure
 
 ```
 ├── docker/                 # Docker Compose + nginx config
-├── infrastructure/         # Pulumi AWS infrastructure
+├── infra/                  # SST AWS infrastructure
 ├── packages/
 │   ├── config/            # Environment configuration
 │   ├── web/               # React SPA
@@ -65,7 +62,7 @@ pulumi up
 | Environment   | Command      | Notes                          |
 | ------------- | ------------ | ------------------------------ |
 | **Local Dev** | `docker compose up` | Docker Compose with hot reload |
-| **AWS Prod**  | `pulumi up`  | ECS Fargate, S3, CloudFront    |
+| **AWS Prod**  | `bun run deploy:prod` | ECS Fargate, S3, CloudFront |
 
 ## 🧪 Development
 
@@ -88,7 +85,7 @@ GitHub Actions workflow included at `.github/workflows/ci-cd.yml`:
 1. Lint and type check
 2. Build Docker images
 3. Run E2E tests
-4. Deploy with Pulumi
+4. Deploy with SST
 
 ## 📚 Documentation
 

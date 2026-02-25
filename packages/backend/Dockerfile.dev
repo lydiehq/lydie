@@ -14,7 +14,6 @@ WORKDIR /app
 COPY package.json .
 COPY bun.lock .
 COPY tsconfig.json .
-COPY infrastructure/package.json ./infrastructure/package.json
 COPY packages/core/package.json ./packages/core/package.json
 COPY packages/backend/package.json ./packages/backend/package.json
 COPY packages/database/package.json ./packages/database/package.json

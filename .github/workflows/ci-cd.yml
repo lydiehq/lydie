@@ -40,52 +40,6 @@ jobs:
       - name: Run unit tests
         run: bun test
 
-  # Build Docker images
-  build-images:
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./packages/backend/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/lydie-backend-production:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/lydie-backend-production:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push zero image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./packages/zero/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/lydie-zero-production:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/lydie-zero-production:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
   # End-to-end tests against production Docker build
   e2e-tests:
     runs-on: ubuntu-latest
@@ -143,7 +97,7 @@ jobs:
   # Deploy to staging
   deploy-staging:
     runs-on: ubuntu-latest
-    needs: [build-and-test, build-images]
+    needs: [build-and-test, e2e-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: staging
     steps:
@@ -161,27 +115,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Setup Pulumi
-        uses: pulumi/actions@v5
-        with:
-          command: version
+      - name: Install dependencies
+        run: bun install
 
-      - name: Pulumi Preview Staging
-        uses: pulumi/actions@v5
-        with:
-          command: preview
-          stack-name: staging
-          work-dir: ./infrastructure
-          comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pulumi Up Staging
-        uses: pulumi/actions@v5
-        with:
-          command: up
-          stack-name: staging
-          work-dir: ./infrastructure
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy Staging with SST
+        run: bun run deploy:staging
+        env:
+          SST_STAGE: staging
 
   # Deploy to production
   deploy-production:
@@ -204,33 +144,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Setup Pulumi
-        uses: pulumi/actions@v5
-        with:
-          command: version
+      - name: Install dependencies
+        run: bun install
 
-      - name: Pulumi Preview Production
-        uses: pulumi/actions@v5
-        with:
-          command: preview
-          stack-name: production
-          work-dir: ./infrastructure
-          comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pulumi Up Production
-        uses: pulumi/actions@v5
-        with:
-          command: up
-          stack-name: production
-          work-dir: ./infrastructure
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Invalidate CloudFront caches
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_WEB_DISTRIBUTION_ID }} \
-            --paths "/*"
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_ASSETS_DISTRIBUTION_ID }} \
-            --paths "/*"
+      - name: Deploy Production with SST
+        run: bun run deploy:prod
+        env:
+          SST_STAGE: production

@@ -6,7 +6,6 @@ WORKDIR /app
 # Copy workspace files
 COPY package.json bun.lock ./
 COPY tsconfig.json ./
-COPY infrastructure/package.json ./infrastructure/package.json
 COPY packages/core/package.json ./packages/core/package.json
 COPY packages/database/package.json ./packages/database/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
