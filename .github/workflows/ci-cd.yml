@@ -45,8 +45,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker images (cached)
+        uses: docker/bake-action@v6
+        env:
+          INSTALL_CONVERSION_DEPS: "false"
+        with:
+          files: docker/docker-compose.yml
+          targets: backend zero web migrations
+          load: true
+          set: |
+            *.cache-from=type=gha,scope=ci-e2e-compose
+            *.cache-to=type=gha,mode=max,scope=ci-e2e-compose
+
       - name: Set up Docker Compose
-        run: docker compose -f docker/docker-compose.yml up -d --build --wait --wait-timeout 180
+        run: docker compose -f docker/docker-compose.yml up -d --no-build --wait --wait-timeout 180
         env:
           APP_STAGE: test
           INSTALL_CONVERSION_DEPS: "false"
@@ -63,8 +78,27 @@ jobs:
         with:
           bun-version: 1.3.9
 
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'packages/web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps chromium
@@ -103,6 +137,17 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: 1.3.9
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
