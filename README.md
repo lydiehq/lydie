@@ -47,7 +47,7 @@ pulumi up
 ## 📁 Project Structure
 
 ```
-├── docker/                 # Docker Compose for local dev
+├── docker/                 # Docker Compose + nginx config
 ├── infrastructure/         # Pulumi AWS infrastructure
 ├── packages/
 │   ├── config/            # Environment configuration

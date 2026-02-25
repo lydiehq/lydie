@@ -50,7 +50,7 @@ services:
   migrations:
     build:
       context: ..
-      dockerfile: docker/migrations.Dockerfile
+      dockerfile: packages/database/Dockerfile.migrations
     container_name: lydie-migrations
     environment:
       NODE_ENV: production
@@ -112,7 +112,7 @@ services:
   zero:
     build:
       context: ..
-      dockerfile: docker/zero.Dockerfile
+      dockerfile: packages/zero/Dockerfile
     container_name: lydie-zero
     environment:
       APP_STAGE: ${APP_STAGE:-development}
@@ -149,7 +149,7 @@ services:
   web:
     build:
       context: ..
-      dockerfile: docker/web.Dockerfile
+      dockerfile: packages/web/Dockerfile
       args:
         VITE_API_URL: http://localhost:3000
         VITE_ZERO_URL: http://localhost:3000
@@ -172,7 +172,7 @@ services:
   e2e:
     build:
       context: ..
-      dockerfile: docker/e2e.Dockerfile
+      dockerfile: packages/web/Dockerfile.e2e
     container_name: lydie-e2e-runner
     environment:
       # Use localhost:3000 which maps to the web container via host-gateway.

@@ -1,6 +1,8 @@
 # Docker Setup
 
-This directory contains Docker configurations for local development and production-like environments.
+This directory contains Docker Compose and nginx configuration for local development and production-like environments.
+
+Service Dockerfiles live alongside their packages (`packages/*/Dockerfile*`).
 
 ## Overview
 

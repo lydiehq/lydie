@@ -254,7 +254,7 @@ docker push $(pulumi stack output backendEcrRepoUrl):latest
 #### Build and push zero image
 
 ```bash
-docker build -f docker/zero.Dockerfile -t lydie-zero .
+docker build -f packages/zero/Dockerfile -t lydie-zero .
 docker tag lydie-zero $(pulumi stack output zeroEcrRepoUrl):latest
 docker push $(pulumi stack output zeroEcrRepoUrl):latest
 ```
