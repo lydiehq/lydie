@@ -4,18 +4,39 @@ import { useEffect, useRef } from "react";
 
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { AssistantPreferencesProvider } from "@/context/assistant-preferences.context";
-import { getSessionQuery, hasLoadedSession, type ExtendedSessionData } from "@/lib/auth/session";
+import {
+  getSessionQuery,
+  hasLoadedSession,
+  SESSION_QUERY_KEY,
+  type ExtendedSessionData,
+} from "@/lib/auth/session";
 
 const QUERY_CACHE_KEY = "lydie:query:cache:session";
 
 export const Route = createFileRoute("/__auth")({
   component: RouteComponent,
   ssr: false,
-  beforeLoad: ({ context }) => {
-    const auth = context.auth as ExtendedSessionData | undefined;
+  beforeLoad: async ({ context }) => {
+    let auth = context.auth as ExtendedSessionData | undefined;
+
+    if (auth?.user) {
+      const freshSession = (await context.queryClient.fetchQuery(getSessionQuery())) as
+        | ExtendedSessionData
+        | undefined;
+
+      auth = freshSession;
+    }
 
     // Only redirect if we have confirmed there's no session (data was fetched)
     if (!auth?.user && hasLoadedSession(context.queryClient)) {
+      context.queryClient.setQueryData(SESSION_QUERY_KEY, undefined);
+
+      try {
+        localStorage.removeItem(QUERY_CACHE_KEY);
+      } catch {
+        // Ignore errors
+      }
+
       throw redirect({
         to: "/auth",
         search: {

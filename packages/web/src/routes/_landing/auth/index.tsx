@@ -1,14 +1,43 @@
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
+import { getSessionQuery, type ExtendedSessionData } from "@/lib/auth/session";
 import { authClient } from "@/utils/auth";
 
 export const Route = createFileRoute("/_landing/auth/")({
   component: RouteComponent,
+  beforeLoad: async ({ context }) => {
+    const sessionData = (await context.queryClient.fetchQuery(getSessionQuery())) as
+      | ExtendedSessionData
+      | undefined;
+
+    if (!sessionData?.user) {
+      return;
+    }
+
+    const activeOrganizationSlug = sessionData.session?.activeOrganizationSlug;
+    const organizations = sessionData.session?.organizations ?? [];
+
+    if (activeOrganizationSlug) {
+      throw redirect({
+        to: "/w/$organizationSlug",
+        params: { organizationSlug: activeOrganizationSlug },
+      });
+    }
+
+    if (organizations.length > 0) {
+      throw redirect({
+        to: "/w/$organizationSlug",
+        params: { organizationSlug: organizations[0].slug },
+      });
+    }
+
+    throw redirect({ to: "/new" });
+  },
   validateSearch: z.object({
     redirect: z.string().optional(),
     template: z.string().optional(),

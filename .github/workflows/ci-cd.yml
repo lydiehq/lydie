@@ -55,7 +55,7 @@ jobs:
           INSTALL_CONVERSION_DEPS: "false"
         with:
           files: docker/docker-compose.yml
-          targets: backend,web,migrations
+          targets: backend,zero,web,migrations
           load: true
           set: |
             *.cache-from=type=gha
@@ -64,7 +64,7 @@ jobs:
       - name: Set up Docker Compose
         run: docker compose -f docker/docker-compose.yml up -d --no-build --wait --wait-timeout 180
         env:
-          APP_STAGE: test
+          APP_STAGE: development
           INSTALL_CONVERSION_DEPS: "false"
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 

@@ -4,10 +4,14 @@ import type { ExtendedSessionData } from "@/lib/auth/session";
 
 export const Route = createFileRoute("/_landing")({
   component: RouteComponent,
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, location }) => {
+    if (location.pathname.startsWith("/auth")) {
+      return;
+    }
+
     const auth = context.auth as ExtendedSessionData | undefined;
 
-    if (auth) {
+    if (auth?.user) {
       const activeOrganizationSlug = auth.session?.activeOrganizationSlug;
       const organizations = auth.session?.organizations ?? [];
 

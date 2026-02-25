@@ -447,16 +447,6 @@ export function CommandMenu() {
             },
           ]
         : []),
-      {
-        id: "create-organization",
-        label: "Create new organization",
-        icon: AddRegular,
-        action: () => {
-          navigate({
-            to: "/new",
-          });
-        },
-      },
     ];
 
     return [
