@@ -9,6 +9,7 @@ on:
 env:
   NODE_ENV: test
   APP_STAGE: development
+  BETTER_AUTH_SECRET: test-secret-for-e2e-tests-only232-323-23j23i2
 
 jobs:
   # Build and test
@@ -63,9 +64,8 @@ jobs:
       - name: Set up Docker Compose
         run: docker compose -f docker/docker-compose.yml up -d --no-build --wait --wait-timeout 180
         env:
-          APP_STAGE: test
+          APP_STAGE: development
           INSTALL_CONVERSION_DEPS: "false"
-          BETTER_AUTH_SECRET: test-secret-for-e2e-tests-only232-323-23j23i2
 
       - name: Show service status on startup failure
         if: failure()
@@ -108,7 +108,7 @@ jobs:
         run: bunx playwright test --config playwright.config.docker.ts
         working-directory: packages/web
         env:
-          BETTER_AUTH_SECRET: test-secret-for-e2e-tests-only
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
           DATABASE_URL: postgres://lydie:lydie@localhost:5432/lydie
 
       - name: Upload test results
