@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { expect, test, testUnauthenticated } from "./fixtures/auth.fixture";
 import { createExpiredSession, deleteSessionFromDB, setSessionCookie } from "./utils/auth";
 
+const QUERY_CACHE_KEY = "lydie:query:cache:session";
+
 function hasResolvedSessionData(rawCache: string | null): boolean {
   if (!rawCache) {
     return false;
@@ -42,7 +44,27 @@ function hasResolvedSessionData(rawCache: string | null): boolean {
   return sessionQuery.state?.status === "success" && sessionQuery.state?.data != null;
 }
 
-testUnauthenticated("should not allow unauthed workspace access", async ({ page }) => {
+function buildUnauthenticatedSessionCacheSnapshot(): string {
+  return JSON.stringify({
+    timestamp: Date.now(),
+    buster: "",
+    clientState: {
+      mutations: [],
+      queries: [
+        {
+          queryKey: ["auth", "getSession"],
+          state: {
+            data: null,
+            status: "success",
+            dataUpdatedAt: Date.now(),
+          },
+        },
+      ],
+    },
+  });
+}
+
+testUnauthenticated("should not allow unauthenticated workspace access", async ({ page }) => {
   await page.goto("/w/test-org-slug");
   await page.waitForURL(/\/auth/);
 });
@@ -53,7 +75,7 @@ test.describe("workspace auth", () => {
     await page.waitForURL(`/w/${organization.slug}`);
   });
 
-  test("authenticated users should be be redirected to workspace if accessing root", async ({
+  test("authenticated users should be redirected to workspace if accessing root", async ({
     page,
     organization,
   }) => {
@@ -62,7 +84,7 @@ test.describe("workspace auth", () => {
     await expect(page.getByRole("button", { name: organization.name }).first()).toBeVisible();
   });
 
-  test("should logout and redirect to /auth when signing out", async ({ page, organization }) => {
+  test("should log out and redirect to /auth when signing out", async ({ page, organization }) => {
     await page.goto(`/w/${organization.slug}`);
     await page.waitForURL(`/w/${organization.slug}`);
     await page.getByRole("button", { name: organization.name }).first().click();
@@ -81,9 +103,10 @@ test.describe("workspace auth", () => {
     await page.waitForURL(/\/auth/);
 
     // Verify there is no resolved authenticated session cache
-    const cached = await page.evaluate(() => {
-      return localStorage.getItem("lydie:query:cache:session");
-    });
+    const cached = await page.evaluate(
+      (cacheKey) => localStorage.getItem(cacheKey),
+      QUERY_CACHE_KEY,
+    );
 
     expect(hasResolvedSessionData(cached)).toBe(false);
   });
@@ -114,9 +137,10 @@ test.describe("session persistence", () => {
     await page.waitForURL(`/w/${organization.slug}`);
 
     // Verify localStorage contains the cached session
-    const cached = await page.evaluate(() => {
-      return localStorage.getItem("lydie:query:cache:session");
-    });
+    const cached = await page.evaluate(
+      (cacheKey) => localStorage.getItem(cacheKey),
+      QUERY_CACHE_KEY,
+    );
     expect(cached).toBeTruthy();
     expect(cached).toContain("auth");
     expect(cached).toContain("getSession");
@@ -143,18 +167,17 @@ test.describe("session persistence", () => {
     await page.waitForURL(`/w/${organization.slug}`);
 
     // Verify cache exists
-    let cached = await page.evaluate(() => {
-      return localStorage.getItem("lydie:query:cache:session");
-    });
+    let cached = await page.evaluate(
+      (cacheKey) => localStorage.getItem(cacheKey),
+      QUERY_CACHE_KEY,
+    );
     expect(cached).toBeTruthy();
 
     // Navigate to auth page - should clear cache
     await page.goto("/auth");
 
     // Verify there is no resolved authenticated session cache
-    cached = await page.evaluate(() => {
-      return localStorage.getItem("lydie:query:cache:session");
-    });
+    cached = await page.evaluate((cacheKey) => localStorage.getItem(cacheKey), QUERY_CACHE_KEY);
     expect(hasResolvedSessionData(cached)).toBe(false);
   });
 
@@ -169,6 +192,32 @@ test.describe("session persistence", () => {
     await expect(page.getByRole("button", { name: organization.name }).first()).toBeVisible();
   });
 
+  test("oauth callback should redirect to workspace even with stale unauth cache", async ({
+    page,
+    organization,
+    session,
+  }) => {
+    const redirectPath = `/w/${organization.slug}`;
+    const callbackPath = `/auth?redirect=${encodeURIComponent(redirectPath)}`;
+
+    await page.addInitScript(
+      ({ cacheKey, cachePayload }) => {
+        localStorage.setItem(cacheKey, cachePayload);
+      },
+      {
+        cacheKey: QUERY_CACHE_KEY,
+        cachePayload: buildUnauthenticatedSessionCacheSnapshot(),
+      },
+    );
+
+    await page.context().clearCookies();
+    await setSessionCookie(page, session.token, new Date(session.expiresAt));
+
+    await page.goto(callbackPath);
+    await page.waitForURL(redirectPath);
+    await expect(page.getByRole("button", { name: organization.name }).first()).toBeVisible();
+  });
+
   test.fixme("logged out user accessing cached workspace URL should redirect to /auth", async ({
     page,
     context,
@@ -179,9 +228,10 @@ test.describe("session persistence", () => {
     await page.waitForURL(`/w/${organization.slug}`);
 
     // Verify cache exists
-    const cached = await page.evaluate(() => {
-      return localStorage.getItem("lydie:query:cache:session");
-    });
+    const cached = await page.evaluate(
+      (cacheKey) => localStorage.getItem(cacheKey),
+      QUERY_CACHE_KEY,
+    );
     expect(cached).toBeTruthy();
 
     // Clear cookies to simulate logout, but keep localStorage cache
@@ -205,9 +255,9 @@ test.describe("session expiration", () => {
   }) => {
     await page.goto(`/w/${organization.slug}`);
     await page.context().clearCookies();
-    await page.evaluate(() => {
-      localStorage.removeItem("lydie:query:cache:session");
-    });
+    await page.evaluate((cacheKey) => {
+      localStorage.removeItem(cacheKey);
+    }, QUERY_CACHE_KEY);
 
     const { sessionId, token, expiresAt } = await createExpiredSession(
       user.id,

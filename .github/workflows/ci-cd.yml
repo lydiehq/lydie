@@ -55,7 +55,7 @@ jobs:
           INSTALL_CONVERSION_DEPS: "false"
         with:
           files: docker/docker-compose.yml
-          targets: backend zero web migrations
+          targets: backend,zero,web,migrations
           load: true
           set: |
             *.cache-from=type=gha,scope=ci-e2e-compose
