@@ -64,7 +64,7 @@ jobs:
       - name: Set up Docker Compose
         run: docker compose -f docker/docker-compose.yml up -d --no-build --wait --wait-timeout 180
         env:
-          APP_STAGE: development
+          APP_STAGE: test
           INSTALL_CONVERSION_DEPS: "false"
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
@@ -123,6 +123,13 @@ jobs:
         if: always()
         run: docker compose -f docker/docker-compose.yml down -v
 
+  # Deploy to production (services only - no migrations)
+  #
+  # Database migrations are handled separately via the db-migrate.yml workflow.
+  # Follow the expand/migrate/contract pattern for Zero compatibility:
+  #   1. Run db-migrate.yml with phase "expand" (additive schema changes)
+  #   2. Push to main -> this job deploys backend, Zero, and frontend
+  #   3. Run db-migrate.yml with phase "contract" (destructive changes, if any)
   deploy-production:
     runs-on: ubuntu-latest
     needs: [e2e-tests]

@@ -1,0 +1,141 @@
+name: Database Migrations
+
+# Manual workflow for running database migrations against production.
+#
+# Zero requires the expand/migrate/contract pattern for schema changes:
+#
+#   1. EXPAND  - Run additive migrations (new tables, columns, indexes)
+#   2. Deploy  - Deploy backend, Zero, and frontend (via CI/CD pipeline)
+#   3. CONTRACT - Run destructive migrations (drop old columns/tables)
+#                 Only after clients have refreshed with the new code.
+#
+# This workflow handles steps 1 and 3. Step 2 is the deploy-production
+# job in ci-cd.yml which runs automatically on push to main.
+#
+# Usage:
+#   - Before deploying new code: run with phase "expand"
+#   - After deploy + client refresh: run with phase "contract" (if needed)
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "Migration phase (see expand/migrate/contract pattern)"
+        required: true
+        type: choice
+        options:
+          - expand
+          - contract
+      dry-run:
+        description: "Dry run - show what would be applied without executing"
+        required: false
+        type: boolean
+        default: true
+      confirm:
+        description: "Type 'yes-migrate-production' to confirm (ignored in dry-run)"
+        required: false
+        type: string
+        default: ""
+
+env:
+  NODE_ENV: production
+  APP_STAGE: production
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: production-database
+      cancel-in-progress: false
+    steps:
+      - name: Validate confirmation
+        if: inputs.dry-run == false
+        run: |
+          if [ "${{ inputs.confirm }}" != "yes-migrate-production" ]; then
+            echo "::error::You must type 'yes-migrate-production' to confirm a real migration run."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.9
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Show pending migrations (dry run)
+        if: inputs.dry-run == true
+        run: |
+          echo "=== DRY RUN - Phase: ${{ inputs.phase }} ==="
+          echo ""
+          echo "Migration files in packages/database/drizzle/:"
+          for dir in packages/database/drizzle/*/; do
+            name=$(basename "$dir")
+            echo "  - $name"
+            head -5 "$dir/migration.sql" 2>/dev/null | sed 's/^/      /'
+            echo "      ..."
+          done
+          echo ""
+          echo "Checking migration status against production database..."
+          bun sst shell --stage production bunx --bun drizzle-kit check 2>&1 || true
+          echo ""
+          echo "=== To apply, re-run with dry-run unchecked and confirmation text ==="
+
+      - name: Run migrations
+        if: inputs.dry-run == false
+        run: |
+          echo "=== APPLYING MIGRATIONS - Phase: ${{ inputs.phase }} ==="
+          echo ""
+          bun sst shell --stage production bunx --bun drizzle-kit migrate
+          echo ""
+          echo "=== Migrations applied successfully ==="
+
+      - name: Sync Zero publication
+        if: inputs.dry-run == false && inputs.phase == 'expand'
+        run: |
+          echo "=== Syncing Zero publication (adding new tables) ==="
+          bun sst shell --stage production bun run --cwd packages/database src/sync-zero-publication.ts
+          echo ""
+          echo "=== Zero publication synced ==="
+
+      - name: Post-migration summary
+        if: always()
+        run: |
+          echo "## Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Phase:** ${{ inputs.phase }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry run:** ${{ inputs.dry-run }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.phase }}" = "expand" ] && [ "${{ inputs.dry-run }}" = "false" ]; then
+            echo "### Next steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Merge and push your code changes to \`main\`" >> $GITHUB_STEP_SUMMARY
+            echo "2. Wait for the CI/CD pipeline to deploy" >> $GITHUB_STEP_SUMMARY
+            echo "3. If you have contract migrations, run this workflow again with phase \`contract\` after clients have refreshed" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ inputs.phase }}" = "contract" ] && [ "${{ inputs.dry-run }}" = "false" ]; then
+            echo "### Done" >> $GITHUB_STEP_SUMMARY
+            echo "Destructive schema changes have been applied. Verify your application is healthy." >> $GITHUB_STEP_SUMMARY
+          fi
