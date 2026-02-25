@@ -3,8 +3,8 @@ import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
-import { isTextDropItem, ListBox, ListBoxItem, useDragAndDrop } from "react-aria-components";
 import { useMemo } from "react";
+import { isTextDropItem, ListBox, ListBoxItem, useDragAndDrop } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useZero } from "@/services/zero";
@@ -49,7 +49,12 @@ function extractFieldValues(
     : {};
 }
 
-export function CollectionKanban({ collectionId, organizationId, organizationSlug, schema }: Props) {
+export function CollectionKanban({
+  collectionId,
+  organizationId,
+  organizationSlug,
+  schema,
+}: Props) {
   const z = useZero();
   const [documentsResult] = useQuery(
     queries.collections.documentsByCollection({
@@ -209,7 +214,9 @@ function KanbanColumn({
     <div className="rounded-xl border border-gray-200 bg-white p-3">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-900">{optionLabel}</h3>
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{cards.length}</span>
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+          {cards.length}
+        </span>
       </div>
       <ListBox
         aria-label={`${optionLabel} cards`}

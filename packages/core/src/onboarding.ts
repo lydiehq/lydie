@@ -3,9 +3,9 @@ import {
   DeleteScheduleCommand,
   SchedulerClient,
 } from "@aws-sdk/client-scheduler";
-import { Resource } from "sst";
 
 import { sendEmail } from "./email";
+import { env } from "./env";
 
 const schedulerClient = new SchedulerClient({});
 
@@ -111,8 +111,14 @@ async function createSchedule({
     emailType,
   };
 
-  const lambdaArn = Resource.OnboardingEmailProcessorFunctionLinkable.arn;
-  const roleArn = Resource.OnboardingSchedulerRoleLinkable.arn;
+  const lambdaArn = env.ONBOARDING_LAMBDA_ARN;
+  const roleArn = env.ONBOARDING_SCHEDULER_ROLE_ARN;
+
+  // Skip scheduling if AWS resources are not configured (local dev)
+  if (!lambdaArn || !roleArn) {
+    console.log(`[Info] Skipping email scheduling - AWS resources not configured`);
+    return;
+  }
 
   try {
     await schedulerClient.send(

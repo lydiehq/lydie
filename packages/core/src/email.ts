@@ -1,5 +1,6 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
-import { Resource } from "sst";
+
+import { env } from "./env";
 
 interface EmailParams {
   to: string;
@@ -28,7 +29,7 @@ export async function sendEmail({
 }: EmailParams) {
   const fromAddress = formatFromAddress(from, fromName);
 
-  if (Resource.App.stage !== "production") {
+  if (env.APP_STAGE !== "production") {
     console.log(`[Info] Skipping email sending in non-production stage`);
     console.log(`[Info] Email details:`, { to, subject, from: fromAddress });
     return;

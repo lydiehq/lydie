@@ -21,7 +21,6 @@ import {
 import { deserializeFromMDX } from "@lydie/core/serialization/mdx";
 import { deserializeFromText } from "@lydie/core/serialization/text";
 import jwt from "jsonwebtoken";
-import { Resource } from "sst";
 
 // Config saved in the database on the connection
 type GitHubConfig = {
@@ -164,9 +163,9 @@ async function getGitHubAppCredentials(): Promise<{
   appSlug?: string;
 }> {
   return {
-    clientId: Resource.GitHubClientId.value,
-    privateKey: Resource.GitHubPrivateKey.value,
-    appSlug: Resource.GitHubAppSlug?.value,
+    clientId: process.env.GITHUB_CLIENT_ID,
+    privateKey: process.env.GITHUB_PRIVATE_KEY,
+    appSlug: process.env.GITHUB_APP_SLUG,
   };
 }
 
@@ -759,8 +758,8 @@ export const githubIntegration: GitHubIntegrationExtended = {
 
   async getOAuthCredentials(): Promise<OAuthCredentials> {
     return {
-      clientId: Resource.GitHubClientId.value,
-      clientSecret: Resource.GitHubClientSecret.value,
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     };
   },
 
@@ -770,7 +769,7 @@ export const githubIntegration: GitHubIntegrationExtended = {
     redirectUri: string,
     _params?: Record<string, string>,
   ): string {
-    const appSlug = Resource.GitHubAppSlug.value;
+    const appSlug = process.env.GITHUB_APP_SLUG;
     if (!appSlug) {
       throw new Error("GitHub App slug not configured");
     }

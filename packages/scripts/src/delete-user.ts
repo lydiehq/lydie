@@ -1,12 +1,12 @@
 import { db, schema } from "@lydie/database";
 import { eq } from "drizzle-orm";
-import { Resource } from "sst";
 
 // Note: Stripe customer cleanup should be done manually in Stripe Dashboard
 // or via separate Stripe API script if needed
 
 async function deleteUser() {
-  if (Resource.App.stage === "production") {
+  const stage = process.env.APP_STAGE || "development";
+  if (stage === "production") {
     console.error("❌ Error: This script is not available in production");
     process.exit(1);
   }
@@ -21,7 +21,7 @@ async function deleteUser() {
   }
 
   console.log(`🔌 Connecting to database...`);
-  console.log(`📦 Environment: ${Resource.App.stage}`);
+  console.log(`📦 Environment: ${stage}`);
 
   // Try to find the user by email or ID
   const user = await db.query.usersTable.findFirst({

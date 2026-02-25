@@ -80,38 +80,37 @@ test.describe("API key REST API", () => {
     await page.waitForURL(`/w/${organization.slug}`);
 
     // Create an API key directly in the database
-    const { createHash } = await import("crypto");
-    const { createId } = await import("@lydie/core/id");
-    const { Resource } = await import("sst");
+      const { createHash } = await import("crypto");
+      const { createId } = await import("@lydie/core/id");
 
-    const stage = Resource.App.stage;
-    const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
-    const key = `${prefix}${createId()}`;
-    const partialKey = `${key.slice(0, 8)}...${key.slice(-4)}`;
-    const hashedKey = createHash("sha256").update(key).digest("hex");
+      const stage = process.env.APP_STAGE || "development";
+      const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
+      const key = `${prefix}${createId()}`;
+      const partialKey = `${key.slice(0, 8)}...${key.slice(-4)}`;
+      const hashedKey = createHash("sha256").update(key).digest("hex");
 
-    const [createdKey] = await db
-      .insert(apiKeysTable)
-      .values({
-        name: `Revoked Test Key ${Date.now()}`,
-        partialKey,
-        hashedKey,
-        organizationId: organization.id,
-        revoked: false,
-      })
-      .returning();
+      const [createdKey] = await db
+        .insert(apiKeysTable)
+        .values({
+          name: `Revoked Test Key ${Date.now()}`,
+          partialKey,
+          hashedKey,
+          organizationId: organization.id,
+          revoked: false,
+        })
+        .returning();
 
-    try {
-      // Revoke the key
-      await db
-        .update(apiKeysTable)
-        .set({ revoked: true })
-        .where(eq(apiKeysTable.id, createdKey.id));
+      try {
+        // Revoke the key
+        await db
+          .update(apiKeysTable)
+          .set({ revoked: true })
+          .where(eq(apiKeysTable.id, createdKey.id));
 
-      // Try to use the revoked key
-      const pageURL = new URL(page.url());
-      const baseURL = `${pageURL.protocol}//${pageURL.host}`;
-      const apiURL = process.env.VITE_API_URL || baseURL.replace(":3000", ":3001");
+        // Try to use the revoked key
+        const pageURL = new URL(page.url());
+        const baseURL = `${pageURL.protocol}//${pageURL.host}`;
+        const apiURL = process.env.VITE_API_URL || baseURL.replace(":3000", ":3001");
 
       const response = await page.request.get(`${apiURL}/v1/${organization.id}/documents`, {
         headers: {
@@ -141,9 +140,8 @@ test.describe("API key REST API", () => {
     try {
       const { createHash } = await import("crypto");
       const { createId } = await import("@lydie/core/id");
-      const { Resource } = await import("sst");
 
-      const stage = Resource.App.stage;
+      const stage = process.env.APP_STAGE || "development";
       const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
       const key = `${prefix}${createId()}`;
       const partialKey = `${key.slice(0, 8)}...${key.slice(-4)}`;
@@ -230,9 +228,8 @@ test.describe("API key REST API", () => {
     // Create an API key directly in the database
     const { createHash } = await import("crypto");
     const { createId } = await import("@lydie/core/id");
-    const { Resource } = await import("sst");
 
-    const stage = Resource.App.stage;
+    const stage = process.env.APP_STAGE || "development";
     const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
     const key = `${prefix}${createId()}`;
     const partialKey = `${key.slice(0, 8)}...${key.slice(-4)}`;

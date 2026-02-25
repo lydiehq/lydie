@@ -1,6 +1,7 @@
 FROM mirror.gcr.io/oven/bun:1.3.8
 
 RUN apt-get update && apt-get install -y \
+    curl \
     pandoc \
     texlive-latex-base \
     texlive-latex-recommended \
@@ -9,6 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 ADD ./package.json .
 ADD ./bun.lock .
+ADD ./tsconfig.json .
 ADD ./packages/core/package.json ./packages/core/package.json
 ADD ./packages/backend/package.json ./packages/backend/package.json
 ADD ./packages/database/package.json ./packages/database/package.json

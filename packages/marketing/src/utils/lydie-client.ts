@@ -1,7 +1,6 @@
 import type { DocumentListItem } from "@lydie/core/content";
-import { Resource } from "sst";
 
-const apiKey = Resource.LydieApiKey.value;
+const apiKey = process.env.LYDIE_API_KEY!;
 const organizationId = "lydie";
 const apiUrl = "https://api.lydie.co/v1";
 

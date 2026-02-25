@@ -1,5 +1,6 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { Resource } from "sst";
+
+import { env, requireEnv } from "./env";
 
 const THUMBNAIL_WIDTH = 800;
 const THUMBNAIL_HEIGHT = 450;
@@ -190,9 +191,11 @@ export async function generateAndUploadThumbnail(
   // Upload to S3
   const s3Key = `templates/thumbnails/${templateSlug}.png`;
   const s3Client = new S3Client({});
+  const bucketName = requireEnv(env.S3_BUCKET_ASSETS, "S3_BUCKET_ASSETS");
+  const assetsBaseUrl = requireEnv(env.ASSETS_PUBLIC_BASE_URL, "ASSETS_PUBLIC_BASE_URL");
 
   const putCommand = new PutObjectCommand({
-    Bucket: Resource.OrganizationAssets.name,
+    Bucket: bucketName,
     Key: s3Key,
     Body: pngBuffer,
     ContentType: "image/png",
@@ -201,9 +204,7 @@ export async function generateAndUploadThumbnail(
   await s3Client.send(putCommand);
 
   // Construct public URL
-  const routerUrl = Resource.AssetsRouter.url;
-  const assetDomain = routerUrl.startsWith("http") ? new URL(routerUrl).hostname : routerUrl;
-  const publicUrl = `https://${assetDomain}/${s3Key}`;
+  const publicUrl = `${assetsBaseUrl.replace(/\/$/, "")}/${s3Key}`;
 
   return {
     s3Key,

@@ -108,12 +108,12 @@ export function useDocumentEditor({
             const orgId = doc.organization_id;
             const orgSlug = organizationSlug;
             return ReactNodeViewRenderer((nodeViewProps) =>
-                createElement(CollectionViewBlockComponent, {
-                  ...nodeViewProps,
-                  documentId: doc.id,
-                  organizationId: orgId,
-                  organizationSlug: orgSlug,
-                }),
+              createElement(CollectionViewBlockComponent, {
+                ...nodeViewProps,
+                documentId: doc.id,
+                organizationId: orgId,
+                organizationSlug: orgSlug,
+              }),
             );
           },
         },

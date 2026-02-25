@@ -4,7 +4,8 @@ import { createId } from "@lydie/core/id";
 import { apiKeysTable, db } from "@lydie/database";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { Resource } from "sst";
+
+import { env } from "../../env";
 
 type Variables = {
   organizationId: string;
@@ -35,7 +36,7 @@ export const OrganizationRoute = new Hono<{ Variables: Variables }>().post(
       });
     }
 
-    const stage = Resource.App.stage;
+    const stage = env.APP_STAGE;
     const prefix = stage === "production" ? "lydie_live_" : "lydie_test_";
     const key = `${prefix}${createId()}`;
 

@@ -12,10 +12,10 @@ import {
 } from "@lydie/ui/components/icons/wysiwyg-icons";
 import { queries } from "@lydie/zero/queries";
 import type { Schema } from "@lydie/zero/schema";
+import { Zero } from "@rocicorp/zero";
 import type { Editor, Range } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
-import { Zero } from "@rocicorp/zero";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 
@@ -173,9 +173,7 @@ export function createSlashMenuSuggestion(
 
       // Query components from Zero and add them to the menu
       try {
-        const components = await zero.run(
-          queries.components.byOrganization({ organizationId }),
-        );
+        const components = await zero.run(queries.components.byOrganization({ organizationId }));
 
         if (components.length > 0) {
           const queryLower = query.toLowerCase();

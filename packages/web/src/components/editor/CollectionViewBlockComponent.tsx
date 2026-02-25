@@ -10,9 +10,9 @@ import { createId } from "@lydie/core/id";
 import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
-import { motion } from "framer-motion";
 import { useQuery } from "@rocicorp/zero/react";
 import { NodeViewWrapper, type NodeViewRendererProps } from "@tiptap/react";
+import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -245,7 +245,8 @@ export function CollectionViewBlockComponent(props: Props) {
     return availableViews
       .filter((view) => {
         return (
-          view.name.toLowerCase().includes(query) || view.collectionName.toLowerCase().includes(query)
+          view.name.toLowerCase().includes(query) ||
+          view.collectionName.toLowerCase().includes(query)
         );
       })
       .slice(0, 8);
@@ -318,12 +319,8 @@ export function CollectionViewBlockComponent(props: Props) {
 
             <div className="rounded-lg border border-gray-200 bg-white p-3 space-y-2">
               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">
-                  Or use an existing view
-                </div>
-                <p className="text-xs text-gray-500">
-                  Pick a saved view and embed it.
-                </p>
+                <div className="text-sm font-medium text-gray-900">Or use an existing view</div>
+                <p className="text-xs text-gray-500">Pick a saved view and embed it.</p>
               </div>
 
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
@@ -354,9 +351,7 @@ export function CollectionViewBlockComponent(props: Props) {
                         <div className="font-medium text-sm text-gray-900 truncate">
                           {view.name}
                         </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {view.collectionName}
-                        </div>
+                        <div className="text-xs text-gray-500 truncate">{view.collectionName}</div>
                       </div>
                     </button>
                   ))

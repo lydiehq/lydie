@@ -4,7 +4,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createId } from "@lydie/core/id";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { Resource } from "sst";
+
+import { env, requireEnv } from "../../env";
 
 const s3Client = new S3Client({ region: "us-east-1" });
 
@@ -59,7 +60,7 @@ export const WorkspaceExportRoute = new Hono<{
       const { handler } = await import("../../handlers/workspace-export");
       await handler({ organizationId, userId, exportId });
 
-      const bucketName = process.env.SST_RESOURCE_WorkspaceExports_NAME;
+      const bucketName = requireEnv(env.S3_BUCKET_EXPORTS, "S3_BUCKET_EXPORTS");
       const manifestKey = `exports/${organizationId}/${exportId}/manifest.json`;
 
       // Generate presigned URL for download
@@ -128,7 +129,7 @@ export const WorkspaceExportRoute = new Hono<{
       throw new HTTPException(404, { message: "Export not found or not ready" });
     }
 
-    const bucketName = process.env.SST_RESOURCE_WorkspaceExports_NAME;
+    const bucketName = requireEnv(env.S3_BUCKET_EXPORTS, "S3_BUCKET_EXPORTS");
     const key = filePath ? `exports/${organizationId}/${exportId}/${filePath}` : job.manifestKey;
 
     if (!key) {

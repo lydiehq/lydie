@@ -117,7 +117,10 @@ function RichTextPropertyEditor({
 
   return (
     <div className="space-y-1">
-      <Label className="truncate text-[10px] font-medium uppercase tracking-wide text-gray-500" title={label}>
+      <Label
+        className="truncate text-[10px] font-medium uppercase tracking-wide text-gray-500"
+        title={label}
+      >
         {label}
       </Label>
       <div className="relative">
@@ -316,8 +319,8 @@ export function DocumentComponent({ node, updateAttributes }: NodeViewProps) {
                                   <Label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">
                                     {field.name}
                                   </Label>
-                                   <TextArea rows={2} />
-                                 </AriaTextField>
+                                  <TextArea rows={2} />
+                                </AriaTextField>
                               )}
                             </div>
                           ))}

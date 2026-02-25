@@ -20,7 +20,9 @@ test.describe("collections", () => {
 
       await expect(page).toHaveURL(/\/collections\//);
       // Wait for Zero sync to populate the collection data
-      await expect(page.getByRole("textbox", { name: "Collection name" })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("textbox", { name: "Collection name" })).toBeVisible({
+        timeout: 10000,
+      });
       // The collection name should be set (could be "Untitled Collection" or already synced)
       const nameInput = page.getByRole("textbox", { name: "Collection name" });
       await expect(nameInput).not.toHaveValue("");
@@ -178,10 +180,10 @@ test.describe("collections", () => {
         // Navigate to collection page first to ensure data is synced
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
         await expect(page.getByRole("textbox", { name: "Collection name" })).toBeVisible();
-        
+
         // Then navigate to settings page
         await page.goto(`/w/${organization.slug}/collections/${collection.id}/settings`);
-        
+
         // Wait for settings page to load
         const handleInput = page.getByRole("textbox", { name: "Handle" });
         await expect(handleInput).toBeVisible({ timeout: 10000 });
@@ -205,10 +207,10 @@ test.describe("collections", () => {
       // Navigate to collection page first to ensure data is synced
       await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
       await expect(page.getByRole("textbox", { name: "Collection name" })).toBeVisible();
-      
+
       // Then navigate to settings page
       await page.goto(`/w/${organization.slug}/collections/${collection.id}/settings`);
-      
+
       // Wait for delete button to be visible
       const deleteButton = page.getByRole("button", { name: "Delete collection" });
       await expect(deleteButton).toBeVisible({ timeout: 10000 });
@@ -419,22 +421,22 @@ test.describe("collections", () => {
         await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
 
         // Find the cell by looking for the row with the document title, then find the priority column cell
-        const row = page.locator('tr').filter({ hasText: 'Edit Test Document' }).first();
-        const cell = row.locator('td').nth(2); // priority is the 3rd column (after select and title)
-        
+        const row = page.locator("tr").filter({ hasText: "Edit Test Document" }).first();
+        const cell = row.locator("td").nth(2); // priority is the 3rd column (after select and title)
+
         // Verify initial value
-        await expect(cell).toContainText('low');
-        
+        await expect(cell).toContainText("low");
+
         // Click to enter edit mode
         await cell.click();
-        
+
         // Find the input that appears and fill it
         const input = cell.locator('input[type="text"]');
-        await input.fill('high');
-        await input.press('Enter');
+        await input.fill("high");
+        await input.press("Enter");
 
         // Verify the updated value
-        await expect(cell).toContainText('high');
+        await expect(cell).toContainText("high");
       } finally {
         await deleteTestDocument(document.id);
         await deleteTestCollection(collection.id);

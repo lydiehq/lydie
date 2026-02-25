@@ -1,12 +1,16 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { Resource } from "sst";
 
 import { relations } from "./relations";
 import * as schema from "./schema";
 
-// const pg = new SQL(Resource.PostgresConnectionStringDirect.value);
-const pg = postgres(Resource.PostgresConnectionStringDirect.value);
+const connectionString = process.env.DATABASE_URL_DIRECT ?? process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL or DATABASE_URL_DIRECT is required");
+}
+
+const pg = postgres(connectionString);
 
 export const db = drizzle({
   client: pg,

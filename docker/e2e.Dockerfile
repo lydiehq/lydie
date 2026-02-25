@@ -1,0 +1,48 @@
+FROM mcr.microsoft.com/playwright:v1.49.0-jammy
+
+WORKDIR /app
+
+# Install Bun
+RUN apt-get update && apt-get install -y curl unzip && \
+    curl -fsSL https://bun.sh/install | bash && \
+    mv ~/.bun/bin/bun /usr/local/bin/bun && \
+    ln -s /usr/local/bin/bun /usr/local/bin/bunx && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package.json bun.lock ./
+COPY tsconfig.json ./
+COPY infrastructure/package.json ./infrastructure/package.json
+COPY packages/core/package.json ./packages/core/package.json
+COPY packages/database/package.json ./packages/database/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
+COPY packages/editor/package.json ./packages/editor/package.json
+COPY packages/web/package.json ./packages/web/package.json
+COPY packages/zero/package.json ./packages/zero/package.json
+COPY packages/integrations/package.json ./packages/integrations/package.json
+COPY packages/scripts/package.json ./packages/scripts/package.json
+COPY packages/backend/package.json ./packages/backend/package.json
+
+# Install dependencies
+RUN bun install --ignore-scripts
+
+# Copy source code
+COPY packages/core ./packages/core
+COPY packages/database ./packages/database
+COPY packages/ui ./packages/ui
+COPY packages/editor ./packages/editor
+COPY packages/web ./packages/web
+COPY packages/zero ./packages/zero
+COPY packages/integrations ./packages/integrations
+COPY packages/scripts ./packages/scripts
+COPY packages/backend ./packages/backend
+
+# Copy integration assets
+RUN bun --filter=@lydie/scripts copy-integration-assets
+
+# Install Playwright browsers
+WORKDIR /app/packages/web
+RUN bunx playwright install chromium
+
+# Default command: wait for services and run tests
+CMD ["bunx", "playwright", "test", "--config", "playwright.config.docker.ts"]

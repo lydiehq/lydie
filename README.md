@@ -1,64 +1,100 @@
 # Lydie
 
-Lydie is a high-performance writing workspace that scales from simple notes
-to deeply structured, interconnected knowledge systems.
+Lydie is a high-performance writing workspace that scales from simple notes to deeply structured, interconnected knowledge systems.
 
 ![Screenshot](./screenshot.png)
 
-## Tech Stack
+## 🚀 Quick Start
 
-- **Monorepo Manager:** [Bun](https://bun.sh) workspaces
-- **Infrastructure:** [SST](https://sst.dev) on AWS
-- **Frontend:** React, Vite (Web App), Astro (Marketing Site)
-- **Backend:** Hono, Better Auth
-- **Database & Sync:** Postgres, Drizzle ORM, [Zero](https://zero.rocicorp.dev)
-- **AI:** Vercel AI SDK (OpenAI, Google)
-
-## Getting Started
-
-### Prerequisites
-
-- [Bun](https://bun.sh) (v1.3.3+)
-- AWS Credentials (configured for SST)
-
-### Installation
-
-Install dependencies from the root directory:
+### Development (Docker)
 
 ```bash
-bun install
+cd docker && docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
-### Development
+Access:
 
-Start the development environment (infrastructure and applications):
+- **Web App**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Zero Sync**: http://localhost:4848
+
+Run migrations:
 
 ```bash
-bun dev
+cd packages/database && bunx drizzle-kit migrate
 ```
 
-This command runs `sst dev`, which orchestrates the local development environment.
+### Production (AWS)
 
-## Project Structure
+See [Deployment Guide](docs/DEPLOYMENT.md) for AWS deployment with Pulumi.
 
-The project is organized as a monorepo:
+```bash
+cd infrastructure
+pulumi stack select production
+pulumi config set domainName yourdomain.com
+pulumi up
+```
 
-- **`packages/web`**: The main web application (React/Vite).
-- **`packages/marketing`**: The marketing website (Astro).
-- **`packages/backend`**: API services and backend logic.
-- **`packages/core`**: Shared core logic, AI utilities, and types.
-- **`packages/database`**: Database schema, migrations, and configuration.
-- **`packages/zero`**: Real-time sync configuration (Zero).
-- **`packages/sdk`**: Lydie Client SDK.
-- **`infra/`**: SST infrastructure definitions.
+## 🛠️ Tech Stack
 
-## Roadmap
+- **Frontend**: React, Vite, TanStack Router
+- **Backend**: Hono, Better Auth
+- **Database**: PostgreSQL, Drizzle ORM
+- **Real-time**: Zero sync, WebSockets
+- **AI**: Vercel AI SDK
+- **Infrastructure**: Docker (local), Pulumi + AWS (production)
 
-Key planned features include:
+## 📁 Project Structure
 
-- Real-time collaboration
-- Native desktop application
-- Cross-platform publishing
-- Advanced AI features (LLM selection, web search, cross-document referencing)
+```
+├── docker/                 # Docker Compose for local dev
+├── infrastructure/         # Pulumi AWS infrastructure
+├── packages/
+│   ├── config/            # Environment configuration
+│   ├── web/               # React SPA
+│   ├── backend/           # Hono API server
+│   ├── core/              # Shared logic
+│   ├── database/          # Drizzle ORM schema
+│   └── zero/              # Zero sync configuration
+└── docs/
+    └── DEPLOYMENT.md      # Local dev, self-hosting & AWS deployment
+```
 
-For the full roadmap, see [https://lydie.co/roadmap](https://lydie.co/roadmap).
+## 📦 Deployment Options
+
+| Environment   | Command      | Notes                          |
+| ------------- | ------------ | ------------------------------ |
+| **Local Dev** | `docker compose up` | Docker Compose with hot reload |
+| **AWS Prod**  | `pulumi up`  | ECS Fargate, S3, CloudFront    |
+
+## 🧪 Development
+
+```bash
+# Start infrastructure
+cd docker && docker compose up -d
+
+# Run migrations
+cd packages/database && bunx drizzle-kit migrate
+
+# Start dev servers (in separate terminals)
+bun --filter=@lydie/backend dev
+bun --filter=@lydie/web dev
+```
+
+## 🔄 CI/CD
+
+GitHub Actions workflow included at `.github/workflows/ci-cd.yml`:
+
+1. Lint and type check
+2. Build Docker images
+3. Run E2E tests
+4. Deploy with Pulumi
+
+## 📚 Documentation
+
+- [Deployment](docs/DEPLOYMENT.md) - Local dev, self-hosting & AWS production deployment
+- [Migration Summary](MIGRATION_SUMMARY.md) - Implementation details
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE) for details

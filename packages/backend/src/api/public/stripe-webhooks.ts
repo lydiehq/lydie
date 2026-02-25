@@ -1,8 +1,9 @@
 import { stripe } from "@lydie/core/billing/config";
 import { handleWebhookEvent } from "@lydie/core/billing/webhooks";
 import { Hono } from "hono";
-import { Resource } from "sst";
 import type Stripe from "stripe";
+
+import { env } from "../../env";
 
 export const stripeWebhookRouter = new Hono();
 
@@ -19,7 +20,7 @@ stripeWebhookRouter.post("/stripe", async (c) => {
   }
 
   // Get webhook secret from environment
-  const webhookSecret = Resource.StripeWebhookSecret.value;
+  const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     console.error("STRIPE_WEBHOOK_SECRET not configured");
     return c.json({ error: "Webhook secret not configured" }, 500);

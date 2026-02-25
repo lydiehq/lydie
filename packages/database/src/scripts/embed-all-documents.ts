@@ -1,10 +1,9 @@
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
-import { Resource } from "sst";
 
 import { db } from "../index";
 
 async function embedAllDocuments() {
-  console.log(`📦 Environment: ${Resource.App.stage}`);
+  console.log(`📦 Environment: ${process.env.APP_STAGE || "development"}`);
   console.log(`🚀 Starting to embed all documents...`);
   console.log(`🔌 Connecting to database...`);
 

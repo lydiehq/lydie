@@ -1,0 +1,212 @@
+# Production-like Docker Compose for Lydie
+#
+# Usage:
+#   docker compose up -d              # Start all services
+#   docker compose --profile test up   # Start services + run e2e tests
+#   docker compose down -v             # Tear down everything
+#
+# This compose file mirrors the production topology:
+#   - nginx reverse proxy (like ALB in AWS)
+#   - backend API server (ECS backend service)
+#   - zero sync server (ECS zero service)
+#   - postgres database (RDS in AWS)
+#   - migrations (runs once before zero starts)
+#
+# The web SPA is served by nginx, which also proxies API and WebSocket
+# traffic to backend/zero containers - same pattern as the ALB with
+# host-based routing in production.
+#
+# Environment distinction:
+#   NODE_ENV=production   - Runtime optimisation (minified builds, no dev warnings)
+#   APP_STAGE=development - Application-level config (trusted origins, cookie
+#                           domains, email sending, etc.). Set to "production"
+#                           only in the real AWS deployment where production
+#                           domains are used.
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: lydie-postgres
+    command: postgres -c wal_level=logical -c max_replication_slots=4 -c max_slot_wal_keep_size=1GB
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lydie}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lydie}
+      POSTGRES_DB: ${POSTGRES_DB:-lydie}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lydie} -d ${POSTGRES_DB:-lydie}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lydie-network
+
+  # Database migrations - runs once before zero starts
+  migrations:
+    build:
+      context: ..
+      dockerfile: docker/migrations.Dockerfile
+    container_name: lydie-migrations
+    environment:
+      NODE_ENV: production
+      APP_STAGE: ${APP_STAGE:-development}
+      APP_ENV: docker
+      DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lydie-network
+
+  # Backend API server
+  backend:
+    build:
+      context: ..
+      dockerfile: packages/backend/Dockerfile
+    container_name: lydie-backend
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      NODE_ENV: production
+      APP_STAGE: ${APP_STAGE:-development}
+      APP_ENV: docker
+      SECURE_COOKIES: "false"
+      DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      # In the e2e topology nginx proxies requests from :3000 → backend:3001,
+      # so Better Auth must see the public-facing origin (localhost:3000).
+      BETTER_AUTH_BASE_URL: http://localhost:3000/internal/public/auth
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-at-least-32-chars}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      ZERO_MUTATE_URL: http://backend:3001/internal/zero/mutate
+      ZERO_QUERY_URL: http://backend:3001/internal/zero/queries
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      S3_BUCKET_ASSETS: ${S3_BUCKET_ASSETS:-}
+      ASSETS_PUBLIC_BASE_URL: ${ASSETS_PUBLIC_BASE_URL:-}
+      S3_BUCKET_EXPORTS: ${S3_BUCKET_EXPORTS:-}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lydie-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Zero sync server
+  zero:
+    build:
+      context: ..
+      dockerfile: docker/zero.Dockerfile
+    container_name: lydie-zero
+    environment:
+      APP_STAGE: ${APP_STAGE:-development}
+      APP_ENV: docker
+      ZERO_UPSTREAM_DB: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      ZERO_CVR_DB: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      ZERO_CHANGE_DB: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      ZERO_MUTATE_URL: http://backend:3001/internal/zero/mutate
+      ZERO_QUERY_URL: http://backend:3001/internal/zero/queries
+      ZERO_MUTATE_FORWARD_COOKIES: "true"
+      ZERO_QUERY_FORWARD_COOKIES: "true"
+      ZERO_NUM_SYNC_WORKERS: ${ZERO_NUM_SYNC_WORKERS:-2}
+      ZERO_ADMIN_PASSWORD: ${ZERO_ADMIN_PASSWORD:-change-me-in-production}
+    ports:
+      - "4848:4848"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+    networks:
+      - lydie-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4848/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Web frontend (SPA served by nginx with reverse proxy)
+  #
+  # nginx proxies API/WebSocket/Zero traffic to backend and zero containers,
+  # mirroring the ALB host-based routing in production. The browser only
+  # talks to localhost:3000 - no cross-origin issues.
+  web:
+    build:
+      context: ..
+      dockerfile: docker/web.Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+        VITE_ZERO_URL: http://localhost:3000
+        VITE_YJS_SERVER_URL: ws://localhost:3000/yjs
+    container_name: lydie-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+      - zero
+    networks:
+      - lydie-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # E2E test runner (only started with --profile test)
+  e2e:
+    build:
+      context: ..
+      dockerfile: docker/e2e.Dockerfile
+    container_name: lydie-e2e-runner
+    environment:
+      # Use localhost:3000 which maps to the web container via host-gateway.
+      # This ensures the browser's origin matches the baked-in VITE URLs.
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_API_URL: http://localhost:3001
+      DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-at-least-32-chars}
+    # The SPA has http://localhost:3000 baked in for API/Zero URLs.
+    # Map localhost to the Docker host so the browser reaches containers via port mappings.
+    extra_hosts:
+      - "localhost:host-gateway"
+    volumes:
+      - ../packages/web/tests/e2e:/app/packages/web/tests/e2e
+      - e2e-test-results:/app/packages/web/test-results
+      - e2e-reports:/app/packages/web/playwright-report
+    depends_on:
+      web:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      zero:
+        condition: service_healthy
+    networks:
+      - lydie-network
+    profiles:
+      - test
+
+volumes:
+  postgres_data:
+  e2e-test-results:
+  e2e-reports:
+
+networks:
+  lydie-network:
+    driver: bridge

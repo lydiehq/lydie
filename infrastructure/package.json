@@ -1,0 +1,20 @@
+{
+  "name": "@lydie/infrastructure",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "pulumi:preview": "pulumi preview",
+    "pulumi:up": "pulumi up",
+    "pulumi:destroy": "pulumi destroy"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^6.0.0",
+    "@pulumi/awsx": "^2.0.0",
+    "@pulumi/planetscale": "file:sdks/planetscale",
+    "@pulumi/pulumi": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "typescript": "^5.9.3"
+  }
+}

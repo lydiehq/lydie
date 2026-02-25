@@ -1,5 +1,4 @@
 import { createGateway } from "@ai-sdk/gateway";
-import { openai } from "@ai-sdk/openai";
 import {
   getDefaultAgentById,
   getDefaultAgentByName,
@@ -12,13 +11,13 @@ import { createDocument } from "@lydie/core/ai/tools/create-document";
 import { deleteCollection } from "@lydie/core/ai/tools/delete-collection";
 import { findDocuments } from "@lydie/core/ai/tools/find-documents";
 import { moveDocuments } from "@lydie/core/ai/tools/move-documents";
-import { updateCollectionEntry } from "@lydie/core/ai/tools/update-collection-entry";
-import { updateCollection } from "@lydie/core/ai/tools/update-collection";
-import { readDocument } from "@lydie/core/ai/tools/read-document";
 import { readCollection } from "@lydie/core/ai/tools/read-collection";
+import { readDocument } from "@lydie/core/ai/tools/read-document";
 import { replaceInDocument } from "@lydie/core/ai/tools/replace-in-document";
 import { scanDocuments } from "@lydie/core/ai/tools/scan-documents";
 import { showDocuments } from "@lydie/core/ai/tools/show-documents";
+import { updateCollection } from "@lydie/core/ai/tools/update-collection";
+import { updateCollectionEntry } from "@lydie/core/ai/tools/update-collection-entry";
 import { VisibleError } from "@lydie/core/error";
 import {
   assistantAgentsTable,
@@ -32,18 +31,20 @@ import { ToolLoopAgent, createAgentUIStreamResponse, smoothStream, validateUIMes
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { Resource } from "sst";
 import { z } from "zod";
 
+import { env } from "../../env";
 import { buildAssistantSystemPrompt } from "../utils/ai/assistant/system-prompt";
 import { generateConversationTitle } from "../utils/conversation";
 import { checkCreditBalance, consumeCredits } from "../utils/usage-limits";
 
 // Create gateway singleton at module initialization
 // This avoids recreating it on every request (~5-10ms saved per request)
-const gateway = createGateway({
-  apiKey: Resource.ApiGatewayKey.value,
-});
+const gateway = env.AI_GATEWAY_API_KEY
+  ? createGateway({
+      apiKey: env.AI_GATEWAY_API_KEY,
+    })
+  : null;
 
 // Pre-compute base provider options to avoid rebuilding on every request
 // These are the static options that don't change per request
@@ -331,6 +332,14 @@ export const AssistantRoute = new Hono<{
 
     if (currentDocument?.id) {
       tools.replace_in_document = replaceInDocument();
+    }
+
+    if (!gateway) {
+      throw new VisibleError(
+        "ai_gateway_not_configured",
+        "AI gateway API key is not configured. Set AI_GATEWAY_API_KEY to enable assistant responses.",
+        500,
+      );
     }
 
     const chatModel = gateway(selectedModel.model);
