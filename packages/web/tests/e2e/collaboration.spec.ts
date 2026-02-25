@@ -21,6 +21,11 @@ test.describe("real-time collaboration - same user (two tabs)", () => {
           title: "Same User Collab Test",
           content: "Initial content",
         });
+        await tab1.goto(documentUrl, { waitUntil: "networkidle" });
+        await waitForEditorReady(tab1);
+        await expect(tab1.getByLabel("Document content").locator('[contenteditable="true"]').first()).toContainText(
+          "Initial content",
+        );
 
         // Tab 2 navigates to the same document
         await tab2.goto(documentUrl, { waitUntil: "networkidle" });
@@ -104,6 +109,11 @@ test.describe("real-time collaboration - different users", () => {
         title: "Collaboration Test Doc",
         content: "Initial content",
       });
+      await user1Page.goto(documentUrl, { waitUntil: "networkidle" });
+      await waitForEditorReady(user1Page);
+      await expect(
+        user1Page.getByLabel("Document content").locator('[contenteditable="true"]').first(),
+      ).toContainText("Initial content");
 
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });

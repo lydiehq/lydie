@@ -35,6 +35,7 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
     unique: boolean;
     options: string;
     relationTargetCollectionId: string;
+    relationMany: boolean;
   }>({
     name: "",
     type: "text",
@@ -42,6 +43,7 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
     unique: false,
     options: "",
     relationTargetCollectionId: "self",
+    relationMany: false,
   });
   const [collections] = useQuery(
     queries.collections.byOrganization({
@@ -98,6 +100,7 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
         ? {
             relation: {
               targetCollectionId: newProperty.relationTargetCollectionId,
+              ...(newProperty.relationMany ? { many: true } : {}),
             },
           }
         : {}),
@@ -113,6 +116,7 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
       unique: false,
       options: "",
       relationTargetCollectionId: "self",
+      relationMany: false,
     });
   };
 
@@ -256,6 +260,20 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
                     </option>
                   ))}
               </select>
+              <label className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={newProperty.relationMany}
+                  onChange={(e) =>
+                    setNewProperty((p) => ({
+                      ...p,
+                      relationMany: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-gray-300"
+                />
+                Allow multiple related records
+              </label>
             </div>
           )}
 

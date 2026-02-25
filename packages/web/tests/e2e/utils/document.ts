@@ -8,10 +8,12 @@ export async function createDocument(
   page: Page,
   options: { title: string; content: string },
   autoSaveDelay = 500,
-): Promise<void> {
+): Promise<string> {
   await page.getByRole("button", { name: "Create new document" }).click();
+  await page.waitForURL(/\/w\/[^/]+\/[^/]+/);
 
   const titleEditor = page.getByLabel("Document title").locator('[contenteditable="true"]').first();
+  await titleEditor.waitFor({ state: "visible" });
   await titleEditor.click();
   await titleEditor.fill(options.title);
   await titleEditor.blur();
@@ -21,13 +23,18 @@ export async function createDocument(
       .getByLabel("Document content")
       .locator('[contenteditable="true"]')
       .first();
-    await contentEditor.fill(options.content);
+    await contentEditor.waitFor({ state: "visible" });
+    await contentEditor.click();
+    await contentEditor.pressSequentially(options.content, { delay: 10 });
+    await contentEditor.blur();
   }
 
   // Short wait for auto-save
   if (autoSaveDelay > 0) {
     await page.waitForTimeout(autoSaveDelay);
   }
+
+  return page.url();
 }
 
 /**

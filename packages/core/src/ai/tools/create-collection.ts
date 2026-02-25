@@ -32,6 +32,7 @@ const propertyDefinitionSchema = z.object({
   relation: z
     .object({
       targetCollectionId: z.string(),
+      many: z.boolean().optional(),
     })
     .optional(),
   derived: z

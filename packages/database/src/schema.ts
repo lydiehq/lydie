@@ -247,6 +247,7 @@ export const collectionsTable = pgTable(
           }>;
           relation?: {
             targetCollectionId: string;
+            many?: boolean;
           } | null;
           derived?: {
             sourceField: string;

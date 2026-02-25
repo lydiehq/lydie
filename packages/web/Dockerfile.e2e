@@ -44,4 +44,4 @@ WORKDIR /app/packages/web
 RUN bunx playwright install chromium
 
 # Default command: wait for services and run tests
-CMD ["bunx", "playwright", "test", "--config", "playwright.config.docker.ts"]
+CMD ["bunx", "playwright", "test"]

@@ -3,12 +3,14 @@ import {
   resolveRelationTargetCollectionId,
   type PropertyDefinition,
   type PropertyOption,
+  type PropertyOptionStage,
 } from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
+import { Select as PropertySelect, SelectItem } from "@lydie/ui/components/generic/Select";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
@@ -85,10 +87,100 @@ const PROPERTY_TYPES: Array<{ label: string; value: PropertyDefinition["type"] }
   { label: "Relation", value: "relation" },
 ];
 
-const DEFAULT_STATUS_OPTIONS: PropertyOption[] = [
-  { id: createId(), label: "To do", order: 0, stage: "NOT_STARTED" },
-  { id: createId(), label: "In progress", order: 1, stage: "IN_PROGRESS" },
-  { id: createId(), label: "Done", order: 2, stage: "COMPLETE" },
+const OPTION_COLORS = [
+  { value: "gray", label: "Gray" },
+  { value: "red", label: "Red" },
+  { value: "orange", label: "Orange" },
+  { value: "yellow", label: "Yellow" },
+  { value: "green", label: "Green" },
+  { value: "blue", label: "Blue" },
+  { value: "purple", label: "Purple" },
+  { value: "pink", label: "Pink" },
+] as const;
+
+type EnumOptionDraft = {
+  id: string;
+  label: string;
+  color: string;
+  stage?: PropertyOptionStage;
+};
+
+type OptionColor = {
+  dot: string;
+  pill: string;
+  text: string;
+};
+
+const DEFAULT_COLOR = "gray";
+
+const OPTION_COLOR_CLASSNAMES: Record<string, OptionColor> = {
+  gray: {
+    dot: "bg-gray-500",
+    pill: "bg-gray-100 border-gray-200",
+    text: "text-gray-700",
+  },
+  red: {
+    dot: "bg-red-500",
+    pill: "bg-red-100 border-red-200",
+    text: "text-red-700",
+  },
+  orange: {
+    dot: "bg-orange-500",
+    pill: "bg-orange-100 border-orange-200",
+    text: "text-orange-700",
+  },
+  yellow: {
+    dot: "bg-yellow-500",
+    pill: "bg-yellow-100 border-yellow-200",
+    text: "text-yellow-700",
+  },
+  green: {
+    dot: "bg-green-500",
+    pill: "bg-green-100 border-green-200",
+    text: "text-green-700",
+  },
+  blue: {
+    dot: "bg-blue-500",
+    pill: "bg-blue-100 border-blue-200",
+    text: "text-blue-700",
+  },
+  purple: {
+    dot: "bg-purple-500",
+    pill: "bg-purple-100 border-purple-200",
+    text: "text-purple-700",
+  },
+  pink: {
+    dot: "bg-pink-500",
+    pill: "bg-pink-100 border-pink-200",
+    text: "text-pink-700",
+  },
+};
+
+const STATUS_STAGE_LABELS: Record<PropertyOptionStage, string> = {
+  NOT_STARTED: "Not started",
+  IN_PROGRESS: "In progress",
+  COMPLETE: "Complete",
+};
+
+const DEFAULT_STATUS_OPTION_DRAFTS: EnumOptionDraft[] = [
+  {
+    id: createId(),
+    label: "To do",
+    color: "gray",
+    stage: "NOT_STARTED",
+  },
+  {
+    id: createId(),
+    label: "In progress",
+    color: "blue",
+    stage: "IN_PROGRESS",
+  },
+  {
+    id: createId(),
+    label: "Done",
+    color: "green",
+    stage: "COMPLETE",
+  },
 ];
 
 type Props = {
@@ -113,7 +205,36 @@ function toFieldValue(
   if (fieldDef.type === "date") {
     return value === "" ? null : value;
   }
+  if (fieldDef.type === "multi-select") {
+    return value
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
   return value === "" ? null : value;
+}
+
+function createDefaultEnumOptions(type: PropertyDefinition["type"]): EnumOptionDraft[] {
+  if (type === "status") {
+    return DEFAULT_STATUS_OPTION_DRAFTS.map((option) => ({
+      ...option,
+      id: createId(),
+    }));
+  }
+
+  if (type === "select" || type === "multi-select") {
+    return [{ id: createId(), label: "", color: DEFAULT_COLOR }];
+  }
+
+  return [];
+}
+
+function getOptionColor(color: string | null | undefined): OptionColor {
+  return OPTION_COLOR_CLASSNAMES[color ?? DEFAULT_COLOR] ?? OPTION_COLOR_CLASSNAMES[DEFAULT_COLOR];
+}
+
+function normalizeOptionColor(color: string | null | undefined): string {
+  return OPTION_COLOR_CLASSNAMES[color ?? ""] ? (color as string) : DEFAULT_COLOR;
 }
 
 function extractFieldValues(
@@ -276,13 +397,15 @@ export function CollectionTable({
       required,
       unique,
       relationTargetCollectionId,
+      relationMany,
     }: {
       name: string;
       type: PropertyDefinition["type"];
-      options: string;
+      options: EnumOptionDraft[];
       required: boolean;
       unique: boolean;
       relationTargetCollectionId: string;
+      relationMany: boolean;
     }) => {
       const trimmedName = name.trim();
       if (!trimmedName) {
@@ -298,22 +421,43 @@ export function CollectionTable({
 
       const enumOptions =
         type === "status"
-          ? DEFAULT_STATUS_OPTIONS.map((option) => ({ ...option }))
+          ? options
+              .map((option, index) => ({
+                id: option.id,
+                label: option.label.trim(),
+                color: normalizeOptionColor(option.color),
+                order: index,
+                stage: option.stage,
+              }))
+              .filter(
+                (
+                  option,
+                ): option is {
+                  id: string;
+                  label: string;
+                  color: string;
+                  order: number;
+                  stage: PropertyOptionStage;
+                } => option.label.length > 0 && option.stage !== undefined,
+              )
           : type === "select" || type === "multi-select"
             ? options
-                .split(",")
-                .map((option) => option.trim())
-                .filter(Boolean)
-                .map((label, index) => ({
-                  id: createId(),
-                  label,
+                .map((option, index) => ({
+                  id: option.id,
+                  label: option.label.trim(),
+                  color: normalizeOptionColor(option.color),
                   order: index,
                 }))
+                .filter((option) => option.label.length > 0)
             : undefined;
 
+      if ((type === "select" || type === "multi-select" || type === "status") && !enumOptions) {
+        return false;
+      }
+
       if (
-        (type === "select" || type === "multi-select") &&
-        (!enumOptions || enumOptions.length === 0)
+        (type === "select" || type === "multi-select" || type === "status") &&
+        (enumOptions?.length ?? 0) === 0
       ) {
         return false;
       }
@@ -327,12 +471,13 @@ export function CollectionTable({
           unique,
           ...(enumOptions ? { options: enumOptions } : {}),
           ...(type === "relation"
-            ? {
-                relation: {
-                  targetCollectionId: relationTargetCollectionId,
-                },
-              }
-            : {}),
+              ? {
+                  relation: {
+                    targetCollectionId: relationTargetCollectionId,
+                    ...(relationMany ? { many: true } : {}),
+                  },
+                }
+              : {}),
         },
       ];
 
@@ -408,6 +553,70 @@ export function CollectionTable({
     [collectionId, organizationId, schema, z],
   );
 
+  const handleUpdateEnumPropertyOptions = useCallback(
+    async (propertyName: string, options: EnumOptionDraft[]) => {
+      const nextSchema = schema.map((property) => {
+        if (property.name !== propertyName) {
+          return property;
+        }
+
+        if (property.type === "status") {
+          const nextOptions = options
+            .map((option, index) => ({
+              id: option.id,
+              label: option.label.trim(),
+              color: normalizeOptionColor(option.color),
+              order: index,
+              stage: option.stage,
+            }))
+            .filter(
+              (
+                option,
+              ): option is {
+                id: string;
+                label: string;
+                color: string;
+                order: number;
+                stage: PropertyOptionStage;
+              } => option.label.length > 0 && option.stage !== undefined,
+            );
+
+          return {
+            ...property,
+            options: nextOptions,
+          };
+        }
+
+        if (property.type === "select" || property.type === "multi-select") {
+          const nextOptions = options
+            .map((option, index) => ({
+              id: option.id,
+              label: option.label.trim(),
+              color: normalizeOptionColor(option.color),
+              order: index,
+            }))
+            .filter((option) => option.label.length > 0);
+
+          return {
+            ...property,
+            options: nextOptions,
+          };
+        }
+
+        return property;
+      });
+
+      await z.mutate(
+        mutators.collection.update({
+          collectionId,
+          organizationId,
+          properties: nextSchema,
+        }),
+      );
+    },
+    [collectionId, organizationId, schema, z],
+  );
+
   const columns = useMemo<ColumnDef<DocumentItem>[]>(
     () => [
       {
@@ -458,8 +667,10 @@ export function CollectionTable({
           header: ({ column }) => (
             <PropertyHeader
               column={column}
+              fieldDef={property}
               label={property.name}
               onDeleteProperty={handleDeleteProperty}
+              onUpdateEnumPropertyOptions={handleUpdateEnumPropertyOptions}
             />
           ),
           cell: (context: CellContext<DocumentItem, unknown>) => (
@@ -484,7 +695,14 @@ export function CollectionTable({
         cell: () => <span className="block h-6 w-[120px]" aria-hidden="true" />,
       },
     ],
-    [collectionId, collections, handleAddProperty, handleDeleteProperty, schema],
+    [
+      collectionId,
+      collections,
+      handleAddProperty,
+      handleDeleteProperty,
+      handleUpdateEnumPropertyOptions,
+      schema,
+    ],
   );
 
   const table = useReactTable({
@@ -816,31 +1034,191 @@ const SortableHeader = memo(function SortableHeader({
 
 const PropertyHeader = memo(function PropertyHeader({
   column,
+  fieldDef,
   label,
   onDeleteProperty,
+  onUpdateEnumPropertyOptions,
 }: {
   column: Column<DocumentItem, unknown>;
+  fieldDef: PropertyDefinition;
   label: string;
   onDeleteProperty: (propertyName: string) => void;
+  onUpdateEnumPropertyOptions: (propertyName: string, options: EnumOptionDraft[]) => Promise<void>;
 }) {
+  const isEnumField =
+    fieldDef.type === "select" || fieldDef.type === "multi-select" || fieldDef.type === "status";
+
   return (
     <div className="flex items-center justify-between gap-1">
       <div className="min-w-0 flex-1">
         <SortableHeader column={column} label={label} />
       </div>
-      <MenuTrigger>
-        <RACButton
-          type="button"
-          aria-label={`Open ${label} column menu`}
-          className="inline-flex shrink-0 items-center rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-        >
-          <MoreHorizontalRegular className="size-4" />
-        </RACButton>
-        <Menu placement="bottom end">
-          <MenuItem onAction={() => onDeleteProperty(label)}>Delete property</MenuItem>
-        </Menu>
-      </MenuTrigger>
+      <div className="flex items-center gap-1">
+        {isEnumField ? (
+          <EditEnumPropertyOptionsDialog
+            propertyName={fieldDef.name}
+            propertyType={fieldDef.type}
+            options={fieldDef.options ?? []}
+            onSave={onUpdateEnumPropertyOptions}
+          />
+        ) : null}
+
+        <MenuTrigger>
+          <RACButton
+            type="button"
+            aria-label={`Open ${label} column menu`}
+            className="inline-flex shrink-0 items-center rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            <MoreHorizontalRegular className="size-4" />
+          </RACButton>
+          <Menu placement="bottom end">
+            <MenuItem onAction={() => onDeleteProperty(label)}>Delete property</MenuItem>
+          </Menu>
+        </MenuTrigger>
+      </div>
     </div>
+  );
+});
+
+const EditEnumPropertyOptionsDialog = memo(function EditEnumPropertyOptionsDialog({
+  propertyName,
+  propertyType,
+  options,
+  onSave,
+}: {
+  propertyName: string;
+  propertyType: PropertyDefinition["type"];
+  options: PropertyOption[];
+  onSave: (propertyName: string, options: EnumOptionDraft[]) => Promise<void>;
+}) {
+  const [draftOptions, setDraftOptions] = useState<EnumOptionDraft[]>(
+    options.map((option) => ({
+      id: option.id,
+      label: option.label,
+      color: normalizeOptionColor(option.color),
+      stage: option.stage,
+    })),
+  );
+
+  const handleReset = useCallback(() => {
+    setDraftOptions(
+      options.map((option) => ({
+        id: option.id,
+        label: option.label,
+        color: normalizeOptionColor(option.color),
+        stage: option.stage,
+      })),
+    );
+  }, [options]);
+
+  const handleSubmit = useCallback(async () => {
+    await onSave(propertyName, draftOptions);
+    toast.success(`Updated ${propertyName} options`);
+  }, [draftOptions, onSave, propertyName]);
+
+  return (
+    <DialogTrigger>
+      <Button intent="ghost" size="sm" className="h-7 px-2 text-[11px]">
+        Options
+      </Button>
+      <Popover placement="bottom end" className="w-[360px] p-0">
+        <div className="border-b border-gray-200 p-3">
+          <h3 className="text-sm font-semibold text-gray-900">Edit options: {propertyName}</h3>
+        </div>
+        <div className="space-y-3 p-3">
+          <div className="space-y-2">
+            {draftOptions.map((option, index) => (
+              <div key={option.id} className="rounded-md border border-gray-200 bg-gray-50 p-2">
+                <div className="mb-1.5 flex items-center justify-between">
+                  {option.stage ? (
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                      {STATUS_STAGE_LABELS[option.stage]}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                      Option {index + 1}
+                    </span>
+                  )}
+
+                  {propertyType !== "status" ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraftOptions((prev) => prev.filter((item) => item.id !== option.id))
+                      }
+                      className="text-xs text-gray-500 hover:text-red-600"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="grid grid-cols-[1fr_120px] gap-2">
+                  <Input
+                    value={option.label}
+                    onChange={(event) =>
+                      setDraftOptions((prev) =>
+                        prev.map((item) =>
+                          item.id === option.id ? { ...item, label: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    placeholder="Label"
+                    className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
+                  />
+
+                  <select
+                    value={normalizeOptionColor(option.color)}
+                    onChange={(event) =>
+                      setDraftOptions((prev) =>
+                        prev.map((item) =>
+                          item.id === option.id ? { ...item, color: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    className={`w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm ${focusVisibleStyles}`}
+                  >
+                    {OPTION_COLORS.map((color) => (
+                      <option key={color.value} value={color.value}>
+                        {color.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ))}
+
+            {draftOptions.length === 0 ? (
+              <p className="text-xs text-gray-500">Add at least one option.</p>
+            ) : null}
+          </div>
+
+          {propertyType !== "status" ? (
+            <button
+              type="button"
+              onClick={() =>
+                setDraftOptions((prev) => [
+                  ...prev,
+                  { id: createId(), label: "", color: DEFAULT_COLOR },
+                ])
+              }
+              className="text-xs font-medium text-blue-600 hover:text-blue-700"
+            >
+              + Add option
+            </button>
+          ) : null}
+
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button intent="ghost" size="sm" onPress={handleReset}>
+              Reset
+            </Button>
+            <Button intent="secondary" size="sm" onPress={() => void handleSubmit()}>
+              Save options
+            </Button>
+          </div>
+        </div>
+      </Popover>
+    </DialogTrigger>
   );
 });
 
@@ -856,19 +1234,21 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
   onAddProperty: (payload: {
     name: string;
     type: PropertyDefinition["type"];
-    options: string;
+    options: EnumOptionDraft[];
     required: boolean;
     unique: boolean;
     relationTargetCollectionId: string;
+    relationMany: boolean;
   }) => Promise<boolean>;
 }) {
   const [newPropertyName, setNewPropertyName] = useState("");
   const [newPropertyType, setNewPropertyType] = useState<PropertyDefinition["type"]>("text");
-  const [newPropertyOptions, setNewPropertyOptions] = useState("");
+  const [newPropertyOptions, setNewPropertyOptions] = useState<EnumOptionDraft[]>([]);
   const [newPropertyRequired, setNewPropertyRequired] = useState(false);
   const [newPropertyUnique, setNewPropertyUnique] = useState(false);
   const [newPropertyRelationTargetCollectionId, setNewPropertyRelationTargetCollectionId] =
     useState<string>("self");
+  const [newPropertyRelationMany, setNewPropertyRelationMany] = useState(false);
 
   const hasDuplicatePropertyName = schema.some(
     (property) => property.name.toLowerCase() === newPropertyName.trim().toLowerCase(),
@@ -882,6 +1262,7 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
       required: newPropertyRequired,
       unique: newPropertyUnique,
       relationTargetCollectionId: newPropertyRelationTargetCollectionId,
+      relationMany: newPropertyRelationMany,
     });
 
     if (!didAdd) {
@@ -890,10 +1271,11 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
 
     setNewPropertyName("");
     setNewPropertyType("text");
-    setNewPropertyOptions("");
+    setNewPropertyOptions([]);
     setNewPropertyRequired(false);
     setNewPropertyUnique(false);
     setNewPropertyRelationTargetCollectionId("self");
+    setNewPropertyRelationMany(false);
   };
 
   return (
@@ -933,9 +1315,11 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
             <select
               id="collection-property-type"
               value={newPropertyType}
-              onChange={(event) =>
-                setNewPropertyType(event.target.value as PropertyDefinition["type"])
-              }
+              onChange={(event) => {
+                const nextType = event.target.value as PropertyDefinition["type"];
+                setNewPropertyType(nextType);
+                setNewPropertyOptions(createDefaultEnumOptions(nextType));
+              }}
               className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
             >
               {PROPERTY_TYPES.map((propertyType) => (
@@ -946,22 +1330,95 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
             </select>
           </div>
 
-          {(newPropertyType === "select" || newPropertyType === "multi-select") && (
+          {(newPropertyType === "select" ||
+            newPropertyType === "multi-select" ||
+            newPropertyType === "status") && (
             <div>
-              <label
-                htmlFor="collection-property-options"
-                className="mb-1 block text-xs font-medium text-gray-600"
-              >
-                Options (comma-separated)
-              </label>
-              <Input
-                id="collection-property-options"
-                type="text"
-                value={newPropertyOptions}
-                onChange={(event) => setNewPropertyOptions(event.target.value)}
-                placeholder="todo, in-progress, done"
-                className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
-              />
+              <div className="mb-1 flex items-center justify-between">
+                <p className="block text-xs font-medium text-gray-600">Options</p>
+                {newPropertyType !== "status" ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setNewPropertyOptions((prev) => [
+                        ...prev,
+                        { id: createId(), label: "", color: DEFAULT_COLOR },
+                      ])
+                    }
+                    className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    + Add option
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                {newPropertyOptions.map((option, index) => (
+                  <div key={option.id} className="rounded-md border border-gray-200 bg-gray-50 p-2">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      {option.stage ? (
+                        <span className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                          {STATUS_STAGE_LABELS[option.stage]}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                          Option {index + 1}
+                        </span>
+                      )}
+                      {newPropertyType !== "status" ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setNewPropertyOptions((prev) =>
+                              prev.filter((item) => item.id !== option.id),
+                            )
+                          }
+                          className="text-xs text-gray-500 hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                    </div>
+
+                    <div className="grid grid-cols-[1fr_120px] gap-2">
+                      <Input
+                        value={option.label}
+                        onChange={(event) =>
+                          setNewPropertyOptions((prev) =>
+                            prev.map((item) =>
+                              item.id === option.id ? { ...item, label: event.target.value } : item,
+                            ),
+                          )
+                        }
+                        placeholder="Label"
+                        className={`w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm ${focusVisibleStyles}`}
+                      />
+
+                      <select
+                        value={normalizeOptionColor(option.color)}
+                        onChange={(event) =>
+                          setNewPropertyOptions((prev) =>
+                            prev.map((item) =>
+                              item.id === option.id ? { ...item, color: event.target.value } : item,
+                            ),
+                          )
+                        }
+                        className={`w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm ${focusVisibleStyles}`}
+                      >
+                        {OPTION_COLORS.map((color) => (
+                          <option key={color.value} value={color.value}>
+                            {color.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+
+                {newPropertyOptions.length === 0 ? (
+                  <p className="text-xs text-gray-500">Add at least one option.</p>
+                ) : null}
+              </div>
             </div>
           )}
 
@@ -988,6 +1445,15 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
                     </option>
                   ))}
               </select>
+              <label className="mt-2 inline-flex items-center gap-2 text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={newPropertyRelationMany}
+                  onChange={(event) => setNewPropertyRelationMany(event.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Allow multiple related records
+              </label>
             </div>
           )}
 
@@ -1027,6 +1493,30 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
     </DialogTrigger>
   );
 });
+
+function OptionChip({ option }: { option: PropertyOption }) {
+  const color = getOptionColor(option.color);
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${color.pill} ${color.text}`}
+    >
+      <span className={`size-1.5 rounded-full ${color.dot}`} aria-hidden />
+      {option.label}
+    </span>
+  );
+}
+
+function OptionPickerLabel({ option }: { option: PropertyOption }) {
+  const color = getOptionColor(option.color);
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className={`size-2 rounded-full ${color.dot}`} aria-hidden />
+      <span>{option.label}</span>
+    </span>
+  );
+}
 
 function EditableGridCell({ context }: { context: CellContext<DocumentItem, unknown> }) {
   const { row, column, table } = context;
@@ -1085,6 +1575,57 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
 
   if (isEditing) {
     if (fieldDef?.type === "relation") {
+      const relationMany = fieldDef.relation?.many === true;
+      const selectedRelationValues = Array.isArray(currentValue)
+        ? currentValue.filter((entry): entry is string => typeof entry === "string")
+        : typeof currentValue === "string"
+          ? [currentValue]
+          : [];
+
+      if (relationMany) {
+        return (
+          <MenuTrigger>
+            <RACButton
+              type="button"
+              autoFocus
+              aria-label={`${fieldDef.name} values`}
+              className="flex min-h-9 w-full items-center rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-sm"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  stopEditing();
+                }
+              }}
+            >
+              {selectedRelationValues.length > 0
+                ? `${selectedRelationValues.length} selected`
+                : "Select records"}
+            </RACButton>
+            <Menu
+              selectionMode="multiple"
+              selectedKeys={new Set(selectedRelationValues)}
+              onSelectionChange={(keys) => {
+                if (keys === "all") {
+                  return;
+                }
+
+                const normalized = Array.from(keys)
+                  .map((key) => String(key))
+                  .filter(Boolean);
+                meta?.updateData(row.index, column.id, normalized);
+                stopEditing();
+              }}
+            >
+              {availableRelationOptions.map((option) => (
+                <MenuItem key={option.id} id={option.id} textValue={option.title}>
+                  {option.title}
+                </MenuItem>
+              ))}
+            </Menu>
+          </MenuTrigger>
+        );
+      }
+
       return (
         <select
           autoFocus
@@ -1113,20 +1654,17 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
       );
     }
 
-    if (
-      (fieldDef?.type === "select" ||
-        fieldDef?.type === "multi-select" ||
-        fieldDef?.type === "status") &&
-      fieldDef.options
-    ) {
+    if ((fieldDef?.type === "select" || fieldDef?.type === "status") && fieldDef.options) {
       return (
-        <select
+        <PropertySelect
           autoFocus
-          value={value}
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            setValue(nextValue);
-            meta?.updateData(row.index, column.id, nextValue === "" ? null : nextValue);
+          aria-label={`${fieldDef.name} value`}
+          selectedKey={typeof currentValue === "string" ? currentValue : null}
+          placeholder="Select an option"
+          className="w-full"
+          onSelectionChange={(nextValue) => {
+            const valueAsString = typeof nextValue === "string" ? nextValue : null;
+            meta?.updateData(row.index, column.id, valueAsString);
             stopEditing();
           }}
           onBlur={stopEditing}
@@ -1136,15 +1674,60 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
               stopEditing();
             }
           }}
-          className={`h-9 w-full rounded-none border-0 bg-transparent px-3 py-1 text-sm ${focusVisibleStyles}`}
         >
-          <option value="">-</option>
           {fieldDef.options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
+            <SelectItem key={option.id} id={option.id} textValue={option.label}>
+              <OptionPickerLabel option={option} />
+            </SelectItem>
           ))}
-        </select>
+        </PropertySelect>
+      );
+    }
+
+    if (fieldDef?.type === "multi-select" && fieldDef.options) {
+      const selectedValues = Array.isArray(currentValue)
+        ? currentValue.filter((entry): entry is string => typeof entry === "string")
+        : typeof currentValue === "string"
+          ? [currentValue]
+          : [];
+
+      return (
+        <MenuTrigger>
+          <RACButton
+            type="button"
+            autoFocus
+            aria-label={`${fieldDef.name} values`}
+            className="flex min-h-9 w-full items-center rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-sm"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                stopEditing();
+              }
+            }}
+          >
+            {selectedValues.length > 0 ? `${selectedValues.length} selected` : "Select options"}
+          </RACButton>
+          <Menu
+            selectionMode="multiple"
+            selectedKeys={new Set(selectedValues)}
+            onSelectionChange={(keys) => {
+              if (keys === "all") {
+                return;
+              }
+              const normalized = Array.from(keys)
+                .map((key) => String(key))
+                .filter(Boolean);
+              meta?.updateData(row.index, column.id, normalized.length > 0 ? normalized : null);
+              stopEditing();
+            }}
+          >
+            {fieldDef.options.map((option) => (
+              <MenuItem key={option.id} id={option.id} textValue={option.label}>
+                <OptionPickerLabel option={option} />
+              </MenuItem>
+            ))}
+          </Menu>
+        </MenuTrigger>
       );
     }
 
@@ -1176,27 +1759,59 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
     );
   }
 
-  const relationLabel =
-    fieldDef?.type === "relation" && typeof currentValue === "string"
-      ? (relationOptions.find((option) => option.id === currentValue)?.title ?? "Missing record")
+  const relationValueIds =
+    fieldDef?.type === "relation"
+      ? Array.isArray(currentValue)
+        ? currentValue.filter((entry): entry is string => typeof entry === "string")
+        : typeof currentValue === "string"
+          ? [currentValue]
+          : []
+      : [];
+
+  const relationLabels =
+    fieldDef?.type === "relation"
+      ? relationValueIds.map(
+          (relationValueId) =>
+            relationOptions.find((option) => option.id === relationValueId)?.title ?? "Missing record",
+        )
       : null;
 
-  const enumLabel =
-    typeof currentValue === "string" &&
-    (fieldDef?.type === "select" ||
-      fieldDef?.type === "multi-select" ||
-      fieldDef?.type === "status")
-      ? (fieldDef.options?.find((option) => option.id === currentValue)?.label ?? "Unknown option")
+  const enumOptionById =
+    fieldDef?.type === "select" || fieldDef?.type === "multi-select" || fieldDef?.type === "status"
+      ? new Map((fieldDef.options ?? []).map((option) => [option.id, option]))
       : null;
+
+  const enumDisplay =
+    fieldDef?.type === "multi-select" && Array.isArray(currentValue)
+      ? currentValue
+          .map((entry) => (typeof entry === "string" ? enumOptionById?.get(entry) : undefined))
+          .filter((option): option is PropertyOption => Boolean(option))
+      : typeof currentValue === "string"
+        ? (enumOptionById?.get(currentValue) ?? null)
+        : null;
 
   const content =
     kind === "title" ? (
       <span className="font-medium text-gray-900">{row.original.title || "Untitled"}</span>
     ) : currentValue !== null && currentValue !== undefined ? (
       fieldDef?.type === "relation" ? (
-        (relationLabel ?? "Missing record")
-      ) : enumLabel ? (
-        enumLabel
+        relationLabels && relationLabels.length > 0 ? (
+          relationLabels.join(", ")
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ) : Array.isArray(enumDisplay) ? (
+        enumDisplay.length > 0 ? (
+          <div className="flex flex-wrap gap-1 py-0.5">
+            {enumDisplay.map((option) => (
+              <OptionChip key={option.id} option={option} />
+            ))}
+          </div>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ) : enumDisplay ? (
+        <OptionChip option={enumDisplay} />
       ) : (
         String(currentValue)
       )
@@ -1219,7 +1834,7 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
         </Link>
       ) : null}
       <div className="min-w-0 flex flex-1 items-center overflow-hidden text-left text-sm">
-        <span className="block w-full truncate whitespace-nowrap">{content}</span>
+        <span className="block w-full">{content}</span>
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ export type PropertyDefinition = {
   options?: PropertyOption[];
   relation?: {
     targetCollectionId: string;
+    many?: boolean;
   };
   derived?: {
     sourceField: string;

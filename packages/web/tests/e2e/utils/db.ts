@@ -5,11 +5,13 @@ import {
   collectionsTable,
   db,
   documentsTable,
+  membersTable,
   organizationsTable,
   usersTable,
+  workspaceBillingTable,
 } from "@lydie/database";
 import type { InferSelectModel } from "drizzle-orm";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 type User = InferSelectModel<typeof usersTable>;
 type Organization = InferSelectModel<typeof organizationsTable>;
@@ -102,13 +104,47 @@ export async function createTestUser(options?: {
     let failed = false;
 
     try {
+      const ownedMemberships = await withDeadlockRetry(
+        () =>
+          db
+            .select({ organizationId: membersTable.organizationId })
+            .from(membersTable)
+            .where(and(eq(membersTable.userId, user.id), eq(membersTable.role, "owner"))),
+        `owned membership lookup for ${userId}`,
+      );
+
+      for (const membership of ownedMemberships) {
+        await withDeadlockRetry(
+          () =>
+            db
+              .delete(organizationsTable)
+              .where(eq(organizationsTable.id, membership.organizationId)),
+          `organization cleanup for ${membership.organizationId}`,
+        );
+      }
+    } catch (error) {
+      failed = true;
+      console.error(`Failed to cleanup owned organizations for ${userId}:`, error);
+    }
+
+    try {
       await withDeadlockRetry(
-        () => db.delete(organizationsTable).where(eq(organizationsTable.id, organization.id)),
-        `organization cleanup for ${userId}`,
+        () => db.delete(membersTable).where(eq(membersTable.userId, user.id)),
+        `membership cleanup for ${userId}`,
       );
     } catch (error) {
       failed = true;
-      console.error(`Failed to cleanup organization ${organization.id} for ${userId}:`, error);
+      console.error(`Failed to cleanup memberships for ${user.id}:`, error);
+    }
+
+    try {
+      await withDeadlockRetry(
+        () => db.delete(workspaceBillingTable).where(eq(workspaceBillingTable.billingOwnerUserId, user.id)),
+        `workspace billing cleanup for ${userId}`,
+      );
+    } catch (error) {
+      failed = true;
+      console.error(`Failed to cleanup workspace billing for ${user.id}:`, error);
     }
 
     try {
@@ -188,6 +224,7 @@ export async function createTestCollection(
       }>;
       relation?: {
         targetCollectionId: string;
+        many?: boolean;
       };
     }>;
   },

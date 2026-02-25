@@ -30,124 +30,101 @@ interface MultiUserAuthenticatedFixtures {
 // Multi-user authenticated test with two users in the same organization
 export const test = baseTest.extend<
   MultiUserAuthenticatedFixtures,
-  { workerStorageState: StorageState; workerData: WorkerData }
+  { workerData: WorkerData }
 >({
-  workerData: [
-    // eslint-disable-next-line no-empty-pattern
-    async ({}, use, workerInfo) => {
-      const id = workerInfo.workerIndex;
-      const orgId = createId();
+  workerData: async ({}, use, testInfo) => {
+    const runSuffix = `${testInfo.workerIndex}-${testInfo.parallelIndex}-${createId()}`;
+    const user1Id = createId();
+    const user2Id = createId();
 
-      // Create two users in the same organization
-      const user1Id = createId();
-      const user2Id = createId();
+    const { user: user1, organization, cleanup: cleanupUser1 } = await createTestUser({
+      prefix: `collab-user1-${runSuffix}`,
+      userId: user1Id,
+      organizationPrefix: `test-org-collab-${runSuffix}`,
+      organizationName: `Test Collaboration Org ${runSuffix}`,
+    });
 
-      // Create first user with organization
-      const {
-        user: user1,
-        organization,
-        cleanup: cleanup1,
-      } = await createTestUser({
-        prefix: "collab-user1",
-        userId: user1Id,
-        organizationPrefix: `test-org-collab-${orgId}`,
-        organizationName: `Test Collaboration Org ${orgId}`,
-      });
+    const [user2] = await db
+      .insert(usersTable)
+      .values({
+        id: user2Id,
+        email: `collab-user2-${runSuffix}@playwright.test`,
+        name: `Test Collab User 2 ${runSuffix}`,
+        emailVerified: true,
+      })
+      .returning();
 
-      // Create second user
-      const [user2] = await db
-        .insert(usersTable)
-        .values({
-          id: user2Id,
-          email: `collab-user2-${user2Id}@playwright.test`,
-          name: `Test Collab User 2 ${user2Id}`,
-          emailVerified: true,
-        })
-        .returning();
+    if (!user2) {
+      throw new Error(`Failed to create second user ${user2Id}`);
+    }
 
-      if (!user2) {
-        throw new Error(`Failed to create second user ${user2Id}`);
+    const member2Id = createId();
+    await db.insert(membersTable).values({
+      id: member2Id,
+      organizationId: organization.id,
+      userId: user2.id,
+      role: "member",
+    });
+
+    const session1 = await createSession(user1.id, organization.id);
+    const session2 = await createSession(user2.id, organization.id);
+
+    const workerData: WorkerData = {
+      user1: { user: user1, session: session1 },
+      user2: { user: user2, session: session2 },
+      organization,
+    };
+
+    await use(workerData);
+
+    let failed = false;
+    const cleanupSteps: Array<{ label: string; run: () => Promise<unknown> }> = [
+      {
+        label: `session cleanup 1 for ${runSuffix}`,
+        run: () => db.delete(sessionsTable).where(eq(sessionsTable.id, session1.id)),
+      },
+      {
+        label: `session cleanup 2 for ${runSuffix}`,
+        run: () => db.delete(sessionsTable).where(eq(sessionsTable.id, session2.id)),
+      },
+      {
+        label: `member cleanup for ${runSuffix}`,
+        run: () => db.delete(membersTable).where(eq(membersTable.id, member2Id)),
+      },
+      {
+        label: `secondary user cleanup for ${runSuffix}`,
+        run: () => db.delete(usersTable).where(eq(usersTable.id, user2.id)),
+      },
+    ];
+
+    for (const step of cleanupSteps) {
+      try {
+        await withDeadlockRetry(step.run, step.label);
+      } catch (error) {
+        failed = true;
+        console.error(`Failed ${step.label}:`, error);
       }
+    }
 
-      // Add user2 to the same organization
-      const member2Id = createId();
-      await db.insert(membersTable).values({
-        id: member2Id,
-        organizationId: organization.id,
-        userId: user2Id,
-        role: "member",
-      });
+    if (failed) {
+      console.error(`Failed to cleanup test data for ${runSuffix}`);
+    }
 
-      // Create sessions for both users using shared helper
-      const session1 = await createSession(user1Id, organization.id);
-      const session2 = await createSession(user2Id, organization.id);
+    const [cleanupPrimary] = await Promise.allSettled([cleanupUser1()]);
+    if (cleanupPrimary.status === "rejected") {
+      console.error(`Failed primary collab user cleanup for ${runSuffix}`);
+    }
+  },
 
-      const workerData: WorkerData = {
-        user1: { user: user1, session: session1 },
-        user2: { user: user2, session: session2 },
-        organization,
-      };
-
-      await use(workerData);
-
-      let failed = false;
-
-      const cleanupSteps: Array<{ label: string; run: () => Promise<unknown> }> = [
-        {
-          label: `session cleanup 1 for worker ${id}`,
-          run: () => db.delete(sessionsTable).where(eq(sessionsTable.id, session1.id)),
-        },
-        {
-          label: `session cleanup 2 for worker ${id}`,
-          run: () => db.delete(sessionsTable).where(eq(sessionsTable.id, session2.id)),
-        },
-        {
-          label: `member cleanup for worker ${id}`,
-          run: () => db.delete(membersTable).where(eq(membersTable.userId, user2Id)),
-        },
-        {
-          label: `secondary user cleanup for worker ${id}`,
-          run: () => db.delete(usersTable).where(eq(usersTable.id, user2Id)),
-        },
-        {
-          label: `primary user cleanup for worker ${id}`,
-          run: cleanup1,
-        },
-      ];
-
-      for (const step of cleanupSteps) {
-        try {
-          await withDeadlockRetry(step.run, step.label);
-        } catch (error) {
-          failed = true;
-          console.error(`Failed ${step.label}:`, error);
-        }
-      }
-
-      if (failed) {
-        console.error(`Failed to cleanup test data for worker ${id}`);
-      }
-    },
-    { scope: "worker" },
-  ],
-
-  workerStorageState: [
-    async ({ workerData }, use, workerInfo) => {
-      const baseURL = workerInfo.project.use?.baseURL || "http://localhost:3000";
-
-      // Store state for user1 (default context) using shared helper
-      const storageState = createStorageState(
-        workerData.user1.session.token,
-        new Date(workerData.user1.session.expiresAt),
-        baseURL,
-      );
-
-      await use(storageState);
-    },
-    { scope: "worker" },
-  ],
-
-  storageState: ({ workerStorageState }, use) => use(workerStorageState),
+  storageState: async ({ workerData }, use, testInfo) => {
+    const baseURL = testInfo.project.use?.baseURL || "http://localhost:3000";
+    const storageState: StorageState = createStorageState(
+      workerData.user1.session.token,
+      new Date(workerData.user1.session.expiresAt),
+      baseURL,
+    );
+    await use(storageState);
+  },
 
   user1: async ({ workerData }, use) => {
     await use(workerData.user1);

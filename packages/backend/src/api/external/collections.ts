@@ -18,6 +18,25 @@ type RelatedQueryOptions = {
   collectionId?: string;
 };
 
+type FieldFilter =
+  | {
+      field: string;
+      operator: "equals";
+      value: string;
+    }
+  | {
+      field: string;
+      operator: "contains";
+      value: string;
+    };
+
+type PopulateSelection = "all" | Set<string>;
+
+type RelationPropertyConfig = {
+  many: boolean;
+  targetCollectionId: string;
+};
+
 function parseSortBy(value: string | undefined): SortBy {
   if (value === "updated_at" || value === "title") {
     return value;
@@ -65,17 +84,136 @@ function buildDocumentOrder(sortBy: SortBy, sortOrder: SortOrder): SQL[] {
   return [order(documentsTable.createdAt), order(documentsTable.id)];
 }
 
-function parseFilters(query: Record<string, string>): Record<string, string> {
-  const filters: Record<string, string> = {};
+function parseFieldFilters(query: Record<string, string>): FieldFilter[] {
+  const filters: FieldFilter[] = [];
 
   for (const [key, value] of Object.entries(query)) {
-    const match = key.match(/^filter\[(.+)\]$/);
-    if (match && value !== undefined) {
-      filters[match[1]] = value;
+    if (value === undefined || value === "") {
+      continue;
+    }
+
+    const legacyMatch = key.match(/^filter\[(.+)\]$/);
+    if (legacyMatch) {
+      filters.push({
+        field: legacyMatch[1],
+        operator: "equals",
+        value,
+      });
+      continue;
+    }
+
+    const whereContainsMatch = key.match(/^where\[(.+)\]\[contains\]$/);
+    if (whereContainsMatch) {
+      filters.push({
+        field: whereContainsMatch[1],
+        operator: "contains",
+        value,
+      });
+      continue;
+    }
+
+    const whereEqualsMatch = key.match(/^where\[(.+)\](?:\[equals\])?$/);
+    if (whereEqualsMatch) {
+      filters.push({
+        field: whereEqualsMatch[1],
+        operator: "equals",
+        value,
+      });
     }
   }
 
   return filters;
+}
+
+function parsePopulateSelection(value: string | undefined): PopulateSelection | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value === "*") {
+    return "all";
+  }
+
+  const fields = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (fields.length === 0) {
+    return null;
+  }
+
+  return new Set(fields);
+}
+
+function getRelationPropertyConfigs(
+  properties: unknown,
+  currentCollectionId: string,
+): Map<string, RelationPropertyConfig> {
+  const relationProperties = new Map<string, RelationPropertyConfig>();
+
+  if (!Array.isArray(properties)) {
+    return relationProperties;
+  }
+
+  for (const property of properties) {
+    if (typeof property !== "object" || property === null) {
+      continue;
+    }
+
+    const relationProperty = property as {
+      name?: unknown;
+      type?: unknown;
+      relation?: { targetCollectionId?: unknown; many?: unknown } | null;
+    };
+
+    if (relationProperty.type !== "relation" || typeof relationProperty.name !== "string") {
+      continue;
+    }
+
+    const targetCollectionId =
+      relationProperty.relation?.targetCollectionId === "self" ||
+      relationProperty.relation?.targetCollectionId === undefined
+        ? currentCollectionId
+        : typeof relationProperty.relation?.targetCollectionId === "string"
+          ? relationProperty.relation.targetCollectionId
+          : currentCollectionId;
+
+    relationProperties.set(relationProperty.name, {
+      many: relationProperty.relation?.many === true,
+      targetCollectionId,
+    });
+  }
+
+  return relationProperties;
+}
+
+function shouldPopulateField(populate: PopulateSelection | null, fieldName: string): boolean {
+  if (!populate) {
+    return false;
+  }
+
+  if (populate === "all") {
+    return true;
+  }
+
+  return populate.has(fieldName);
+}
+
+function normalizeRelationIds(value: unknown): string[] {
+  if (value === null || value === undefined) {
+    return [];
+  }
+
+  if (typeof value === "string") {
+    return [value];
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is string => typeof entry === "string");
+  }
+
+  return [];
 }
 
 function getUniquePropertyNames(properties: unknown): string[] {
@@ -166,6 +304,8 @@ async function findCollectionDocumentByIdentifier(
 async function transformToDocumentResponse(
   doc: typeof documentsTable.$inferSelect,
   fieldValues: Record<string, unknown>,
+  relationPropertyConfigs: Map<string, RelationPropertyConfig>,
+  populate: PopulateSelection | null,
   relatedQueryOptions: RelatedQueryOptions | null,
   includeToc: boolean,
 ): Promise<Record<string, unknown>> {
@@ -223,9 +363,67 @@ async function transformToDocumentResponse(
 
   const { yjsState: _, ...docWithoutYjs } = doc;
 
+  const responseFieldValues = { ...fieldValues };
+
+  if (populate) {
+    for (const [fieldName, relationConfig] of relationPropertyConfigs.entries()) {
+      if (!shouldPopulateField(populate, fieldName)) {
+        continue;
+      }
+
+      const relationIds = normalizeRelationIds(responseFieldValues[fieldName]);
+      if (relationIds.length === 0) {
+        responseFieldValues[fieldName] = relationConfig.many ? [] : null;
+        continue;
+      }
+
+      const relatedDocuments = await db
+        .select({
+          document: documentsTable,
+          fieldValues: collectionFieldsTable.values,
+        })
+        .from(documentsTable)
+        .leftJoin(
+          collectionFieldsTable,
+          and(
+            eq(collectionFieldsTable.documentId, documentsTable.id),
+            eq(collectionFieldsTable.collectionId, documentsTable.collectionId),
+          ),
+        )
+        .where(
+          and(
+            inArray(documentsTable.id, relationIds),
+            eq(documentsTable.organizationId, doc.organizationId),
+            eq(documentsTable.collectionId, relationConfig.targetCollectionId),
+            sql`${documentsTable.deletedAt} IS NULL`,
+            eq(documentsTable.published, true),
+          ),
+        );
+
+      const relatedById = new Map(
+        relatedDocuments.map((entry) => {
+          const { yjsState: __, ...relatedDocWithoutYjs } = entry.document;
+          return [
+            entry.document.id,
+            {
+              ...relatedDocWithoutYjs,
+              fields: (entry.fieldValues as Record<string, unknown>) || {},
+            },
+          ];
+        }),
+      );
+
+      const populatedValue = relationIds
+        .map((relationId) => relatedById.get(relationId))
+        .filter(Boolean) as Array<Record<string, unknown>>;
+
+      responseFieldValues[fieldName] = relationConfig.many ? populatedValue : populatedValue[0] ?? null;
+    }
+  }
+
   return {
     ...docWithoutYjs,
-    fields: fieldValues,
+    fields: responseFieldValues,
     jsonContent,
     ...(relatedQueryOptions && { related }),
     ...(includeToc && { toc }),
@@ -313,6 +511,7 @@ export const CollectionsApi = new Hono()
     const includeToc = c.req.query("include_toc") === "true";
     const sortBy = parseSortBy(c.req.query("sort_by"));
     const sortOrder = parseSortOrder(c.req.query("sort_order"));
+    const populate = parsePopulateSelection(c.req.query("populate"));
 
     const collectionResult = await db
       .select()
@@ -331,7 +530,8 @@ export const CollectionsApi = new Hono()
       throw new HTTPException(404, { message: "Collection not found" });
     }
 
-    const filters = parseFilters(c.req.query());
+    const filters = parseFieldFilters(c.req.query());
+    const relationPropertyConfigs = getRelationPropertyConfigs(collection.properties, collection.id);
 
     const whereConditions: SQL[] = [
       eq(documentsTable.organizationId, organizationId),
@@ -340,8 +540,15 @@ export const CollectionsApi = new Hono()
       eq(documentsTable.published, true),
     ];
 
-    for (const [fieldName, value] of Object.entries(filters)) {
-      whereConditions.push(sql`${collectionFieldsTable.values}->>${fieldName} = ${value}`);
+    for (const filter of filters) {
+      if (filter.operator === "contains") {
+        whereConditions.push(
+          sql`${collectionFieldsTable.values}->${filter.field} @> ${JSON.stringify([filter.value])}::jsonb`,
+        );
+        continue;
+      }
+
+      whereConditions.push(sql`${collectionFieldsTable.values}->>${filter.field} = ${filter.value}`);
     }
 
     const documents = await db
@@ -374,6 +581,8 @@ export const CollectionsApi = new Hono()
         transformToDocumentResponse(
           doc.document,
           (doc.fieldValues as Record<string, unknown>) || {},
+          relationPropertyConfigs,
+          populate,
           relatedQueryOptions,
           includeToc,
         ),
@@ -391,6 +600,7 @@ export const CollectionsApi = new Hono()
     const relatedCollectionHandle = c.req.query("related_collection_handle");
     const relatedLimit = parseRelatedLimit(c.req.query("related_limit"));
     const includeToc = c.req.query("include_toc") === "true";
+    const populate = parsePopulateSelection(c.req.query("populate"));
 
     const collectionResult = await db
       .select({ id: collectionsTable.id, properties: collectionsTable.properties })
@@ -439,9 +649,13 @@ export const CollectionsApi = new Hono()
       currentCollectionId: collection.id,
     });
 
+    const relationPropertyConfigs = getRelationPropertyConfigs(collection.properties, collection.id);
+
     const response = await transformToDocumentResponse(
       document,
       (fieldValuesResult[0]?.values as Record<string, unknown>) || {},
+      relationPropertyConfigs,
+      populate,
       relatedQueryOptions,
       includeToc,
     );
@@ -456,6 +670,7 @@ export const CollectionsApi = new Hono()
     const relatedCollectionHandle = c.req.query("related_collection_handle");
     const relatedLimit = parseRelatedLimit(c.req.query("related_limit"));
     const includeToc = c.req.query("include_toc") === "true";
+    const populate = parsePopulateSelection(c.req.query("populate"));
 
     let documentResult = await db
       .select()
@@ -515,9 +730,29 @@ export const CollectionsApi = new Hono()
           .limit(1)
       : [];
 
+    const [collection] = document.collectionId
+      ? await db
+          .select({ properties: collectionsTable.properties, id: collectionsTable.id })
+          .from(collectionsTable)
+          .where(
+            and(
+              eq(collectionsTable.id, document.collectionId),
+              eq(collectionsTable.organizationId, organizationId),
+            ),
+          )
+          .limit(1)
+      : [];
+
+    const relationPropertyConfigs =
+      collection && document.collectionId
+        ? getRelationPropertyConfigs(collection.properties, document.collectionId)
+        : new Map<string, RelationPropertyConfig>();
+
     const response = await transformToDocumentResponse(
       document,
       (fieldValuesResult[0]?.values as Record<string, unknown>) || {},
+      relationPropertyConfigs,
+      populate,
       await resolveRelatedQueryOptions({
         includeRelated,
         organizationId,

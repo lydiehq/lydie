@@ -106,7 +106,7 @@ jobs:
         working-directory: packages/web
 
       - name: Run E2E tests
-        run: bunx playwright test --config playwright.config.docker.ts
+        run: bunx playwright test
         working-directory: packages/web
         env:
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}

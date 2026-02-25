@@ -55,6 +55,7 @@ const propertyDefinitionSchema = z.object({
   relation: z
     .object({
       targetCollectionId: z.union([z.literal("self"), z.string()]),
+      many: z.boolean().optional(),
     })
     .optional(),
   derived: z
@@ -274,23 +275,72 @@ async function validateRelationFieldValues(
       continue;
     }
 
+    const relationConfig =
+      typeof property.relation === "object" && property.relation !== null
+        ? (property.relation as { targetCollectionId?: unknown; many?: unknown })
+        : null;
+    const isMany = relationConfig?.many === true;
+
     const rawValue = values[propertyName];
-    if (rawValue === null) {
+
+    const normalizedRelationIds = (() => {
+      if (isMany) {
+        if (rawValue === null) {
+          return [];
+        }
+
+        if (typeof rawValue === "string") {
+          return [rawValue];
+        }
+
+        if (!Array.isArray(rawValue) || rawValue.some((entry) => typeof entry !== "string")) {
+          throw new Error(`Relation field "${propertyName}" must be a list of document ids`);
+        }
+
+        return Array.from(new Set(rawValue));
+      }
+
+      if (rawValue === null) {
+        return [];
+      }
+
+      if (typeof rawValue === "string") {
+        return [rawValue];
+      }
+
+      if (Array.isArray(rawValue) && rawValue.every((entry) => typeof entry === "string")) {
+        if (rawValue.length === 0) {
+          return [];
+        }
+
+        if (rawValue.length > 1) {
+          throw new Error(`Relation field "${propertyName}" must be a document id or null`);
+        }
+
+        const firstRelationId = rawValue[0];
+        if (!firstRelationId) {
+          return [];
+        }
+
+        return [firstRelationId];
+      }
+
+      throw new Error(`Relation field "${propertyName}" must be a document id or null`);
+    })();
+
+    const normalizedSingleRelationId = normalizedRelationIds[0] ?? null;
+    values[propertyName] = isMany ? normalizedRelationIds : normalizedSingleRelationId;
+
+    if (normalizedRelationIds.length === 0) {
       continue;
     }
 
-    if (typeof rawValue !== "string") {
-      throw new Error(`Relation field "${propertyName}" must be a document id or null`);
+    for (const relationId of normalizedRelationIds) {
+      if (relationId === documentId) {
+        throw new Error(`Relation field "${propertyName}" cannot reference the same document`);
+      }
     }
 
-    if (rawValue === documentId) {
-      throw new Error(`Relation field "${propertyName}" cannot reference the same document`);
-    }
-
-    const relationConfig =
-      typeof property.relation === "object" && property.relation !== null
-        ? (property.relation as { targetCollectionId?: unknown })
-        : null;
     const targetCollectionId = resolveRelationTargetCollectionId(
       typeof relationConfig?.targetCollectionId === "string"
         ? { targetCollectionId: relationConfig.targetCollectionId }
@@ -298,23 +348,132 @@ async function validateRelationFieldValues(
       collectionId,
     );
 
-    const targetDocument = (await maybeOne(
-      tx.run(
-        zql.documents
-          .where("id", rawValue)
-          .where("organization_id", organizationId)
-          .where("deleted_at", "IS", null)
-          .one(),
-      ),
-    )) as { collection_id?: string | null } | null;
+    for (const relationId of normalizedRelationIds) {
+      const targetDocument = (await maybeOne(
+        tx.run(
+          zql.documents
+            .where("id", relationId)
+            .where("organization_id", organizationId)
+            .where("deleted_at", "IS", null)
+            .one(),
+        ),
+      )) as { collection_id?: string | null } | null;
 
-    if (!targetDocument) {
-      throw new Error(`Referenced document for "${propertyName}" was not found`);
+      if (!targetDocument) {
+        throw new Error(`Referenced document for "${propertyName}" was not found`);
+      }
+
+      if (targetDocument.collection_id !== targetCollectionId) {
+        throw new Error(
+          `Referenced document for "${propertyName}" is not in the target collection`,
+        );
+      }
+    }
+  }
+}
+
+function getRelationManyByFieldName(
+  properties: unknown,
+): Map<string, { isMany: boolean; targetCollectionId: string | null }> {
+  const relationMap = new Map<string, { isMany: boolean; targetCollectionId: string | null }>();
+
+  const schemaProperties = Array.isArray(properties)
+    ? (properties as Array<Record<string, unknown>>)
+    : [];
+
+  for (const property of schemaProperties) {
+    if (property.type !== "relation" || typeof property.name !== "string") {
+      continue;
     }
 
-    if (targetDocument.collection_id !== targetCollectionId) {
-      throw new Error(`Referenced document for "${propertyName}" is not in the target collection`);
+    const relation =
+      typeof property.relation === "object" && property.relation !== null
+        ? (property.relation as { many?: unknown; targetCollectionId?: unknown })
+        : null;
+
+    relationMap.set(property.name, {
+      isMany: relation?.many === true,
+      targetCollectionId:
+        typeof relation?.targetCollectionId === "string" ? relation.targetCollectionId : null,
+    });
+  }
+
+  return relationMap;
+}
+
+function normalizeValueForManyRelation(value: unknown): string[] {
+  if (value === null || value === undefined) {
+    return [];
+  }
+
+  if (typeof value === "string") {
+    return [value];
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is string => typeof entry === "string");
+  }
+
+  return [];
+}
+
+async function migrateSingleToManyRelationValues(
+  tx: any,
+  collectionId: string,
+  previousProperties: unknown,
+  nextProperties: unknown,
+) {
+  const previousRelationMap = getRelationManyByFieldName(previousProperties);
+  const nextRelationMap = getRelationManyByFieldName(nextProperties);
+
+  const fieldsToMigrate = Array.from(nextRelationMap.entries())
+    .filter(([fieldName, nextConfig]) => {
+      const previous = previousRelationMap.get(fieldName);
+      return previous?.isMany === false && nextConfig.isMany === true;
+    })
+    .map(([fieldName]) => fieldName);
+
+  if (fieldsToMigrate.length === 0) {
+    return;
+  }
+
+  const existingFieldRows = await tx.run(zql.collection_fields.where("collection_id", collectionId));
+
+  for (const row of existingFieldRows) {
+    const existingValues =
+      typeof row.values === "object" && row.values !== null
+        ? ({ ...(row.values as Record<string, unknown>) } as Record<string, unknown>)
+        : {};
+
+    let didChange = false;
+    for (const fieldName of fieldsToMigrate) {
+      if (!(fieldName in existingValues)) {
+        continue;
+      }
+
+      const normalized = normalizeValueForManyRelation(existingValues[fieldName]);
+      const current = existingValues[fieldName];
+      const isSameArray =
+        Array.isArray(current) &&
+        current.length === normalized.length &&
+        current.every((entry, index) => entry === normalized[index]);
+
+      if (isSameArray) {
+        continue;
+      }
+
+      existingValues[fieldName] = normalized;
+      didChange = true;
     }
+
+    if (!didChange) {
+      continue;
+    }
+
+    await tx.mutate.collection_fields.update({
+      id: row.id,
+      values: existingValues as ReadonlyJSONValue,
+    });
   }
 }
 
@@ -387,6 +546,12 @@ export const collectionMutators = {
       }
       if (args.properties !== undefined) {
         validatePropertyDefinitions(args.properties);
+        await migrateSingleToManyRelationValues(
+          tx,
+          args.collectionId,
+          existing.properties,
+          args.properties,
+        );
         updates.properties = args.properties as ReadonlyJSONValue;
       }
 

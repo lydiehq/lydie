@@ -94,7 +94,7 @@ test.describe("editor", () => {
     const table = page.getByLabel("Document content").locator("table");
     await expect(table).toBeVisible();
 
-    const headerRow = table.locator("thead tr");
+    const headerRow = table.locator("tbody tr").first();
     await expect(headerRow).toBeVisible();
 
     const rows = table.locator("tr");

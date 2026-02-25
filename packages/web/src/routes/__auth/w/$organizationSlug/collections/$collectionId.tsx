@@ -6,7 +6,7 @@ import { Input } from "@lydie/ui/components/generic/Field";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { Outlet, createFileRoute, useLocation } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TextField } from "react-aria-components";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ function RouteComponent() {
   const { organization } = useOrganization();
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user);
-  const location = useLocation();
+  const matchRoute = useMatchRoute();
 
   const [collection, status] = useQuery(
     queries.collections.byId({
@@ -59,7 +59,7 @@ function RouteComponent() {
     return null;
   }
 
-  if (location.pathname.endsWith(`/collections/${collectionId}/settings`)) {
+  if (matchRoute({ to: "/w/$organizationSlug/collections/$collectionId/settings" })) {
     return <Outlet />;
   }
 

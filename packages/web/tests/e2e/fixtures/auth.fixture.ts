@@ -2,7 +2,7 @@ import { base64 } from "@better-auth/utils/base64";
 import { createHMAC } from "@better-auth/utils/hmac";
 import { createRandomStringGenerator } from "@better-auth/utils/random";
 import { createId } from "@lydie/core/id";
-import { db, organizationsTable, sessionsTable, usersTable } from "@lydie/database";
+import { db, sessionsTable, usersTable } from "@lydie/database";
 import { test as baseTest } from "@playwright/test";
 import type { StorageState } from "@playwright/test";
 import type { InferSelectModel } from "drizzle-orm";
@@ -26,7 +26,7 @@ async function getAuthSecret(): Promise<string> {
   return cachedSecret;
 }
 
-interface WorkerData {
+interface AuthData {
   user: InferSelectModel<typeof usersTable>;
   organization: InferSelectModel<typeof organizationsTable>;
 }
@@ -107,37 +107,32 @@ function createStorageState(sessionToken: string, expiresAt: Date, baseURL: stri
 }
 
 // Authenticated test with user, session, and organization fixtures
-export const test = baseTest.extend<AuthenticatedFixtures, { workerData: WorkerData }>({
-  workerData: [
-    // eslint-disable-next-line no-empty-pattern
-    async ({}, use, workerInfo) => {
-      const id = workerInfo.workerIndex;
-      const userId = createId();
-      const { user, organization, cleanup } = await createTestUser({
-        prefix: "worker",
-        userId,
-        organizationPrefix: "test-org-worker",
-        organizationName: `Test Organization Worker ${userId}`,
-      });
+export const test = baseTest.extend<
+  AuthenticatedFixtures & { authData: AuthData },
+  { authData: AuthData }
+>({
+  authData: async ({}, use, testInfo) => {
+    const userId = createId();
+    const runSuffix = `${testInfo.workerIndex}-${testInfo.parallelIndex}-${userId}`;
+    const { user, organization, cleanup } = await createTestUser({
+      prefix: `test-${runSuffix}`,
+      userId,
+      organizationPrefix: `test-org-${runSuffix}`,
+      organizationName: `Test Organization ${runSuffix}`,
+    });
 
-      const workerData: WorkerData = {
-        user,
-        organization,
-      };
+    const authData: AuthData = { user, organization };
 
-      await use(workerData);
+    await use(authData);
 
-      const [userCleanup] = await Promise.allSettled([cleanup()]);
+    const [userCleanup] = await Promise.allSettled([cleanup()]);
+    if (userCleanup.status === "rejected") {
+      console.error(`Failed to cleanup test data for ${runSuffix}`);
+    }
+  },
 
-      if (userCleanup.status === "rejected") {
-        console.error(`Failed to cleanup test data for worker ${id}`);
-      }
-    },
-    { scope: "worker" },
-  ],
-
-  session: async ({ workerData }, use) => {
-    const session = await createSession(workerData.user.id, workerData.organization.id);
+  session: async ({ authData }, use) => {
+    const session = await createSession(authData.user.id, authData.organization.id);
 
     await use(session);
 
@@ -158,12 +153,12 @@ export const test = baseTest.extend<AuthenticatedFixtures, { workerData: WorkerD
     await use(storageState);
   },
 
-  user: async ({ workerData }, use) => {
-    await use(workerData.user);
+  user: async ({ authData }, use) => {
+    await use(authData.user);
   },
 
-  organization: async ({ workerData }, use) => {
-    await use(workerData.organization);
+  organization: async ({ authData }, use) => {
+    await use(authData.organization);
   },
 });
 

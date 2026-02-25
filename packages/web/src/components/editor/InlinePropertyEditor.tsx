@@ -1,8 +1,11 @@
 import { resolveRelationTargetCollectionId, type PropertyDefinition } from "@lydie/core/collection";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
+import { Select, SelectItem } from "@lydie/ui/components/generic/Select";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useState } from "react";
+import { Button as RACButton, MenuTrigger } from "react-aria-components";
 
 import { useZero } from "@/services/zero";
 
@@ -26,11 +29,26 @@ export function InlinePropertyEditor({
   const [editValue, setEditValue] = useState<string>(
     value !== null && value !== undefined ? String(value) : "",
   );
+  const [multiEditValue, setMultiEditValue] = useState<string[]>(
+    Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [],
+  );
+  const [relationManyEditValue, setRelationManyEditValue] = useState<string[]>(
+    Array.isArray(value)
+      ? value.filter((entry): entry is string => typeof entry === "string")
+      : typeof value === "string"
+        ? [value]
+        : [],
+  );
 
-  const handleSave = async () => {
-    let finalValue: string | number | boolean | null = editValue;
+  const handleSave = async (nextMultiValue?: string[], nextRelationManyValue?: string[]) => {
+    let finalValue: string | number | boolean | string[] | null = editValue;
 
-    if (fieldDef.type === "boolean") {
+    if (fieldDef.type === "multi-select") {
+      const resolvedMultiValue = nextMultiValue ?? multiEditValue;
+      finalValue = resolvedMultiValue.length > 0 ? resolvedMultiValue : null;
+    } else if (fieldDef.type === "relation" && fieldDef.relation?.many) {
+      finalValue = nextRelationManyValue ?? relationManyEditValue;
+    } else if (fieldDef.type === "boolean") {
       finalValue = editValue === "true" || editValue === "on";
     } else if (fieldDef.type === "number") {
       finalValue = editValue ? Number(editValue) : null;
@@ -68,6 +86,14 @@ export function InlinePropertyEditor({
       ? (fieldDef.options?.find((option) => option.id === value)?.label ?? "Unknown option")
       : null;
 
+  const multiSelectLabel =
+    fieldDef.type === "multi-select" && Array.isArray(value)
+      ? value
+          .map((optionId) => fieldDef.options?.find((option) => option.id === optionId)?.label)
+          .filter((label): label is string => Boolean(label))
+          .join(", ")
+      : null;
+
   const targetCollectionId =
     fieldDef.type === "relation"
       ? collectionId
@@ -91,6 +117,18 @@ export function InlinePropertyEditor({
         )?.title ?? "Missing record")
       : null;
 
+  const relationManyLabel =
+    fieldDef.type === "relation" && fieldDef.relation?.many && Array.isArray(value)
+      ? value
+          .map(
+            (relationId) =>
+              ((relationDocuments ?? []) as Array<{ id: string; title: string }>).find(
+                (document) => document.id === relationId,
+              )?.title ?? "Missing record",
+          )
+          .join(", ")
+      : null;
+
   if (!isEditing) {
     return (
       <button
@@ -105,7 +143,9 @@ export function InlinePropertyEditor({
           <span className="flex-1 text-sm text-gray-600 min-w-0">
             {displayValue !== null ? (
               fieldDef.type === "relation" ? (
-                relationValueLabel
+                fieldDef.relation?.many ? relationManyLabel || "-" : relationValueLabel
+              ) : multiSelectLabel ? (
+                multiSelectLabel
               ) : enumLabel ? (
                 enumLabel
               ) : (
@@ -136,6 +176,9 @@ export function InlinePropertyEditor({
                 : []
             }
             onChange={setEditValue}
+            onMultiChange={setMultiEditValue}
+            relationManyValue={relationManyEditValue}
+            onRelationManyChange={setRelationManyEditValue}
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
           />
@@ -150,6 +193,9 @@ function FieldInput({
   value,
   relationDocuments,
   onChange,
+  onMultiChange,
+  relationManyValue,
+  onRelationManyChange,
   onSave,
   onCancel,
 }: {
@@ -157,10 +203,47 @@ function FieldInput({
   value: string;
   relationDocuments: Array<{ id: string; title: string }>;
   onChange: (value: string) => void;
-  onSave: () => void;
+  onMultiChange: (value: string[]) => void;
+  relationManyValue: string[];
+  onRelationManyChange: (value: string[]) => void;
+  onSave: (nextMultiValue?: string[], nextRelationManyValue?: string[]) => void;
   onCancel: () => void;
 }) {
   if (fieldDef.type === "relation") {
+    if (fieldDef.relation?.many) {
+      return (
+        <MenuTrigger>
+          <RACButton
+            type="button"
+            className="w-full text-left text-sm bg-transparent border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-500"
+          >
+            {relationManyValue.length > 0
+              ? `${relationManyValue.length} selected`
+              : "Select records"}
+          </RACButton>
+          <Menu
+            selectionMode="multiple"
+            selectedKeys={new Set(relationManyValue)}
+            onSelectionChange={(keys: any) => {
+              if (keys === "all") {
+                return;
+              }
+
+              const next = Array.from(keys).map((key) => String(key));
+              onRelationManyChange(next);
+              onSave(undefined, next);
+            }}
+          >
+            {relationDocuments.map((document) => (
+              <MenuItem key={document.id} id={document.id} textValue={document.title}>
+                {document.title || "Untitled"}
+              </MenuItem>
+            ))}
+          </Menu>
+        </MenuTrigger>
+      );
+    }
+
     return (
       <select
         value={value}
@@ -168,7 +251,7 @@ function FieldInput({
           onChange(e.target.value);
           onSave();
         }}
-        onBlur={onSave}
+        onBlur={() => onSave()}
         className="w-full text-sm bg-transparent border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-500"
         autoFocus
       >
@@ -182,30 +265,60 @@ function FieldInput({
     );
   }
 
-  if (
-    (fieldDef.type === "select" ||
-      fieldDef.type === "multi-select" ||
-      fieldDef.type === "status") &&
-    fieldDef.options
-  ) {
+  if (fieldDef.type === "multi-select" && fieldDef.options) {
+    const selected = value
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
     return (
-      <select
-        value={value}
-        onChange={(e) => {
-          onChange(e.target.value);
+      <MenuTrigger>
+        <RACButton
+          type="button"
+          className="w-full text-left text-sm bg-transparent border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-500"
+        >
+          {selected.length > 0 ? `${selected.length} selected` : "Select options"}
+        </RACButton>
+        <Menu
+          selectionMode="multiple"
+          selectedKeys={new Set(selected)}
+          onSelectionChange={(keys: any) => {
+            if (keys === "all") {
+              return;
+            }
+            const next = Array.from(keys).map((key) => String(key));
+            onMultiChange(next);
+            onChange(next.join(","));
+            onSave(next);
+          }}
+        >
+          {fieldDef.options.map((opt) => (
+            <MenuItem key={opt.id} id={opt.id}>
+              {opt.label}
+            </MenuItem>
+          ))}
+        </Menu>
+      </MenuTrigger>
+    );
+  }
+
+  if ((fieldDef.type === "select" || fieldDef.type === "status") && fieldDef.options) {
+    return (
+      <Select
+        selectedKey={value || null}
+        onSelectionChange={(nextValue) => {
+          onChange(typeof nextValue === "string" ? nextValue : "");
           onSave();
         }}
-        onBlur={onSave}
-        className="w-full text-sm bg-transparent border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-500"
+        className="w-full"
         autoFocus
       >
-        <option value="">—</option>
         {fieldDef.options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
+          <SelectItem key={opt.id} id={opt.id}>
             {opt.label}
-          </option>
+          </SelectItem>
         ))}
-      </select>
+      </Select>
     );
   }
 
@@ -231,7 +344,7 @@ function FieldInput({
       }
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      onBlur={onSave}
+      onBlur={() => onSave()}
       onKeyDown={(e) => {
         if (e.key === "Enter") onSave();
         if (e.key === "Escape") onCancel();

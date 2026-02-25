@@ -75,7 +75,19 @@ export function CollectionKanban({
   }, [collectionId, documentsResult]);
 
   const statusField = useMemo(() => {
-    return schema.find((field) => field.type === "status") ?? null;
+    const status = schema.find((field) => field.type === "status");
+    if (status) {
+      return status;
+    }
+
+    const selectNamedStatus = schema.find(
+      (field) => field.type === "select" && field.name.toLowerCase() === "status",
+    );
+    if (selectNamedStatus) {
+      return selectNamedStatus;
+    }
+
+    return schema.find((field) => field.type === "select") ?? null;
   }, [schema]);
 
   const options = useMemo(() => statusField?.options ?? [], [statusField]);
@@ -103,7 +115,7 @@ export function CollectionKanban({
   if (!statusField || options.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-600">
-        Kanban requires a `status` property with options.
+        Kanban requires a `status` or `select` property with options.
       </div>
     );
   }
@@ -115,6 +127,7 @@ export function CollectionKanban({
           key={option.id}
           optionId={option.id}
           optionLabel={option.label}
+          optionColor={option.color}
           statusFieldName={statusField.name}
           cards={cardsByOption.get(option.id) ?? []}
           documents={documents}
@@ -145,6 +158,7 @@ export function CollectionKanban({
 function KanbanColumn({
   optionId,
   optionLabel,
+  optionColor,
   statusFieldName,
   cards,
   documents,
@@ -153,6 +167,7 @@ function KanbanColumn({
 }: {
   optionId: string;
   optionLabel: string;
+  optionColor?: string;
   statusFieldName: string;
   cards: DocumentCard[];
   documents: DocumentCard[];
@@ -213,7 +228,13 @@ function KanbanColumn({
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-3">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">{optionLabel}</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <span
+            className={`size-2 rounded-full ${getOptionDotClassName(optionColor)}`}
+            aria-hidden
+          />
+          {optionLabel}
+        </h3>
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
           {cards.length}
         </span>
@@ -248,4 +269,25 @@ function KanbanColumn({
       </ListBox>
     </div>
   );
+}
+
+function getOptionDotClassName(color: string | undefined): string {
+  switch (color) {
+    case "red":
+      return "bg-red-500";
+    case "orange":
+      return "bg-orange-500";
+    case "yellow":
+      return "bg-yellow-500";
+    case "green":
+      return "bg-green-500";
+    case "blue":
+      return "bg-blue-500";
+    case "purple":
+      return "bg-purple-500";
+    case "pink":
+      return "bg-pink-500";
+    default:
+      return "bg-gray-500";
+  }
 }
