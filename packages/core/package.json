@@ -8,10 +8,10 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
-    "@aws-sdk/client-s3": "^3.997.0",
-    "@aws-sdk/client-scheduler": "^3.997.0",
-    "@aws-sdk/client-sesv2": "^3.997.0",
-    "@aws-sdk/s3-request-presigner": "^3.997.0",
+    "@aws-sdk/client-s3": "^3.998.0",
+    "@aws-sdk/client-scheduler": "^3.998.0",
+    "@aws-sdk/client-sesv2": "^3.998.0",
+    "@aws-sdk/s3-request-presigner": "^3.998.0",
     "@hocuspocus/provider": "3",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
@@ -28,6 +28,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^25.3.0"
+    "@types/node": "^25.3.1"
   }
 }
