@@ -1,15 +1,10 @@
 import { Button } from "@lydie/ui/components/generic/Button";
 import { useAtom } from "jotai";
-import { useEffect } from "react";
 
-import { globalBulkActionsAtom, initGlobalBulkActions } from "@/stores/global-bulk-actions";
+import { globalBulkActionsAtom } from "@/stores/global-bulk-actions";
 
 export function GlobalBulkActionsBar() {
-  const [state, setState] = useAtom(globalBulkActionsAtom);
-
-  useEffect(() => {
-    initGlobalBulkActions(setState);
-  }, [setState]);
+  const [state] = useAtom(globalBulkActionsAtom);
 
   return (
     <div

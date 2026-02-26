@@ -38,9 +38,12 @@ type GlobalBulkActionsSetter = (
 
 let setGlobalBulkActions: GlobalBulkActionsSetter | null = null;
 
-export function initGlobalBulkActions(setter: GlobalBulkActionsSetter) {
-  setGlobalBulkActions = setter;
-}
+globalBulkActionsAtom.onMount = (setAtom) => {
+  setGlobalBulkActions = setAtom;
+  return () => {
+    setGlobalBulkActions = null;
+  };
+};
 
 export function showGlobalBulkActions(options: {
   ownerId: string;

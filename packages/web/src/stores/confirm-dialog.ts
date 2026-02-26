@@ -14,17 +14,28 @@ export const confirmDialogAtom = atom<ConfirmDialogState>({
   onConfirm: undefined,
 });
 
-let setConfirmDialog: (state: ConfirmDialogState) => void;
+type ConfirmDialogSetter = (
+  state: ConfirmDialogState | ((previousState: ConfirmDialogState) => ConfirmDialogState),
+) => void;
 
-export function initConfirmDialog(setter: (state: ConfirmDialogState) => void) {
-  setConfirmDialog = setter;
-}
+let setConfirmDialog: ConfirmDialogSetter | null = null;
+
+confirmDialogAtom.onMount = (setAtom) => {
+  setConfirmDialog = setAtom;
+  return () => {
+    setConfirmDialog = null;
+  };
+};
 
 export function confirmDialog(options: {
   title?: string;
   message: string;
   onConfirm: () => void;
 }): void {
+  if (!setConfirmDialog) {
+    return;
+  }
+
   setConfirmDialog({
     isOpen: true,
     title: options.title ?? "Confirm",

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { AssistantInput } from "@/components/assistant/AssistantInput";
 import { ChatMessages } from "@/components/chat/ChatMessages";
@@ -37,16 +37,13 @@ export function AssistantChat({
   onNavigateToChat,
 }: AssistantChatProps) {
   const { selectedAgentId } = useAssistantPreferences();
-  const [currentInitialPrompt, setCurrentInitialPrompt] = useState<string | undefined>(
-    initialPrompt,
+  const [consumedInitialPrompt, setConsumedInitialPrompt] = useState<string | undefined>(
+    undefined,
   );
   const [hasNavigated, setHasNavigated] = useState(false);
 
-  useEffect(() => {
-    if (currentInitialPrompt && initialPrompt !== currentInitialPrompt) {
-      setCurrentInitialPrompt(initialPrompt);
-    }
-  }, [initialPrompt, currentInitialPrompt]);
+  const currentInitialPrompt =
+    initialPrompt && initialPrompt !== consumedInitialPrompt ? initialPrompt : undefined;
 
   const handleSubmit = useCallback(
     async (text: string, contextDocumentIds: string[]) => {
@@ -74,7 +71,7 @@ export function AssistantChat({
       });
 
       if (currentInitialPrompt) {
-        setCurrentInitialPrompt(undefined);
+        setConsumedInitialPrompt(currentInitialPrompt);
         onPromptUsed?.();
       }
     },

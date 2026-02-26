@@ -2,7 +2,7 @@ import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import type { Editor, Range } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 
 type MentionItem = {
@@ -42,10 +42,7 @@ export const MentionMenuList = forwardRef<
   MentionMenuProps
 >((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [props.items]);
+  const activeIndex = Math.min(selectedIndex, Math.max(props.items.length - 1, 0));
 
   const selectItem = (index: number) => {
     const item = props.items[index];
@@ -55,15 +52,17 @@ export const MentionMenuList = forwardRef<
   };
 
   const upHandler = () => {
-    setSelectedIndex((selectedIndex + props.items.length - 1) % props.items.length);
+    if (props.items.length === 0) return;
+    setSelectedIndex((index) => (index + props.items.length - 1) % props.items.length);
   };
 
   const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % props.items.length);
+    if (props.items.length === 0) return;
+    setSelectedIndex((index) => (index + 1) % props.items.length);
   };
 
   const enterHandler = () => {
-    selectItem(selectedIndex);
+    selectItem(activeIndex);
   };
 
   useImperativeHandle(ref, () => ({
@@ -103,7 +102,7 @@ export const MentionMenuList = forwardRef<
           key={item.id}
           onClick={() => selectItem(index)}
           className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-3 text-sm transition-colors ${
-            index === selectedIndex ? "bg-gray-100 text-gray-900" : "text-gray-700 hover:bg-gray-50"
+            index === activeIndex ? "bg-gray-100 text-gray-900" : "text-gray-700 hover:bg-gray-50"
           }`}
           type="button"
         >

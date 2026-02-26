@@ -4,7 +4,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
 import { atom, useAtom, useAtomValue } from "jotai";
 import type { ReactElement } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type { Key } from "react-aria-components";
 import { Tree } from "react-aria-components";
 
@@ -54,21 +54,11 @@ export function DocumentTree() {
   const { session } = useAuth();
   const userId = session?.userId;
 
-  const [initialized, setInitialized] = useState(false);
   const [expandedKeysArray, setExpandedKeysArray] = useAtom(documentTreeExpandedKeysAtom);
 
   useEffect(() => {
-    if (!initialized) {
-      setExpandedKeysArray(loadFromStorage(userId));
-      setInitialized(true);
-    }
-  }, [initialized, userId, setExpandedKeysArray]);
-
-  useEffect(() => {
-    if (initialized) {
-      saveToStorage(userId, expandedKeysArray);
-    }
-  }, [initialized, userId, expandedKeysArray]);
+    setExpandedKeysArray(loadFromStorage(userId));
+  }, [userId, setExpandedKeysArray]);
 
   const [orgData] = useQuery(
     queries.organizations.documents({
@@ -144,7 +134,9 @@ export function DocumentTree() {
       dragAndDropHooks={dragAndDropHooks}
       expandedKeys={expandedKeys}
       onExpandedChange={(keys: Set<Key>) => {
-        setExpandedKeysArray(Array.from(keys).map(String));
+        const nextExpandedKeys = Array.from(keys).map(String);
+        setExpandedKeysArray(nextExpandedKeys);
+        saveToStorage(userId, nextExpandedKeys);
       }}
     >
       {renderItem}

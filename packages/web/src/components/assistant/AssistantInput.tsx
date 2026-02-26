@@ -77,19 +77,22 @@ export function AssistantInput({
   });
 
   useEffect(() => {
-    if (initialPrompt && assistantEditor.editor && !assistantEditor.getTextContent()) {
-      assistantEditor.setContent(initialPrompt);
+    if (!assistantEditor.editor) {
+      return;
     }
-  }, [initialPrompt, assistantEditor]);
 
-  useEffect(() => {
-    if (content !== undefined && content !== null && assistantEditor.editor) {
+    if (content !== undefined && content !== null) {
       const currentContent = assistantEditor.getTextContent();
       if (content !== currentContent) {
         assistantEditor.setContent(content);
       }
+      return;
     }
-  }, [content, assistantEditor]);
+
+    if (initialPrompt && !assistantEditor.getTextContent()) {
+      assistantEditor.setContent(initialPrompt);
+    }
+  }, [content, initialPrompt, assistantEditor]);
 
   // Enhance context items to mark manually selected documents
   const contextItems = useMemo(() => {

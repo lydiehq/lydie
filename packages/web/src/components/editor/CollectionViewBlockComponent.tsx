@@ -40,7 +40,6 @@ export function CollectionViewBlockComponent(props: Props) {
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [pickerCollectionId, setPickerCollectionId] = useState<string | null>(null);
-  const [isCollectionLinkHovered, setIsCollectionLinkHovered] = useState(false);
 
   const [view] = useQuery(
     viewId && organizationId
@@ -100,31 +99,25 @@ export function CollectionViewBlockComponent(props: Props) {
     (attrs: Partial<typeof node.attrs>) => {
       const pos = getPos();
       if (typeof pos === "number") {
-        editor.commands.updateAttributes("collectionViewBlock", attrs);
+        const hasChanges = Object.entries(attrs).some(
+          ([key, value]) => node.attrs[key as keyof typeof node.attrs] !== value,
+        );
+        if (!hasChanges) {
+          return;
+        }
+
+        const nextAttrs = {
+          ...node.attrs,
+          ...attrs,
+        };
+
+        editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, nextAttrs));
       }
     },
-    [editor, getPos],
+    [editor, getPos, node],
   );
 
   const blockId = (node.attrs.blockId as string | null | undefined) ?? null;
-
-  useEffect(() => {
-    if (blockId) {
-      return;
-    }
-
-    let cancelled = false;
-
-    queueMicrotask(() => {
-      if (!cancelled) {
-        handleUpdate({ blockId: createId() });
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [blockId, handleUpdate]);
 
   useEffect(() => {
     if (!blockId) {
@@ -193,16 +186,6 @@ export function CollectionViewBlockComponent(props: Props) {
   };
 
   const handleRemoveBlock = () => {
-    if (blockId) {
-      void z.mutate(
-        mutators.collection.deleteViewUsageByBlock({
-          organizationId,
-          documentId,
-          blockId,
-        }),
-      );
-    }
-
     const pos = getPos();
     if (typeof pos === "number") {
       editor
@@ -413,10 +396,9 @@ export function CollectionViewBlockComponent(props: Props) {
           <div className="flex items-center gap-2">
             <motion.div
               className="inline-flex"
-              onHoverStart={() => setIsCollectionLinkHovered(true)}
-              onHoverEnd={() => setIsCollectionLinkHovered(false)}
-              onFocusCapture={() => setIsCollectionLinkHovered(true)}
-              onBlurCapture={() => setIsCollectionLinkHovered(false)}
+              initial="rest"
+              whileHover="hover"
+              whileFocus="hover"
             >
               <Link
                 to="/w/$organizationSlug/collections/$collectionId"
@@ -427,9 +409,9 @@ export function CollectionViewBlockComponent(props: Props) {
                 <span className="relative flex size-4 items-center justify-center text-gray-500">
                   <motion.span
                     className="absolute inset-0 flex items-center justify-center"
-                    animate={{
-                      opacity: isCollectionLinkHovered ? 0 : 1,
-                      scale: isCollectionLinkHovered ? 0.88 : 1,
+                    variants={{
+                      rest: { opacity: 1, scale: 1 },
+                      hover: { opacity: 0, scale: 0.88 },
                     }}
                     transition={{ duration: 0.16, ease: "easeOut" }}
                   >
@@ -437,9 +419,9 @@ export function CollectionViewBlockComponent(props: Props) {
                   </motion.span>
                   <motion.span
                     className="absolute inset-0 flex items-center justify-center"
-                    animate={{
-                      opacity: isCollectionLinkHovered ? 1 : 0,
-                      scale: isCollectionLinkHovered ? 1 : 0.88,
+                    variants={{
+                      rest: { opacity: 0, scale: 0.88 },
+                      hover: { opacity: 1, scale: 1 },
                     }}
                     transition={{ duration: 0.16, ease: "easeOut" }}
                   >
