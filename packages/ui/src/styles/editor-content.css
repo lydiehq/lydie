@@ -57,6 +57,12 @@
     padding-inline: var(--editor-block-padding-x, 1rem);
   }
 
+  &[data-doc-content] > :is(ul:not([data-type="taskList"]), ol) {
+    padding-inline-start: calc(
+      var(--editor-block-padding-x, 1rem) + var(--spacing) * 6
+    );
+  }
+
   &[data-doc-content] > :is(.doc-block-wide, [data-doc-block-wide]) {
     max-width: none;
     margin-inline: 0;
@@ -68,6 +74,24 @@
     max-width: none;
     margin-inline: 0;
     padding-inline: 0;
+  }
+
+  &[data-doc-content] > :has(> table:not([data-editor-widget-table])) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow-x: auto;
+    margin-left: calc(-1 * var(--editor-content-line-start, var(--editor-block-padding-x, 1rem)));
+    padding-left: var(--editor-content-line-start, var(--editor-block-padding-x, 1rem));
+    padding-right: var(--editor-block-padding-x, 1rem);
+  }
+
+  &[data-doc-content]
+    > :has(> table:not([data-editor-widget-table]))
+    > table:not([data-editor-widget-table]) {
+    width: max-content;
+    min-width: min(100%, var(--editor-block-max-width, 680px));
   }
 
   > * + * {
@@ -839,6 +863,12 @@
     padding-inline: var(--editor-block-padding-x, 1rem);
   }
 
+  &[data-doc-content] > :is(ul:not([data-type="taskList"]), ol) {
+    padding-inline-start: calc(
+      var(--editor-block-padding-x, 1rem) + var(--spacing) * 5
+    );
+  }
+
   &[data-doc-content] > :is(.doc-block-wide, [data-doc-block-wide]) {
     max-width: none;
     margin-inline: 0;
@@ -850,6 +880,24 @@
     max-width: none;
     margin-inline: 0;
     padding-inline: 0;
+  }
+
+  &[data-doc-content] > :has(> table:not([data-editor-widget-table])) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow-x: auto;
+    margin-left: calc(-1 * var(--editor-content-line-start, var(--editor-block-padding-x, 1rem)));
+    padding-left: var(--editor-content-line-start, var(--editor-block-padding-x, 1rem));
+    padding-right: var(--editor-block-padding-x, 1rem);
+  }
+
+  &[data-doc-content]
+    > :has(> table:not([data-editor-widget-table]))
+    > table:not([data-editor-widget-table]) {
+    width: max-content;
+    min-width: min(100%, var(--editor-block-max-width, 680px));
   }
 
   > * + * {

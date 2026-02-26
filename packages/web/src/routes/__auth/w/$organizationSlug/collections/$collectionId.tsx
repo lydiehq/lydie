@@ -87,6 +87,7 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
   const schema = (collection.properties as PropertyDefinition[] | null) ?? [];
   const [name, setName] = useState(collection.name);
   const [isSavingName, setIsSavingName] = useState(false);
+  const [hasAttemptedInitialView, setHasAttemptedInitialView] = useState(false);
   const [newViewName, setNewViewName] = useState("");
   const [newViewType, setNewViewType] = useState<"table" | "list" | "kanban">("table");
   const [selectedViewId, setSelectedViewId] = useState<string | null>(null);
@@ -107,6 +108,37 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
       setSelectedViewId(nextSelectedViewId);
     }
   }, [selectedViewId, viewRecords]);
+
+  useEffect(() => {
+    setHasAttemptedInitialView(false);
+  }, [collection.id]);
+
+  useEffect(() => {
+    if (hasAttemptedInitialView || viewRecords.length > 0) {
+      return;
+    }
+
+    const initialViewId = createId();
+    setHasAttemptedInitialView(true);
+
+    void z
+      .mutate(
+        mutators.collection.createView({
+          viewId: initialViewId,
+          organizationId: organization.id,
+          collectionId: collection.id,
+          name: "Table",
+          type: "table",
+        }),
+      )
+      .then(() => {
+        setSelectedViewId(initialViewId);
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+        toast.error("Failed to create default table view");
+      });
+  }, [collection.id, hasAttemptedInitialView, organization.id, viewRecords.length, z]);
 
   const selectedView = useMemo(
     () => viewRecords.find((view) => view.id === selectedViewId) ?? null,
@@ -177,6 +209,11 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
 
   const handleDeleteView = useCallback(
     async (viewId: string) => {
+      if (viewRecords.length <= 1) {
+        toast.error("A collection must have at least one view");
+        return;
+      }
+
       try {
         await z.mutate(
           mutators.collection.deleteView({
@@ -190,7 +227,7 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
         toast.error("Failed to delete view");
       }
     },
-    [organization.id, z],
+    [organization.id, viewRecords.length, z],
   );
 
   const handleUpdateViewType = useCallback(
@@ -317,6 +354,7 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
                     intent="ghost"
                     size="sm"
                     onPress={() => void handleDeleteView(view.id)}
+                    isDisabled={viewRecords.length <= 1}
                     className="text-red-600 hover:text-red-700"
                   >
                     Delete

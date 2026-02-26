@@ -266,10 +266,10 @@ export const closeDocumentTabAtom = atom(null, (_get, set, documentId: string): 
 
   set(storedTabsAtom, newTabs);
 
-  // Clean up the editor cache for this document
+  // Clean up the editor session for this document
   // Import dynamically to avoid circular dependency
-  import("@/lib/editor/editor-cache").then(({ editorCache }) => {
-    editorCache.remove(documentId);
+  void import("@/lib/editor/editor-sessions").then(({ editorSessions }) => {
+    editorSessions.remove(documentId);
   });
 
   return nextActiveId;

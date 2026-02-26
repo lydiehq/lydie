@@ -1,5 +1,7 @@
 import type { Editor } from "@tiptap/react";
 
+import { createId } from "@lydie/core/id";
+
 export type FormattingAction = {
   id: string;
   label: string;
@@ -151,7 +153,7 @@ export const insertActions: FormattingAction[] = [
             type: "collectionViewBlock",
             attrs: {
               viewId: null,
-              blockId: null,
+              blockId: createId(),
             },
           },
           {

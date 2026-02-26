@@ -22,7 +22,7 @@ import { useZero } from "@/services/zero";
 
 import { Link } from "../generic/Link";
 
-const viewsByOrganizationQuery = queries.collections.viewsByOrganization as any;
+const collectionsByOrganizationQuery = queries.collections.byOrganization as any;
 const viewsByCollectionQuery = queries.collections.viewsByCollection as any;
 const collectionViewByIdQuery = queries.collections.viewById as any;
 
@@ -39,6 +39,7 @@ export function CollectionViewBlockComponent(props: Props) {
   const [newCollectionName, setNewCollectionName] = useState("");
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [pickerCollectionId, setPickerCollectionId] = useState<string | null>(null);
   const [isCollectionLinkHovered, setIsCollectionLinkHovered] = useState(false);
 
   const [view] = useQuery(
@@ -50,9 +51,9 @@ export function CollectionViewBlockComponent(props: Props) {
       : null,
   );
 
-  const [views] = useQuery(
+  const [collections] = useQuery(
     organizationId
-      ? viewsByOrganizationQuery({
+      ? collectionsByOrganizationQuery({
           organizationId,
         })
       : null,
@@ -60,17 +61,13 @@ export function CollectionViewBlockComponent(props: Props) {
 
   const viewData = view as any;
   const collectionData = viewData?.collection as any;
-  const viewsData = useMemo(
+  const collectionsData = useMemo(
     () =>
-      (views ?? []) as unknown as Array<{
+      (collections ?? []) as unknown as Array<{
         id: string;
         name?: string;
-        collection?: {
-          id: string;
-          name?: string;
-        } | null;
       }>,
-    [views],
+    [collections],
   );
 
   const collectionName = (collectionData?.name as string | undefined) || "Untitled";
@@ -79,36 +76,31 @@ export function CollectionViewBlockComponent(props: Props) {
   const viewConfig = (viewData?.config as { filters?: Record<string, unknown> } | undefined) ?? {};
   const filters = viewConfig.filters ?? {};
   const viewType = (viewData?.type as "table" | "list" | "kanban" | undefined) ?? "table";
+  const viewsCollectionId = collectionId ?? pickerCollectionId;
 
   const [collectionViews] = useQuery(
-    collectionId
+    viewsCollectionId
       ? viewsByCollectionQuery({
           organizationId,
-          collectionId,
+          collectionId: viewsCollectionId,
         })
       : null,
   );
 
   const schema = (collectionData?.properties || []) as PropertyDefinition[];
-  const availableViews: Array<{
+  const availableCollections: Array<{
     id: string;
     name: string;
-    collectionId: string;
-    collectionName: string;
-  }> = viewsData
-    .filter((entry) => entry.collection?.id)
-    .map((entry) => ({
-      id: entry.id,
-      name: entry.name || "Untitled view",
-      collectionId: entry.collection?.id || "",
-      collectionName: entry.collection?.name || "Untitled",
-    }));
+  }> = collectionsData.map((entry) => ({
+    id: entry.id,
+    name: entry.name || "Untitled",
+  }));
 
   const handleUpdate = useCallback(
     (attrs: Partial<typeof node.attrs>) => {
       const pos = getPos();
       if (typeof pos === "number") {
-        editor.chain().focus().updateAttributes("collectionViewBlock", attrs).run();
+        editor.commands.updateAttributes("collectionViewBlock", attrs);
       }
     },
     [editor, getPos],
@@ -121,30 +113,36 @@ export function CollectionViewBlockComponent(props: Props) {
       return;
     }
 
-    handleUpdate({ blockId: createId() });
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (!cancelled) {
+        handleUpdate({ blockId: createId() });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [blockId, handleUpdate]);
 
   useEffect(() => {
-    if (!blockId || !viewId) {
+    if (!blockId) {
       return;
     }
 
-    void z.mutate(
-      mutators.collection.upsertViewUsage({
-        organizationId,
-        documentId,
-        viewId,
-        blockId,
-      }),
-    );
-  }, [blockId, documentId, organizationId, viewId, z]);
+    if (viewId) {
+      void z.mutate(
+        mutators.collection.upsertViewUsage({
+          organizationId,
+          documentId,
+          viewId,
+          blockId,
+        }),
+      );
+    }
 
-  useEffect(() => {
     return () => {
-      if (!blockId) {
-        return;
-      }
-
       void z.mutate(
         mutators.collection.deleteViewUsageByBlock({
           organizationId,
@@ -153,10 +151,11 @@ export function CollectionViewBlockComponent(props: Props) {
         }),
       );
     };
-  }, [blockId, documentId, organizationId, z]);
+  }, [blockId, documentId, organizationId, viewId, z]);
 
   const handleSelectView = (view: { id: string }) => {
     handleUpdate({ viewId: view.id });
+    setPickerCollectionId(null);
     setSearchQuery("");
   };
 
@@ -166,6 +165,7 @@ export function CollectionViewBlockComponent(props: Props) {
     }
 
     const id = createId();
+    const defaultViewId = createId();
     const name = newCollectionName.trim() || "Untitled Collection";
 
     setIsCreatingCollection(true);
@@ -175,24 +175,14 @@ export function CollectionViewBlockComponent(props: Props) {
       await z.mutate(
         mutators.collection.create({
           collectionId: id,
+          defaultViewId,
           organizationId,
           name,
           properties: [],
         }),
       );
 
-      const viewId = createId();
-      await z.mutate(
-        mutators.collection.createView({
-          viewId,
-          organizationId,
-          collectionId: id,
-          name: `${name} view`,
-          type: "table",
-        }),
-      );
-
-      handleUpdate({ viewId });
+      handleUpdate({ viewId: defaultViewId });
     } catch (error) {
       handleUpdate({ viewId: null });
       console.error(error);
@@ -239,27 +229,29 @@ export function CollectionViewBlockComponent(props: Props) {
   };
 
   // Filter collections based on search query
-  const filteredViews = useMemo(() => {
-    if (!searchQuery.trim()) return availableViews.slice(0, 8);
+  const filteredCollections = useMemo(() => {
+    if (!searchQuery.trim()) return availableCollections.slice(0, 8);
     const query = searchQuery.toLowerCase();
-    return availableViews
-      .filter((view) => {
-        return (
-          view.name.toLowerCase().includes(query) ||
-          view.collectionName.toLowerCase().includes(query)
-        );
+    return availableCollections
+      .filter((collection) => {
+        return collection.name.toLowerCase().includes(query);
       })
       .slice(0, 8);
-  }, [availableViews, searchQuery]);
+  }, [availableCollections, searchQuery]);
 
   const collectionViewsData = useMemo(
     () =>
-      (collectionViews ?? []) as Array<{
+      (collectionViews ?? []) as unknown as Array<{
         id: string;
         name: string;
         type: "table" | "list" | "kanban";
       }>,
     [collectionViews],
+  );
+
+  const selectedPickerCollection = useMemo(
+    () => availableCollections.find((collection) => collection.id === pickerCollectionId) ?? null,
+    [availableCollections, pickerCollectionId],
   );
 
   // Empty state - no collection selected
@@ -319,44 +311,88 @@ export function CollectionViewBlockComponent(props: Props) {
 
             <div className="rounded-lg border border-gray-200 bg-white p-3 space-y-2">
               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Or use an existing view</div>
-                <p className="text-xs text-gray-500">Pick a saved view and embed it.</p>
+                <div className="text-sm font-medium text-gray-900">
+                  {pickerCollectionId ? "Choose a view" : "Or use an existing collection"}
+                </div>
+                <p className="text-xs text-gray-500">
+                  {pickerCollectionId
+                    ? `Select a view from ${selectedPickerCollection?.name ?? "this collection"}.`
+                    : "Pick a collection first, then choose which view to embed."}
+                </p>
               </div>
 
-              <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
-                <SearchFilled className="size-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search views..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 text-sm outline-none bg-transparent"
-                />
-              </div>
-
-              <div className="max-h-48 overflow-y-auto space-y-1">
-                {filteredViews.length === 0 ? (
-                  <div className="text-sm text-gray-500 py-4 text-center">
-                    {searchQuery.trim() ? "No views found" : "No views available"}
+              {!pickerCollectionId ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
+                    <SearchFilled className="size-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search collections..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1 text-sm outline-none bg-transparent"
+                    />
                   </div>
-                ) : (
-                  filteredViews.map((view) => (
-                    <button
-                      key={view.id}
-                      onClick={() => handleSelectView(view)}
-                      className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3 transition-colors"
-                    >
-                      <FolderFilled className="size-4 text-gray-400 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-gray-900 truncate">
-                          {view.name}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">{view.collectionName}</div>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {filteredCollections.length === 0 ? (
+                      <div className="text-sm text-gray-500 py-4 text-center">
+                        {searchQuery.trim() ? "No collections found" : "No collections available"}
                       </div>
-                    </button>
-                  ))
-                )}
-              </div>
+                    ) : (
+                      filteredCollections.map((collectionOption) => (
+                        <button
+                          key={collectionOption.id}
+                          onClick={() => setPickerCollectionId(collectionOption.id)}
+                          className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3 transition-colors"
+                        >
+                          <FolderFilled className="size-4 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm text-gray-900 truncate">
+                              {collectionOption.name}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate">Choose collection</div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setPickerCollectionId(null)}
+                    className="text-xs text-blue-600 hover:text-blue-700"
+                  >
+                    Back to collections
+                  </button>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {collectionViewsData.length === 0 ? (
+                      <div className="text-sm text-gray-500 py-4 text-center">No views available</div>
+                    ) : (
+                      collectionViewsData.map((viewOption) => (
+                        <button
+                          key={viewOption.id}
+                          onClick={() => handleSelectView({ id: viewOption.id })}
+                          className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3 transition-colors"
+                        >
+                          <FolderFilled className="size-4 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm text-gray-900 truncate">
+                              {viewOption.name}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate capitalize">
+                              {viewOption.type}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -23,58 +23,45 @@ import { PlaceholderComponent } from "@/components/PlaceholderComponent";
 
 import { documentConnectionManager } from "./document-connection-manager";
 
-export interface CachedEditor {
+export interface EditorSession {
   documentId: string;
   contentEditor: Editor;
   titleEditor: Editor;
   ydoc: Y.Doc;
   provider: HocuspocusProvider;
-  container: HTMLDivElement;
-  lastUsed: number;
-  userId: string;
 }
 
-const MAX_EDITORS = 8;
-
 /**
- * EditorCache - Lightweight multiplexing for TipTap editors
+ * EditorSessions - one editor session per open document tab.
  *
- * Keeps editors alive in memory across tab switches.
- * LRU eviction when exceeding MAX_EDITORS limit.
- *
- * This cache does NOT track which document is "active" - that's handled
- * by the tab system in @/atoms/tabs. This cache only manages editor
- * lifecycle and memory limits.
+ * This module does NOT track which document is "active" - that lives in
+ * the tab atoms. It only owns editor lifecycle for documents that are open.
  */
-class EditorCache {
-  private editors = new Map<string, CachedEditor>();
+class EditorSessions {
+  private editors = new Map<string, EditorSession>();
 
   /**
-   * Get or create an editor for a document.
-   * Returns the cached instance if it exists, creates new otherwise.
-   * Updates lastUsed timestamp for LRU tracking.
+   * Get or create an editor session for a document.
+   * Returns an existing session when present.
    */
   getOrCreate(
     documentId: string,
-    userId: string,
     userName: string,
     yjsState: string | null,
     initialTitle: string,
     organizationId: string,
     organizationSlug: string,
     zero: Zero<Schema>,
-  ): CachedEditor {
+  ): EditorSession {
     const existing = this.editors.get(documentId);
 
     if (existing) {
-      existing.lastUsed = Date.now();
       return existing;
     }
 
     // Create new editor instance
-    const cached = this.createEditor(
+    const session = this.createEditor(
       documentId,
-      userId,
       userName,
       yjsState,
       initialTitle,
@@ -82,21 +69,15 @@ class EditorCache {
       organizationSlug,
       zero,
     );
-    this.editors.set(documentId, cached);
+    this.editors.set(documentId, session);
 
-    // Evict oldest if over limit
-    if (this.editors.size > MAX_EDITORS) {
-      this.evictLRU(documentId);
-    }
-
-    return cached;
+    return session;
   }
 
   /**
-   * Get an existing cached editor.
-   * Does NOT update lastUsed - call touch() if accessing for activity.
+   * Get an existing editor session.
    */
-  get(documentId: string): CachedEditor | undefined {
+  get(documentId: string): EditorSession | undefined {
     return this.editors.get(documentId);
   }
 
@@ -108,28 +89,17 @@ class EditorCache {
   }
 
   /**
-   * Update lastUsed timestamp for LRU tracking.
-   * Call this when the user is actively working on this document.
-   */
-  touch(documentId: string): void {
-    const cached = this.editors.get(documentId);
-    if (cached) {
-      cached.lastUsed = Date.now();
-    }
-  }
-
-  /**
-   * Remove an editor from cache and destroy it.
+   * Remove an editor session and destroy it.
    * Called when a tab is closed.
    */
   remove(documentId: string): void {
-    const cached = this.editors.get(documentId);
-    if (!cached) return;
+    const session = this.editors.get(documentId);
+    if (!session) return;
 
     // Cleanup DOM if editor has been mounted
     // The view throws if accessed before mounting, so we catch errors
     try {
-      const dom = cached.contentEditor.view.dom as HTMLElement;
+      const dom = session.contentEditor.view.dom as HTMLElement;
       if (dom.parentNode) {
         dom.parentNode.removeChild(dom);
       }
@@ -138,8 +108,8 @@ class EditorCache {
     }
 
     // Destroy editors (this cleans up the view)
-    cached.contentEditor.destroy();
-    cached.titleEditor.destroy();
+    session.contentEditor.destroy();
+    session.titleEditor.destroy();
 
     // Cleanup connection
     documentConnectionManager.cleanup(documentId);
@@ -148,14 +118,14 @@ class EditorCache {
   }
 
   /**
-   * Get all cached document IDs.
+   * Get all active document IDs.
    */
   getDocumentIds(): string[] {
     return Array.from(this.editors.keys());
   }
 
   /**
-   * Destroy all editors and clear cache.
+   * Destroy all editors and clear sessions.
    */
   destroy(): void {
     for (const cached of this.editors.values()) {
@@ -167,35 +137,26 @@ class EditorCache {
   }
 
   /**
-   * Get debug info about the cache.
+   * Get debug info about active sessions.
    */
   getDebugInfo() {
     return {
       count: this.editors.size,
-      editors: Array.from(this.editors.entries()).map(([id, e]) => ({
-        documentId: id,
-        lastUsed: new Date(e.lastUsed).toISOString(),
-        idleMs: Date.now() - e.lastUsed,
-      })),
+      editors: Array.from(this.editors.keys()),
     };
   }
 
   private createEditor(
     documentId: string,
-    userId: string,
     userName: string,
     yjsState: string | null,
     initialTitle: string,
     organizationId: string,
     organizationSlug: string,
     zero: Zero<Schema>,
-  ): CachedEditor {
+  ): EditorSession {
     // Get connection from manager
     const connection = documentConnectionManager.getConnection(documentId, yjsState);
-
-    // Create container for editor DOM
-    const container = document.createElement("div");
-    container.className = "size-full";
 
     let contentEditor: Editor | null = null;
 
@@ -307,34 +268,15 @@ class EditorCache {
       throw new Error("Failed to initialize content editor");
     }
 
-    // Append editor DOM to container
-    const contentDom = contentEditor.view.dom as HTMLElement;
-    container.appendChild(contentDom);
-
     return {
       documentId,
       contentEditor,
       titleEditor,
       ydoc: connection.ydoc,
       provider: connection.provider,
-      container,
-      lastUsed: Date.now(),
-      userId,
     };
-  }
-
-  private evictLRU(currentDocumentId: string): void {
-    // Find oldest (excluding the one we just created)
-    const entries = Array.from(this.editors.entries()).filter(([id]) => id !== currentDocumentId);
-
-    if (entries.length === 0) return;
-
-    const oldest = entries.sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
-    if (oldest) {
-      this.remove(oldest[0]);
-    }
   }
 }
 
 // Singleton instance
-export const editorCache = new EditorCache();
+export const editorSessions = new EditorSessions();

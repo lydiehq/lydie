@@ -110,8 +110,20 @@ function RichTextPropertyEditor({
     const current = JSON.stringify(editor.getJSON());
     const next = JSON.stringify(content);
     if (current !== next) {
-      editor.commands.setContent(content, { emitUpdate: false });
-      latestJsonRef.current = content;
+      let isCancelled = false;
+
+      queueMicrotask(() => {
+        if (isCancelled || editor.isDestroyed) {
+          return;
+        }
+
+        editor.commands.setContent(content, { emitUpdate: false });
+        latestJsonRef.current = content;
+      });
+
+      return () => {
+        isCancelled = true;
+      };
     }
   }, [content, editor]);
 

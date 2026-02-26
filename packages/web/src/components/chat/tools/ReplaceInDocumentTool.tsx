@@ -19,7 +19,7 @@ import {
 } from "@/atoms/editor";
 import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
-import { useActiveDocumentId, useEditorRegistry } from "@/hooks/use-editor";
+import { useActiveDocumentId, useEditorSessions } from "@/hooks/use-editor";
 import { useZero } from "@/services/zero";
 import { isAdmin } from "@/utils/admin";
 import { applyContentChanges, findChangeRange } from "@/utils/document-changes";
@@ -72,7 +72,7 @@ export function ReplaceInDocumentTool({
   const navigate = useNavigate();
   const params = useParams({ strict: false });
   const z = useZero();
-  const registry = useEditorRegistry();
+  const sessions = useEditorSessions();
   const activeDocumentId = useActiveDocumentId();
 
   // Get target document ID
@@ -80,13 +80,13 @@ export function ReplaceInDocumentTool({
 
   // Look up editors in the registry for the target document
   const targetInstance = targetDocumentId
-    ? registry.get(targetDocumentId)
+    ? sessions.get(targetDocumentId)
     : activeDocumentId
-      ? registry.get(activeDocumentId)
+      ? sessions.get(activeDocumentId)
       : undefined;
 
   // Get active document editors as fallback
-  const activeInstance = activeDocumentId ? registry.get(activeDocumentId) : undefined;
+  const activeInstance = activeDocumentId ? sessions.get(activeDocumentId) : undefined;
 
   // Use target document's editors if available, otherwise fall back to active document's editors
   const editor = targetInstance?.contentEditor ?? activeInstance?.contentEditor ?? null;
@@ -279,7 +279,7 @@ export function ReplaceInDocumentTool({
       }, 5000);
 
       setTimeout(() => {
-        navigate({
+        void navigate({
           to: "/w/$organizationSlug/$id",
           params: {
             organizationSlug: params.organizationSlug as string,
@@ -554,7 +554,7 @@ export function ReplaceInDocumentTool({
 
     // Clear any existing proposed change first
     if (proposedChange) {
-      const existingEditor = registry.get(proposedChange.documentId)?.contentEditor;
+      const existingEditor = sessions.get(proposedChange.documentId)?.contentEditor;
       existingEditor?.commands.clearProposedChange?.();
     }
 

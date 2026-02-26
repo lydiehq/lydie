@@ -1,22 +1,33 @@
-// Editor state management - exports from the editor registry
-// All editor access should go through the registry for multi-tab support
-export {
-  activeDocumentIdAtom,
-  activeEditorInstanceAtom,
-  editorCache,
-  editorRegistry,
-  pendingChangeStatusAtom,
-  pendingEditorChangeAtom,
-} from "@/lib/editor/editor-registry";
-
-export type {
-  EditorInstance,
-  PendingEditorChange,
-  PendingChangeStatus,
-} from "@/lib/editor/editor-registry";
-
-// Proposed change diff view state
 import { atom } from "jotai";
+
+import { activeTabIdAtom } from "@/atoms/tabs";
+import { editorSessions, type EditorSession } from "@/lib/editor/editor-sessions";
+
+export type EditorInstance = EditorSession;
+
+export interface PendingEditorChange {
+  documentId: string;
+  title?: string;
+  selectionWithEllipsis: string;
+  replace: string;
+  organizationId: string;
+}
+
+export type PendingChangeStatus = "pending" | "applying" | "applied" | "failed" | null;
+
+export { editorSessions };
+
+export const activeEditorInstanceAtom = atom((get) => {
+  const activeId = get(activeTabIdAtom);
+  if (!activeId) {
+    return null;
+  }
+
+  return editorSessions.get(activeId) ?? null;
+});
+
+export const pendingEditorChangeAtom = atom<PendingEditorChange | null>(null);
+export const pendingChangeStatusAtom = atom<PendingChangeStatus>(null);
 
 export interface ProposedChangeState {
   documentId: string;

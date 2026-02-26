@@ -95,6 +95,3 @@ class DocumentConnectionManager {
 
 // Singleton instance
 export const documentConnectionManager = new DocumentConnectionManager();
-
-// Export types
-export type { DocumentConnection };

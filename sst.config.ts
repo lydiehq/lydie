@@ -7,6 +7,7 @@ export default $config({
       home: "aws",
       providers: {
         aws: {
+profile: "lydie",
           region: "us-east-1",
         },
         command: true,

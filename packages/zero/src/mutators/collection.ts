@@ -481,6 +481,7 @@ export const collectionMutators = {
   create: defineMutator(
     z.object({
       collectionId: z.string().optional(),
+      defaultViewId: z.string().optional(),
       organizationId: z.string(),
       name: z.string().min(1),
       handle: z.string().optional(),
@@ -497,13 +498,32 @@ export const collectionMutators = {
 
       validatePropertyDefinitions(args.properties);
 
+      const collectionId = args.collectionId ?? createId();
+
       await tx.mutate.collections.insert(
         withTimestamps({
-          id: args.collectionId ?? createId(),
+          id: collectionId,
           organization_id: args.organizationId,
           name: args.name.trim(),
           handle,
           properties: args.properties as ReadonlyJSONValue,
+        }),
+      );
+
+      await tx.mutate.collection_views.insert(
+        withTimestamps({
+          id: args.defaultViewId ?? createId(),
+          organization_id: args.organizationId,
+          collection_id: collectionId,
+          name: "Table",
+          type: "table",
+          config: {
+            filters: {},
+            sortField: null,
+            sortDirection: "asc",
+            groupBy: null,
+          } as ReadonlyJSONValue,
+          deleted_at: null,
         }),
       );
     },
@@ -743,6 +763,17 @@ export const collectionMutators = {
       const view = await getCollectionViewById(tx, args.organizationId, args.viewId);
       if (!view) {
         throw new Error("View not found");
+      }
+
+      const collectionViews = await tx.run(
+        zql.collection_views
+          .where("organization_id", args.organizationId)
+          .where("collection_id", view.collection_id)
+          .where("deleted_at", "IS", null),
+      );
+
+      if (collectionViews.length <= 1) {
+        throw new Error("A collection must have at least one view");
       }
 
       await tx.mutate.collection_views.update({

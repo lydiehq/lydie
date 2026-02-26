@@ -4,7 +4,7 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
 import React from "react";
@@ -56,11 +56,24 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
   const setActiveTab = useSetAtom(activateDocumentTabAtom);
   const closeTab = useSetAtom(closeDocumentTabAtom);
   const makePersistent = useSetAtom(makeTabPersistentAtom);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   const navigate = useNavigate() as (options: {
     to: string;
     params?: Record<string, string>;
   }) => void;
+
+  const getTabPath = useCallback(
+    (tabId: string) => {
+      const collectionId = getCollectionIdFromTabId(tabId);
+      if (collectionId) {
+        return `/w/${organizationSlug}/collections/${collectionId}`;
+      }
+
+      return `/w/${organizationSlug}/${tabId}`;
+    },
+    [organizationSlug],
+  );
 
   const navigateToTab = useCallback(
     (tabId: string) => {
@@ -118,10 +131,21 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
   const handleSelectionChange = useCallback(
     (key: Key) => {
       const documentId = key as string;
+
+      if (documentId === activeTabId) {
+        return;
+      }
+
+      const targetPath = getTabPath(documentId);
+      if (targetPath === pathname) {
+        setActiveTab(documentId);
+        return;
+      }
+
       setActiveTab(documentId);
       navigateToTab(documentId);
     },
-    [navigateToTab, setActiveTab],
+    [activeTabId, getTabPath, navigateToTab, pathname, setActiveTab],
   );
 
   const { createDocument } = useDocumentActions();
@@ -156,7 +180,11 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
         selectionMode="single"
         selectedKeys={selectedKey ? new Set([selectedKey]) : new Set()}
         onSelectionChange={(keys) => {
-          const key = [...keys][0];
+          if (keys === "all") {
+            return;
+          }
+
+          const key = keys.values().next().value as Key | undefined;
           if (key) handleSelectionChange(key);
         }}
         className="flex min-w-0 flex-row items-center overflow-x-auto scrollbar-hide gap-0.5"
@@ -243,8 +271,18 @@ export function useDocumentTabSync(
     const last = syncedRef.current;
     if (last?.id === documentId && last?.title === title) return;
 
-    syncTab({ documentId, title, mode });
-    syncedRef.current = { id: documentId, title };
+    let isCancelled = false;
+
+    queueMicrotask(() => {
+      if (isCancelled) return;
+
+      syncTab({ documentId, title, mode });
+      syncedRef.current = { id: documentId, title };
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [documentId, title, mode, syncTab]);
 
   // Return function to convert current tab to persistent
