@@ -1,13 +1,15 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 export default $config({
   app(input) {
+    const useAwsProfile = !process.env.CI && !process.env.GITHUB_ACTIONS;
+
     return {
       name: "lydie",
       // protect: ["production"].includes(input?.stage),
       home: "aws",
       providers: {
         aws: {
-profile: "lydie",
+          ...(useAwsProfile ? { profile: "lydie" } : {}),
           region: "us-east-1",
         },
         command: true,
