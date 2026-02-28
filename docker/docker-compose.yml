@@ -57,7 +57,6 @@ services:
       NODE_ENV: production
       APP_STAGE: ${APP_STAGE:-development}
       DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
-      DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,7 +80,6 @@ services:
       APP_STAGE: ${APP_STAGE:-development}
       SECURE_COOKIES: "false"
       DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
-      DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
       # In the e2e topology nginx proxies requests from :3000 → backend:3001,
       # so Better Auth must see the public-facing origin (localhost:3000).
       BETTER_AUTH_BASE_URL: http://localhost:3000/internal/public/auth
@@ -184,7 +182,6 @@ services:
       PLAYWRIGHT_BASE_URL: http://localhost:3000
       PLAYWRIGHT_API_URL: http://localhost:3001
       DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
-      DATABASE_URL_DIRECT: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-at-least-32-chars}
     # The SPA has http://localhost:3000 baked in for API/Zero URLs.
     # Map localhost to the Docker host so the browser reaches containers via port mappings.

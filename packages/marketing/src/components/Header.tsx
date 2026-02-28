@@ -29,8 +29,57 @@ const links = [
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const apiUrl = import.meta.env.PUBLIC_API_URL ?? "https://api.lydie.co";
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadAuthState() {
+      try {
+        const cachedValue = window.sessionStorage.getItem("lydie:marketing:is-logged-in");
+        if (cachedValue === "true") {
+          setIsLoggedIn(true);
+          return;
+        }
+
+        const response = await fetch(
+          `${apiUrl}/internal/public/auth/get-session`,
+          {
+            credentials: "include",
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as { user?: unknown | null };
+        const loggedIn = Boolean(payload?.user);
+
+        setIsLoggedIn(loggedIn);
+
+        if (loggedIn) {
+          window.sessionStorage.setItem("lydie:marketing:is-logged-in", "true");
+        }
+      } catch {
+        // ignore auth lookup failures
+      }
+    }
+
+    loadAuthState();
+
+    return () => {
+      controller.abort();
+    };
+  }, [apiUrl]);
+
+  const logoHref = isLoggedIn ? "/home" : "/";
+  const authHref = isLoggedIn ? "https://app.lydie.co" : "https://app.lydie.co/auth";
+  const authLabel = isLoggedIn ? "Go to app" : "Sign in";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -135,7 +184,7 @@ export function Header() {
         )}
       >
         <Container className="flex items-center justify-between">
-          <a href="/" className="flex items-center gap-x-1.5 z-50 relative focus:outline-none">
+          <a href={logoHref} className="flex items-center gap-x-1.5 z-50 relative focus:outline-none">
             <Logo className="text-gray-950 size-5" />
             <span className="text-lg/0 font-semibold text-gray-800">Lydie</span>
           </a>
@@ -154,7 +203,7 @@ export function Header() {
                 </li>
               ))}
               <li className="ml-2">
-                <Button href="https://app.lydie.co/auth">Sign in</Button>
+                <Button href={authHref}>{authLabel}</Button>
               </li>
             </ul>
           </nav>

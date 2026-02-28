@@ -35,7 +35,6 @@ services:
       APP_STAGE: development
       NODE_ENV: development
       DATABASE_URL: postgres://lydie:lydie@postgres:5432/lydie
-      DATABASE_URL_DIRECT: postgres://lydie:lydie@postgres:5432/lydie
       BETTER_AUTH_BASE_URL: http://localhost:3001/internal/public/auth
       FRONTEND_URL: http://localhost:3000
       ZERO_MUTATE_URL: http://backend:3001/internal/zero/mutate
@@ -114,7 +113,6 @@ services:
       APP_STAGE: development
       NODE_ENV: development
       DATABASE_URL: postgres://lydie:lydie@postgres:5432/lydie
-      DATABASE_URL_DIRECT: postgres://lydie:lydie@postgres:5432/lydie
     depends_on:
       postgres:
         condition: service_healthy
