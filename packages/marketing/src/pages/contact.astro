@@ -1,0 +1,33 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { Container } from "../components/Container";
+import { Eyebrow } from "../components/landing/Eyebrow";
+---
+
+<Layout title="Contact - Lydie" description="Get in touch with the Lydie team.">
+  <div class="flex flex-col gap-y-10 py-8 md:py-12">
+    <Container className="flex flex-col gap-y-4">
+      <Eyebrow>Get in touch</Eyebrow>
+      <h1
+        class="text-4xl md:text-5xl font-heading font-medium tracking-tight text-gray-800"
+      >
+        Contact
+      </h1>
+      <p class="text-[15px]/relaxed text-gray-600 max-w-2xl">
+        We would love to hear from you. If you have questions, feedback, support
+        needs, or ideas for Lydie, send an email and we will get back to you as
+        soon as possible.
+      </p>
+
+      <div
+        class="flex flex-col gap-y-1 pt-2 text-[15px]/relaxed text-gray-600 max-w-2xl"
+      >
+        <span>Contact email: contact@lydie.co</span>
+        <span>
+          Prefer reaching out directly to the founder? Email Lars at
+          lars@lydie.co.
+        </span>
+      </div>
+    </Container>
+  </div>
+</Layout>
