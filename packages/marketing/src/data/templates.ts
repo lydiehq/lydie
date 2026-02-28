@@ -28,6 +28,21 @@ export type Template = {
   faqs: Array<{ question: string; answer: string }>;
 };
 
+function getDocumentsFromPreviewData(previewData: unknown): TemplateDocument[] {
+  if (Array.isArray(previewData)) {
+    return previewData as TemplateDocument[];
+  }
+
+  if (previewData && typeof previewData === "object") {
+    const maybeDocuments = (previewData as { documents?: unknown }).documents;
+    if (Array.isArray(maybeDocuments)) {
+      return maybeDocuments as TemplateDocument[];
+    }
+  }
+
+  return [];
+}
+
 // Cache for all templates to avoid repeated DB queries during build
 let allTemplatesCache: Template[] | null = null;
 let allTemplatesCachePromise: Promise<Template[]> | null = null;
@@ -72,7 +87,7 @@ export async function getTemplate(slug: string): Promise<Template | undefined> {
     detailedDescription: template.detailedDescription || "",
     thumbnailSrc: template.thumbnailSrc || null,
     categories,
-    documents: (template.previewData as TemplateDocument[]) || [],
+    documents: getDocumentsFromPreviewData(template.previewData),
     faqs,
   };
 }
@@ -159,7 +174,7 @@ export async function getAllTemplates(): Promise<Template[]> {
         detailedDescription: template.detailedDescription || "",
         thumbnailSrc: template.thumbnailSrc || null,
         categories,
-        documents: (template.previewData as TemplateDocument[]) || [],
+        documents: getDocumentsFromPreviewData(template.previewData),
         faqs: faqsByTemplate.get(template.id) || [],
       };
     });
@@ -281,7 +296,7 @@ export async function getTemplatesBySlugs(slugs: string[]): Promise<Template[]> 
       detailedDescription: template.detailedDescription || "",
       thumbnailSrc: template.thumbnailSrc || null,
       categories,
-      documents: (template.previewData as TemplateDocument[]) || [],
+      documents: getDocumentsFromPreviewData(template.previewData),
       faqs: faqsByTemplate.get(template.id) || [],
     };
 
@@ -397,7 +412,7 @@ export async function getTemplatesByIds(ids: string[]): Promise<Template[]> {
       detailedDescription: template.detailedDescription || "",
       thumbnailSrc: template.thumbnailSrc || null,
       categories,
-      documents: (template.previewData as TemplateDocument[]) || [],
+      documents: getDocumentsFromPreviewData(template.previewData),
       faqs: faqsByTemplate.get(template.id) || [],
     };
 

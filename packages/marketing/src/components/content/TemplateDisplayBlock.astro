@@ -1,0 +1,142 @@
+---
+import { findRelatedTemplates } from "@lydie/core/embedding/search";
+
+import TemplateThumbnail from "@/components/templates/TemplateThumbnail.astro";
+import { TemplateViewer } from "@/components/templates/TemplateViewer";
+import { getTemplatesByIds } from "@/data/templates";
+
+type OtherTemplateCard = {
+  id: string;
+  slug: string;
+  name: string;
+  teaser?: string | null;
+  thumbnailSrc?: string | null;
+};
+
+interface Props {
+  templateId: string;
+  otherTemplateIds?: string[];
+  marketplaceCtaLabel?: string;
+  marketplaceCtaUrl?: string;
+}
+
+const {
+  templateId,
+  otherTemplateIds = [],
+  marketplaceCtaLabel = "Explore all templates",
+  marketplaceCtaUrl = "/templates",
+} = Astro.props;
+
+const [template] = await getTemplatesByIds([templateId]);
+
+const explicitOtherIds = [...new Set(otherTemplateIds.map((id) => id.trim()))].filter(
+  (id) => id.length > 0 && id !== template?.id,
+);
+
+let otherTemplateCards: OtherTemplateCard[] = [];
+
+if (template) {
+  if (explicitOtherIds.length > 0) {
+    const explicitTemplates = await getTemplatesByIds(explicitOtherIds);
+    otherTemplateCards = explicitTemplates.slice(0, 3).map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      name: item.name,
+      teaser: item.teaser,
+      thumbnailSrc: item.thumbnailSrc,
+    }));
+  } else {
+    try {
+      const relatedTemplates = await findRelatedTemplates(template.id, 3);
+      otherTemplateCards = relatedTemplates.map((item) => ({
+        id: item.id,
+        slug: item.slug,
+        name: item.name,
+        teaser: item.teaser,
+        thumbnailSrc: item.thumbnailSrc,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch related templates for TemplateDisplay:", error);
+    }
+  }
+}
+---
+
+<aside class="my-8 relative not-prose">
+  <div class="absolute -top-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+  <div class="absolute -bottom-1.5 bg-linear-to-r h-px from-transparent via-black/5 to-transparent from-2% to-98% -left-100 -right-100 -z-10" />
+  <div class="absolute -right-1.5 bg-linear-to-t w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+  <div class="absolute -left-1.5 bg-linear-to-b w-px from-transparent via-black/5 to-transparent from-2% to-98% -top-100 -bottom-100 -z-10" />
+  <div class="rounded-xl shadow-legit overflow-hidden bg-white p-5 ring ring-black/5">
+    {
+      template ? (
+        <div class="flex flex-col gap-y-6">
+          <header class="flex flex-col gap-y-3">
+            <p class="m-0 text-xs font-semibold uppercase tracking-wide text-sky-700">
+              Template preview
+            </p>
+            <div class="flex flex-col gap-y-1">
+              <h3 class="m-0 text-xl font-semibold text-slate-900">{template.name}</h3>
+              {template.teaser ? (
+                <p class="m-0 text-sm leading-relaxed text-slate-700">{template.teaser}</p>
+              ) : null}
+            </div>
+            {template.categories.length > 0 ? (
+              <div class="flex flex-wrap gap-2">
+                {template.categories.map((category) => (
+                  <a
+                    href={category.path || `/templates/categories/${category.slug}`}
+                    class="px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                  >
+                    {category.name}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </header>
+
+          <div class="rounded-lg border border-black/10 bg-gray-50 p-2">
+            <TemplateViewer client:load documents={template.documents} />
+          </div>
+
+          {
+            otherTemplateCards.length > 0 && (
+              <section class="flex flex-col gap-y-3">
+                <h4 class="m-0 text-base font-semibold text-slate-900">Related templates</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {otherTemplateCards.map((item) => (
+                    <TemplateThumbnail
+                      name={item.name}
+                      teaser={item.teaser || undefined}
+                      href={`/templates/${item.slug}`}
+                      slug={item.slug}
+                      thumbnailSrc={item.thumbnailSrc}
+                    />
+                  ))}
+                </div>
+              </section>
+            )
+          }
+
+          <div class="pt-1">
+            <a
+              href={marketplaceCtaUrl}
+              class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-slate-800 transition-colors"
+            >
+              {marketplaceCtaLabel}
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div class="flex flex-col gap-y-2">
+          <p class="m-0 text-xs font-semibold uppercase tracking-wide text-amber-700">
+            Template preview unavailable
+          </p>
+          <p class="m-0 text-sm leading-relaxed text-slate-700">
+            We couldn't load this template. Please verify the template ID.
+          </p>
+        </div>
+      )
+    }
+  </div>
+</aside>

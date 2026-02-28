@@ -6,10 +6,28 @@ Lydie is a high-performance writing workspace that scales from simple notes to d
 
 ## 🚀 Quick Start
 
-### Development (Docker)
+### Development (SST, recommended)
 
 ```bash
-cd docker && docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+bun install
+bun run docker:db:up
+bun run db:migrate
+bun run dev
+```
+
+This starts the local SST multiplexer and runs local dev processes for:
+
+- **Web App**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Zero Sync**: http://localhost:4848
+- **Marketing**: local Astro dev server in the SST tabs
+
+`sst dev` expects a reachable Postgres instance from your local machine (default: `localhost:5432`).
+
+### Development (Docker, optional)
+
+```bash
+bun run docker:dev
 ```
 
 Access:
@@ -18,10 +36,10 @@ Access:
 - **Backend API**: http://localhost:3001
 - **Zero Sync**: http://localhost:4848
 
-Run migrations:
+Run migrations (if needed):
 
 ```bash
-cd packages/database && bunx drizzle-kit migrate
+bun run db:migrate
 ```
 
 ### Production (AWS)
@@ -39,7 +57,7 @@ bun run deploy:prod
 - **Database**: PostgreSQL, Drizzle ORM
 - **Real-time**: Zero sync, WebSockets
 - **AI**: Vercel AI SDK
-- **Infrastructure**: Docker (local/self-host), SST + AWS (production)
+- **Infrastructure**: SST (local orchestration + AWS), Docker (optional local/self-host)
 
 ## 📁 Project Structure
 
@@ -61,21 +79,24 @@ bun run deploy:prod
 
 | Environment   | Command      | Notes                          |
 | ------------- | ------------ | ------------------------------ |
-| **Local Dev** | `docker compose up` | Docker Compose with hot reload |
+| **Local Dev** | `bun run dev` | SST multiplexer + local processes |
+| **Local Dev (Alt)** | `bun run docker:dev` | Docker Compose with hot reload |
 | **AWS Prod**  | `bun run deploy:prod` | ECS Fargate, S3, CloudFront |
 
 ## 🧪 Development
 
 ```bash
-# Start infrastructure
-cd docker && docker compose up -d
+# Start local development (recommended)
+bun run dev
 
-# Run migrations
-cd packages/database && bunx drizzle-kit migrate
+# Optional: Docker-based development
+bun run docker:dev
 
-# Start dev servers (in separate terminals)
-bun --filter=@lydie/backend dev
-bun --filter=@lydie/web dev
+# Optional: run migrations
+bun run db:migrate
+
+# Optional: Postgres only for SST dev
+bun run docker:db:up
 ```
 
 ## 🔄 CI/CD

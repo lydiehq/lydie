@@ -20,10 +20,6 @@ declare module "sst" {
       "sender": string
       "type": "sst.aws.Email"
     }
-    "EventsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
     "Marketing": {
       "type": "sst.aws.Astro"
       "url": string

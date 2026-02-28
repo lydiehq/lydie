@@ -2,6 +2,8 @@
 
 This directory contains Docker Compose and nginx configuration for local development and production-like environments.
 
+For day-to-day development, prefer `bun run dev` (SST multiplexer). Docker remains a supported alternative for contributors who want to work without SST local orchestration.
+
 Service Dockerfiles live alongside their packages (`packages/*/Dockerfile*`).
 
 ## Overview
@@ -36,6 +38,19 @@ bun run docker:dev:logs
 bun run docker:dev:down
 ```
 
+### Postgres only (for `sst dev`)
+
+```bash
+# Start just Postgres on localhost:5432
+bun run docker:db:up
+
+# Tail Postgres logs
+bun run docker:db:logs
+
+# Stop Postgres
+bun run docker:db:down
+```
+
 ### Production-like
 
 ```bash
@@ -68,6 +83,9 @@ This is the same flow CI uses. It:
 | `bun run docker:dev` | Start dev environment with HMR |
 | `bun run docker:dev:down` | Stop dev environment |
 | `bun run docker:dev:logs` | View dev environment logs |
+| `bun run docker:db:up` | Start Postgres only |
+| `bun run docker:db:down` | Stop Postgres only |
+| `bun run docker:db:logs` | View Postgres logs |
 | `bun run docker:prod` | Start production-like environment |
 | `bun run docker:prod:down` | Stop and clean up production environment |
 | `bun run docker:prod:logs` | View production environment logs |

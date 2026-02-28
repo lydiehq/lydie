@@ -44,6 +44,27 @@ function sanitizeUrl(url: string | undefined): string {
   return "";
 }
 
+function getBoolean(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+
+  return null;
+}
+
+function getNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value.trim());
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return null;
+}
+
 export function normalizeComponentKey(value: string): string {
   return value
     .trim()
@@ -53,6 +74,64 @@ export function normalizeComponentKey(value: string): string {
 
 export function getStringProperty(properties: Record<string, unknown>, key: string): string {
   return getString(properties[key]).trim();
+}
+
+export function getBooleanProperty(
+  properties: Record<string, unknown>,
+  key: string,
+  defaultValue = false,
+): boolean {
+  const parsed = getBoolean(properties[key]);
+  return parsed === null ? defaultValue : parsed;
+}
+
+export function getNumberProperty(properties: Record<string, unknown>, key: string): number | null {
+  return getNumber(properties[key]);
+}
+
+export function getStringListProperty(properties: Record<string, unknown>, key: string): string[] {
+  const value = properties[key];
+  const strings: string[] = [];
+
+  const pushValue = (entry: unknown): void => {
+    if (typeof entry === "string" || typeof entry === "number") {
+      const normalized = String(entry).trim();
+      if (normalized) strings.push(normalized);
+      return;
+    }
+
+    if (!entry || typeof entry !== "object") {
+      return;
+    }
+
+    const record = entry as Record<string, unknown>;
+    const candidates = [record.id, record.templateId, record.slug, record.value];
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" || typeof candidate === "number") {
+        const normalized = String(candidate).trim();
+        if (normalized) {
+          strings.push(normalized);
+          return;
+        }
+      }
+    }
+  };
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      pushValue(entry);
+    }
+  } else if (typeof value === "string") {
+    for (const entry of value.split(",")) {
+      pushValue(entry);
+    }
+  }
+
+  return [...new Set(strings)];
+}
+
+export function getUrlProperty(properties: Record<string, unknown>, key: string): string {
+  return sanitizeUrl(getString(properties[key]).trim() || undefined);
 }
 
 export function getChecklistItems(

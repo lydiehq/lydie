@@ -14,6 +14,7 @@ export default defineConfig({
     enabled: false,
   },
   vite: {
+    envDir: "../../",
     plugins: [tailwindcss()],
     ssr: {
       noExternal: ["@fluentui/react-icons"],

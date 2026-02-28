@@ -8,7 +8,9 @@ import {
   getFaqItems,
   getFlowchartEdges,
   getFlowchartNodes,
+  getStringListProperty,
   getStringProperty,
+  getUrlProperty,
   normalizeComponentKey,
 } from "@/utils/content-component-props";
 
@@ -16,6 +18,7 @@ import ContentTextRenderer from "./ContentTextRenderer.astro";
 import FAQBlock from "./FAQBlock.astro";
 import { Flowchart } from "./Flowchart";
 import { HeadingWithAnchor } from "./HeadingWithAnchor";
+import TemplateDisplayBlock from "./TemplateDisplayBlock.astro";
 
 interface Props {
   node: ContentNode | TextNode;
@@ -127,6 +130,20 @@ const checklistItems = getChecklistItems(componentProperties, "items");
 const checklistNote = getStringProperty(componentProperties, "note");
 const pillarType = getStringProperty(componentProperties, "type") || "note";
 const pillarHeading = getStringProperty(componentProperties, "heading") || "";
+const templateDisplayTemplateId =
+  getStringProperty(componentProperties, "templateId") ||
+  getStringProperty(componentProperties, "id");
+const templateDisplayOtherTemplateIds = [
+  ...getStringListProperty(componentProperties, "otherTemplates"),
+  ...getStringListProperty(componentProperties, "otherTemplateIds"),
+];
+const templateDisplayMarketplaceCtaLabel =
+  getStringProperty(componentProperties, "marketplaceCtaLabel") ||
+  getStringProperty(componentProperties, "ctaLabel");
+const templateDisplayMarketplaceCtaUrl =
+  getUrlProperty(componentProperties, "marketplaceCtaUrl") ||
+  getUrlProperty(componentProperties, "ctaUrl") ||
+  "/templates";
 
 let pillarLabelClass = "text-slate-700";
 let pillarHeadingClass = "text-slate-900";
@@ -500,6 +517,19 @@ const textNode = node.type === "text" ? (node as TextNode) : null;
       <FAQBlock
         title={getStringProperty(componentProperties, "title") || undefined}
         items={getFaqItems(componentProperties.items)}
+      />
+    )
+}
+
+{
+  (node.type === "customBlock" || node.type === "documentComponent") &&
+    normalizedComponentName === "templatedisplay" &&
+    templateDisplayTemplateId && (
+      <TemplateDisplayBlock
+        templateId={templateDisplayTemplateId}
+        otherTemplateIds={templateDisplayOtherTemplateIds}
+        marketplaceCtaLabel={templateDisplayMarketplaceCtaLabel || undefined}
+        marketplaceCtaUrl={templateDisplayMarketplaceCtaUrl}
       />
     )
 }
