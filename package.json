@@ -7,8 +7,8 @@
       "packages/*"
     ],
     "catalog": {
-      "@fluentui/react-icons": "^2.0.319",
-      "@rocicorp/zero": "0.25.12",
+      "@fluentui/react-icons": "^2.0.320",
+      "@rocicorp/zero": "0.25.13",
       "sst": "v3.18.6",
       "zod": "^4.3.6",
       "react": "^19.2.4",
@@ -16,9 +16,9 @@
       "yjs": "^13.6.29",
       "drizzle-orm": "^1.0.0-beta.15-9485290",
       "better-auth": "1.4.7-beta.2",
-      "@ai-sdk/google": "^3.0.31",
-      "@ai-sdk/openai": "^3.0.33",
-      "ai": "^6.0.99",
+      "@ai-sdk/google": "^3.0.34",
+      "@ai-sdk/openai": "^3.0.37",
+      "ai": "^6.0.105",
       "@tiptap/core": "^3.20.0",
       "@tiptap/pm": "^3.20.0",
       "@tiptap/react": "^3.20.0",
@@ -29,7 +29,7 @@
       "@tiptap/extension-mention": "^3.20.0",
       "@tiptap/extension-node-range": "^3.20.0",
       "@tiptap/extension-placeholder": "^3.20.0",
-      "stripe": "^20.3.1"
+      "stripe": "^20.4.0"
     }
   },
   "scripts": {
@@ -65,7 +65,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.58",
+    "@ai-sdk/gateway": "^3.0.59",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/react-query-persist-client": "^5.90.23",
