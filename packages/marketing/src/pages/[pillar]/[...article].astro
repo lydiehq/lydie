@@ -26,12 +26,16 @@ if (!pillar) {
   return new Response(null, { status: 404 });
 }
 
-const pillarCollectionMap: Record<string, string> = {
+const pillarCollectionMap = {
   "knowledge-bases": lydieApi.collections.knowledgeBases,
   "note-taking": lydieApi.collections.noteTaking,
-};
+} as const;
 
-const collectionHandle = pillarCollectionMap[pillar] || pillar;
+if (!(pillar in pillarCollectionMap)) {
+  return new Response(null, { status: 404 });
+}
+
+const collectionHandle = pillarCollectionMap[pillar as keyof typeof pillarCollectionMap];
 const requestedPath = article ? `/${article}` : "/";
 
 type CollectionDocument = lydieApi.CollectionApiDocument & {
