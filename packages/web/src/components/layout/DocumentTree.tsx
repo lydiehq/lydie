@@ -3,7 +3,7 @@ import type { QueryResultType } from "@rocicorp/zero";
 import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
 import { atom, useAtom, useAtomValue } from "jotai";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { useCallback, useEffect, useMemo } from "react";
 import type { Key } from "react-aria-components";
 import { Tree } from "react-aria-components";
@@ -44,11 +44,15 @@ function saveToStorage(userId: string | null | undefined, keys: string[]): void 
 
 export const documentTreeExpandedKeysAtom = atom<string[]>([]);
 
+type Props = {
+  renderEmptyState?: () => ReactNode;
+};
+
 type QueryDocuments = NonNullable<
   QueryResultType<typeof queries.organizations.documents>
 >["documents"];
 
-export function DocumentTree() {
+export function DocumentTree({ renderEmptyState }: Props) {
   const { organization } = useOrganization();
   const { id: currentDocId } = useParams({ strict: false });
   const { session } = useAuth();
@@ -131,6 +135,7 @@ export function DocumentTree() {
       selectionMode="single"
       className="flex flex-col focus:outline-none"
       items={treeItems}
+      renderEmptyState={renderEmptyState}
       dragAndDropHooks={dragAndDropHooks}
       expandedKeys={expandedKeys}
       onExpandedChange={(keys: Set<Key>) => {

@@ -62,10 +62,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.55",
+    "@ai-sdk/gateway": "^3.0.57",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
-    "@tanstack/react-query-persist-client": "^5.90.22",
+    "@tanstack/react-query-persist-client": "^5.90.23",
     "@tiptap/extension-code": "^3.20.0",
     "@tiptap/extension-table-of-contents": "^3.20.0",
     "framer-motion": "^12.34.3"

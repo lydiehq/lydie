@@ -14,6 +14,7 @@ import { Container } from "@/components/Container";
 import LydieContent from "@/components/LydieContent.astro";
 import PillarTOC from "@/components/PillarTOC.astro";
 import RelatedDocumentCard from "@/components/RelatedDocumentCard.astro";
+import { GeometricPatternIllustration } from "@/components/illustrations/GeometricPatternIllustration";
 import Layout from "@/layouts/Layout.astro";
 import { articleTypographyClassName } from "@/utils/article-typography";
 import * as lydieApi from "@/utils/lydie-client";
@@ -78,7 +79,9 @@ try {
       relatedScope: "collection_handle",
       relatedCollectionHandle: lydieApi.collections.knowledgeBases,
       relatedLimit: 2,
-    } as unknown as Parameters<typeof lydieApi.getCollectionDocumentsWithPaths>[1],
+    } as unknown as Parameters<
+      typeof lydieApi.getCollectionDocumentsWithPaths
+    >[1],
   );
   allDocuments = documents as CollectionDocument[];
 
@@ -119,21 +122,27 @@ try {
     documentsForToc = [resolvedDocument, ...documentsForToc];
   }
 
-  const relatedFromApi = (resolvedDocument.related || []) as RelatedCollectionDocument[];
+  const relatedFromApi = (resolvedDocument.related ||
+    []) as RelatedCollectionDocument[];
 
   const knowledgeBaseDocuments =
     collectionHandle === lydieApi.collections.knowledgeBases
       ? allDocuments
       : ((
-          await lydieApi.getCollectionDocumentsWithPaths(lydieApi.collections.knowledgeBases, {
-            sortBy: "created_at",
-            sortOrder: "asc",
-          })
+          await lydieApi.getCollectionDocumentsWithPaths(
+            lydieApi.collections.knowledgeBases,
+            {
+              sortBy: "created_at",
+              sortOrder: "asc",
+            },
+          )
         ).documents as CollectionDocument[]);
 
   relatedDocuments = relatedFromApi
     .map((doc) => {
-      const matchingDoc = knowledgeBaseDocuments.find((entry) => entry.id === doc.id);
+      const matchingDoc = knowledgeBaseDocuments.find(
+        (entry) => entry.id === doc.id,
+      );
       return {
         ...doc,
         path: matchingDoc?.path,
@@ -154,8 +163,10 @@ if (!currentDocument) {
 }
 
 const pageDocument = currentDocument;
+const isPillarIndex = requestedPath === "/";
 const description =
   pageDocument.fields?.description || pageDocument.title || "Article";
+const pageSeed = `${collectionHandle}:${String(pageDocument.path || pageDocument.id)}`;
 const breadcrumbItems = [
   { label: "Home", href: "/" },
   {
@@ -176,18 +187,47 @@ const breadcrumbItems = [
     <Container>
       <Breadcrumbs items={breadcrumbItems} />
 
+      {
+        isPillarIndex && (
+          <section class="mx-auto mt-8 mb-12 max-w-3xl text-center">
+            <h1 class="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight">
+              {pageDocument.title}
+            </h1>
+            {pageDocument.fields?.description && (
+              <p class="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
+                {pageDocument.fields?.description}
+              </p>
+            )}
+            <div class="mt-8 w-full aspect-[21/10]">
+              <GeometricPatternIllustration seed={pageSeed} radius="lg" />
+            </div>
+          </section>
+        )
+      }
+
       <div class="flex gap-8 mt-8 relative">
         <div class="flex-1">
-          <article class="max-w-[65ch]">
+          <article class="w-[60ch]">
             <header class="mb-8">
-              <h1 class="text-3xl font-semibold text-gray-900">
-                {pageDocument.title}
-              </h1>
               {
-                pageDocument.fields?.description && (
-                  <p class="text-lg text-gray-600 mt-4">
-                    {pageDocument.fields?.description}
-                  </p>
+                !isPillarIndex && (
+                  <>
+                    <h1 class="text-3xl font-semibold text-gray-900">
+                      {pageDocument.title}
+                    </h1>
+                    {pageDocument.fields?.description && (
+                      <p class="text-lg text-gray-600 mt-4">
+                        {pageDocument.fields?.description}
+                      </p>
+                    )}
+                  </>
+                )
+              }
+              {
+                !isPillarIndex && (
+                  <div class="mt-6 w-full aspect-[21/10]">
+                    <GeometricPatternIllustration seed={pageSeed} radius="md" />
+                  </div>
                 )
               }
             </header>
@@ -215,7 +255,9 @@ const breadcrumbItems = [
                               ? "/knowledge-bases"
                               : `/knowledge-bases${doc.path}`
                             : (() => {
-                                const relatedSlug = getMarketingSlug(doc.fields?.slug ?? doc.slug);
+                                const relatedSlug = getMarketingSlug(
+                                  doc.fields?.slug ?? doc.slug,
+                                );
                                 return relatedSlug
                                   ? `/knowledge-bases/${relatedSlug}`
                                   : `/knowledge-bases/${doc.id}`;
@@ -224,6 +266,7 @@ const breadcrumbItems = [
                         title={doc.title}
                         createdAt={doc.createdAt}
                         coverImage={doc.coverImage}
+                        seed={String(doc.fields?.slug ?? doc.slug ?? doc.id)}
                       />
                     ))}
                   </div>
@@ -232,7 +275,7 @@ const breadcrumbItems = [
             }
           </article>
         </div>
-        <aside class="hidden lg:block lg:order-2 lg:w-80 xl:w-96 shrink-0">
+        <aside class="hidden lg:block lg:order-2 w-68 shrink-0">
           <PillarTOC
             documents={documentsForToc}
             currentDocumentId={pageDocument.id}

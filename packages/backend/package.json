@@ -29,14 +29,14 @@
     "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
-    "hono": "^4.12.2",
+    "hono": "^4.12.3",
     "hono-rate-limiter": "^0.5.3",
     "postgres": "^3.4.8",
     "yjs": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.160",
+    "@types/aws-lambda": "^8.10.161",
     "@types/node": "^25.3.1",
     "@types/ws": "^8.18.1"
   }

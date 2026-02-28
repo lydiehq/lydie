@@ -6,7 +6,6 @@ Astro.response.headers.set(
   "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
-import { Image } from "astro:assets";
 import BlogPost from "../../layouts/BlogPost.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import * as lydieApi from "../../utils/lydie-client";
@@ -15,6 +14,7 @@ import FormattedDate from "../../components/FormattedDate.astro";
 import ArticleHeadingEnhancements from "../../components/ArticleHeadingEnhancements.astro";
 import LydieContent from "../../components/LydieContent.astro";
 import RelatedDocumentCard from "../../components/RelatedDocumentCard.astro";
+import { GeometricPatternIllustration } from "../../components/illustrations/GeometricPatternIllustration";
 import { Heading } from "../../components/generic/Heading";
 import { Container } from "../../components/Container";
 import { articleTypographyClassName } from "../../utils/article-typography";
@@ -84,14 +84,15 @@ const articleUrl = new URL(
   `/blog/${document.fields?.slug || document.id}`,
   Astro.site,
 );
-const linkResolver = createLinkResolver({ currentCollectionHandle: BLOG_COLLECTION_HANDLE });
+const linkResolver = createLinkResolver({
+  currentCollectionHandle: BLOG_COLLECTION_HANDLE,
+});
 const imageUrl =
   typeof document.coverImage === "string"
     ? new URL(document.coverImage, Astro.site)
     : new URL("/blog.png", Astro.site);
-const coverImageSrc =
-  typeof document.coverImage === "string" ? imageUrl.toString() : "/blog.png";
 const excerpt = String(document.fields?.excerpt || "");
+const illustrationSeed = String(document.fields?.slug || document.id);
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -145,18 +146,10 @@ const structuredData = {
               <FormattedDate date={new Date(String(document.createdAt))} />
             </span>
           </header>
-          <div
-            class="rounded-lg ring ring-black/5 overflow-hidden h-80 [&>img]:object-cover [&>img]:w-full [&>img]:h-80"
-          >
-            <Image
-              src={coverImageSrc}
-              alt=""
-              width={672}
-              height={320}
-              layout="constrained"
-              fit="cover"
-              sizes="(max-width: 672px) 100vw, 672px"
-              class="w-full h-80"
+          <div class="w-full aspect-[21/10]">
+            <GeometricPatternIllustration
+              seed={`blog:${illustrationSeed}`}
+              radius="md"
             />
           </div>
           <div class={`mt-12 ${articleTypographyClassName}`}>
@@ -179,10 +172,15 @@ const structuredData = {
 
                     return (
                       <RelatedDocumentCard
-                        href={relatedSlug ? `/blog/${relatedSlug}` : `/blog/${post.id}`}
+                        href={
+                          relatedSlug
+                            ? `/blog/${relatedSlug}`
+                            : `/blog/${post.id}`
+                        }
                         title={post.title}
                         createdAt={post.createdAt}
                         coverImage={post.coverImage}
+                        seed={String(post.fields?.slug ?? post.slug ?? post.id)}
                       />
                     );
                   },

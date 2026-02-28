@@ -44,6 +44,7 @@ import { DocumentTree } from "./DocumentTree";
 import { FavoritesTree } from "./FavoritesTree";
 import { OrganizationMenu } from "./OrganizationMenu";
 import { SidebarIcon } from "./SidebarIcon";
+import { SidebarTreeEmptyState } from "./SidebarTreeEmptyState";
 import { UsageStats } from "./UsageStats";
 
 type Props = {
@@ -268,7 +269,11 @@ const DocumentsSection = memo(function DocumentsSection() {
         </div>
       </div>
       <DisclosurePanel className="px-2 pb-2">
-        <DocumentTree />
+        <DocumentTree
+          renderEmptyState={() => (
+            <SidebarTreeEmptyState actionLabel="Create document" onAction={() => createDocument()} />
+          )}
+        />
       </DisclosurePanel>
     </Disclosure>
   );
@@ -336,15 +341,25 @@ const CollectionsSection = memo(function CollectionsSection() {
         </div>
       </div>
       <DisclosurePanel className="px-2 pb-2">
-        <GridList aria-label="Collections" className="flex flex-col">
-          {collections.map((collection) => (
+        <GridList
+          aria-label="Collections"
+          className="flex flex-col"
+          items={collections}
+          renderEmptyState={() => (
+            <SidebarTreeEmptyState
+              actionLabel="Create collection"
+              onAction={() => void handleCreateCollection()}
+            />
+          )}
+        >
+          {(collection) => (
             <CollectionTreeItem
               key={collection.id}
               collection={collection}
               isActive={activeCollectionId === collection.id}
               organizationSlug={organization.slug}
             />
-          ))}
+          )}
         </GridList>
       </DisclosurePanel>
     </Disclosure>

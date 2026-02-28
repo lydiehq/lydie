@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import { CastShadowPlayground } from "../../components/playground/CastShadowPlayground";
+import { ImagesPlayground } from "@/components/playground/ImagesPlayground";
 
 export const prerender = true;
 ---
@@ -12,7 +13,8 @@ export const prerender = true;
 >
   <meta name="robots" content="noindex, nofollow" slot="head" />
   <Container className="py-12">
-    <div class="flex flex-col gap-y-8">
+    <ImagesPlayground />
+    <!-- <div class="flex flex-col gap-y-8">
       <div>
         <h1 class="text-2xl font-medium text-gray-900">
           Cast Shadow Playground
@@ -22,6 +24,6 @@ export const prerender = true;
         </p>
       </div>
       <CastShadowPlayground client:load />
-    </div>
+    </div> -->
   </Container>
 </Layout>

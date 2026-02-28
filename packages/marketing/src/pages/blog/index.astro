@@ -7,11 +7,11 @@ Astro.response.headers.set(
   "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
 );
 
-import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
+import { GeometricPatternIllustration } from "../../components/illustrations/GeometricPatternIllustration";
 import * as lydieApi from "../../utils/lydie-client";
 
 const BLOG_COLLECTION_HANDLE = lydieApi.collections.blog;
@@ -20,12 +20,41 @@ type BlogListDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
 >["documents"][number];
 
+function toSlug(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().replace(/^\/+|\/+$/g, "");
+  return normalized.length > 0 ? normalized : null;
+}
+
+function getPostHref(post: BlogListDocument): string {
+  const slug = toSlug(post.fields?.slug);
+  return slug ? `/blog/${slug}` : `/blog/${String(post.id)}`;
+}
+
+function getPostSeed(post: BlogListDocument): string {
+  const slug = toSlug(post.fields?.slug);
+  return `blog:${slug ?? String(post.id)}`;
+}
+
+function getPostDate(post: BlogListDocument): Date {
+  const dateValue =
+    typeof post.createdAt === "string"
+      ? post.createdAt
+      : typeof post.updatedAt === "string"
+        ? post.updatedAt
+        : "";
+
+  const parsedDate = dateValue ? new Date(dateValue) : new Date(0);
+  return Number.isNaN(parsedDate.getTime()) ? new Date(0) : parsedDate;
+}
+
 let posts: BlogListDocument[] = [];
 
 try {
   console.log("[Blog] Fetching posts from collection:", BLOG_COLLECTION_HANDLE);
-  const { documents } =
-    await lydieApi.getCollectionDocuments(BLOG_COLLECTION_HANDLE);
+  const { documents } = await lydieApi.getCollectionDocuments(
+    BLOG_COLLECTION_HANDLE,
+  );
   posts = documents;
   console.log(`[Blog] Successfully fetched ${posts.length} blog posts`);
 } catch (error) {
@@ -34,8 +63,8 @@ try {
 }
 
 const sortedPosts = posts.sort((a, b) => {
-  const dateA = new Date(a.createdAt || a.updatedAt || 0);
-  const dateB = new Date(b.createdAt || b.updatedAt || 0);
+  const dateA = getPostDate(a);
+  const dateB = getPostDate(b);
   return dateB.getTime() - dateA.getTime();
 });
 
@@ -61,28 +90,13 @@ const remainingPosts = sortedPosts.slice(1);
       {
         featuredPost && (
           <section class="overflow-visible -mx-2 px-2">
-            <a
-              href={`/blog/${featuredPost.fields?.slug || featuredPost.id}`}
-              class="block group"
-            >
+            <a href={getPostHref(featuredPost)} class="block group">
               <div class="rounded-xl bg-transparent group-hover:bg-gray-50 transition-colors duration-150 -m-2 p-2">
                 <div class="flex gap-x-4 items-center">
-                  <div class="rounded-lg shadow-surface h-60 aspect-video overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
-                    <Image
-                      src={
-                        featuredPost.coverImage
-                          ? new URL(
-                              featuredPost.coverImage,
-                              Astro.site,
-                            ).toString()
-                          : "/blog.png"
-                      }
-                      alt=""
-                      width={640}
-                      height={360}
-                      layout="constrained"
-                      fit="cover"
-                      class="w-full h-full"
+                  <div class="w-72 aspect-video shrink-0">
+                    <GeometricPatternIllustration
+                      seed={getPostSeed(featuredPost)}
+                      radius="md"
                     />
                   </div>
                   <div class="flex flex-col gap-y-2 p-6">
@@ -95,7 +109,7 @@ const remainingPosts = sortedPosts.slice(1);
                       </p>
                     )}
                     <p class="text-gray-500 text-xs">
-                      <FormattedDate date={new Date(featuredPost.createdAt)} />
+                      <FormattedDate date={getPostDate(featuredPost)} />
                     </p>
                   </div>
                 </div>
@@ -113,45 +127,19 @@ const remainingPosts = sortedPosts.slice(1);
               {remainingPosts.map((post) => (
                 <li>
                   <a
-                    href={`/blog/${post.fields?.slug || post.id}`}
+                    href={getPostHref(post)}
                     class="flex flex-col gap-y-3 group"
                   >
                     <div class="flex gap-x-4 items-center">
-                      {post.coverImage ? (
-                        <div class="rounded-lg shadow-surface w-16 h-16 overflow-hidden shrink-0 [&>img]:object-cover [&>img]:w-full [&>img]:h-full">
-                          <Image
-                            src={new URL(
-                              post.coverImage,
-                              Astro.site,
-                            ).toString()}
-                            alt=""
-                            width={64}
-                            height={64}
-                            layout="constrained"
-                            fit="cover"
-                            class="w-full h-full"
-                          />
-                        </div>
-                      ) : (
-                        <div class="p-2 rounded-lg ring ring-black/8 text-gray-300">
-                          <svg
-                            class="size-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="32"
-                            height="32"
-                            viewBox="0 0 512 512"
-                          >
-                            <path
-                              fill="currentColor"
-                              d="M428 224H288a48 48 0 0 1-48-48V36a4 4 0 0 0-4-4h-92a64 64 0 0 0-64 64v320a64 64 0 0 0 64 64h224a64 64 0 0 0 64-64V228a4 4 0 0 0-4-4m-92 160H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32m0-80H176a16 16 0 0 1 0-32h160a16 16 0 0 1 0 32"
-                            />
-                            <path
-                              fill="currentColor"
-                              d="M419.22 188.59L275.41 44.78a2 2 0 0 0-3.41 1.41V176a16 16 0 0 0 16 16h129.81a2 2 0 0 0 1.41-3.41"
-                            />
-                          </svg>
-                        </div>
-                      )}
+                      <div class="w-16 aspect-square shrink-0">
+                        <GeometricPatternIllustration
+                          seed={getPostSeed(post)}
+                          columns={3}
+                          rows={3}
+                          minWhiteShapes={2}
+                          radius="sm"
+                        />
+                      </div>
                       <div class="flex flex-col">
                         <h3 class="text-bsae font-medium text-gray-900">
                           {post.title}
@@ -159,7 +147,7 @@ const remainingPosts = sortedPosts.slice(1);
                         <div class="flex gap-x-2">
                           {post.createdAt && (
                             <span class="text-xs text-gray-500 whitespace-nowrap">
-                              <FormattedDate date={new Date(post.createdAt)} />
+                              <FormattedDate date={getPostDate(post)} />
                             </span>
                           )}
                         </div>

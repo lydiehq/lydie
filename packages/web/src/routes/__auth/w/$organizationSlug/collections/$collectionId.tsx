@@ -121,23 +121,23 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
     const initialViewId = createId();
     setHasAttemptedInitialView(true);
 
-    void z
-      .mutate(
-        mutators.collection.createView({
-          viewId: initialViewId,
-          organizationId: organization.id,
-          collectionId: collection.id,
-          name: "Table",
-          type: "table",
-        }),
-      )
-      .then(() => {
+    void (async () => {
+      try {
+        z.mutate(
+          mutators.collection.createView({
+            viewId: initialViewId,
+            organizationId: organization.id,
+            collectionId: collection.id,
+            name: "Table",
+            type: "table",
+          }),
+        );
         setSelectedViewId(initialViewId);
-      })
-      .catch((error: unknown) => {
+      } catch (error: unknown) {
         console.error(error);
         toast.error("Failed to create default table view");
-      });
+      }
+    })();
   }, [collection.id, hasAttemptedInitialView, organization.id, viewRecords.length, z]);
 
   const selectedView = useMemo(

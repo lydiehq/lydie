@@ -1,20 +1,31 @@
 ---
 import FormattedDate from "./FormattedDate.astro";
+import { GeometricPatternIllustration } from "./illustrations/GeometricPatternIllustration";
 
 type Props = {
   href: string;
   title: string;
   createdAt?: string;
   coverImage?: string | null;
+  seed?: string | number;
 };
 
-const { href, title, createdAt, coverImage } = Astro.props;
+const { href, title, createdAt, seed } = Astro.props;
 ---
 
 <a
   href={href}
-  class="group gap-4 rounded-xl border border-gray-200 bg-white/80 p-3 no-underline transition-all duration-150 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
+  class="group flex gap-4 rounded-xl border border-gray-200 bg-white/80 p-3 no-underline transition-all duration-150 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
 >
+  <div class="w-20 shrink-0">
+    <GeometricPatternIllustration
+      seed={seed ?? href}
+      columns={3}
+      rows={2}
+      minWhiteShapes={2}
+      radius="sm"
+    />
+  </div>
   <div class="min-w-0 flex flex-col justify-between py-1">
     <h3
       class="line-clamp-2 text-base font-semibold text-gray-900 transition-colors group-hover:text-slate-700"
