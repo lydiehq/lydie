@@ -7,7 +7,7 @@
     "./*": "./src/*"
   },
   "dependencies": {
-    "@fluentui/react-icons": "^2.0.319",
+    "@fluentui/react-icons": "^2.0.320",
     "@lydie/core": "workspace:*",
     "@tiptap/core": "catalog:",
     "@tiptap/react": "catalog:",
