@@ -1,29 +1,29 @@
-import { base64 } from "@better-auth/utils/base64";
-import { createHMAC } from "@better-auth/utils/hmac";
-import { createRandomStringGenerator } from "@better-auth/utils/random";
+import { authClient } from "@lydie/core/auth";
 import { createId } from "@lydie/core/id";
-import { db, sessionsTable, usersTable } from "@lydie/database";
+import { db, organizationsTable, sessionsTable, usersTable } from "@lydie/database";
 import { test as baseTest } from "@playwright/test";
-import type { StorageState } from "@playwright/test";
 import type { InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 
 import { createTestUser, withDeadlockRetry } from "../utils/db";
 
-// Cache expensive crypto operations at module level
-const hmac = createHMAC("SHA-256", "none");
-const generateRandomString = createRandomStringGenerator("a-z", "0-9", "A-Z", "-_");
+let cachedTestHelpers: any;
+async function getTestHelpers() {
+  if (cachedTestHelpers) {
+    return cachedTestHelpers;
+  }
 
-// Cache the secret - it won't change during test run
-let cachedSecret: string | undefined;
-async function getAuthSecret(): Promise<string> {
-  if (!cachedSecret) {
-    cachedSecret = process.env.BETTER_AUTH_SECRET;
+  const context = await authClient.$context;
+  const testHelpers = (context as { test?: unknown }).test;
+
+  if (!testHelpers) {
+    throw new Error(
+      "Better Auth test utils are not enabled. Set BETTER_AUTH_ENABLE_TEST_UTILS=true for E2E runs.",
+    );
   }
-  if (!cachedSecret) {
-    throw new Error("BETTER_AUTH_SECRET is required - set it as an environment variable");
-  }
-  return cachedSecret;
+
+  cachedTestHelpers = testHelpers;
+  return cachedTestHelpers;
 }
 
 interface AuthData {
@@ -45,28 +45,29 @@ async function createSession(
   organizationId: string,
   ttlMs: number = 60 * 60 * 1000,
 ): Promise<SessionWithSignedToken> {
-  const secret = await getAuthSecret();
-  const sessionToken = generateRandomString(16); // Reduced from 32 to 16
-
-  const signatureBytes = await hmac.sign(secret, sessionToken);
-  const signature = base64.encode(signatureBytes);
-  const signedToken = `${sessionToken}.${signature}`;
-
-  const sessionId = createId();
+  const testHelpers = await getTestHelpers();
+  const loginResult = await testHelpers.login({ userId });
+  const sessionId = loginResult?.session?.id as string | undefined;
+  const signedToken = loginResult?.token as string | undefined;
   const expiresAt = new Date(Date.now() + ttlMs);
 
-  const [session] = await db
-    .insert(sessionsTable)
-    .values({
-      id: sessionId,
-      token: sessionToken,
-      userId,
+  if (!sessionId || !signedToken) {
+    throw new Error(`Failed to create Better Auth test session for user ${userId}`);
+  }
+
+  await db
+    .update(sessionsTable)
+    .set({
       expiresAt,
-      ipAddress: "::1",
-      userAgent: "Playwright",
       activeOrganizationId: organizationId,
     })
-    .returning();
+    .where(eq(sessionsTable.id, sessionId));
+
+  const [session] = await db
+    .select()
+    .from(sessionsTable)
+    .where(eq(sessionsTable.id, sessionId))
+    .limit(1);
 
   if (!session) {
     throw new Error(`Failed to create session for user ${userId}`);
@@ -80,6 +81,7 @@ function createStorageState(sessionToken: string, expiresAt: Date, baseURL: stri
   const url = new URL(baseURL);
   const isSecure = url.protocol === "https:";
   const domain = isSecure ? ".lydie.co" : "localhost";
+  const sameSite = isSecure ? ("None" as const) : ("Lax" as const);
 
   const cookies = [
     {
@@ -89,6 +91,8 @@ function createStorageState(sessionToken: string, expiresAt: Date, baseURL: stri
       path: "/",
       expires: expiresAt.getTime() / 1000,
       httpOnly: true,
+      secure: isSecure,
+      sameSite,
     },
   ];
 
@@ -100,6 +104,8 @@ function createStorageState(sessionToken: string, expiresAt: Date, baseURL: stri
       path: "/",
       expires: expiresAt.getTime() / 1000,
       httpOnly: true,
+      secure: true,
+      sameSite: "None",
     });
   }
 
@@ -108,8 +114,7 @@ function createStorageState(sessionToken: string, expiresAt: Date, baseURL: stri
 
 // Authenticated test with user, session, and organization fixtures
 export const test = baseTest.extend<
-  AuthenticatedFixtures & { authData: AuthData },
-  { authData: AuthData }
+  AuthenticatedFixtures & { authData: AuthData }
 >({
   authData: async ({}, use, testInfo) => {
     const userId = createId();
@@ -148,7 +153,7 @@ export const test = baseTest.extend<
       session.token,
       new Date(session.expiresAt),
       resolvedBaseURL,
-    ) satisfies StorageState;
+    );
 
     await use(storageState);
   },
@@ -163,7 +168,7 @@ export const test = baseTest.extend<
 });
 
 // Export helper for multi-user fixture
-export { createSession, createStorageState, hmac, generateRandomString, getAuthSecret };
+export { createSession, createStorageState };
 
 // Unauthenticated test for testing auth flows and public pages
 export const testUnauthenticated = baseTest;

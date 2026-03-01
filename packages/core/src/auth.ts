@@ -1,7 +1,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { db, schema } from "@lydie/database";
 import { betterAuth } from "better-auth";
-import { admin, customSession, organization } from "better-auth/plugins";
+import { admin, customSession, organization, testUtils } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 import { syncSubscriptionQuantity } from "./billing/seat-management";
@@ -247,5 +247,6 @@ export const authClient = betterAuth({
         },
       };
     }),
+    ...(env.BETTER_AUTH_ENABLE_TEST_UTILS ? [testUtils()] : []),
   ],
 });

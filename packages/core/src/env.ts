@@ -10,6 +10,7 @@ function parseAppStage(value: string | undefined): AppStage {
 export const env = {
   APP_STAGE: parseAppStage(process.env.APP_STAGE),
   SECURE_COOKIES: process.env.SECURE_COOKIES !== "false",
+  BETTER_AUTH_ENABLE_TEST_UTILS: process.env.BETTER_AUTH_ENABLE_TEST_UTILS === "true",
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
   BETTER_AUTH_BASE_URL:
     process.env.BETTER_AUTH_BASE_URL ?? "http://localhost:3001/internal/public/auth",

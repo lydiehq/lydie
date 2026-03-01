@@ -84,6 +84,7 @@ services:
       # so Better Auth must see the public-facing origin (localhost:3000).
       BETTER_AUTH_BASE_URL: http://localhost:3000/internal/public/auth
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-at-least-32-chars}
+      BETTER_AUTH_ENABLE_TEST_UTILS: ${BETTER_AUTH_ENABLE_TEST_UTILS:-false}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       ZERO_MUTATE_URL: http://backend:3001/internal/zero/mutate
       ZERO_QUERY_URL: http://backend:3001/internal/zero/queries
