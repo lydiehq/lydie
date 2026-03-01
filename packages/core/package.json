@@ -12,6 +12,7 @@
     "@aws-sdk/client-scheduler": "^3.1000.0",
     "@aws-sdk/client-sesv2": "^3.1000.0",
     "@aws-sdk/s3-request-presigner": "^3.1000.0",
+    "@better-auth/drizzle-adapter": "catalog:",
     "@hocuspocus/provider": "3",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
@@ -28,6 +29,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^25.3.2"
+    "@types/node": "^25.3.3"
   }
 }
