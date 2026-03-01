@@ -1,12 +1,20 @@
 import type { Editor } from "@tiptap/core";
 import type { TableOfContentDataItem } from "@tiptap/extension-table-of-contents";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface Props {
   editor: Editor;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
+
+type MinimapLine = {
+  id: string;
+  heading: TableOfContentDataItem;
+  headingCount: number;
+  startIndex: number;
+  endIndex: number;
+};
 
 // Width for each heading level (H1 = widest, H6 = narrowest)
 const LEVEL_WIDTHS: Record<number, number> = {
@@ -18,45 +26,65 @@ const LEVEL_WIDTHS: Record<number, number> = {
   6: 8, // H6 - 8px wide
 };
 
+const MAX_MINIMAP_LINES = 60;
+
 export function TableOfContentsMinimap({ editor, containerRef }: Props) {
   const [headings, setHeadings] = useState<TableOfContentDataItem[]>([]);
-  const [activeIndex, setActiveIndex] = useState<number>(0);
-  const [isHovered, setIsHovered] = useState(false);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
 
-  // Subscribe to heading updates from the TableOfContents extension
+  // Keep headings in sync with TipTap storage.
   useEffect(() => {
-    const storage = editor.storage.tableOfContents;
-    if (!storage) return;
-
     const updateHeadings = () => {
-      setHeadings(storage.content || []);
+      setHeadings(editor.storage.tableOfContents?.content || []);
     };
 
-    // Initial update
     updateHeadings();
-
-    // Set up onUpdate callback via extension options
-    const tableOfContentsExtension = editor.extensionManager.extensions.find(
-      (ext) => ext.name === "tableOfContents",
-    );
-
-    if (tableOfContentsExtension) {
-      const originalOnUpdate = tableOfContentsExtension.options.onUpdate;
-      tableOfContentsExtension.options.onUpdate = (
-        content: TableOfContentDataItem[],
-        isCreate: boolean,
-      ) => {
-        setHeadings(content);
-        if (originalOnUpdate) {
-          originalOnUpdate(content, isCreate);
-        }
-      };
-    }
+    editor.on("update", updateHeadings);
 
     return () => {
-      // Cleanup not needed as extension persists with editor
+      editor.off("update", updateHeadings);
     };
   }, [editor]);
+
+  const minimapLines = useMemo<MinimapLine[]>(() => {
+    if (headings.length <= MAX_MINIMAP_LINES) {
+      return headings.map((heading, index) => ({
+        id: heading.id,
+        heading,
+        headingCount: 1,
+        startIndex: index,
+        endIndex: index,
+      }));
+    }
+
+    const bucketSize = Math.ceil(headings.length / MAX_MINIMAP_LINES);
+    const lines: MinimapLine[] = [];
+
+    for (let i = 0; i < headings.length; i += bucketSize) {
+      const bucket = headings.slice(i, i + bucketSize);
+      const firstHeading = bucket[0];
+      const lastHeading = bucket.at(-1);
+
+      if (!firstHeading || !lastHeading) {
+        continue;
+      }
+
+      lines.push({
+        id: `${firstHeading.id}-${lastHeading.id}`,
+        heading: firstHeading,
+        headingCount: bucket.length,
+        startIndex: i,
+        endIndex: i + bucket.length - 1,
+      });
+    }
+
+    return lines;
+  }, [headings]);
+
+  const activeLineIndex = useMemo(
+    () => minimapLines.findIndex((line) => activeIndex >= line.startIndex && activeIndex <= line.endIndex),
+    [activeIndex, minimapLines],
+  );
 
   // Track scroll position to highlight active heading
   useEffect(() => {
@@ -87,14 +115,14 @@ export function TableOfContentsMinimap({ editor, containerRef }: Props) {
       setActiveIndex(currentIndex);
     };
 
-    container.addEventListener("scroll", handleScroll);
+    container.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll(); // Initial check
 
     return () => container.removeEventListener("scroll", handleScroll);
   }, [containerRef, headings]);
 
   // Navigate to a heading when clicked
-  const navigateToHeading = (heading: TableOfContentDataItem) => {
+  const navigateToHeading = useCallback((heading: TableOfContentDataItem) => {
     const element = document.getElementById(heading.id);
     if (element && containerRef.current) {
       const container = containerRef.current;
@@ -109,7 +137,7 @@ export function TableOfContentsMinimap({ editor, containerRef }: Props) {
         behavior: "smooth",
       });
     }
-  };
+  }, [containerRef]);
 
   // Don't show if no headings
   if (headings.length === 0) {
@@ -117,28 +145,28 @@ export function TableOfContentsMinimap({ editor, containerRef }: Props) {
   }
 
   return (
-    <div
-      className="fixed right-6 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="group fixed right-6 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1">
       {/* Minimap lines - always visible, compact representation */}
       <div className="flex flex-col items-end gap-1.5 pr-4">
-        {headings.map((heading, index) => {
-          const isActive = index === activeIndex;
-          const width = LEVEL_WIDTHS[heading.level] || 10;
+        {minimapLines.map((line, index) => {
+          const isActive = index === activeLineIndex;
+          const width = LEVEL_WIDTHS[line.heading.level] || 10;
 
           return (
             <button
-              key={heading.id}
-              onClick={() => navigateToHeading(heading)}
+              key={line.id}
+              onClick={() => navigateToHeading(line.heading)}
               className={clsx(
                 "h-0.5 rounded-sm transition-all duration-200",
                 "hover:opacity-80 focus:outline-none",
                 isActive ? "bg-gray-800" : "bg-black/10 hover:bg-black/20",
               )}
               style={{ width: `${width}px` }}
-              title={heading.textContent}
+              title={
+                line.headingCount > 1
+                  ? `${line.heading.textContent} (+${line.headingCount - 1} more)`
+                  : line.heading.textContent
+              }
             />
           );
         })}
@@ -153,33 +181,36 @@ export function TableOfContentsMinimap({ editor, containerRef }: Props) {
           "absolute right-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 w-56 max-h-[80vh] overflow-y-auto",
           "bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/80",
           "transition-all duration-200 ease-out origin-right",
-          isHovered
-            ? "opacity-100 scale-100 translate-x-0"
-            : "opacity-0 scale-95 translate-x-4 pointer-events-none",
+          "opacity-0 scale-95 translate-x-4 pointer-events-none",
+          "group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 group-hover:pointer-events-auto",
         )}
       >
         <div className="py-2 px-2">
           <nav className="flex flex-col gap-0.5">
-            {headings.map((heading, index) => {
-              const isActive = index === activeIndex;
+            {minimapLines.map((line, index) => {
+              const isActive = index === activeLineIndex;
+              const headingLabel =
+                line.headingCount > 1
+                  ? `${line.heading.textContent} (+${line.headingCount - 1})`
+                  : line.heading.textContent;
 
               return (
                 <button
-                  key={heading.id}
-                  onClick={() => navigateToHeading(heading)}
+                  key={line.id}
+                  onClick={() => navigateToHeading(line.heading)}
                   className={clsx(
                     "text-left text-xs py-1 px-2 rounded transition-all duration-150",
                     "hover:bg-gray-100 focus:outline-none focus:bg-gray-100 truncate",
                     isActive ? "text-gray-900 font-medium bg-gray-50" : "text-gray-500 font-normal",
-                    heading.level === 1 && "pl-2",
-                    heading.level === 2 && "pl-3",
-                    heading.level === 3 && "pl-4",
-                    heading.level === 4 && "pl-5",
-                    heading.level === 5 && "pl-6",
+                    line.heading.level === 1 && "pl-2",
+                    line.heading.level === 2 && "pl-3",
+                    line.heading.level === 3 && "pl-4",
+                    line.heading.level === 4 && "pl-5",
+                    line.heading.level === 5 && "pl-6",
                   )}
-                  title={heading.textContent}
+                  title={headingLabel}
                 >
-                  {heading.textContent}
+                  {headingLabel}
                 </button>
               );
             })}
