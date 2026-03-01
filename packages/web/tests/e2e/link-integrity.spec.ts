@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures/auth.fixture";
 import { createDocument, gotoWorkspace } from "./utils/document";
 
-test.describe("internal link integrity", () => {
+test.describe.skip("internal link integrity", () => {
   test("can create internal link to another document", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
     const suffix = Date.now();

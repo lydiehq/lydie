@@ -20,7 +20,7 @@ export const authClient = betterAuth({
   },
   session: {
     cookieCache: {
-      enabled: true,
+      enabled: !env.BETTER_AUTH_ENABLE_TEST_UTILS,
       maxAge: 5 * 60,
     },
   },

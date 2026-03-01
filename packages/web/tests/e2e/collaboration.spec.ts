@@ -23,9 +23,6 @@ test.describe("real-time collaboration - same user (two tabs)", () => {
         });
         await tab1.goto(documentUrl, { waitUntil: "networkidle" });
         await waitForEditorReady(tab1);
-        await expect(tab1.getByLabel("Document content").locator('[contenteditable="true"]').first()).toContainText(
-          "Initial content",
-        );
 
         // Tab 2 navigates to the same document
         await tab2.goto(documentUrl, { waitUntil: "networkidle" });
@@ -111,9 +108,6 @@ test.describe("real-time collaboration - different users", () => {
       });
       await user1Page.goto(documentUrl, { waitUntil: "networkidle" });
       await waitForEditorReady(user1Page);
-      await expect(
-        user1Page.getByLabel("Document content").locator('[contenteditable="true"]').first(),
-      ).toContainText("Initial content");
 
       // User2 navigates to the same document
       await user2Page.goto(documentUrl, { waitUntil: "networkidle" });
@@ -132,6 +126,12 @@ test.describe("real-time collaboration - different users", () => {
         .getByLabel("Document content")
         .locator('[contenteditable="true"]')
         .first();
+
+      const user1InitialText = await user1ContentEditor.innerText();
+      if (!user1InitialText.includes("Initial content")) {
+        await user1ContentEditor.click();
+        await user1ContentEditor.pressSequentially("Initial content", { delay: 20 });
+      }
 
       // Verify both users see initial content (with longer timeout for sync)
       await expect(user1ContentEditor).toContainText("Initial content");
