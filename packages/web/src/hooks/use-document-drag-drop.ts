@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { useOrganization } from "@/context/organization.context";
 import { useZero } from "@/services/zero";
-import { confirmDialog } from "@/stores/confirm-dialog";
+import { confirmDialog } from "@/atoms/confirm-dialog";
 
 interface ItemType {
   id: string;

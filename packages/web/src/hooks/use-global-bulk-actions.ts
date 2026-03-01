@@ -4,7 +4,7 @@ import {
   hideGlobalBulkActions,
   showGlobalBulkActions,
   type GlobalBulkAction,
-} from "@/stores/global-bulk-actions";
+} from "@/atoms/global-bulk-actions";
 
 type UseGlobalBulkActionsOptions = {
   selectionCount: number;

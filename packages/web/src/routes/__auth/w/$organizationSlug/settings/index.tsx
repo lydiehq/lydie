@@ -24,7 +24,7 @@ import { useAppForm } from "@/hooks/use-app-form";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useAuthenticatedApi } from "@/services/api";
 import { useZero } from "@/services/zero";
-import { confirmDialog } from "@/stores/confirm-dialog";
+import { confirmDialog } from "@/atoms/confirm-dialog";
 import { authClient } from "@/utils/auth";
 
 type ApiKeyDialogStep = "create" | "success";

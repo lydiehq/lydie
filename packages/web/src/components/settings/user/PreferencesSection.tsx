@@ -4,7 +4,7 @@ import { useAtom } from "jotai";
 
 import { editorFontSizeAtom } from "@/atoms/workspace-settings";
 import { Card } from "@/components/layout/Card";
-import { FONT_SIZE_MAP, type FontSizeOption } from "@/stores/font-size";
+import { FONT_SIZE_MAP, type FontSizeOption } from "@/atoms/font-size";
 
 export function PreferencesSection() {
   const [fontSize, setFontSize] = useAtom(editorFontSizeAtom);

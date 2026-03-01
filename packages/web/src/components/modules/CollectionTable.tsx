@@ -36,7 +36,7 @@ import { toast } from "sonner";
 
 import { useGlobalBulkActions } from "@/hooks/use-global-bulk-actions";
 import { useZero } from "@/services/zero";
-import { confirmDialog } from "@/stores/confirm-dialog";
+import { confirmDialog } from "@/atoms/confirm-dialog";
 import { focusVisibleStyles } from "@/utils/focus-ring";
 
 type DocumentItem = {

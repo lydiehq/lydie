@@ -94,7 +94,7 @@ export function useDocumentActions() {
     };
 
     if (integrationLinkId) {
-      const { confirmDialog } = require("@/stores/confirm-dialog");
+      const { confirmDialog } = require("@/atoms/confirm-dialog");
       confirmDialog({
         title: "Delete from Integration?",
         message:

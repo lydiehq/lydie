@@ -15,7 +15,7 @@ import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useZero } from "@/services/zero";
-import { confirmDialog } from "@/stores/confirm-dialog";
+import { confirmDialog } from "@/atoms/confirm-dialog";
 import { isAdmin } from "@/utils/admin";
 
 type DocumentMenuProps = {

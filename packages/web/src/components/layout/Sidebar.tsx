@@ -35,7 +35,7 @@ import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useZero } from "@/services/zero";
-import { commandMenuStateAtom } from "@/stores/command-menu";
+import { commandMenuStateAtom } from "@/atoms/command-menu";
 import { isAdmin } from "@/utils/admin";
 
 import { FeedbackWidget } from "../feedback/FeedbackWidget";

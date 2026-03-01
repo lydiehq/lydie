@@ -1,7 +1,7 @@
 import { Button } from "@lydie/ui/components/generic/Button";
 import { useAtom } from "jotai";
 
-import { globalBulkActionsAtom } from "@/stores/global-bulk-actions";
+import { globalBulkActionsAtom } from "@/atoms/global-bulk-actions";
 
 export function GlobalBulkActionsBar() {
   const [state] = useAtom(globalBulkActionsAtom);

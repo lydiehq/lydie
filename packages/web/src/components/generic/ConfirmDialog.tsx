@@ -4,7 +4,7 @@ import { Modal } from "@lydie/ui/components/generic/Modal";
 import { useAtom } from "jotai";
 import { Heading } from "react-aria-components";
 
-import { confirmDialogAtom } from "@/stores/confirm-dialog";
+import { confirmDialogAtom } from "@/atoms/confirm-dialog";
 
 export function ConfirmDialog() {
   const [state, setState] = useAtom(confirmDialogAtom);

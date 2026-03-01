@@ -3,7 +3,7 @@ import type { WritableAtom } from "jotai";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
-import type { FontSizeOption } from "@/stores/font-size";
+import type { FontSizeOption } from "@/atoms/font-size";
 
 type SidebarSection = "favorites" | "documents" | "collections";
 

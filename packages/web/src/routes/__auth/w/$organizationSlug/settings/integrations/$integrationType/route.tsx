@@ -17,7 +17,7 @@ import { Link } from "@/components/generic/Link";
 import { WordPressConnectionForm } from "@/components/settings/integrations/forms/wordpress-connection-form";
 import { useOrganization } from "@/context/organization.context";
 import { useAuthenticatedApi } from "@/services/api";
-import { confirmDialog } from "@/stores/confirm-dialog";
+import { confirmDialog } from "@/atoms/confirm-dialog";
 import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 export const Route = createFileRoute(

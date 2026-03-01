@@ -20,7 +20,7 @@ import { getSessionQuery, loadSession, type ExtendedSessionData } from "@/lib/au
 import { identifyUser } from "@/lib/posthog";
 import { getZeroInstance } from "@/lib/zero/instance";
 import type { RouterContext } from "@/main";
-import { getFontSizePixels } from "@/stores/font-size";
+import { getFontSizePixels } from "@/atoms/font-size";
 
 declare module "react-aria-components" {
   interface RouterConfig {
