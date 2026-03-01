@@ -15,10 +15,12 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     env:
-      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
       AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate ephemeral auth secret
+        run: echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -40,7 +42,6 @@ jobs:
         env:
           APP_STAGE: test
           INSTALL_CONVERSION_DEPS: "false"
-          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
           AI_GATEWAY_API_KEY: ${{ env.AI_GATEWAY_API_KEY }}
 
       - name: Show service status on startup failure
@@ -84,7 +85,6 @@ jobs:
         run: bunx playwright test
         working-directory: packages/web
         env:
-          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
           DATABASE_URL: postgres://lydie:lydie@localhost:5432/lydie
 
       - name: Upload test results
