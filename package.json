@@ -44,7 +44,7 @@
     "docker:prod": "docker compose --env-file .env -f docker/docker-compose.yml up -d --build",
     "docker:prod:down": "docker compose --env-file .env -f docker/docker-compose.yml down -v",
     "docker:prod:logs": "docker compose --env-file .env -f docker/docker-compose.yml logs -f",
-    "docker:e2e": "docker compose --env-file .env -f docker/docker-compose.yml up -d --build && bun --filter=@lydie/web test:e2e; docker compose --env-file .env -f docker/docker-compose.yml down -v",
+    "docker:e2e": "BETTER_AUTH_ENABLE_TEST_UTILS=true docker compose --env-file .env -f docker/docker-compose.yml up -d --build && BETTER_AUTH_ENABLE_TEST_UTILS=true bun --filter=@lydie/web test:e2e; docker compose --env-file .env -f docker/docker-compose.yml down -v",
     "db:push": "bun --filter=@lydie/database db:push",
     "db:sync": "bun --filter=@lydie/database db:sync-zero-publication",
     "db:studio": "bun --filter=@lydie/database db:studio",

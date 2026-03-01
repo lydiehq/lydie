@@ -48,7 +48,12 @@ async function createSession(
   const testHelpers = await getTestHelpers();
   const loginResult = await testHelpers.login({ userId });
   const sessionId = loginResult?.session?.id as string | undefined;
-  const signedToken = loginResult?.token as string | undefined;
+  const cookies = (await testHelpers.getCookies({ userId, domain: "localhost" })) as Array<{
+    name: string;
+    value: string;
+  }>;
+  const sessionCookie = cookies.find((cookie) => cookie.name === "better-auth.session_token");
+  const signedToken = (sessionCookie?.value || loginResult?.token) as string | undefined;
   const expiresAt = new Date(Date.now() + ttlMs);
 
   if (!sessionId || !signedToken) {
