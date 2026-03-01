@@ -16,7 +16,12 @@ import { editorFontSizeAtom } from "@/atoms/workspace-settings";
 import { ConfirmDialog } from "@/components/generic/ConfirmDialog";
 import { ErrorPage } from "@/components/layout/ErrorPage";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
-import { getSessionQuery, loadSession, type ExtendedSessionData } from "@/lib/auth/session";
+import {
+  getSessionQuery,
+  loadSession,
+  revalidateSessionOnStartup,
+  type ExtendedSessionData,
+} from "@/lib/auth/session";
 import { identifyUser } from "@/lib/posthog";
 import { getZeroInstance } from "@/lib/zero/instance";
 import type { RouterContext } from "@/main";
@@ -81,35 +86,38 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   pendingComponent: LoadingScreen,
   errorComponent: ErrorPage,
   beforeLoad: async ({ context: { queryClient } }) => {
-    // Load session - uses cache when fresh (5 min staleTime), fetches if stale/missing
-    const { auth } = await loadSession(queryClient);
+    const { auth, hadCachedSession } = await loadSession(queryClient);
 
     return {
       zero: getZeroInstance(auth),
       auth,
+      hadCachedSession,
     };
   },
   component: () => {
     const router = useRouter();
-    const { zero: zeroInstance } = Route.useRouteContext();
+    const { hadCachedSession, queryClient, zero: zeroInstance } = Route.useRouteContext();
     const fontSizeOption = useAtomValue(editorFontSizeAtom);
     const [isRedirecting, setIsRedirecting] = useState(false);
 
-    // Load session - uses cached data immediately, then revalidates with staleTime: 0
     const { data: sessionData, isLoading } = useQuery(getSessionQuery()) as {
       data: ExtendedSessionData | undefined;
       isLoading: boolean;
     };
 
-    // Handle organization redirect logic - only after we have confirmed fresh data
-    // Only redirect if user is logged in but has no organizations
     useEffect(() => {
-      // Only process after initial load completes
+      if (!hadCachedSession) {
+        return;
+      }
+
+      void revalidateSessionOnStartup(queryClient);
+    }, [hadCachedSession, queryClient]);
+
+    useEffect(() => {
       if (!isLoading && sessionData?.user) {
         const organizations = sessionData.session?.organizations || [];
         const pathname = window.location.pathname;
 
-        // Only redirect to /new if user has no orgs and isn't already on special pages
         if (
           organizations.length === 0 &&
           !pathname.startsWith("/new") &&
@@ -122,7 +130,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       }
     }, [isLoading, sessionData, router]);
 
-    // Apply font size
     useEffect(() => {
       if (fontSizeOption === "default") {
         document.documentElement.style.removeProperty("font-size");
@@ -131,7 +138,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       }
     }, [fontSizeOption]);
 
-    // Identify user for analytics
     useEffect(() => {
       if (sessionData?.user?.id) {
         identifyUser(sessionData.user.id, {
@@ -141,7 +147,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       }
     }, [sessionData?.user?.id, sessionData?.user?.email, sessionData?.user?.name]);
 
-    // Show loading screen only during initial load
     if (isLoading || isRedirecting) {
       return <LoadingScreen />;
     }

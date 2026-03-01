@@ -27,6 +27,7 @@ const LEVEL_WIDTHS: Record<number, number> = {
 };
 
 const MAX_MINIMAP_LINES = 60;
+const MIN_HEADINGS_TO_SHOW = 4;
 
 export function TableOfContentsMinimap({ editor, containerRef }: Props) {
   const [headings, setHeadings] = useState<TableOfContentDataItem[]>([]);
@@ -139,8 +140,8 @@ export function TableOfContentsMinimap({ editor, containerRef }: Props) {
     }
   }, [containerRef]);
 
-  // Don't show if no headings
-  if (headings.length === 0) {
+  // Don't show minimap for short documents.
+  if (headings.length < MIN_HEADINGS_TO_SHOW) {
     return null;
   }
 

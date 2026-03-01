@@ -5,15 +5,17 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
-import { getSessionQuery, type ExtendedSessionData } from "@/lib/auth/session";
+import {
+  clearPersistedSessionCache,
+  SESSION_QUERY_KEY,
+  type ExtendedSessionData,
+} from "@/lib/auth/session";
 import { authClient } from "@/utils/auth";
 
 export const Route = createFileRoute("/_landing/auth/")({
   component: RouteComponent,
-  beforeLoad: async ({ context }) => {
-    const sessionData = (await context.queryClient.fetchQuery(getSessionQuery())) as
-      | ExtendedSessionData
-      | undefined;
+  beforeLoad: ({ context }) => {
+    const sessionData = context.auth as ExtendedSessionData | undefined;
 
     if (!sessionData?.user) {
       return;
@@ -44,9 +46,6 @@ export const Route = createFileRoute("/_landing/auth/")({
   }),
 });
 
-const QUERY_CACHE_KEY = "lydie:query:cache:session";
-const SESSION_QUERY_KEY = ["auth", "getSession"];
-
 function RouteComponent() {
   return (
     <div className="relative min-h-screen overflow-hidden grainy-gradient-container">
@@ -68,18 +67,9 @@ function AuthBox() {
   const { redirect, template } = Route.useSearch();
   const queryClient = useQueryClient();
 
-  // Clear any stale session cache when visiting auth page
-  // This ensures fresh session data after OAuth redirect
   useEffect(() => {
-    try {
-      localStorage.removeItem(QUERY_CACHE_KEY);
-      // Also clear React Query cache to ensure fresh fetch
-      // Use setQueryData instead of removeQueries to avoid triggering
-      // a refetch that would cause an infinite loop with the root route loader
-      queryClient.setQueryData(SESSION_QUERY_KEY, undefined);
-    } catch {
-      // Ignore errors
-    }
+    clearPersistedSessionCache();
+    queryClient.setQueryData(SESSION_QUERY_KEY, undefined);
   }, [queryClient]);
 
   const handleGoogleSignIn = async () => {
@@ -120,10 +110,6 @@ function AuthBox() {
         <img src="/icons/google.svg" alt="Google" className="size-4 mr-2" />
         <span>Continue with Google</span>
       </Button>
-
-      {/* <div className="text-xs text-gray-500 dark:text-gray-400">
-        By continuing, you agree to our Terms of Service and Privacy Policy
-      </div> */}
     </div>
   );
 }

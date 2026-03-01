@@ -14,6 +14,7 @@ import { useState } from "react";
 import { Menu, MenuTrigger, Button as RACButton } from "react-aria-components";
 
 import { useOrganization } from "@/context/organization.context";
+import { clearSession } from "@/lib/auth/session";
 import { resetUser } from "@/lib/posthog";
 import { clearZeroInstance } from "@/lib/zero/instance";
 import { authClient } from "@/utils/auth";
@@ -30,12 +31,10 @@ type Props = {
 export function OrganizationMenu({ isCollapsed }: Props) {
   const { organization } = useOrganization();
 
-  // Live query to get real-time organization updates
   const [liveOrganization] = useQuery(
     queries.organizations.byId({ organizationId: organization?.id ?? "" }),
   );
 
-  // Use live data if available, fall back to loader data
   const displayOrganization = liveOrganization ?? organization;
   const avatarColor =
     displayOrganization?.color ?? getDefaultColorForId(displayOrganization?.id ?? "");
@@ -46,25 +45,12 @@ export function OrganizationMenu({ isCollapsed }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const signOut = async () => {
-    // Clear client-side state BEFORE calling signOut to prevent race conditions
-    // where routes still see cached session data during redirect
     clearZeroInstance();
     resetUser();
 
-    // Clear React Query cache synchronously to ensure no stale session data
-    queryClient.clear();
-
-    // Remove persisted session from localStorage immediately
-    try {
-      localStorage.removeItem("lydie:query:cache:session");
-    } catch {
-      // Ignore localStorage errors
-    }
-
-    // Sign out on the server (clears HTTP-only cookie)
+    await clearSession(queryClient);
     await authClient.signOut();
 
-    // Hard navigate to auth page to ensure clean state
     window.location.href = "/auth";
   };
 

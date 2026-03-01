@@ -53,7 +53,7 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
   staleTime: Infinity,
 });
 
-const COLLAPSED_SIZE = 50; // pixels
+const COLLAPSED_SIZE = 50;
 
 function NotFoundComponent() {
   return (
@@ -71,7 +71,6 @@ function RouteComponent() {
 }
 
 function RouteLayout() {
-  // Initialize shared WebSocket connection for the workspace
   useWorkspaceWebSocket();
 
   const sidebarPanelRef = usePanelRef();
@@ -81,7 +80,7 @@ function RouteLayout() {
   );
   const [floatingAssistantContainer, setFloatingAssistantContainer] =
     useState<HTMLDivElement | null>(null);
-  const [size, setSize] = useState(280); // pixels
+  const [size, setSize] = useState(280);
   const isCollapsed = size === COLLAPSED_SIZE;
   const [, setSidebarCollapsed] = useAtom(isSidebarCollapsedAtom);
   const setTabStorageScope = useSetAtom(setDocumentTabsStorageScopeAtom);
@@ -89,7 +88,6 @@ function RouteLayout() {
   const isDocked = useAtomValue(isDockedAtom);
   const { session } = useAuth();
 
-  // Sync collapsed state to atom so child components can read it
   useEffect(() => {
     setSidebarCollapsed(isCollapsed);
   }, [isCollapsed, setSidebarCollapsed]);
@@ -101,10 +99,8 @@ function RouteLayout() {
     } else {
       sidebarPanelRef.current.collapse();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sidebarPanelRef]);
 
-  // Listen for toggle-sidebar event from child components
   useEffect(() => {
     const handleToggleSidebar = () => {
       toggleSidebar();
@@ -119,20 +115,13 @@ function RouteLayout() {
   const params = Route.useParams();
   const { organization } = Route.useRouteContext();
 
-  // Track the last organization that was set as active to avoid unnecessary API calls.
-  // This ref persists across renders but doesn't trigger re-renders when changed.
   const lastActiveOrgIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Only set active organization if:
-    // 1. We have an organization
-    // 2. It's different from the last one we set
     if (organization && organization.id !== lastActiveOrgIdRef.current) {
-      // Update the ref immediately to prevent concurrent calls
       lastActiveOrgIdRef.current = organization.id;
 
-      // Set the active organization on the server
-      authClient.organization.setActive({
+      void authClient.organization.setActive({
         organizationId: organization.id,
       });
     }

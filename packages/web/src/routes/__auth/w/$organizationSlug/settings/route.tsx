@@ -91,6 +91,7 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationSlug/settings/integrations/",
         label: "Integrations",
         icon: TabDesktopMultiple16Filled,
+        adminOnly: true,
       },
       {
         path: "/w/$organizationSlug/settings/export-import",

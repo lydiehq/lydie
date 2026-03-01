@@ -15,7 +15,6 @@ export const Route = createFileRoute("/_landing")({
       const activeOrganizationSlug = auth.session?.activeOrganizationSlug;
       const organizations = auth.session?.organizations ?? [];
 
-      // Redirect to active organization if set
       if (activeOrganizationSlug) {
         throw redirect({
           to: "/w/$organizationSlug",
@@ -23,7 +22,6 @@ export const Route = createFileRoute("/_landing")({
         });
       }
 
-      // Redirect to first organization if user has any
       if (organizations.length > 0) {
         throw redirect({
           to: "/w/$organizationSlug",
@@ -31,7 +29,6 @@ export const Route = createFileRoute("/_landing")({
         });
       }
 
-      // No organizations, redirect to create workspace
       throw redirect({
         to: "/new",
       });

@@ -3,16 +3,13 @@ import type { QueryClient } from "@tanstack/react-query";
 import { authClient } from "@/utils/auth";
 
 export const SESSION_QUERY_KEY = ["auth", "getSession"];
+export const SESSION_CACHE_KEY = "lydie:query:cache:session";
 
-// 5 minutes - how long cached session data is considered fresh
-const SESSION_CACHE_STALE_TIME = 5 * 60 * 1000;
-
-// 30 seconds - minimum time between background revalidation calls
+const SESSION_QUERY_STALE_TIME = Number.POSITIVE_INFINITY;
 const REVALIDATION_THROTTLE_MS = 30 * 1000;
 
 type SessionData = Awaited<ReturnType<typeof authClient.getSession>>["data"];
 
-// Extended session type that includes organizations from customSession plugin
 export type ExtendedSessionData = SessionData & {
   session?: {
     organizations?: Array<{
@@ -25,44 +22,34 @@ export type ExtendedSessionData = SessionData & {
   };
 };
 
-// Fetch session data from the server
 async function fetchSession() {
   const response = await authClient.getSession();
   return response.data;
 }
 
-// Query configuration for use in components (always revalidates on mount)
 export function getSessionQuery() {
   return {
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
-    staleTime: 0, // Always revalidate on mount to catch auth state changes
+    staleTime: SESSION_QUERY_STALE_TIME,
     retry: 2,
   };
 }
 
 export type LoadSessionResult = {
   auth: SessionData | undefined;
-  organizations: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    [key: string]: any;
-  }>;
+  hadCachedSession: boolean;
 };
 
-// Get cached session without triggering a fetch
 export function getCachedSession(queryClient: QueryClient): ExtendedSessionData | undefined {
   return queryClient.getQueryData<ExtendedSessionData>(SESSION_QUERY_KEY);
 }
 
-// Check if session has been loaded at least once
 export function hasLoadedSession(queryClient: QueryClient): boolean {
   const state = queryClient.getQueryState(SESSION_QUERY_KEY);
   return Boolean(state?.dataUpdatedAt);
 }
 
-// Throttled background revalidation - prevents spam on rapid route changes
 let lastRevalidationTime = 0;
 
 export function shouldThrottleRevalidation(): boolean {
@@ -74,22 +61,24 @@ export function shouldThrottleRevalidation(): boolean {
   return false;
 }
 
-// Load session data for route loaders - uses cache when fresh
 export async function loadSession(queryClient: QueryClient): Promise<LoadSessionResult> {
-  const data = (await queryClient.ensureQueryData({
-    queryKey: SESSION_QUERY_KEY,
-    queryFn: fetchSession,
-    staleTime: SESSION_CACHE_STALE_TIME,
-    retry: 2,
-  })) as ExtendedSessionData;
+  const hadCachedSession = hasLoadedSession(queryClient);
+
+  const data = hadCachedSession
+    ? getCachedSession(queryClient)
+    : ((await queryClient.fetchQuery({
+        queryKey: SESSION_QUERY_KEY,
+        queryFn: fetchSession,
+        staleTime: SESSION_QUERY_STALE_TIME,
+        retry: 2,
+      })) as ExtendedSessionData);
 
   return {
     auth: data || undefined,
-    organizations: data?.session?.organizations || [],
+    hadCachedSession,
   };
 }
 
-// Revalidate session data by forcing a fresh fetch from the server
 export async function revalidateSession(queryClient: QueryClient) {
   await queryClient.fetchQuery({
     queryKey: SESSION_QUERY_KEY,
@@ -98,7 +87,17 @@ export async function revalidateSession(queryClient: QueryClient) {
   });
 }
 
-// Wait for session to reflect organization changes (with retries)
+let hasTriggeredStartupRevalidation = false;
+
+export async function revalidateSessionOnStartup(queryClient: QueryClient) {
+  if (hasTriggeredStartupRevalidation || shouldThrottleRevalidation()) {
+    return;
+  }
+
+  hasTriggeredStartupRevalidation = true;
+  await revalidateSession(queryClient);
+}
+
 export async function waitForSessionUpdate(
   queryClient: QueryClient,
   checkFn: (session: ExtendedSessionData | undefined) => boolean,
@@ -124,22 +123,21 @@ export async function waitForSessionUpdate(
   return false;
 }
 
-// Clear session data (useful for logout)
-export function clearSession(queryClient: QueryClient) {
-  // Cancel all ongoing queries to prevent race conditions
-  queryClient.cancelQueries({
+export function clearPersistedSessionCache() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    localStorage.removeItem(SESSION_CACHE_KEY);
+  } catch {}
+}
+
+export async function clearSession(queryClient: QueryClient) {
+  await queryClient.cancelQueries({
     queryKey: SESSION_QUERY_KEY,
   });
 
-  // Clear all queries (more thorough than just removing session)
   queryClient.clear();
-
-  // Clear persisted cache from localStorage to prevent stale data on next visit
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.removeItem("lydie:query:cache:session");
-    } catch {
-      // Ignore localStorage errors
-    }
-  }
+  clearPersistedSessionCache();
 }

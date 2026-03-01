@@ -3,6 +3,7 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Logo } from "@/components/layout/Logo";
+import { clearSession } from "@/lib/auth/session";
 import { resetUser } from "@/lib/posthog";
 import { authClient } from "@/utils/auth";
 
@@ -35,23 +36,11 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
   const queryClient = useQueryClient();
 
   const signOut = async () => {
-    // Clear client-side state BEFORE calling signOut to prevent race conditions
     resetUser();
 
-    // Clear React Query cache completely
-    queryClient.clear();
-
-    // Remove persisted session from localStorage immediately
-    try {
-      localStorage.removeItem("lydie:query:cache:session");
-    } catch {
-      // Ignore localStorage errors
-    }
-
-    // Sign out on the server (clears HTTP-only cookie)
+    await clearSession(queryClient);
     await authClient.signOut();
 
-    // Hard navigate to auth page to ensure clean state
     window.location.href = "/auth";
   };
 

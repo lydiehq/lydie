@@ -2,7 +2,12 @@ import { db, sessionsTable } from "@lydie/database";
 import { eq } from "drizzle-orm";
 
 import { expect, test, testUnauthenticated } from "./fixtures/auth.fixture";
-import { createExpiredSession, deleteSessionFromDB, setSessionCookie } from "./utils/auth";
+import {
+  createExpiredSession,
+  createGetSessionRequestCounter,
+  deleteSessionFromDB,
+  setSessionCookie,
+} from "./utils/auth";
 
 const QUERY_CACHE_KEY = "lydie:query:cache:session";
 
@@ -42,6 +47,48 @@ function hasResolvedSessionData(rawCache: string | null): boolean {
   }
 
   return sessionQuery.state?.status === "success" && sessionQuery.state?.data != null;
+}
+
+function hasSensitiveTokenFields(rawCache: string | null): boolean {
+  if (!rawCache) {
+    return false;
+  }
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(rawCache) as unknown;
+  } catch {
+    return false;
+  }
+
+  const keysToBlock = new Set(["token", "accessToken", "refreshToken"]);
+
+  function scan(value: unknown): boolean {
+    if (!value || typeof value !== "object") {
+      return false;
+    }
+
+    if (Array.isArray(value)) {
+      return value.some((item) => scan(item));
+    }
+
+    const record = value as Record<string, unknown>;
+
+    for (const [key, nestedValue] of Object.entries(record)) {
+      if (keysToBlock.has(key)) {
+        return true;
+      }
+
+      if (scan(nestedValue)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  return scan(parsed);
 }
 
 function buildUnauthenticatedSessionCacheSnapshot(): string {
@@ -144,6 +191,73 @@ test.describe("session persistence", () => {
     expect(cached).toBeTruthy();
     expect(cached).toContain("auth");
     expect(cached).toContain("getSession");
+    expect(hasSensitiveTokenFields(cached)).toBe(false);
+  });
+
+  test("cold app load should call get-session once", async ({ page, organization }) => {
+    await page.addInitScript((cacheKey) => {
+      localStorage.removeItem(cacheKey);
+    }, QUERY_CACHE_KEY);
+
+    const counter = createGetSessionRequestCounter(page);
+
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect.poll(() => counter.getCount()).toBe(1);
+    counter.dispose();
+  });
+
+  test("warm app load should use cache and revalidate once in background", async ({
+    page,
+    organization,
+  }) => {
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect
+      .poll(async () => page.evaluate((cacheKey) => localStorage.getItem(cacheKey), QUERY_CACHE_KEY))
+      .toBeTruthy();
+
+    const counter = createGetSessionRequestCounter(page);
+
+    await page.reload();
+    await page.waitForURL(`/w/${organization.slug}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect.poll(() => counter.getCount()).toBe(1);
+
+    counter.dispose();
+  });
+
+  test("client-side workspace navigation should not call get-session", async ({ page, organization }) => {
+    const counter = createGetSessionRequestCounter(page);
+
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect.poll(() => counter.getCount()).toBe(1);
+
+    counter.reset();
+
+    await page.evaluate((organizationSlug) => {
+      window.history.pushState({}, "", `/w/${organizationSlug}?e2e-nav=1`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, organization.slug);
+    await page.waitForURL(`/w/${organization.slug}?e2e-nav=1`);
+
+    await page.evaluate((organizationSlug) => {
+      window.history.pushState({}, "", `/w/${organizationSlug}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, organization.slug);
+    await page.waitForURL(`/w/${organization.slug}`);
+
+    await page.waitForTimeout(300);
+    expect(counter.getCount()).toBe(0);
+    counter.dispose();
   });
 
   test("session should persist across multiple tabs", async ({ page, context, organization }) => {
@@ -181,7 +295,7 @@ test.describe("session persistence", () => {
     expect(hasResolvedSessionData(cached)).toBe(false);
   });
 
-  test("session should revalidate with staleTime:0 on mount", async ({ page, organization }) => {
+  test("session should remain valid after background revalidation", async ({ page, organization }) => {
     await page.goto(`/w/${organization.slug}`);
     await page.waitForURL(`/w/${organization.slug}`);
 
@@ -296,6 +410,28 @@ test.describe("session expiration", () => {
 
     // Try to access the page again - should redirect to auth
     await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(/\/auth/);
+  });
+
+  test("should redirect to /auth on reload after session is revoked while app is open", async ({
+    page,
+    user,
+    organization,
+  }) => {
+    const { sessionId, token, expiresAt } = await createExpiredSession(
+      user.id,
+      organization.id,
+      60 * 60 * 1000,
+    );
+
+    await setSessionCookie(page, token, expiresAt);
+
+    await page.goto(`/w/${organization.slug}`);
+    await page.waitForURL(`/w/${organization.slug}`);
+
+    await deleteSessionFromDB(sessionId);
+
+    await page.reload();
     await page.waitForURL(/\/auth/);
   });
 });

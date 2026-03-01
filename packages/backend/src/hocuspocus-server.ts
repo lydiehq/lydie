@@ -191,12 +191,6 @@ export const hocuspocus = new Hocuspocus({
 
       const hasAccess = await verifyDocumentAccess(documentName, session.user.id);
 
-      console.log("[Hocuspocus Auth] Access check", {
-        userId: session.user.id,
-        documentName,
-        hasAccess,
-      });
-
       if (!hasAccess) {
         console.error(
           "[Hocuspocus Auth] Access denied for user",
